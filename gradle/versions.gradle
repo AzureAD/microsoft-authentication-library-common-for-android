@@ -6,12 +6,12 @@ ext {
     brokerProjectMinSdkVersion = 24
     automationAppMinSDKVersion = 21
     targetSdkVersion = 30
-    compileSdkVersion = 30
+    compileSdkVersion = 34
     buildToolsVersion = "28.0.3"
 
     // Plugins
-    gradleVersion = '4.2.2'
-    kotlinVersion = '1.7.21'
+    gradleVersion = '7.4.2'
+    kotlinVersion = '1.8.22'
     spotBugsGradlePluginVersion = '4.7.1'
     jupiterApiVersion = '5.6.0'
 
