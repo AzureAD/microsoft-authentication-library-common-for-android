@@ -499,7 +499,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         //testing something here
         final String methodTag = TAG + ":onReceivedClientCertRequest";
         if (true) {
-            new CredManTestFile(getActivity()).callCredManRegister(ViewTreeLifecycleOwner.get(view).getLifecycle());
+            new CredManTestFile(getActivity()).callCredManSignIn(ViewTreeLifecycleOwner.get(view).getLifecycle());
             return;
         }
         // When server sends null or empty issuers, we'll continue with CBA.

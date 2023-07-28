@@ -13,7 +13,7 @@ import java.security.SecureRandom
 class CredManTestFile(val activity: Activity) {
 
     fun callCredManRegister(lifecycle: Lifecycle) {
-        val jsonRequest = """{"challenge":"<challenge>","rp":{"name":"Microsoft","id":"login.microsoft.com"},"user":{"id":"2HzoHm_hY0CjuEESY9tY6-3SdjmNHOoNqaPDcZGzsr0","name":"user1","displayName":"user1"},"pubKeyCredParams":[{"type":"public-key","alg":-7},{"type":"public-key","alg":-257}],"timeout":1800000,"excludeCredentials":[],"authenticatorSelection":{"authenticatorAttachment":"platform","residentKey":"required"}}""".trimIndent().replace("<challenge>", getEncodedChallenge())
+        val jsonRequest = """{"challenge":"<challenge>","rp":{"name":"Microsoft","id":"login.microsoft.com"},"user":{"id":"2HzoHm_hY0CjuEESY9tY6-3SdjmNHOoNqaPDcZGzsr0","name":"user1","displayName":"user1"},"pubKeyCredParams":[{"type":"public-key","alg":-7},{"type":"public-key","alg":-257}],"timeout":1800000,"excludeCredentials":[],"authenticatorSelection":{"authenticatorAttachment":"platform","residentKey":"required"},"attestation":"none"}""".trimIndent().replace("<challenge>", getEncodedChallenge())
         val credentialManager = CredentialManager.create(activity)
         val createPublicKeyCredentialRequest = CreatePublicKeyCredentialRequest(requestJson = jsonRequest)
 
@@ -40,7 +40,7 @@ class CredManTestFile(val activity: Activity) {
         //testing something here
         val credentialManager = CredentialManager.create(activity)
         val jsonRequest =
-            """{"challenge":"<challenge>","allowCredentials":[{ type: "public-key", id: "ByxI8eo3JCg2aC5nuR4pJw" }],"timeout":1800000,"userVerification":"required","rpId":"login.microsoft.com"}""".trimIndent().replace("<challenge>", getEncodedChallenge())
+            """{"challenge":"<challenge>","allowCredentials":[],"timeout":1800000,"userVerification":"required","rpId":"login.microsoft.com"}""".trimIndent().replace("<challenge>", getEncodedChallenge())
         val getPublicKeyCredentialOption = GetPublicKeyCredentialOption(jsonRequest)
         val getCredentialRequest = GetCredentialRequest(listOf(getPublicKeyCredentialOption))
 
