@@ -27,20 +27,19 @@ import com.microsoft.identity.common.java.interfaces.IStorageSupplier
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.util.*
 
 class ClientActiveBrokerCache
 internal constructor(private val storage: INameValueStorage<String>,
-                     private val lock: Mutex): ActiveBrokerCache(storage, lock), IClientActiveBrokerCache {
+                     private val lock: Mutex): BaseActiveBrokerCache(storage, lock), IClientActiveBrokerCache {
 
     companion object {
         /**
-         * File name of [ActiveBrokerCache] used by the SDK code.
+         * File name of [ClientActiveBrokerCache] used by the SDK code.
          **/
         private const val BROKER_METADATA_CACHE_STORE_ON_SDK_SIDE_STORAGE_NAME = "BROKER_METADATA_CACHE_STORE_ON_SDK_SIDE"
 
         /**
-         * The Mutex for all [ActiveBrokerCache] instances used by the SDK code.
+         * The Mutex for all [ClientActiveBrokerCache] instances used by the SDK code.
          * (As of May 24, 2023... Kotlin has yet to officially support ReadWriteMutex.
          *  I don't think it's worth implementing our own (for now).
          *  If we eventually are seeing a perf hit, sure...)
@@ -51,9 +50,9 @@ internal constructor(private val storage: INameValueStorage<String>,
          * If the caller is an SDK, invoke this function.
          *
          * @param storageSupplier an [IStorageSupplier] component.
-         * @return a thread-safe [IActiveBrokerCache].
+         * @return a thread-safe [IClientActiveBrokerCache].
          */
-        fun getBrokerMetadataStoreOnSdkSide(storageSupplier: IStorageSupplier)
+        fun getCache(storageSupplier: IStorageSupplier)
                 : IClientActiveBrokerCache {
             return ClientActiveBrokerCache(
                 storage = storageSupplier.getEncryptedNameValueStore(
