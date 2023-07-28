@@ -69,10 +69,6 @@ public class MsalTestApp extends App {
                                @NonNull final String password,
                                @NonNull final PromptHandlerParameters promptHandlerParameters,
                                @NonNull final boolean shouldHandlePrompt) throws UiObjectNotFoundException, InterruptedException {
-        // handle loginHint input if needed
-        if (shouldHandlePrompt) {
-            UiAutomatorUtils.handleInput("com.msft.identity.client.sample.local:id/loginHint", username);
-        }
 
         final UiObject acquireTokenButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_acquiretoken");
         scrollToElement(acquireTokenButton);
@@ -131,20 +127,22 @@ public class MsalTestApp extends App {
         return result.getText();
     }
 
-    public UiObject removeUser(@NonNull String msg) throws UiObjectNotFoundException {
+    public String removeUser() throws UiObjectNotFoundException {
         final UiObject removeUserButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_clearCache");
         scrollToElement(removeUserButton);
         removeUserButton.click();
-        final UiObject toast = UiAutomatorUtils.obtainUiObjectWithText(msg);
-        return toast;
+        final UiObject textView = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/dialog_message");
+        final String text = textView.getText();
+        return text;
     }
 
-    public UiObject getPackageName(@NonNull String packageName) throws UiObjectNotFoundException, InterruptedException {
+    public String getActiveBrokerPackageName() throws UiObjectNotFoundException {
         final UiObject getPackageNameButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btnGetActiveBroker");
         scrollToElement(getPackageNameButton);
         getPackageNameButton.click();
-        final UiObject toast = UiAutomatorUtils.obtainUiObjectWithText(packageName);
-        return toast;
+        final UiObject textView = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/dialog_message");
+        final String text = textView.getText();
+        return text;
     }
 
     private void scrollToElement(UiObject obj) throws UiObjectNotFoundException {
@@ -155,6 +153,10 @@ public class MsalTestApp extends App {
 
     public void handleBackButton() {
         UiAutomatorUtils.pressBack();
+    }
+
+    public void handleUserNameInput(@NonNull String input) {
+        UiAutomatorUtils.handleInput("com.msft.identity.client.sample.local:id/loginHint", input);
     }
 
     @Override
