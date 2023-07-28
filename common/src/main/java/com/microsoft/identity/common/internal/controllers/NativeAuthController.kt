@@ -842,6 +842,7 @@ class NativeAuthController : BaseNativeAuthController() {
         try {
             val strategyParameters = OAuth2StrategyParameters.builder()
                 .platformComponents(parameters.platformComponents)
+                .challengeTypes(parameters.challengeType)
                 .build()
 
             val oAuth2Strategy = parameters
