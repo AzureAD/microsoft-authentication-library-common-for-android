@@ -50,5 +50,10 @@ public enum SpanName {
     AccountStorageWithBackup,
     EncryptionManager,
     Passthrough,
-    BrokerOperationRequestDispatcher;
+    BrokerOperationRequestDispatcher,
+    BrokerDiscoveryManagerGetActiveBroker,
+    BrokerDiscoveryManagerPerformDiscoveryProcess,
+    BrokerDiscoveryMetadataAggregator,
+    BrokerSelectionProtocolManager,
+    BrokerDiscoveryV1ProtocolBroadcastResult
 }

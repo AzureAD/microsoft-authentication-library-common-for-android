@@ -74,18 +74,9 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         super(sharedPreferencesFileManager);
         Logger.verbose(TAG, "Init: " + TAG);
         mCacheValueDelegate = accountCacheValueDelegate;
-        new Thread(() -> initialize()).start();
+        new Thread(() -> load()).start();
     }
 
-    private void initialize() {
-        final String methodTag = TAG + ":initialize";
-        try {
-            load();
-            removeSha1ApplicationIdentifierAccessTokensIfNeeded();
-        } catch (final Throwable t) {
-            Logger.error(methodTag, "Failed to load initial accounts/credentials or remove SHA-1 app identifier tokens from SharedPreferences", t);
-        }
-    }
     private void load() {
         final String methodTag = TAG + ":load";
 
@@ -95,6 +86,8 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
                 Logger.info(methodTag, "Loaded " + mCachedAccountRecordsWithKeys.size() + " AccountRecords");
                 mCachedCredentialsWithKeys = loadCredentialsWithKeys();
                 Logger.info(methodTag, "Loaded " + mCachedCredentialsWithKeys.size() + " Credentials");
+            } catch (final Throwable t) {
+                Logger.error(methodTag, "Failed to load initial accounts or credentials from SharedPreferences", t);
             } finally {
                 mLoaded = true;
                 mCacheLock.notifyAll();

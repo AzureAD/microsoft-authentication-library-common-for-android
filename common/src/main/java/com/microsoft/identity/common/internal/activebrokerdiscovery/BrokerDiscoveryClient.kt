@@ -173,7 +173,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
             AccountManagerBrokerDiscoveryUtil(context).getActiveBrokerFromAccountManager()
         },
         ipcStrategy = ContentProviderStrategy(context),
-        cache = ClientActiveBrokerCache.getBrokerMetadataStoreOnSdkSide(components.storageSupplier),
+        cache = ClientActiveBrokerCache.getCache(components.storageSupplier),
         isPackageInstalled = { brokerData ->
             PackageHelper(context).
                 isPackageInstalledAndEnabled(brokerData.packageName)
