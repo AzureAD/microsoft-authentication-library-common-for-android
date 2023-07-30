@@ -313,7 +313,7 @@ afterEvaluate {
             distDebug(MavenPublication) {
                 from components.distDebug
                 groupId 'com.microsoft.identity'
-                artifactId 'common'
+                artifactId 'common-debug'
                 //Edit the 'version' here for VSTS RC build
                 version = project.version
             }
