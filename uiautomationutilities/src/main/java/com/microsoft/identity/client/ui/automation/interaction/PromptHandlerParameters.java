@@ -140,6 +140,11 @@ public class PromptHandlerParameters {
     private final boolean howWouldYouLikeToSignInExpected;
 
     /**
+     * Denotes whether or not to except "Choose certificate" Prompt
+     */
+    private final boolean chooseCertificateExpected;
+
+    /**
      * Denotes the way in which we want to respond to the enroll page for this request.
      */
     @Builder.Default

@@ -83,6 +83,10 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
             aadLoginComponentHandler.handleHowWouldYouLikeToSignIn();
         }
 
+        if (parameters.isChooseCertificateExpected()) {
+            aadLoginComponentHandler.handleChooseCertificate();
+        }
+
         if (parameters.isPasswordPageExpected() || parameters.getPrompt() == PromptParameter.LOGIN || !parameters.isSessionExpected()) {
             loginComponentHandler.handlePasswordField(password);
         }
