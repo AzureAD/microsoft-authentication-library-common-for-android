@@ -354,7 +354,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     /**
      * This method performs a commit() to ensure that all outstanding apply() calls are completed.
      * This should be called after any putX() call where we need to ensure that apply() is not delayed or missed.
-     * @return 
+     * @return true if the commit is successful.
      */
     public boolean flushSharedPreference(){
         synchronized (cacheLock) {
