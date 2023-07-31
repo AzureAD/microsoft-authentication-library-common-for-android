@@ -327,12 +327,13 @@ public class BrokerHost extends AbstractTestBroker {
      * @param value The flight parameter value as string
      */
     public void setLocalFlight(@NonNull final String key, @NonNull final String value) {
+        final String methodTag = TAG + ":setLocalFlight";
         brokerFlightsFragment.launch();
         brokerFlightsFragment.selectLocalProvider();
         brokerFlightsFragment.setLocalFlight(key, value);
-        ThreadUtils.sleepSafely(500, TAG, "Wait before force stop.");
+        ThreadUtils.sleepSafely(500, methodTag, "Wait before force stop.");
         forceStop();
-        ThreadUtils.sleepSafely(500, "TAG", "Wait before launch.");
+        ThreadUtils.sleepSafely(500, methodTag, "Wait before launch.");
         launch();
     }
 }
