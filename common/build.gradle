@@ -42,7 +42,7 @@ android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
     kotlinOptions {
-        jvmTarget = '11'
+        jvmTarget = '1.8'
     }
     defaultConfig {
         namespace 'com.microsoft.identity.common'
@@ -76,8 +76,8 @@ android {
     }
     //Upgrading to Java 8 in order to use YubiKit SDK
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     lintOptions {
