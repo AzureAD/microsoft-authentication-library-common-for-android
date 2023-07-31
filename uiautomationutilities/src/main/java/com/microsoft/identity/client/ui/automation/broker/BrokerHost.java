@@ -304,24 +304,12 @@ public class BrokerHost extends AbstractTestBroker {
 
     public void enableMultipleWpj() {
         Logger.i(TAG, "Enable Multiple WPJ..");
-        brokerFlightsFragment.launch();
-        brokerFlightsFragment.selectLocalProvider();
-        brokerFlightsFragment.setLocalFlight(FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER, "true");
-        ThreadUtils.sleepSafely(500, TAG, "Wait before force stop.");
-        forceStop();
-        ThreadUtils.sleepSafely(500, "TAG", "Wait before launch.");
-        launch();
+        setLocalFlight(FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER, "true");
     }
 
     public void disableMultipleWpj() {
         Logger.i(TAG, "Disable Multiple WPJ..");
-        brokerFlightsFragment.launch();
-        brokerFlightsFragment.selectLocalProvider();
-        brokerFlightsFragment.setLocalFlight(FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER, "false");
-        ThreadUtils.sleepSafely(500, TAG, "Wait before force stop.");
-        forceStop();
-        ThreadUtils.sleepSafely(500, TAG, "Wait before launch.");
-        launch();
+        setLocalFlight(FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER, "false");
     }
 
     /**
@@ -330,9 +318,18 @@ public class BrokerHost extends AbstractTestBroker {
      */
     public void enablePrtV3() {
         Logger.i(TAG, "Enable PRTv3");
+        setLocalFlight(FLIGHT_PRT_V3, Boolean.toString(true));
+    }
+
+    /**
+     * Ensures flight provider as LocalFlightsProvider
+     * @param key The flight parameter name as string.
+     * @param value The flight parameter value as string
+     */
+    public void setLocalFlight(@NonNull final String key, @NonNull final String value) {
         brokerFlightsFragment.launch();
         brokerFlightsFragment.selectLocalProvider();
-        brokerFlightsFragment.setLocalFlight(FLIGHT_PRT_V3, Boolean.toString(true));
+        brokerFlightsFragment.setLocalFlight(key, value);
         ThreadUtils.sleepSafely(500, TAG, "Wait before force stop.");
         forceStop();
         ThreadUtils.sleepSafely(500, "TAG", "Wait before launch.");
