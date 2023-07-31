@@ -77,9 +77,7 @@ open class BaseActiveBrokerCache
     override fun setCachedActiveBroker(brokerData: BrokerData) {
         return runBlocking {
             lock.withLock {
-                storage.put(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY, brokerData.packageName)
-                storage.put(ACTIVE_BROKER_CACHE_SIGHASH_KEY, brokerData.signingCertificateThumbprint)
-                inMemoryCachedValue = brokerData.copy()
+                setCachedActiveBrokerWithoutLock(brokerData)
             }
         }
     }
@@ -90,6 +88,12 @@ open class BaseActiveBrokerCache
                 clearCachedActiveBrokerWithoutLock()
             }
         }
+    }
+
+    protected open fun setCachedActiveBrokerWithoutLock(brokerData: BrokerData){
+        storage.put(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY, brokerData.packageName)
+        storage.put(ACTIVE_BROKER_CACHE_SIGHASH_KEY, brokerData.signingCertificateThumbprint)
+        inMemoryCachedValue = brokerData.copy()
     }
 
     protected fun clearCachedActiveBrokerWithoutLock(){
