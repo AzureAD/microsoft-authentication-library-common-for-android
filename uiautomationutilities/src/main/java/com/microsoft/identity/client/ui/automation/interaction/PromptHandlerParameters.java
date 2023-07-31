@@ -140,7 +140,7 @@ public class PromptHandlerParameters {
     private final boolean howWouldYouLikeToSignInExpected;
 
     /**
-     * Denotes whether or not to except "Choose certificate" Prompt
+     * Denotes whether or not to expect "Choose certificate" Prompt
      */
     private final boolean chooseCertificateExpected;
 
