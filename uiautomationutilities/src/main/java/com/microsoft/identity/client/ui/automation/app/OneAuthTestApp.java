@@ -145,6 +145,10 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         UiAutomatorUtils.pressBack();
     }
 
+    public void handleUserNameInput(@NonNull final String input) {
+        UiAutomatorUtils.handleInput("com.microsoft.oneauth.testapp:id/account_hints_edittext", input);
+    }
+
     @Override
     public void onAccountAdded() {
         // nothing needed here

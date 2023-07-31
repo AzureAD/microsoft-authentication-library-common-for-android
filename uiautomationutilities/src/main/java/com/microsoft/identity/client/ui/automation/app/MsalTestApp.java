@@ -126,7 +126,7 @@ public class MsalTestApp extends App {
         return users;
     }
 
-    public void selectFromAuthScheme(@NonNull String text) throws UiObjectNotFoundException {
+    public void selectFromAuthScheme(@NonNull final String text) throws UiObjectNotFoundException {
         final UiObject authSchemeSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/authentication_scheme");
         authSchemeSpinner.click();
         final UiObject authScheme = UiAutomatorUtils.obtainUiObjectWithText(text);
@@ -169,7 +169,7 @@ public class MsalTestApp extends App {
         UiAutomatorUtils.pressBack();
     }
 
-    public void handleUserNameInput(@NonNull String input) {
+    public void handleUserNameInput(@NonNull final String input) {
         UiAutomatorUtils.handleInput("com.msft.identity.client.sample.local:id/loginHint", input);
     }
 
