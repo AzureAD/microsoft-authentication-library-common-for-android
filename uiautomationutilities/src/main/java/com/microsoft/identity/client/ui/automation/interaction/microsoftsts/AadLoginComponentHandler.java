@@ -146,7 +146,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     public void handleSpeedBump() {
         Logger.i(TAG, "Handle Speed Bump UI..");
         // Confirm On Speed Bump Screen
-        final UiObject speedBump = UiAutomatorUtils.obtainUiObjectWithResourceId("appConfirmTitle", mFindLoginUiElementTimeout);
+        final UiObject speedBump = UiAutomatorUtils.obtainUiObjectWithResourceId("idSIButton9", mFindLoginUiElementTimeout);
 
         if (!speedBump.exists()) {
             fail("Speed Bump screen did not show up");
