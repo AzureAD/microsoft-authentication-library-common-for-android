@@ -23,6 +23,10 @@
 package com.microsoft.identity.client.ui.automation.app;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+
+import android.widget.Button;
+import android.widget.EditText;
+
 import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
@@ -76,6 +80,16 @@ public class MsalTestApp extends App {
 
         // handle prompt if needed
         if (shouldHandlePrompt) {
+            try {
+                final UiObject emailField = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
+                        "", EditText.class);
+                emailField.setText(username);
+                final UiObject nextBtn = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
+                        "Next", Button.class);
+                nextBtn.click();
+            } catch (final UiObjectNotFoundException e) {
+                throw new AssertionError("Could not click on object with txt Next");
+            }
             final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler((MicrosoftStsPromptHandlerParameters) promptHandlerParameters);
             microsoftStsPromptHandler.handlePrompt(username, password);
         }
