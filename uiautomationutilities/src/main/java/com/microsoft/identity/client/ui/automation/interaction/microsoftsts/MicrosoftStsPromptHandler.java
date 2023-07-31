@@ -108,6 +108,10 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
             aadLoginComponentHandler.handleSpeedBump();
         }
 
+        if (parameters.isSecondSpeedBumpExpected()) {
+            aadLoginComponentHandler.handleSpeedBump();
+        }
+
         if (parameters.isRegisterPageExpected()) {
             aadLoginComponentHandler.handleRegistration();
         }

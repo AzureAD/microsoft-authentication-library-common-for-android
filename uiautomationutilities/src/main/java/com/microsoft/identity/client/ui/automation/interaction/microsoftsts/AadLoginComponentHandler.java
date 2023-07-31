@@ -152,7 +152,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
             fail("Speed Bump screen did not show up");
         }
 
-        UiAutomatorUtils.handleButtonClickForObjectWithText("Continue");
+        handleNextButton();
     }
 
     @Override
@@ -212,6 +212,9 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     public void handleHowWouldYouLikeToSignIn() {
         // Looks like we sometimes see this UI prompt asking "How would like to sign in?"
         // We press button1, which is "Ok" to confirm the default selection of using device certificate.
+        UiAutomatorUtils.handleButtonClickSafely("android:id/button1", mFindLoginUiElementTimeout);
+
+        // Sometimes need to also confirm the selection
         UiAutomatorUtils.handleButtonClickSafely("android:id/button1", mFindLoginUiElementTimeout);
     }
 }

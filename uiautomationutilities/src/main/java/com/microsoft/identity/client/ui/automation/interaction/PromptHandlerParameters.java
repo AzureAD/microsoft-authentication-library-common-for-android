@@ -105,6 +105,12 @@ public class PromptHandlerParameters {
     private final boolean speedBumpExpected;
 
     /**
+     * Denotes whether or not a second speed bump page is expected to appear during an interactive token
+     * request.
+     */
+    private final boolean secondSpeedBumpExpected;
+
+    /**
      * Denotes whether or not the register page is expected to appear during an interactive token
      * request.
      */
