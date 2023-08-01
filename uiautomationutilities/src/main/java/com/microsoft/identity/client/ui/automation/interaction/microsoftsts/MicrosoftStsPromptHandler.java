@@ -33,8 +33,6 @@ import com.microsoft.identity.client.ui.automation.interaction.UiResponse;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.common.java.util.ThreadUtils;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * A Prompt Handler for Microsoft STS login flows.
  */
