@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.util.UrlUtil
 class FidoChallengeFactory {
     companion object {
         val DELIMITER = ","
+        val PASSKEY_PROTOCOL_REQUEST_INVALID = "Passkey protocol request is invalid"
 
         /**
          * Creates a FidoChallenge from a WebView passkey redirect url.
@@ -44,69 +45,68 @@ class FidoChallengeFactory {
             val parameters = UrlUtil.getParameters(redirectUri)
             //At the moment, only auth FIDO requests will be sent by the server.
             return AuthFidoChallenge(
-                challenge = validateParameter(
-                    parameters[FidoRequestField.Challenge.name],
-                    FidoRequestField.Challenge.name
+                challenge = validateRequiredParameter(
+                    FidoRequestField.Challenge.name,
+                    parameters[FidoRequestField.Challenge.name]
                 ),
-                relyingPartyIdentifier = validateParameter(
-                    parameters[FidoRequestField.RelyingPartyIdentifier.name],
-                    FidoRequestField.RelyingPartyIdentifier.name
+                relyingPartyIdentifier = validateRequiredParameter(
+                    FidoRequestField.RelyingPartyIdentifier.name,
+                    parameters[FidoRequestField.RelyingPartyIdentifier.name]
                 ),
-                userVerificationPolicy = validateParameter(
-                    parameters[FidoRequestField.UserVerificationPolicy.name],
-                    FidoRequestField.UserVerificationPolicy.name
+                userVerificationPolicy = validateRequiredParameter(
+                    FidoRequestField.UserVerificationPolicy.name,
+                    parameters[FidoRequestField.UserVerificationPolicy.name]
                 ),
-                version = validateParameter(
-                    parameters[FidoRequestField.Version.name],
-                    FidoRequestField.Version.name
+                version = validateRequiredParameter(
+                    FidoRequestField.Version.name,
+                    parameters[FidoRequestField.Version.name]
                 ),
-                submitUrl = validateParameter(
-                    parameters[FidoRequestField.SubmitUrl.name],
-                    FidoRequestField.SubmitUrl.name
+                submitUrl = validateRequiredParameter(
+                    FidoRequestField.SubmitUrl.name,
+                    parameters[FidoRequestField.SubmitUrl.name]
                 ),
-                keyTypes = validateListParameter(
-                    parameters[FidoRequestField.KeyTypes.name],
-                    FidoRequestField.KeyTypes.name
+                keyTypes = validateRequiredListParameter(
+                    FidoRequestField.KeyTypes.name,
+                    parameters[FidoRequestField.KeyTypes.name]
                 ),
-                context = validateParameter(
-                    parameters[FidoRequestField.Context.name],
-                    FidoRequestField.Context.name
+                context = validateRequiredParameter(
+                    FidoRequestField.Context.name,
+                    parameters[FidoRequestField.Context.name]
                 ),
-                allowedCredentials = validateListParameter(
-                    parameters[AuthFidoRequestField.AllowedCredentials.name],
-                    AuthFidoRequestField.AllowedCredentials.name
+                allowedCredentials = validateRequiredListParameter(
+                    AuthFidoRequestField.AllowedCredentials.name,
+                    parameters[AuthFidoRequestField.AllowedCredentials.name]
                 )
             )
         }
 
         /**
-         * Validates that the given parameter is not null.
-         * @param parameter value for a passkey protocol field
+         * Validates that the given parameter is not null or empty.
          * @param field passkey protocol field
-         * @throws ClientException if the parameter is null.
+         * @param value value for a passkey protocol parameter
+         * @throws ClientException if the parameter is null or empty.
          */
         @Throws(ClientException::class)
-        private fun validateParameter(parameter: String?, field: String): String {
-            if (parameter == null) {
-                throw ClientException("FIDO request is invalid", "$field is empty")
+        private fun validateRequiredParameter(field: String, value: String?): String {
+            if (value == null) {
+                throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field not provided")
+            } else if (value.isBlank()) {
+                throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field is empty")
             }
-            return parameter;
+            return value;
         }
 
         /**
-         * Validates that the given parameter is not null.
-         * @param parameter value for a passkey protocol field
-         * @param field passkey protocol field (list)
-         * @throws ClientException if the parameter is null
+         * Validates that the given parameter is not null or empty.
+         * @param value list value for a passkey protocol parameter
+         * @param field passkey protocol field
+         * @throws ClientException if the parameter is null or empty
          */
         @Throws(ClientException::class)
-        private fun validateListParameter(parameter: String?, field: String): List<String> {
-            if (parameter == null) {
-                throw ClientException("FIDO request is invalid", "$field is empty")
-            } else if (parameter.isBlank()) {
-                return listOf()
-            }
-            return parameter.split(DELIMITER).toList()
+        private fun validateRequiredListParameter(field: String, value: String?): List<String> {
+            return validateRequiredParameter(field, value).split(DELIMITER).toList()
         }
+
+        //TODO: Create validateOptionalParameter method (checks for empty fields) once server team finishes design
     }
 }
