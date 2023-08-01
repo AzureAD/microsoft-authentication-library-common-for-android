@@ -31,6 +31,7 @@ import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerPara
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.UiResponse;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.common.java.util.ThreadUtils;
 
 /**
  * A Prompt Handler for Microsoft STS login flows.
@@ -83,6 +84,10 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
             aadLoginComponentHandler.handleHowWouldYouLikeToSignIn();
         }
 
+        if (parameters.isChooseCertificateExpected()) {
+            aadLoginComponentHandler.handleChooseCertificate();
+        }
+
         if (parameters.isPasswordPageExpected() || parameters.getPrompt() == PromptParameter.LOGIN || !parameters.isSessionExpected()) {
             loginComponentHandler.handlePasswordField(password);
         }
@@ -105,6 +110,12 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
         }
 
         if (parameters.isSpeedBumpExpected()) {
+            aadLoginComponentHandler.handleSpeedBump();
+        }
+
+        if (parameters.isSecondSpeedBumpExpected()) {
+            // Need to wait between button presses, or we might press the same button twice
+            ThreadUtils.sleepSafely(6000, TAG, "Sleep Interrupted");
             aadLoginComponentHandler.handleSpeedBump();
         }
 

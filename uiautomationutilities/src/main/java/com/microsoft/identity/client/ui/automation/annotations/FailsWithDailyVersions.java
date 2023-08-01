@@ -20,12 +20,19 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.constants;
+package com.microsoft.identity.client.ui.automation.annotations;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Class used to hold some constant variables for UI testing automation.
+ * An annotation indicating that an automated End-to-End test case is failing when used with Daily Pipeline versions,
+ * but should still be attempted on Monthly Release Pipeline for validation.
  */
-public class GlobalConstants {
-    public static final boolean IS_STAY_SIGN_IN_PAGE_EXPECTED = true;
-    public static final boolean IS_EXPECTING_SECOND_SPEED_BUMP = true;
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.METHOD, ElementType.TYPE})
+public @interface FailsWithDailyVersions {
+    String value() default "";
 }
