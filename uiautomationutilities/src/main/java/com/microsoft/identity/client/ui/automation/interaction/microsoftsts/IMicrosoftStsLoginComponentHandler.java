@@ -69,6 +69,11 @@ public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponen
     void handleVerifyYourIdentity();
 
     /**
+     * Clickes "Select" when prompted with the choose certificate prompt
+     */
+    void handleChooseCertificate();
+
+    /**
      * Handle the How would you like to sign in
      */
     void handleHowWouldYouLikeToSignIn();
