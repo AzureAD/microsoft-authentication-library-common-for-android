@@ -212,6 +212,12 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     public void handleHowWouldYouLikeToSignIn() {
         // Looks like we sometimes see this UI prompt asking "How would like to sign in?"
         // We press button1, which is "Ok" to confirm the default selection of using device certificate.
-        UiAutomatorUtils.handleButtonClick("android:id/button1", mFindLoginUiElementTimeout);
+        UiAutomatorUtils.handleButtonClickSafely("android:id/button1", mFindLoginUiElementTimeout);
+    }
+
+    @Override
+    public void handleChooseCertificate() {
+        // Choose default certificate
+        UiAutomatorUtils.handleButtonClickSafely("android:id/button1", mFindLoginUiElementTimeout);
     }
 }

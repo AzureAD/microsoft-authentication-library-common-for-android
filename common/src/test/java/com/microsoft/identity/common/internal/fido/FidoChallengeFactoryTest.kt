@@ -24,6 +24,8 @@ package com.microsoft.identity.common.internal.fido
 
 import android.net.Uri
 import com.microsoft.identity.common.java.exception.ClientException
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -37,7 +39,6 @@ class FidoChallengeFactoryTest {
     val userVerificationPolicy = "required"
     val version = "1.0"
     val submitUrl = "submiturl"
-    val keyTypes = "passkey"
     val context = "123456"
     val authority = "urn:http-auth:PassKey"
 
@@ -45,6 +46,8 @@ class FidoChallengeFactoryTest {
     val allowCredentialsEmpty = ""
     val allowCredentialsOneUser = "user1"
     val allowCredentialsTwoUsers = "user1,user2"
+    val keyTypes = "passkey"
+    val keyTypesEmpty = ""
 
     @Test
     fun testCreateFidoChallengeFromRedirect_AuthAllowCredentialsOneUser() {
@@ -55,13 +58,16 @@ class FidoChallengeFactoryTest {
             .appendQueryParameter(FidoRequestField.UserVerificationPolicy.name, userVerificationPolicy)
             .appendQueryParameter(FidoRequestField.Version.name, version)
             .appendQueryParameter(FidoRequestField.SubmitUrl.name, submitUrl)
-            .appendQueryParameter(FidoRequestField.KeyTypes.name, keyTypes)
+            .appendQueryParameter(AuthFidoRequestField.KeyTypes.name, keyTypes)
             .appendQueryParameter(FidoRequestField.Context.name, context)
             .build().toString()
         val fidoChallenge = FidoChallengeFactory.createFidoChallengeFromRedirect(fullUrl)
         assertTrue(fidoChallenge is AuthFidoChallenge)
         val authFidoChallenge : AuthFidoChallenge = fidoChallenge as AuthFidoChallenge
-        assertTrue(authFidoChallenge.allowedCredentials.size == 1)
+        assertNotNull(authFidoChallenge.allowedCredentials)
+        authFidoChallenge.allowedCredentials?.let {
+            assertTrue(it.size == 1)
+        }
     }
 
     @Test
@@ -73,13 +79,67 @@ class FidoChallengeFactoryTest {
             .appendQueryParameter(FidoRequestField.UserVerificationPolicy.name, userVerificationPolicy)
             .appendQueryParameter(FidoRequestField.Version.name, version)
             .appendQueryParameter(FidoRequestField.SubmitUrl.name, submitUrl)
-            .appendQueryParameter(FidoRequestField.KeyTypes.name, keyTypes)
+            .appendQueryParameter(AuthFidoRequestField.KeyTypes.name, keyTypes)
             .appendQueryParameter(FidoRequestField.Context.name, context)
             .build().toString()
         val fidoChallenge = FidoChallengeFactory.createFidoChallengeFromRedirect(fullUrl)
         assertTrue(fidoChallenge is AuthFidoChallenge)
         val authFidoChallenge : AuthFidoChallenge = fidoChallenge as AuthFidoChallenge
-        assertTrue(authFidoChallenge.allowedCredentials.size == 2)
+        assertNotNull(authFidoChallenge.allowedCredentials)
+        authFidoChallenge.allowedCredentials?.let {
+            assertTrue(it.size == 2)
+        }
+    }
+
+    @Test
+    fun testCreateFidoChallengeFromRedirect_AuthNoAllowedCredentials() {
+        val url = Uri.Builder().authority(authority)
+            .appendQueryParameter(FidoRequestField.Challenge.name, challengeStr)
+            .appendQueryParameter(FidoRequestField.RelyingPartyIdentifier.name, relyingPartyIdentifier)
+            .appendQueryParameter(FidoRequestField.UserVerificationPolicy.name, userVerificationPolicy)
+            .appendQueryParameter(FidoRequestField.Version.name, version)
+            .appendQueryParameter(FidoRequestField.SubmitUrl.name, submitUrl)
+            .appendQueryParameter(AuthFidoRequestField.KeyTypes.name, keyTypes)
+            .appendQueryParameter(FidoRequestField.Context.name, context)
+            .build().toString()
+        val fidoChallenge = FidoChallengeFactory.createFidoChallengeFromRedirect(url)
+        assertTrue(fidoChallenge is AuthFidoChallenge)
+        val authFidoChallenge : AuthFidoChallenge = fidoChallenge as AuthFidoChallenge
+        assertNull(authFidoChallenge.allowedCredentials)
+    }
+
+    @Test
+    fun testCreateFidoChallengeFromRedirect_AuthNoKeyTypes() {
+        val url = Uri.Builder().authority(authority)
+            .appendQueryParameter(FidoRequestField.Challenge.name, challengeStr)
+            .appendQueryParameter(AuthFidoRequestField.AllowedCredentials.name, allowCredentialsOneUser)
+            .appendQueryParameter(FidoRequestField.RelyingPartyIdentifier.name, relyingPartyIdentifier)
+            .appendQueryParameter(FidoRequestField.UserVerificationPolicy.name, userVerificationPolicy)
+            .appendQueryParameter(FidoRequestField.Version.name, version)
+            .appendQueryParameter(FidoRequestField.SubmitUrl.name, submitUrl)
+            .appendQueryParameter(FidoRequestField.Context.name, context)
+            .build().toString()
+        val fidoChallenge = FidoChallengeFactory.createFidoChallengeFromRedirect(url)
+        assertTrue(fidoChallenge is AuthFidoChallenge)
+        val authFidoChallenge : AuthFidoChallenge = fidoChallenge as AuthFidoChallenge
+        assertNull(authFidoChallenge.keyTypes)
+    }
+
+    @Test
+    fun testCreateFidoChallengeFromRedirect_AuthOnlyRequiredParams() {
+        val url = Uri.Builder().authority(authority)
+            .appendQueryParameter(FidoRequestField.Challenge.name, challengeStr)
+            .appendQueryParameter(FidoRequestField.RelyingPartyIdentifier.name, relyingPartyIdentifier)
+            .appendQueryParameter(FidoRequestField.UserVerificationPolicy.name, userVerificationPolicy)
+            .appendQueryParameter(FidoRequestField.Version.name, version)
+            .appendQueryParameter(FidoRequestField.SubmitUrl.name, submitUrl)
+            .appendQueryParameter(FidoRequestField.Context.name, context)
+            .build().toString()
+        val fidoChallenge = FidoChallengeFactory.createFidoChallengeFromRedirect(url)
+        assertTrue(fidoChallenge is AuthFidoChallenge)
+        val authFidoChallenge : AuthFidoChallenge = fidoChallenge as AuthFidoChallenge
+        assertNull(authFidoChallenge.allowedCredentials)
+        assertNull(authFidoChallenge.keyTypes)
     }
 
     @Test(expected = ClientException::class)
@@ -90,21 +150,7 @@ class FidoChallengeFactoryTest {
             .appendQueryParameter(FidoRequestField.UserVerificationPolicy.name, userVerificationPolicy)
             .appendQueryParameter(FidoRequestField.Version.name, version)
             .appendQueryParameter(FidoRequestField.SubmitUrl.name, submitUrl)
-            .appendQueryParameter(FidoRequestField.KeyTypes.name, keyTypes)
-            .appendQueryParameter(FidoRequestField.Context.name, context)
-            .build().toString()
-        FidoChallengeFactory.createFidoChallengeFromRedirect(malformedUrl)
-    }
-
-    @Test(expected = ClientException::class)
-    fun testCreateFidoChallengeFromRedirect_AuthNoAllowedCredentials() {
-        val malformedUrl = Uri.Builder().authority(authority)
-            .appendQueryParameter(FidoRequestField.Challenge.name, challengeStr)
-            .appendQueryParameter(FidoRequestField.RelyingPartyIdentifier.name, relyingPartyIdentifier)
-            .appendQueryParameter(FidoRequestField.UserVerificationPolicy.name, userVerificationPolicy)
-            .appendQueryParameter(FidoRequestField.Version.name, version)
-            .appendQueryParameter(FidoRequestField.SubmitUrl.name, submitUrl)
-            .appendQueryParameter(FidoRequestField.KeyTypes.name, keyTypes)
+            .appendQueryParameter(AuthFidoRequestField.KeyTypes.name, keyTypes)
             .appendQueryParameter(FidoRequestField.Context.name, context)
             .build().toString()
         FidoChallengeFactory.createFidoChallengeFromRedirect(malformedUrl)
@@ -118,7 +164,7 @@ class FidoChallengeFactoryTest {
             .appendQueryParameter(FidoRequestField.UserVerificationPolicy.name,userVerificationPolicy)
             .appendQueryParameter(FidoRequestField.Version.name, version)
             .appendQueryParameter(FidoRequestField.SubmitUrl.name, submitUrl)
-            .appendQueryParameter(FidoRequestField.KeyTypes.name, keyTypes)
+            .appendQueryParameter(AuthFidoRequestField.KeyTypes.name, keyTypes)
             .appendQueryParameter(FidoRequestField.Context.name, context)
             .build().toString()
         FidoChallengeFactory.createFidoChallengeFromRedirect(malformedUrl)
@@ -132,7 +178,7 @@ class FidoChallengeFactoryTest {
             .appendQueryParameter(FidoRequestField.RelyingPartyIdentifier.name, relyingPartyIdentifier)
             .appendQueryParameter(FidoRequestField.Version.name, version)
             .appendQueryParameter(FidoRequestField.SubmitUrl.name, submitUrl)
-            .appendQueryParameter(FidoRequestField.KeyTypes.name, keyTypes)
+            .appendQueryParameter(AuthFidoRequestField.KeyTypes.name, keyTypes)
             .appendQueryParameter(FidoRequestField.Context.name, context)
             .build().toString()
         FidoChallengeFactory.createFidoChallengeFromRedirect(malformedUrl)
@@ -146,7 +192,7 @@ class FidoChallengeFactoryTest {
             .appendQueryParameter(FidoRequestField.RelyingPartyIdentifier.name, relyingPartyIdentifier)
             .appendQueryParameter(FidoRequestField.UserVerificationPolicy.name, userVerificationPolicy)
             .appendQueryParameter(FidoRequestField.SubmitUrl.name, submitUrl)
-            .appendQueryParameter(FidoRequestField.KeyTypes.name, keyTypes)
+            .appendQueryParameter(AuthFidoRequestField.KeyTypes.name, keyTypes)
             .appendQueryParameter(FidoRequestField.Context.name, context)
             .build().toString()
         FidoChallengeFactory.createFidoChallengeFromRedirect(malformedUrl)
@@ -160,21 +206,7 @@ class FidoChallengeFactoryTest {
             .appendQueryParameter(FidoRequestField.RelyingPartyIdentifier.name, relyingPartyIdentifier)
             .appendQueryParameter(FidoRequestField.UserVerificationPolicy.name, userVerificationPolicy)
             .appendQueryParameter(FidoRequestField.Version.name, version)
-            .appendQueryParameter(FidoRequestField.KeyTypes.name, keyTypes)
-            .appendQueryParameter(FidoRequestField.Context.name, context)
-            .build().toString()
-        FidoChallengeFactory.createFidoChallengeFromRedirect(malformedUrl)
-    }
-
-    @Test(expected = ClientException::class)
-    fun testCreateFidoChallengeFromRedirect_AuthNoKeyTypes() {
-        val malformedUrl = Uri.Builder().authority(authority)
-            .appendQueryParameter(FidoRequestField.Challenge.name, challengeStr)
-            .appendQueryParameter(AuthFidoRequestField.AllowedCredentials.name, allowCredentialsOneUser)
-            .appendQueryParameter(FidoRequestField.RelyingPartyIdentifier.name, relyingPartyIdentifier)
-            .appendQueryParameter(FidoRequestField.UserVerificationPolicy.name, userVerificationPolicy)
-            .appendQueryParameter(FidoRequestField.Version.name, version)
-            .appendQueryParameter(FidoRequestField.SubmitUrl.name, submitUrl)
+            .appendQueryParameter(AuthFidoRequestField.KeyTypes.name, keyTypes)
             .appendQueryParameter(FidoRequestField.Context.name, context)
             .build().toString()
         FidoChallengeFactory.createFidoChallengeFromRedirect(malformedUrl)
@@ -189,7 +221,7 @@ class FidoChallengeFactoryTest {
             .appendQueryParameter(FidoRequestField.UserVerificationPolicy.name, userVerificationPolicy)
             .appendQueryParameter(FidoRequestField.Version.name, version)
             .appendQueryParameter(FidoRequestField.SubmitUrl.name, submitUrl)
-            .appendQueryParameter(FidoRequestField.KeyTypes.name, keyTypes)
+            .appendQueryParameter(AuthFidoRequestField.KeyTypes.name, keyTypes)
             .build().toString()
         FidoChallengeFactory.createFidoChallengeFromRedirect(malformedUrl)
     }
@@ -203,7 +235,22 @@ class FidoChallengeFactoryTest {
             .appendQueryParameter(FidoRequestField.UserVerificationPolicy.name, userVerificationPolicy)
             .appendQueryParameter(FidoRequestField.Version.name, version)
             .appendQueryParameter(FidoRequestField.SubmitUrl.name, submitUrl)
-            .appendQueryParameter(FidoRequestField.KeyTypes.name, keyTypes)
+            .appendQueryParameter(AuthFidoRequestField.KeyTypes.name, keyTypes)
+            .appendQueryParameter(FidoRequestField.Context.name, context)
+            .build().toString()
+        FidoChallengeFactory.createFidoChallengeFromRedirect(fullUrl)
+    }
+
+    @Test(expected = ClientException::class)
+    fun testCreateFidoChallengeFromRedirect_AuthKeyTypesEmpty() {
+        val fullUrl = Uri.Builder().authority(authority)
+            .appendQueryParameter(FidoRequestField.Challenge.name, challengeStr)
+            .appendQueryParameter(AuthFidoRequestField.AllowedCredentials.name, allowCredentialsOneUser)
+            .appendQueryParameter(FidoRequestField.RelyingPartyIdentifier.name, relyingPartyIdentifier)
+            .appendQueryParameter(FidoRequestField.UserVerificationPolicy.name, userVerificationPolicy)
+            .appendQueryParameter(FidoRequestField.Version.name, version)
+            .appendQueryParameter(FidoRequestField.SubmitUrl.name, submitUrl)
+            .appendQueryParameter(AuthFidoRequestField.KeyTypes.name, keyTypesEmpty)
             .appendQueryParameter(FidoRequestField.Context.name, context)
             .build().toString()
         FidoChallengeFactory.createFidoChallengeFromRedirect(fullUrl)

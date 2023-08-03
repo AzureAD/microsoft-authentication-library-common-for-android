@@ -30,8 +30,8 @@ import com.microsoft.identity.common.java.util.UrlUtil
  */
 class FidoChallengeFactory {
     companion object {
-        val DELIMITER = ","
-        val PASSKEY_PROTOCOL_REQUEST_INVALID = "Passkey protocol request is invalid"
+        private const val DELIMITER = ","
+        private const val PASSKEY_PROTOCOL_REQUEST_INVALID = "Passkey protocol request is invalid"
 
         /**
          * Creates a FidoChallenge from a WebView passkey redirect url.
@@ -65,15 +65,15 @@ class FidoChallengeFactory {
                     FidoRequestField.SubmitUrl.name,
                     parameters[FidoRequestField.SubmitUrl.name]
                 ),
-                keyTypes = validateRequiredListParameter(
-                    FidoRequestField.KeyTypes.name,
-                    parameters[FidoRequestField.KeyTypes.name]
+                keyTypes = validateOptionalListParameter(
+                    AuthFidoRequestField.KeyTypes.name,
+                    parameters[AuthFidoRequestField.KeyTypes.name]
                 ),
                 context = validateRequiredParameter(
                     FidoRequestField.Context.name,
                     parameters[FidoRequestField.Context.name]
                 ),
-                allowedCredentials = validateRequiredListParameter(
+                allowedCredentials = validateOptionalListParameter(
                     AuthFidoRequestField.AllowedCredentials.name,
                     parameters[AuthFidoRequestField.AllowedCredentials.name]
                 )
@@ -81,9 +81,10 @@ class FidoChallengeFactory {
         }
 
         /**
-         * Validates that the given parameter is not null or empty.
+         * Validates that the given required parameter is not null or empty.
          * @param field passkey protocol field
          * @param value value for a passkey protocol parameter
+         * @return validated parameter value
          * @throws ClientException if the parameter is null or empty.
          */
         @Throws(ClientException::class)
@@ -93,20 +94,38 @@ class FidoChallengeFactory {
             } else if (value.isBlank()) {
                 throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field is empty")
             }
-            return value;
+            return value
         }
 
         /**
-         * Validates that the given parameter is not null or empty.
-         * @param value list value for a passkey protocol parameter
+         * Validates that the given optional parameter is not empty.
          * @param field passkey protocol field
-         * @throws ClientException if the parameter is null or empty
+         * @param value value for a passkey protocol parameter
+         * @return validated parameter value, or null if not provided.
+         * @throws ClientException if the parameter is empty.
          */
         @Throws(ClientException::class)
-        private fun validateRequiredListParameter(field: String, value: String?): List<String> {
-            return validateRequiredParameter(field, value).split(DELIMITER).toList()
+        private fun validateOptionalParameter(field: String, value: String?): String? {
+            if (value != null && value.isBlank()) {
+                throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field is empty")
+            }
+            return value
         }
 
-        //TODO: Create validateOptionalParameter method (checks for empty fields) once server team finishes design
+        /**
+         * Validates that the given optional parameter is not empty and turns into a list.
+         * @param value value for a passkey protocol parameter
+         * @param field passkey protocol field
+         * @return validated parameter value, or null if not provided.
+         * @throws ClientException if the parameter is empty
+         */
+        @Throws(ClientException::class)
+        private fun validateOptionalListParameter(field: String, value: String?): List<String>? {
+            val param = validateOptionalParameter(field, value)
+            if (param != null) {
+                return param.split(DELIMITER).toList()
+            }
+            return param
+        }
     }
 }
