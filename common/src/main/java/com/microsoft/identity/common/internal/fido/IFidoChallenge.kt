@@ -48,10 +48,6 @@ interface IFidoChallenge {
      */
     val submitUrl: String
     /**
-     * For authentication, array of allowed key types; for registration, should have one entry for requested key type.
-     */
-    val keyTypes: List<String>
-    /**
      * Server state that needs to be maintained between challenge and response.
      */
     val context: String

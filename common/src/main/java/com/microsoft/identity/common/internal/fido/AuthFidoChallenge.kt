@@ -31,10 +31,15 @@ data class AuthFidoChallenge(
     override val userVerificationPolicy: String,
     override val version: String,
     override val submitUrl: String,
-    override val keyTypes: List<String>,
     override val context: String,
     /**
-     * List of credential IDs the client will use for filtering.
+     * Array of allowed key types.
+     * This parameter is optional.
      */
-    val allowedCredentials: List<String>
+    val keyTypes: List<String>?,
+    /**
+     * List of credential IDs the client will use for filtering.
+     * This parameter is optional.
+     */
+    val allowedCredentials: List<String>?
 ) : IFidoChallenge

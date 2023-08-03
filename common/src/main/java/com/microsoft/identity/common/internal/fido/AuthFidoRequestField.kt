@@ -26,5 +26,6 @@ package com.microsoft.identity.common.internal.fido
  * Request fields specific to an Auth FIDO request.
  */
 enum class AuthFidoRequestField {
-    AllowedCredentials
+    AllowedCredentials,
+    KeyTypes
 }

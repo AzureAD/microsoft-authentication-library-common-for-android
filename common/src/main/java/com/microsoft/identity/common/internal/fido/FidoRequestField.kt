@@ -31,6 +31,5 @@ enum class FidoRequestField {
     UserVerificationPolicy,
     Version,
     SubmitUrl,
-    KeyTypes,
     Context
 }
