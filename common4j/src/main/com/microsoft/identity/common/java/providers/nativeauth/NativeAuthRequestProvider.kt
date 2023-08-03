@@ -90,7 +90,10 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         LogSession.logMethodCall(tag = TAG)
 
         if (commandParameters.password.isBlank())
-            throw ClientException("$TAG password can't be empty or consists solely of whitespace characters")
+        {
+            var msg = "password can't be empty or consists solely of whitespace characters"
+            throw ClientException("$TAG $msg", msg)
+        }
 
         return SignUpStartRequest.create(
             username = commandParameters.username,
