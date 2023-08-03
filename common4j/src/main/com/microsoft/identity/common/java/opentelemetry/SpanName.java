@@ -48,5 +48,6 @@ public enum SpanName {
     AcquireTokenDcfAuthRequest,
     AcquireTokenDcfFetchToken,
     AccountStorageWithBackup,
-    EncryptionManager
+    EncryptionManager,
+    DRSDiscoveryRequest
 }
