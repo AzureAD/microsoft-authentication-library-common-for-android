@@ -30,7 +30,7 @@ import com.microsoft.identity.common.java.util.UrlUtil
  */
 class FidoChallengeFactory {
     companion object {
-        private const val DELIMITER = ","
+        const val DELIMITER = ","
         private const val PASSKEY_PROTOCOL_REQUEST_INVALID = "Passkey protocol request is invalid"
 
         /**
@@ -88,7 +88,7 @@ class FidoChallengeFactory {
          * @throws ClientException if the parameter is null or empty.
          */
         @Throws(ClientException::class)
-        private fun validateRequiredParameter(field: String, value: String?): String {
+        fun validateRequiredParameter(field: String, value: String?): String {
             if (value == null) {
                 throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field not provided")
             } else if (value.isBlank()) {
@@ -105,7 +105,7 @@ class FidoChallengeFactory {
          * @throws ClientException if the parameter is empty.
          */
         @Throws(ClientException::class)
-        private fun validateOptionalParameter(field: String, value: String?): String? {
+        fun validateOptionalParameter(field: String, value: String?): String? {
             if (value != null && value.isBlank()) {
                 throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field is empty")
             }
@@ -120,7 +120,7 @@ class FidoChallengeFactory {
          * @throws ClientException if the parameter is empty
          */
         @Throws(ClientException::class)
-        private fun validateOptionalListParameter(field: String, value: String?): List<String>? {
+        fun validateOptionalListParameter(field: String, value: String?): List<String>? {
             val param = validateOptionalParameter(field, value)
             if (param != null) {
                 return param.split(DELIMITER).toList()
