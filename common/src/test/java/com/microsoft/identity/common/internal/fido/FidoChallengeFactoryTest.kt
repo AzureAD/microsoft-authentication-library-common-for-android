@@ -23,10 +23,9 @@
 package com.microsoft.identity.common.internal.fido
 
 import android.net.Uri
+import com.microsoft.identity.common.internal.fido.FidoChallengeFactory.Companion.DELIMITER
 import com.microsoft.identity.common.java.exception.ClientException
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -254,5 +253,41 @@ class FidoChallengeFactoryTest {
             .appendQueryParameter(FidoRequestField.Context.name, context)
             .build().toString()
         FidoChallengeFactory.createFidoChallengeFromRedirect(fullUrl)
+    }
+
+    @Test
+    fun testValidateRequiredParameter_ExpectedFieldAndValue() {
+        assertEquals(
+            FidoChallengeFactory.validateRequiredParameter(FidoRequestField.Challenge.name, challengeStr),
+            challengeStr
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateRequiredParameter_MissingField() {
+        FidoChallengeFactory.validateRequiredParameter(FidoRequestField.Challenge.name, null)
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateRequiredParameter_EmptyValue() {
+        FidoChallengeFactory.validateRequiredParameter(FidoRequestField.Challenge.name, "")
+    }
+
+    @Test
+    fun testValidateOptionalListParameter_ExpectedFieldAndValue() {
+        assertEquals(
+            FidoChallengeFactory.validateOptionalListParameter(AuthFidoRequestField.AllowedCredentials.name, allowCredentialsTwoUsers),
+            allowCredentialsTwoUsers.split(DELIMITER).toList()
+        )
+    }
+
+    @Test
+    fun testValidateOptionalListParameter_MissingField() {
+        assertNull(FidoChallengeFactory.validateOptionalListParameter(AuthFidoRequestField.AllowedCredentials.name, null))
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateOptionalListParameter_EmptyValue() {
+        FidoChallengeFactory.validateOptionalListParameter(AuthFidoRequestField.AllowedCredentials.name, "")
     }
 }
