@@ -84,7 +84,8 @@ class NativeAuthCIAMAuthority (
     /**
      * TODO add documentation (learn.microsoft.com) that explains challengeTypes
      * "redirect" is added by the SDK as a default challenge type, as the server always expects
-     * this. The list is then converted in a whitespace separated string (e.g. "oob password redirect")
+     * this. Duplicates are removed, and the list is then converted in a whitespace separated string
+     * (e.g. "oob password redirect")
      */
     private fun getChallengeTypesWithDefault(challengeTypes: List<String>?): String {
         LogSession.logMethodCall(tag = TAG)
