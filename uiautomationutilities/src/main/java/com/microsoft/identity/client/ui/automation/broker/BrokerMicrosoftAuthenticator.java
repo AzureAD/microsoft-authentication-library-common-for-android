@@ -400,6 +400,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Continue");
             // the skip button
             UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/frx_skip_button");
+            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("NOT NOW");
             shouldHandleFirstRun = false;
         }
     }
