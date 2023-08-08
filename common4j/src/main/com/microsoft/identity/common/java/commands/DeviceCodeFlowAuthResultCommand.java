@@ -47,7 +47,7 @@ import lombok.NonNull;
 public class DeviceCodeFlowAuthResultCommand extends BaseCommand<AuthorizationResult> {
     private static final String TAG = DeviceCodeFlowAuthResultCommand.class.getSimpleName();
 
-    private static final String DEVICE_ID_CLAIM = "deviceid";
+    public static final String DEVICE_ID_CLAIM = "deviceid";
 
     public DeviceCodeFlowAuthResultCommand(@NonNull DeviceCodeFlowCommandParameters parameters,
                                  @NonNull BaseController controller,
