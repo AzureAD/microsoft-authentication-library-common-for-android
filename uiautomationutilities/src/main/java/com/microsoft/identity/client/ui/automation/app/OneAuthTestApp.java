@@ -112,7 +112,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/get_access_token_button");
         try {
             // Add a delay so that UI is updated with the token successfully
-            Thread.sleep(2000);
+            Thread.sleep(5000);
         } catch (final InterruptedException e) {
             e.printStackTrace();
         }
@@ -158,7 +158,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/prefer_broker_switch_button");
     }
 
-    public void selectFromAppConfiguration(final String text) throws UiObjectNotFoundException {
+    public void selectFromAppConfiguration(@NonNull final String text) throws UiObjectNotFoundException {
         final UiObject appConfigurationSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/app_configuration_spinner");
         appConfigurationSpinner.click();
         final UiObject appConfiguration = UiAutomatorUtils.obtainUiObjectWithText(text);
