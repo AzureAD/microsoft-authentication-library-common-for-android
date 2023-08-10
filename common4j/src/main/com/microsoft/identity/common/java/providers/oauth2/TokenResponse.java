@@ -97,6 +97,14 @@ public class TokenResponse implements ISuccessResponse {
     @SerializedName("refresh_token")
     private String mRefreshToken;
 
+    private boolean mIsNaaRequest = false;
+    public void setIsNaaRequest(final boolean isNaaRequest) {
+        mIsNaaRequest = isNaaRequest;
+    }
+    public final boolean isRequestForNAA() {
+        return mIsNaaRequest;
+    }
+
     /**
      * OPTIONAL, if identical to the scope requested by the client;
      * otherwise, REQUIRED.  The scope of the access token as
