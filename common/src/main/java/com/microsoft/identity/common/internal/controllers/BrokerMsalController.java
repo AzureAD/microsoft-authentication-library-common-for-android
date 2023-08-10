@@ -62,8 +62,11 @@ import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdaterUtil;
+import com.microsoft.identity.common.internal.cache.ClientActiveBrokerCache;
 import com.microsoft.identity.common.internal.cache.HelloCache;
 import com.microsoft.identity.common.internal.cache.HelloCacheResult;
+import com.microsoft.identity.common.internal.cache.IActiveBrokerCache;
 import com.microsoft.identity.common.internal.commands.parameters.AndroidActivityInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter;
 import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter;
@@ -142,7 +145,10 @@ public class BrokerMsalController extends BaseController {
         mComponents = components;
         mApplicationContext = applicationContext;
         mActiveBrokerPackageName = activeBrokerPackageName;
-        mBrokerOperationExecutor = new BrokerOperationExecutor(ipcStrategies);
+        mBrokerOperationExecutor = new BrokerOperationExecutor(
+                ipcStrategies,
+                ClientActiveBrokerCache.getCache(components.getStorageSupplier()),
+                new ActiveBrokerCacheUpdaterUtil(applicationContext));
         mHelloCache = getHelloCache();
     }
 

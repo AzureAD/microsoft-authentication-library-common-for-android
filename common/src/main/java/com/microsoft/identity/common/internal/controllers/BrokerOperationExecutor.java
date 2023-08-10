@@ -28,6 +28,8 @@ import android.os.Bundle;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.cache.IActiveBrokerCache;
+import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdaterUtil;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
@@ -51,6 +53,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import lombok.NonNull;
 
@@ -109,13 +112,20 @@ public class BrokerOperationExecutor {
         void putValueInSuccessEvent(@NonNull final ApiEndEvent event, @NonNull final T result);
     }
 
+    private final ActiveBrokerCacheUpdaterUtil mCacheUpdaterUtil;
+
     private final List<IIpcStrategy> mStrategies;
+    private final IActiveBrokerCache mActiveBrokerCache;
 
     /**
      * @param strategies list of IIpcStrategy to be invoked.
      */
-    public BrokerOperationExecutor(final @NonNull List<IIpcStrategy> strategies) {
+    public BrokerOperationExecutor(@NonNull final List<IIpcStrategy> strategies,
+                                   @NonNull final IActiveBrokerCache activeBrokerCache,
+                                   @NonNull final ActiveBrokerCacheUpdaterUtil cacheUpdaterUtil) {
         mStrategies = strategies;
+        mActiveBrokerCache = activeBrokerCache;
+        mCacheUpdaterUtil = cacheUpdaterUtil;
     }
 
     /**
@@ -228,6 +238,9 @@ public class BrokerOperationExecutor {
             operation.performPrerequisites(strategy);
             final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
             final Bundle resultBundle = strategy.communicateToBroker(brokerOperationBundle);
+
+            mCacheUpdaterUtil.updateCachedActiveBrokerFromResultBundle(mActiveBrokerCache, resultBundle);
+
             span.setStatus(StatusCode.OK);
             return operation.extractResultBundle(resultBundle);
             // TODO: Emit success rate and performance of each strategy to eSTS in a finally block.
