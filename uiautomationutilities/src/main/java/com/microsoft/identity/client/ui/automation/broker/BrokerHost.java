@@ -22,8 +22,12 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.broker;
 
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObjectNotFoundException;
 
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
@@ -64,6 +68,7 @@ public class BrokerHost extends AbstractTestBroker {
     // name for broker host APKs
     public final static String BROKER_HOST_APK = "BrokerHost.apk";
     public final static String OLD_BROKER_HOST_APK = "OldBrokerHost.apk";
+    public final static String BROKER_HOST_WITHOUT_BROKER_SELECTION_APK = "BrokerHostWithoutBrokerSelection.apk";
     public final static String BROKER_HOST_APK_PROD = "BrokerHostProd.apk";
     public final static String BROKER_HOST_APK_RC = "BrokerHostRC.apk";
     // Fragments for BrokerHost
@@ -261,6 +266,95 @@ public class BrokerHost extends AbstractTestBroker {
         return dialogMessage.replace("DeviceId:", "");
     }
 
+    public void handleTenantIdInputLegacyApp(@NonNull final String tenantId) {
+        final String inputResourceId = CommonUtils.getResourceId(
+                AbstractBrokerHost.BROKER_HOST_APP_PACKAGE_NAME,
+                "editTextTenantId"
+        );
+        UiAutomatorUtils.handleInput(inputResourceId, tenantId);
+    }
+
+    public void performGetPreProvisioningBlobButtonClickLegacyApp() {
+        final String buttonResourceId = CommonUtils.getResourceId(
+                AbstractBrokerHost.BROKER_HOST_APP_PACKAGE_NAME,
+                "getPreProvBlobBtn"
+        );
+        UiAutomatorUtils.handleButtonClick(buttonResourceId);
+        final String dialogMessage = AbstractBrokerHost.dismissDialogBoxAndGetText();
+        Assert.assertTrue(!dialogMessage.isEmpty());
+    }
+
+    public void obtainDeviceStateLegacyApp() {
+        final String buttonGetDeviceStateId = CommonUtils.getResourceId(
+                AbstractBrokerHost.BROKER_HOST_APP_PACKAGE_NAME,
+                "buttonDeviceState"
+        );
+        UiAutomatorUtils.handleButtonClick(buttonGetDeviceStateId);
+        final String dialogMessage = AbstractBrokerHost.dismissDialogBoxAndGetText();
+        Assert.assertTrue("Assert that the device state is true", dialogMessage.contains("true"));
+    }
+
+    public void performInstallCertButtonClickLegacyApp() throws UiObjectNotFoundException {
+        final String buttonResourceId = CommonUtils.getResourceId(
+                AbstractBrokerHost.BROKER_HOST_APP_PACKAGE_NAME,
+                "buttonInstallCert"
+        );
+        UiAutomatorUtils.handleButtonClick(buttonResourceId);
+
+        final UiObject dialog = UiAutomatorUtils.obtainUiObjectWithText("Choose a certificate type");
+        dialog.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+        final UiObject option = UiAutomatorUtils.obtainUiObjectWithText("Vpn & app user certificate");
+        option.click();
+
+        final UiObject okButton1 = UiAutomatorUtils.obtainUiObjectWithText("OK");
+        okButton1.click();
+
+        final UiObject namingCertificateDialog = UiAutomatorUtils.obtainUiObjectWithText("Name this certificate");
+        namingCertificateDialog.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+
+        final UiObject okButton2 = UiAutomatorUtils.obtainUiObjectWithText("OK");
+        okButton2.click();
+
+        final UiObject installedMessage = UiAutomatorUtils.obtainUiObjectWithText("Certificate is installed");
+        Assert.assertTrue("Assert that the certificate is installed", installedMessage.exists());
+    }
+
+    public String obtainWpjUpnLegacyApp() {
+        final String buttonGetWpjUpn = CommonUtils.getResourceId(
+                AbstractBrokerHost.BROKER_HOST_APP_PACKAGE_NAME,
+                "buttonGetWpjUpn"
+        );
+        UiAutomatorUtils.handleButtonClick(buttonGetWpjUpn);
+        final String dialogMessage = AbstractBrokerHost.dismissDialogBoxAndGetText();
+        return dialogMessage.replace("UPN:", "");
+    }
+
+    public void obtainDeviceTokenLegacyApp() throws UiObjectNotFoundException {
+        final String buttonGetDeviceToken = CommonUtils.getResourceId(
+                AbstractBrokerHost.BROKER_HOST_APP_PACKAGE_NAME,
+                "buttonDeviceToken"
+        );
+        UiAutomatorUtils.handleButtonClick(buttonGetDeviceToken);
+        final String textDeviceToken = CommonUtils.getResourceId(
+                AbstractBrokerHost.BROKER_HOST_APP_PACKAGE_NAME,
+                "editTextDeviceToken"
+        );
+
+        final UiObject textObj = UiAutomatorUtils.obtainUiObjectWithResourceId(textDeviceToken);
+        textObj.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+        final String token = textObj.getText();
+        Assert.assertTrue("Assert that the device token is not empty", !token.isEmpty());
+    }
+
+    public void wpjLeaveLegacyApp() {
+        final String buttonWpjLeave = CommonUtils.getResourceId(
+                AbstractBrokerHost.BROKER_HOST_APP_PACKAGE_NAME,
+                "buttonLeave"
+        );
+        UiAutomatorUtils.handleButtonClick(buttonWpjLeave);
+        final String dialogMessage = AbstractBrokerHost.dismissDialogBoxAndGetText();
+        Assert.assertTrue("Assert that the WPJ leave is successful", dialogMessage.contains("Device leave successful."));
+    }
 
     public void wpjLeave() {
         singleWpjApiFragment.launch();
