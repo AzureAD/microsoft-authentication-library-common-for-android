@@ -41,8 +41,11 @@ boolean newBrokerDiscoveryEnabledFlag = project.hasProperty("newBrokerDiscoveryE
 android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
-
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
     defaultConfig {
+        namespace 'com.microsoft.identity.common'
         multiDexEnabled true
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
@@ -74,7 +77,7 @@ android {
     //Upgrading to Java 8 in order to use YubiKit SDK
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     lintOptions {
@@ -225,7 +228,7 @@ android.libraryVariants.all { variant ->
 
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
+    classifier 'sources'
     destinationDirectory = reporting.file("$project.buildDir/outputs/jar/")
 }
 
