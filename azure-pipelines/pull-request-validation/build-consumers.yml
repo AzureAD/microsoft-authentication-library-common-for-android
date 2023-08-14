@@ -100,6 +100,7 @@ stages:
       condition: eq(variables['Build.Reason'], 'PullRequest')
       name: checkPrCILabel
     - pwsh: |
+        Write-Host "Setting version to: $env:LABEL_FOUND"
         Write-Host "Setting version to: $env:LABELFOUND"
         Write-Host "##vso[task.setvariable variable=labelFound;isOutput=true]$env:LABELFOUND"
       displayName: 'Set variable'
