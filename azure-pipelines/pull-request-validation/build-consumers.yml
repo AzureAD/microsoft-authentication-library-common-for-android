@@ -110,7 +110,6 @@ stages:
     dependsOn:
       - setupBranch
       - checkLabel
-    condition: and(succeeded(), not(eq($(skipValidation), 'true')) )
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     steps:
