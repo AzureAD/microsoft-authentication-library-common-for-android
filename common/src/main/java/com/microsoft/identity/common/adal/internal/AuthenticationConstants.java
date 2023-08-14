@@ -63,7 +63,7 @@ public final class AuthenticationConstants {
     /**
      * The Constant CHARSET_UTF8.
      */
-    private static final Charset CHARSET_UTF8 = Charset.forName("UTF-8");
+    public static final Charset CHARSET_UTF8 = Charset.forName("UTF-8");
 
     /**
      * The Constant CHARSET_ASCII.

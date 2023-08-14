@@ -89,6 +89,7 @@ stages:
   - job: msalValidation
     displayName: MSAL
     dependsOn: setupBranch
+    condition: and(succeeded(), notContains( github.event.pull_request.labels.*.name, 'Skip-Consumers-Check' ))
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     steps:
