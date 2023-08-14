@@ -40,10 +40,7 @@ boolean newBrokerDiscoveryEnabledFlag = project.hasProperty("newBrokerDiscoveryE
 
 android {
 
-    compileSdkVersion rootProject.ext.compileSdkVersion
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
+    compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
         namespace 'com.microsoft.identity.common'
         multiDexEnabled true
@@ -77,7 +74,7 @@ android {
     //Upgrading to Java 8 in order to use YubiKit SDK
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     lintOptions {
