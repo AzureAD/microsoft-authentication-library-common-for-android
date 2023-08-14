@@ -23,12 +23,15 @@
 package com.microsoft.identity.common.internal
 
 import android.accounts.AccountManager
+import android.accounts.AuthenticatorDescription
 import androidx.test.core.app.ApplicationProvider
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.internal.activebrokerdiscovery.AccountManagerBrokerDiscoveryUtil
 import com.microsoft.identity.common.internal.broker.BrokerData
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.annotation.Config
@@ -45,7 +48,6 @@ class AccountManagerBrokerDiscoveryUtilTests {
     fun testGetCurrentActiveBrokerExactMatch() {
         val accountManager = AccountManager.get(ApplicationProvider.getApplicationContext())
         Shadows.shadowOf(accountManager).addAuthenticator("com.microsoft.workaccount")
-
         val util = AccountManagerBrokerDiscoveryUtil(
             knownBrokerApps = BrokerData.prodBrokers,
             isSignedByKnownKeys = { brokerData ->
@@ -56,6 +58,34 @@ class AccountManagerBrokerDiscoveryUtilTests {
                 accountManager.authenticatorTypes
             })
         Assert.assertNull(util.getActiveBrokerFromAccountManager())
+    }
+
+    @Test
+    fun testGetCurrentActiveBrokerWithDebugAuthApp() {
+        val util = AccountManagerBrokerDiscoveryUtil(
+            knownBrokerApps = BrokerData.allBrokers,
+            isSignedByKnownKeys = { brokerData ->
+                // Mock validation.
+                brokerData == BrokerData.debugMicrosoftAuthenticator
+            },
+            getAccountManagerApps = {
+                getMockedAccountManager()?.authenticatorTypes!!
+            })
+        Assert.assertNotNull(util.getActiveBrokerFromAccountManager())
+    }
+
+    @Test
+    fun testGetCurrentActiveBrokerWithReleaseAuthApp() {
+        val util = AccountManagerBrokerDiscoveryUtil(
+            knownBrokerApps = BrokerData.prodBrokers,
+            isSignedByKnownKeys = { brokerData ->
+                // Mock validation.
+                brokerData == BrokerData.prodMicrosoftAuthenticator
+            },
+            getAccountManagerApps = {
+                getMockedAccountManager()?.authenticatorTypes!!
+            })
+        Assert.assertNotNull(util.getActiveBrokerFromAccountManager())
     }
 
     @Test
@@ -98,5 +128,21 @@ class AccountManagerBrokerDiscoveryUtilTests {
     fun testGetCurrentActiveBrokerNoBrokeRegistered() {
         val util = AccountManagerBrokerDiscoveryUtil(ApplicationProvider.getApplicationContext())
         Assert.assertNull(util.getActiveBrokerFromAccountManager())
+    }
+
+    private fun getMockedAccountManager(): AccountManager? {
+        val mockedAccountManager = Mockito.mock(AccountManager::class.java)
+        val authenticatorDescription = AuthenticatorDescription(
+            "com.microsoft.workaccount",
+            AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
+            0,  // label id
+            0,  // icon id
+            0,  // small icon id
+            0 // pref id
+        )
+        val mockedAuthenticator = Mockito.spy(authenticatorDescription)
+        val mockedAuthenticatorTypes = arrayOf(mockedAuthenticator)
+        Mockito.`when`(mockedAccountManager.authenticatorTypes).thenReturn(mockedAuthenticatorTypes)
+        return mockedAccountManager
     }
 }

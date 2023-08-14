@@ -11,6 +11,8 @@ V.NEXT
 - [MINOR] Capture perf telemetry for cache & network operations (#2124)
 - [MINOR] Add method to flush shared preference file manager (#2130)
 - [PATCH] Improve logging in BrokerMsalController.verifyBrokerVersionIsSupported (#2132)
+- [PATCH] Fix NPE in OTEL code for DCF flow (#2139)
+- [PATCH] Fixed debug apps not recognized as active broker issue (#2138)
 
 V.14.0.1
 ----------
@@ -33,6 +35,7 @@ V.14.0.0
 - [PATCH] Fix AbstractMethodError in makeCurrentSpan for otel (#2083)
 - [MINOR] Emit number of concurrent silent requests in telemetry (#2093)
 - [PATCH] Fix missing visibility of the LTW app (#2097)
+- [MINOR] Add support to MsalTestApp for selecting Auth Scheme, Click Generate SHR & remove user button (#2103)
 - [MINOR] Add span names for storage and encryption spans (#2104)
 - [MINOR] Invalid required broker protocol version check in Acquire Token/Acquire Token Silent (#2101)
 - [PATCH] Add UI elemnent wait timeout in AadLoginComponentHandler (#2095)
