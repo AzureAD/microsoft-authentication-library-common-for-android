@@ -42,7 +42,7 @@ android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '11'
     }
     defaultConfig {
         namespace 'com.microsoft.identity.common'
