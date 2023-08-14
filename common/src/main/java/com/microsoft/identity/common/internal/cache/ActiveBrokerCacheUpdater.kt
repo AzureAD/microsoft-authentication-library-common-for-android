@@ -24,10 +24,8 @@ package com.microsoft.identity.common.internal.cache
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.internal.broker.BrokerValidator
-import com.microsoft.identity.common.internal.broker.PackageHelper
 import com.microsoft.identity.common.logging.Logger
 
 /**
@@ -43,17 +41,19 @@ import com.microsoft.identity.common.logging.Logger
  *
  * This class exists to facilitate the "packing" and "unpacking" active broker app on the response bundle.
  * */
-class ActiveBrokerCacheUpdaterUtil(
-    private val isValidBroker: (BrokerData) -> Boolean) {
+class ActiveBrokerCacheUpdater(
+    private val isValidBroker: (BrokerData) -> Boolean,
+    private val cache: IActiveBrokerCache) {
 
-    constructor(context: Context): this(
+    constructor(context: Context, cache: IActiveBrokerCache): this(
         isValidBroker = { brokerData: BrokerData ->
             BrokerValidator(context).isSignedByKnownKeys(brokerData)
-        }
+        },
+        cache = cache
     )
 
     companion object {
-        private val TAG = ActiveBrokerCacheUpdaterUtil::class.simpleName
+        private val TAG = ActiveBrokerCacheUpdater::class.simpleName
 
         /**
          * ACTIVE BROKER KEYS (Use these keys to retrieve the active broker that executed the request)
@@ -83,10 +83,8 @@ class ActiveBrokerCacheUpdaterUtil(
      * update [IActiveBrokerCache] with it.
      *
      * @param bundle       The result bundle. could be null (for backward compatibility).
-     * @param cache        The [IActiveBrokerCache] to update with.
      */
-    fun updateCachedActiveBrokerFromResultBundle(cache: IActiveBrokerCache,
-                                                 bundle: Bundle?) {
+    fun updateCachedActiveBrokerFromResultBundle(bundle: Bundle?) {
         val methodTag = "$TAG:updateCachedActiveBrokerFromResultBundle"
         if (bundle == null) {
             return

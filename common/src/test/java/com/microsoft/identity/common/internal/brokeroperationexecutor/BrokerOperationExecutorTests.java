@@ -32,7 +32,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.internal.activebrokerdiscovery.InMemoryActiveBrokerCache;
 import com.microsoft.identity.common.internal.broker.BrokerData;
-import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdaterUtil;
+import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.cache.IActiveBrokerCache;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
@@ -179,8 +179,10 @@ public class BrokerOperationExecutorTests {
                 "com.microsoft.newActiveBroker",
                 "SOME_SIG_HASH");
 
-        final ActiveBrokerCacheUpdaterUtil mUtil = new ActiveBrokerCacheUpdaterUtil(
-                (brokerData) -> brokerData.equals(newActiveBroker)
+        final IActiveBrokerCache cache = new InMemoryActiveBrokerCache();
+        final ActiveBrokerCacheUpdater mCacheUpdater = new ActiveBrokerCacheUpdater(
+                (brokerData) -> brokerData.equals(newActiveBroker),
+                cache
         );
 
         final IIpcStrategy strategy = new IIpcStrategy() {
@@ -188,7 +190,7 @@ public class BrokerOperationExecutorTests {
             public @NonNull Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
                 final Bundle result = new Bundle();
                 result.putBoolean(SUCCESS_BUNDLE_KEY, true);
-                mUtil.appendActiveBrokerToResultBundle(result, newActiveBroker);
+                ActiveBrokerCacheUpdater.appendActiveBrokerToResultBundle(result, newActiveBroker);
                 return result;
             }
 
@@ -201,8 +203,7 @@ public class BrokerOperationExecutorTests {
         final List<IIpcStrategy> strategyList = new ArrayList<>();
         strategyList.add(strategy);
 
-        final IActiveBrokerCache cache = new InMemoryActiveBrokerCache();
-        final BrokerOperationExecutor executor = new BrokerOperationExecutor(strategyList, cache, mUtil);
+        final BrokerOperationExecutor executor = new BrokerOperationExecutor(strategyList, mCacheUpdater);
 
         Assert.assertTrue(executor.execute(getMockParameter(), getBrokerOperation()));
         Assert.assertEquals(newActiveBroker, cache.getCachedActiveBroker());
@@ -237,8 +238,7 @@ public class BrokerOperationExecutorTests {
         try {
             final BrokerOperationExecutor executor = new BrokerOperationExecutor(
                     strategyList,
-                    cache,
-                    new ActiveBrokerCacheUpdaterUtil((brokerData) -> true));
+                    new ActiveBrokerCacheUpdater((brokerData) -> true, cache));
             Assert.assertTrue(executor.execute(getMockParameter(), getBrokerOperation()));
         } catch (final BaseException e) {
             Assert.fail("Unexpected exception.");
@@ -249,8 +249,8 @@ public class BrokerOperationExecutorTests {
         try {
             final BrokerOperationExecutor executor = new BrokerOperationExecutor(
                     strategyList,
-                    new InMemoryActiveBrokerCache(),
-                    new ActiveBrokerCacheUpdaterUtil((brokerData) -> true));
+                    new ActiveBrokerCacheUpdater((brokerData) -> true,
+                            new InMemoryActiveBrokerCache()));
             executor.execute(getMockParameter(), getBrokerOperation());
             Assert.fail("Failure is expected.");
         } catch (final BaseException e) {
@@ -264,8 +264,8 @@ public class BrokerOperationExecutorTests {
         try {
             final BrokerOperationExecutor executor = new BrokerOperationExecutor(
                     strategyList,
-                    new InMemoryActiveBrokerCache(),
-                    new ActiveBrokerCacheUpdaterUtil((brokerData) -> true));
+                    new ActiveBrokerCacheUpdater((brokerData) -> true,
+                            new InMemoryActiveBrokerCache()));
             executor.execute(getMockParameter(), getBrokerOperation());
             Assert.fail("Failure is expected.");
         } catch (final BaseException e) {
@@ -278,8 +278,8 @@ public class BrokerOperationExecutorTests {
         try {
             final BrokerOperationExecutor executor = new BrokerOperationExecutor(
                     strategyList,
-                    new InMemoryActiveBrokerCache(),
-                    new ActiveBrokerCacheUpdaterUtil((brokerData) -> true));
+                    new ActiveBrokerCacheUpdater((brokerData) -> true,
+                            new InMemoryActiveBrokerCache()));
             executor.execute(getMockParameter(), getBrokerOperation());
             Assert.fail("Failure is expected.");
         } catch (final BaseException e) {
@@ -292,8 +292,8 @@ public class BrokerOperationExecutorTests {
         try {
             final BrokerOperationExecutor executor = new BrokerOperationExecutor(
                     strategyList,
-                    new InMemoryActiveBrokerCache(),
-                    new ActiveBrokerCacheUpdaterUtil((brokerData) -> true));
+                    new ActiveBrokerCacheUpdater((brokerData) -> true,
+                            new InMemoryActiveBrokerCache()));
             executor.execute(getMockParameter(), getBrokerOperation());
             Assert.fail("Failure is expected.");
         } catch (final BaseException e) {
