@@ -94,18 +94,23 @@ stages:
         echo "Looking for label at https://api.github.com/repos/$BUILD_REPOSITORY_ID/issues/$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER/labels"
         if curl -s "https://api.github.com/repos/$BUILD_REPOSITORY_ID/issues/$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER/labels" | grep '"name": "Skip-Consumers-Check"'
         then
-          echo "##vso[task.setvariable variable=prWithCILabel;isOutput=true]true"
-          echo "fullci label found!"
+          echo "##vso[task.setvariable variable=labelFound;isOutput=true]true"
+          echo "Skip-Consumers-Check label found"
         fi
       condition: eq(variables['Build.Reason'], 'PullRequest')
       name: checkPrCILabel
+    - pwsh: |
+        Write-Host "Setting version to: $env:LABELFOUND"
+        Write-Host "##vso[task.setvariable variable=labelFound;isOutput=true]$env:LABELFOUND"
+      displayName: 'Set variable'
+      name: set_variable
   # msal
   - job: msalValidation
     displayName: MSAL
     dependsOn:
       - setupBranch
       - checkLabel
-    condition: and(succeeded(), not(eq(variables['prWithCILabel'], 'true')) )
+    condition: and(succeeded(), not(eq(variables['labelFound'], 'true')) )
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     steps:
