@@ -110,10 +110,12 @@ stages:
     dependsOn:
       - setupBranch
       - checkLabel
-    condition: and(succeeded(), not(eq(variables['skipValidation'], 'true')) )
+    condition: and(succeeded(), not(eq($(skipValidation), 'true')) )
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     steps:
+    - pwsh: |
+        Write-Host "Should skip validation: $(skipValidation)"
     - template: ../templates/steps/automation-cert.yml
     - checkout: msal
       displayName: Checkout msal repository
