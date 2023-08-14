@@ -102,7 +102,9 @@ stages:
   # msal
   - job: msalValidation
     displayName: MSAL
-    dependsOn: setupBranch, checkLabel
+    dependsOn:
+      - setupBranch
+      - checkLabel
     condition: and(succeeded(), not(eq(variables['prWithCILabel'], 'true')) )
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
@@ -136,7 +138,9 @@ stages:
     displayName: Broker
     cancelTimeoutInMinutes: 1
     timeoutInMinutes: 120
-    dependsOn: setupBranch, checkLabel
+    dependsOn:
+      - setupBranch
+      - checkLabel
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     pool:
@@ -172,7 +176,9 @@ stages:
   # Linux broker
   - job: linuxBrokerValidation
     displayName: Linux Broker
-    dependsOn: setupBranch, checkLabel
+    dependsOn:
+      - setupBranch
+      - checkLabel
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     pool:
@@ -227,7 +233,9 @@ stages:
   # adal
   - job: adalValidation
     displayName: ADAL
-    dependsOn: setupBranch, checkLabel
+    dependsOn:
+      - setupBranch
+      - checkLabel
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     steps:
