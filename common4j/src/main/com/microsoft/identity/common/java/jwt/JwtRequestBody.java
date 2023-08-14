@@ -58,9 +58,6 @@ public final class JwtRequestBody extends AbstractJwtRequest {
     @SerializedName(ClaimNames.REDIRECT_URI)
     private String mRedirectUri;
 
-    @SerializedName(ClaimNames.BRK_REDIRECT_URI)
-    private String mBrkRedirectUri;
-
     @Setter(AccessLevel.NONE)
     @SerializedName(ClaimNames.IAT)
     private String mIat;
