@@ -13,11 +13,11 @@ V.NEXT
 - [PATCH] Improve logging in BrokerMsalController.verifyBrokerVersionIsSupported (#2132)
 - [PATCH] Fix NPE in OTEL code for DCF flow (#2139)
 - [PATCH] Fixed debug apps not recognized as active broker issue (#2138)
+- [MINOR] Updated target, compile sdk, AGP and gradle versions  (#2142)
 
 V.14.0.1
 ----------
 - [PATCH] Reverting token removal logic (#2117)
-- [MINOR] Updated target and compile sdk versions to 34 (#2125)
 
 
 V.14.0.0
