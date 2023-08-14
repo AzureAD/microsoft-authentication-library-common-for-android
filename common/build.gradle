@@ -39,7 +39,6 @@ if (project.hasProperty("distCommon4jVersion") && project.distCommon4jVersion !=
 boolean newBrokerDiscoveryEnabledFlag = project.hasProperty("newBrokerDiscoveryEnabledFlag")
 
 android {
-
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
         namespace 'com.microsoft.identity.common'
