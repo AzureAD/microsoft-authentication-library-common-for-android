@@ -28,6 +28,7 @@ import android.os.Bundle;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
@@ -109,13 +110,17 @@ public class BrokerOperationExecutor {
         void putValueInSuccessEvent(@NonNull final ApiEndEvent event, @NonNull final T result);
     }
 
+    private final ActiveBrokerCacheUpdater mCacheUpdaterManager;
+
     private final List<IIpcStrategy> mStrategies;
 
     /**
      * @param strategies list of IIpcStrategy to be invoked.
      */
-    public BrokerOperationExecutor(final @NonNull List<IIpcStrategy> strategies) {
+    public BrokerOperationExecutor(@NonNull final List<IIpcStrategy> strategies,
+                                   @NonNull final ActiveBrokerCacheUpdater cacheUpdaterManager) {
         mStrategies = strategies;
+        mCacheUpdaterManager = cacheUpdaterManager;
     }
 
     /**
@@ -228,6 +233,9 @@ public class BrokerOperationExecutor {
             operation.performPrerequisites(strategy);
             final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
             final Bundle resultBundle = strategy.communicateToBroker(brokerOperationBundle);
+
+            mCacheUpdaterManager.updateCachedActiveBrokerFromResultBundle(resultBundle);
+
             span.setStatus(StatusCode.OK);
             return operation.extractResultBundle(resultBundle);
             // TODO: Emit success rate and performance of each strategy to eSTS in a finally block.
