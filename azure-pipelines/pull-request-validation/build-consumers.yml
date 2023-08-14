@@ -102,7 +102,7 @@ stages:
     - pwsh: |
         Write-Host "Setting version to: $env:LABEL_FOUND"
         Write-Host "Setting version to: $env:LABELFOUND"
-        Write-Host "$(labelfound)"
+        Write-Host "$(checkPrCILabel.labelfound)"
         Write-Host "##vso[task.setvariable variable=skipValidation;isOutput=true]$env:LABELFOUND"
       displayName: 'Set variable'
       name: set_variable
