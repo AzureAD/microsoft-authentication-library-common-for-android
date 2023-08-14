@@ -1,12 +1,22 @@
 V.NEXT
 ----------
+- [MAJOR] Move Broker side active broker cache to broker repo (#2123)
 - [MINOR] Add span names for the BrokerOperationRequestDispatcher and PassthroughExecutor (#2100)
 - [PATCH] Add key derivation method that takes SecretKey object as argument (#2113)
 - [MAJOR] AccountManagerStorageHelper should not force cast IBrokerAccount into AndroidBrokerAccount (#2110) (Breaking change to Broker only)
 - [MAJOR] Tidy up BrokerValidator (#2107)
 - [PATCH] Adding null checks for CancelHelper (CBA) (#2105)
-- [MINOR] Update YubiKit version to 2.3.0 (#2112)
 - [MINOR] Updated target and compile sdk versions to 34 (#2125)
+- [MINOR] Update YubiKit version to 2.3.0 (#2112) Note: This version of YubiKit contains new logging libraries. Projects using the SLF4j and/or logback-android dependencies must bump their versions to at least 2.0.7 and 3.0.0, respectively.
+- [MINOR] Capture perf telemetry for cache & network operations (#2124)
+- [MINOR] Add method to flush shared preference file manager (#2130)
+- [PATCH] Improve logging in BrokerMsalController.verifyBrokerVersionIsSupported (#2132)
+- [PATCH] Fix NPE in OTEL code for DCF flow (#2139)
+- [PATCH] Fixed debug apps not recognized as active broker issue (#2138)
+
+V.14.0.1
+----------
+- [PATCH] Reverting token removal logic (#2117)
 
 V.14.0.0
 ----------
@@ -25,6 +35,7 @@ V.14.0.0
 - [PATCH] Fix AbstractMethodError in makeCurrentSpan for otel (#2083)
 - [MINOR] Emit number of concurrent silent requests in telemetry (#2093)
 - [PATCH] Fix missing visibility of the LTW app (#2097)
+- [MINOR] Add support to MsalTestApp for selecting Auth Scheme, Click Generate SHR & remove user button (#2103)
 - [MINOR] Add span names for storage and encryption spans (#2104)
 - [MINOR] Invalid required broker protocol version check in Acquire Token/Acquire Token Silent (#2101)
 - [PATCH] Add UI elemnent wait timeout in AadLoginComponentHandler (#2095)

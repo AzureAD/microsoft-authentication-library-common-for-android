@@ -42,7 +42,7 @@ public class ResultFuture<T> implements Future<T> {
 
     private final CountDownLatch mCountDownLatch = new CountDownLatch(1);
     private T mResult = null;
-    private Exception mException = null;
+    private Throwable mException = null;
     private final List<BiConsumer<T, Throwable>> mConsumers = new ArrayList<>();
 
     @Override
@@ -93,7 +93,7 @@ public class ResultFuture<T> implements Future<T> {
      *
      * @param exception The Exception to set.
      */
-    public synchronized void setException(@NonNull final Exception exception) {
+    public synchronized void setException(@NonNull final Throwable exception) {
         mException = exception;
         mCountDownLatch.countDown();
 

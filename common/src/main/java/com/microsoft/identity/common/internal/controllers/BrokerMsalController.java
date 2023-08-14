@@ -1189,7 +1189,8 @@ public class BrokerMsalController extends BaseController {
                 throw new UnsupportedBrokerException(mActiveBrokerPackageName);
             }
         } catch (final ClientException e) {
-            Logger.error(methodTag, "Unable to read broker result from result bundle", e);
+            Logger.info(methodTag, "ResultBundle does not contain BrokerResult. " +
+                    "So, this is not likely a broker version supported issue. Continuing.");
         }
     }
 }
