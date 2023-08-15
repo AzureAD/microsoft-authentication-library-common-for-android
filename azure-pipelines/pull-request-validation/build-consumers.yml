@@ -146,6 +146,8 @@ stages:
       - checkLabel
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+      skipValidation: $[ dependencies.checkLabel.outputs['checkPrCILabel.skipValidation'] ]
+    condition: and(succeeded(), not(eq(variables['skipValidation'], 'true')) )
     pool:
       name: 1ES-AndroidPool-EOC-Test
     steps:
@@ -184,6 +186,8 @@ stages:
       - checkLabel
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+      skipValidation: $[ dependencies.checkLabel.outputs['checkPrCILabel.skipValidation'] ]
+    condition: and(succeeded(), not(eq(variables['skipValidation'], 'true')) )
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -241,6 +245,8 @@ stages:
       - checkLabel
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+      skipValidation: $[ dependencies.checkLabel.outputs['checkPrCILabel.skipValidation'] ]
+    condition: and(succeeded(), not(eq(variables['skipValidation'], 'true')) )
     steps:
     - checkout: adal
       displayName: Checkout adal repository
