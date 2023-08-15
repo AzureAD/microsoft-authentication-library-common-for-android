@@ -169,7 +169,9 @@ stages:
         workingDirectory: $(Agent.BuildDirectory)/s/common
     - task: Gradle@2
       displayName: Assemble broker
-      ${{ if eq(variables.validationOptional, 'true') }}:
+      variables:
+        pleaseStop: $('validationOptional')
+      ${{ if eq(variables.pleaseStop, 'true') }}:
         continueOnError: true
       inputs:
         tasks: AADAuthenticator:clean AADAuthenticator:assembleLocal --build-cache --info
@@ -271,7 +273,7 @@ stages:
         workingDirectory: $(Agent.BuildDirectory)/s/common
     - task: Gradle@2
       displayName: Assemble adal
-      ${{ if eq(variables.validationOptional, 'true') }}:
+      ${{ if eq(variables['validationOptional'], 'true') }}:
         continueOnError: true
       inputs:
         tasks: clean adal:assembleLocal
