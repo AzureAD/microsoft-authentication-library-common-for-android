@@ -169,9 +169,7 @@ stages:
         workingDirectory: $(Agent.BuildDirectory)/s/common
     - task: Gradle@2
       displayName: Assemble broker
-      variables:
-        pleaseStop: $('validationOptional')
-      ${{ if eq(variables.pleaseStop, 'true') }}:
+      ${{ if eq($(validationOptional), 'true') }}:
         continueOnError: true
       inputs:
         tasks: AADAuthenticator:clean AADAuthenticator:assembleLocal --build-cache --info
