@@ -22,14 +22,32 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
+import android.webkit.WebView
+import androidx.lifecycle.findViewTreeLifecycleOwner
+import com.microsoft.identity.common.java.opentelemetry.IFidoTelemetryHelper
+import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback
+
 /**
- * Representation of a manager that handles interactions with a passkey provider (usually through an API).
+ * Instantiates AbstractFidoChallengeHandler objects.
  */
-interface IFidoManager {
+class FidoChallengeHandlerFactory {
     /**
-     * Interacts with the FIDO credential provider and returns an assertion.
-     * @param challenge AuthFidoChallenge received from the server.
-     * @return assertion
+     * Creates a FidoChallengeHandler.
+     * @param manager IFidoManager instance.
+     * @param webView current WebView.
+     * @param telemetryHelper IFidoTelemetryHelper instance.
+     * @param keyTypes list of acceptable key types.
+     * @return an AbstractFidoChallengeHandler.
      */
-    suspend fun authenticate(challenge: AuthFidoChallenge): String
+    fun createFidoChallengeHandler(
+        manager: IFidoManager,
+        webView: WebView,
+        completionCallback: IAuthorizationCompletionCallback,
+        telemetryHelper: IFidoTelemetryHelper,
+        keyTypes: List<String>
+    ): AbstractFidoChallengeHandler {
+        //Once we get security key support, this is where we will prompt a user with a dialog to choose which type of credentials they want to sign in with.
+        //But for now, this will always return a PassKeyFidoChallengeHandler.
+        return PassKeyFidoChallengeHandler(manager, webView, webView.findViewTreeLifecycleOwner(), telemetryHelper)
+    }
 }

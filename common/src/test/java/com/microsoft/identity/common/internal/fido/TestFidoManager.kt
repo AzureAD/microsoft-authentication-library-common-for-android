@@ -22,14 +22,20 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
-/**
- * Representation of a manager that handles interactions with a passkey provider (usually through an API).
- */
-interface IFidoManager {
-    /**
-     * Interacts with the FIDO credential provider and returns an assertion.
-     * @param challenge AuthFidoChallenge received from the server.
-     * @return assertion
-     */
-    suspend fun authenticate(challenge: AuthFidoChallenge): String
+class TestFidoManager () : IFidoManager{
+    companion object {
+        const val EXCEPTION_CHALLENGE = "Throw exception in manager"
+    }
+    override suspend fun authenticate(challenge: AuthFidoChallenge): String {
+        if (challenge.challenge == EXCEPTION_CHALLENGE) {
+            throw Exception("Throwing an exception")
+        }
+        //Example assertion from https://developer.android.com/training/sign-in/passkeys#configure
+        return """{
+            "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiVDF4Q3NueE0yRE5MMktkSzVDTGE2Zk1oRDdPQnFobzZzeXpJbmtfbi1VbyIsIm9yaWdpbiI6ImFuZHJvaWQ6YXBrLWtleS1oYXNoOk1MTHpEdll4UTRFS1R3QzZVNlpWVnJGUXRIOEdjVi0xZDQ0NEZLOUh2YUkiLCJhbmRyb2lkUGFja2FnZU5hbWUiOiJjb20uZ29vZ2xlLmNyZWRlbnRpYWxtYW5hZ2VyLnNhbXBsZSJ9",
+            "authenticatorData": "j5r_fLFhV-qdmGEwiukwD5E_5ama9g0hzXgN8thcFGQdAAAAAA",
+            "signature": "MEUCIQCO1Cm4SA2xiG5FdKDHCJorueiS04wCsqHhiRDbbgITYAIgMKMFirgC2SSFmxrh7z9PzUqr0bK1HZ6Zn8vZVhETnyQ",
+            "userHandle": "2HzoHm_hY0CjuEESY9tY6-3SdjmNHOoNqaPDcZGzsr0"
+        }"""
+    }
 }

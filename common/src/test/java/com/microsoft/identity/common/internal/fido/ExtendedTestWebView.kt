@@ -22,14 +22,30 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
-/**
- * Representation of a manager that handles interactions with a passkey provider (usually through an API).
- */
-interface IFidoManager {
-    /**
-     * Interacts with the FIDO credential provider and returns an assertion.
-     * @param challenge AuthFidoChallenge received from the server.
-     * @return assertion
-     */
-    suspend fun authenticate(challenge: AuthFidoChallenge): String
+import android.webkit.WebView
+import androidx.test.core.app.ApplicationProvider
+
+class ExtendedTestWebView : WebView(ApplicationProvider.getApplicationContext()) {
+    var urlLoaded = false
+    var headers : MutableMap<String, String>? = null
+
+    override fun post(action: Runnable?): Boolean {
+        //Running the action right away instead of putting in a message queue.
+        action?.run()
+        return true
+    }
+
+    override fun loadUrl(url: String, additionalHttpHeaders: MutableMap<String, String>) {
+        urlLoaded = true
+        headers = additionalHttpHeaders
+    }
+
+    fun isAssertionHeaderEmpty() : Boolean {
+        headers?.let {
+            val assertion = it[FidoResponseField.Assertion.name]
+                ?: throw Exception("No assertion header found.")
+            return assertion.isBlank()
+        }
+        throw Exception("Headers is null.")
+    }
 }
