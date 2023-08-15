@@ -93,11 +93,6 @@ android {
             exclude 'com/microsoft/identity/common/integration'
             exclude 'com/microsoft/identity/common/ropc'
         }
-//        compileOptions {
-//            // Sets Java compatibility to Java 8
-//            sourceCompatibility JavaVersion.VERSION_1_8
-//            targetCompatibility JavaVersion.VERSION_1_8
-//        }
     }
 
     flavorDimensions "main"
