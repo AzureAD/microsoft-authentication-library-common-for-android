@@ -31,23 +31,30 @@ import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizatio
  * Instantiates AbstractFidoChallengeHandler objects.
  */
 class FidoChallengeHandlerFactory {
-    /**
-     * Creates a FidoChallengeHandler.
-     * @param manager IFidoManager instance.
-     * @param webView current WebView.
-     * @param telemetryHelper IFidoTelemetryHelper instance.
-     * @param keyTypes list of acceptable key types.
-     * @return an AbstractFidoChallengeHandler.
-     */
-    fun createFidoChallengeHandler(
-        manager: IFidoManager,
-        webView: WebView,
-        completionCallback: IAuthorizationCompletionCallback,
-        telemetryHelper: IFidoTelemetryHelper,
-        keyTypes: List<String>
-    ): AbstractFidoChallengeHandler {
-        //Once we get security key support, this is where we will prompt a user with a dialog to choose which type of credentials they want to sign in with.
-        //But for now, this will always return a PassKeyFidoChallengeHandler.
-        return PassKeyFidoChallengeHandler(manager, webView, webView.findViewTreeLifecycleOwner(), telemetryHelper)
+    companion object {
+        /**
+         * Creates a FidoChallengeHandler.
+         * @param manager IFidoManager instance.
+         * @param webView current WebView.
+         * @param telemetryHelper IFidoTelemetryHelper instance.
+         * @param keyTypes list of acceptable key types.
+         * @return an AbstractFidoChallengeHandler.
+         */
+        @JvmStatic
+        fun createFidoChallengeHandler(
+            manager: IFidoManager,
+            webView: WebView,
+            telemetryHelper: IFidoTelemetryHelper,
+            keyTypes: List<String>
+        ): AbstractFidoChallengeHandler {
+            //Once we get security key support, this is where we will prompt a user with a dialog to choose which type of credentials they want to sign in with.
+            //But for now, this will always return a PassKeyFidoChallengeHandler.
+            return PassKeyFidoChallengeHandler(
+                manager,
+                webView,
+                webView.findViewTreeLifecycleOwner(),
+                telemetryHelper
+            )
+        }
     }
 }
