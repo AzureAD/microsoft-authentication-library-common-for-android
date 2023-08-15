@@ -108,7 +108,7 @@ stages:
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
       skipValidation: $[ dependencies.checkLabel.outputs['checkPrCILabel.skipValidation'] ]
-    condition: and(succeeded(), not(eq($(skipValidation), 'true')) )
+    condition: and(succeeded(), not(eq(variables['skipValidation'], 'true')) )
     steps:
     - pwsh: |
         Write-Host "Should skip validation: $(skipValidation)"
