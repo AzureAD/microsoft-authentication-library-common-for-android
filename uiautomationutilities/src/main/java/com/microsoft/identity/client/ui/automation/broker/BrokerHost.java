@@ -194,6 +194,20 @@ public class BrokerHost extends AbstractTestBroker {
         return singleWpjApiFragment.getDeviceState();
     }
 
+    @Nullable
+    public String getBlob(@NonNull final String tenantId) {
+        Logger.i(TAG, "Get Blob..");
+        singleWpjApiFragment.launch();
+        return singleWpjApiFragment.getBlob(tenantId);
+    }
+
+    @NonNull
+    public String getDeviceToken() {
+        Logger.i(TAG, "Get Device Token..");
+        singleWpjApiFragment.launch();
+        return singleWpjApiFragment.getDeviceToken();
+    }
+
     @Override
     public void overwriteFlights(@NonNull final String flightsJson) {
         Logger.i(TAG, "Overwrite Flights..");

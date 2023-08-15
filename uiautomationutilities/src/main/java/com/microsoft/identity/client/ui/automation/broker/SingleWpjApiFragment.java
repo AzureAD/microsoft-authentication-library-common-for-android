@@ -54,6 +54,8 @@ public class SingleWpjApiFragment extends AbstractBrokerHost {
     public final static String JOIN_TENANT_BUTTON_ID = "button_join_tenant";
     // Resource Id for the edit text
     public final static String TENANT_EDIT_TEXT = "edit_text_tenant_id";
+    public final static String GET_BLOB_BUTTON_ID = "button_get_blob";
+    public final static String GET_DEVICE_TOKEN_BUTTON_ID = "button_get_device_token";
 
     /**
      * Perform a wpj leave operation.
@@ -159,6 +161,17 @@ public class SingleWpjApiFragment extends AbstractBrokerHost {
         final IPromptHandler promptHandler = getPromptHandler(isFederatedUser, promptHandlerParameters);
         promptHandler.handlePrompt(username, password);
 
+        return dismissDialogBoxAndGetText();
+    }
+
+    public String getBlob(@NonNull String tenantId) {
+        fillTextBox(USERNAME_EDIT_TEXT, tenantId);
+        clickButton(GET_BLOB_BUTTON_ID);
+        return dismissDialogBoxAndGetText();
+    }
+
+    public String getDeviceToken() {
+        clickButton(GET_DEVICE_TOKEN_BUTTON_ID);
         return dismissDialogBoxAndGetText();
     }
 }
