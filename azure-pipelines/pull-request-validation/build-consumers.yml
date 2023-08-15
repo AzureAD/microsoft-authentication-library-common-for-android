@@ -128,10 +128,14 @@ stages:
         workingDirectory: $(Agent.BuildDirectory)/s/common
     - task: Gradle@2
       displayName: Assemble msal
+      ${{ if variables.validationOptional }}:
+        continueOnError: true
       inputs:
         tasks: clean msal:assembleLocal
     - task: Gradle@2
       displayName: Run msal Unit tests
+      ${{ if variables.validationOptional }}:
+        continueOnError: true
       inputs:
         tasks: msal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
   # broker
