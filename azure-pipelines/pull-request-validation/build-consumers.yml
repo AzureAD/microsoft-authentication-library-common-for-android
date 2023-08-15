@@ -127,7 +127,7 @@ stages:
         workingDirectory: $(Agent.BuildDirectory)/s/common
     - task: Gradle@2
       displayName: Assemble c$(validationOptional) msal
-      ${{ if eq(variables.validationOptional, 'true') }}:
+      ${{ if eq($(validationOptional), 'true') }}:
         continueOnError: true
       inputs:
         tasks: clean msal:assembleLocal
