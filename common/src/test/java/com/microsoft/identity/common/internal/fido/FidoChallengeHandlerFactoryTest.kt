@@ -52,6 +52,6 @@ class FidoChallengeHandlerFactoryTest {
             telemetryHelper = testFidoTelemetryHelper,
             keyTypes = keyTypes
         )
-        assertTrue(challengeHandler is PassKeyFidoChallengeHandler)
+        assertTrue(challengeHandler is PasskeyFidoChallengeHandler)
     }
 }

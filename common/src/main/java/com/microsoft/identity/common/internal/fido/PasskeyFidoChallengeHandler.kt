@@ -32,9 +32,9 @@ import kotlinx.coroutines.launch
 /**
  * Handles a FidoChallenge by either creating or authenticating with a passkey.
  */
-class PassKeyFidoChallengeHandler
+class PasskeyFidoChallengeHandler
 /**
- * Creates a PassKeyFidoChallengeHandler instance.
+ * Creates a PasskeyFidoChallengeHandler instance.
  * @param fidoManager IFidoManager instance.
  * @param webView Current WebView.
  * @param lifecycleOwner instance to get coroutine scope from.
@@ -45,7 +45,7 @@ class PassKeyFidoChallengeHandler
     private val lifecycleOwner: LifecycleOwner?,
     telemetryHelper: IFidoTelemetryHelper
 ) : AbstractFidoChallengeHandler(webView, telemetryHelper) {
-    val TAG = PassKeyFidoChallengeHandler::class.simpleName.toString()
+    val TAG = PasskeyFidoChallengeHandler::class.simpleName.toString()
 
     override fun processChallenge(fidoChallenge: IFidoChallenge): Void? {
         val methodTag = "$TAG:processChallenge"
@@ -66,16 +66,18 @@ class PassKeyFidoChallengeHandler
                     respondToChallengeWithEmptyAssertion(fidoChallenge.submitUrl, fidoChallenge.context)
                 }
             }
-        } else {
-            if (lifecycleOwner == null) {
-                Logger.error(methodTag, "Cannot get lifecycle owner needed for FIDO API calls.", null)
-            }
-            if (fidoChallenge !is AuthFidoChallenge) {
-                Logger.error(methodTag, "FidoChallenge object is of type " + fidoChallenge::class.simpleName.toString() + ", which is unexpected and not supported.", null)
-            }
-            telemetryHelper.setResultFailure("Failed directly in PasskeyFidoChallengeHandler. Check logs for more details.")
-            respondToChallengeWithEmptyAssertion(fidoChallenge.submitUrl, fidoChallenge.context)
+            return null
         }
+        var errorMessage = "Failed based on parameter values."
+        if (lifecycleOwner == null) {
+            errorMessage += " Cannot get lifecycle owner needed for FIDO API calls."
+        }
+        if (fidoChallenge !is AuthFidoChallenge) {
+            errorMessage += " FidoChallenge object is of type " + fidoChallenge::class.simpleName.toString() + ", which is unexpected and not supported."
+        }
+        Logger.error(methodTag, errorMessage, null)
+        telemetryHelper.setResultFailure(errorMessage)
+        respondToChallengeWithEmptyAssertion(fidoChallenge.submitUrl, fidoChallenge.context)
         return null
     }
 

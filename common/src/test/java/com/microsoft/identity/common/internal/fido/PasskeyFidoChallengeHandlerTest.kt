@@ -49,13 +49,13 @@ class PasskeyFidoChallengeHandlerTest {
     val testLifecycleOwner = TestLifecycleOwner()
     lateinit var webView : ExtendedTestWebView
     lateinit var testFidoTelemetryHelper : TestFidoTelemetryHelper
-    lateinit var passkeyFidoChallengeHandler: PassKeyFidoChallengeHandler
+    lateinit var passkeyFidoChallengeHandler: PasskeyFidoChallengeHandler
 
     @Before
     fun setUp() {
         webView = ExtendedTestWebView()
         testFidoTelemetryHelper = TestFidoTelemetryHelper()
-        passkeyFidoChallengeHandler = PassKeyFidoChallengeHandler(
+        passkeyFidoChallengeHandler = PasskeyFidoChallengeHandler(
             fidoManager = testFidoManager,
             webView = webView,
             lifecycleOwner = testLifecycleOwner,
@@ -107,7 +107,7 @@ class PasskeyFidoChallengeHandlerTest {
     //Passing a null lifecycleOwner will end the operation before any calls can be made from the manager.
     @Test
     fun testProcessChallenge_AuthExceptionInHandler() {
-        passkeyFidoChallengeHandler = PassKeyFidoChallengeHandler(
+        passkeyFidoChallengeHandler = PasskeyFidoChallengeHandler(
             fidoManager = testFidoManager,
             webView = webView,
             lifecycleOwner = null,
