@@ -110,8 +110,6 @@ stages:
       skipValidation: $[ dependencies.checkLabel.outputs['checkPrCILabel.skipValidation'] ]
     condition: and(succeeded(), not(eq(variables['skipValidation'], 'true')) )
     steps:
-    - pwsh: |
-        Write-Host "Should skip validation: $(skipValidation)"
     - template: ../templates/steps/automation-cert.yml
     - checkout: msal
       displayName: Checkout msal repository
