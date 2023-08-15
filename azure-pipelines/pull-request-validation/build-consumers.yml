@@ -108,7 +108,7 @@ stages:
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
       validationOptional: $[ dependencies.checkLabel.outputs['checkPrCILabel.validationOptional'] ]
-    continueOnFailure: variables['validationOptional']
+    continueOnError: variables['validationOptional']
     steps:
     - template: ../templates/steps/automation-cert.yml
     - checkout: msal
@@ -145,7 +145,7 @@ stages:
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
       validationOptional: $[ dependencies.checkLabel.outputs['checkPrCILabel.validationOptional'] ]
-    continueOnFailure: variables['validationOptional']
+    continueOnError: variables['validationOptional']
     pool:
       name: 1ES-AndroidPool-EOC-Test
     steps:
@@ -185,7 +185,7 @@ stages:
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
       validationOptional: $[ dependencies.checkLabel.outputs['checkPrCILabel.validationOptional'] ]
-    continueOnFailure: variables['validationOptional']
+    continueOnError: variables['validationOptional']
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -244,7 +244,7 @@ stages:
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
       validationOptional: $[ dependencies.checkLabel.outputs['checkPrCILabel.validationOptional'] ]
-    continueOnFailure: variables['validationOptional']
+    continueOnError: variables['validationOptional']
     steps:
     - checkout: adal
       displayName: Checkout adal repository
