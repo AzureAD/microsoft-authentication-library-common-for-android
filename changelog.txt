@@ -14,6 +14,7 @@ V.NEXT
 - [PATCH] Fix NPE in OTEL code for DCF flow (#2139)
 - [PATCH] Fixed debug apps not recognized as active broker issue (#2138)
 - [MINOR] Updated target, compile sdk, AGP and gradle versions  (#2142)
+- [MINOR] Update TokenRequest.java with NAA params (#2143)
 
 V.14.0.1
 ----------
