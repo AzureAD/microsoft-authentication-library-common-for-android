@@ -13,6 +13,7 @@ V.NEXT
 - [PATCH] Improve logging in BrokerMsalController.verifyBrokerVersionIsSupported (#2132)
 - [PATCH] Fix NPE in OTEL code for DCF flow (#2139)
 - [PATCH] Fixed debug apps not recognized as active broker issue (#2138)
+- [MINOR] Update TokenRequest.java with NAA params (#2143)
 
 V.14.0.1
 ----------
