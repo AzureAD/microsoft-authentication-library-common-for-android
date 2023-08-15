@@ -178,7 +178,7 @@ public class TokenRequest implements IHasExtraParameters {
     }
 
     /**
-     * @param mChildredirectUri child redirect URI of the token request.
+     * @param childRedirectUri child redirect URI of the token request.
      */
     public void setChildRedirectUri(final String childRedirectUri) {
         mChildRedirectUri = childRedirectUri;
@@ -192,9 +192,9 @@ public class TokenRequest implements IHasExtraParameters {
     }
 
     /**
-     * @param childclientId child client ID of the token request.
+     * @param childClientId child client ID of the token request.
      */
-    public void setClientId(final String childClientId) {
+    public void setChildClientId(final String childClientId) {
         mChildClientId = childClientId;
     }
 
