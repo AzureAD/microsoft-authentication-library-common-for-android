@@ -108,7 +108,6 @@ stages:
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
       validationOptional: $[ dependencies.checkLabel.outputs['checkPrCILabel.validationOptional'] ]
-    continueOnError: ${{ eq(variables['validationOptional'], 'true') }}
     steps:
     - template: ../templates/steps/automation-cert.yml
     - checkout: msal
@@ -128,13 +127,13 @@ stages:
         workingDirectory: $(Agent.BuildDirectory)/s/common
     - task: Gradle@2
       displayName: Assemble msal
-      ${{ if variables.validationOptional }}:
+      ${{ if eq(variables.validationOptional, 'true') }}:
         continueOnError: true
       inputs:
         tasks: clean msal:assembleLocal
     - task: Gradle@2
       displayName: Run msal Unit tests
-      ${{ if variables.validationOptional }}:
+      ${{ if eq(variables.validationOptional, 'true') }}:
         continueOnError: true
       inputs:
         tasks: msal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
@@ -170,7 +169,7 @@ stages:
         workingDirectory: $(Agent.BuildDirectory)/s/common
     - task: Gradle@2
       displayName: Assemble broker
-      ${{ if variables.validationOptional }}:
+      ${{ if eq(variables.validationOptional, 'true') }}:
         continueOnError: true
       inputs:
         tasks: AADAuthenticator:clean AADAuthenticator:assembleLocal --build-cache --info
@@ -179,7 +178,7 @@ stages:
         sqAnalysisBreakBuildIfQualityGateFailed: false
     - task: Gradle@2
       displayName: Run broker Unit tests
-      ${{ if variables.validationOptional }}:
+      ${{ if eq(variables.validationOptional, 'true') }}:
         continueOnError: true
       inputs:
         tasks: AADAuthenticator:localDebugAADAuthenticatorUnitTestCoverageReport --build-cache --info -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PpowerLiftApiKey=$(powerliftApiKey) -PcodeCoverageEnabled=true ${{variables.shouldSkipLongRunningTest}}
@@ -213,7 +212,7 @@ stages:
       - task: Gradle@1
         name: Gradle1
         displayName: Assemble Linux Broker
-        ${{ if variables.validationOptional }}:
+        ${{ if eq(variables.validationOptional, 'true') }}:
           continueOnError: true
         inputs:
           cwd: $(Build.SourcesDirectory)/broker-java-root
@@ -224,7 +223,7 @@ stages:
       - task: Bash@3
         retryCountOnTaskFailure: 3
         displayName: Execute tests
-        ${{ if variables.validationOptional }}:
+        ${{ if eq(variables.validationOptional, 'true') }}:
           continueOnError: true
         inputs:
           workingDirectory: $(Build.SourcesDirectory)/broker-java-root
@@ -272,13 +271,13 @@ stages:
         workingDirectory: $(Agent.BuildDirectory)/s/common
     - task: Gradle@2
       displayName: Assemble adal
-      ${{ if variables.validationOptional }}:
+      ${{ if eq(variables.validationOptional, 'true') }}:
         continueOnError: true
       inputs:
         tasks: clean adal:assembleLocal
     - task: Gradle@2
       displayName: Run adal Unit tests
-      ${{ if variables.validationOptional }}:
+      ${{ if eq(variables.validationOptional, 'true') }}:
         continueOnError: true
       inputs:
         tasks: adal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
