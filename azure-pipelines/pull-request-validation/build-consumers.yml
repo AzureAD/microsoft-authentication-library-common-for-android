@@ -145,7 +145,6 @@ stages:
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
       validationOptional: $[ dependencies.checkLabel.outputs['checkPrCILabel.validationOptional'] ]
-    continueOnError: ${{ eq($(validationOptional), 'true') }}
     pool:
       name: 1ES-AndroidPool-EOC-Test
     steps:
@@ -185,7 +184,6 @@ stages:
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
       validationOptional: $[ dependencies.checkLabel.outputs['checkPrCILabel.validationOptional'] ]
-    continueOnError: ${{ eq($(checkPrCILabelvalidationOptional), 'true') }}
     pool:
       vmImage: 'ubuntu-latest'
     steps:
