@@ -126,7 +126,7 @@ stages:
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
     - task: Gradle@2
-      displayName: Assemble msal
+      displayName: Assemble c$(validationOptional) msal
       ${{ if eq(variables.validationOptional, 'true') }}:
         continueOnError: true
       inputs:
