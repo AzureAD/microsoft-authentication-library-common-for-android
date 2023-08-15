@@ -56,59 +56,9 @@ class BaseActiveBrokerCacheTest {
         val mockData = BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH)
         cache1.setCachedActiveBroker(mockData)
 
-        Assert.assertEquals(mockData, cache1.inMemoryCachedValue)
-        Assert.assertNull(cache2.inMemoryCachedValue)
-
         // Value should be readable by both caches.
         Assert.assertEquals(mockData, cache1.getCachedActiveBroker())
         Assert.assertEquals(mockData, cache2.getCachedActiveBroker())
-        Assert.assertEquals(mockData, cache1.inMemoryCachedValue)
-        Assert.assertEquals(mockData, cache2.inMemoryCachedValue)
-    }
-
-    /**
-     * Test that the value cached in memory is used.
-     **/
-    @Test
-    fun testInMemoryCachedValue(){
-        val writeOnlyStorage = object : INameValueStorage<String> {
-            override fun get(name: String): String? {
-                throw UnsupportedOperationException()
-            }
-
-            override fun getAll(): MutableMap<String, String> {
-                throw UnsupportedOperationException()
-            }
-
-            override fun remove(name: String) {
-                throw UnsupportedOperationException()
-            }
-
-            override fun clear() {
-                throw UnsupportedOperationException()
-            }
-
-            override fun keySet(): MutableSet<String> {
-                throw UnsupportedOperationException()
-            }
-
-            override fun getAllFilteredByKey(keyFilter: Predicate<String>?): MutableIterator<MutableMap.MutableEntry<String, String>> {
-                throw UnsupportedOperationException()
-            }
-
-            override fun put(name: String, value: String?) {
-                // good to go!
-                // Do not persist anything.
-            }
-        }
-
-        val cache = BaseActiveBrokerCache(writeOnlyStorage, Mutex())
-        val mockData = BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH)
-        cache.setCachedActiveBroker(mockData)
-
-        // Cached value should be read from memory
-        // (because the storage layer will be throwing exception upon read!)
-        Assert.assertEquals(mockData, cache.getCachedActiveBroker())
     }
 
     @Test
@@ -153,7 +103,6 @@ class BaseActiveBrokerCacheTest {
 
         val cache = BaseActiveBrokerCache(readOnlyStorage, Mutex())
         Assert.assertEquals(BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH), cache.getCachedActiveBroker())
-        Assert.assertEquals(BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH), cache.inMemoryCachedValue)
     }
 
     @Test
@@ -207,7 +156,6 @@ class BaseActiveBrokerCacheTest {
 
         Assert.assertEquals(MOCK_PACKAGE_NAME, readOnlyStorage.brokerPkgName)
         Assert.assertEquals(MOCK_HASH, readOnlyStorage.brokerSigHash)
-        Assert.assertEquals(mockData, cache.inMemoryCachedValue)
     }
 
     @Test
@@ -245,10 +193,8 @@ class BaseActiveBrokerCacheTest {
         }
 
         val cache = BaseActiveBrokerCache(clearOnlyStorage, Mutex())
-        cache.inMemoryCachedValue = BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH)
 
         cache.clearCachedActiveBroker()
-        Assert.assertNull(cache.inMemoryCachedValue)
         Assert.assertTrue(clearOnlyStorage.isCleared)
     }
 
@@ -261,10 +207,8 @@ class BaseActiveBrokerCacheTest {
         cache.setCachedActiveBroker(mockData)
 
         Assert.assertEquals(BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH), cache.getCachedActiveBroker())
-        Assert.assertEquals(BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH), cache.inMemoryCachedValue)
 
         cache.clearCachedActiveBroker()
         Assert.assertNull(cache.getCachedActiveBroker())
-        Assert.assertNull(cache.inMemoryCachedValue)
     }
 }
