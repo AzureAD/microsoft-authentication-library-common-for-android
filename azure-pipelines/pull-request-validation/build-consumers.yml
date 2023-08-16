@@ -50,9 +50,7 @@ stages:
   pool:
     name: Hosted Windows 2019 with VS2019
   jobs:
-  - job:
-    steps:
-      - template: ../templates/steps/fetch-pr-labels.yml
+    - template: ../templates/steps/fetch-pr-labels.yml
 - stage: validateConsumers
   # Validate Consumers
   displayName: 'Validate'
