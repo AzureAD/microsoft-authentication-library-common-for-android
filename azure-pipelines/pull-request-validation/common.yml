@@ -81,6 +81,8 @@ jobs:
     inputs:
       tasks: clean common:lintLocalDebug
       publishJUnitResults: false
+      javaHomeSelection: JDKVersion
+      jdkVersionOption: "1.11"
 - job: codeql
   displayName: CodeQL
   cancelTimeoutInMinutes: 1
