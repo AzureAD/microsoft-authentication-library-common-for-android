@@ -57,12 +57,13 @@ stages:
   dependsOn: checkLabel
   pool:
     name: Hosted Windows 2019 with VS2019
+  variables:
+    prLabels: $[ dependencies.checkLabel.outputs['fetchPrCILabel.prLabels'] ]
   condition: and(succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])))
   jobs:
   # setup
   - job: setupBranch
     displayName: Setup branch
-    condition: and(succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])))
     steps:
     - checkout: none
     - task: PowerShell@2
