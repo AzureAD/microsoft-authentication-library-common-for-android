@@ -1,4 +1,5 @@
-job: getLabelsJob
+jobs:
+- job: getLabelsJob
   displayName: Fetch PR Labels
   steps:
     - bash: |
