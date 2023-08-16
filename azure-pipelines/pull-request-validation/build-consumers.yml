@@ -48,6 +48,7 @@ stages:
   displayName: Check for PR Label
   pool:
     name: Hosted Windows 2019 with VS2019
+  jobs:
   - job: checkLabel
     steps:
       - template: ../templates/steps/fetch-pr-labels.yml
@@ -56,7 +57,7 @@ stages:
   displayName: 'Validate'
   pool:
     name: Hosted Windows 2019 with VS2019
-  condition: and(succeeded(), not(eq(variables['skipValidation'], 'true')) )
+  condition: and(succeeded(), not(eq(variables['skipConsumerValidation'], 'true')) )
   jobs:
   # setup
   - job: setupBranch
