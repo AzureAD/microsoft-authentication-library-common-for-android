@@ -59,7 +59,7 @@ stages:
     name: Hosted Windows 2019 with VS2019
   variables:
     prLabels: $[ stageDependencies.getLabel.getLabelsJob.outputs['fetchPrCILabel.prLabels'] ]
-  condition: and(succeeded(), not(contains(variables['prLabels'], '}')))
+  condition: and(succeeded(), not(contains(variables['prLabels'], '{')))
   jobs:
   # setup
   - job: setupBranch
