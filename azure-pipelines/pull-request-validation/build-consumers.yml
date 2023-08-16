@@ -43,13 +43,13 @@ resources:
     endpoint: ANDROID_GITHUB
 
 stages:
-- stage:
+- stage: checkLabel
   # Check PR Label
   displayName: Check for PR Label
   pool:
     name: Hosted Windows 2019 with VS2019
   jobs:
-  - job: checkLabel
+  - job:
     steps:
       - template: ../templates/steps/fetch-pr-labels.yml
 - stage: validateConsumers
