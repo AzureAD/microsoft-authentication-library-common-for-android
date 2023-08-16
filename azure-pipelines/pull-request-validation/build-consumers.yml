@@ -60,6 +60,8 @@ stages:
   variables:
     prLabels2: $[ dependencies.getLabel.outputs['getLabelsJob.fetchPrCILabel.prLabels'] ]
     prLabels: $[ dependencies.getLabel.getLabelsJob.outputs['fetchPrCILabel.prLabels'] ]
+    prLabels2: $[ dependencies.getLabel.outputs['getLabelsJob.fetchPrCILabel.prLabels2'] ]
+    prLabels: $[ dependencies.getLabel.getLabelsJob.outputs['fetchPrCILabel.prLabels2'] ]
   condition: and(succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])))
   jobs:
   # setup
