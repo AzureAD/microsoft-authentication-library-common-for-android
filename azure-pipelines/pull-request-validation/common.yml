@@ -104,6 +104,7 @@ jobs:
       buildCommandsString: 'gradlew.bat clean common:assembleLocal'
       querySuite: 'Recommended'
       timeout: '1800'
+      jdkVersionOption: "1.11"
   - task: PublishPipelineArtifact@1
     displayName: 'Publish code analysis artifacts'
     inputs:
