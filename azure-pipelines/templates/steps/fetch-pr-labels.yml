@@ -1,6 +1,7 @@
+jobs:
 - job:
   displayName: Fetch PR Labels
-  - steps:
+  steps:
     - bash: |
         echo "Fetching labels from https://api.github.com/repos/$BUILD_REPOSITORY_ID/issues/$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER/labels"
         temp=$(curl -s "https://api.github.com/repos/$BUILD_REPOSITORY_ID/issues/$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER/labels" | jq '.[] | {name}')
