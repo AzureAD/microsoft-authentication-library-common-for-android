@@ -92,6 +92,12 @@ public class CommandParameters {
     private String childRedirectUri;
 
     @Expose()
+    private String childClientId;
+
+    @Expose()
+    private String childRedirectUri;
+
+    @Expose()
     private boolean powerOptCheckEnabled;
 
     @Expose()

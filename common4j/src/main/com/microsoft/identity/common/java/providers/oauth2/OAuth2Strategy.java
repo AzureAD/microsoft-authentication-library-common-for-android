@@ -230,8 +230,8 @@ public abstract class OAuth2Strategy
                     headers.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
                 }
             }
-
-            final URL requestUrl = new URL(getTokenEndpoint()+"?dc=ESTS-PUB-WUS2-AZ1-FD000-TEST1&pwbrokerpuidtoguid=true&bypasspwpoliciesmsa=true&jwtcredsmsa=true");
+            final URL requestUrl = new URL(getTokenEndpoint());
+         //   final URL requestUrl = new URL(getTokenEndpoint()+"?dc=ESTS-PUB-WUS2-AZ1-FD000-TEST1&pwbrokerpuidtoguid=true&bypasspwpoliciesmsa=true&jwtcredsmsa=true");
 
             final long networkStartTime = System.currentTimeMillis();
             final HttpResponse response = httpClient.post(
@@ -252,25 +252,6 @@ public abstract class OAuth2Strategy
         } catch (Exception e) {
             throw e;
         }
-
-        final URL requestUrl = new URL(getTokenEndpoint());
-
-        final long networkStartTime = System.currentTimeMillis();
-        final HttpResponse response = httpClient.post(
-                requestUrl,
-                headers,
-                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME)
-        );
-        final long networkEndTime = System.currentTimeMillis();
-        final long networkTime = networkEndTime - networkStartTime;
-        SpanExtension.current().setAttribute(AttributeName.elapsed_time_network_acquire_at.name(), networkTime);
-
-
-        // Record the clock skew between *this device* and EVO...
-        if (null != response.getDate()) {
-            recordClockSkew(response.getDate().getTime());
-        }
-        return response;
     }
 
     protected String getTokenEndpoint() {

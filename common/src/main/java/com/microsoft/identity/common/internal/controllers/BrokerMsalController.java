@@ -1170,6 +1170,8 @@ public class BrokerMsalController extends BaseController {
                     "The min broker protocol version for PopAuthenticationSchemeWithClientKey should be equal or more than 11.0."
                             + " Current required version is set to: " + parameters.getRequiredBrokerProtocolVersion());
         }
+
+        // Also add a check for NAA here
     }
 
     /**

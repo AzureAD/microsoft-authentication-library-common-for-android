@@ -60,12 +60,12 @@ public class TokenRequest implements IHasExtraParameters {
 
     @Expose()
     @SerializedName("brk_redirect_uri")
-    private String mChildRedirectUri;
+    private String mBrkRedirectUri;
 
     @Expose()
     @SerializedName("brk_client_id")
 
-    private String mChildClientId;
+    private String mBrkClientId;
 
     @SerializedName("client_secret")
     private String mClientSecret;
@@ -174,29 +174,29 @@ public class TokenRequest implements IHasExtraParameters {
     /**
      * @return mChildRedirectUri of the token request.
      */
-    public String getChildRedirectUri() {
-        return mChildRedirectUri;
+    public String getBrkRedirectUri() {
+        return mBrkRedirectUri;
     }
 
     /**
-     * @param childRedirectUri child redirect URI of the token request.
+     * @param brkRedirectUri child redirect URI of the token request.
      */
-    public void setChildRedirectUri(final String childRedirectUri) {
-        mChildRedirectUri = childRedirectUri;
+    public void setBrkRedirectUri(final String brkRedirectUri) {
+        mBrkRedirectUri = brkRedirectUri;
     }
 
     /**
      * @return mChildClientId of the token request.
      */
-    public String getChildClientId() {
-        return mChildClientId;
+    public String getBrkClientId() {
+        return mBrkClientId;
     }
 
     /**
-     * @param childClientId child client ID of the token request.
+     * @param brkClientId child client ID of the token request.
      */
-    public void setChildClientId(final String childClientId) {
-        mChildClientId = childClientId;
+    public void setBrkClientId(final String brkClientId) {
+        mBrkClientId = brkClientId;
     }
 
     /**
