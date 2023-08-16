@@ -59,7 +59,6 @@ stages:
     name: Hosted Windows 2019 with VS2019
   variables:
     prLabels: $[ stageDependencies.getLabel.getLabelsJob.outputs['fetchPrCILabel.prLabels'] ]
-  condition: not(eq(stageDependencies.getLabel.getLabelsJob.outputs['fetchPrCILabel.prLabels'], ''))
   jobs:
   # setup
   - job: setupBranch
@@ -105,6 +104,7 @@ stages:
       - setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    condition: not(eq(variables['prLabels'], ''))
     steps:
     - template: ../templates/steps/automation-cert.yml
     - checkout: msal
