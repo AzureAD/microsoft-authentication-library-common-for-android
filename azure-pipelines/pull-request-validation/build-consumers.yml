@@ -59,10 +59,7 @@ stages:
   dependsOn: checkLabel
   pool:
     name: Hosted Windows 2019 with VS2019
-  variables:
-    test: variables['prLabels']
-    skipConsumerValidation: contains(variables['prLabels'], variables['skipConsumerValidationLabel'])
-  condition: and(succeeded(), not(eq(variables['skipConsumerValidation'], 'true')) )
+  condition: and(succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])))
   jobs:
   # setup
   - job: setupBranch
