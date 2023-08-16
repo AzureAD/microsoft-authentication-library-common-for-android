@@ -1,4 +1,4 @@
-V.NEXT
+V.15.0.0
 ----------
 - [MAJOR] Update active broker cache upon returned result (#2140)
 - [MAJOR] Move Broker side active broker cache to broker repo (#2123)
