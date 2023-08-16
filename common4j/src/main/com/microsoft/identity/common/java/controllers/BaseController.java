@@ -265,12 +265,16 @@ public abstract class BaseController {
 //        builder.setClientId(parameters.getClientId())
 //                .setRedirectUri(parameters.getRedirectUri());
 
-
-        builder.setChildRedirectUri("msauth://com.microsoft.teams/VCpKgbYCXucoq1mZ4BZPsh5taNE=");
-        // put this under an if block
-        builder.setClientId("be742297-5370-4852-8cd0-6cbf49754e48");
-        builder.setRedirectUri("brk-multihub://localhost:3000");
-        builder.setChildClientId("8ec6bc83-69c8-4392-8f08-b3c986009232");
+        if (parameters.getChildRedirectUri() != null && parameters.getChildClientId() !=null) {
+            builder.setChildRedirectUri("msauth://com.microsoft.teams/VCpKgbYCXucoq1mZ4BZPsh5taNE=");
+            // put this under an if block
+            builder.setClientId("be742297-5370-4852-8cd0-6cbf49754e48");
+            builder.setRedirectUri("brk-multihub://localhost:3000");
+            builder.setChildClientId("8ec6bc83-69c8-4392-8f08-b3c986009232");
+        } else {
+            builder.setClientId(parameters.getClientId())
+                .setRedirectUri(parameters.getRedirectUri());
+        }
         if (builder instanceof MicrosoftAuthorizationRequest.Builder) {
             ((MicrosoftAuthorizationRequest.Builder) builder).setCorrelationId(correlationId);
         }
