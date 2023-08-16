@@ -76,6 +76,8 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     @Expose
     private final String homeTenantId;
 
+    private boolean isNAA;
+
     @Override
     public void validate() throws ArgumentException {
         super.validate();
@@ -117,11 +119,11 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
             }
             if (getSdkType().isCapableOfMSA() &&
                     !getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
-                throw new ArgumentException(
-                        ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
-                        "mRedirectUri", "The redirect URI doesn't match the uri" +
-                        " generated with caller package name and signature"
-                );
+//                throw new ArgumentException(
+//                        ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
+//                        "mRedirectUri", "The redirect URI doesn't match the uri" +
+//                        " generated with caller package name and signature"
+//                );
             }
         }
     }

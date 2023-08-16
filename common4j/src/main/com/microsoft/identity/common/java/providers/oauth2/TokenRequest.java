@@ -51,20 +51,20 @@ public class TokenRequest implements IHasExtraParameters {
     private String mCode;
 
     @Expose()
-    @SerializedName("child_redirect_uri")
+    @SerializedName("redirect_uri")
     private String mRedirectUri;
 
     @Expose()
-    @SerializedName("child_client_id")
+    @SerializedName("client_id")
     private String mClientId;
 
     @Expose()
-    @SerializedName("redirect_uri")
-    private String mBrkRedirectUri;
+    @SerializedName("brk_redirect_uri")
+    private String mChildRedirectUri;
 
     @Expose()
-    @SerializedName("client_id")
-    private String mBrkClientId;
+    @SerializedName("brk_client_id")
+    private String mChildClientId;
 
     @SerializedName("client_secret")
     private String mClientSecret;
@@ -170,29 +170,32 @@ public class TokenRequest implements IHasExtraParameters {
         mClientId = clientId;
     }
 
-    public String getBrkRedirectUri() {
-        return mBrkRedirectUri;
+    /**
+     * @return mChildRedirectUri of the token request.
+     */
+    public String getChildRedirectUri() {
+        return mChildRedirectUri;
     }
 
     /**
-     * @param brkRedirectUri redirect URI of the token request.
+     * @param childRedirectUri child redirect URI of the token request.
      */
-    public void setBrkRedirectUri(final String brkRedirectUri) {
-        mBrkRedirectUri = brkRedirectUri;
+    public void setChildRedirectUri(final String childRedirectUri) {
+        mChildRedirectUri = childRedirectUri;
     }
 
     /**
-     * @return mClientId of the token request.
+     * @return mChildClientId of the token request.
      */
-    public String getBrkClientId() {
-        return mBrkClientId;
+    public String getChildClientId() {
+        return mChildClientId;
     }
 
     /**
-     * @param brkClientId Client ID of the token request.
+     * @param childClientId child client ID of the token request.
      */
-    public void setBrkClientId(final String brkClientId) {
-        mBrkClientId = brkClientId;
+    public void setChildClientId(final String childClientId) {
+        mChildClientId = childClientId;
     }
 
     /**
