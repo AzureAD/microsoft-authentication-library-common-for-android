@@ -58,10 +58,10 @@ stages:
   pool:
     name: Hosted Windows 2019 with VS2019
   variables:
-    prLabels1: $[ dependencies.getLabel.outputs['getLabelsJob.fetchPrCILabel.prLabels'] ]
-    prLabels2: $[ dependencies.getLabel.getLabelsJob.outputs['fetchPrCILabel.prLabels'] ]
-    prLabels3: $[ dependencies.getLabel.outputs['getLabelsJob.fetchPrCILabel.prLabels2'] ]
-    prLabels4: $[ dependencies.getLabel.getLabelsJob.outputs['fetchPrCILabel.prLabels2'] ]
+    prLabels1: $[ stageDependencies.getLabel.outputs['getLabelsJob.fetchPrCILabel.prLabels'] ]
+    prLabels2: $[ stageDependencies.getLabel.getLabelsJob.outputs['fetchPrCILabel.prLabels'] ]
+    prLabels3: $[ stageDependencies.getLabel.outputs['getLabelsJob.fetchPrCILabel.prLabels2'] ]
+    prLabels4: $[ stageDependencies.getLabel.getLabelsJob.outputs['fetchPrCILabel.prLabels2'] ]
   condition: and(succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])))
   jobs:
   # setup
