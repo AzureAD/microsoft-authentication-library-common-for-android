@@ -29,10 +29,6 @@ jobs:
     clean: true
     submodules: recursive
     persistCredentials: True
-  - task: UseJavaVersion@0
-    inputs:
-      versionSpec: '11' # Specify the desired Java version
-      addToPath: true
   - template: ../templates/steps/automation-cert.yml
   - task: CmdLine@1
     displayName: Set Office MVN Access Token in Environment
@@ -110,6 +106,7 @@ jobs:
       buildCommandsString: 'gradlew.bat clean common:assembleLocal'
       querySuite: 'Recommended'
       timeout: '1800'
+      jdkVersionOption: "1.11"
   - task: PublishPipelineArtifact@1
     displayName: 'Publish code analysis artifacts'
     inputs:
