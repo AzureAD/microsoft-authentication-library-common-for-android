@@ -2,18 +2,20 @@ steps:
   - bash: |
       echo "Looking for label at https://api.github.com/repos/$BUILD_REPOSITORY_ID/issues/$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER/labels"
       curl -s "https://api.github.com/repos/$BUILD_REPOSITORY_ID/issues/$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER/labels"
-
       if curl -s "https://api.github.com/repos/$BUILD_REPOSITORY_ID/issues/$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER/labels" | grep '"name": "Skip-Consumers-Check"'
       then
         echo "##vso[task.setvariable variable=skipConsumerValidation;isOutput=true]true"
         echo "Skip-Consumers-Check label found, skip validation"
       fi
-
-      echo "##vso[task.setvariable variable=labelz]curl -s "https://api.github.com/repos/$BUILD_REPOSITORY_ID/issues/$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER/labels" | jq '.[] | {name}'"
       echo $(skipConsumerValidation)
       echo "$(labelz)"
     condition: eq(variables['Build.Reason'], 'PullRequest')
     name: checkPrCILabel
   - bash: |
-      echo "$(skipConsumerValidation)"
-      echo "$(labelz)"
+      echo "Looking for label at https://api.github.com/repos/$BUILD_REPOSITORY_ID/issues/$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER/labels"
+      test1=curl -s "https://api.github.com/repos/$BUILD_REPOSITORY_ID/issues/$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER/labels" | jq '.[] | {name}'
+      echo "##vso[task.setvariable variable=labelz]$test1"
+      echo "$test1"
+  - bash: |
+      echo "$skipConsumerValidation"
+      echo "$labelz"
