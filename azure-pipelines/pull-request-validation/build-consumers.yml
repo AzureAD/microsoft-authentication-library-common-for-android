@@ -60,7 +60,8 @@ stages:
   pool:
     name: Hosted Windows 2019 with VS2019
   variables:
-    skipConsumerValidation: contains(variables.prLabels, variables.skipConsumerValidationLabel)
+    test: variables['prLabels']
+    skipConsumerValidation: contains(variables['prLabels'], variables['skipConsumerValidationLabel'])
   condition: and(succeeded(), not(eq(variables['skipConsumerValidation'], 'true')) )
   jobs:
   # setup
