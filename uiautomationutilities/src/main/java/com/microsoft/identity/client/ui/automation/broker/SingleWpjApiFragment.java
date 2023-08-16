@@ -165,7 +165,7 @@ public class SingleWpjApiFragment extends AbstractBrokerHost {
     }
 
     public String getBlob(@NonNull String tenantId) {
-        fillTextBox(USERNAME_EDIT_TEXT, tenantId);
+        fillTextBox(TENANT_EDIT_TEXT, tenantId);
         clickButton(GET_BLOB_BUTTON_ID);
         return dismissDialogBoxAndGetText();
     }
