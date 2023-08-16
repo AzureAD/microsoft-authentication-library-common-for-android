@@ -63,6 +63,7 @@ stages:
   # setup
   - job: setupBranch
     displayName: Setup branch
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
     - checkout: none
     - task: PowerShell@2
@@ -104,7 +105,7 @@ stages:
       - setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
-    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
+    condition: and( succeeded(), not(contains(variables['prLabels'], '{')) )
     steps:
     - template: ../templates/steps/automation-cert.yml
     - checkout: msal
