@@ -59,11 +59,12 @@ public class TokenRequest implements IHasExtraParameters {
     private String mClientId;
 
     @Expose()
-    @SerializedName("child_redirect_uri")
+    @SerializedName("brk_redirect_uri")
     private String mChildRedirectUri;
 
     @Expose()
-    @SerializedName("child_client_id")
+    @SerializedName("brk_client_id")
+
     private String mChildClientId;
 
     @SerializedName("client_secret")
