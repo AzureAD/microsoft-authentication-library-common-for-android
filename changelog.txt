@@ -1,5 +1,6 @@
 V.15.0.0
 ----------
+- [MAJOR] Update active broker cache upon returned result (#2140)
 - [MAJOR] Move Broker side active broker cache to broker repo (#2123)
 - [MINOR] Add span names for the BrokerOperationRequestDispatcher and PassthroughExecutor (#2100)
 - [PATCH] Add key derivation method that takes SecretKey object as argument (#2113)
@@ -10,6 +11,9 @@ V.15.0.0
 - [MINOR] Capture perf telemetry for cache & network operations (#2124)
 - [MINOR] Add method to flush shared preference file manager (#2130)
 - [PATCH] Improve logging in BrokerMsalController.verifyBrokerVersionIsSupported (#2132)
+- [PATCH] Fix NPE in OTEL code for DCF flow (#2139)
+- [PATCH] Fixed debug apps not recognized as active broker issue (#2138)
+- [MINOR] Update TokenRequest.java with NAA params (#2143)
 
 V.14.0.1
 ----------

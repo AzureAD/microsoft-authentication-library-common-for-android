@@ -30,6 +30,7 @@ import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
@@ -70,7 +71,7 @@ public class DeviceCodeFlowAuthResultCommand extends BaseCommand<AuthorizationRe
         span.setAttribute(AttributeName.application_name.name(), getParameters().getApplicationName());
         span.setAttribute(AttributeName.public_api_id.name(), getPublicApiId());
 
-        try (final Scope scope = span.makeCurrent()) {
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             // Get the controller used to execute the command
             final BaseController controller = getDefaultController();
 

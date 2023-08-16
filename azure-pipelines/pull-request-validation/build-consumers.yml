@@ -4,6 +4,7 @@
 # Variable: 'mvnAccessToken' was defined in the Variables tab
 # https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
 # Variable: 'commonBranchName' common branch to be used when running the pipeline manually
+# Variable: 'skipConsumerValidationLabel' PR label used to skip the checks in this pipeline
 name: $(date:yyyyMMdd)$(rev:.r)
 
 trigger: none
@@ -43,14 +44,26 @@ resources:
     endpoint: ANDROID_GITHUB
 
 stages:
-- stage: validateConsumers
-  displayName: 'Validate'
+- stage: getLabel
+  # Check PR Label
+  displayName: Check for PR Label
   pool:
     name: Hosted Windows 2019 with VS2019
+  jobs:
+    - template: ../templates/steps/fetch-pr-labels.yml
+- stage: validateConsumers
+  # Validate Consumers
+  displayName: 'Validate'
+  dependsOn: getLabel
+  pool:
+    name: Hosted Windows 2019 with VS2019
+  variables:
+    prLabels: $[ stageDependencies.getLabel.getLabelsJob.outputs['fetchPrCILabel.prLabels'] ]
   jobs:
   # setup
   - job: setupBranch
     displayName: Setup branch
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
     - checkout: none
     - task: PowerShell@2
@@ -88,9 +101,11 @@ stages:
   # msal
   - job: msalValidation
     displayName: MSAL
-    dependsOn: setupBranch
+    dependsOn:
+      - setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
     - template: ../templates/steps/automation-cert.yml
     - checkout: msal
@@ -121,9 +136,11 @@ stages:
     displayName: Broker
     cancelTimeoutInMinutes: 1
     timeoutInMinutes: 120
-    dependsOn: setupBranch
+    dependsOn:
+      - setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     pool:
       name: 1ES-AndroidPool-EOC-Test
     steps:
@@ -157,9 +174,11 @@ stages:
   # Linux broker
   - job: linuxBrokerValidation
     displayName: Linux Broker
-    dependsOn: setupBranch
+    dependsOn:
+      - setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -212,9 +231,11 @@ stages:
   # adal
   - job: adalValidation
     displayName: ADAL
-    dependsOn: setupBranch
+    dependsOn:
+      - setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
     - checkout: adal
       displayName: Checkout adal repository

@@ -52,6 +52,7 @@ internal constructor(private val storage: INameValueStorage<String>,
          * @param storageSupplier an [IStorageSupplier] component.
          * @return a thread-safe [IClientActiveBrokerCache].
          */
+        @JvmStatic
         fun getCache(storageSupplier: IStorageSupplier)
                 : IClientActiveBrokerCache {
             return ClientActiveBrokerCache(

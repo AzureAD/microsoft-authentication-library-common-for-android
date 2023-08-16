@@ -58,6 +58,14 @@ public class TokenRequest implements IHasExtraParameters {
     @SerializedName("client_id")
     private String mClientId;
 
+    @Expose()
+    @SerializedName("child_redirect_uri")
+    private String mChildRedirectUri;
+
+    @Expose()
+    @SerializedName("child_client_id")
+    private String mChildClientId;
+
     @SerializedName("client_secret")
     private String mClientSecret;
 
@@ -160,6 +168,34 @@ public class TokenRequest implements IHasExtraParameters {
      */
     public void setClientId(final String clientId) {
         mClientId = clientId;
+    }
+
+    /**
+     * @return mChildRedirectUri of the token request.
+     */
+    public String getChildRedirectUri() {
+        return mChildRedirectUri;
+    }
+
+    /**
+     * @param childRedirectUri child redirect URI of the token request.
+     */
+    public void setChildRedirectUri(final String childRedirectUri) {
+        mChildRedirectUri = childRedirectUri;
+    }
+
+    /**
+     * @return mChildClientId of the token request.
+     */
+    public String getChildClientId() {
+        return mChildClientId;
+    }
+
+    /**
+     * @param childClientId child client ID of the token request.
+     */
+    public void setChildClientId(final String childClientId) {
+        mChildClientId = childClientId;
     }
 
     /**
