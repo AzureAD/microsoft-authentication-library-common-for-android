@@ -55,13 +55,13 @@ stages:
 - stage: validateConsumers
   # Validate Consumers
   displayName: 'Validate'
+  dependsOn: checkLabel
   pool:
     name: Hosted Windows 2019 with VS2019
   condition: and(succeeded(), not(eq(variables['skipConsumerValidation'], 'true')) )
   jobs:
   # setup
   - job: setupBranch
-    dependsOn: checkLabel
     displayName: Setup branch
     steps:
     - checkout: none
@@ -102,7 +102,6 @@ stages:
     displayName: MSAL
     dependsOn:
       - setupBranch
-      - checkLabel
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     steps:
@@ -137,7 +136,6 @@ stages:
     timeoutInMinutes: 120
     dependsOn:
       - setupBranch
-      - checkLabel
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     pool:
@@ -175,7 +173,6 @@ stages:
     displayName: Linux Broker
     dependsOn:
       - setupBranch
-      - checkLabel
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     pool:
@@ -232,7 +229,6 @@ stages:
     displayName: ADAL
     dependsOn:
       - setupBranch
-      - checkLabel
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     steps:
