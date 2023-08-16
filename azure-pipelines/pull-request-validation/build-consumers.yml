@@ -62,6 +62,7 @@ stages:
   # setup
   - job: setupBranch
     displayName: Setup branch
+    condition: and(succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])))
     steps:
     - checkout: none
     - task: PowerShell@2
