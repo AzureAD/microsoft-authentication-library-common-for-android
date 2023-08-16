@@ -43,13 +43,24 @@ resources:
     endpoint: ANDROID_GITHUB
 
 stages:
+- stage:
+  # Check PR Label
+  displayName: Check for PR Label
+  pool:
+    name: Hosted Windows 2019 with VS2019
+  - job: checkLabel
+    steps:
+      - template: ../templates/steps/fetch-pr-labels.yml
 - stage: validateConsumers
+  # Validate Consumers
   displayName: 'Validate'
   pool:
     name: Hosted Windows 2019 with VS2019
+  condition: and(succeeded(), not(eq(variables['skipValidation'], 'true')) )
   jobs:
   # setup
   - job: setupBranch
+    dependsOn: checkLabel
     displayName: Setup branch
     steps:
     - checkout: none
@@ -85,20 +96,6 @@ stages:
         }
       name: echovar
       displayName: Echo branch name
-  # Check PR Label
-  - job: checkLabel
-    displayName: Check for PR Label
-    dependsOn: setupBranch
-    steps:
-    - bash: |
-        echo "Looking for label at https://api.github.com/repos/$BUILD_REPOSITORY_ID/issues/$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER/labels"
-        if curl -s "https://api.github.com/repos/$BUILD_REPOSITORY_ID/issues/$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER/labels" | grep '"name": "Skip-Consumers-Check"'
-        then
-          echo "##vso[task.setvariable variable=skipValidation;isOutput=true]true"
-          echo "Skip-Consumers-Check label found, skip validation"
-        fi
-      condition: eq(variables['Build.Reason'], 'PullRequest')
-      name: checkPrCILabel
   # msal
   - job: msalValidation
     displayName: MSAL
@@ -107,8 +104,6 @@ stages:
       - checkLabel
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
-      skipValidation: $[ dependencies.checkLabel.outputs['checkPrCILabel.skipValidation'] ]
-    condition: and(succeeded(), not(eq(variables['skipValidation'], 'true')) )
     steps:
     - template: ../templates/steps/automation-cert.yml
     - checkout: msal
@@ -144,8 +139,6 @@ stages:
       - checkLabel
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
-      skipValidation: $[ dependencies.checkLabel.outputs['checkPrCILabel.skipValidation'] ]
-    condition: and(succeeded(), not(eq(variables['skipValidation'], 'true')) )
     pool:
       name: 1ES-AndroidPool-EOC-Test
     steps:
@@ -184,8 +177,6 @@ stages:
       - checkLabel
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
-      skipValidation: $[ dependencies.checkLabel.outputs['checkPrCILabel.skipValidation'] ]
-    condition: and(succeeded(), not(eq(variables['skipValidation'], 'true')) )
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -243,8 +234,6 @@ stages:
       - checkLabel
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
-      skipValidation: $[ dependencies.checkLabel.outputs['checkPrCILabel.skipValidation'] ]
-    condition: and(succeeded(), not(eq(variables['skipValidation'], 'true')) )
     steps:
     - checkout: adal
       displayName: Checkout adal repository
