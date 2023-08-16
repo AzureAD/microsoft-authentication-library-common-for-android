@@ -4,7 +4,7 @@ jobs:
   steps:
     - bash: |
         echo "Fetching labels from https://api.github.com/repos/$BUILD_REPOSITORY_ID/issues/$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER/labels"
-        temp=$(curl -s "https://api.github.com/repos/$BUILD_REPOSITORY_ID/issues/$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER/labels" | jq -jr '.[] | {name}')
+        temp=$(curl -s "https://api.github.com/repos/$BUILD_REPOSITORY_ID/issues/$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER/labels" | jq -jc '.[] | {name}')
         echo -e "##vso[task.setvariable variable=prLabels;isOutput=true]$temp"
         echo "$temp"
       condition: eq(variables['Build.Reason'], 'PullRequest')
