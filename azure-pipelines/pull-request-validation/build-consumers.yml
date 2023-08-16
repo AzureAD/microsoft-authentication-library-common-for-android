@@ -105,7 +105,7 @@ stages:
       - setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
-    condition: and( succeeded(), not(contains(variables['prLabels'], '{')) )
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
     - template: ../templates/steps/automation-cert.yml
     - checkout: msal
