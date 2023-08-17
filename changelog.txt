@@ -1,4 +1,4 @@
-V.NEXT
+V.15.0.0
 ----------
 - [MAJOR] handle broker discovery disabled on SDK side (#2145)
 - [MAJOR] Update active broker cache upon returned result (#2140)
