@@ -23,6 +23,8 @@
 
 package com.microsoft.identity.common.java.providers.nativeauth
 
+import com.microsoft.identity.common.java.BuildConfig
+import com.microsoft.identity.common.java.BuildValues
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration
 import com.microsoft.identity.common.java.util.UrlUtil
@@ -36,8 +38,7 @@ class NativeAuthOAuth2Configuration(
     val challengeType: String,
     // Need this to decide whether or not to return mock api authority or actual authority supplied in configuration
     // Turn this on if you plan to use web auth and/or open id configuration
-    // TODO make this configurable: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2629229
-    val useRealAuthority: Boolean = false
+    val useRealAuthority: Boolean = BuildValues.USE_REAL_AUTHORITY
 ) : MicrosoftStsOAuth2Configuration() {
 
     private val TAG = NativeAuthOAuth2Configuration::class.java.simpleName
@@ -211,9 +212,11 @@ class NativeAuthOAuth2Configuration(
     private fun getEndpointUrlFromRootAndTenantAndSuffix(root: URL, endpointSuffix: String): URL {
         LogSession.logMethodCall(tag = TAG)
         return try {
-            // TODO make this configurable: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2629229
-//            UrlUtil.appendPathToURL(root, endpointSuffix, "dc=ESTS-PUB-WUS3-AZ1-FD000-TEST1")
-            UrlUtil.appendPathToURL(root, endpointSuffix, null)
+            if (BuildValues.DC.isNotEmpty()) {
+                UrlUtil.appendPathToURL(root, endpointSuffix, "dc=${BuildValues.DC}")
+            } else {
+                UrlUtil.appendPathToURL(root, endpointSuffix, null)
+            }
         } catch (e: URISyntaxException) {
             LogSession.logException(tag = TAG, throwable = e)
             throw e
