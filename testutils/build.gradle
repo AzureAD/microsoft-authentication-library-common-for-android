@@ -173,7 +173,7 @@ dependencies {
         }
     } else {
         //Always use the latest release
-        implementation(group: 'com.microsoft.identity', name: 'common', version: '0.0.+')
+        implementation(group: 'com.microsoft.identity', name: 'common', version: '1.0.+')
     }
 
     // keyvault per product flavor
@@ -184,7 +184,7 @@ dependencies {
         }
     } else {
         //Always use the latest release
-        implementation(group: 'com.microsoft.identity', name: 'keyvault', version: '0.0.+')
+        implementation(group: 'com.microsoft.identity', name: 'keyvault', version: '1.0.+')
     }
 
     // labapi per product flavor
@@ -195,7 +195,7 @@ dependencies {
         }
     } else {
         //Always use the latest release
-        implementation(group: 'com.microsoft.identity', name: 'labapi', version: '0.0.+')
+        implementation(group: 'com.microsoft.identity', name: 'labapi', version: '1.0.+')
     }
 
     implementation project(":LabApiUtilities")
