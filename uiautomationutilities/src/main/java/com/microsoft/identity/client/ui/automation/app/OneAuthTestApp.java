@@ -141,9 +141,11 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         new AadPromptHandler(promptHandlerParameters).handlePrompt(username, password);
     }
 
-    public String handleSignInWithoutPrompt() {
+    public void handleSignInWithoutPrompt() {
         UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/sign_in_button");
-        return getTokenSecret();
+        final String token = getTokenSecret();
+        Assert.assertTrue("Token is not empty", !TextUtils.isEmpty(token));
+        assertSuccess();
     }
 
     public void handleBackButton() {
