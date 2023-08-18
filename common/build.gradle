@@ -337,6 +337,21 @@ afterEvaluate {
     }
 }
 
+afterEvaluate {
+    // Gradle 7.5.1 and Android Gradle Plugin 7.4.2 doesn't rename the file (see 'outputFileName' above)
+    // Adding this work around to have the file properly renamed.
+    tasks.named("assembleDistRelease").configure {
+        def buildFile = file("$buildDir/outputs/aar/${archivesBaseName}-dist-release.aar")
+        print "Build file $buildFile"
+        doLast {
+            println "Renaming build file $buildFile to '$buildDir${File.separator}outputs${File.separator}aar${File.separator}${archivesBaseName}-${version}.aar'"
+            if (!buildFile.renameTo("$buildDir${File.separator}outputs${File.separator}aar${File.separator}${archivesBaseName}-${version}.aar")) {
+                println "Rename failed!"
+            }
+        }
+    }
+}
+
 tasks.whenTaskAdded { task ->
     if (task.name.contains("assemble")) {
         task.dependsOn 'pmd'
