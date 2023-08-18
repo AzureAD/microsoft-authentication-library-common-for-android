@@ -79,6 +79,18 @@ public class CommandParameters {
     @Expose()
     private String redirectUri;
 
+    /**
+     * ClientId of a nested app
+     */
+    @Expose()
+    private String childClientId;
+
+    /**
+     * RedirectUri of a nested app
+     */
+    @Expose()
+    private String childRedirectUri;
+
     @Expose()
     private boolean powerOptCheckEnabled;
 
