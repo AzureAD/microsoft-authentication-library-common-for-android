@@ -1,6 +1,6 @@
 V.Next
 ----------
-- [MINOR] Daily version dependency now uses 1.0.+ (#2149)
+- [MINOR] Daily dev version dependency now uses 1.0.+ (#2149)
 
 V.15.0.0
 ----------
