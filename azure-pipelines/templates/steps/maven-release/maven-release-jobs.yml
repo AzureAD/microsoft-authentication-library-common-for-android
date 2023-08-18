@@ -61,8 +61,6 @@ jobs:
     inputs:
       tasks: ${{ parameters.gradleAssembleReleaseTask }}
       publishJUnitResults: false
-      jdkArchitecture: x86
-      jdkVersionOption: "1.11"
 #   - task: Gradle@1
 #     displayName: Generate Pom file
 #     inputs:
