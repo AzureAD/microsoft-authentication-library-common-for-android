@@ -1,3 +1,7 @@
+V.Next
+----------
+- [MINOR] Daily version dependency now uses 1.0.+ (#2149)
+
 V.15.0.0
 ----------
 - [MAJOR] Update active broker cache upon returned result (#2140)
