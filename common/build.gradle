@@ -275,7 +275,7 @@ afterEvaluate {
                 artifactId 'common'
                 //Edit the 'version' here for VSTS RC build
                 version = project.version
-                artifact "$buildDir/outputs/aar/common-${version}.aar"
+                from components.distRelease
 
                 pom {
                     name = 'common'
