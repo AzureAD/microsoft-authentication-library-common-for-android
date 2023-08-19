@@ -123,6 +123,10 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
             aadLoginComponentHandler.handleRegistration();
         }
 
+        if (parameters.isGetTheAppExpected()) {
+            aadLoginComponentHandler.handleGetTheAppPage();
+        }
+
         if (parameters.isEnrollPageExpected()) {
             final UiResponse enrollPageResponse = parameters.getEnrollPageResponse();
             if (enrollPageResponse == UiResponse.ACCEPT) {
@@ -130,6 +134,10 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
             } else {
                 aadLoginComponentHandler.declineEnroll();
             }
+        }
+
+        if (parameters.isSecondPasswordPageExpected()) {
+            loginComponentHandler.handlePasswordField(password);
         }
     }
 }

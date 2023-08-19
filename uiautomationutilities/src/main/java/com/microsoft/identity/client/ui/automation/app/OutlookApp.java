@@ -37,6 +37,8 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * A model for interacting with the Outlook Android App during UI Test.
  */
@@ -139,5 +141,33 @@ public class OutlookApp extends App implements IFirstPartyApp {
         // handle login prompt
         final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
         microsoftStsPromptHandler.handlePrompt(username, password);
+    }
+
+    public void addExistingFirstAccount(@NonNull final String username) {
+        Logger.i(TAG, "Adding Existing Account..");
+        // Click start btn
+        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/btn_primary_button");
+
+        Assert.assertTrue("Not on Accounts found page", UiAutomatorUtils.obtainUiObjectWithExactText("Accounts found").exists());
+        Assert.assertTrue("Couldn't find account:" + username, UiAutomatorUtils.obtainUiObjectWithText(username).exists());
+
+        // Click Continue btn
+        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/btn_primary_button");
+    }
+
+    public void signInThroughSnackBar(@NonNull final String username,
+                                      @NonNull final String password,
+                                      @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+        // Click SIGN IN Button in snackBar
+        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/snackbar_action");
+
+        // handle login prompt
+        final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
+        microsoftStsPromptHandler.handlePrompt(username, password);
+    }
+
+    public boolean isSignInSnackBarPresent() {
+        // Check if the sign in SnackBar is present
+        return UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.office.outlook:id/snackbar_action", TimeUnit.SECONDS.toMillis(5)).exists();
     }
 }
