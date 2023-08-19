@@ -271,11 +271,11 @@ afterEvaluate {
     publishing {
         publications {
             distRelease(MavenPublication) {
+                from components.distRelease
                 groupId 'com.microsoft.identity'
                 artifactId 'common'
                 //Edit the 'version' here for VSTS RC build
                 version = project.version
-                from components.distRelease
 
                 pom {
                     name = 'common'
@@ -344,9 +344,11 @@ afterEvaluate {
         def buildFile = file("$buildDir/outputs/aar/${archivesBaseName}-dist-release.aar")
         print "Build file $buildFile"
         doLast {
-            println "Renaming build file $buildFile to '$buildDir${File.separator}outputs${File.separator}aar${File.separator}${archivesBaseName}-${version}.aar'"
-            if (!buildFile.renameTo("$buildDir${File.separator}outputs${File.separator}aar${File.separator}${archivesBaseName}-${version}.aar")) {
-                println "Rename failed!"
+            if (project.hasProperty("shouldRenameBuildFile")) {
+                println "Renaming build file $buildFile to '$buildDir${File.separator}outputs${File.separator}aar${File.separator}${archivesBaseName}-${version}.aar'"
+                if (!buildFile.renameTo("$buildDir${File.separator}outputs${File.separator}aar${File.separator}${archivesBaseName}-${version}.aar")) {
+                    println "Rename failed!"
+                }
             }
         }
     }

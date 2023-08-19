@@ -61,119 +61,119 @@ jobs:
     inputs:
       tasks: ${{ parameters.gradleAssembleReleaseTask }}
       publishJUnitResults: false
-#   - task: Gradle@1
-#     displayName: Generate Pom file
-#     inputs:
-#       tasks: ${{ parameters.gradleGeneratePomFiletask }}
-#       publishJUnitResults: false
-#       jdkArchitecture: x86
-#       sqAnalysisBreakBuildIfQualityGateFailed: false
-#   - ${{ if ne(parameters.extraSourceFolder, 'none') }}:
-#     - task: CopyFiles@2
-#       displayName: Copy ${{ parameters.extraSourceFolder }} to Artifact Staging Directory
-#       inputs:
-#         SourceFolder: ${{ parameters.extraSourceFolder }}
-#         Contents: ${{ parameters.extraContents }}
-#         TargetFolder: $(Build.ArtifactStagingDirectory)
-#   - ${{ if ne(parameters.aarSourceFolder, 'none') }}:
-#     - task: CopyFiles@2
-#       name: CopyFiles1
-#       displayName: Copy aar to Artifact Staging Directory
-#       inputs:
-#         SourceFolder: ${{ parameters.aarSourceFolder }}
-#         Contents: '**/*.aar'
-#         TargetFolder: $(Build.ArtifactStagingDirectory)
-#   - ${{ if ne(parameters.jarSourceFolder, 'none') }}:
-#     - task: CopyFiles@2
-#       displayName: Copy jars to Artifact Staging Directory
-#       inputs:
-#         SourceFolder: ${{ parameters.jarSourceFolder }}
-#         Contents: '**/*.jar'
-#         TargetFolder: $(Build.ArtifactStagingDirectory)
-#   - ${{ if ne(parameters.pomSourceFolder, 'none') }}:
-#     - task: CopyFiles@2
-#       displayName: Copy pom to Artifact Staging Directory
-#       inputs:
-#         SourceFolder: ${{ parameters.pomSourceFolder }}
-#         Contents: '**/*.xml'
-#         TargetFolder: $(Build.ArtifactStagingDirectory)
-#   - task: PublishPipelineArtifact@1
-#     name: PublishPipelineArtifact1
-#     displayName: 'Publish Artifact: Build Outputs'
-#     inputs:
-#       ArtifactName: BuildOutputs
-#       TargetPath: $(Build.ArtifactStagingDirectory)
-# - job: gpg_siging
-#   variables:
-#     BuildOutputs: build_outputs
-#   displayName: GPG Signing
-#   cancelTimeoutInMinutes: 1
-#   dependsOn: sdl_maven
-#   pool:
-#     name: 1ES-AndroidPool-EOC
-#   steps:
-#   - ${{ if not(startsWith(parameters.project, 'common')) }}:
-#     - checkout: common
-#       clean: true
-#   - task: DownloadPipelineArtifact@2
-#     displayName: Download Pipeline Artifacts
-#     inputs:
-#       artifact: BuildOutputs
-#       path: $(Build.SourcesDirectory)/$(BuildOutputs)
-#   - task: DownloadSecureFile@1
-#     name: private
-#     displayName: Download GPG private key
-#     inputs:
-#       secureFile: private.gpg
-#       retryCount: 5
-#   - task: DownloadSecureFile@1
-#     name: public
-#     displayName: Download GPG public key
-#     inputs:
-#       secureFile: public.gpg
-#       retryCount: 5
-#   - task: DownloadSecureFile@1
-#     name: passphrase
-#     displayName: Download GPG passphrase
-#     inputs:
-#       secureFile: passphrase.txt
-#       retryCount: 5
-#   - task: Bash@3
-#     displayName: GPG Signing
-#     inputs:
-#       targetType: filePath
-#       filePath: azure-pipelines/templates/steps/maven-release/gpg-signing.sh
-#       workingDirectory: $(Build.SourcesDirectory)/$(BuildOutputs)
-#     env:
-#       PROJECT: ${{ parameters.project }}
-#       PROJECTVERSION: ${{ parameters.projectVersion }}
-#       JAR: ${{ parameters.gpgJar }}
-#       AAR: ${{ parameters.gpgAar }}
-#       SOURCESJAR: ${{ parameters.gpgSourcesJar }}
-#       JAVADOCJAR: ${{ parameters.gpgJavadocJar }}
-#   - task: CopyFiles@2
-#     inputs:
-#       SourceFolder: $(Build.SourcesDirectory)/$(BuildOutputs)
-#       targetFolder: $(Build.ArtifactStagingDirectory)
-#   - task: PublishBuildArtifacts@1
-#     displayName: 'Publish Artifact: GPG Signing artifacts'
-#     inputs:
-#       pathToPublish: $(Build.ArtifactStagingDirectory)
-#       ArtifactName: GPG Signing artifacts
-#   - task: CmdLine@2
-#     displayName: Download Python Requests Library
-#     inputs:
-#       script: pip install requests
-#   - task: DownloadSecureFile@1
-#     name: credentials
-#     displayName: Download Nexus Sonatype Login Credentials
-#     inputs:
-#       secureFile: NugetADDSonatypeCredentials.json
-#       retryCount: 5
-#   - task: PythonScript@0
-#     displayName: Upload to Nexus Sonatype Staging Directory
-#     inputs:
-#       arguments: ${{ parameters.project }} ${{ parameters.projectVersion }}
-#       scriptSource: filePath
-#       scriptPath: azure-pipelines/templates/steps/maven-release/upload-to-nexus-sonatype.py
-# ...
+  - task: Gradle@1
+    displayName: Generate Pom file
+    inputs:
+      tasks: ${{ parameters.gradleGeneratePomFiletask }}
+      publishJUnitResults: false
+      jdkArchitecture: x86
+      sqAnalysisBreakBuildIfQualityGateFailed: false
+  - ${{ if ne(parameters.extraSourceFolder, 'none') }}:
+    - task: CopyFiles@2
+      displayName: Copy ${{ parameters.extraSourceFolder }} to Artifact Staging Directory
+      inputs:
+        SourceFolder: ${{ parameters.extraSourceFolder }}
+        Contents: ${{ parameters.extraContents }}
+        TargetFolder: $(Build.ArtifactStagingDirectory)
+  - ${{ if ne(parameters.aarSourceFolder, 'none') }}:
+    - task: CopyFiles@2
+      name: CopyFiles1
+      displayName: Copy aar to Artifact Staging Directory
+      inputs:
+        SourceFolder: ${{ parameters.aarSourceFolder }}
+        Contents: '**/*.aar'
+        TargetFolder: $(Build.ArtifactStagingDirectory)
+  - ${{ if ne(parameters.jarSourceFolder, 'none') }}:
+    - task: CopyFiles@2
+      displayName: Copy jars to Artifact Staging Directory
+      inputs:
+        SourceFolder: ${{ parameters.jarSourceFolder }}
+        Contents: '**/*.jar'
+        TargetFolder: $(Build.ArtifactStagingDirectory)
+  - ${{ if ne(parameters.pomSourceFolder, 'none') }}:
+    - task: CopyFiles@2
+      displayName: Copy pom to Artifact Staging Directory
+      inputs:
+        SourceFolder: ${{ parameters.pomSourceFolder }}
+        Contents: '**/*.xml'
+        TargetFolder: $(Build.ArtifactStagingDirectory)
+  - task: PublishPipelineArtifact@1
+    name: PublishPipelineArtifact1
+    displayName: 'Publish Artifact: Build Outputs'
+    inputs:
+      ArtifactName: BuildOutputs
+      TargetPath: $(Build.ArtifactStagingDirectory)
+- job: gpg_siging
+  variables:
+    BuildOutputs: build_outputs
+  displayName: GPG Signing
+  cancelTimeoutInMinutes: 1
+  dependsOn: sdl_maven
+  pool:
+    name: 1ES-AndroidPool-EOC
+  steps:
+  - ${{ if not(startsWith(parameters.project, 'common')) }}:
+    - checkout: common
+      clean: true
+  - task: DownloadPipelineArtifact@2
+    displayName: Download Pipeline Artifacts
+    inputs:
+      artifact: BuildOutputs
+      path: $(Build.SourcesDirectory)/$(BuildOutputs)
+  - task: DownloadSecureFile@1
+    name: private
+    displayName: Download GPG private key
+    inputs:
+      secureFile: private.gpg
+      retryCount: 5
+  - task: DownloadSecureFile@1
+    name: public
+    displayName: Download GPG public key
+    inputs:
+      secureFile: public.gpg
+      retryCount: 5
+  - task: DownloadSecureFile@1
+    name: passphrase
+    displayName: Download GPG passphrase
+    inputs:
+      secureFile: passphrase.txt
+      retryCount: 5
+  - task: Bash@3
+    displayName: GPG Signing
+    inputs:
+      targetType: filePath
+      filePath: azure-pipelines/templates/steps/maven-release/gpg-signing.sh
+      workingDirectory: $(Build.SourcesDirectory)/$(BuildOutputs)
+    env:
+      PROJECT: ${{ parameters.project }}
+      PROJECTVERSION: ${{ parameters.projectVersion }}
+      JAR: ${{ parameters.gpgJar }}
+      AAR: ${{ parameters.gpgAar }}
+      SOURCESJAR: ${{ parameters.gpgSourcesJar }}
+      JAVADOCJAR: ${{ parameters.gpgJavadocJar }}
+  - task: CopyFiles@2
+    inputs:
+      SourceFolder: $(Build.SourcesDirectory)/$(BuildOutputs)
+      targetFolder: $(Build.ArtifactStagingDirectory)
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: GPG Signing artifacts'
+    inputs:
+      pathToPublish: $(Build.ArtifactStagingDirectory)
+      ArtifactName: GPG Signing artifacts
+  - task: CmdLine@2
+    displayName: Download Python Requests Library
+    inputs:
+      script: pip install requests
+  - task: DownloadSecureFile@1
+    name: credentials
+    displayName: Download Nexus Sonatype Login Credentials
+    inputs:
+      secureFile: NugetADDSonatypeCredentials.json
+      retryCount: 5
+  - task: PythonScript@0
+    displayName: Upload to Nexus Sonatype Staging Directory
+    inputs:
+      arguments: ${{ parameters.project }} ${{ parameters.projectVersion }}
+      scriptSource: filePath
+      scriptPath: azure-pipelines/templates/steps/maven-release/upload-to-nexus-sonatype.py
+...
