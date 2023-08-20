@@ -1,5 +1,6 @@
 V.15.0.0
 ----------
+- [MAJOR] handle broker discovery disabled on SDK side (#2145)
 - [MAJOR] Update active broker cache upon returned result (#2140)
 - [MAJOR] Move Broker side active broker cache to broker repo (#2123)
 - [MINOR] Add span names for the BrokerOperationRequestDispatcher and PassthroughExecutor (#2100)
