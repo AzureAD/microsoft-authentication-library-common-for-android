@@ -22,7 +22,7 @@ jobs:
     project: common
     projectVersion: $(commonVersion)
     envVstsMvnAndroidAccessTokenVar: ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME
-    gradleAssembleReleaseTask: common:clean common:build common:assembleDistRelease
+    gradleAssembleReleaseTask: common:clean common:build common:assembleDistRelease -PshouldRenameBuildFile
     gradleGeneratePomFiletask: common:generatePomFileForDistReleasePublication
     aarSourceFolder: common/build/outputs/aar
     jarSourceFolder: common/build/outputs/jar

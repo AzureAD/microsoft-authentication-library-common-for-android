@@ -360,4 +360,7 @@ tasks.whenTaskAdded { task ->
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
         task.dependsOn 'lint', 'sourcesJar', 'pmd'
     }
+    if (task.name == 'assembleDistRelease') {
+        task.dependsOn 'sourcesJar'
+    }
 }

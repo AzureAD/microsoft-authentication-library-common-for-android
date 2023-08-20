@@ -20,7 +20,6 @@ V.14.0.1
 ----------
 - [PATCH] Reverting token removal logic (#2117)
 
-
 V.14.0.0
 ----------
 - [PATCH] Make AndroidWrappedKeyLoader return the right alias (#2102)
