@@ -34,6 +34,7 @@ import com.microsoft.identity.common.internal.activebrokerdiscovery.InMemoryActi
 import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.cache.IActiveBrokerCache;
+import com.microsoft.identity.common.internal.cache.IClientActiveBrokerCache;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -179,7 +180,7 @@ public class BrokerOperationExecutorTests {
                 "com.microsoft.newActiveBroker",
                 "SOME_SIG_HASH");
 
-        final IActiveBrokerCache cache = new InMemoryActiveBrokerCache();
+        final IClientActiveBrokerCache cache = new InMemoryActiveBrokerCache();
         final ActiveBrokerCacheUpdater mCacheUpdater = new ActiveBrokerCacheUpdater(
                 (brokerData) -> brokerData.equals(newActiveBroker),
                 cache
@@ -222,7 +223,7 @@ public class BrokerOperationExecutorTests {
         final List<IIpcStrategy> strategyList = new ArrayList<>();
         strategyList.add(getStrategyWithValidResult());
 
-        final IActiveBrokerCache cache = new InMemoryActiveBrokerCache();
+        final IClientActiveBrokerCache cache = new InMemoryActiveBrokerCache();
         cache.setCachedActiveBroker(currentActiveBroker);
 
         expectValidResult(strategyList, cache);
@@ -234,7 +235,7 @@ public class BrokerOperationExecutorTests {
     }
 
     private void expectValidResult(final List<IIpcStrategy> strategyList,
-                                   final IActiveBrokerCache cache) {
+                                   final IClientActiveBrokerCache cache) {
         try {
             final BrokerOperationExecutor executor = new BrokerOperationExecutor(
                     strategyList,
