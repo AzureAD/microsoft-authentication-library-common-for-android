@@ -87,8 +87,8 @@ jobs:
       inputs:
         targetType: 'inline'
         script: |
-        cd $(Build.ArtifactStagingDirectory)
-        mv common-dist-release.aar common-15.0.0.aar
+          cd $(Build.ArtifactStagingDirectory)
+          mv common-dist-release.aar common-15.0.0.aar
   - ${{ if ne(parameters.jarSourceFolder, 'none') }}:
     - task: CopyFiles@2
       displayName: Copy jars to Artifact Staging Directory
