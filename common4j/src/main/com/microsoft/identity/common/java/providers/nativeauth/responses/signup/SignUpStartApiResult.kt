@@ -30,7 +30,7 @@ sealed interface SignUpStartApiResult {
         val signupToken: String,
         override val error: String,
         override val errorDescription: String,
-        val unverifiedAttributes: List<Map<String, String>>
+        val unverifiedAttributes: List<String>
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
