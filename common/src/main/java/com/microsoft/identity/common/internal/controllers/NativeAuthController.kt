@@ -32,6 +32,7 @@ import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.cache.ICacheRecord
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.AcquireTokenNoFixedScopesCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseNativeAuthCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseSignInTokenCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseSignUpStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordResendCodeCommandParameters
@@ -121,14 +122,7 @@ class NativeAuthController : BaseNativeAuthController() {
         LogSession.logMethodCall(tag = TAG)
 
         try {
-            val strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.platformComponents)
-                .challengeTypes(parameters.challengeType)
-                .build()
-
-            val oAuth2Strategy = parameters
-                .authority
-                .createOAuth2Strategy(strategyParameters)
+            val oAuth2Strategy = composeOAuth2Strategy(parameters)
 
             val usePassword = parameters is SignInStartUsingPasswordCommandParameters
 
@@ -162,13 +156,7 @@ class NativeAuthController : BaseNativeAuthController() {
         LogSession.logMethodCall(tag = TAG)
 
         try {
-            val strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.platformComponents)
-                .build()
-
-            val oAuth2Strategy = parameters
-                .authority
-                .createOAuth2Strategy(strategyParameters)
+            val oAuth2Strategy = composeOAuth2Strategy(parameters)
 
             val mergedScopes = addDefaultScopes(parameters.scopes)
             val parametersWithScopes = CommandUtil.createSignInWithSLTCommandParametersWithScopes(
@@ -226,13 +214,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     mergedScopes
                 )
 
-            val strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.platformComponents)
-                .build()
-
-            val oAuth2Strategy = parametersWithScopes
-                .authority
-                .createOAuth2Strategy(strategyParameters)
+            val oAuth2Strategy = composeOAuth2Strategy(parameters)
 
             val tokenApiResult = performOOBTokenRequest(
                 oAuth2Strategy = oAuth2Strategy,
@@ -281,14 +263,7 @@ class NativeAuthController : BaseNativeAuthController() {
         LogSession.logMethodCall(tag = TAG)
 
         try {
-            val strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.platformComponents)
-                .challengeTypes(parameters.challengeType)
-                .build()
-
-            val oAuth2Strategy = parameters
-                .authority
-                .createOAuth2Strategy(strategyParameters)
+            val oAuth2Strategy = composeOAuth2Strategy(parameters)
 
             val result = performSignInChallengeCall(
                 oAuth2Strategy = oAuth2Strategy,
@@ -341,14 +316,7 @@ class NativeAuthController : BaseNativeAuthController() {
         LogSession.logMethodCall(tag = TAG)
 
         try {
-            val strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.platformComponents)
-                .challengeTypes(parameters.challengeType)
-                .build()
-
-            val oAuth2Strategy = parameters
-                .authority
-                .createOAuth2Strategy(strategyParameters)
+            val oAuth2Strategy = composeOAuth2Strategy(parameters)
 
             val mergedScopes = addDefaultScopes(parameters.scopes)
             val parametersWithScopes =
@@ -373,13 +341,7 @@ class NativeAuthController : BaseNativeAuthController() {
     fun signUpStart(parameters: BaseSignUpStartCommandParameters): SignUpStartCommandResult {
         LogSession.logMethodCall(tag = TAG)
         try {
-            val strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.platformComponents)
-                .build()
-
-            val oAuth2Strategy = parameters
-                .authority
-                .createOAuth2Strategy(strategyParameters)
+            val oAuth2Strategy = composeOAuth2Strategy(parameters)
 
             val usePassword = parameters is SignUpStartUsingPasswordCommandParameters
 
@@ -457,13 +419,7 @@ class NativeAuthController : BaseNativeAuthController() {
         LogSession.logMethodCall(tag = TAG)
 
         try {
-            val strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.platformComponents)
-                .build()
-
-            val oAuth2Strategy = parameters
-                .authority
-                .createOAuth2Strategy(strategyParameters)
+            val oAuth2Strategy = composeOAuth2Strategy(parameters)
 
             val signUpContinueApiResult = performSignUpSubmitCode(
                 oAuth2Strategy = oAuth2Strategy,
@@ -484,13 +440,7 @@ class NativeAuthController : BaseNativeAuthController() {
         LogSession.logMethodCall(tag = TAG)
 
         try {
-            val strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.platformComponents)
-                .build()
-
-            val oAuth2Strategy = parameters
-                .authority
-                .createOAuth2Strategy(strategyParameters)
+            val oAuth2Strategy = composeOAuth2Strategy(parameters)
 
             return performSignUpChallengeCall(
                 oAuth2Strategy = oAuth2Strategy,
@@ -510,13 +460,7 @@ class NativeAuthController : BaseNativeAuthController() {
         LogSession.logMethodCall(tag = TAG)
 
         try {
-            val strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.platformComponents)
-                .build()
-
-            val oAuth2Strategy = parameters
-                .authority
-                .createOAuth2Strategy(strategyParameters)
+            val oAuth2Strategy = composeOAuth2Strategy(parameters)
 
             val signUpContinueApiResult = performSignUpSubmitUserAttributes(
                 oAuth2Strategy = oAuth2Strategy,
@@ -537,13 +481,7 @@ class NativeAuthController : BaseNativeAuthController() {
         LogSession.logMethodCall(tag = TAG)
 
         try {
-            val strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.platformComponents)
-                .build()
-
-            val oAuth2Strategy = parameters
-                .authority
-                .createOAuth2Strategy(strategyParameters)
+            val oAuth2Strategy = composeOAuth2Strategy(parameters)
 
             return performSignUpSubmitPassword(
                 oAuth2Strategy = oAuth2Strategy,
@@ -734,14 +672,7 @@ class NativeAuthController : BaseNativeAuthController() {
         LogSession.logMethodCall(tag = TAG)
 
         try {
-            val strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.platformComponents)
-                .challengeTypes(parameters.challengeType)
-                .build()
-
-            val oAuth2Strategy = parameters
-                .authority
-                .createOAuth2Strategy(strategyParameters)
+            val oAuth2Strategy = composeOAuth2Strategy(parameters)
 
             val resetPasswordStartApiResult = performResetPasswordStartCall(
                 oAuth2Strategy = oAuth2Strategy,
@@ -788,13 +719,7 @@ class NativeAuthController : BaseNativeAuthController() {
         LogSession.logMethodCall(tag = TAG)
 
         try {
-            val strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.platformComponents)
-                .build()
-
-            val oAuth2Strategy = parameters
-                .authority
-                .createOAuth2Strategy(strategyParameters)
+            val oAuth2Strategy = composeOAuth2Strategy(parameters)
 
             val resetPasswordContinueApiResult = performResetPasswordContinueCall(
                 oAuth2Strategy = oAuth2Strategy,
@@ -840,14 +765,7 @@ class NativeAuthController : BaseNativeAuthController() {
         LogSession.logMethodCall(tag = TAG)
 
         try {
-            val strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.platformComponents)
-                .challengeTypes(parameters.challengeType)
-                .build()
-
-            val oAuth2Strategy = parameters
-                .authority
-                .createOAuth2Strategy(strategyParameters)
+            val oAuth2Strategy = composeOAuth2Strategy(parameters)
 
             val resetPasswordChallengeApiResult = performResetPasswordChallengeCall(
                 oAuth2Strategy = oAuth2Strategy,
@@ -892,13 +810,7 @@ class NativeAuthController : BaseNativeAuthController() {
         LogSession.logMethodCall(tag = TAG)
 
         try {
-            val strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.platformComponents)
-                .build()
-
-            val oAuth2Strategy = parameters
-                .authority
-                .createOAuth2Strategy(strategyParameters)
+            val oAuth2Strategy = composeOAuth2Strategy(parameters)
 
             val resetPasswordSubmitApiResult = performResetPasswordSubmitCall(
                 oAuth2Strategy = oAuth2Strategy,
@@ -1748,5 +1660,16 @@ class NativeAuthController : BaseNativeAuthController() {
                 )
             }
         }
+    }
+
+    private fun composeOAuth2Strategy(parameters: BaseNativeAuthCommandParameters): NativeAuthOAuth2Strategy {
+        val strategyParameters = OAuth2StrategyParameters.builder()
+            .platformComponents(parameters.platformComponents)
+            .challengeTypes(parameters.challengeType)
+            .build()
+
+        return parameters
+            .authority
+            .createOAuth2Strategy(strategyParameters)
     }
 }
