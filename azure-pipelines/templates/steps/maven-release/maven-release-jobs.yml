@@ -85,7 +85,10 @@ jobs:
         TargetFolder: $(Build.ArtifactStagingDirectory)
     - task: CmdLine@2
       inputs:
-        script: ls
+        script: | 
+        cd $(Build.ArtifactStagingDirectory)
+        ls
+        ren common-dist-release.aar common-15.0.0.aar
   - ${{ if ne(parameters.jarSourceFolder, 'none') }}:
     - task: CopyFiles@2
       displayName: Copy jars to Artifact Staging Directory
