@@ -22,6 +22,7 @@ jobs:
     project: common
     projectVersion: $(commonVersion)
     envVstsMvnAndroidAccessTokenVar: ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME
+    # -PshouldRenameBuildFile is required to rename the generated aar files for gpg signing stage to work
     gradleAssembleReleaseTask: common:clean common:assembleDistRelease -PshouldRenameBuildFile
     gradleGeneratePomFiletask: common:generatePomFileForDistReleasePublication
     aarSourceFolder: common/build/outputs/aar
