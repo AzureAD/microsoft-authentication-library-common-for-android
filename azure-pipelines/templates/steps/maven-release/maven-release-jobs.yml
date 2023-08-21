@@ -85,6 +85,7 @@ jobs:
         TargetFolder: $(Build.ArtifactStagingDirectory)
     - task: Bash@3
       inputs:
+        targetType: 'inline'
         script: | 
         cd $(Build.ArtifactStagingDirectory)
         mv common-dist-release.aar common-15.0.0.aar
