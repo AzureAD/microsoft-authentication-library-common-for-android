@@ -87,7 +87,6 @@ jobs:
       inputs:
         script: | 
         cd $(Build.ArtifactStagingDirectory)
-        ls
         mv common-dist-release.aar common-15.0.0.aar
   - ${{ if ne(parameters.jarSourceFolder, 'none') }}:
     - task: CopyFiles@2
