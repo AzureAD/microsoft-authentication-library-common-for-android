@@ -230,8 +230,8 @@ public abstract class OAuth2Strategy
                     headers.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
                 }
             }
-            final URL requestUrl = new URL(getTokenEndpoint());
-         //   final URL requestUrl = new URL(getTokenEndpoint()+"?dc=ESTS-PUB-WUS2-AZ1-FD000-TEST1&pwbrokerpuidtoguid=true&bypasspwpoliciesmsa=true&jwtcredsmsa=true");
+         //   final URL requestUrl = new URL(getTokenEndpoint());
+            final URL requestUrl = new URL(getTokenEndpoint()+"?dc=ESTS-PUB-WUS2-AZ1-FD000-TEST1&pwbrokerpuidtoguid=true&bypasspwpoliciesmsa=true&jwtcredsmsa=true");
 
             final long networkStartTime = System.currentTimeMillis();
             final HttpResponse response = httpClient.post(
