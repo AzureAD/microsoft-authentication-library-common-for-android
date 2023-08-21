@@ -44,6 +44,12 @@ import com.microsoft.identity.common.java.util.ObjectMapper
 import java.net.HttpURLConnection
 
 class NativeAuthResponseHandler {
+
+    companion object {
+        internal const val DEFAULT_ERROR = "unknown_error"
+        internal const val DEFAULT_ERROR_DESCRIPTION = "No error description received"
+    }
+
     private val TAG = NativeAuthResponseHandler::class.java.simpleName
 
     //region signup/start
@@ -53,11 +59,24 @@ class NativeAuthResponseHandler {
     ): SignUpStartApiResponse {
         LogSession.logMethodCall(tag = TAG)
 
-        val result = if (response.body == null) SignUpStartApiResponse(response.statusCode, null, null, null, null, null, null, null)
-            else ObjectMapper.deserializeJsonStringToObject(
-            response.body,
-            SignUpStartApiResponse::class.java
-        )
+        val result = if (response.body.isNullOrBlank()) {
+            SignUpStartApiResponse(
+                response.statusCode,
+                DEFAULT_ERROR,
+                DEFAULT_ERROR_DESCRIPTION,
+                null,
+                null,
+                null,
+                null,
+                null
+            )
+        }
+        else {
+            ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                SignUpStartApiResponse::class.java
+            )
+        }
         result.statusCode = response.statusCode
 
         ApiResultUtil.logResponse(TAG, result)
@@ -73,11 +92,26 @@ class NativeAuthResponseHandler {
     ): SignUpChallengeApiResponse {
         LogSession.logMethodCall(tag = TAG)
 
-        val result = if (response.body == null) SignUpChallengeApiResponse(response.statusCode, null, null, null, null, null, null, null, null, null,null)
-                else ObjectMapper.deserializeJsonStringToObject(
-                    response.body,
-                    SignUpChallengeApiResponse::class.java
-                )
+        val result = if (response.body.isNullOrBlank()) {
+            SignUpChallengeApiResponse(
+                response.statusCode,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                DEFAULT_ERROR,
+                DEFAULT_ERROR_DESCRIPTION,
+                null,
+                null
+            )
+        } else {
+            ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                SignUpChallengeApiResponse::class.java
+            )
+        }
         result.statusCode = response.statusCode
 
         ApiResultUtil.logResponse(TAG, result)
@@ -93,11 +127,25 @@ class NativeAuthResponseHandler {
     ): SignUpContinueApiResponse {
         LogSession.logMethodCall(tag = TAG)
 
-        val result = if (response.body == null) SignUpContinueApiResponse(response.statusCode, null, null, null, null, null, null, null, null, null)
-                    else ObjectMapper.deserializeJsonStringToObject(
-                        response.body,
-                        SignUpContinueApiResponse::class.java
-                    )
+        val result = if (response.body.isNullOrBlank()) {
+            SignUpContinueApiResponse(
+                response.statusCode,
+                null,
+                null,
+                DEFAULT_ERROR,
+                DEFAULT_ERROR_DESCRIPTION,
+                null,
+                null,
+                null,
+                null,
+                null
+            )
+        } else {
+            ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                SignUpContinueApiResponse::class.java
+            )
+        }
         result.statusCode = response.statusCode
 
         ApiResultUtil.logResponse(TAG, result)
@@ -112,11 +160,24 @@ class NativeAuthResponseHandler {
     ): SignInInitiateApiResponse {
         LogSession.logMethodCall(tag = TAG)
 
-        val result = if (response.body == null) SignInInitiateApiResponse(response.statusCode, null, null, null, null, null, null, null, null)
-                    else ObjectMapper.deserializeJsonStringToObject(
-                        response.body,
-                        SignInInitiateApiResponse::class.java
-                    )
+        val result = if (response.body.isNullOrBlank()) {
+            SignInInitiateApiResponse(
+                response.statusCode,
+                null,
+                null,
+                DEFAULT_ERROR,
+                DEFAULT_ERROR_DESCRIPTION,
+                null,
+                null,
+                null,
+                null
+            )
+        }  else {
+            ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                SignInInitiateApiResponse::class.java
+            )
+        }
         result.statusCode = response.statusCode
 
         ApiResultUtil.logResponse(TAG, result)
@@ -132,11 +193,29 @@ class NativeAuthResponseHandler {
     ): SignInChallengeApiResponse {
         LogSession.logMethodCall(tag = TAG)
 
-        val result = if (response.body == null) SignInChallengeApiResponse(response.statusCode, null, null, null, null, null, null, null, null, null, null, null, null, null)
-                    else ObjectMapper.deserializeJsonStringToObject(
-                        response.body,
-                        SignInChallengeApiResponse::class.java
-                    )
+        val result = if (response.body.isNullOrBlank()) {
+            SignInChallengeApiResponse(
+                response.statusCode,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                DEFAULT_ERROR,
+                null,
+                null,
+                DEFAULT_ERROR_DESCRIPTION,
+                null,
+                null)
+
+        } else {
+            ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                SignInChallengeApiResponse::class.java
+            )
+        }
         result.statusCode = response.statusCode
 
         ApiResultUtil.logResponse(TAG, result)
@@ -156,11 +235,31 @@ class NativeAuthResponseHandler {
         // Use native-auth specific class in case of API error response,
         // or standard MicrosoftStsTokenResponse in case of success response
         if (response.statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            val apiResponse = if (response.body == null) SignInTokenApiResponse(response.statusCode, null, null, null,null, null, null,null, null, null,null, null, null, null, null, null)
-                            else ObjectMapper.deserializeJsonStringToObject(
-                                    response.body,
-                                    SignInTokenApiResponse::class.java
-                            )
+            val apiResponse = if (response.body.isNullOrBlank()) {
+                SignInTokenApiResponse(
+                    response.statusCode,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    DEFAULT_ERROR,
+                    DEFAULT_ERROR_DESCRIPTION,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+                )
+            } else {
+                ObjectMapper.deserializeJsonStringToObject(
+                    response.body,
+                    SignInTokenApiResponse::class.java
+                )
+            }
             ApiResultUtil.logResponse(TAG, apiResponse)
             return apiResponse.toErrorResult()
         } else {
@@ -183,11 +282,23 @@ class NativeAuthResponseHandler {
     ): ResetPasswordStartApiResponse {
         LogSession.logMethodCall(tag = TAG)
 
-        val apiResponse = if (response.body == null) ResetPasswordStartApiResponse(response.statusCode, null, null, null, null, null, null, null)
-            else ObjectMapper.deserializeJsonStringToObject(
-            response.body,
-            ResetPasswordStartApiResponse::class.java
-        )
+        val apiResponse = if (response.body.isNullOrBlank()) {
+            ResetPasswordStartApiResponse(
+                response.statusCode,
+                null,
+                null,
+                DEFAULT_ERROR,
+                DEFAULT_ERROR_DESCRIPTION,
+                null,
+                null,
+                null
+            )
+        } else {
+            ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                ResetPasswordStartApiResponse::class.java
+            )
+        }
         apiResponse.statusCode = response.statusCode
 
         ApiResultUtil.logResponse(TAG, apiResponse)
@@ -202,11 +313,28 @@ class NativeAuthResponseHandler {
     ): ResetPasswordChallengeApiResponse {
         LogSession.logMethodCall(tag = TAG)
 
-        val apiResponse = if (response.body == null) ResetPasswordChallengeApiResponse(response.statusCode, null, null, null, null, null, null, null, null, null, null, null, null)
-                        else ObjectMapper.deserializeJsonStringToObject(
-                                response.body,
-                                ResetPasswordChallengeApiResponse::class.java
-                        )
+        val apiResponse = if (response.body.isNullOrBlank()) {
+            ResetPasswordChallengeApiResponse(
+                response.statusCode,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                DEFAULT_ERROR,
+                null,
+                DEFAULT_ERROR_DESCRIPTION,
+                null,
+                null
+            )
+        } else {
+            ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                ResetPasswordChallengeApiResponse::class.java
+            )
+        }
         apiResponse.statusCode = response.statusCode
 
         ApiResultUtil.logResponse(TAG, apiResponse)
@@ -221,11 +349,25 @@ class NativeAuthResponseHandler {
     ): ResetPasswordContinueApiResponse {
         LogSession.logMethodCall(tag = TAG)
 
-        val apiResponse = if (response.body == null) ResetPasswordContinueApiResponse(response.statusCode, null, null, null, null, null, null, null, null, null)
-                        else ObjectMapper.deserializeJsonStringToObject(
-                            response.body,
-                            ResetPasswordContinueApiResponse::class.java
-                        )
+        val apiResponse = if (response.body.isNullOrBlank()) {
+            ResetPasswordContinueApiResponse(
+                response.statusCode,
+                null,
+                null,
+                null,
+                null,
+                DEFAULT_ERROR,
+                DEFAULT_ERROR_DESCRIPTION,
+                null,
+                null,
+                null
+            )
+        } else {
+            ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                ResetPasswordContinueApiResponse::class.java
+            )
+        }
         apiResponse.statusCode = response.statusCode
 
         ApiResultUtil.logResponse(TAG, apiResponse)
@@ -239,11 +381,23 @@ class NativeAuthResponseHandler {
     ): ResetPasswordSubmitApiResponse {
         LogSession.logMethodCall(tag = TAG)
 
-        val apiResponse = if (response.body == null) ResetPasswordSubmitApiResponse(response.statusCode, null, null, null, null, null, null, null)
-                        else ObjectMapper.deserializeJsonStringToObject(
-                            response.body,
-                            ResetPasswordSubmitApiResponse::class.java
-                        )
+        val apiResponse = if (response.body.isNullOrBlank()) {
+            ResetPasswordSubmitApiResponse(
+                response.statusCode,
+                null,
+                null,
+                DEFAULT_ERROR,
+                DEFAULT_ERROR_DESCRIPTION,
+                null,
+                null,
+                null
+            )
+        } else {
+            ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                ResetPasswordSubmitApiResponse::class.java
+            )
+        }
         apiResponse.statusCode = response.statusCode
 
         ApiResultUtil.logResponse(TAG, apiResponse)
@@ -258,11 +412,23 @@ class NativeAuthResponseHandler {
     ): ResetPasswordPollCompletionApiResponse {
         LogSession.logMethodCall(tag = TAG)
 
-        val apiResponse = if (response.body == null) ResetPasswordPollCompletionApiResponse(response.statusCode, null, null, null, null, null, null, null)
-                        else ObjectMapper.deserializeJsonStringToObject(
-                                response.body,
-                                ResetPasswordPollCompletionApiResponse::class.java
-                        )
+        val apiResponse = if (response.body.isNullOrBlank()) {
+            ResetPasswordPollCompletionApiResponse(
+                response.statusCode,
+                null,
+                null,
+                DEFAULT_ERROR,
+                DEFAULT_ERROR_DESCRIPTION,
+                null,
+                null,
+                null
+            )
+        } else {
+            ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                ResetPasswordPollCompletionApiResponse::class.java
+            )
+        }
         apiResponse.statusCode = response.statusCode
 
         ApiResultUtil.logResponse(TAG, apiResponse)
