@@ -28,5 +28,5 @@ data class RequiredUserAttributeApiResult(
     @SerializedName("name") val name: String?,
     @SerializedName("type") val type: String?,
     @SerializedName("required") val required: Boolean?,
-    @SerializedName("options") val options: List<RequiredUserAttributeOptionsApiResult>?
+    @SerializedName("options") val options: RequiredUserAttributeOptionsApiResult?
 )
