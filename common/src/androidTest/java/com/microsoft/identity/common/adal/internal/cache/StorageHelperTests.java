@@ -198,6 +198,7 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
     public void testKeyChange() throws GeneralSecurityException, IOException {
         Context context = getInstrumentation().getTargetContext();
         StorageHelper.LAST_KNOWN_THUMBPRINT.set("");
+        StorageHelper.FIRST_TIME.set(true);
         final StorageHelper storageHelper = new StorageHelper(context);
         Assert.assertTrue(storageHelper.testKeyChange());
         for (int i = 0; i < 500; i++) {

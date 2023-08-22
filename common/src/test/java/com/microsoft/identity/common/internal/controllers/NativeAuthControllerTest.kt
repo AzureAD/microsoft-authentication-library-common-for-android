@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.controllers
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.microsoft.identity.common.AndroidPlatformComponents
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiEndpointType
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiResponseType
@@ -1100,7 +1099,7 @@ class NativeAuthControllerTest {
 
     private fun createSignInStartWithPasswordCommandParameters(): SignInStartUsingPasswordCommandParameters {
         val authenticationScheme = AuthenticationSchemeFactory.createScheme(
-            AndroidPlatformComponents.createFromContext(context),
+            AndroidPlatformComponentsFactory.createFromContext(context),
             null
         )
 
@@ -1120,7 +1119,7 @@ class NativeAuthControllerTest {
 
     private fun createSignInStartCommandParameters(): SignInStartCommandParameters {
         val authenticationScheme = AuthenticationSchemeFactory.createScheme(
-            AndroidPlatformComponents.createFromContext(context),
+            AndroidPlatformComponentsFactory.createFromContext(context),
             null
         )
 
@@ -1138,7 +1137,7 @@ class NativeAuthControllerTest {
 
     private fun createSignInWithSLTCommandParameters(withScopes: Boolean = false): SignInWithSLTCommandParameters {
         val authenticationScheme = AuthenticationSchemeFactory.createScheme(
-            AndroidPlatformComponents.createFromContext(context),
+            AndroidPlatformComponentsFactory.createFromContext(context),
             null
         )
 
@@ -1157,7 +1156,7 @@ class NativeAuthControllerTest {
 
     private fun createSignInSubmitCodeCommandParameters(): SignInSubmitCodeCommandParameters {
         val authenticationScheme = AuthenticationSchemeFactory.createScheme(
-            AndroidPlatformComponents.createFromContext(context),
+            AndroidPlatformComponentsFactory.createFromContext(context),
             null
         )
 
@@ -1188,7 +1187,7 @@ class NativeAuthControllerTest {
 
     private fun createSignInSubmitPasswordCommandParameters(): SignInSubmitPasswordCommandParameters {
         val authenticationScheme = AuthenticationSchemeFactory.createScheme(
-            AndroidPlatformComponents.createFromContext(context),
+            AndroidPlatformComponentsFactory.createFromContext(context),
             null
         )
 

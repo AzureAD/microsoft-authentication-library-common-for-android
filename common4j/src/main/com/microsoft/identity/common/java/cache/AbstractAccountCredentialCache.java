@@ -33,6 +33,7 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -50,6 +51,17 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
 
     private static final String TAG = AbstractAccountCredentialCache.class.getSimpleName();
     private static final String NEW_LINE = "\n";
+
+    // SharedPreferences used to store Accounts and Credentials
+    protected final INameValueStorage<String> mSharedPreferencesFileManager;
+
+    /**
+     * Constructor of AbstractAccountCredentialCache.
+     * @param sharedPreferencesFileManager INameValueStorage
+     */
+    protected AbstractAccountCredentialCache(@NonNull final INameValueStorage<String> sharedPreferencesFileManager) {
+        mSharedPreferencesFileManager = sharedPreferencesFileManager;
+    }
 
     @Nullable
     protected Class<? extends Credential> getTargetClassForCredentialType(@Nullable final String cacheKey,

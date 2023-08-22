@@ -23,7 +23,10 @@
 
 package com.microsoft.identity.common.internal.broker;
 
-import android.annotation.SuppressLint;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_DEBUG_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
+
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -35,6 +38,7 @@ import android.util.Base64;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.logging.Logger;
@@ -50,7 +54,7 @@ import java.security.NoSuchAlgorithmException;
 public class PackageHelper {
     private static final String TAG = "CallerInfo";
 
-    private PackageManager mPackageManager;
+    private final PackageManager mPackageManager;
 
     /**
      * Creates helper to check caller info.
@@ -62,15 +66,24 @@ public class PackageHelper {
     }
 
     /**
-     * Reads first signature in the list for given package name.
+     * Creates helper to check caller info.
      *
-     * @param packageName name of the package for which signature should be returned
-     * @return signature for package
+     * @param context The android Context
      */
-    public String getCurrentSignatureForPackage(final String packageName) {
-        final String methodTag = TAG + ":getCurrentSignatureForPackage";
+    public PackageHelper(final Context context) {
+        mPackageManager = context.getPackageManager();
+    }
+
+    /**
+     * Reads first {@link Signature} in the list for given package name and generate a thumbprint with SHA-1.
+     *
+     * @param packageName name of the package for which thumbprint should be returned
+     * @return SHA-1 signing certificate thumbprint for the package
+     */
+    public String getSha1SignatureForPackage(final String packageName) {
+        final String methodTag = TAG + ":getSha1SignatureForPackage";
         try {
-            return getCurrentSignatureForPackage(getPackageInfo(mPackageManager, packageName));
+            return getSigningCertificateThumbprintForPackage(getPackageInfo(mPackageManager, packageName), false);
         } catch (NameNotFoundException e) {
             Logger.error(methodTag, "Calling App's package does not exist in PackageManager. ", "", e);
         }
@@ -78,18 +91,37 @@ public class PackageHelper {
     }
 
     /**
-     * Reads first signature in the list for given package name.
+     * Reads first {@link Signature} in the list for given package name and generate a thumbprint with SHA-512.
      *
-     * @param packageInfo package for which signature should be returned
+     * @param packageName name of the package for which thumbprint should be returned
+     * @return SHA-512 signing certificate thumbprint for the package
+     */
+    public String getSha512SignatureForPackage(final String packageName) {
+        final String methodTag = TAG + ":getSha512SignatureForPackage";
+        try {
+            return getSigningCertificateThumbprintForPackage(getPackageInfo(mPackageManager, packageName), true);
+        } catch (NameNotFoundException e) {
+            Logger.error(methodTag, "Calling App's package does not exist in PackageManager. ", "", e);
+        }
+        return null;
+    }
+
+    /**
+     * Reads first {@link Signature} in the list for given package name.
+     *
+     * @param packageInfo package for which signing certificate should be returned
+     * @param useSha512 if true, uses SHA-512 to generate signing certificate thumbprint (should be used for verification purposes);
+     *                  if false, uses default SHA (redirect URI purposes)
      * @return signature for package
      */
-    public static String getCurrentSignatureForPackage(final PackageInfo packageInfo) {
-        final String methodTag = TAG + ":getCurrentSignatureForPackage";
+    private static String getSigningCertificateThumbprintForPackage(final PackageInfo packageInfo,
+                                                                    final boolean useSha512) {
+        final String methodTag = TAG + ":getSigningCertificateThumbprintForPackage";
         try {
             final Signature[] signatures = getSignatures(packageInfo);
             if (signatures != null && signatures.length > 0) {
                 final Signature signature = signatures[0];
-                MessageDigest md = MessageDigest.getInstance("SHA");
+                MessageDigest md = MessageDigest.getInstance(useSha512 ? "SHA-512" : "SHA");
                 md.update(signature.toByteArray());
                 return Base64.encodeToString(md.digest(), Base64.NO_WRAP);
             }
@@ -125,21 +157,34 @@ public class PackageHelper {
      * @param packageName the package name to look up.
      * @return true if the package is installed and enabled. Otherwise, returns false.
      */
-    public boolean isPackageInstalledAndEnabled(final Context context, final String packageName) {
+    public boolean isPackageInstalledAndEnabled(final String packageName) {
         final String methodTag = TAG + ":isPackageInstalledAndEnabled";
         boolean enabled = false;
-        PackageManager pm = context.getPackageManager();
         try {
-            ApplicationInfo applicationInfo = pm.getApplicationInfo(packageName, 0);
+            ApplicationInfo applicationInfo = mPackageManager.getApplicationInfo(packageName, 0);
             if (applicationInfo != null) {
                 enabled = applicationInfo.enabled;
             }
         } catch (NameNotFoundException e) {
-            Logger.error(methodTag, "Package is not found. Package name: " + packageName, e);
+            Logger.warn(methodTag, "Package is not found. Package name: " + packageName);
         }
 
         Logger.info(methodTag, " Is package installed and enabled? [" + enabled + "]");
         return enabled;
+    }
+
+    /**
+     * Helper method to get Broker Redirect Uri
+     *
+     * @param context
+     * @param packageName
+     * @return String Broker Redirect Uri
+     */
+    public static String getBrokerRedirectUri(final Context context, final String packageName) {
+        final PackageHelper info = new PackageHelper(context.getPackageManager());
+        final String signatureDigest = info.getSha1SignatureForPackage(packageName);
+        return PackageHelper.getBrokerRedirectUrl(packageName,
+                signatureDigest);
     }
 
     /**
@@ -210,5 +255,27 @@ public class PackageHelper {
 
     public static Signature[] getSignatures(@NonNull Context context) throws PackageManager.NameNotFoundException {
         return getSignatures(getPackageInfo(context.getPackageManager(), context.getPackageName()));
+    }
+
+    /**
+     * Validate if provided package name is a valid teams app package
+     * @return true if context is from Teams app, false otherwise
+     */
+    public boolean verifyIfValidTeamsPackage(final String packageName) {
+        // Bypass if the request made on a debug MSAL build.
+        if (BuildConfig.DEBUG) {
+            return true;
+        }
+
+        if (packageName.equals(IPPHONE_APP_PACKAGE_NAME) &&
+                isPackageInstalledAndEnabled(IPPHONE_APP_PACKAGE_NAME)) {
+            final String currentSignatureForTeamsApp = getSha1SignatureForPackage(IPPHONE_APP_PACKAGE_NAME);
+            if (IPPHONE_APP_SIGNATURE.equals(currentSignatureForTeamsApp) ||
+                    IPPHONE_APP_DEBUG_SIGNATURE.equals(currentSignatureForTeamsApp)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

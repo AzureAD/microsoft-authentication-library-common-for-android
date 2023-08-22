@@ -94,6 +94,7 @@ public final class AuthenticationConstants {
     public static final String FOUR_POINT_ZERO = "4.0";
 
 
+
     /**
      * Holding all the constant value involved in the webview.
      */
@@ -605,7 +606,19 @@ public final class AuthenticationConstants {
          *
          * @see <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Broker%20API/broker_protocol_versions.md">Android Auth Broker Protocol Versions</a>
          */
-        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "12.0";
+        public static final String LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "14.0";
+
+        /**
+         * The maximum msal-to-broker protocol version known by clients such as MSAL Android.
+         */
+        public static final String CLIENT_MAX_PROTOCOL_VERSION = LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE;
+
+        /**
+         * The maximum broker protocol version known by Broker. This is a default value that can be
+         * used by the broker, however, broker may choose to override this value and use a higher
+         * value during handshake based on a flight.
+         */
+        public static final String DEFAULT_MAX_BROKER_PROTOCOL_VERSION = "13.0";
 
         /**
          * A client id for requesting the SSO token.
@@ -1003,6 +1016,36 @@ public final class AuthenticationConstants {
         public static final String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
 
         /**
+         * Mock AuthApp package name.
+         */
+        public static final String MOCK_AUTH_APP_PACKAGE_NAME = "com.microsoft.mockauthapp";
+
+        /**
+         * Mock AuthApp SHA512 signature hash.
+         */
+        public static final String MOCK_AUTH_APP_SIGNATURE_SHA512 = "QhjKSYYD31K7+C4q4Mpd08crE0LN/3GgnKVVuej4JWckUTc0Wp/i//LWLQnANaWiAjdESJJrjavu0cE6hkQihQ==";
+
+        /**
+         * Mock CP package name.
+         */
+        public static final String MOCK_CP_PACKAGE_NAME = "com.microsoft.mockcp";
+
+        /**
+         * Mock CP SHA512 signature hash.
+         */
+        public static final String MOCK_CP_SIGNATURE_SHA512 = "EZ2RCcsmf869Ec41PgHHnFdI0MgmVsADFFy8AtcfEKsjD1YAPtKxCMZVdT+y+K1IWRnPk4Lf2PUAcL5N49OqAA==";
+
+        /**
+         * Mock LTW package name.
+         */
+        public static final String MOCK_LTW_PACKAGE_NAME = "com.microsoft.mockltw";
+
+        /**
+         * Mock LTW SHA512 signature hash.
+         */
+        public static final String MOCK_LTW_SIGNATURE_SHA512 = "felxzv/rpqa69dOADXVVKnawk5x8snBW2k/kDxzQLVkbcdzAvrGm8gcBRItzUGIQTupHCTWksN6WBGbn+b0KIA==";
+
+        /**
          * Intune app package name.
          */
         public static final String INTUNE_APP_PACKAGE_NAME = "com.microsoft.intune";
@@ -1019,28 +1062,66 @@ public final class AuthenticationConstants {
 
         /**
          * Signature info for Intune Company portal app that installs authenticator
-         * component.
+         * component. Generated with SHA-1.
          */
         public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE = "1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
 
         /**
-         * Signature info for Azure authenticator app that installs authenticator
-         * component.
+         * Signature info for Intune Company portal app that installs authenticator
+         * component. Generated with SHA-512.
+         */
+        public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512 = "jPpMoaNvcxSLMX4yG4C3Gf86rtTqh33SqpuRKg4WOP+MnnpA52zZgvKLW76U4Cqqf68iaBk9W7k/jhciiSAtgQ==";
+
+        /**
+         * Signature info for Azure authenticator release app that installs authenticator
+         * component. Generated with SHA-1.
          */
         public static final String AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE = "ho040S3ffZkmxqtQrSwpTVOn9r0=";
 
         /**
-         * Signature info for Azure authenticator app that installs authenticator
-         * component.
+         * Signature info for Azure authenticator release app that installs authenticator
+         * component. Generated with SHA-512.
+         */
+        public static final String AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE_SHA512 = "Gu8CuaYmSV5CHWd6dz3tGPXIE+YTalCVIXi5lEBXpvUgsMKoHbU9Rqou3WNRNU1tsz8pvEADTCCJ5f02fbw9qw==";
+
+        /**
+         * Signature info for Azure authenticator debug app that installs authenticator
+         * component. Generated with SHA-1.
          */
         public static final String AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE = "N1jdcbbnKDr0LaFZlqdhXgm2luE=";
 
         /**
+         * Signature info for Azure authenticator debug app that installs authenticator
+         * component. Generated with SHA-512.
+         */
+        public static final String AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE_SHA512 = "pdAtoxfsEwbpQsIaua5Uobl5AQEjqt40aPXI7UY1lIW0NTmg0G4jHQ5T5mujSjjU06q4mEHs5hb6z/Mr0PNlmQ==";
+
+        /**
          * Signature info for Broker Host app that installs authenticator
-         * component.
+         * component.Generated with SHA-1.
          */
         public static final String BROKER_HOST_APP_SIGNATURE = "1wIqXSqBj7w+h11ZifsnqwgyKrY=";
 
+        /**
+         * Signature info for Broker Host app that installs authenticator
+         * component.Generated with SHA-512.
+         */
+        public static final String BROKER_HOST_APP_SIGNATURE_SHA512 = "xxAk8S05zu0Nkce+X2J6IKJ2e7YE4F9ZorZj0YnYUQ2vw8vLc8VGGOqJdTnVySbbcy9VY8UDbOfeOETSErYllw==";
+
+        /**
+         * Package name of the Link To Windows app.
+         */
+        public static final String LTW_APP_PACKAGE_NAME = "com.microsoft.appmanager";
+
+        /**
+         * SHA512 signature hash of the Link To Windows app, signed by the production keystore key.
+         */
+        public static final String LTW_APP_SHA512_RELEASE_SIGNATURE = "WhUdh04ZkQLmNb//lKmohyqDdPMWXHcI0O3AvoLMtgF/smnED4r+Vguvgj6d4QG77Jl3avUKt6LeqF2TJPZVzg==";
+
+        /**
+         * SHA512 signature hash of the Link To Windows app, signed by a debug keystore key.
+         */
+        public static final String LTW_APP_SHA512_DEBUG_SIGNATURE = "x28mHDILP8IZRH6EfjD4zC1bcpgk8euKS91klxoddu8+e34xEgy3Q9XTa3ySY7C7EXX4o/EJpDV8MqmEfIf7LA==";
 
         /**
          * Teams IP Phones (Sakurai devices) is supported by Intune, but does not have a back button nor browser.
@@ -1058,6 +1139,11 @@ public final class AuthenticationConstants {
          * App signature of Teams Phone app to detect it for the MDM Device CA redirect.
          */
         public static final String IPPHONE_APP_SIGNATURE = "fcg80qvoM1YMKJZibjBwQcDfOno=";
+
+        /**
+         * Teams IP Phones (Sakurai devices) debug signature to unblock any teams local debug development .
+         */
+        public static final String IPPHONE_APP_DEBUG_SIGNATURE = "VCpKgbYCXucoq1mZ4BZPsh5taNE=";
 
         /**
          * The value for pkeyauth redirect.
@@ -1143,6 +1229,11 @@ public final class AuthenticationConstants {
          * String for caller package.
          */
         public static final String CALLER_INFO_PACKAGE = "caller.info.package";
+
+        /**
+         * String to return Broker DCF Auth Result.
+         */
+        public static final String BROKER_DCF_AUTH_RESULT = "broker_dcf_auth_result";
 
         /**
          * String to send Msal V2 Request params.
@@ -1380,6 +1471,10 @@ public final class AuthenticationConstants {
 
         public static final String ACQUIRE_TOKEN_SILENT = "ACQUIRE_TOKEN_SILENT";
 
+        public static final String FETCH_DCF_AUTH_RESULT = "FETCH_DCF_AUTH_RESULT";
+
+        public static final String ACQUIRE_TOKEN_DCF = "ACQUIRE_TOKEN_DCF";
+
         public static final String GET_INTENT_FOR_INTERACTIVE_REQUEST = "GET_INTENT_FOR_INTERACTIVE_REQUEST";
 
         public static final String REMOVE_ACCOUNT = "REMOVE_ACCOUNT";
@@ -1416,6 +1511,7 @@ public final class AuthenticationConstants {
         private static final String BROKER_VERSION_3 = THREE_POINT_ZERO;
         private static final String BROKER_VERSION_4 = FOUR_POINT_ZERO;
 
+
         /**
          * Tie the API paths and codes into a single object structure to stop us from having to keep
          * them in sync.  This is designed to pull all the parts of the API definition into a single
@@ -1444,8 +1540,14 @@ public final class AuthenticationConstants {
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
             UNKNOWN(null, null, null),
             DEVICE_REGISTRATION_PROTOCOLS(DEVICE_REGISTRATION_PROTOCOLS_PATH, null, null),
-            BROKER_UPLOAD_LOGS(BROKER_API_UPLOAD_LOGS, BROKER_VERSION_4, null)
-            ;
+            BROKER_UPLOAD_LOGS(BROKER_API_UPLOAD_LOGS, BROKER_VERSION_4, null),
+            FETCH_DCF_AUTH_RESULT(MSAL_FETCH_DCF_AUTH_RESULT_PATH, null, null),
+            ACQUIRE_TOKEN_DCF(MSAL_ACQUIRE_TOKEN_DCF_PATH, null, null),
+            BROKER_DISCOVERY_METADATA_RETRIEVAL(RETRIEVE_BROKER_DISCOVERY_METADATA_PATH, null, null),
+            BROKER_DISCOVERY_FROM_SDK(BROKER_DISCOVERY_FROM_SDK_PATH, null, null),
+            BROKER_DISCOVERY_SET_ACTIVE_BROKER(BROKER_DISCOVERY_SET_ACTIVE_BROKER_PATH, null, null),
+            PASSTHROUGH(PASSTHROUGH_PATH, null, null),;
+
             /**
              * The content provider path that the API exists behind.
              */
@@ -1474,6 +1576,16 @@ public final class AuthenticationConstants {
          * URI Path constant for MSAL-to-Broker acquireTokenSilent request using ContentProvider.
          */
         public static final String MSAL_ACQUIRE_TOKEN_SILENT_PATH = "/acquireTokenSilent";
+
+        /**
+         * URI Path constant for MSAL-to-Broker fetchDCFAuthResult request using ContentProvider.
+         */
+        public static final String MSAL_FETCH_DCF_AUTH_RESULT_PATH = "/fetchDCFAuthResult";
+
+        /**
+         * URI Path constant for MSAL-to-Broker acquireTokenDCF request using ContentProvider.
+         */
+        public static final String MSAL_ACQUIRE_TOKEN_DCF_PATH = "/acquireTokenDCF";
 
         /**
          * URI Path constant for MSAL-to-Broker getAccounts request using ContentProvider.
@@ -1536,6 +1648,27 @@ public final class AuthenticationConstants {
          * Broker api path constant for adding flight information.
          */
         public static final String BROKER_API_GET_FLIGHTS_PATH = "/brokerApi/getFlights";
+
+        /**
+         * ContentProvider path for retrieving Broker Discovery Metadata.
+         */
+        public static final String RETRIEVE_BROKER_DISCOVERY_METADATA_PATH = "/brokerElection/brokerDiscoveryMetadataRetrieval";
+
+        /**
+         * ContentProvider path for triggering Broker Discovery on Broker side.
+         */
+        public static final String BROKER_DISCOVERY_FROM_SDK_PATH = "/brokerElection/brokerDiscoveryFromSdk";
+
+        /**
+         * ContentProvider path for setting active Broker.
+         * Can only be invoked by known broker apps only.
+         */
+        public static final String BROKER_DISCOVERY_SET_ACTIVE_BROKER_PATH = "/brokerElection/setActiveBroker";
+
+        /**
+         * Broker api path for passthrough communication betwwen brokers.
+         */
+        public static final String PASSTHROUGH_PATH = "/passthrough";
 
         /**
          * Broker api path constant for adding flight information.

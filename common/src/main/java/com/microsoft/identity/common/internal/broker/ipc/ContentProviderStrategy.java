@@ -37,6 +37,7 @@ import android.util.Base64;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.util.ParcelableUtil;
@@ -47,18 +48,26 @@ import java.util.List;
 /**
  * A strategy for communicating with the targeted broker via Content Provider.
  */
-public class ContentProviderStrategy implements IIpcStrategy {
+public class ContentProviderStrategy extends AbstractIpcStrategyWithServiceValidation {
 
-    private static final String TAG = ContentProviderStrategy.class.getName();
+    private static final String TAG = ContentProviderStrategy.class.getSimpleName();
     private final Context mContext;
 
     public ContentProviderStrategy(final Context context) {
+        super(false);
+        mContext = context;
+    }
+
+    @VisibleForTesting
+    protected ContentProviderStrategy(final Context context,
+                                      final boolean shouldBypassSupportValidation) {
+        super(shouldBypassSupportValidation);
         mContext = context;
     }
 
     @Override
     @Nullable
-    public Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
+    protected Bundle communicateToBrokerAfterValidation(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
         final String methodTag = TAG + ":communicateToBroker";
         final String operationName = brokerOperationBundle.getOperation().name();
@@ -140,8 +149,9 @@ public class ContentProviderStrategy implements IIpcStrategy {
     /**
      * Returns true if the target package name supports this content provider strategy.
      */
-    public boolean isBrokerContentProviderAvailable(final @NonNull String targetedBrokerPackageName) {
-        final String methodTag = TAG + ":isBrokerContentProviderAvailable";
+    @Override
+    public boolean isSupportedByTargetedBroker(final @NonNull String targetedBrokerPackageName) {
+        final String methodTag = TAG + ":isSupportedByTargetedBroker";
         final String contentProviderAuthority = getContentProviderAuthority(targetedBrokerPackageName);
 
         final List<ProviderInfo> providers = mContext.getPackageManager()

@@ -51,9 +51,9 @@ public interface IFirstPartyApp extends IApp {
      * @param password                the password of the account to add
      * @param promptHandlerParameters the prompt handler parameters indicating how to handle prompt
      */
-    void addAnotherAccount(final String username,
-                           final String password,
-                           final FirstPartyAppPromptHandlerParameters promptHandlerParameters);
+    void addAnotherAccount(@NonNull final String username,
+                           @NonNull final String password,
+                           @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters);
 
     /**
      * This method can be called to handle the welcome screens in the first party app that appear on

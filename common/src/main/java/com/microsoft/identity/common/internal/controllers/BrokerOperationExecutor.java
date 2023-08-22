@@ -28,6 +28,7 @@ import android.os.Bundle;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
@@ -39,6 +40,7 @@ import com.microsoft.identity.common.java.marker.CodeMarkerManager;
 import com.microsoft.identity.common.java.marker.PerfConstants;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
@@ -108,13 +110,17 @@ public class BrokerOperationExecutor {
         void putValueInSuccessEvent(@NonNull final ApiEndEvent event, @NonNull final T result);
     }
 
+    private final ActiveBrokerCacheUpdater mCacheUpdaterManager;
+
     private final List<IIpcStrategy> mStrategies;
 
     /**
      * @param strategies list of IIpcStrategy to be invoked.
      */
-    public BrokerOperationExecutor(final @NonNull List<IIpcStrategy> strategies) {
+    public BrokerOperationExecutor(@NonNull final List<IIpcStrategy> strategies,
+                                   @NonNull final ActiveBrokerCacheUpdater cacheUpdaterManager) {
         mStrategies = strategies;
+        mCacheUpdaterManager = cacheUpdaterManager;
     }
 
     /**
@@ -222,11 +228,14 @@ public class BrokerOperationExecutor {
 
         final Span span = OTelUtility.createSpan(SpanName.MSAL_PerformIpcStrategy.name());
 
-        try (final Scope scope = span.makeCurrent()) {
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             span.setAttribute(AttributeName.ipc_strategy.name(), strategy.getType().name());
             operation.performPrerequisites(strategy);
             final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
             final Bundle resultBundle = strategy.communicateToBroker(brokerOperationBundle);
+
+            mCacheUpdaterManager.updateCachedActiveBrokerFromResultBundle(resultBundle);
+
             span.setStatus(StatusCode.OK);
             return operation.extractResultBundle(resultBundle);
             // TODO: Emit success rate and performance of each strategy to eSTS in a finally block.

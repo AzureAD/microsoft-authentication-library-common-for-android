@@ -202,10 +202,25 @@ public class AndroidKeyStoreUtil {
         final String errCode;
         try {
             final KeyStore keyStore = getKeyStore();
-            final Certificate cert = keyStore.getCertificate(keyAlias);
+
+            if (!keyStore.containsAlias(keyAlias)) {
+                Logger.verbose(methodTag, "Alias doesn't exist.");
+                return null;
+            }
+
+            // We intentionally check the private key first, due to crash stacks hit in the wild
+            // when checking for the public certificate when it does not exist.
+            // `KeyStore exception android.os.ServiceSpecificException: (code 7)`
+            // https://stackoverflow.com/questions/52024752/android-9-keystore-exception-android-os-servicespecificexception
             final Key privateKey = keyStore.getKey(keyAlias, null);
-            if (cert == null || privateKey == null) {
-                Logger.verbose(methodTag, "Key entry doesn't exist.");
+            if (privateKey == null) {
+                Logger.verbose(methodTag, "Private key entry doesn't exist.");
+                return null;
+            }
+
+            final Certificate cert = keyStore.getCertificate(keyAlias);
+            if (cert == null) {
+                Logger.verbose(methodTag, "Public key entry doesn't exist.");
                 return null;
             }
 
@@ -255,7 +270,7 @@ public class AndroidKeyStoreUtil {
     /**
      * See: https://issuetracker.google.com/issues/37095309
      */
-    private static synchronized void applyKeyStoreLocaleWorkarounds(@NonNull final Locale currentLocale) {
+    public static synchronized void applyKeyStoreLocaleWorkarounds(@NonNull final Locale currentLocale) {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M
                 && DateUtilities.isLocaleCalendarNonGregorian(currentLocale)) {
             Locale.setDefault(Locale.ENGLISH);

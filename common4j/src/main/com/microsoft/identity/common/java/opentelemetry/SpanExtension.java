@@ -28,6 +28,9 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.TraceId;
+import io.opentelemetry.context.ImplicitContextKeyed;
+import io.opentelemetry.context.Scope;
+import lombok.NonNull;
 
 /**
  * Extension methods for {@link Span}.
@@ -65,6 +68,38 @@ public class SpanExtension {
         } catch (final NoSuchMethodError error) {
             Logger.error(TAG + ":getCurrentSpan", error.getMessage(), error);
             return new NoopSpan(INVALID);
+        }
+    }
+
+    /**
+     * A safe implementation of {@link ImplicitContextKeyed#makeCurrent()} that doesn't crash. The
+     * default implementation in Open Telemetry sometimes throws an NPE deep into OTel's code. Per
+     * our telemetry this is happening on 0.08% of devices i.e. the impact is minimal. That said,
+     * we're creating this safe wrapper here in effort to mitigate even that minimal impact. If we
+     * get an NPE then we just return a Noop Scope.
+     *
+     * @param span the {@link Span} that needs to be made current
+     * @return a {@link Scope}
+     */
+    public static Scope makeCurrentSpan(@NonNull final Span span) {
+        try {
+            return span.makeCurrent();
+        } catch (final AbstractMethodError | Exception exception) {
+            Logger.error(TAG + ":makeCurrentSpan", exception.getMessage(), exception);
+            return NoopScope.INSTANCE;
+        }
+    }
+
+    /**
+     * This is a custom No-op implementation of {@link Scope}. This should be viewed the same as the
+     * default Noop implementation in {@link io.opentelemetry.context.ThreadLocalContextStorage}.
+     * We just made a custom one since the default one is package-private.
+     */
+    enum NoopScope implements Scope {
+        INSTANCE;
+
+        @Override
+        public void close() {
         }
     }
 

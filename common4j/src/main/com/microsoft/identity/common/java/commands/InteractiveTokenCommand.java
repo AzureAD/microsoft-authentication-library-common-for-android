@@ -30,6 +30,7 @@ import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
@@ -64,13 +65,12 @@ public class InteractiveTokenCommand extends TokenCommand {
     public AcquireTokenResult execute() throws Exception {
         final String methodName = ":execute";
 
-        final Span span = OTelUtility.createSpanFromParent(
-                SpanName.AcquireTokenInteractive.name(), getParameters().getSpanContext()
-        );
+        final Span span = SpanExtension.current();
+
         span.setAttribute(AttributeName.application_name.name(), getParameters().getApplicationName());
         span.setAttribute(AttributeName.public_api_id.name(), getPublicApiId());
 
-        try (final Scope scope = span.makeCurrent()) {
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             if (getParameters() instanceof InteractiveTokenCommandParameters) {
                 Logger.info(
                         TAG + methodName,
@@ -105,8 +105,6 @@ public class InteractiveTokenCommand extends TokenCommand {
             span.setStatus(StatusCode.ERROR);
             span.recordException(throwable);
             throw throwable;
-        } finally {
-            span.end();
         }
     }
 

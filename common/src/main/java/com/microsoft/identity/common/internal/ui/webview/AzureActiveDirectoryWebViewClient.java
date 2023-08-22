@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.ui.webview;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -56,6 +55,8 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URISyntaxException;
+import java.security.Principal;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -79,9 +80,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public static final String ERROR = "error";
     public static final String ERROR_SUBCODE = "error_subcode";
     public static final String ERROR_DESCRIPTION = "error_description";
+    private static final String DEVICE_CERT_ISSUER = "CN=MS-Organization-Access";
     private final String mRedirectUrl;
     private final CertBasedAuthFactory mCertBasedAuthFactory;
     private AbstractCertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
+
+    private HashMap<String, String> mRequestHeaders;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
@@ -124,6 +128,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
         final Uri requestUrl = request.getUrl();
         return handleUrl(view, requestUrl.toString());
+    }
+
+    public void setRequestHeaders(final HashMap<String, String> requestHeaders) {
+        mRequestHeaders = requestHeaders;
     }
 
     /**
@@ -175,12 +183,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processInvalidRedirectUri(view, url);
             } else if (isBlankPageRequest(formattedURL)) {
                 Logger.info(methodTag,"It is an blank page request");
-            } else if (isUriSSLProtected(formattedURL)) {
+            } else if (!isUriSSLProtected(formattedURL)) {
                 Logger.info(methodTag,"Check for SSL protection");
                 processSSLProtectionCheck(view, url);
+            } else if (isHeaderForwardingRequiredUri(url)) {
+                processHeaderForwardingRequiredUri(view, url);
             } else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
                 processInvalidUrl(url);
+
                 return false;
             }
         } catch (final ClientException exception) {
@@ -193,7 +204,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private boolean isUriSSLProtected(@NonNull final String url) {
-        return !(url.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX));
+        return url.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX);
     }
 
     private boolean isBlankPageRequest(@NonNull final String url) {
@@ -240,6 +251,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return url.startsWith(AuthenticationConstants.Broker.BROWSER_EXT_WEB_CP);
     }
 
+    private boolean isHeaderForwardingRequiredUri(@NonNull final String url) {
+        // MSAL makes MSA requests first to login.microsoftonline.com, and then gets redirected to login.live.com.
+        // This drops all the headers, which can have credentials useful for SSO and correlationIds useful for
+        // investigations.
+        // Old Chromium versions <88 did this behavior by default, but it was removed in more recent versions.
+        // For now, reproduce this only for MSA, and consider adding more trusted ESTS endpoints in the future.
+        final boolean urlIsTrustedToReceiveHeaders =  url.startsWith("https://login.live.com/");
+        final boolean originalRequestHasHeaders = mRequestHeaders != null && !mRequestHeaders.isEmpty();
+        return urlIsTrustedToReceiveHeaders && originalRequestHasHeaders;
+    }
+
     // This function is only called when the client received a redirect that starts with the apps
     // redirect uri.
     protected void processRedirectUrl(@NonNull final WebView view, @NonNull final String url) {
@@ -260,15 +282,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (url.contains(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER)) {
             Logger.info(methodTag, "This is a device CA request.");
             final PackageHelper packageHelper = new PackageHelper(getActivity().getPackageManager());
-            final Context applicationContext = getActivity().getApplicationContext();
 
             // If CP is installed, redirect to CP.
             // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
             //       CP is currently working on this.
             //       Until that comes, we'll only handle this in ipphone.
-            if (packageHelper.isPackageInstalledAndEnabled(applicationContext, IPPHONE_APP_PACKAGE_NAME) &&
-                    IPPHONE_APP_SIGNATURE.equals(packageHelper.getCurrentSignatureForPackage(IPPHONE_APP_PACKAGE_NAME)) &&
-                    packageHelper.isPackageInstalledAndEnabled(applicationContext, COMPANY_PORTAL_APP_PACKAGE_NAME)) {
+            if (packageHelper.isPackageInstalledAndEnabled(IPPHONE_APP_PACKAGE_NAME) &&
+                    IPPHONE_APP_SIGNATURE.equals(packageHelper.getSha1SignatureForPackage(IPPHONE_APP_PACKAGE_NAME)) &&
+                    packageHelper.isPackageInstalledAndEnabled(COMPANY_PORTAL_APP_PACKAGE_NAME)) {
                 try {
                     launchCompanyPortal();
                     return;
@@ -434,6 +455,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 + removeQueryParametersOrRedact(url) + "' the user's url pattern is '" + mRedirectUrl + "'");
     }
 
+    private void processHeaderForwardingRequiredUri(@NonNull final WebView view, @NonNull final String url) {
+        final String methodTag = TAG + ":processHeaderForwardingRequiredUri";
+
+        Logger.infoPII(methodTag,"We are loading this new URL: '"
+                + removeQueryParametersOrRedact(url) + "' with original requestHeaders appended.");
+
+        view.loadUrl(url, mRequestHeaders);
+    }
+
     private String removeQueryParametersOrRedact(@NonNull final String url) {
         final String methodTag = TAG + ":removeQueryParametersOrRedact";
         try {
@@ -460,6 +490,23 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @Override
     public void onReceivedClientCertRequest(@NonNull final WebView view,
                                             @NonNull final ClientCertRequest clientCertRequest) {
+        final String methodTag = TAG + ":onReceivedClientCertRequest";
+        // When server sends null or empty issuers, we'll continue with CBA.
+        // In the case where ADFS sends a clientTLS device auth request, we don't handle that in CBA.
+        // This type of request will have a particular issuer, so if that issuer is found, we will
+        //  immediately cancel the ClientCertRequest.
+        final Principal[] acceptableCertIssuers = clientCertRequest.getPrincipals();
+        if (acceptableCertIssuers != null) {
+            for (final Principal issuer : acceptableCertIssuers) {
+                if (issuer.getName().contains(DEVICE_CERT_ISSUER)) {
+                    final String message = "Cancelling the TLS request, not responding to TLS challenge triggered by device authentication.";
+                    Logger.info(methodTag, message);
+                    clientCertRequest.cancel();
+                    return;
+                }
+            }
+        }
+
         if (mCertBasedAuthChallengeHandler != null) {
             mCertBasedAuthChallengeHandler.cleanUp();
         }

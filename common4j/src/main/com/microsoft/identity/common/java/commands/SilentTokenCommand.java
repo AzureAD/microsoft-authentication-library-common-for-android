@@ -34,6 +34,7 @@ import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 
@@ -71,13 +72,12 @@ public class SilentTokenCommand extends TokenCommand {
         AcquireTokenResult result = null;
         final String methodName = ":execute";
 
-        final Span span = OTelUtility.createSpanFromParent(
-                SpanName.AcquireTokenSilent.name(), getParameters().getSpanContext()
-        );
+        final Span span = SpanExtension.current();
+
         span.setAttribute(AttributeName.application_name.name(), getParameters().getApplicationName());
         span.setAttribute(AttributeName.public_api_id.name(), getPublicApiId());
 
-        try (final Scope scope = span.makeCurrent()) {
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             for (int ii = 0; ii < this.getControllers().size(); ii++) {
                 final BaseController controller = this.getControllers().get(ii);
 
@@ -144,8 +144,6 @@ public class SilentTokenCommand extends TokenCommand {
             span.setStatus(StatusCode.ERROR);
             span.recordException(throwable);
             throw throwable;
-        } finally {
-            span.end();
         }
     }
 

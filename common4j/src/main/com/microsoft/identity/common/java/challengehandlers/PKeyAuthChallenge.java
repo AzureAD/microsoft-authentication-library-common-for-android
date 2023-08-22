@@ -28,14 +28,10 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.
 
 import com.microsoft.identity.common.java.AuthenticationSettings;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.JWSBuilder;
 import com.microsoft.identity.common.java.util.StringUtil;
 
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -150,12 +146,7 @@ public class PKeyAuthChallenge {
                     "Found a certificate matching the provided authority.");
             return getChallengeHeaderWithSignedJwt(deviceCertProxy);
         }
-
-        if (StringUtil.equalsIgnoreCase(deviceCertProxy.getThumbPrint(), mThumbprint)){
-            Logger.info(TAG + methodName,
-                    "Found a certificate matching the provided thumbprint.");
-            return getChallengeHeaderWithSignedJwt(deviceCertProxy);
-        }
+        //Note that we aren't validating thumbprint hints anymore, which is in line with the iOS team.
 
         return getChallengeHeaderWithoutSignedJwt();
     }

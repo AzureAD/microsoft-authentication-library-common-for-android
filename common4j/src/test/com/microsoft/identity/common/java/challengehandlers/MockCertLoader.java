@@ -29,7 +29,6 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.JWSBuilder;
 
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.List;
 
@@ -41,8 +40,6 @@ import lombok.experimental.Accessors;
 
 @Accessors(prefix = "m")
 public class MockCertLoader implements IDeviceCertificateLoader{
-
-    private final String MOCK_CERT_THUMBPRINT = "thumbprint1234";
 
     @Getter
     @Setter
@@ -65,11 +62,6 @@ public class MockCertLoader implements IDeviceCertificateLoader{
         @Override
         public @lombok.NonNull X509Certificate getX509() {
             return mX509;
-        }
-
-        @Override
-        public String getThumbPrint() {
-            return MOCK_CERT_THUMBPRINT;
         }
 
         @Override
