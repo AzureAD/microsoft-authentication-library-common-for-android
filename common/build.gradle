@@ -166,6 +166,10 @@ dependencies {
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
 
+    implementation "com.squareup.moshi:moshi:$rootProject.ext.moshiVersion"
+    implementation "com.squareup.moshi:moshi-kotlin:$rootProject.ext.moshiVersion"
+    implementation "com.squareup.moshi:moshi-adapters:$rootProject.ext.moshiAdaptersVersion"
+
     // Test dependencies
     // Needed to resolve JSONObject inside of non-instrumented tests
     testImplementation 'org.json:json:20160810'
