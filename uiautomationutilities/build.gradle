@@ -22,6 +22,7 @@ android {
         dependencies {
             coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
         }
+        animationsDisabled = true
     }
     //Commenting out until the next major version of common/msal/etc...
     /*
@@ -40,15 +41,18 @@ android {
 
     boolean usePreInstalledApks = project.hasProperty("preferPreInstalledApks")
 
+    boolean preInstallLtw = project.hasProperty("preInstallLtw")
+    boolean sendPowerLiftLogs = project.hasProperty("sendPowerLiftLogs")
+
     def final appSourcePlayStore = "PlayStore"
     def final appSourceLocalApk = "LocalApk"
 
     // defaults to LocalApkFile - the file must be pushed to the device before tests
-    def brokerInstallationSource = appSourcePlayStore
+    def brokerInstallationSource = appSourceLocalApk
 
-    def brokerUpdationSource = appSourcePlayStore
+    def brokerUpdationSource = appSourceLocalApk
 
-    def wordAppInstallationSource = appSourcePlayStore
+    def wordAppInstallationSource = appSourceLocalApk
 
     if (project.hasProperty("brokerSource")) {
         if (brokerSource.equalsIgnoreCase(appSourcePlayStore)) {
@@ -102,7 +106,8 @@ android {
         buildConfigField("String", "UPDATE_SOURCE_PLAY_STORE", "\"$appSourcePlayStore\"")
         buildConfigField("String", "UPDATE_SOURCE_LOCAL_APK", "\"$appSourceLocalApk\"")
         buildConfigField("boolean", "PREFER_PRE_INSTALLED_APKS", "$usePreInstalledApks")
-
+        buildConfigField("boolean", "PRE_INSTALL_LTW", "$preInstallLtw")
+        buildConfigField("boolean", "SEND_POWERLIFT_LOGS", "$sendPowerLiftLogs")
 
         // Specifies a sorted list of flavors that the plugin should try to use from
         // a given dimension. The following tells the plugin that, when encountering
@@ -201,6 +206,7 @@ dependencies {
     implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
     implementation(project(":LabApiUtilities"))
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
+    implementation project(path: ':common4j')
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     androidTestImplementation "androidx.test:runner:$rootProject.ext.androidxTestRunnerVersion"

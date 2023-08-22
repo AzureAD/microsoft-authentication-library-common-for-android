@@ -74,4 +74,10 @@ public interface ICertBasedAuthTelemetryHelper {
      * @param choice enum indicating user's intended choice for CBA.
      */
     void setUserChoice(@NonNull final CertBasedAuthChoice choice);
+
+    /**
+     * Sets attribute that indicates the selected certificate's public key algorithm type.
+     * @param type algorithm name as a string.
+     */
+    void setPublicKeyAlgoType(@NonNull final String type);
 }

@@ -55,14 +55,10 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
 
     private static final String TAG = SharedPreferencesAccountCredentialCacheWithMemoryCache.class.getSimpleName();
 
-    // SharedPreferences used to store Accounts and Credentials
-    private final INameValueStorage<String> mSharedPreferencesFileManager;
-
     private final ICacheKeyValueDelegate mCacheValueDelegate;
 
     private final Object mCacheLock = new Object();
     private boolean mLoaded = false;
-
     private Map<String, AccountRecord> mCachedAccountRecordsWithKeys = new HashMap<>();
     private Map<String, Credential> mCachedCredentialsWithKeys = new HashMap<>();
 
@@ -75,8 +71,8 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
     public SharedPreferencesAccountCredentialCacheWithMemoryCache(
             @NonNull final ICacheKeyValueDelegate accountCacheValueDelegate,
             @NonNull final INameValueStorage<String> sharedPreferencesFileManager) {
+        super(sharedPreferencesFileManager);
         Logger.verbose(TAG, "Init: " + TAG);
-        mSharedPreferencesFileManager = sharedPreferencesFileManager;
         mCacheValueDelegate = accountCacheValueDelegate;
         new Thread(() -> load()).start();
     }
@@ -486,7 +482,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
             @Nullable final String target,
             @Nullable final String authScheme,
             @Nullable final String requestedClaims,
-            @Nullable final List<Credential> inputCredentials) {
+            @NonNull final List<Credential> inputCredentials) {
         final String methodTag = TAG + ":getCredentialsFilteredBy";
         Logger.verbose(methodTag, "getCredentialsFilteredBy()");
 
@@ -548,7 +544,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
 
     @Override
     public List<Credential> getCredentialsFilteredBy(
-            @Nullable List<Credential> inputCredentials,
+            @NonNull List<Credential> inputCredentials,
             @Nullable final String homeAccountId,
             @Nullable final String environment,
             @Nullable final CredentialType credentialType,
@@ -735,5 +731,4 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         Logger.verbose(methodTag, "isCredential? [" + isCredential + "]");
         return isCredential;
     }
-
 }

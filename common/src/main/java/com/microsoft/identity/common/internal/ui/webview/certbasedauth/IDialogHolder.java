@@ -59,6 +59,16 @@ public interface IDialogHolder {
                          final int messageStringResourceId);
 
     /**
+     * Builds and shows dialog informing the user of an expected or unexpected error.
+     * @param titleStringResourceId String resource id of the title text.
+     * @param messageStringResourceId String resource id of the message text.
+     * @param dismissButtonStringResourceId String resource id of the dismiss/positive button text.
+     */
+    void showErrorDialog(final int titleStringResourceId,
+                         final int messageStringResourceId,
+                         final int dismissButtonStringResourceId);
+
+    /**
      * Builds and shows dialog that prompts user to choose if they would like to proceed with on-device
      * or smartcard certificate based authentication.
      * @param positiveButtonListener A Listener containing code to be run upon a positive button click.

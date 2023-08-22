@@ -37,6 +37,11 @@ public class PerfConstants {
         public static final String ACQUIRE_TOKEN_SILENT_EXECUTOR_START = "10012";
         public static final String ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START = "10013";
         public static final String ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END = "10014";
+        public static final String ACQUIRE_TOKEN_DCF_START = "10015";
+        public static final String ACQUIRE_TOKEN_DCF_EXECUTOR_START = "10016";
+        public static final String ACQUIRE_TOKEN_DCF_COMMAND_EXECUTION_START = "10017";
+        public static final String ACQUIRE_TOKEN_DCF_COMMAND_EXECUTION_END = "10018";
+        public static final String ACQUIRE_TOKEN_DCF_FUTURE_OBJECT_CREATION_END = "10019";
         public static final String ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END = "10020";
 
         // AT/PoP Code Markers...

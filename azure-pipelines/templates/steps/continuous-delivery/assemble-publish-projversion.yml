@@ -29,7 +29,7 @@ steps:
   displayName: Set MVN Access Token in Environment
   inputs:
     filename: echo
-    arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAt }}]$(mvnAccessToken)'
+    arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAt }}]$(System.AccessToken)'
 - task: Gradle@2
   displayName: Assemble ${{ parameters.project }} ${{ parameters.variant }}
   inputs:

@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Inga tillämpliga certifikat hittades.</string>
     <string name="smartcard_no_cert_dialog_message">Bekräfta att certifikatet har etablerats korrekt på smartkortenheten.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Du kan bara använda ett smartkort i taget</string>
+    <string name="smartcard_nfc_diff_connected_message">Använd det smartkort som du ursprungligen loggade in med.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Jag förstår</string>
+
     <string name="smartcard_general_error_dialog_title">Försök igen senare</string>
     <string name="smartcard_general_error_dialog_message">Ett oväntat fel uppstod. Försök igen senare.</string>
 

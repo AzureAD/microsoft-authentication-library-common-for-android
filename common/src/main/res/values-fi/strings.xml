@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Soveltuvia varmenteita ei löytynyt.</string>
     <string name="smartcard_no_cert_dialog_message">Varmista, että varmenne on valmisteltu älykorttilaitteeseen oikein.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Voit käyttää vain yhtä älykorttia kerrallaan</string>
+    <string name="smartcard_nfc_diff_connected_message">Käytä älykorttia, jolla alun perin kirjauduit sisään.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Selvä</string>
+
     <string name="smartcard_general_error_dialog_title">Yritä myöhemmin uudelleen</string>
     <string name="smartcard_general_error_dialog_message">Tapahtui odottamaton virhe. Yritä myöhemmin uudelleen.</string>
 
@@ -57,5 +61,5 @@
     <string name="smartcard_nfc_reminder_dialog_positive_button">Selvä juttu</string>
 
     <string name="smartcard_removal_prompt_dialog_title">Voit nyt poistaa älykortin</string>
-    <string name="smartcard_removal_prompt_dialog_positive_button">Selvä juttu</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Selvä</string>
 </resources>

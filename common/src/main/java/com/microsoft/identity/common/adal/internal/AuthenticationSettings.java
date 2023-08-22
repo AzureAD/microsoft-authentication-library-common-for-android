@@ -28,9 +28,7 @@ import android.os.Build;
 
 import androidx.annotation.VisibleForTesting;
 
-import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.java.challengehandlers.IDeviceCertificate;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
@@ -67,7 +65,7 @@ public enum AuthenticationSettings {
 
     private String mBrokerPackageName = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 
-    private String mBrokerSignature = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE;
+    private String mBrokerSignature = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512;
 
     private String mActivityPackageName;
 

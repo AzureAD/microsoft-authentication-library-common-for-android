@@ -42,12 +42,17 @@ import com.microsoft.identity.common.java.net.DefaultHttpClientWrapper;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.io.File;
+
 import lombok.NonNull;
 
 /**
  * A factory class for building Android implementations of platform-dependent components in Common.
  */
 public class AndroidPlatformComponentsFactory {
+
+    private static final String TAG = AndroidPlatformComponentsFactory.class.getSimpleName();
+
     /**
      * True if all of the platform-dependent static classes have been initialized.
      */
@@ -57,10 +62,19 @@ public class AndroidPlatformComponentsFactory {
      * Initializes platform-dependent static classes.
      */
     public static synchronized void initializeGlobalStates(@NonNull final Context context){
+        final String methodTag = TAG + ":initializeGlobalStates";
         if (!sGlobalStateInitalized) {
             HttpCache.initialize(context);
             Device.setDeviceMetadata(new AndroidDeviceMetadata());
             Logger.setAndroidLogger();
+
+            final File cacheDir = context.getCacheDir();
+            if (cacheDir != null) {
+                HttpCache.initialize(cacheDir);
+            } else {
+                Logger.warn(methodTag, "Http caching is not enabled because the cache dir is null");
+            }
+
             sGlobalStateInitalized = true;
         }
     }
@@ -93,20 +107,8 @@ public class AndroidPlatformComponentsFactory {
         initializeGlobalStates(context);
 
         final PlatformComponents.PlatformComponentsBuilder builder = PlatformComponents.builder();
-        fillBuilder(builder, context, activity, fragment);
-        return builder.build();
-    }
-
-    /**
-     * Fill {@link PlatformComponents.PlatformComponentsBuilder} with Android implementations.
-     */
-    @SuppressWarnings(WarningType.rawtype_warning)
-    private static void fillBuilder(@NonNull final PlatformComponents.PlatformComponentsBuilder builder,
-                                    @NonNull final Context context,
-                                    @Nullable final Activity activity,
-                                    @Nullable final Fragment fragment) {
-        builder.storageEncryptionManager(new AndroidAuthSdkStorageEncryptionManager(context, null));
         fillBuilderWithBasicImplementations(builder, context, activity, fragment);
+        return builder.build();
     }
 
     /**
@@ -122,7 +124,8 @@ public class AndroidPlatformComponentsFactory {
         builder.clockSkewManager(new AndroidClockSkewManager(context))
                 .broadcaster(new AndroidBroadcaster(context))
                 .popManagerLoader(new AndroidPopManagerSupplier(context))
-                .storageLoader(new AndroidStorageSupplier(context))
+                .storageSupplier(new AndroidStorageSupplier(context,
+                        new AndroidAuthSdkStorageEncryptionManager(context)))
                 .platformUtil(new AndroidPlatformUtil(context, activity))
                 .httpClientWrapper(new DefaultHttpClientWrapper());
 

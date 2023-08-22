@@ -101,6 +101,21 @@ public class CertBasedAuthFactoryTest extends AbstractCertBasedAuthTest {
     }
 
     @Test
+    public void testCancelAtPromptDialogNullManagers() {
+        mFactory = new CertBasedAuthFactory(mActivity, null, null, mDialogHolder);
+        challengeHandlerHelper(ExpectedChallengeHandler.NULL);
+        checkIfCorrectDialogIsShowing(TestDialog.user_choice);
+        final UserChoiceDialog.PositiveButtonListener listener = mDialogHolder.getUserChoicePositiveButtonListener();
+        assertNotNull(listener);
+        listener.onClick(1);
+        checkIfCorrectDialogIsShowing(TestDialog.prompt);
+        final ICancelCbaCallback callback = mDialogHolder.getCancelCbaCallback();
+        assertNotNull(callback);
+        callback.onCancel();
+        checkIfCorrectDialogIsShowing(null);
+    }
+
+    @Test
     public void testChooseSmartcardAndProceedWithUsb() {
         challengeHandlerHelper(ExpectedChallengeHandler.USB);
         checkIfCorrectDialogIsShowing(TestDialog.user_choice);

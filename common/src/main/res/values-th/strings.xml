@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">ไม่พบใบรับรองที่เกี่ยวข้อง</string>
     <string name="smartcard_no_cert_dialog_message">ยืนยันว่าใบรับรองของคุณได้รับการเตรียมใช้งานอย่างถูกต้องบนอุปกรณ์สมาร์ทการ์ดของคุณ</string>
 
+    <string name="smartcard_nfc_diff_connected_title">คุณสามารถใช้สมาร์ทการ์ดได้ครั้งละหนึ่งรายการเท่านั้น</string>
+    <string name="smartcard_nfc_diff_connected_message">ใช้สมาร์ทการ์ดที่คุณลงชื่อเข้าใช้ครั้งแรก</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">เข้าใจแล้ว</string>
+
     <string name="smartcard_general_error_dialog_title">ลองอีกครั้งในภายหลัง</string>
     <string name="smartcard_general_error_dialog_message">เกิดข้อผิดพลาดที่ไม่คาดคิด โปรดลองอีกครั้งภายหลัง</string>
 

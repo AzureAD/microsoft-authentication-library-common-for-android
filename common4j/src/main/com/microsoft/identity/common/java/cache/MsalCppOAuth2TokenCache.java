@@ -67,7 +67,7 @@ public class MsalCppOAuth2TokenCache
         GenericAccount,
         GenericRefreshToken> {
 
-    private static final String TAG = MsalCppOAuth2TokenCache.class.getName();
+    private static final String TAG = MsalCppOAuth2TokenCache.class.getSimpleName();
 
     /**
      * Constructor of MsalOAuth2TokenCache.

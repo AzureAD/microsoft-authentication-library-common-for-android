@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Nisu pronađeni primjenjivi certifikati.</string>
     <string name="smartcard_no_cert_dialog_message">Potvrdite da je certifikat pravilno dodijeljen na vaš uređaj pametne kartice.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Istovremeno možete koristiti samo jednu pametnu karticu</string>
+    <string name="smartcard_nfc_diff_connected_message">Koristite pametnu karticu pomoću koje ste se izvorno prijavili.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Shvaćam</string>
+
     <string name="smartcard_general_error_dialog_title">Pokušajte ponovno poslije</string>
     <string name="smartcard_general_error_dialog_message">Došlo je do neočekivane pogreške. Pokušajte ponovno kasnije.</string>
 

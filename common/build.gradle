@@ -37,6 +37,8 @@ if (project.hasProperty("distCommon4jVersion") && project.distCommon4jVersion !=
     common4jVersion = project.distCommon4jVersion
 }
 
+boolean newBrokerDiscoveryEnabledFlag = project.hasProperty("newBrokerDiscoveryEnabledFlag")
+
 android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -55,6 +57,7 @@ android {
                 "eu", "fi", "fr", "gl", "he", "hi", "hr", "hu", "in", "it", "iw", "ja",
                 "kk", "ko", "lt", "lv", "ms", "nb", "nl", "pl", "pt-rBR", "pt-rPT", "ro",
                 "ru", "sk", "sl", "sr", "sv", "th", "tr", "uk", "vi", "zh-rCN", "zh-rTW"
+        buildConfigField("boolean", "newBrokerDiscoveryEnabledFlag", "$newBrokerDiscoveryEnabledFlag")
     }
 
     buildTypes {
@@ -143,6 +146,9 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
     testImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
     androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
+
+    implementation "androidx.datastore:datastore-preferences:1.0.0"
 
     implementation(group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
@@ -180,6 +186,8 @@ dependencies {
     testImplementation "org.robolectric:robolectric:$rootProject.ext.robolectricVersion"
     testImplementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
     testImplementation project(":LabApiUtilities")
+
+    testImplementation(testFixtures(project(":common4j")))
 
     testImplementation project(':testutils')
     testImplementation("org.mockito.kotlin:mockito-kotlin:$rootProject.ext.mockitoKotlinVersion") {

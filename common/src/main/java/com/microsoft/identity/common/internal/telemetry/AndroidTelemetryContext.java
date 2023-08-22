@@ -44,7 +44,7 @@ import lombok.NonNull;
  */
 public class AndroidTelemetryContext extends AbstractTelemetryContext {
 
-    private static final String TAG = AndroidTelemetryContext.class.getName();
+    private static final String TAG = AndroidTelemetryContext.class.getSimpleName();
 
     @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "Lombok inserts nullchecks")

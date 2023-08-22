@@ -37,6 +37,20 @@ public class BrokerProtocolVersionUtil {
     public static final String MSAL_TO_BROKER_PROTOCOL_ACCOUNT_FROM_PRT_CHANGES_MINIMUM_VERSION = "8.0";
     public static final String MSAL_TO_BROKER_PROTOCOL_PKEYAUTH_HEADER_CHANGES_MINIMUM_VERSION = "9.0";
     public static final String MSAL_TO_BROKER_PROTOCOL_POP_SCHEME_WITH_CLIENT_KEY_MINIMUM_VERSION = "11.0";
+    public static final String MSAL_TO_BROKER_PROTOCOL_BROKER_MSA_SUPPORT_MINIMUM_VERSION = "14.0";
+
+    /**
+     * Verifies if negotiated broker protocol version allows to support MSA accounts in the broker.
+     *
+     * @param negotiatedBrokerProtocol negotiated protocol version, result of hello handshake.
+     * @return true if the negotiated protocol version is larger or equal than
+     * the {@link BrokerProtocolVersionUtil#MSAL_TO_BROKER_PROTOCOL_BROKER_MSA_SUPPORT_MINIMUM_VERSION}.
+     */
+    public static boolean canSupportMsaAccountsInBroker(@Nullable String negotiatedBrokerProtocol) {
+        return isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+                negotiatedBrokerProtocol,
+                MSAL_TO_BROKER_PROTOCOL_BROKER_MSA_SUPPORT_MINIMUM_VERSION);
+    }
 
     /**
      * Verifies if negotiated broker protocol version allows to decompressing/compressing broker payloads.
