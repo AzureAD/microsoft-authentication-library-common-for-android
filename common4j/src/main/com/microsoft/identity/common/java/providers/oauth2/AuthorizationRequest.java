@@ -94,7 +94,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      */
     @Expose()
     @SerializedName("brk_client_id")
-    private final String mChildClientId;
+    private final String mBrkClientId;
 
     /**
      * Redirect URLs are a critical part of the OAuth flow. After a user successfully authorizes an
@@ -102,7 +102,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      * either an authorization code or access token in the URL.
      */
     @SerializedName("brk_redirect_uri")
-    private final String mChildRedirectUri;
+    private final String mBrkRedirectUri;
 
     /**
      * A recommended value.
@@ -159,8 +159,8 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         mState = builder.mState == null ? null : StringUtil.encodeUrlSafeString(builder.mState);
         mScope = builder.mScope;
 
-        mChildClientId = builder.mChildClientId;
-        mChildRedirectUri = builder.mChildRedirectUri;
+        mBrkClientId = builder.mBrkClientId;
+        mBrkRedirectUri = builder.mBrkRedirectUri;
 
         // Suppressing unchecked warning of casting List to List<Pair<String,String>>. This warning is raised as the generic type was not provided during constructing builder object.
         @SuppressWarnings(WarningType.unchecked_warning) final List<Map.Entry<String, String>> extraQueryParams = builder.mExtraQueryParams;
@@ -184,8 +184,8 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         private String mClientId;
         private String mRedirectUri;
 
-        private String mChildClientId;
-        private String mChildRedirectUri;
+        private String mBrkClientId;
+        private String mBrkRedirectUri;
 
         private String mState;
         private String mScope;
@@ -215,13 +215,13 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         }
 
 
-        public B setChildClientId(String clientId) {
-            mChildClientId = clientId;
+        public B setBrkClientId(String brkClientId) {
+            mBrkClientId = brkClientId;
             return self();
         }
 
-        public B setChildRedirectUri(String redirectUri) {
-            mChildRedirectUri = redirectUri;
+        public B setBrkRedirectUri(String brkRedirectUri) {
+            mBrkRedirectUri = brkRedirectUri;
             return self();
         }
 
@@ -275,8 +275,8 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
                 ", mClientId='" + mClientId + '\'' +
                 ", mRedirectUri='" + mRedirectUri + '\'' +
 
-                ", mBrkClientId='" + mChildClientId + '\'' +
-                ", mBrkRedirectUri='" + mChildRedirectUri + '\'' +
+                ", mBrkClientId='" + mBrkClientId + '\'' +
+                ", mBrkRedirectUri='" + mBrkRedirectUri + '\'' +
                 ", mScope='" + mScope + '\'' +
                 ", mState='" + mState + '\'' +
                 '}';
