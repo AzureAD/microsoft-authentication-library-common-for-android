@@ -170,6 +170,11 @@ dependencies {
     implementation "com.squareup.moshi:moshi-kotlin:$rootProject.ext.moshiVersion"
     implementation "com.squareup.moshi:moshi-adapters:$rootProject.ext.moshiAdaptersVersion"
 
+    //For passkeys
+    implementation "androidx.credentials:credentials:$rootProject.ext.AndroidCredentialsVersion"
+    //needed for credentials support from play services, for devices running
+    implementation "androidx.credentials:credentials-play-services-auth:$rootProject.ext.AndroidCredentialsPlayServicesAuthVersion"
+
     // Test dependencies
     // Needed to resolve JSONObject inside of non-instrumented tests
     testImplementation 'org.json:json:20160810'
@@ -271,6 +276,89 @@ task pmd(type: Pmd) {
         xml.enabled = false
         html.enabled = true
     }
+}
+
+tasks.register("depsize") {
+    description = 'Prints dependencies for "default" configuration'
+    doLast() {
+        listConfigurationDependencies()
+    }
+}
+
+tasks.register("depsize-all-configurations") {
+    description = 'Prints dependencies for all available configurations'
+    doLast() {
+        configurations
+                .findAll { it.isCanBeResolved() }
+                .each {
+                    def formatStr = "%,10.2f"
+                    def size = it.collect { it.length() / (1024 * 1024) }.sum()
+
+                    def out = new StringBuffer()
+                    out << "\nConfiguration name: \"${it.name}\"\n"
+                    if (size) {
+                        out << 'Total dependencies size:'.padRight(65)
+                        out << "${String.format(formatStr, size)} Mb\n\n"
+                    } else {
+                        out << 'No dependencies found';
+                    }
+                    println(out)
+                }
+    }
+}
+
+def listConfigurationDependencies() {
+    def formatStr = "%,10.2f"
+    def array = ["apiDependenciesMetadata",
+                 "archives",
+                 "checkstyle",
+                 "compile",
+                 "compileOnlyDependenciesMetadata",
+                 "coreLibraryDesugaring",
+                 "debugApiDependenciesMetadata",
+                 "debugCompileOnlyDependenciesMetadata",
+                 "debugImplementationDependenciesMetadata",
+                 "debugIntransitiveDependenciesMetadata",
+                 "debugRuntimeOnlyDependenciesMetadata",
+                 "default",
+                 "distApiDependenciesMetadata",
+                 "distCompileOnlyDependenciesMetadata",
+                 "distImplementationDependenciesMetadata",
+                 "distIntransitiveDependenciesMetadata",
+                 "distRuntimeOnlyDependenciesMetadata",
+                 "implementationDependenciesMetadata",
+                 "intransitiveDependenciesMetadata",
+                 "kotlinCompilerClasspath",
+                 "kotlinCompilerPluginClasspath",
+                "kotlinKlibCommonizerClasspath",
+                "kotlinNativeCompilerPluginClasspath",
+                "localApiDependenciesMetadata",
+                "localCompileOnlyDependenciesMetadata",
+                "localImplementationDependenciesMetadata",
+                "localIntransitiveDependenciesMetadata",
+                "localRuntimeOnlyDependenciesMetadata",
+                "runtimeOnlyDependenciesMetadata"
+    ] as String[]
+    for (def configName in array) {
+        def size = configurations.getByName(configName).collect { it.length() / (1024 * 1024) }.sum()
+
+        def out = new StringBuffer()
+        out << "\nConfiguration name: \"${configurations.getByName(configName).name}\"\n"
+        if (size) {
+            out << 'Total dependencies size:'.padRight(65)
+            out << "${String.format(formatStr, size)} Mb\n\n"
+
+            configurations.getByName(configName).sort { -it.length() }
+                    .each {
+                        out << "${it.name}".padRight(65)
+                        out << "${String.format(formatStr, (it.length() / 1024))} kb\n"
+                    }
+        } else {
+            out << 'No dependencies found';
+        }
+        println(out)
+    }
+    //def configName = "debugApiDependenciesMetadata"
 }
 
 // For publishing to the remote maven repo.
