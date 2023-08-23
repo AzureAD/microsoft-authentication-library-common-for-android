@@ -721,7 +721,7 @@ public final class AuthenticationConstants {
         public static final String BROKER_REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
 
         /**
-         * String for new broker redirect URI
+         * String for new broker redirect URI.
          */
         public static final String NEW_BROKER_REDIRECT_URI = "msauth://Microsoft.AAD.BrokerPlugin";
 
