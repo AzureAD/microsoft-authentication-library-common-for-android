@@ -17,6 +17,7 @@ V.15.0.0
 - [PATCH] Fixed debug apps not recognized as active broker issue (#2138)
 - [MINOR] Add checkMode method to msaltestapp infra (#2141)
 - [MINOR] Update TokenRequest.java with NAA params (#2143)
+- [MINOR] Add new apk name to BrokerHost infra (#2152)
 
 V.14.0.1
 ----------
