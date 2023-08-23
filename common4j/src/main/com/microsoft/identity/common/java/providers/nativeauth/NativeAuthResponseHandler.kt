@@ -46,15 +46,16 @@ import java.net.HttpURLConnection
 class NativeAuthResponseHandler {
 
     companion object {
-        internal const val DEFAULT_ERROR = "unknown_error"
-        internal const val DEFAULT_ERROR_DESCRIPTION = "No error description received"
+        @VisibleForTesting const val DEFAULT_ERROR = "unknown_error"
+        @VisibleForTesting const val DEFAULT_ERROR_DESCRIPTION = "No error description received"
     }
 
     private val TAG = NativeAuthResponseHandler::class.java.simpleName
 
     //region signup/start
     @Throws(ClientException::class)
-    internal fun getSignUpStartResultFromHttpResponse(
+    @VisibleForTesting
+    fun getSignUpStartResultFromHttpResponse(
         response: HttpResponse
     ): SignUpStartApiResponse {
         LogSession.logMethodCall(tag = TAG)
@@ -87,7 +88,8 @@ class NativeAuthResponseHandler {
 
     //region signup/challenge
     @Throws(ClientException::class)
-    internal fun getSignUpChallengeResultFromHttpResponse(
+    @VisibleForTesting
+    fun getSignUpChallengeResultFromHttpResponse(
         response: HttpResponse
     ): SignUpChallengeApiResponse {
         LogSession.logMethodCall(tag = TAG)
@@ -122,7 +124,8 @@ class NativeAuthResponseHandler {
 
     //region /signup/continue
     @Throws(ClientException::class)
-    internal fun getSignUpContinueResultFromHttpResponse(
+    @VisibleForTesting
+    fun getSignUpContinueResultFromHttpResponse(
         response: HttpResponse
     ): SignUpContinueApiResponse {
         LogSession.logMethodCall(tag = TAG)
@@ -155,7 +158,8 @@ class NativeAuthResponseHandler {
 
     //region /oauth/v2.0/initiate
     @Throws(ClientException::class)
-    internal fun getSignInInitiateResultFromHttpResponse(
+    @VisibleForTesting
+    fun getSignInInitiateResultFromHttpResponse(
         response: HttpResponse
     ): SignInInitiateApiResponse {
         LogSession.logMethodCall(tag = TAG)
@@ -188,7 +192,8 @@ class NativeAuthResponseHandler {
 
     //region /oauth/v2.0/challenge
     @Throws(ClientException::class)
-    internal fun getSignInChallengeResultFromHttpResponse(
+    @VisibleForTesting
+    fun getSignInChallengeResultFromHttpResponse(
         response: HttpResponse
     ): SignInChallengeApiResponse {
         LogSession.logMethodCall(tag = TAG)
@@ -277,7 +282,8 @@ class NativeAuthResponseHandler {
 
     //region /resetpassword/start
     @Throws(ClientException::class)
-    internal fun getResetPasswordStartApiResponseFromHttpResponse(
+    @VisibleForTesting
+    fun getResetPasswordStartApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordStartApiResponse {
         LogSession.logMethodCall(tag = TAG)
@@ -308,7 +314,8 @@ class NativeAuthResponseHandler {
 
     //region /resetpassword/challenge
     @Throws(ClientException::class)
-    internal fun getResetPasswordChallengeApiResponseFromHttpResponse(
+    @VisibleForTesting
+    fun getResetPasswordChallengeApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordChallengeApiResponse {
         LogSession.logMethodCall(tag = TAG)
@@ -344,7 +351,8 @@ class NativeAuthResponseHandler {
 
     //region /resetpassword/continue
     @Throws(ClientException::class)
-    internal fun getResetPasswordContinueApiResponseFromHttpResponse(
+    @VisibleForTesting
+    fun getResetPasswordContinueApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordContinueApiResponse {
         LogSession.logMethodCall(tag = TAG)
@@ -376,7 +384,8 @@ class NativeAuthResponseHandler {
 
     //region /resetpassword/submit
     @Throws(ClientException::class)
-    internal fun getResetPasswordSubmitApiResponseFromHttpResponse(
+    @VisibleForTesting
+    fun getResetPasswordSubmitApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordSubmitApiResponse {
         LogSession.logMethodCall(tag = TAG)
@@ -407,7 +416,8 @@ class NativeAuthResponseHandler {
 
     //region /resetpassword/poll_completion
     @Throws(ClientException::class)
-    internal fun getResetPasswordPollCompletionApiResponseFromHttpResponse(
+    @VisibleForTesting
+    fun getResetPasswordPollCompletionApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordPollCompletionApiResponse {
         LogSession.logMethodCall(tag = TAG)
