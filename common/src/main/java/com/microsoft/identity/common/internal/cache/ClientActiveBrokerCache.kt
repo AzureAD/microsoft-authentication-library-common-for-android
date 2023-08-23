@@ -52,6 +52,7 @@ internal constructor(private val storage: INameValueStorage<String>,
          * @param storageSupplier an [IStorageSupplier] component.
          * @return a thread-safe [IClientActiveBrokerCache].
          */
+        @JvmStatic
         fun getCache(storageSupplier: IStorageSupplier)
                 : IClientActiveBrokerCache {
             return ClientActiveBrokerCache(
@@ -78,27 +79,15 @@ internal constructor(private val storage: INameValueStorage<String>,
             "SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY"
     }
 
-    /**
-     * Cached value of [SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY]
-     **/
-    var cachedTimeStamp: Long? = null
-
     override fun shouldUseAccountManager(): Boolean {
         return runBlocking {
             lock.withLock {
-                if (cachedTimeStamp == null){
-                    storage.get(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY)?.let { rawValue ->
-                        rawValue.toLongOrNull()?.let { expiryDate ->
-                            cachedTimeStamp = expiryDate
-                        }
+                storage.get(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY)?.let { rawValue ->
+                    rawValue.toLongOrNull()?.let { expiryDate ->
+                        return@runBlocking isNotExpired(expiryDate)
                     }
                 }
 
-                if (isNotExpired(cachedTimeStamp)){
-                    return@runBlocking true
-                }
-
-                cachedTimeStamp = null
                 return@runBlocking false
             }
         }
@@ -109,7 +98,6 @@ internal constructor(private val storage: INameValueStorage<String>,
             lock.withLock {
                 val timeStamp = System.currentTimeMillis() + timeInMillis
                 storage.put(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY, timeStamp.toString())
-                cachedTimeStamp = timeStamp
             }
         }
     }
@@ -119,7 +107,6 @@ internal constructor(private val storage: INameValueStorage<String>,
             lock.withLock {
                 clearCachedActiveBrokerWithoutLock()
                 storage.remove(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY)
-                cachedTimeStamp = null
             }
         }
     }

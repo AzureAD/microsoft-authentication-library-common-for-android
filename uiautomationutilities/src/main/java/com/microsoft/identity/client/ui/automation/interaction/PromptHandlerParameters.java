@@ -105,6 +105,12 @@ public class PromptHandlerParameters {
     private final boolean speedBumpExpected;
 
     /**
+     * Denotes whether or not a second speed bump page is expected to appear during an interactive token
+     * request.
+     */
+    private final boolean secondSpeedBumpExpected;
+
+    /**
      * Denotes whether or not the register page is expected to appear during an interactive token
      * request.
      */
@@ -132,6 +138,11 @@ public class PromptHandlerParameters {
      * Denotes whether or not to expect "How would you like to sign in?" Prompt
      */
     private final boolean howWouldYouLikeToSignInExpected;
+
+    /**
+     * Denotes whether or not to expect "Choose certificate" Prompt
+     */
+    private final boolean chooseCertificateExpected;
 
     /**
      * Denotes the way in which we want to respond to the enroll page for this request.

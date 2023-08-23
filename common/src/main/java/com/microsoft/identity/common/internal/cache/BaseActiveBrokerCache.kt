@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.cache
 
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.java.interfaces.INameValueStorage
-import com.microsoft.identity.common.java.interfaces.IStorageSupplier
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -50,26 +49,16 @@ open class BaseActiveBrokerCache
         const val ACTIVE_BROKER_CACHE_SIGHASH_KEY = "ACTIVE_BROKER_CACHE_SIGHASH_KEY"
     }
 
-    /**
-     * In-memory cached value.
-     */
-    internal var inMemoryCachedValue: BrokerData? = null
-
     override fun getCachedActiveBroker(): BrokerData? {
         return runBlocking {
             lock.withLock {
-                if (inMemoryCachedValue != null) {
-                    return@runBlocking inMemoryCachedValue
-                }
-
                 val packageName = storage.get(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY)
                 val signatureHash = storage.get(ACTIVE_BROKER_CACHE_SIGHASH_KEY)
 
                 if (packageName.isNullOrEmpty() || signatureHash.isNullOrEmpty())
                     return@runBlocking null
 
-                inMemoryCachedValue = BrokerData(packageName, signatureHash)
-                return@runBlocking inMemoryCachedValue
+                return@runBlocking BrokerData(packageName, signatureHash)
             }
         }
     }
@@ -77,9 +66,7 @@ open class BaseActiveBrokerCache
     override fun setCachedActiveBroker(brokerData: BrokerData) {
         return runBlocking {
             lock.withLock {
-                storage.put(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY, brokerData.packageName)
-                storage.put(ACTIVE_BROKER_CACHE_SIGHASH_KEY, brokerData.signingCertificateThumbprint)
-                inMemoryCachedValue = brokerData.copy()
+                setCachedActiveBrokerWithoutLock(brokerData)
             }
         }
     }
@@ -92,9 +79,13 @@ open class BaseActiveBrokerCache
         }
     }
 
+    protected open fun setCachedActiveBrokerWithoutLock(brokerData: BrokerData){
+        storage.put(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY, brokerData.packageName)
+        storage.put(ACTIVE_BROKER_CACHE_SIGHASH_KEY, brokerData.signingCertificateThumbprint)
+    }
+
     protected fun clearCachedActiveBrokerWithoutLock(){
         storage.remove(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY)
         storage.remove(ACTIVE_BROKER_CACHE_SIGHASH_KEY)
-        inMemoryCachedValue = null
     }
 }
