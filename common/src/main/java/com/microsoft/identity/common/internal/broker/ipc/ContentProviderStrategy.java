@@ -133,8 +133,8 @@ public class ContentProviderStrategy extends AbstractIpcStrategyWithServiceValid
     /**
      * Returns a content provider URI for the given path.
      */
-    public static Uri getContentProviderURI(final @NonNull String targetedBrokerPackageName,
-                                      final @NonNull String path) {
+    private Uri getContentProviderURI(final @NonNull String targetedBrokerPackageName,
+                                             final @NonNull String path) {
         final String authority = getContentProviderAuthority(targetedBrokerPackageName);
         return Uri.parse(CONTENT_SCHEME + authority + path);
     }
@@ -142,7 +142,7 @@ public class ContentProviderStrategy extends AbstractIpcStrategyWithServiceValid
     /**
      * Returns content provider authority.
      */
-    public static String getContentProviderAuthority(final @NonNull String targetedBrokerPackageName) {
+    private String getContentProviderAuthority(final @NonNull String targetedBrokerPackageName) {
         return targetedBrokerPackageName + "." + AUTHORITY;
     }
 
