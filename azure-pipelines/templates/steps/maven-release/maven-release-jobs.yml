@@ -55,21 +55,19 @@ jobs:
       inputs:
         filename: echo
         arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAndroidAccessTokenVar }}]$(System.AccessToken)'
-  - task: Gradle@1
-    name: Gradle1
+  - task: Gradle@3
+    name: Gradle3
     displayName: Assemble Release
     inputs:
       tasks: ${{ parameters.gradleAssembleReleaseTask }}
       publishJUnitResults: false
-      jdkArchitecture: x86
-      sqAnalysisBreakBuildIfQualityGateFailed: false
-  - task: Gradle@1
+      jdkArchitecture: x64
+  - task: Gradle@3
     displayName: Generate Pom file
     inputs:
       tasks: ${{ parameters.gradleGeneratePomFiletask }}
       publishJUnitResults: false
-      jdkArchitecture: x86
-      sqAnalysisBreakBuildIfQualityGateFailed: false
+      jdkArchitecture: x64
   - ${{ if ne(parameters.extraSourceFolder, 'none') }}:
     - task: CopyFiles@2
       displayName: Copy ${{ parameters.extraSourceFolder }} to Artifact Staging Directory
