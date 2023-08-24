@@ -84,13 +84,19 @@ jobs:
         Contents: '**/*.aar'
         TargetFolder: $(Build.ArtifactStagingDirectory)
     - task: Bash@3
-      displayName: Rename common-dist-release.aar to append version number
+      displayName: Rename dist-release.aar to append version number
       inputs:
         targetType: 'inline'
         script: |
           cd $(Build.ArtifactStagingDirectory)
-          echo "Renaming file: common-dist-release.aar to common-${{ parameters.projectVersion }}.aar"
-          mv common-dist-release.aar common-${{ parameters.projectVersion }}.aar
+          old_string="-dist-release.aar"
+          for file in *"$old_string"; do
+            if [ -e "$file" ]; then
+              new_file="${file%"$old_string"}${{ parameters.projectVersion }}.aar"
+              mv "$file" "$new_file"
+              echo "Renamed '$file' to '$new_file'"
+            fi
+          done
   - ${{ if ne(parameters.jarSourceFolder, 'none') }}:
     - task: CopyFiles@2
       displayName: Copy jars to Artifact Staging Directory
