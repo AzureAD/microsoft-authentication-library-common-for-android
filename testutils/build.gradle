@@ -172,7 +172,7 @@ dependencies {
         }
     } else {
         //Always use the latest release
-        implementation(group: 'com.microsoft.identity', name: 'common', version: '0.0.+')
+        implementation(group: 'com.microsoft.identity', name: 'common', version: '1.0.+')
     }
 
     // keyvault per product flavor
