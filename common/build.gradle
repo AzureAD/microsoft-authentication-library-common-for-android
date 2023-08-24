@@ -12,6 +12,7 @@ apply from: '../versioning/version_tasks.gradle'
 def desugarCode = false
 
 if (project.hasProperty("sugar")) {
+    println("found sugar")
     desugarCode = sugar.toBoolean()
 }
 
@@ -130,7 +131,7 @@ android {
 
 dependencies {
     //Java 8 - Desugaring - Enabled/Disabled via plugin
-    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:1.1.9"
 
     localApi(project(":common4j")) {
         transitive = false
