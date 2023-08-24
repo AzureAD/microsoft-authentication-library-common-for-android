@@ -50,10 +50,21 @@ open class BrokerValidator: IBrokerValidator {
         this.validateSigningCertificate = validateSigningCertificate
     }
 
-    private val allowedBrokerApps: Set<BrokerData>;
-    private val getSigningCertificateForApp: (packageName: String) -> List<X509Certificate>;
+    /**
+     * Set of broker apps to validate against.
+     **/
+    private val allowedBrokerApps: Set<BrokerData>
+
+    /**
+     * Set of broker apps to validate against.
+     **/
+    private val getSigningCertificateForApp: (packageName: String) -> List<X509Certificate>
+
+    /**
+     * Validate if given list of signing certificate can generate the matching thumbprint.
+     **/
     private val validateSigningCertificate: (
-        expectedSigningCertificateSignature: String,
+        expectedSigningCertificateThumbprint: String,
         signingCertificates: List<X509Certificate>
     ) -> Unit;
 
@@ -61,13 +72,13 @@ open class BrokerValidator: IBrokerValidator {
         private val TAG = BrokerValidator::class.simpleName
 
         fun validateSigningCertificate(
-            expectedSigningCertificateSignature: String,
+            expectedSigningCertificateThumbprint: String,
             signingCertificates: List<X509Certificate>
         ) {
             // Verify the cert list contains the cert we trust.
             PackageUtils.verifySignatureHash(
                 signingCertificates,
-                setOf(expectedSigningCertificateSignature).iterator()
+                setOf(expectedSigningCertificateThumbprint).iterator()
             )
 
             // Perform the certificate chain validation. If there is only one cert returned,
