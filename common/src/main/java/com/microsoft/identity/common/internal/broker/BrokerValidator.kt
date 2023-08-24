@@ -31,14 +31,31 @@ import java.security.cert.X509Certificate
  * A class for validating if a given app is a valid broker app.
  * NOTE: Marked it as 'open' to make it mockable by ADAL's mockito.
  * */
-open class BrokerValidator(
-    private val allowedBrokerApps: Set<BrokerData>,
-    private val getSigningCertificateForApp: (packageName: String) -> List<X509Certificate>,
+open class BrokerValidator: IBrokerValidator {
+
+    constructor(context: Context) {
+        allowedBrokerApps = BrokerData.getKnownBrokerApps()
+        getSigningCertificateForApp = { packageName: String ->
+            PackageUtils.readCertDataForApp(packageName, context)
+        }
+        validateSigningCertificate = Companion::validateSigningCertificate
+    }
+
+    constructor(allowedBrokerApps: Set<BrokerData>,
+                getSigningCertificateForApp: (packageName: String) -> List<X509Certificate>,
+                validateSigningCertificate: (expectedSigningCertificateSignature: String,
+                                             signingCertificates: List<X509Certificate>) -> Unit) {
+        this.allowedBrokerApps = allowedBrokerApps
+        this.getSigningCertificateForApp = getSigningCertificateForApp
+        this.validateSigningCertificate = validateSigningCertificate
+    }
+
+    private val allowedBrokerApps: Set<BrokerData>;
+    private val getSigningCertificateForApp: (packageName: String) -> List<X509Certificate>;
     private val validateSigningCertificate: (
         expectedSigningCertificateSignature: String,
         signingCertificates: List<X509Certificate>
-    ) -> Unit,
-) : IBrokerValidator {
+    ) -> Unit;
 
     companion object {
         private val TAG = BrokerValidator::class.simpleName
@@ -60,14 +77,6 @@ open class BrokerValidator(
             }
         }
     }
-
-    constructor(context: Context) : this(
-        allowedBrokerApps = BrokerData.getKnownBrokerApps(),
-        getSigningCertificateForApp = { packageName: String ->
-            PackageUtils.readCertDataForApp(packageName, context)
-        },
-        validateSigningCertificate = Companion::validateSigningCertificate
-    )
 
     /**
      * Kept for backward-compatibility with ADAL.
