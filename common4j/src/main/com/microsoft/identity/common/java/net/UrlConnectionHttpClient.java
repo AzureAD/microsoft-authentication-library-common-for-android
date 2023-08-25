@@ -330,88 +330,75 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         }
     }
 
-    private HttpResponse executeHttpSend(HttpRequest request,
-                                         Consumer<HttpResponse> completionCallback)
-            throws IOException {
-        final HttpURLConnection urlConnection = HttpUrlConnectionFactory.createHttpURLConnection(
-                request.getRequestUrl());
+    private HttpResponse executeHttpSend(HttpRequest request, Consumer<HttpResponse> completionCallback) throws IOException {
+        final HttpURLConnection urlConnection = setupConnection(request);
+
+        sendRequest(urlConnection, request.getRequestContent(), request.getRequestHeaders().get(HttpConstants.HeaderField.CONTENT_TYPE));
+
+        InputStream responseStream = null;
+        HttpResponse response = null;
         try {
-            setupConnection(urlConnection, request);
-            sendRequest(urlConnection,
-                    request.getRequestContent(),
-                    request.getRequestHeaders().get(HttpConstants.HeaderField.CONTENT_TYPE));
-
-            InputStream responseStream = null;
-            HttpResponse response = null;
             try {
-                try {
-                    responseStream = urlConnection.getInputStream();
-                } catch (final SocketTimeoutException socketTimeoutException) {
-                    // SocketTimeoutExcetion is thrown when connection timeout happens. For connection
-                    // timeout, we want to retry once. Throw the exception to the upper layer, and the
-                    // upper layer will handle the retry.
-                    throw socketTimeoutException;
-                } catch (final IOException ioException) {
-                    // 404, for example, will generate an exception.  We should catch it.
-                    responseStream = urlConnection.getErrorStream();
-                }
-
-                final int statusCode = urlConnection.getResponseCode();
-                final Date date = new Date(urlConnection.getDate());
-
-                final String responseBody = responseStream == null
-                        ? ""
-                        : convertStreamToString(responseStream);
-
-                response = new HttpResponse(
-                        date,
-                        statusCode,
-                        responseBody,
-                        urlConnection.getHeaderFields()
-                );
-
-                final Span span = SpanExtension.current();
-
-                final String contentType = response.getHeaderValue(CONTENT_TYPE, 0);
-                if (contentType != null) {
-                    span.setAttribute(
-                            AttributeName.response_content_type.name(),
-                            contentType
-                    );
-                }
-
-                final String cssRequestId = response.getHeaderValue(XMS_CCS_REQUEST_ID, 0);
-                if (cssRequestId != null) {
-                    span.setAttribute(
-                            AttributeName.ccs_request_id.name(),
-                            cssRequestId
-                    );
-                }
-
-                span.setAttribute(
-                        AttributeName.response_body_length.name(),
-                        responseBody.length()
-                );
-                span.setAttribute(
-                        AttributeName.http_status_code.name(),
-                        response.getStatusCode()
-                );
-
-            } finally {
-                completionCallback.accept(response);
-                safeCloseStream(responseStream);
+                responseStream = urlConnection.getInputStream();
+            } catch (final SocketTimeoutException socketTimeoutException) {
+                // SocketTimeoutExcetion is thrown when connection timeout happens. For connection
+                // timeout, we want to retry once. Throw the exception to the upper layer, and the
+                // upper layer will handle the retry.
+                throw socketTimeoutException;
+            } catch (final IOException ioException) {
+                // 404, for example, will generate an exception.  We should catch it.
+                responseStream = urlConnection.getErrorStream();
             }
 
-            return response;
+            final int statusCode = urlConnection.getResponseCode();
+            final Date date = new Date(urlConnection.getDate());
+
+            final String responseBody = responseStream == null
+                    ? ""
+                    : convertStreamToString(responseStream);
+
+            response = new HttpResponse(
+                    date,
+                    statusCode,
+                    responseBody,
+                    urlConnection.getHeaderFields()
+            );
+
+            final Span span = SpanExtension.current();
+
+            if (response.getHeaders() != null && response.getHeaders().size() > 0) {
+                span.setAttribute(
+                        AttributeName.response_content_type.name(),
+                        response.getHeaderValue(CONTENT_TYPE, 0)
+                );
+
+                span.setAttribute(
+                        com.microsoft.identity.common.java.opentelemetry.AttributeName.ccs_request_id.name(),
+                        response.getHeaderValue(XMS_CCS_REQUEST_ID, 0)
+                );
+            }
+
+            span.setAttribute(
+                    AttributeName.response_body_length.name(),
+                    responseBody.length()
+            );
+            span.setAttribute(
+                    AttributeName.http_status_code.name(),
+                    response.getStatusCode()
+            );
 
         } finally {
-            urlConnection.disconnect();
+            completionCallback.accept(response);
+            safeCloseStream(responseStream);
         }
+
+        return response;
     }
 
-    private void setupConnection(@NonNull final HttpURLConnection urlConnection,
-                                 @NonNull final HttpRequest request) throws IOException {
+    private HttpURLConnection setupConnection(HttpRequest request) throws IOException {
         final String methodName = ":setupConnection";
+        final HttpURLConnection urlConnection = HttpUrlConnectionFactory.createHttpURLConnection(request.getRequestUrl());
+
         // Apply request headers and update the headers with default attributes first
         final Set<Map.Entry<String, String>> headerEntries = request.getRequestHeaders().entrySet();
 
@@ -435,6 +422,8 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         urlConnection.setInstanceFollowRedirects(true);
         urlConnection.setUseCaches(true);
         urlConnection.setDoInput(true);
+
+        return urlConnection;
     }
 
     private int getReadTimeoutMs() {
