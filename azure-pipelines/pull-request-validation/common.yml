@@ -81,6 +81,8 @@ jobs:
     inputs:
       tasks: clean common:lintLocalDebug
       publishJUnitResults: false
+      javaHomeSelection: JDKVersion
+      jdkVersionOption: "1.11"
 - job: codeql
   displayName: CodeQL
   cancelTimeoutInMinutes: 1
@@ -89,6 +91,11 @@ jobs:
     clean: true
     submodules: recursive
     persistCredentials: True
+  - task: JavaToolInstaller@0
+    inputs:
+        versionSpec: '11'
+        jdkArchitectureOption: 'x64'
+        jdkSourceOption: 'PreInstalled'
   - task: CmdLine@1
     displayName: Set Office MVN Access Token in Environment
     inputs:
@@ -104,6 +111,7 @@ jobs:
       buildCommandsString: 'gradlew.bat clean common:assembleLocal'
       querySuite: 'Recommended'
       timeout: '1800'
+      jdkVersionOption: "1.11"
   - task: PublishPipelineArtifact@1
     displayName: 'Publish code analysis artifacts'
     inputs:

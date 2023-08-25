@@ -1,5 +1,6 @@
-V.NEXT
+V.15.0.0
 ----------
+- [MAJOR] handle broker discovery disabled on SDK side (#2145)
 - [MAJOR] Update active broker cache upon returned result (#2140)
 - [MAJOR] Move Broker side active broker cache to broker repo (#2123)
 - [MINOR] Add span names for the BrokerOperationRequestDispatcher and PassthroughExecutor (#2100)
@@ -14,6 +15,10 @@ V.NEXT
 - [MINOR] Refactored OneAuthTestApp infra in order to process LTW test cases (#2136)
 - [PATCH] Fix NPE in OTEL code for DCF flow (#2139)
 - [PATCH] Fixed debug apps not recognized as active broker issue (#2138)
+<<<<<<< HEAD
+=======
+- [MINOR] Updated target, compile sdk, AGP and gradle versions  (#2142)
+>>>>>>> dev
 - [MINOR] Add checkMode method to msaltestapp infra (#2141)
 - [MINOR] Update TokenRequest.java with NAA params (#2143)
 

@@ -125,4 +125,23 @@ class ActiveBrokerCacheUpdaterTest {
         cacheUpdater.updateCachedActiveBrokerFromResultBundle(bundle)
         Assert.assertEquals(newActiveBroker, cache.getCachedActiveBroker())
     }
+
+    @Test
+    fun testWipeCachedActiveBroker(){
+        val cache = InMemoryActiveBrokerCache()
+        cache.setCachedActiveBroker(newActiveBroker)
+
+        val cacheUpdater = ActiveBrokerCacheUpdater ({ false }, cache)
+
+        val bundle = Bundle()
+        ActiveBrokerCacheUpdater.appendBrokerDiscoveryDisabledToResultBundle(bundle)
+
+        Assert.assertEquals(newActiveBroker, cache.getCachedActiveBroker())
+        Assert.assertFalse(cache.shouldUseAccountManager())
+
+        cacheUpdater.updateCachedActiveBrokerFromResultBundle(bundle)
+
+        Assert.assertNull(cache.getCachedActiveBroker())
+        Assert.assertTrue(cache.shouldUseAccountManager())
+    }
 }
