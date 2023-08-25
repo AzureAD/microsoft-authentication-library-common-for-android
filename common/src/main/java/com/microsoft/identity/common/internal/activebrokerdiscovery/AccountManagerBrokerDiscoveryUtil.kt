@@ -86,11 +86,11 @@ class AccountManagerBrokerDiscoveryUtil(
             if (AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE.equals(accountType, ignoreCase = true)) {
                 Logger.info(methodTag, "Verify: $packageName")
 
-                val brokerData = knownBrokerApps.find {
+                val brokerData = knownBrokerApps.filter {
                     it.packageName.equals(packageName, ignoreCase = true)
-                }
+                }.firstOrNull(isSignedByKnownKeys)
 
-                if (brokerData?.let { isSignedByKnownKeys(it) } == true) {
+                if (brokerData != null) {
                     return brokerData
                 }
             }

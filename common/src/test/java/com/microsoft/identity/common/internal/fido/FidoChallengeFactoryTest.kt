@@ -40,12 +40,12 @@ class FidoChallengeFactoryTest {
     val submitUrl = "submiturl"
     val context = "123456"
     val authority = "urn:http-auth:PassKey"
-    val keyTypes = "passkey"
 
     //Auth
     val allowCredentialsEmpty = ""
     val allowCredentialsOneUser = "user1"
     val allowCredentialsTwoUsers = "user1,user2"
+    val keyTypes = "passkey"
     val keyTypesEmpty = ""
 
     @Test

@@ -22,6 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.app;
 
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+
+import android.widget.Button;
+import android.widget.EditText;
+
 import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
@@ -67,11 +72,7 @@ public class MsalTestApp extends App {
     public String acquireToken(@NonNull final String username,
                                @NonNull final String password,
                                @NonNull final PromptHandlerParameters promptHandlerParameters,
-                               @NonNull final boolean shouldHandlePrompt) throws UiObjectNotFoundException {
-        // handle loginHint input if needed
-        if (shouldHandlePrompt) {
-            UiAutomatorUtils.handleInput("com.msft.identity.client.sample.local:id/loginHint", username);
-        }
+                               @NonNull final boolean shouldHandlePrompt) throws UiObjectNotFoundException, InterruptedException {
 
         final UiObject acquireTokenButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_acquiretoken");
         scrollToElement(acquireTokenButton);
@@ -79,6 +80,16 @@ public class MsalTestApp extends App {
 
         // handle prompt if needed
         if (shouldHandlePrompt) {
+            try {
+                final UiObject emailField = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
+                        "", EditText.class);
+                emailField.setText(username);
+                final UiObject nextBtn = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
+                        "Next", Button.class);
+                nextBtn.click();
+            } catch (final UiObjectNotFoundException e) {
+                throw new AssertionError("Could not click on object with txt Next");
+            }
             final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler((MicrosoftStsPromptHandlerParameters) promptHandlerParameters);
             microsoftStsPromptHandler.handlePrompt(username, password);
         }
@@ -90,7 +101,7 @@ public class MsalTestApp extends App {
 
 
     // click on button acquire token silent
-    public String acquireTokenSilent() throws UiObjectNotFoundException {
+    public String acquireTokenSilent() throws UiObjectNotFoundException, InterruptedException {
         final UiObject acquireTokenSilentButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_acquiretokensilent");
         scrollToElement(acquireTokenSilentButton);
         acquireTokenSilentButton.click();
@@ -99,9 +110,12 @@ public class MsalTestApp extends App {
     }
 
     // click on button getUsers
-    public List<String> getUsers() throws UiObjectNotFoundException {
-        UiAutomatorUtils.handleButtonClick("com.msft.identity.client.sample.local:id/btn_getUsers");
-
+    public List<String> getUsers() throws UiObjectNotFoundException, InterruptedException {
+        final UiObject getUsersButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_getUsers");
+        scrollToElement(getUsersButton);
+        getUsersButton.click();
+        // wait for ui to update
+        Thread.sleep(2000);
         // get each user information in the user list
         final List<String> users = new ArrayList<>();
         final UiObject userList = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/user_list");
@@ -112,9 +126,56 @@ public class MsalTestApp extends App {
         return users;
     }
 
+    public void selectFromAuthScheme(@NonNull final String text) throws UiObjectNotFoundException {
+        final UiObject authSchemeSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/authentication_scheme");
+        authSchemeSpinner.click();
+        final UiObject authScheme = UiAutomatorUtils.obtainUiObjectWithText(text);
+        authScheme.click();
+    }
+
+    public String generateSHR() throws UiObjectNotFoundException {
+        final UiObject generateSHRButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_generate_shr");
+        scrollToElement(generateSHRButton);
+        generateSHRButton.click();
+        final UiObject result = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/txt_result");
+        return result.getText();
+    }
+
+    public String removeUser() throws UiObjectNotFoundException {
+        final UiObject removeUserButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_clearCache");
+        scrollToElement(removeUserButton);
+        removeUserButton.click();
+        final UiObject textView = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/dialog_message");
+        final String text = textView.getText();
+        return text;
+    }
+
+    public String getActiveBrokerPackageName() throws UiObjectNotFoundException {
+        final UiObject getPackageNameButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btnGetActiveBroker");
+        scrollToElement(getPackageNameButton);
+        getPackageNameButton.click();
+        final UiObject textView = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/dialog_message");
+        final String text = textView.getText();
+        return text;
+    }
+
+    public String checkMode() throws UiObjectNotFoundException {
+        final UiObject modeText = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/public_application_mode");
+        return modeText.getText();
+    }
+
     private void scrollToElement(UiObject obj) throws UiObjectNotFoundException {
         UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
         scrollable.scrollIntoView(obj);
+        obj.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+    }
+
+    public void handleBackButton() {
+        UiAutomatorUtils.pressBack();
+    }
+
+    public void handleUserNameInput(@NonNull final String input) {
+        UiAutomatorUtils.handleInput("com.msft.identity.client.sample.local:id/loginHint", input);
     }
 
     @Override
