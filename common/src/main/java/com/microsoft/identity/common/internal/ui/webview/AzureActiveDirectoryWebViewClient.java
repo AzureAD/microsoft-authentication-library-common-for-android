@@ -543,54 +543,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public void onReceivedClientCertRequest(@NonNull final WebView view,
                                             @NonNull final ClientCertRequest clientCertRequest) {
         final String methodTag = TAG + ":onReceivedClientCertRequest";
-        if (true) {
-            final IFidoChallenge fidoChallenge;
-            try {
-                fidoChallenge = FidoChallengeFactory.createFidoChallengeFromRedirect("urn:http-auth:PassKey?Challenge=T1xCsnxM2DNL2KdK5CLa6fMhD7OBqho6syzInk_n-Uo&RelyingPartyIdentifier=login.microsoft.com&UserVerificationPolicy=required&Version=1.0&SubmitUrl=https://login.microsoft.com&Context=context");
-                final IFidoManager fidoManager = FidoManagerFactory.createFidoManager(getActivity());
-                final IFidoTelemetryHelper telemetryHelper = new IFidoTelemetryHelper() {
-                    @Override
-                    public void setFidoChallenge(@NonNull String challengeName) {
-
-                    }
-
-                    @Override
-                    public void setFidoChallengeHandler(@NonNull String challengeHandlerName) {
-
-                    }
-
-                    @Override
-                    public void setResultSuccess() {
-
-                    }
-
-                    @Override
-                    public void setResultFailure(@NonNull String message) {
-
-                    }
-
-                    @Override
-                    public void setResultFailure(@NonNull Exception exception) {
-
-                    }
-                };
-                final List<String> keyTypes = new ArrayList<>();
-                keyTypes.add("passkey");
-                final AbstractFidoChallengeHandler fidoChallengeHandler = FidoChallengeHandlerFactory.createFidoChallengeHandler(
-                        fidoManager,
-                        view,
-                        telemetryHelper,
-                        keyTypes
-                );
-                fidoChallengeHandler.processChallenge(fidoChallenge);
-                return;
-            } catch (ClientException exception) {
-                Logger.error(methodTag,exception.getErrorCode(), null);
-                Logger.errorPII(methodTag,exception.getMessage(), exception);
-                returnError(exception.getErrorCode(), exception.getMessage());
-                view.stopLoading();
-            }
-        }
         // When server sends null or empty issuers, we'll continue with CBA.
         // In the case where ADFS sends a clientTLS device auth request, we don't handle that in CBA.
         // This type of request will have a particular issuer, so if that issuer is found, we will
