@@ -51,20 +51,18 @@ class PasskeyFidoChallengeHandler
         val methodTag = "$TAG:processChallenge"
         telemetryHelper.setFidoChallenge(fidoChallenge::class.simpleName.toString())
         telemetryHelper.setFidoChallengeHandler(TAG)
+        var assertion: String
         if (lifecycleOwner != null && fidoChallenge is AuthFidoChallenge) {
             lifecycleOwner.lifecycleScope.launch {
                 try {
-                    val assertion = fidoManager.authenticate(fidoChallenge)
-                    respondToChallenge(fidoChallenge.submitUrl, fidoChallenge.context, assertion)
+                    assertion = fidoManager.authenticate(fidoChallenge)
                     telemetryHelper.setResultSuccess()
                 } catch (e: Exception) {
-                    //Exceptions here could be specific to the FIDO APIs being used.
-                    Logger.error(methodTag, e.message, e)
+                    assertion = fidoManager.getExceptionMessage(e)
+                    Logger.error(methodTag, assertion, e)
                     telemetryHelper.setResultFailure(e)
-                    //TODO: Look into responding with a more specific error message in assertion,
-                    // once custom protocol is complete and more testing is done with CredMan.
-                    respondToChallengeWithEmptyAssertion(fidoChallenge.submitUrl, fidoChallenge.context)
                 }
+                respondToChallenge(fidoChallenge.submitUrl, fidoChallenge.context, assertion)
             }
             return null
         }
@@ -77,7 +75,7 @@ class PasskeyFidoChallengeHandler
         }
         Logger.error(methodTag, errorMessage, null)
         telemetryHelper.setResultFailure(errorMessage)
-        respondToChallengeWithEmptyAssertion(fidoChallenge.submitUrl, fidoChallenge.context)
+        respondToChallenge(fidoChallenge.submitUrl, fidoChallenge.context, errorMessage)
         return null
     }
 
@@ -97,21 +95,7 @@ class PasskeyFidoChallengeHandler
         )
         webView.post {
             Logger.info(methodTag, "Responding to Fido challenge.")
-            //TODO: server team might want us to postUrl instead of loadUrl. Edit this line accordingly once they make a decision.
             webView.loadUrl(submitUrl, header)
         }
-    }
-
-    /**
-     * Makes a post request in the WebView with an empty assertion.
-     * Should be called due to cancellation or error while getting assertion.
-     * @param submitUrl The url to which the client submits the response to the server's challenge.
-     * @param context Server state that needs to be maintained between challenge and response.
-     */
-    private fun respondToChallengeWithEmptyAssertion(submitUrl: String, context: String) {
-        val methodTag = "$TAG:respondToChallengeWithEmptyAssertion"
-        Logger.info(methodTag, "Responding to Fido challenge with empty assertion.")
-        respondToChallenge(submitUrl, context, "")
-
     }
 }

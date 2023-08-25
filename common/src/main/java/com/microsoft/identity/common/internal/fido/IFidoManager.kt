@@ -30,6 +30,14 @@ interface IFidoManager {
      * Interacts with the FIDO credential provider and returns an assertion.
      * @param challenge AuthFidoChallenge received from the server.
      * @return assertion
+     * @throws Exception
      */
     suspend fun authenticate(challenge: AuthFidoChallenge): String
+
+    /**
+     * Identifies the exception thrown and returns a helpful message pertaining to the exception.
+     * @param exception The exception thrown
+     * @return message related to exception
+     */
+    fun getExceptionMessage(exception: Exception): String
 }

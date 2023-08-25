@@ -40,11 +40,11 @@ class ExtendedTestWebView : WebView(ApplicationProvider.getApplicationContext())
         headers = additionalHttpHeaders
     }
 
-    fun isAssertionHeaderEmpty() : Boolean {
+    fun isRegularAssertion() : Boolean {
         headers?.let {
             val assertion = it[FidoResponseField.Assertion.name]
                 ?: throw Exception("No assertion header found.")
-            return assertion.isBlank()
+            return assertion == TestFidoManager.SAMPLE_ASSERTION
         }
         throw Exception("Headers is null.")
     }

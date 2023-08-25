@@ -78,7 +78,7 @@ class PasskeyFidoChallengeHandlerTest {
                 allowedCredentials = allowCredentialsOneUser
         ))
         assertTrue(webView.urlLoaded)
-        assertFalse(webView.isAssertionHeaderEmpty())
+        assertTrue(webView.isRegularAssertion())
         assertTrue(testFidoTelemetryHelper.successFlag)
         assertFalse(testFidoTelemetryHelper.failureFlag)
     }
@@ -99,14 +99,14 @@ class PasskeyFidoChallengeHandlerTest {
                 allowedCredentials = allowCredentialsOneUser
             ))
         assertTrue(webView.urlLoaded)
-        assertTrue(webView.isAssertionHeaderEmpty())
+        assertFalse(webView.isRegularAssertion())
         assertFalse(testFidoTelemetryHelper.successFlag)
         assertTrue(testFidoTelemetryHelper.failureFlag)
     }
 
     //Passing a null lifecycleOwner will end the operation before any calls can be made from the manager.
     @Test
-    fun testProcessChallenge_AuthExceptionInHandler() {
+    fun testProcessChallenge_AuthErrorInHandler() {
         passkeyFidoChallengeHandler = PasskeyFidoChallengeHandler(
             fidoManager = testFidoManager,
             webView = webView,
@@ -126,7 +126,7 @@ class PasskeyFidoChallengeHandlerTest {
                 allowedCredentials = allowCredentialsOneUser
             ))
         assertTrue(webView.urlLoaded)
-        assertTrue(webView.isAssertionHeaderEmpty())
+        assertFalse(webView.isRegularAssertion())
         assertFalse(testFidoTelemetryHelper.successFlag)
         assertTrue(testFidoTelemetryHelper.failureFlag)
     }

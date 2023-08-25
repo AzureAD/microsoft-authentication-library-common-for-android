@@ -22,20 +22,26 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
-class TestFidoManager () : IFidoManager{
+class TestFidoManager () : IFidoManager {
     companion object {
-        const val EXCEPTION_CHALLENGE = "Throw exception in manager"
-    }
-    override suspend fun authenticate(challenge: AuthFidoChallenge): String {
-        if (challenge.challenge == EXCEPTION_CHALLENGE) {
-            throw Exception("Throwing an exception")
-        }
         //Example assertion from https://developer.android.com/training/sign-in/passkeys#configure
-        return """{
+        const val SAMPLE_ASSERTION = """{
             "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiVDF4Q3NueE0yRE5MMktkSzVDTGE2Zk1oRDdPQnFobzZzeXpJbmtfbi1VbyIsIm9yaWdpbiI6ImFuZHJvaWQ6YXBrLWtleS1oYXNoOk1MTHpEdll4UTRFS1R3QzZVNlpWVnJGUXRIOEdjVi0xZDQ0NEZLOUh2YUkiLCJhbmRyb2lkUGFja2FnZU5hbWUiOiJjb20uZ29vZ2xlLmNyZWRlbnRpYWxtYW5hZ2VyLnNhbXBsZSJ9",
             "authenticatorData": "j5r_fLFhV-qdmGEwiukwD5E_5ama9g0hzXgN8thcFGQdAAAAAA",
             "signature": "MEUCIQCO1Cm4SA2xiG5FdKDHCJorueiS04wCsqHhiRDbbgITYAIgMKMFirgC2SSFmxrh7z9PzUqr0bK1HZ6Zn8vZVhETnyQ",
             "userHandle": "2HzoHm_hY0CjuEESY9tY6-3SdjmNHOoNqaPDcZGzsr0"
         }"""
+        const val EXCEPTION_CHALLENGE = "Throw exception in manager"
+        const val EXCEPTION_MESSAGE = "Throwing an exception"
+    }
+    override suspend fun authenticate(challenge: AuthFidoChallenge): String {
+        if (challenge.challenge == EXCEPTION_CHALLENGE) {
+            throw Exception(EXCEPTION_MESSAGE)
+        }
+        return SAMPLE_ASSERTION
+    }
+
+    override fun getExceptionMessage(exception: Exception): String {
+        return EXCEPTION_MESSAGE
     }
 }
