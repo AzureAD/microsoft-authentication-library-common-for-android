@@ -24,6 +24,7 @@ android {
         }
         animationsDisabled = true
     }
+
     //Commenting out until the next major version of common/msal/etc...
     /*
     compileOptions {
@@ -34,10 +35,9 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
     */
-   
 
-    compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    compileSdk rootProject.ext.compileSdkVersion
 
     boolean usePreInstalledApks = project.hasProperty("preferPreInstalledApks")
 
