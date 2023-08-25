@@ -162,13 +162,13 @@ stages:
           git status
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
-    - task: Gradle@2
+    - task: Gradle@3
       displayName: Assemble broker
       inputs:
         tasks: AADAuthenticator:clean AADAuthenticator:assembleLocal --build-cache --info
         publishJUnitResults: false
-        jdkArchitecture: x86
-        sqAnalysisBreakBuildIfQualityGateFailed: false
+        jdkArchitecture: x64
+        jdkVersionOption: "1.11"
     - task: Gradle@2
       displayName: Run broker Unit tests
       inputs:
@@ -206,8 +206,8 @@ stages:
           cwd: $(Build.SourcesDirectory)/broker-java-root
           tasks: LinuxBroker:clean LinuxBroker:assemble --build-cache --info
           publishJUnitResults: false
-          jdkArchitecture: x86
-          sqAnalysisBreakBuildIfQualityGateFailed: false
+          jdkArchitecture: x64
+          jdkVersionOption: "1.11"
       - task: Bash@3
         retryCountOnTaskFailure: 3
         displayName: Execute tests
@@ -254,10 +254,12 @@ stages:
           git status
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
-    - task: Gradle@2
+    - task: Gradle@3
       displayName: Assemble adal
       inputs:
         tasks: clean adal:assembleLocal
+        jdkArchitecture: x64
+        jdkVersionOption: "1.11"
     - task: Gradle@2
       displayName: Run adal Unit tests
       inputs:
