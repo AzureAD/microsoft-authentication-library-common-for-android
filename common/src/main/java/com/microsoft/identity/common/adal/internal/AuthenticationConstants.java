@@ -1165,6 +1165,9 @@ public final class AuthenticationConstants {
          */
         public static final String CHALLENGE_TLS_INCAPABLE_VERSION = ONE_POINT_ZERO;
 
+        public static final String PASSKEYAUTH_REDIRECT = "urn:http-auth:PassKey";
+        public static final String PASSKEYAUTH_VERSION = ONE_POINT_ZERO;
+
         /**
          * Broker redirect prefix.
          */
