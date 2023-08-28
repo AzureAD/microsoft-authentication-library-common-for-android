@@ -1151,6 +1151,7 @@ class NativeAuthControllerTest {
             .sdkType(SdkType.MSAL)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .signInSLT(signInSLT)
+            .username(username)
             .build()
     }
 

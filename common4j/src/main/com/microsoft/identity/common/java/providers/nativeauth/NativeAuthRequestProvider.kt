@@ -181,6 +181,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             signInSlt = parameters.signInSLT,
             scopes = parameters.scopes,
             clientId = config.clientId,
+            username = parameters.username,
             challengeType = config.challengeType,
             requestUrl = signInTokenEndpoint,
             headers = getRequestHeaders()

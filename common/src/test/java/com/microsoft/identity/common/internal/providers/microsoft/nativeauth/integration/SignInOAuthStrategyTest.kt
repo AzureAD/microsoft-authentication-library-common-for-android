@@ -378,6 +378,7 @@ class SignInOAuthStrategyTest {
         val parameters = SignInWithSLTCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .signInSLT(signInSLT)
+            .username(username)
             .build()
 
         val result = nativeAuthOAuth2Strategy.performSLTTokenRequest(
@@ -398,6 +399,7 @@ class SignInOAuthStrategyTest {
         val parameters = SignInWithSLTCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .signInSLT(signInSLT)
+            .username(username)
             .build()
 
         val result = nativeAuthOAuth2Strategy.performSLTTokenRequest(
@@ -418,6 +420,7 @@ class SignInOAuthStrategyTest {
         val parameters = SignInWithSLTCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .signInSLT(signInSLT)
+            .username(username)
             .build()
 
         val result = nativeAuthOAuth2Strategy.performSLTTokenRequest(

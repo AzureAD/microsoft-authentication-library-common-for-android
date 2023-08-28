@@ -496,6 +496,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = SignInWithSLTCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .signInSLT(signInSLT)
+            .username(username)
             .build()
 
         nativeAuthRequestProvider.createSLTTokenRequest(
@@ -508,6 +509,20 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = SignInWithSLTCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .signInSLT(emptyString)
+            .username(username)
+            .build()
+
+        nativeAuthRequestProvider.createSLTTokenRequest(
+            parameters = commandParameters
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignInTokenWithEmptyUsernameShouldThrowException() {
+        val commandParameters = SignInWithSLTCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .signInSLT(signInSLT)
+            .username(emptyString)
             .build()
 
         nativeAuthRequestProvider.createSLTTokenRequest(

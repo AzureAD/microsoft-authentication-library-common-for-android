@@ -80,6 +80,7 @@ data class SignInTokenRequest private constructor(
         fun createSltTokenRequest(
             signInSlt: String,
             clientId: String,
+            username: String,
             scopes: List<String>? = null,
             challengeType: String? = null,
             requestUrl: String,
@@ -88,6 +89,7 @@ data class SignInTokenRequest private constructor(
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(signInSlt, "signInSlt")
             ArgUtils.validateNonNullArg(clientId, "clientId")
+            ArgUtils.validateNonNullArg(username, "username")
             ArgUtils.validateNonNullArg(challengeType, "challengeType")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
@@ -96,6 +98,7 @@ data class SignInTokenRequest private constructor(
                 parameters = NativeAuthRequestSignInTokenParameters(
                     signInSlt = signInSlt,
                     clientId = clientId,
+                    username = username,
                     grantType = NativeAuthConstants.GrantType.SLT,
                     challengeType = challengeType,
                     scope = scopes?.joinToString(" ")

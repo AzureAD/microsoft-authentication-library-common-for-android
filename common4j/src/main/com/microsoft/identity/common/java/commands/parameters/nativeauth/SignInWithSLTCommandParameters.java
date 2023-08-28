@@ -35,4 +35,7 @@ public class SignInWithSLTCommandParameters extends BaseSignInTokenCommandParame
 
     @NonNull
     public final String signInSLT;
+
+    @NonNull
+    public final String username;
 }
