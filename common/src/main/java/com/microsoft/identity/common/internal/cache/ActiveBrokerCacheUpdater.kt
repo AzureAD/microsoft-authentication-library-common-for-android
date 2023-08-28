@@ -71,6 +71,12 @@ class ActiveBrokerCacheUpdater(
          */
         const val BROKER_DISCOVERY_DISABLED_KEY = "broker.discovery.disabled"
 
+        /**
+         * If this key is present in the request bundle,
+         * The broker will return the active broker information in the result bundle.
+         * Note: This is only valid for requests that are processed by the BrokerOperationRequestDispatcher.
+         */
+        const val REQUEST_ACTIVE_BROKER_DATA_KEY = "com.microsoft.identity.request.broker.data"
 
         /**
          * Adds the active broker information to the result bundle.
@@ -125,6 +131,7 @@ class ActiveBrokerCacheUpdater(
         val signingCertThumbprint = bundle.getString(ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_KEY)
 
         if (packageName.isNullOrEmpty() || signingCertThumbprint.isNullOrEmpty()) {
+            Logger.info(methodTag, "A response was received without active broker information.")
             return
         }
 

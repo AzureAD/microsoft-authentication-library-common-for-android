@@ -27,6 +27,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.CONNECTION_ERROR;
 import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE;
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.CONTENT_PROVIDER;
+import static com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater.REQUEST_ACTIVE_BROKER_DATA_KEY;
 
 import android.content.Context;
 import android.content.pm.ProviderInfo;
@@ -86,6 +87,7 @@ public class ContentProviderStrategy extends AbstractIpcStrategyWithServiceValid
 
         final Bundle requestBundle = brokerOperationBundle.getBundle();
         if (requestBundle != null) {
+            requestBundle.putBoolean(REQUEST_ACTIVE_BROKER_DATA_KEY, true);
             byte[] marshalledBytes = ParcelableUtil.marshall(requestBundle);
             marshalledRequestString = Base64.encodeToString(marshalledBytes, 0);
         }
