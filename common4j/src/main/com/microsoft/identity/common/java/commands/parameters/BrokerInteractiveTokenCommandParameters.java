@@ -119,6 +119,8 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
             }
             if (getSdkType().isCapableOfMSA() &&
                     !getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
+                // Uncomment below once testing is completed. This is commented out because,
+                // MsalTestApp has a different package signature and the redirectURI used for testing does not match the sig hash
 //                throw new ArgumentException(
 //                        ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
 //                        "mRedirectUri", "The redirect URI doesn't match the uri" +
