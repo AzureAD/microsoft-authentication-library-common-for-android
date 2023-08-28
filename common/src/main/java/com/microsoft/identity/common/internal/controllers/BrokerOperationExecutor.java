@@ -23,8 +23,6 @@
 
 package com.microsoft.identity.common.internal.controllers;
 
-import static com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater.REQUEST_ACTIVE_BROKER_DATA_KEY;
-
 import android.os.Bundle;
 
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
@@ -234,9 +232,6 @@ public class BrokerOperationExecutor {
             span.setAttribute(AttributeName.ipc_strategy.name(), strategy.getType().name());
             operation.performPrerequisites(strategy);
             final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
-            if (brokerOperationBundle.getBundle() != null) {
-                brokerOperationBundle.getBundle().putBoolean(REQUEST_ACTIVE_BROKER_DATA_KEY, true);
-            }
             final Bundle resultBundle = strategy.communicateToBroker(brokerOperationBundle);
 
             mCacheUpdaterManager.updateCachedActiveBrokerFromResultBundle(resultBundle);
