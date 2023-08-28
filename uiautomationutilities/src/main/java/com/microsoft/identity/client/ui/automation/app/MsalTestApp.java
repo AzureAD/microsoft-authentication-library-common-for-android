@@ -99,6 +99,33 @@ public class MsalTestApp extends App {
         return result.getText();
     }
 
+    // click on button acquire token interactive
+    public void acquireTokenWithoutFetchingToken(@NonNull final String username,
+                                                 @NonNull final String password,
+                                                 @NonNull final PromptHandlerParameters promptHandlerParameters,
+                                                 @NonNull final boolean shouldHandlePrompt) throws UiObjectNotFoundException, InterruptedException {
+
+        final UiObject acquireTokenButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_acquiretoken");
+        scrollToElement(acquireTokenButton);
+        acquireTokenButton.click();
+
+        // handle prompt if needed
+        if (shouldHandlePrompt) {
+            try {
+                final UiObject emailField = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
+                        "", EditText.class);
+                emailField.setText(username);
+                final UiObject nextBtn = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
+                        "Next", Button.class);
+                nextBtn.click();
+            } catch (final UiObjectNotFoundException e) {
+                throw new AssertionError("Could not click on object with txt Next");
+            }
+            final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler((MicrosoftStsPromptHandlerParameters) promptHandlerParameters);
+            microsoftStsPromptHandler.handlePrompt(username, password);
+        }
+    }
+
 
     // click on button acquire token silent
     public String acquireTokenSilent() throws UiObjectNotFoundException, InterruptedException {

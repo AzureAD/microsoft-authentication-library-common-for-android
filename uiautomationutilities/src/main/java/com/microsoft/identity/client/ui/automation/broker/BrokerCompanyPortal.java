@@ -31,6 +31,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.TestContext;
+import com.microsoft.identity.client.ui.automation.constants.GlobalConstants;
 import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsLoginComponentHandler;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
@@ -396,17 +397,14 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         // get access screen - continue
         UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/positive_button");
 
-        Logger.i(TAG, "Handle PIN to enable App Protection Policy..");
         // handle PIN
-        final Random random = new Random();
-        final int randomPin = random.nextInt(10000);
-
+        Logger.i(TAG, "Handle PIN to enable App Protection Policy..");
         final UiObject pinField = UiAutomatorUtils.obtainUiObjectWithResourceId(
                 "com.microsoft.windowsintune.companyportal:id/pin_entry_passcodeEditView"
         );
 
         try {
-            pinField.setText(String.valueOf(randomPin));
+            pinField.setText(GlobalConstants.PIN);
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
@@ -414,13 +412,12 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         device.pressEnter();
 
         // confirm PIN
-
         final UiObject pinConfirmField = UiAutomatorUtils.obtainUiObjectWithResourceId(
                 "com.microsoft.windowsintune.companyportal:id/pin_entry_passcodeEditView"
         );
 
         try {
-            pinConfirmField.setText(String.valueOf(randomPin));
+            pinConfirmField.setText(GlobalConstants.PIN);
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
