@@ -405,9 +405,9 @@ public class BrokerMsalController extends BaseController {
             // MSAL needs to save this account locally for future token calls.
             // parameters.getOAuth2TokenCache() will be non-null only in case of MSAL native
             // If the request is from MSALCPP , OAuth2TokenCache will be null.
-//            if (parameters.getOAuth2TokenCache() != null && !BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker(negotiatedBrokerProtocolVersion)) {
-//                saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
-//            }
+            if (parameters.getOAuth2TokenCache() != null && !BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker(negotiatedBrokerProtocolVersion)) {
+                saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
+            }
 
             verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
             result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
@@ -442,7 +442,7 @@ public class BrokerMsalController extends BaseController {
      * @param parameters a {@link InteractiveTokenCommandParameters}
      * @return an {@link Intent} for initiating Broker interactive activity.
      */
-    private @NonNull
+    public @NonNull
     Intent getBrokerAuthorizationIntent(
             final @NonNull InteractiveTokenCommandParameters parameters) throws BaseException {
         return mBrokerOperationExecutor.execute(parameters,
@@ -1172,6 +1172,12 @@ public class BrokerMsalController extends BaseController {
         }
 
         // Also add a check for NAA here
+        if ((parameters.getChildClientId() != null || parameters.getChildRedirectUri() != null)
+                && !BrokerProtocolVersionUtil.canSupportNestedAppAuthentication(requiredProtocolVersion)) {
+            throw new ClientException(ClientException.NESTED_APP_AUTH_NOT_SUPPORTED,
+                    "The min broker protocol version for Nested app auth should be equal or more than 15.0."
+                            + " Current required version is set to: " + parameters.getRequiredBrokerProtocolVersion());
+        }
     }
 
     /**

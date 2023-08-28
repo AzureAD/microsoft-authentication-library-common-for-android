@@ -606,7 +606,7 @@ public final class AuthenticationConstants {
          *
          * @see <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Broker%20API/broker_protocol_versions.md">Android Auth Broker Protocol Versions</a>
          */
-        public static final String LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "14.0";
+        public static final String LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "15.0";
 
         /**
          * The maximum msal-to-broker protocol version known by clients such as MSAL Android.
@@ -618,7 +618,7 @@ public final class AuthenticationConstants {
          * used by the broker, however, broker may choose to override this value and use a higher
          * value during handshake based on a flight.
          */
-        public static final String DEFAULT_MAX_BROKER_PROTOCOL_VERSION = "13.0";
+        public static final String DEFAULT_MAX_BROKER_PROTOCOL_VERSION = "14.0";
 
         /**
          * A client id for requesting the SSO token.
