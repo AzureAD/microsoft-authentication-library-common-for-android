@@ -159,6 +159,11 @@ public class MsalTestApp extends App {
         return text;
     }
 
+    public String checkMode() throws UiObjectNotFoundException {
+        final UiObject modeText = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/public_application_mode");
+        return modeText.getText();
+    }
+
     private void scrollToElement(UiObject obj) throws UiObjectNotFoundException {
         UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
         scrollable.scrollIntoView(obj);

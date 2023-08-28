@@ -9,8 +9,7 @@ project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") 
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 
 android {
-    compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
+    compileSdk rootProject.ext.compileSdkVersion
 
     testOptions {
         compileOptions {
@@ -173,7 +172,7 @@ dependencies {
         }
     } else {
         //Always use the latest release
-        implementation(group: 'com.microsoft.identity', name: 'common', version: '0.0.+')
+        implementation(group: 'com.microsoft.identity', name: 'common', version: '1.0.+')
     }
 
     // keyvault per product flavor

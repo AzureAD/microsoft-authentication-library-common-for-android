@@ -31,26 +31,54 @@ import java.security.cert.X509Certificate
  * A class for validating if a given app is a valid broker app.
  * NOTE: Marked it as 'open' to make it mockable by ADAL's mockito.
  * */
-open class BrokerValidator(
-    private val allowedBrokerApps: Set<BrokerData>,
-    private val getSigningCertificateForApp: (packageName: String) -> List<X509Certificate>,
+open class BrokerValidator: IBrokerValidator {
+
+    constructor(context: Context) {
+        allowedBrokerApps = BrokerData.getKnownBrokerApps()
+        getSigningCertificateForApp = { packageName: String ->
+            PackageUtils.readCertDataForApp(packageName, context)
+        }
+        validateSigningCertificate = Companion::validateSigningCertificate
+    }
+
+    constructor(allowedBrokerApps: Set<BrokerData>,
+                getSigningCertificateForApp: (packageName: String) -> List<X509Certificate>,
+                validateSigningCertificate: (expectedSigningCertificateSignature: String,
+                                             signingCertificates: List<X509Certificate>) -> Unit) {
+        this.allowedBrokerApps = allowedBrokerApps
+        this.getSigningCertificateForApp = getSigningCertificateForApp
+        this.validateSigningCertificate = validateSigningCertificate
+    }
+
+    /**
+     * Set of broker apps to validate against.
+     **/
+    private val allowedBrokerApps: Set<BrokerData>
+
+    /**
+     * Set of broker apps to validate against.
+     **/
+    private val getSigningCertificateForApp: (packageName: String) -> List<X509Certificate>
+
+    /**
+     * Validate if given list of signing certificate can generate the matching thumbprint.
+     **/
     private val validateSigningCertificate: (
-        expectedSigningCertificateSignature: String,
+        expectedSigningCertificateThumbprint: String,
         signingCertificates: List<X509Certificate>
-    ) -> Unit,
-) : IBrokerValidator {
+    ) -> Unit;
 
     companion object {
         private val TAG = BrokerValidator::class.simpleName
 
         fun validateSigningCertificate(
-            expectedSigningCertificateSignature: String,
+            expectedSigningCertificateThumbprint: String,
             signingCertificates: List<X509Certificate>
         ) {
             // Verify the cert list contains the cert we trust.
             PackageUtils.verifySignatureHash(
                 signingCertificates,
-                setOf(expectedSigningCertificateSignature).iterator()
+                setOf(expectedSigningCertificateThumbprint).iterator()
             )
 
             // Perform the certificate chain validation. If there is only one cert returned,
@@ -60,14 +88,6 @@ open class BrokerValidator(
             }
         }
     }
-
-    constructor(context: Context) : this(
-        allowedBrokerApps = BrokerData.getKnownBrokerApps(),
-        getSigningCertificateForApp = { packageName: String ->
-            PackageUtils.readCertDataForApp(packageName, context)
-        },
-        validateSigningCertificate = Companion::validateSigningCertificate
-    )
 
     /**
      * Kept for backward-compatibility with ADAL.
