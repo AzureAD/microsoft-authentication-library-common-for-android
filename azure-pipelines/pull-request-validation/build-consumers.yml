@@ -4,13 +4,26 @@
 # Variable: 'mvnAccessToken' was defined in the Variables tab
 # https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
 # Variable: 'commonBranchName' common branch to be used when running the pipeline manually
+# Variable: 'skipConsumerValidationLabel' PR label used to skip the checks in this pipeline
 name: $(date:yyyyMMdd)$(rev:.r)
 
 trigger: none
 
+parameters:
+  - name: shouldSkipLongRunningTest
+    displayName: Should skip long running test?
+    type: boolean
+    default: true
+
 variables:
+- name: shouldSkipLongRunningTest
+  ${{ if parameters.shouldSkipLongRunningTest }}:
+    value: "-PshouldSkipLongRunningTest"
+  ${{ else }}:
+    value: ""
 - name: robolectricSdkVersion
   value: 28
+- group: AndroidAuthClientVariables
 
 resources:
   repositories:
@@ -29,21 +42,28 @@ resources:
     name: AzureAD/azure-activedirectory-library-for-android
     ref: dev
     endpoint: ANDROID_GITHUB
-  - repository: OneAuth
-    type: git
-    name: OneAuth/OneAuthAndroidCommonWrapper
-    ref: main
-    endpoint: OneAuthServiceConnection_2
 
 stages:
-- stage: validateConsumers
-  displayName: 'Validate'
+- stage: getLabel
+  # Check PR Label
+  displayName: Check for PR Label
   pool:
     name: Hosted Windows 2019 with VS2019
+  jobs:
+    - template: ../templates/steps/fetch-pr-labels.yml
+- stage: validateConsumers
+  # Validate Consumers
+  displayName: 'Validate'
+  dependsOn: getLabel
+  pool:
+    name: Hosted Windows 2019 with VS2019
+  variables:
+    prLabels: $[ stageDependencies.getLabel.getLabelsJob.outputs['fetchPrCILabel.prLabels'] ]
   jobs:
   # setup
   - job: setupBranch
     displayName: Setup branch
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
     - checkout: none
     - task: PowerShell@2
@@ -81,9 +101,11 @@ stages:
   # msal
   - job: msalValidation
     displayName: MSAL
-    dependsOn: setupBranch
+    dependsOn:
+      - setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
     - template: ../templates/steps/automation-cert.yml
     - checkout: msal
@@ -101,20 +123,30 @@ stages:
           git status
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
-    - task: Gradle@2
+    - task: Gradle@3
       displayName: Assemble msal
       inputs:
+        jdkArchitecture: x64
+        jdkVersionOption: "1.11"
         tasks: clean msal:assembleLocal
-    - task: Gradle@2
+    - task: Gradle@3
       displayName: Run msal Unit tests
       inputs:
         tasks: msal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+        jdkArchitecture: x64
+        jdkVersionOption: "1.11"
   # broker
   - job: brokerValidation
     displayName: Broker
-    dependsOn: setupBranch
+    cancelTimeoutInMinutes: 1
+    timeoutInMinutes: 120
+    dependsOn:
+      - setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
+    pool:
+      name: 1ES-AndroidPool-EOC-Test
     steps:
     - template: ../templates/steps/automation-cert.yml
     - checkout: broker
@@ -132,49 +164,84 @@ stages:
           git status
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
-    - task: PowerShell@2
-      displayName: Install Flatbuffers Compiler
-      enabled: False
-      inputs:
-        targetType: inline
-        script: >-
-          Write-Output "Downloading flatbuffers"
-
-          $downloadLink = "https://github.com/google/flatbuffers/releases/download/v1.12.0/flatc_windows.zip"
-
-          Write-Output "Using download link: $downloadLink"
-
-          $dest = "$env:Temp\FlatBufferInstaller.zip"
-
-          (New-Object Net.WebClient).DownloadFile($downloadLink, $dest)
-
-          Write-Output "Extracting flatbuffers archive on machine...."
-
-          Expand-Archive -Path $dest -DestinationPath .\flatc-extracted
-
-          Write-Output "Finished extracting flatbuffers archive on machine...."
-
-          Write-Output "Run flatc"
-
-          .\flatc-extracted\flatc
-
-          echo '##vso[task.setvariable variable=path]$(PATH):$(CWD)\flatc-extracted\'
-
-          flatc
-    - task: Gradle@2
+    - task: Gradle@3
       displayName: Assemble broker
       inputs:
-        tasks: clean AADAuthenticator:assembleLocal
-    - task: Gradle@2
+        tasks: AADAuthenticator:clean AADAuthenticator:assembleLocal --build-cache --info
+        publishJUnitResults: false
+        jdkArchitecture: x64
+        jdkVersionOption: "1.11"
+    - task: Gradle@3
       displayName: Run broker Unit tests
       inputs:
-        tasks: AADAuthenticator:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+        tasks: AADAuthenticator:localDebugAADAuthenticatorUnitTestCoverageReport --build-cache --info -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PpowerLiftApiKey=$(powerliftApiKey) -PcodeCoverageEnabled=true ${{variables.shouldSkipLongRunningTest}}
+        jdkArchitecture: x64
+        jdkVersionOption: "1.11"
+  # Linux broker
+  - job: linuxBrokerValidation
+    displayName: Linux Broker
+    dependsOn:
+      - setupBranch
+    variables:
+      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: broker
+        displayName: Checkout broker repository
+        clean: true
+        submodules: recursive
+        persistCredentials: True
+      - task: CmdLine@1
+        displayName: Set MVN Access Token in Environment
+        inputs:
+          filename: echo
+          arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDADACCOUNTS_ACCESSTOKEN]$(System.AccessToken)'
+      - task: CmdLine@1
+        displayName: Set Office MVN Access Token in Environment
+        inputs:
+          filename: echo
+          arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_OFFICE_ACCESSTOKEN]$(System.AccessToken)'
+      - task: Gradle@3
+        name: Gradle3
+        displayName: Assemble Linux Broker
+        inputs:
+          cwd: $(Build.SourcesDirectory)/broker-java-root
+          tasks: LinuxBroker:clean LinuxBroker:assemble --build-cache --info
+          publishJUnitResults: false
+          jdkArchitecture: x64
+          jdkVersionOption: "1.11"
+      - task: Bash@3
+        retryCountOnTaskFailure: 3
+        displayName: Execute tests
+        inputs:
+          workingDirectory: $(Build.SourcesDirectory)/broker-java-root
+          targetType: 'inline'
+          script: |
+            sudo apt-get install -y dbus-x11
+            sudo apt-get install -y dos2unix
+            dos2unix gradlew
+            chmod +x gradlew
+            export DISPLAY=:0.0
+            eval $(dbus-launch --sh-syntax)
+            sudo apt install gnome-keyring
+            /usr/bin/gnome-keyring-daemon --start --components=secrets
+            ./gradlew LinuxBroker:linuxBrokerUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PcodeCoverageEnabled=true -Psystemd_mode_enabled=false
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        inputs:
+          testResultsFormat: 'JUnit'
+          testResultsFiles: '**/TEST-*.xml'
+          searchFolder: 'LinuxBroker'
   # adal
   - job: adalValidation
     displayName: ADAL
-    dependsOn: setupBranch
+    dependsOn:
+      - setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
     - checkout: adal
       displayName: Checkout adal repository
@@ -191,88 +258,15 @@ stages:
           git status
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
-    - task: Gradle@2
+    - task: Gradle@3
       displayName: Assemble adal
       inputs:
         tasks: clean adal:assembleLocal
-    - task: Gradle@2
+        jdkArchitecture: x64
+        jdkVersionOption: "1.11"
+    - task: Gradle@3
       displayName: Run adal Unit tests
       inputs:
         tasks: adal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
-  # OneAuth
-  - job: oneAuthValidation
-    displayName: OneAuth
-    dependsOn: setupBranch
-    variables:
-      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
-    steps:
-      - checkout: OneAuth
-        displayName: Checkout OneAuth repository
-        clean: true
-        submodules: true
-        persistCredentials: True
-      - task: CmdLine@2
-        displayName: Checkout OneAuthAndroidCommonWrapper
-        inputs:
-          script: |
-            git fetch
-            git checkout main
-            git pull
-            git status
-            git rev-parse HEAD
-          workingDirectory: $(Agent.BuildDirectory)/s/
-      - task: CmdLine@2
-        displayName: Checkout common submodule $(commonBranch)
-        inputs:
-          script: |
-            git fetch
-            git checkout $(commonBranch)
-            git pull
-            git status
-            git rev-parse HEAD
-          workingDirectory: $(Agent.BuildDirectory)/s/common
-      - task: CmdLine@2
-        displayName: Checkout OneAuth submodule $(oneAuthBranchName)
-        inputs:
-          script: |
-            git fetch
-            git checkout $(oneAuthBranchName)
-            git pull
-            git status
-            git rev-parse HEAD
-          workingDirectory: $(Agent.BuildDirectory)/s/OneAuth
-
-      - task: MavenAuthenticate@0
-        displayName: Authenticate to the IdentityDivision Android Maven feed
-        inputs:
-          MavenServiceConnections: IdentityDivision
-
-      - task: MavenAuthenticate@0
-        displayName: Authenticate to the Intune_App_SDK feed
-        inputs:
-          MavenServiceConnections: Intune_App_SDK
-
-      - task: Bash@3
-        displayName: Install ninja
-        inputs:
-          targetType: inline
-          script: |
-            if [[ "$AGENT_OS" == "Darwin" ]]; then
-              HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_AUTO_UPDATE=1 brew install ninja
-            elif [[ "$AGENT_OS" == "Windows_NT" ]]; then
-              choco install -y ninja
-            elif [[ "$AGENT_OS" == "Linux" ]]; then
-              sudo apt-get install -y ninja-build
-            fi
-      - task: Gradle@2
-        displayName: Assemble OneAuth
-        inputs:
-          cwd: $(Agent.BuildDirectory)/s/
-          gradleWrapperFile: $(Agent.BuildDIrectory)/s/gradlew.bat
-          tasks: clean OneAuth:assembleLocalDebug
-      - task: Gradle@2
-        displayName: Run OneAuth Unit tests
-        inputs:
-          cwd: $(Agent.BuildDirectory)/s/
-          gradleWrapperFile: $(Agent.BuildDIrectory)/s/gradlew.bat
-          tasks: OneAuth:testLocalDebugUnitTest
+        jdkArchitecture: x64
+        jdkVersionOption: "1.11"

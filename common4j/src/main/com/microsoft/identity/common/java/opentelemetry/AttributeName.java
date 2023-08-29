@@ -147,5 +147,105 @@ public enum AttributeName {
     /**
      * The size of the silent command executor queue when starting to process an ATS request.
      */
-    num_concurrent_silent_requests;
+    num_concurrent_silent_requests,
+
+    /**
+     * The time (in milliseconds) spent in executing the save method in OAuth2TokenCache.
+     */
+    elapsed_time_cache_save,
+
+    /**
+     * The time (in milliseconds) spent in executing the load method in OAuth2TokenCache.
+     */
+    elapsed_time_cache_load,
+
+    /**
+     * The time (in milliseconds) spent in executing the loadAggregatedAccountData method in OAuth2TokenCache.
+     */
+    elapsed_time_cache_load_aggregated_account_data,
+
+    /**
+     * The time (in milliseconds) spent in executing the loadWithAggregatedAccountData method in OAuth2TokenCache.
+     */
+    elapsed_time_cache_load_with_aggregated_account_data,
+
+    /**
+     * The time (in milliseconds) spent in executing the saveAndLoadAggregatedAccountData method in OAuth2TokenCache.
+     */
+    elapsed_time_cache_save_and_load_aggregated_account_data,
+
+    /**
+     * The time (in milliseconds) spent in executing the removeCredential method in OAuth2TokenCache.
+     */
+    elapsed_time_cache_remove_credential,
+
+    /**
+     * The time (in milliseconds) spent in executing the get account method in OAuth2TokenCache.
+     */
+    elapsed_time_cache_get_account,
+
+    /**
+     * The time (in milliseconds) spent in executing the getAccountWithAggregatedAccountData method in OAuth2TokenCache.
+     */
+    elapsed_time_cache_get_accounts_with_aggregated_account_data,
+
+    /**
+     * The time (in milliseconds) spent in executing the getAccountByLocalAccountId method in OAuth2TokenCache.
+     */
+    elapsed_time_cache_get_account_by_local_account_id,
+
+    /**
+     * The time (in milliseconds) spent in executing the getAccountWithAggregatedAccountDataByLocalAccountId method in OAuth2TokenCache.
+     */
+    elapsed_time_cache_get_account_with_aggregated_account_data_by_local_account_id,
+
+    /**
+     * The time (in milliseconds) spent in executing the getAccounts method in OAuth2TokenCache.
+     */
+    elapsed_time_cache_get_accounts,
+
+    /**
+     * The time (in milliseconds) spent in executing the getAllTenantAccountsForAccountByClientId method in OAuth2TokenCache.
+     */
+    elapsed_time_cache_get_all_tenant_accounts_for_account_by_client_id,
+
+    /**
+     * The time (in milliseconds) spent in executing the getIdTokensForAccountRecord method in OAuth2TokenCache.
+     */
+    elapsed_time_cache_get_id_tokens_for_account_record,
+
+    /**
+     * The time (in milliseconds) spent in executing the getAccountByHomeAccountId method in OAuth2TokenCache.
+     */
+    elapsed_time_cache_get_account_by_home_account_id,
+
+    /**
+     * The time (in milliseconds) spent in executing the removeAccount method in OAuth2TokenCache.
+     */
+    elapsed_time_cache_remove_account,
+
+    /**
+     * The time (in milliseconds) spent in executing the clearAll method in OAuth2TokenCache.
+     */
+    elapsed_time_cache_clear_all,
+
+    /**
+     * The time (in milliseconds) spent in executing the getAllClientIds method in OAuth2TokenCache.
+     */
+    elapsed_time_cache_get_all_client_ids,
+
+    /**
+     * The time (in milliseconds) spent on network when acquiring PRT.
+     */
+    elapsed_time_network_acquire_prt,
+
+    /**
+     * The time (in milliseconds) spent on network when acquiring nonce.
+     */
+    elapsed_time_network_acquire_nonce,
+
+    /**
+     * The time (in milliseconds) spent on network when acquiring AT.
+     */
+    elapsed_time_network_acquire_at;
 }

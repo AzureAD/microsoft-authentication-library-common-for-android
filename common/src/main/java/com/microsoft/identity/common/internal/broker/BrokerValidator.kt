@@ -31,21 +31,55 @@ import java.security.cert.X509Certificate
  * A class for validating if a given app is a valid broker app.
  * NOTE: Marked it as 'open' to make it mockable by ADAL's mockito.
  * */
-open class BrokerValidator(
-    private val allowedBrokerApps: Set<BrokerData>,
-    private val getSigningCertificateForApp: (packageName: String) -> List<X509Certificate>,
-    private val validateSigningCertificate: (expectedSigningCertificateSignature: String,
-                                             signingCertificates: List<X509Certificate>) -> Unit,
-): IBrokerValidator {
+open class BrokerValidator: IBrokerValidator {
+
+    constructor(context: Context) {
+        allowedBrokerApps = BrokerData.getKnownBrokerApps()
+        getSigningCertificateForApp = { packageName: String ->
+            PackageUtils.readCertDataForApp(packageName, context)
+        }
+        validateSigningCertificate = Companion::validateSigningCertificate
+    }
+
+    constructor(allowedBrokerApps: Set<BrokerData>,
+                getSigningCertificateForApp: (packageName: String) -> List<X509Certificate>,
+                validateSigningCertificate: (expectedSigningCertificateSignature: String,
+                                             signingCertificates: List<X509Certificate>) -> Unit) {
+        this.allowedBrokerApps = allowedBrokerApps
+        this.getSigningCertificateForApp = getSigningCertificateForApp
+        this.validateSigningCertificate = validateSigningCertificate
+    }
+
+    /**
+     * Set of broker apps to validate against.
+     **/
+    private val allowedBrokerApps: Set<BrokerData>
+
+    /**
+     * Set of broker apps to validate against.
+     **/
+    private val getSigningCertificateForApp: (packageName: String) -> List<X509Certificate>
+
+    /**
+     * Validate if given list of signing certificate can generate the matching thumbprint.
+     **/
+    private val validateSigningCertificate: (
+        expectedSigningCertificateThumbprint: String,
+        signingCertificates: List<X509Certificate>
+    ) -> Unit;
 
     companion object {
         private val TAG = BrokerValidator::class.simpleName
 
-        fun validateSigningCertificate(expectedSigningCertificateSignature: String,
-                                       signingCertificates: List<X509Certificate>) {
+        fun validateSigningCertificate(
+            expectedSigningCertificateThumbprint: String,
+            signingCertificates: List<X509Certificate>
+        ) {
             // Verify the cert list contains the cert we trust.
-            PackageUtils.verifySignatureHash(signingCertificates,
-                setOf(expectedSigningCertificateSignature).iterator())
+            PackageUtils.verifySignatureHash(
+                signingCertificates,
+                setOf(expectedSigningCertificateThumbprint).iterator()
+            )
 
             // Perform the certificate chain validation. If there is only one cert returned,
             // no need to perform certificate chain validation.
@@ -54,13 +88,6 @@ open class BrokerValidator(
             }
         }
     }
-
-    constructor(context: Context): this(
-        allowedBrokerApps = BrokerData.getKnownBrokerApps(),
-        getSigningCertificateForApp = { packageName: String ->
-            PackageUtils.readCertDataForApp(packageName, context)
-        },
-        validateSigningCertificate =  Companion::validateSigningCertificate)
 
     /**
      * Kept for backward-compatibility with ADAL.
@@ -73,19 +100,21 @@ open class BrokerValidator(
 
     override fun isValidBrokerPackage(packageName: String): Boolean {
         val methodTag = "$TAG:isValidBrokerPackage"
-        val matchingApp = allowedBrokerApps.firstOrNull {
-            it.packageName == packageName
+
+        val matchingApp = allowedBrokerApps.filter {
+            it.packageName.equals(packageName, ignoreCase = true)
+        }.firstOrNull {
+            isSignedByKnownKeys(it)
         }
 
-        if (matchingApp == null){
-            Logger.info(methodTag, "$packageName does not match with any known broker apps.")
-            return false
-        }
+        if (matchingApp != null)
+            return true
 
-        return isSignedByKnownKeys(brokerData = matchingApp)
+        Logger.info(methodTag, "$packageName does not match with any known broker apps.")
+        return false
     }
 
-    override fun isSignedByKnownKeys(brokerData: BrokerData): Boolean{
+    override fun isSignedByKnownKeys(brokerData: BrokerData): Boolean {
         val methodTag = "$TAG:isSignedByKnownKeys"
         return try {
             val signingCertificate = getSigningCertificateForApp(brokerData.packageName)

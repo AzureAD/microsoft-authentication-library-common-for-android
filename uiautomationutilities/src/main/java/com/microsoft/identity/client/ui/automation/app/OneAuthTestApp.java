@@ -112,7 +112,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/get_access_token_button");
         try {
             // Add a delay so that UI is updated with the token successfully
-            Thread.sleep(2000);
+            Thread.sleep(5000);
         } catch (final InterruptedException e) {
             e.printStackTrace();
         }
@@ -141,8 +141,28 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         new AadPromptHandler(promptHandlerParameters).handlePrompt(username, password);
     }
 
+    public void handleSignInWithoutPrompt() {
+        UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/sign_in_button");
+        assertSuccess();
+    }
+
     public void handleBackButton() {
         UiAutomatorUtils.pressBack();
+    }
+
+    public void handleUserNameInput(@NonNull final String input) {
+        UiAutomatorUtils.handleInput("com.microsoft.oneauth.testapp:id/account_hints_edittext", input);
+    }
+
+    public void handlePreferBrokerSwitchButton() {
+        UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/prefer_broker_switch_button");
+    }
+
+    public void selectFromAppConfiguration(@NonNull final String text) throws UiObjectNotFoundException {
+        final UiObject appConfigurationSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/app_configuration_spinner");
+        appConfigurationSpinner.click();
+        final UiObject appConfiguration = UiAutomatorUtils.obtainUiObjectWithText(text);
+        appConfiguration.click();
     }
 
     @Override
@@ -160,7 +180,6 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
             throw new AssertionError("Could not click on object with txt general info text");
         }
     }
-
 
     public void assertSuccess() {
         try {

@@ -17,6 +17,7 @@
         android:backgroundTint="@color/dialogPinEditText"
         android:textCursorDrawable="@drawable/cursor_color"
         android:textAlignment="viewStart"
+        android:layout_gravity="start"
         />
     <TextView
         android:id="@+id/errorTextView"

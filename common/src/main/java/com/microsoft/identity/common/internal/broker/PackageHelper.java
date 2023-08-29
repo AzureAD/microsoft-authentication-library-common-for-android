@@ -38,6 +38,7 @@ import android.util.Base64;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.logging.Logger;
@@ -261,6 +262,10 @@ public class PackageHelper {
      * @return true if context is from Teams app, false otherwise
      */
     public boolean verifyIfValidTeamsPackage(final String packageName) {
+        // Bypass if the request made on a debug MSAL build.
+        if (BuildConfig.DEBUG) {
+            return true;
+        }
 
         if (packageName.equals(IPPHONE_APP_PACKAGE_NAME) &&
                 isPackageInstalledAndEnabled(IPPHONE_APP_PACKAGE_NAME)) {

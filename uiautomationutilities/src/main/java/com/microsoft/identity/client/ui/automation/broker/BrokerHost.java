@@ -59,9 +59,12 @@ public class BrokerHost extends AbstractTestBroker {
 
     // flight to enable/disable the multiple wpj feature
     private final static String FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER = "ENABLE_MULTIPLE_WORKPLACE_JOIN_PP";
+    private final static String FLIGHT_PRT_V3 = "EnablePrtV3";
+
     // name for broker host APKs
     public final static String BROKER_HOST_APK = "BrokerHost.apk";
     public final static String OLD_BROKER_HOST_APK = "OldBrokerHost.apk";
+    public final static String BROKER_HOST_WITHOUT_BROKER_SELECTION_APK = "BrokerHostWithoutBrokerSelection.apk";
     public final static String BROKER_HOST_APK_PROD = "BrokerHostProd.apk";
     public final static String BROKER_HOST_APK_RC = "BrokerHostRC.apk";
     // Fragments for BrokerHost
@@ -192,6 +195,20 @@ public class BrokerHost extends AbstractTestBroker {
         return singleWpjApiFragment.getDeviceState();
     }
 
+    @Nullable
+    public String getBlob(@NonNull final String tenantId) {
+        Logger.i(TAG, "Get Blob..");
+        singleWpjApiFragment.launch();
+        return singleWpjApiFragment.getBlob(tenantId);
+    }
+
+    @NonNull
+    public String getDeviceToken() {
+        Logger.i(TAG, "Get Device Token..");
+        singleWpjApiFragment.launch();
+        return singleWpjApiFragment.getDeviceToken();
+    }
+
     @Override
     public void overwriteFlights(@NonNull final String flightsJson) {
         Logger.i(TAG, "Overwrite Flights..");
@@ -302,23 +319,36 @@ public class BrokerHost extends AbstractTestBroker {
 
     public void enableMultipleWpj() {
         Logger.i(TAG, "Enable Multiple WPJ..");
-        brokerFlightsFragment.launch();
-        brokerFlightsFragment.selectLocalProvider();
-        brokerFlightsFragment.setLocalFlight(FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER, "true");
-        ThreadUtils.sleepSafely(500, TAG, "Wait before force stop.");
-        forceStop();
-        ThreadUtils.sleepSafely(500, "TAG", "Wait before launch.");
-        launch();
+        setLocalFlight(FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER, "true");
     }
 
     public void disableMultipleWpj() {
         Logger.i(TAG, "Disable Multiple WPJ..");
+        setLocalFlight(FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER, "false");
+    }
+
+    /**
+     * Changes flight provider to local flights provider and sets
+     * PRTv3 flight flag to true.
+     */
+    public void enablePrtV3() {
+        Logger.i(TAG, "Enable PRTv3");
+        setLocalFlight(FLIGHT_PRT_V3, Boolean.toString(true));
+    }
+
+    /**
+     * Ensures flight provider as LocalFlightsProvider
+     * @param key The flight parameter name as string.
+     * @param value The flight parameter value as string
+     */
+    public void setLocalFlight(@NonNull final String key, @NonNull final String value) {
+        final String methodTag = TAG + ":setLocalFlight";
         brokerFlightsFragment.launch();
         brokerFlightsFragment.selectLocalProvider();
-        brokerFlightsFragment.setLocalFlight(FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER, "false");
-        ThreadUtils.sleepSafely(500, TAG, "Wait before force stop.");
+        brokerFlightsFragment.setLocalFlight(key, value);
+        ThreadUtils.sleepSafely(500, methodTag, "Wait before force stop.");
         forceStop();
-        ThreadUtils.sleepSafely(500, TAG, "Wait before launch.");
+        ThreadUtils.sleepSafely(500, methodTag, "Wait before launch.");
         launch();
     }
 }
