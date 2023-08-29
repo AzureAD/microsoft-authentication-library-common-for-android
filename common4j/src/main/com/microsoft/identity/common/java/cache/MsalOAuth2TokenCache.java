@@ -1783,7 +1783,6 @@ public class MsalOAuth2TokenCache
                 scopesAsSet.add(s.toLowerCase(Locale.US));
             }
             return scopesAsSet;
-
         }
 
         return new HashSet<>();
