@@ -119,7 +119,7 @@ internal fun String?.isUserAlreadyExists(): Boolean {
 }
 
 internal fun String?.isAuthNotSupported(): Boolean {
-    return this.contentEquals(other = "auth_not_supported", ignoreCase = true)
+    return this.contentEquals(other = "auth_not_supported", ignoreCase = true) || this.contentEquals(other = "unsupported_auth_method", ignoreCase = true)
 }
 
 internal fun String?.isInvalidOOBValue(): Boolean {

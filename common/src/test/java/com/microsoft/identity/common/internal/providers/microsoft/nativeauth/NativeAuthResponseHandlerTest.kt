@@ -117,7 +117,7 @@ class NativeAuthResponseHandlerTest {
     private val signInUnknownError = "unknown_error"
     private val redirect = "redirect"
     private val verificationRequiredErrorCode = "verification_required"
-    private val authNotSupportedErrorCode = "auth_not_supported"
+    private val authNotSupportedErrorCode = "unsupported_auth_method"
     private val invalidAttributesErrorCode = "invalid_attributes"
     private val passwordBasedAuthNotSupported = "Password based authentication is not supported."
     private val attributesValidationFailed = "Attributes validation failed."
