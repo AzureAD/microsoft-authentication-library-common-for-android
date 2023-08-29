@@ -76,7 +76,7 @@ class ActiveBrokerCacheUpdater(
          * The broker will return the active broker information in the result bundle.
          * Note: This is only valid for requests that are processed by the BrokerOperationRequestDispatcher.
          */
-        const val REQUEST_ACTIVE_BROKER_DATA_KEY = "com.microsoft.identity.request.broker.data"
+        const val KEY_REQUEST_ACTIVE_BROKER_DATA = "com.microsoft.identity.request.broker.data"
 
         /**
          * Adds the active broker information to the result bundle.
