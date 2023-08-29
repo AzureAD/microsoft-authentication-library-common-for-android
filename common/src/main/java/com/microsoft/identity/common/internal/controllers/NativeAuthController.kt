@@ -406,11 +406,7 @@ class NativeAuthController : BaseNativeAuthController() {
                 }
             }
         } catch (e: Exception) {
-            LogSession.log(
-                tag = TAG,
-                logLevel = Logger.LogLevel.ERROR,
-                message = "Error occurred while performing sign-up start"
-            )
+            LogSession.logException(tag = TAG, throwable = e)
             throw e
         }
     }
@@ -427,11 +423,7 @@ class NativeAuthController : BaseNativeAuthController() {
             )
             return signUpContinueApiResult.toSignUpSubmitCodeCommandResult(oAuth2Strategy)
         } catch (e: Exception) {
-            LogSession.log(
-                tag = TAG,
-                logLevel = Logger.LogLevel.ERROR,
-                message = "Error occurred while performing sign-up submit code"
-            )
+            LogSession.logException(tag = TAG, throwable = e)
             throw e
         }
     }
@@ -447,11 +439,7 @@ class NativeAuthController : BaseNativeAuthController() {
                 signupToken = parameters.signupToken
             ).toSignUpStartCommandResult() as SignUpResendCodeCommandResult
         } catch (e: Exception) {
-            LogSession.log(
-                tag = TAG,
-                logLevel = Logger.LogLevel.ERROR,
-                message = "Error occurred while performing sign-up resend code"
-            )
+            LogSession.logException(tag = TAG, throwable = e)
             throw e
         }
     }
@@ -468,11 +456,7 @@ class NativeAuthController : BaseNativeAuthController() {
             )
             return signUpContinueApiResult.toSignUpSubmitUserAttributesCommandResult(oAuth2Strategy)
         } catch (e: Exception) {
-            LogSession.log(
-                tag = TAG,
-                logLevel = Logger.LogLevel.ERROR,
-                message = "Error occurred while performing sign-up submit user attributes"
-            )
+            LogSession.logException(tag = TAG, throwable = e)
             throw e
         }
     }
@@ -488,11 +472,7 @@ class NativeAuthController : BaseNativeAuthController() {
                 parameters = parameters
             ).toSignUpSubmitPasswordCommandResult(oAuth2Strategy)
         } catch (e: Exception) {
-            LogSession.log(
-                tag = TAG,
-                logLevel = Logger.LogLevel.ERROR,
-                message = "Error occurred while performing sign-up submit password"
-            )
+            LogSession.logException(tag = TAG, throwable = e)
             throw e
         }
     }
