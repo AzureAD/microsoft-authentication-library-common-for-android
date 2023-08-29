@@ -33,7 +33,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 /**
  * This is now acting as an adapter for {@link com.microsoft.identity.common.java.logging.Logger}.
  * <p>
- * Deprecated: Broker partners should use {@link com.microsoft.identity.common.java.logging.Logger}
+ * Deprecated: Broker partners should use class linked above.
  **/
 @SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 @Deprecated
