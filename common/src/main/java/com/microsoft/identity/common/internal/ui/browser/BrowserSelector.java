@@ -231,7 +231,7 @@ public class BrowserSelector {
         return !(resolveInfos == null || resolveInfos.isEmpty());
     }
 
-    private static boolean isFullBrowser(final ResolveInfo resolveInfo) {
+    private static boolean isFullBrowser(@NonNull final ResolveInfo resolveInfo) {
         // The filter must match ACTION_VIEW, CATEGORY_BROWSEABLE, and at least one scheme,
         if (resolveInfo.filter == null 
                 || !resolveInfo.filter.hasAction(Intent.ACTION_VIEW)
