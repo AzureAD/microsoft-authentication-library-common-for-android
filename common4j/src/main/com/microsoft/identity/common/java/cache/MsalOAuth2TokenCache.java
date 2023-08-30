@@ -1778,9 +1778,11 @@ public class MsalOAuth2TokenCache
         final String scopeString = token.getTarget();
         if (!StringUtil.isNullOrEmpty(scopeString)) {
             final String[] scopeArray = scopeString.split("\\s+");
-            return Arrays.stream(scopeArray)
-                    .map(s -> s.toLowerCase(Locale.US))
-                    .collect(Collectors.toSet());
+            final Set<String> scopesAsSet = new HashSet<>();
+            for (final String scope : scopeArray) {
+                scopesAsSet.add(scope.toLowerCase(Locale.US));
+            }
+            return scopesAsSet;
         }
 
         return new HashSet<>();
