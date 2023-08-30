@@ -160,12 +160,6 @@ dependencies {
     implementation "com.yubico.yubikit:android:$rootProject.ext.yubikitAndroidVersion"
     implementation "com.yubico.yubikit:piv:$rootProject.ext.yubikitPivVersion"
 
-    //For passkeys
-    implementation "androidx.credentials:credentials:$rootProject.ext.AndroidCredentialsVersion"
-
-    //Needed for credentials support from play services, for devices running Android 13 and below.
-    implementation "androidx.credentials:credentials-play-services-auth:$rootProject.ext.AndroidCredentialsPlayServicesAuthVersion"
-
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.3.0'
 
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
