@@ -184,7 +184,7 @@ data class BrokerData(val packageName : String,
          **/
         @JvmStatic
         fun getKnownBrokerApps() : Set<BrokerData> {
-            return if (sShouldTrustDebugBrokers) allBrokers else prodBrokers
+            return  allBrokers
         }
 
         /**
