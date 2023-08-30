@@ -143,6 +143,10 @@ public class OutlookApp extends App implements IFirstPartyApp {
         microsoftStsPromptHandler.handlePrompt(username, password);
     }
 
+    /**
+     * Add an account to outlook that would show up in the "accounts found" page
+     * @param username username of the acount to be added
+     */
     public void addExistingFirstAccount(@NonNull final String username) {
         Logger.i(TAG, "Adding Existing Account..");
         // Click start btn
@@ -155,6 +159,13 @@ public class OutlookApp extends App implements IFirstPartyApp {
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/btn_primary_button");
     }
 
+    /**
+     * Sign in through the SIGN IN button shown through snackbar after a token expires.
+     *
+     * @param username username to be signed in
+     * @param password password to be used
+     * @param promptHandlerParameters prompt handling parameters
+     */
     public void signInThroughSnackBar(@NonNull final String username,
                                       @NonNull final String password,
                                       @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
@@ -166,6 +177,10 @@ public class OutlookApp extends App implements IFirstPartyApp {
         microsoftStsPromptHandler.handlePrompt(username, password);
     }
 
+    /**
+     * Check to see if the sign in snackbar is present in outlook
+     * @return whether or not snackbar is present
+     */
     public boolean isSignInSnackBarPresent() {
         // Check if the sign in SnackBar is present
         return UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.office.outlook:id/snackbar_action", TimeUnit.SECONDS.toMillis(5)).exists();

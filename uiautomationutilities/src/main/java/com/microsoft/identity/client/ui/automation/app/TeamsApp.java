@@ -67,6 +67,9 @@ public class TeamsApp extends App implements IFirstPartyApp {
         // nothing needed here
     }
 
+    /**
+     * Handle UI shown when launching teams with an account already signed in
+     */
     public void handleLaunchWhileSignedIn() {
         UiAutomatorUtils.handleButtonClickSafely("android:id/button2", TimeUnit.SECONDS.toMillis(5));
     }
@@ -165,6 +168,9 @@ public class TeamsApp extends App implements IFirstPartyApp {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    /**
+     * Sign out of teams
+     */
     public void signOut() {
         Logger.i(TAG, "Handling UI to sign out an account from Teams..");
         launch();

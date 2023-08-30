@@ -130,28 +130,28 @@ public class PromptHandlerParameters {
 
     /**
      * Denotes whether or not the Stay signed in page is expected to appear during an interactive
-     * token request
+     * token request.
      */
     private final boolean staySignedInPageExpected;
 
     /**
      * Denotes whether or not the Verify Your Identity page is expected to appear during an interactive
-     * token request
+     * token request.
      */
     private final boolean verifyYourIdentityPageExpected;
 
     /**
-     * Denotes whether or not to expect "How would you like to sign in?" Prompt
+     * Denotes whether or not to expect "How would you like to sign in?" Prompt.
      */
     private final boolean howWouldYouLikeToSignInExpected;
 
     /**
-     * Denotes whether or not to expect "Choose certificate" Prompt
+     * Denotes whether or not to expect "Choose certificate" Prompt.
      */
     private final boolean chooseCertificateExpected;
 
     /**
-     * Denotes whether or not to expect the "Get the app" page
+     * Denotes whether or not to expect the "Get the app" page.
      */
     private final boolean getTheAppExpected;
 
