@@ -42,6 +42,10 @@ internal fun String?.isInvalidGrant(): Boolean {
     return this.contentEquals(other = "invalid_grant", ignoreCase = true)
 }
 
+internal fun String?.isInvalidRequest(): Boolean {
+    return this.contentEquals(other = "invalid_request", ignoreCase = true)
+}
+
 internal fun String?.isPasswordTooWeak(): Boolean {
     return this.contentEquals(other = "password_too_weak", ignoreCase = true)
 }
@@ -91,7 +95,7 @@ internal fun Int?.isInvalidCredentials(): Boolean {
 }
 
 internal fun Int?.isOtpCodeIncorrect(): Boolean {
-    return this == 50181
+    return arrayOf(50181, 50184, 501811).contains(this)
 }
 
 internal fun Int?.isInvalidAuthenticationType(): Boolean {

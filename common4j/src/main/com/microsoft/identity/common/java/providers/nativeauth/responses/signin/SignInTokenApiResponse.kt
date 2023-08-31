@@ -8,6 +8,7 @@ import com.microsoft.identity.common.java.providers.nativeauth.interactors.Inner
 import com.microsoft.identity.common.java.util.isInvalidAuthenticationType
 import com.microsoft.identity.common.java.util.isInvalidCredentials
 import com.microsoft.identity.common.java.util.isInvalidGrant
+import com.microsoft.identity.common.java.util.isInvalidRequest
 import com.microsoft.identity.common.java.util.isMFARequired
 import com.microsoft.identity.common.java.util.isOtpCodeIncorrect
 import com.microsoft.identity.common.java.util.isUserNotFound
@@ -36,6 +37,34 @@ data class SignInTokenApiResponse(
     }
     fun toErrorResult(): SignInTokenApiResult {
         LogSession.logMethodCall(TAG)
+
+        if (error.isInvalidRequest()) {
+            return when {
+                errorCodes.isNullOrEmpty() -> {
+                    SignInTokenApiResult.UnknownError(
+                        error = error.orEmpty(),
+                        errorDescription = errorDescription.orEmpty(),
+                        details = details,
+                        errorCodes = errorCodes.orEmpty()
+                    )
+                }
+                errorCodes[0].isOtpCodeIncorrect() -> {
+                    SignInTokenApiResult.InvalidAuthenticationType(
+                        error = error.orEmpty(),
+                        errorDescription = errorDescription.orEmpty(),
+                        errorCodes = errorCodes
+                    )
+                }
+                else -> {
+                    SignInTokenApiResult.UnknownError(
+                        error = error.orEmpty(),
+                        errorDescription = errorDescription.orEmpty(),
+                        details = details,
+                        errorCodes = errorCodes
+                    )
+                }
+            }
+        }
 
         return if (error.isInvalidGrant()) {
             return when {

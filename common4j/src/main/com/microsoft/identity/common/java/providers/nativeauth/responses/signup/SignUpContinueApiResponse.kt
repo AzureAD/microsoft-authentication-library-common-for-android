@@ -32,6 +32,8 @@ import com.microsoft.identity.common.java.util.isAttributesRequired
 import com.microsoft.identity.common.java.util.isCredentialRequired
 import com.microsoft.identity.common.java.util.isExpiredToken
 import com.microsoft.identity.common.java.util.isInvalidOOBValue
+import com.microsoft.identity.common.java.util.isInvalidRequest
+import com.microsoft.identity.common.java.util.isOtpCodeIncorrect
 import com.microsoft.identity.common.java.util.isPasswordBanned
 import com.microsoft.identity.common.java.util.isPasswordRecentlyUsed
 import com.microsoft.identity.common.java.util.isPasswordTooLong
@@ -47,6 +49,7 @@ data class SignUpContinueApiResponse(
     @Expose @SerializedName("signin_slt") val signInSLT: String?,
     @Expose @SerializedName("expires_in") val expiresIn: Int?,
     @Expose @SerializedName("error") val error: String?,
+    @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("signup_token") val signupToken: String?,
     @Expose @SerializedName("unverified_attributes") val unverifiedAttributes: List<Map<String, String>>?,
@@ -98,7 +101,7 @@ data class SignUpContinueApiResponse(
                             errorDescription = errorDescription.orEmpty()
                         )
                     }
-                    error.isInvalidOOBValue() -> {
+                    (error.isInvalidRequest() and errorCodes?.get(0).isOtpCodeIncorrect()) ->{
                         SignUpContinueApiResult.InvalidOOBValue(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty()

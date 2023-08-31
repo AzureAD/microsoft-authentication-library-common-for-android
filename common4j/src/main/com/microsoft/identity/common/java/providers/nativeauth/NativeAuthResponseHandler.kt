@@ -136,6 +136,7 @@ class NativeAuthResponseHandler {
                 null,
                 null,
                 DEFAULT_ERROR,
+                null,
                 DEFAULT_ERROR_DESCRIPTION,
                 null,
                 null,

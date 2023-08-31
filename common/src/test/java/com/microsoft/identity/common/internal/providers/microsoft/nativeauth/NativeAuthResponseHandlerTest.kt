@@ -96,10 +96,13 @@ class NativeAuthResponseHandlerTest {
     private val passwordResetToken = "1234"
     private val passwordSubmitToken = "1234"
     private val invalidGrantError = "invalid_grant"
+    private val invalidOOBValueError = "invalid_oob_value"
+    private val invalidRequestError = "invalid_request"
     private val unsupportedChallengeTypeError = "unsupported_challenge_type"
     private val expiredTokenError = "expired_token"
     private val userNotFoundError = "user_not_found"
     private val userAlreadyExistsError = "user_already_exists"
+    private val invalidErrorCode = 0
     private val userNotFoundErrorCode = 50034
     private val errorStatusCode = 400
     private val successStatusCode = 200
@@ -109,7 +112,9 @@ class NativeAuthResponseHandlerTest {
     private val codeLength = 6
     private val pollInterval = 5
     private val interval = 300
-    private val incorrectOOBErrorCode = 50181
+    private val incorrectOOBErrorCode1 = 50181
+    private val incorrectOOBErrorCode2 = 50184
+    private val incorrectOOBErrorCode3 = 501811
     private val incorrectPasswordErrorCode = 50126
     private val mfaRequiredErrorCode = 50076
     private val randomErrorCode = 0
@@ -157,7 +162,6 @@ class NativeAuthResponseHandlerTest {
     private val accessToken = "1234"
     private val invalidAuthenticationTypeErrorCode = 400002
     private val attributeValidationFailedErrorCode = "attribute_validation_failed"
-    private val invalidOOBValueErrorCode = "invalid_oob_value"
 
     private val mockConfig = mockk<NativeAuthOAuth2Configuration> {
         every { getSignUpStartEndpoint() } returns requestUrl
@@ -649,6 +653,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = successStatusCode,
             signupToken = null,
             error = null,
+            errorCodes = null,
             signInSLT = signInSLT,
             errorDescription = null,
             unverifiedAttributes = null,
@@ -668,6 +673,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = successStatusCode,
             signupToken = null,
             error = null,
+            errorCodes = null,
             signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
@@ -687,6 +693,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             signupToken = null,
             error = null,
+            errorCodes = null,
             signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
@@ -705,6 +712,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             signupToken = signupToken,
             error = nullString,
+            errorCodes = null,
             signInSLT = null,
             errorDescription = nullString,
             unverifiedAttributes = null,
@@ -723,6 +731,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             signupToken = null,
             error = passwordTooWeakError,
+            errorCodes = null,
             signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
@@ -741,6 +750,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             signupToken = null,
             error = passwordTooLongError,
+            errorCodes = null,
             signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
@@ -759,6 +769,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             signupToken = null,
             error = passwordTooShortError,
+            errorCodes = null,
             signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
@@ -777,6 +788,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             signupToken = null,
             error = passwordBannedError,
+            errorCodes = null,
             signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
@@ -795,6 +807,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             signupToken = null,
             error = passwordRecentlyUsedError,
+            errorCodes = null,
             signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
@@ -813,6 +826,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             signupToken = null,
             error = userAlreadyExistsError,
+            errorCodes = null,
             signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
@@ -826,11 +840,12 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
-    fun testSignUpContinueApiInvalidOOB() {
+    fun testSignUpContinueApiInvalidOOBWithErrorCode1() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
             signupToken = null,
-            error = invalidOOBValueErrorCode,
+            error = invalidRequestError,
+            errorCodes = listOf(incorrectOOBErrorCode1),
             signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
@@ -844,11 +859,88 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
+    fun testSignUpContinueApiInvalidOOBWithErrorCode2() {
+        val signUpContinueApiResponse = SignUpContinueApiResponse(
+            statusCode = errorStatusCode,
+            signupToken = null,
+            error = invalidRequestError,
+            errorCodes = listOf(incorrectOOBErrorCode2),
+            signInSLT = null,
+            errorDescription = null,
+            unverifiedAttributes = null,
+            invalidAttributes = null,
+            expiresIn = null,
+            requiredAttributes = null,
+            details = null
+        )
+        val apiResult = signUpContinueApiResponse.toResult()
+        assertTrue(apiResult is SignUpContinueApiResult.InvalidOOBValue)
+    }
+
+    @Test
+    fun testSignUpContinueApiInvalidOOBWithErrorCode3() {
+        val signUpContinueApiResponse = SignUpContinueApiResponse(
+            statusCode = errorStatusCode,
+            signupToken = null,
+            error = invalidRequestError,
+            errorCodes = listOf(incorrectOOBErrorCode3),
+            signInSLT = null,
+            errorDescription = null,
+            unverifiedAttributes = null,
+            invalidAttributes = null,
+            expiresIn = null,
+            requiredAttributes = null,
+            details = null
+        )
+        val apiResult = signUpContinueApiResponse.toResult()
+        assertTrue(apiResult is SignUpContinueApiResult.InvalidOOBValue)
+    }
+
+    @Test
+    fun testSignUpContinueApiInvalidRequestNullErrorCode() {
+        val signUpContinueApiResponse = SignUpContinueApiResponse(
+            statusCode = errorStatusCode,
+            signupToken = null,
+            error = invalidRequestError,
+            errorCodes = null,
+            signInSLT = null,
+            errorDescription = null,
+            unverifiedAttributes = null,
+            invalidAttributes = null,
+            expiresIn = null,
+            requiredAttributes = null,
+            details = null
+        )
+        val apiResult = signUpContinueApiResponse.toResult()
+        assertTrue(apiResult is SignUpContinueApiResult.UnknownError)
+    }
+
+    @Test
+    fun testSignUpContinueApiInvalidRequestInvalidErrorCode() {
+        val signUpContinueApiResponse = SignUpContinueApiResponse(
+            statusCode = errorStatusCode,
+            signupToken = null,
+            error = invalidRequestError,
+            errorCodes = listOf(invalidErrorCode),
+            signInSLT = null,
+            errorDescription = null,
+            unverifiedAttributes = null,
+            invalidAttributes = null,
+            expiresIn = null,
+            requiredAttributes = null,
+            details = null
+        )
+        val apiResult = signUpContinueApiResponse.toResult()
+        assertTrue(apiResult is SignUpContinueApiResult.UnknownError)
+    }
+
+    @Test
     fun testSignUpContinueApiExpiredToken() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
             signupToken = null,
             error = expiredTokenError,
+            errorCodes = null,
             signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
@@ -867,6 +959,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             signupToken = null,
             error = attributeValidationFailedErrorCode,
+            errorCodes = null,
             signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
@@ -885,6 +978,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             signupToken = null,
             error = attributeValidationFailedErrorCode,
+            errorCodes = null,
             signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
@@ -903,6 +997,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             signupToken = signupToken,
             error = attributesRequiredError,
+            errorCodes = null,
             signInSLT = null,
             errorDescription = userAttributesRequiredErrorDescription,
             unverifiedAttributes = null,
@@ -922,6 +1017,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             signupToken = signupToken,
             error = attributeValidationFailed,
+            errorCodes = null,
             signInSLT = null,
             errorDescription = invalidAttributesErrorDescription,
             unverifiedAttributes = null,
@@ -941,6 +1037,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             signupToken = null,
             error = attributeValidationFailed,
+            errorCodes = null,
             signInSLT = null,
             errorDescription = userAttributesRequiredErrorDescription,
             unverifiedAttributes = null,
@@ -959,6 +1056,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             signupToken = signupToken,
             error = attributesRequiredError,
+            errorCodes = null,
             signInSLT = null,
             errorDescription = userAttributesRequiredErrorDescription,
             unverifiedAttributes = null,
@@ -977,6 +1075,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             signupToken = signupToken,
             error = credentialRequiredError,
+            errorCodes = null,
             signInSLT = null,
             errorDescription = credentialRequiredErrorDescription,
             unverifiedAttributes = null,
@@ -996,6 +1095,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = uncommonErrorStatusCode,
             signupToken = null,
             error = null,
+            errorCodes = null,
             signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
@@ -1507,7 +1607,7 @@ class NativeAuthResponseHandlerTest {
             passwordSubmitToken = null,
             challengeType = null,
             expiresIn = null,
-            error = invalidOOBValueErrorCode,
+            error = invalidOOBValueError,
             errorDescription = null,
             errorUri = null,
             innerErrors = null,
@@ -2470,12 +2570,66 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
-    fun testSignInTokenApiResponseOtpCodeIncorrect() {
+    fun testSignInTokenApiResponseOtpCodeIncorrectWithErrorCode1() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
             credentialToken = null,
             error = invalidGrantError,
-            errorCodes = listOf(incorrectOOBErrorCode),
+            errorCodes = listOf(incorrectOOBErrorCode1),
+            errorDescription = incorrectOtpDescription,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = null,
+            scope = null,
+            expiresIn = null,
+            extExpiresIn = null,
+            accessToken = null,
+            refreshToken = null,
+            idToken = null,
+            clientInfo = null,
+            details = null
+        )
+
+        val apiResult = signInTokenApiResponse.toErrorResult()
+        assertTrue(apiResult is SignInTokenApiResult.CodeIncorrect)
+        assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.CodeIncorrect).error)
+        assertEquals(incorrectOtpDescription, apiResult.errorDescription)
+    }
+
+    @Test
+    fun testSignInTokenApiResponseOtpCodeIncorrectWithErrorCode2() {
+        val signInTokenApiResponse = SignInTokenApiResponse(
+            statusCode = errorStatusCode,
+            credentialToken = null,
+            error = invalidGrantError,
+            errorCodes = listOf(incorrectOOBErrorCode2),
+            errorDescription = incorrectOtpDescription,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = null,
+            scope = null,
+            expiresIn = null,
+            extExpiresIn = null,
+            accessToken = null,
+            refreshToken = null,
+            idToken = null,
+            clientInfo = null,
+            details = null
+        )
+
+        val apiResult = signInTokenApiResponse.toErrorResult()
+        assertTrue(apiResult is SignInTokenApiResult.CodeIncorrect)
+        assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.CodeIncorrect).error)
+        assertEquals(incorrectOtpDescription, apiResult.errorDescription)
+    }
+
+    @Test
+    fun testSignInTokenApiResponseOtpCodeIncorrectWithErrorCode3() {
+        val signInTokenApiResponse = SignInTokenApiResponse(
+            statusCode = errorStatusCode,
+            credentialToken = null,
+            error = invalidGrantError,
+            errorCodes = listOf(incorrectOOBErrorCode3),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
             innerErrors = null,
@@ -2529,7 +2683,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             credentialToken = null,
             error = invalidGrantError,
-            errorCodes = listOf(randomErrorCode, incorrectOOBErrorCode),
+            errorCodes = listOf(randomErrorCode, incorrectOOBErrorCode1, incorrectOOBErrorCode2, incorrectOOBErrorCode2),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
             innerErrors = null,
