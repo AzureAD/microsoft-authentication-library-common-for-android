@@ -51,7 +51,7 @@ class BrokerDiscoveryClientTests {
      * - AuthApp is the active broker.
      **/
     @Test
-    fun testQueryFromBroker() {
+    fun testQueryFromBroker(){
         val client = BrokerDiscoveryClient(
             brokerCandidates = setOf(
                 prodMicrosoftAuthenticator, prodCompanyPortal
@@ -62,8 +62,7 @@ class BrokerDiscoveryClientTests {
             ipcStrategy = object : IIpcStrategy {
                 override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
                     if (bundle.targetBrokerAppPackageName == prodMicrosoftAuthenticator.packageName ||
-                        bundle.targetBrokerAppPackageName == prodCompanyPortal.packageName
-                    ) {
+                            bundle.targetBrokerAppPackageName == prodCompanyPortal.packageName) {
                         val returnBundle = Bundle()
                         returnBundle.putString(
                             BrokerDiscoveryClient.ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY,
@@ -83,7 +82,7 @@ class BrokerDiscoveryClientTests {
                 }
             },
             cache = InMemoryActiveBrokerCache(),
-            isPackageInstalled = {
+            isPackageInstalled =  {
                 it == prodMicrosoftAuthenticator || it == prodCompanyPortal
             },
             isValidBroker = { true }
@@ -97,7 +96,7 @@ class BrokerDiscoveryClientTests {
      * Account Manager is used instead.
      * */
     @Test
-    fun testQueryFromLegacyBroker() {
+    fun testQueryFromLegacyBroker(){
         val client = BrokerDiscoveryClient(
             brokerCandidates = setOf(
                 prodMicrosoftAuthenticator, prodCompanyPortal
@@ -119,7 +118,7 @@ class BrokerDiscoveryClientTests {
                 }
             },
             cache = InMemoryActiveBrokerCache(),
-            isPackageInstalled = {
+            isPackageInstalled =  {
                 it == prodMicrosoftAuthenticator || it == prodCompanyPortal
             },
             isValidBroker = { true }
@@ -133,7 +132,7 @@ class BrokerDiscoveryClientTests {
      * AccountManager shall be used (but not cached).
      **/
     @Test
-    fun testQuery_V0ProtocolErrorReturned() {
+    fun testQuery_V0ProtocolErrorReturned(){
         val cache = InMemoryActiveBrokerCache()
         val client = BrokerDiscoveryClient(
             brokerCandidates = setOf(
@@ -151,7 +150,7 @@ class BrokerDiscoveryClientTests {
                 }
             },
             cache = cache,
-            isPackageInstalled = {
+            isPackageInstalled =  {
                 it == prodMicrosoftAuthenticator || it == prodCompanyPortal
             },
             isValidBroker = { true }
@@ -166,7 +165,7 @@ class BrokerDiscoveryClientTests {
      * an error shall be returned. AccountManager shall be used (but not cached).
      **/
     @Test
-    fun testQuery_UnsupportedBrokerErrorReturned() {
+    fun testQuery_UnsupportedBrokerErrorReturned(){
         val cache = InMemoryActiveBrokerCache()
         val client = BrokerDiscoveryClient(
             brokerCandidates = setOf(
@@ -189,7 +188,7 @@ class BrokerDiscoveryClientTests {
                 }
             },
             cache = cache,
-            isPackageInstalled = {
+            isPackageInstalled =  {
                 it == prodMicrosoftAuthenticator || it == prodCompanyPortal
             },
             isValidBroker = { true }
@@ -200,11 +199,12 @@ class BrokerDiscoveryClientTests {
         Assert.assertNull(cache.getCachedActiveBroker())
     }
 
+
     /**
      * No Broker is installed.
      **/
     @Test
-    fun testQuery_NoBrokerInstalled() {
+    fun testQuery_NoBrokerInstalled(){
         val client = BrokerDiscoveryClient(
             brokerCandidates = setOf(
                 prodMicrosoftAuthenticator, prodCompanyPortal
@@ -221,7 +221,7 @@ class BrokerDiscoveryClientTests {
                 }
             },
             cache = InMemoryActiveBrokerCache(),
-            isPackageInstalled = {
+            isPackageInstalled =  {
                 return@BrokerDiscoveryClient false
             },
             isValidBroker = { true }
@@ -254,7 +254,7 @@ class BrokerDiscoveryClientTests {
                 }
             },
             cache = cache,
-            isPackageInstalled = {
+            isPackageInstalled =  {
                 it == prodMicrosoftAuthenticator || it == prodCompanyPortal
             },
             isValidBroker = { true }
@@ -287,7 +287,7 @@ class BrokerDiscoveryClientTests {
                 }
             },
             cache = cache,
-            isPackageInstalled = {
+            isPackageInstalled =  {
                 return@BrokerDiscoveryClient false
             },
             isValidBroker = { true }
@@ -320,7 +320,7 @@ class BrokerDiscoveryClientTests {
                 }
             },
             cache = InMemoryActiveBrokerCache(),
-            isPackageInstalled = { it == prodMicrosoftAuthenticator },
+            isPackageInstalled =  { it == prodMicrosoftAuthenticator },
             isValidBroker = { false }
         )
 
@@ -352,7 +352,7 @@ class BrokerDiscoveryClientTests {
                 }
             },
             cache = cache,
-            isPackageInstalled = { it == prodMicrosoftAuthenticator },
+            isPackageInstalled =  { it == prodMicrosoftAuthenticator },
             isValidBroker = { false }
         )
 
@@ -380,8 +380,7 @@ class BrokerDiscoveryClientTests {
             ipcStrategy = object : IIpcStrategy {
                 override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
                     if (bundle.targetBrokerAppPackageName == prodMicrosoftAuthenticator.packageName ||
-                        bundle.targetBrokerAppPackageName == prodCompanyPortal.packageName
-                    ) {
+                        bundle.targetBrokerAppPackageName == prodCompanyPortal.packageName) {
                         val returnBundle = Bundle()
                         returnBundle.putString(
                             BrokerDiscoveryClient.ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY,
@@ -401,7 +400,7 @@ class BrokerDiscoveryClientTests {
                 }
             },
             cache = cache,
-            isPackageInstalled = {
+            isPackageInstalled =  {
                 it == prodMicrosoftAuthenticator || it == prodCompanyPortal
             },
             isValidBroker = { true }
@@ -416,7 +415,7 @@ class BrokerDiscoveryClientTests {
      * Only 1 IPC call should be made. The rest should read from cache.
      **/
     @Test
-    fun testRaceCondition_MultiCoroutines() {
+    fun testRaceCondition_MultiCoroutines(){
         val queriedAuthenticator = AtomicBoolean(false)
         val queriedCompanyPortal = AtomicBoolean(false)
         val cache = InMemoryActiveBrokerCache()
@@ -426,6 +425,7 @@ class BrokerDiscoveryClientTests {
         val client1 = getClientForConcurrencyTest(queriedAuthenticator, queriedCompanyPortal, cache)
         val client2 = getClientForConcurrencyTest(queriedAuthenticator, queriedCompanyPortal, cache)
         val client3 = getClientForConcurrencyTest(queriedAuthenticator, queriedCompanyPortal, cache)
+
 
         // Coroutine (Same thread, multiple coroutines)
         runBlocking {
@@ -457,7 +457,7 @@ class BrokerDiscoveryClientTests {
      * Only 1 IPC call should be made. The rest should read from cache.
      **/
     @Test
-    fun testRaceCondition_MultiThread() {
+    fun testRaceCondition_MultiThread(){
         val queriedAuthenticator = AtomicBoolean(false)
         val queriedCompanyPortal = AtomicBoolean(false)
         val cache = InMemoryActiveBrokerCache()
@@ -492,11 +492,9 @@ class BrokerDiscoveryClientTests {
 
     // Returns a client which will throw an error if
     // AuthApp/CP is queried via IPC more than once - each.
-    private fun getClientForConcurrencyTest(
-        queriedAuthenticator: AtomicBoolean,
-        queriedCompanyPortal: AtomicBoolean,
-        cache: InMemoryActiveBrokerCache
-    ): BrokerDiscoveryClient {
+    private fun getClientForConcurrencyTest(queriedAuthenticator: AtomicBoolean,
+                                            queriedCompanyPortal: AtomicBoolean,
+                                            cache: InMemoryActiveBrokerCache) : BrokerDiscoveryClient {
         return BrokerDiscoveryClient(
             brokerCandidates = setOf(
                 prodMicrosoftAuthenticator, prodCompanyPortal
@@ -507,7 +505,7 @@ class BrokerDiscoveryClientTests {
             ipcStrategy = object : IIpcStrategy {
                 override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
                     if (bundle.targetBrokerAppPackageName == prodMicrosoftAuthenticator.packageName) {
-                        if (!queriedAuthenticator.compareAndSet(false, true)) {
+                        if (!queriedAuthenticator.compareAndSet(false,true)) {
                             throw IllegalStateException("AuthApp shouldn't be invoked more than once.")
                         }
 
@@ -539,7 +537,7 @@ class BrokerDiscoveryClientTests {
                 }
             },
             cache = cache,
-            isPackageInstalled = {
+            isPackageInstalled =  {
                 it == prodMicrosoftAuthenticator || it == prodCompanyPortal
             },
             isValidBroker = { true }

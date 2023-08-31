@@ -28,7 +28,7 @@ import com.microsoft.identity.common.internal.broker.BrokerData
 /**
  * An [IBrokerDiscoveryClient] which is based on AccountManager.
  **/
-class LegacyBrokerDiscoveryClient(val context: Context) : IBrokerDiscoveryClient {
+class LegacyBrokerDiscoveryClient(val context: Context): IBrokerDiscoveryClient {
 
     override fun getActiveBroker(shouldSkipCache: Boolean): BrokerData? {
         return AccountManagerBrokerDiscoveryUtil(context)

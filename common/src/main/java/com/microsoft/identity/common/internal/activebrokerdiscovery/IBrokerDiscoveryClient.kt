@@ -34,5 +34,6 @@ interface IBrokerDiscoveryClient {
      *                        and always query the broker for the result.
      * @return BrokerData package name and signature hash of the targeted app.
      * **/
-    fun getActiveBroker(shouldSkipCache: Boolean = false): BrokerData?
+    fun getActiveBroker(shouldSkipCache: Boolean = false) : BrokerData?
 }
+

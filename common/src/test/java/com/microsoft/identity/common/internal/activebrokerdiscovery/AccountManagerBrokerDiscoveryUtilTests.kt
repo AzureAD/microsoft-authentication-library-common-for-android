@@ -34,7 +34,7 @@ import org.robolectric.RobolectricTestRunner
 class AccountManagerBrokerDiscoveryUtilTests {
 
     @Test
-    fun testHappyScenario() {
+    fun testHappyScenario(){
         val acctMgr = AccountManagerBrokerDiscoveryUtil(
             knownBrokerApps = setOf(BrokerData.debugMicrosoftAuthenticator, BrokerData.debugBrokerHost),
             isSignedByKnownKeys = { app ->
@@ -69,7 +69,7 @@ class AccountManagerBrokerDiscoveryUtilTests {
     }
 
     @Test
-    fun testNoBrokerAppInstalled() {
+    fun testNoBrokerAppInstalled(){
         val acctMgr = AccountManagerBrokerDiscoveryUtil(
             knownBrokerApps = setOf(BrokerData.debugMicrosoftAuthenticator, BrokerData.debugBrokerHost),
             isSignedByKnownKeys = { app ->
@@ -97,8 +97,9 @@ class AccountManagerBrokerDiscoveryUtilTests {
         Assert.assertNull(acctMgr.getActiveBrokerFromAccountManager())
     }
 
+
     @Test
-    fun testValidationFailed() {
+    fun testValidationFailed(){
         val acctMgr = AccountManagerBrokerDiscoveryUtil(
             knownBrokerApps = setOf(BrokerData.debugMicrosoftAuthenticator),
             isSignedByKnownKeys = { app ->
@@ -148,7 +149,7 @@ class AccountManagerBrokerDiscoveryUtilTests {
     }
 
     @Test
-    fun testPackageNameWithIndents() {
+    fun testPackageNameWithIndents(){
         val acctMgr = AccountManagerBrokerDiscoveryUtil(
             knownBrokerApps = setOf(BrokerData.debugMicrosoftAuthenticator),
             isSignedByKnownKeys = { app ->
@@ -198,7 +199,7 @@ class AccountManagerBrokerDiscoveryUtilTests {
     }
 
     @Test
-    fun testAccountTypeWithIndents() {
+    fun testAccountTypeWithIndents(){
         val acctMgr = AccountManagerBrokerDiscoveryUtil(
             knownBrokerApps = setOf(BrokerData.debugMicrosoftAuthenticator),
             isSignedByKnownKeys = { app ->

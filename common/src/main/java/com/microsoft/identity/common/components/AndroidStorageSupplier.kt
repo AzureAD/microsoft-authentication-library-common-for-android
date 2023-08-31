@@ -31,25 +31,21 @@ import com.microsoft.identity.common.java.crypto.StorageEncryptionManager
 import com.microsoft.identity.common.java.interfaces.INameValueStorage
 import com.microsoft.identity.common.java.interfaces.IStorageSupplier
 
-class AndroidStorageSupplier(
-    private val context: Context,
-    private val storageEncryptionManager: StorageEncryptionManager
-) :
-    IStorageSupplier {
+class AndroidStorageSupplier(private val context: Context,
+                             private val storageEncryptionManager: StorageEncryptionManager)
+    : IStorageSupplier {
 
     companion object {
         @Suppress("UNCHECKED_CAST")
-        private fun <T> getNameValueStore(
-            context: Context,
-            storeName: String,
-            clazz: Class<T>,
-            storageEncryptionManager: StorageEncryptionManager?
-        ): INameValueStorage<T> {
+        private fun <T> getNameValueStore(context: Context,
+                                          storeName: String,
+                                          clazz: Class<T>,
+                                          storageEncryptionManager: StorageEncryptionManager?): INameValueStorage<T> {
             val mgr: IMultiTypeNameValueStorage =
                 SharedPreferencesFileManager.getSharedPreferences(context, storeName, storageEncryptionManager)
-            if (Long::class.java.isAssignableFrom(clazz) || java.lang.Long::class.java.isAssignableFrom(clazz)) {
+            if (Long::class.java.isAssignableFrom(clazz)|| java.lang.Long::class.java.isAssignableFrom(clazz)) {
                 return (SharedPreferenceLongStorage(mgr) as INameValueStorage<T>)
-            } else if (String::class.java.isAssignableFrom(clazz) || java.lang.String::class.java.isAssignableFrom(clazz)) {
+            } else if (String::class.java.isAssignableFrom(clazz)|| java.lang.String::class.java.isAssignableFrom(clazz)) {
                 return (SharedPrefStringNameValueStorage(mgr) as INameValueStorage<T>)
             }
 

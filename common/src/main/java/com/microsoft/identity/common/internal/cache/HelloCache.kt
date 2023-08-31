@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit
  * @param components           Platform components.
  * @param cacheExpiryTimeInMs  Cache entry expiry time.
  */
-open class HelloCache(
+open class HelloCache (
     private val context: Context,
     private val protocolName: String,
     private val targetAppPackageName: String,
@@ -217,11 +217,9 @@ open class HelloCache(
         clientMinimumProtocolVersion: String?,
         clientMaximumProtocolVersion: String
     ): String {
-        return (
-            protocolName +
-                "[" + clientMinimumProtocolVersion + "," + clientMaximumProtocolVersion + "]:" +
-                targetAppPackageName + "[" + versionCode + "]"
-            )
+        return (protocolName +
+                "[" + clientMinimumProtocolVersion + "," + clientMaximumProtocolVersion + "]:"
+                + targetAppPackageName + "[" + versionCode + "]")
     }
 
     @VisibleForTesting

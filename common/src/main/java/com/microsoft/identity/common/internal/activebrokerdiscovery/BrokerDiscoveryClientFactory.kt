@@ -50,7 +50,7 @@ class BrokerDiscoveryClientFactory {
          * This is currently turned off by default - until we're ready to ship the feature.
          **/
         @JvmStatic
-        fun setNewBrokerDiscoveryEnabled(isEnabled: Boolean) {
+        fun setNewBrokerDiscoveryEnabled(isEnabled: Boolean){
             // If the flag changes, wipe the existing singleton.
             if (isEnabled != IS_NEW_DISCOVERY_ENABLED) {
                 instance = null
@@ -63,18 +63,16 @@ class BrokerDiscoveryClientFactory {
          **/
         @JvmStatic
         fun isNewBrokerDiscoveryEnabled(): Boolean {
-            return BuildConfig.newBrokerDiscoveryEnabledFlag || IS_NEW_DISCOVERY_ENABLED
+            return BuildConfig.newBrokerDiscoveryEnabledFlag || IS_NEW_DISCOVERY_ENABLED;
         }
 
         /**
          * Initializes a new [IBrokerDiscoveryClient] object.
          **/
         @JvmStatic
-        fun getInstance(
-            context: Context,
-            platformComponents: IPlatformComponents
-        ): IBrokerDiscoveryClient {
-            if (instance == null) {
+        fun getInstance(context: Context,
+                        platformComponents: IPlatformComponents) : IBrokerDiscoveryClient{
+            if (instance == null){
                 runBlocking {
                     lock.withLock {
                         if (instance == null) {

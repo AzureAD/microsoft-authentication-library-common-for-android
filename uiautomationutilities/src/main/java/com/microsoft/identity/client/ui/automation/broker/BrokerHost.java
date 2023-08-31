@@ -64,6 +64,7 @@ public class BrokerHost extends AbstractTestBroker {
     // name for broker host APKs
     public final static String BROKER_HOST_APK = "BrokerHost.apk";
     public final static String OLD_BROKER_HOST_APK = "OldBrokerHost.apk";
+    public final static String BROKER_HOST_WITHOUT_BROKER_SELECTION_APK = "BrokerHostWithoutBrokerSelection.apk";
     public final static String BROKER_HOST_APK_PROD = "BrokerHostProd.apk";
     public final static String BROKER_HOST_APK_RC = "BrokerHostRC.apk";
     // Fragments for BrokerHost
@@ -192,6 +193,20 @@ public class BrokerHost extends AbstractTestBroker {
     public String getDeviceState() {
         singleWpjApiFragment.launch();
         return singleWpjApiFragment.getDeviceState();
+    }
+
+    @Nullable
+    public String getBlob(@NonNull final String tenantId) {
+        Logger.i(TAG, "Get Blob..");
+        singleWpjApiFragment.launch();
+        return singleWpjApiFragment.getBlob(tenantId);
+    }
+
+    @NonNull
+    public String getDeviceToken() {
+        Logger.i(TAG, "Get Device Token..");
+        singleWpjApiFragment.launch();
+        return singleWpjApiFragment.getDeviceToken();
     }
 
     @Override

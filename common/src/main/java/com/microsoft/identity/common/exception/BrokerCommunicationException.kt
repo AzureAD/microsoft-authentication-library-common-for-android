@@ -35,8 +35,7 @@ class BrokerCommunicationException(
     val category: Category,
     val strategyType: IIpcStrategy.Type,
     errorMessage: String?,
-    throwable: Throwable?
-) :
+    throwable: Throwable?) :
     BaseException(category.toString(), errorMessage, throwable) {
 
     companion object {
@@ -45,8 +44,8 @@ class BrokerCommunicationException(
 
     enum class Category(private val categoryName: String) {
         // The operation is not supported on the client (calling) side of IPC connection.
-        OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE("ipc_operation_not_supported_on_client_side"), // The operation is not supported on the server (target) side of IPC connection.
-        OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE("ipc_operation_not_supported_on_server_side"), // IPC connection failed due to an error.
+        OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE("ipc_operation_not_supported_on_client_side"),  // The operation is not supported on the server (target) side of IPC connection.
+        OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE("ipc_operation_not_supported_on_server_side"),  // IPC connection failed due to an error.
         CONNECTION_ERROR("ipc_connection_error");
 
         override fun toString(): String {

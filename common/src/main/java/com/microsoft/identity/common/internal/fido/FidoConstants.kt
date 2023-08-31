@@ -20,26 +20,21 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache
-
-import com.microsoft.identity.common.internal.activebrokerdiscovery.BrokerDiscoveryClient
+package com.microsoft.identity.common.internal.fido
 
 /**
- * An extension of [IActiveBrokerCache].
- * This will allow [BrokerDiscoveryClient] to fall back to AccountManager immediately if it's aware that the broker side
- * Does not support account manager (as opposed to trying to make unnecessary IPC call every time).
- * */
-interface IClientActiveBrokerCache: IActiveBrokerCache {
+ * Constants for FIDO related logic.
+ */
+class FidoConstants {
+    companion object {
+        /**
+         * Extra query parameter field to declare WebAuthn capability for a host app.
+         */
+        const val WEBAUTHN_QUERY_PARAMETER_FIELD = "webauthn"
 
-    /**
-     * Returns true if [BrokerDiscoveryClient] should still use AccountManager.
-     **/
-    fun shouldUseAccountManager(): Boolean
-
-    /**
-     * Set the time span when [BrokerDiscoveryClient] should just rely on AccountManager.
-     *
-     * @param timeInMillis Time in milliseconds (from now)
-     **/
-    fun setShouldUseAccountManagerForTheNextMilliseconds(timeInMillis: Long)
+        /**
+         * Extra query parameter value to declare WebAuthn capability for a host app.
+         */
+        const val WEBAUTHN_QUERY_PARAMETER_VALUE = "1"
+    }
 }

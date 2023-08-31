@@ -13,7 +13,7 @@ trigger:
 
 variables:
   - name: BuildParameters.jdkVersion
-    value: 1.8
+    value: 1.11
   - name: BuildParameters.jdkArchitecture
     value: x64
   - name: BuildParameters.javaHomeSelection
@@ -42,7 +42,7 @@ jobs:
         displayName: Assemble Release
         inputs:
           gradleWrapperFile: 'gradlew'
-          tasks: clean ktlintCheck clean common:assembleLocal common4j:assemble
+          tasks: clean clean common:assembleLocal common4j:assemble
           publishJUnitResults: false
           testResultsFiles: '**/build/test-results/TEST-*.xml'
           jdkVersion: $(BuildParameters.jdkVersion)

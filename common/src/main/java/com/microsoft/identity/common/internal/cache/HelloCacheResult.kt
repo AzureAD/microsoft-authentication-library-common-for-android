@@ -32,7 +32,7 @@ import com.microsoft.identity.common.logging.Logger
  * @param error Stores error.
  * @param timeStamp Time stamp of entry.
  */
-class HelloCacheResult(
+class HelloCacheResult (
     val negotiatedProtocolVersion: String?,
     val error: String?,
     internal val timeStamp: Long
@@ -106,21 +106,21 @@ class HelloCacheResult(
     /**
      * Returns true if entry contains handshake_failure.
      */
-    fun isHandShakeError(): Boolean {
+    fun isHandShakeError() : Boolean {
         return isError() && error == HANDSHAKE_ERROR
     }
 
     /**
      * Returns true if the result contains negotiated protocol version value.
      */
-    fun isSuccess(): Boolean {
+    fun isSuccess() : Boolean {
         return !negotiatedProtocolVersion.isNullOrEmpty()
     }
 
     /**
      * Returns true if entry contains an error.
      */
-    fun isError(): Boolean {
+    fun isError() : Boolean {
         return !error.isNullOrEmpty()
     }
 

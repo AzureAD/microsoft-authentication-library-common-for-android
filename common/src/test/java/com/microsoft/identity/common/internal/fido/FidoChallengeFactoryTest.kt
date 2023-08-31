@@ -25,15 +25,12 @@ package com.microsoft.identity.common.internal.fido
 import android.net.Uri
 import com.microsoft.identity.common.internal.fido.FidoChallengeFactory.Companion.DELIMITER
 import com.microsoft.identity.common.java.exception.ClientException
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-// Robolectric used for Uri dependency
+//Robolectric used for Uri dependency
 @RunWith(RobolectricTestRunner::class)
 class FidoChallengeFactoryTest {
     val challengeStr = "T1xCsnxM2DNL2KdK5CLa6fMhD7OBqho6syzInk_n-Uo"
@@ -44,7 +41,7 @@ class FidoChallengeFactoryTest {
     val context = "123456"
     val authority = "urn:http-auth:PassKey"
 
-    // Auth
+    //Auth
     val allowCredentialsEmpty = ""
     val allowCredentialsOneUser = "user1"
     val allowCredentialsTwoUsers = "user1,user2"
@@ -65,7 +62,7 @@ class FidoChallengeFactoryTest {
             .build().toString()
         val fidoChallenge = FidoChallengeFactory.createFidoChallengeFromRedirect(fullUrl)
         assertTrue(fidoChallenge is AuthFidoChallenge)
-        val authFidoChallenge: AuthFidoChallenge = fidoChallenge as AuthFidoChallenge
+        val authFidoChallenge : AuthFidoChallenge = fidoChallenge as AuthFidoChallenge
         assertNotNull(authFidoChallenge.allowedCredentials)
         authFidoChallenge.allowedCredentials?.let {
             assertTrue(it.size == 1)
@@ -86,7 +83,7 @@ class FidoChallengeFactoryTest {
             .build().toString()
         val fidoChallenge = FidoChallengeFactory.createFidoChallengeFromRedirect(fullUrl)
         assertTrue(fidoChallenge is AuthFidoChallenge)
-        val authFidoChallenge: AuthFidoChallenge = fidoChallenge as AuthFidoChallenge
+        val authFidoChallenge : AuthFidoChallenge = fidoChallenge as AuthFidoChallenge
         assertNotNull(authFidoChallenge.allowedCredentials)
         authFidoChallenge.allowedCredentials?.let {
             assertTrue(it.size == 2)
@@ -106,7 +103,7 @@ class FidoChallengeFactoryTest {
             .build().toString()
         val fidoChallenge = FidoChallengeFactory.createFidoChallengeFromRedirect(url)
         assertTrue(fidoChallenge is AuthFidoChallenge)
-        val authFidoChallenge: AuthFidoChallenge = fidoChallenge as AuthFidoChallenge
+        val authFidoChallenge : AuthFidoChallenge = fidoChallenge as AuthFidoChallenge
         assertNull(authFidoChallenge.allowedCredentials)
     }
 
@@ -123,7 +120,7 @@ class FidoChallengeFactoryTest {
             .build().toString()
         val fidoChallenge = FidoChallengeFactory.createFidoChallengeFromRedirect(url)
         assertTrue(fidoChallenge is AuthFidoChallenge)
-        val authFidoChallenge: AuthFidoChallenge = fidoChallenge as AuthFidoChallenge
+        val authFidoChallenge : AuthFidoChallenge = fidoChallenge as AuthFidoChallenge
         assertNull(authFidoChallenge.keyTypes)
     }
 
@@ -139,7 +136,7 @@ class FidoChallengeFactoryTest {
             .build().toString()
         val fidoChallenge = FidoChallengeFactory.createFidoChallengeFromRedirect(url)
         assertTrue(fidoChallenge is AuthFidoChallenge)
-        val authFidoChallenge: AuthFidoChallenge = fidoChallenge as AuthFidoChallenge
+        val authFidoChallenge : AuthFidoChallenge = fidoChallenge as AuthFidoChallenge
         assertNull(authFidoChallenge.allowedCredentials)
         assertNull(authFidoChallenge.keyTypes)
     }
@@ -163,7 +160,7 @@ class FidoChallengeFactoryTest {
         val malformedUrl = Uri.Builder().authority(authority)
             .appendQueryParameter(FidoRequestField.Challenge.name, challengeStr)
             .appendQueryParameter(AuthFidoRequestField.AllowedCredentials.name, allowCredentialsOneUser)
-            .appendQueryParameter(FidoRequestField.UserVerificationPolicy.name, userVerificationPolicy)
+            .appendQueryParameter(FidoRequestField.UserVerificationPolicy.name,userVerificationPolicy)
             .appendQueryParameter(FidoRequestField.Version.name, version)
             .appendQueryParameter(FidoRequestField.SubmitUrl.name, submitUrl)
             .appendQueryParameter(AuthFidoRequestField.KeyTypes.name, keyTypes)

@@ -4,6 +4,7 @@
 # Variable: 'mvnAccessToken' was defined in the Variables tab
 # https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
 # Variable: 'commonBranchName' common branch to be used when running the pipeline manually
+# Variable: 'skipConsumerValidationLabel' PR label used to skip the checks in this pipeline
 name: $(date:yyyyMMdd)$(rev:.r)
 
 trigger: none
@@ -43,14 +44,26 @@ resources:
     endpoint: ANDROID_GITHUB
 
 stages:
-- stage: validateConsumers
-  displayName: 'Validate'
+- stage: getLabel
+  # Check PR Label
+  displayName: Check for PR Label
   pool:
     name: Hosted Windows 2019 with VS2019
+  jobs:
+    - template: ../templates/steps/fetch-pr-labels.yml
+- stage: validateConsumers
+  # Validate Consumers
+  displayName: 'Validate'
+  dependsOn: getLabel
+  pool:
+    name: Hosted Windows 2019 with VS2019
+  variables:
+    prLabels: $[ stageDependencies.getLabel.getLabelsJob.outputs['fetchPrCILabel.prLabels'] ]
   jobs:
   # setup
   - job: setupBranch
     displayName: Setup branch
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
     - checkout: none
     - task: PowerShell@2
@@ -88,9 +101,11 @@ stages:
   # msal
   - job: msalValidation
     displayName: MSAL
-    dependsOn: setupBranch
+    dependsOn:
+      - setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
     - template: ../templates/steps/automation-cert.yml
     - checkout: msal
@@ -108,22 +123,28 @@ stages:
           git status
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
-    - task: Gradle@2
+    - task: Gradle@3
       displayName: Assemble msal
       inputs:
+        jdkArchitecture: x64
+        jdkVersionOption: "1.11"
         tasks: clean msal:assembleLocal
-    - task: Gradle@2
+    - task: Gradle@3
       displayName: Run msal Unit tests
       inputs:
         tasks: msal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+        jdkArchitecture: x64
+        jdkVersionOption: "1.11"
   # broker
   - job: brokerValidation
     displayName: Broker
     cancelTimeoutInMinutes: 1
     timeoutInMinutes: 120
-    dependsOn: setupBranch
+    dependsOn:
+      - setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     pool:
       name: 1ES-AndroidPool-EOC-Test
     steps:
@@ -143,23 +164,27 @@ stages:
           git status
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
-    - task: Gradle@2
+    - task: Gradle@3
       displayName: Assemble broker
       inputs:
         tasks: AADAuthenticator:clean AADAuthenticator:assembleLocal --build-cache --info
         publishJUnitResults: false
-        jdkArchitecture: x86
-        sqAnalysisBreakBuildIfQualityGateFailed: false
-    - task: Gradle@2
+        jdkArchitecture: x64
+        jdkVersionOption: "1.11"
+    - task: Gradle@3
       displayName: Run broker Unit tests
       inputs:
         tasks: AADAuthenticator:localDebugAADAuthenticatorUnitTestCoverageReport --build-cache --info -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PpowerLiftApiKey=$(powerliftApiKey) -PcodeCoverageEnabled=true ${{variables.shouldSkipLongRunningTest}}
+        jdkArchitecture: x64
+        jdkVersionOption: "1.11"
   # Linux broker
   - job: linuxBrokerValidation
     displayName: Linux Broker
-    dependsOn: setupBranch
+    dependsOn:
+      - setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -178,15 +203,15 @@ stages:
         inputs:
           filename: echo
           arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_OFFICE_ACCESSTOKEN]$(System.AccessToken)'
-      - task: Gradle@1
-        name: Gradle1
+      - task: Gradle@3
+        name: Gradle3
         displayName: Assemble Linux Broker
         inputs:
           cwd: $(Build.SourcesDirectory)/broker-java-root
           tasks: LinuxBroker:clean LinuxBroker:assemble --build-cache --info
           publishJUnitResults: false
-          jdkArchitecture: x86
-          sqAnalysisBreakBuildIfQualityGateFailed: false
+          jdkArchitecture: x64
+          jdkVersionOption: "1.11"
       - task: Bash@3
         retryCountOnTaskFailure: 3
         displayName: Execute tests
@@ -212,9 +237,11 @@ stages:
   # adal
   - job: adalValidation
     displayName: ADAL
-    dependsOn: setupBranch
+    dependsOn:
+      - setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
     - checkout: adal
       displayName: Checkout adal repository
@@ -231,11 +258,15 @@ stages:
           git status
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
-    - task: Gradle@2
+    - task: Gradle@3
       displayName: Assemble adal
       inputs:
         tasks: clean adal:assembleLocal
-    - task: Gradle@2
+        jdkArchitecture: x64
+        jdkVersionOption: "1.11"
+    - task: Gradle@3
       displayName: Run adal Unit tests
       inputs:
         tasks: adal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+        jdkArchitecture: x64
+        jdkVersionOption: "1.11"

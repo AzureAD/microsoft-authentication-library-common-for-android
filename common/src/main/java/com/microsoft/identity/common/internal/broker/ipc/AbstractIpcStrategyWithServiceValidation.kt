@@ -34,8 +34,7 @@ import com.microsoft.identity.common.logging.Logger
  *        expose for testing only.
  **/
 abstract class AbstractIpcStrategyWithServiceValidation(
-    private val shouldBypassSupportValidation: Boolean = false
-) : IIpcStrategy {
+    private val shouldBypassSupportValidation: Boolean = false): IIpcStrategy {
     companion object {
         val TAG = AbstractIpcStrategyWithServiceValidation::class.simpleName
     }
@@ -68,4 +67,5 @@ abstract class AbstractIpcStrategyWithServiceValidation(
 
         return communicateToBrokerAfterValidation(bundle)
     }
+
 }

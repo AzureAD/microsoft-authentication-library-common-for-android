@@ -390,6 +390,11 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         ((BrokerAuthenticatorUpdatedVersionImpl) brokerMicrosoftAuthenticatorImpl).shouldUseDeviceSettingsPage = shouldUseDeviceSettingsPage;
     }
 
+    public void setShouldUseDeviceSettingsPage(final boolean shouldUseDeviceSettingsPage) {
+        Assert.assertTrue("Cannot set shouldUseDeviceSettingsPage for BrokerAuthenticatorPreviousVersionImpl", brokerMicrosoftAuthenticatorImpl instanceof BrokerAuthenticatorUpdatedVersionImpl);
+        ((BrokerAuthenticatorUpdatedVersionImpl) brokerMicrosoftAuthenticatorImpl).shouldUseDeviceSettingsPage = shouldUseDeviceSettingsPage;
+    }
+
     @Override
     public void handleFirstRun() {
         if (shouldHandleFirstRun) {
@@ -400,6 +405,8 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Continue");
             // the skip button
             UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/frx_skip_button");
+            // This is required for auth app as it has increased the compile sdk version to 34
+            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("NOT NOW");
             shouldHandleFirstRun = false;
         }
     }

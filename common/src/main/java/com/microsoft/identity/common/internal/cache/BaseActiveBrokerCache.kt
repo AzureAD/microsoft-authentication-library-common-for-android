@@ -33,10 +33,9 @@ import net.jcip.annotations.ThreadSafe
  * A cache for storing the active broker as known by the caller.
  **/
 @ThreadSafe
-open class BaseActiveBrokerCache(
-    private val storage: INameValueStorage<String>,
-    private val lock: Mutex
-) : IActiveBrokerCache {
+open class BaseActiveBrokerCache
+    (private val storage: INameValueStorage<String>,
+     private val lock: Mutex) : IActiveBrokerCache {
 
     companion object {
         /**
@@ -80,12 +79,12 @@ open class BaseActiveBrokerCache(
         }
     }
 
-    protected open fun setCachedActiveBrokerWithoutLock(brokerData: BrokerData) {
+    protected open fun setCachedActiveBrokerWithoutLock(brokerData: BrokerData){
         storage.put(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY, brokerData.packageName)
         storage.put(ACTIVE_BROKER_CACHE_SIGHASH_KEY, brokerData.signingCertificateThumbprint)
     }
 
-    protected fun clearCachedActiveBrokerWithoutLock() {
+    protected fun clearCachedActiveBrokerWithoutLock(){
         storage.remove(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY)
         storage.remove(ACTIVE_BROKER_CACHE_SIGHASH_KEY)
     }

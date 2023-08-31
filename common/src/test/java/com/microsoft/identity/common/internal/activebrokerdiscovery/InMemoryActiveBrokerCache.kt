@@ -31,7 +31,7 @@ import java.time.Instant
 /**
  * An [IActiveBrokerCache] which stores values in-memory.
  **/
-class InMemoryActiveBrokerCache : IClientActiveBrokerCache {
+class InMemoryActiveBrokerCache: IClientActiveBrokerCache {
 
     private var activeBroker: BrokerData? = null
     private var shouldUseAccountManagerUntil: Long? = null

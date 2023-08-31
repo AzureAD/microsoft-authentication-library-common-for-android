@@ -46,50 +46,44 @@ class ActiveBrokerCacheUpdaterTest {
     )
 
     @Test
-    fun testAppendResultToBundle() {
+    fun testAppendResultToBundle(){
         val bundle = Bundle()
         ActiveBrokerCacheUpdater.appendActiveBrokerToResultBundle(bundle, newActiveBroker)
 
-        Assert.assertEquals(
-            newActiveBroker.packageName,
-            bundle.getString(ACTIVE_BROKER_PACKAGE_NAME_KEY)
-        )
+        Assert.assertEquals(newActiveBroker.packageName,
+            bundle.getString(ACTIVE_BROKER_PACKAGE_NAME_KEY))
 
-        Assert.assertEquals(
-            newActiveBroker.signingCertificateThumbprint,
-            bundle.getString(ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_KEY)
-        )
+        Assert.assertEquals(newActiveBroker.signingCertificateThumbprint,
+            bundle.getString(ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_KEY))
     }
 
     @Test
-    fun testTryUpdateWithNullBundle() {
+    fun testTryUpdateWithNullBundle(){
         val cache = InMemoryActiveBrokerCache()
-        val cacheUpdater = ActiveBrokerCacheUpdater(
+        val cacheUpdater = ActiveBrokerCacheUpdater (
             // Bypass the Validation check.
             { _: BrokerData -> true },
-            cache
-        )
+            cache)
 
         cacheUpdater.updateCachedActiveBrokerFromResultBundle(null)
         Assert.assertNull(cache.getCachedActiveBroker())
     }
 
     @Test
-    fun testTryUpdateWithIncompleteBundle() {
+    fun testTryUpdateWithIncompleteBundle(){
         val cache = InMemoryActiveBrokerCache()
-        val cacheUpdater = ActiveBrokerCacheUpdater(
+        val cacheUpdater = ActiveBrokerCacheUpdater (
             // Bypass the Validation check.
             { _: BrokerData -> true },
-            cache
-        )
+            cache)
 
-        val bundle1 = Bundle()
+        val bundle1 = Bundle();
         bundle1.putString(ACTIVE_BROKER_PACKAGE_NAME_KEY, "")
         bundle1.putString(ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_KEY, "someThumbPrint")
         cacheUpdater.updateCachedActiveBrokerFromResultBundle(bundle1)
         Assert.assertNull(cache.getCachedActiveBroker())
 
-        val bundle2 = Bundle()
+        val bundle2 = Bundle();
         bundle2.putString(ACTIVE_BROKER_PACKAGE_NAME_KEY, "somePackageName")
         bundle2.putString(ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_KEY, "")
         cacheUpdater.updateCachedActiveBrokerFromResultBundle(bundle2)
@@ -107,12 +101,11 @@ class ActiveBrokerCacheUpdaterTest {
     }
 
     @Test
-    fun testTryUpdateWithUnknownApps() {
+    fun testTryUpdateWithUnknownApps(){
         val cache = InMemoryActiveBrokerCache()
-        val cacheUpdater = ActiveBrokerCacheUpdater(
+        val cacheUpdater = ActiveBrokerCacheUpdater (
             { brokerData: BrokerData -> brokerData == newActiveBroker },
-            cache
-        )
+            cache)
 
         val bundle = Bundle()
         ActiveBrokerCacheUpdater.appendActiveBrokerToResultBundle(bundle, anotherBrokerApp)
@@ -121,16 +114,34 @@ class ActiveBrokerCacheUpdaterTest {
     }
 
     @Test
-    fun testTryUpdateWithKnownBrokerAppsInBundle() {
+    fun testTryUpdateWithKnownBrokerAppsInBundle(){
         val cache = InMemoryActiveBrokerCache()
-        val cacheUpdater = ActiveBrokerCacheUpdater(
+        val cacheUpdater = ActiveBrokerCacheUpdater (
             { brokerData: BrokerData -> brokerData == newActiveBroker },
-            cache
-        )
+            cache)
 
         val bundle = Bundle()
         ActiveBrokerCacheUpdater.appendActiveBrokerToResultBundle(bundle, newActiveBroker)
         cacheUpdater.updateCachedActiveBrokerFromResultBundle(bundle)
         Assert.assertEquals(newActiveBroker, cache.getCachedActiveBroker())
+    }
+
+    @Test
+    fun testWipeCachedActiveBroker(){
+        val cache = InMemoryActiveBrokerCache()
+        cache.setCachedActiveBroker(newActiveBroker)
+
+        val cacheUpdater = ActiveBrokerCacheUpdater ({ false }, cache)
+
+        val bundle = Bundle()
+        ActiveBrokerCacheUpdater.appendBrokerDiscoveryDisabledToResultBundle(bundle)
+
+        Assert.assertEquals(newActiveBroker, cache.getCachedActiveBroker())
+        Assert.assertFalse(cache.shouldUseAccountManager())
+
+        cacheUpdater.updateCachedActiveBrokerFromResultBundle(bundle)
+
+        Assert.assertNull(cache.getCachedActiveBroker())
+        Assert.assertTrue(cache.shouldUseAccountManager())
     }
 }

@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.cache
 import com.microsoft.identity.common.internal.broker.BrokerData
 import net.jcip.annotations.ThreadSafe
 
+
 /**
  * An interface for accessing cached [BrokerData].
  * This interface must be thread-safe.

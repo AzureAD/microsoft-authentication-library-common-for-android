@@ -37,15 +37,11 @@ import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.exception.ClientException.ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.logging.Logger
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.TimeUnit
+
 
 /**
  * A class for figuring out which Broker app the caller should communicate with.
@@ -64,14 +60,12 @@ import java.util.concurrent.TimeUnit
  * @param isPackageInstalled                a function to determine if any given broker app is installed.
  * @param isValidBroker                     a function to determine if the installed broker app contains a matching signature hash.
  **/
-class BrokerDiscoveryClient(
-    private val brokerCandidates: Set<BrokerData>,
-    private val getActiveBrokerFromAccountManager: () -> BrokerData?,
-    private val ipcStrategy: IIpcStrategy,
-    private val cache: IClientActiveBrokerCache,
-    private val isPackageInstalled: (BrokerData) -> Boolean,
-    private val isValidBroker: (BrokerData) -> Boolean
-) : IBrokerDiscoveryClient {
+class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
+                            private val getActiveBrokerFromAccountManager: () -> BrokerData?,
+                            private val ipcStrategy: IIpcStrategy,
+                            private val cache: IClientActiveBrokerCache,
+                            private val isPackageInstalled: (BrokerData) -> Boolean,
+                            private val isValidBroker: (BrokerData) -> Boolean) : IBrokerDiscoveryClient {
 
     companion object {
         val TAG = BrokerDiscoveryClient::class.simpleName
@@ -100,12 +94,11 @@ class BrokerDiscoveryClient(
          * @param shouldStopQueryForAWhile  a method which, if invoked, will force [BrokerDiscoveryClient]
          *                                  to skip the IPC discovery process for a while.
          **/
-        internal suspend fun queryFromBroker(
-            brokerCandidates: Set<BrokerData>,
-            ipcStrategy: IIpcStrategy,
-            isPackageInstalled: (BrokerData) -> Boolean,
-            isValidBroker: (BrokerData) -> Boolean,
-            shouldStopQueryForAWhile: () -> Unit
+        internal suspend fun queryFromBroker(brokerCandidates: Set<BrokerData>,
+                                             ipcStrategy: IIpcStrategy,
+                                             isPackageInstalled: (BrokerData) -> Boolean,
+                                             isValidBroker: (BrokerData) -> Boolean,
+                                             shouldStopQueryForAWhile: () -> Unit
         ): BrokerData? {
             return coroutineScope {
                 val installedCandidates = brokerCandidates.filter(isPackageInstalled).filter(isValidBroker)
@@ -118,11 +111,9 @@ class BrokerDiscoveryClient(
             }
         }
 
-        private fun makeRequest(
-            candidate: BrokerData,
-            ipcStrategy: IIpcStrategy,
-            shouldStopQueryForAWhile: () -> Unit
-        ): BrokerData? {
+        private fun makeRequest(candidate: BrokerData,
+                                ipcStrategy: IIpcStrategy,
+                                shouldStopQueryForAWhile: () -> Unit): BrokerData? {
             val methodTag = "$TAG:makeRequest"
             val operationBundle = BrokerOperationBundle(
                 BrokerOperationBundle.Operation.BROKER_DISCOVERY_FROM_SDK,
@@ -135,25 +126,18 @@ class BrokerDiscoveryClient(
                 extractResult(result)
             } catch (t: Throwable) {
                 if (t is BrokerCommunicationException &&
-                    BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE == t.category
-                ) {
-                    Logger.info(
-                        methodTag,
-                        "Tried broker discovery on $candidate. It doesn't support the IPC mechanism."
-                    )
+                    BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE == t.category) {
+                    Logger.info(methodTag,
+                        "Tried broker discovery on ${candidate}. It doesn't support the IPC mechanism.")
                     shouldStopQueryForAWhile()
-                } else if (t is ClientException && ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE == t.errorCode) {
-                    Logger.info(
-                        methodTag,
-                        "Tried broker discovery on $candidate. " +
-                            "The Broker side indicates that only AccountManager is supported."
-                    )
+                } else if (t is ClientException && ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE == t.errorCode){
+                    Logger.info(methodTag,
+                        "Tried broker discovery on ${candidate}. " +
+                                "The Broker side indicates that only AccountManager is supported.")
                     shouldStopQueryForAWhile()
                 } else {
-                    Logger.error(
-                        methodTag,
-                        "Tried broker discovery on $candidate, get an error", t
-                    )
+                    Logger.error(methodTag,
+                        "Tried broker discovery on ${candidate}, get an error", t)
                 }
                 null
             }
@@ -173,17 +157,17 @@ class BrokerDiscoveryClient(
                 throw errorData as Throwable
             }
 
-            val pkgName = bundle.getString(ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY)
-                ?: throw NoSuchElementException("ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY must not be null")
+            val pkgName = bundle.getString(ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY)?:
+                throw NoSuchElementException("ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY must not be null")
 
-            val signatureHash = bundle.getString(ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY)
-                ?: throw NoSuchElementException("ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY must not be null")
+            val signatureHash = bundle.getString(ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY)?:
+                throw NoSuchElementException("ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY must not be null")
 
             return BrokerData(pkgName, signatureHash)
         }
     }
 
-    constructor(context: Context, components: IPlatformComponents) : this(
+    constructor(context: Context, components: IPlatformComponents): this(
         brokerCandidates = BrokerData.getKnownBrokerApps(),
         getActiveBrokerFromAccountManager = {
             AccountManagerBrokerDiscoveryUtil(context).getActiveBrokerFromAccountManager()
@@ -191,13 +175,12 @@ class BrokerDiscoveryClient(
         ipcStrategy = ContentProviderStrategy(context),
         cache = ClientActiveBrokerCache.getCache(components.storageSupplier),
         isPackageInstalled = { brokerData ->
-            PackageHelper(context)
-                .isPackageInstalledAndEnabled(brokerData.packageName)
+            PackageHelper(context).
+                isPackageInstalledAndEnabled(brokerData.packageName)
         },
         isValidBroker = { brokerData ->
             BrokerValidator(context).isSignedByKnownKeys(brokerData)
-        }
-    )
+        })
 
     override fun getActiveBroker(shouldSkipCache: Boolean): BrokerData? {
         return runBlocking {
@@ -205,7 +188,7 @@ class BrokerDiscoveryClient(
         }
     }
 
-    private suspend fun getActiveBrokerAsync(shouldSkipCache: Boolean): BrokerData? {
+    private suspend fun getActiveBrokerAsync(shouldSkipCache:Boolean): BrokerData?{
         val methodTag = "$TAG:getActiveBrokerAsync"
         classLevelLock.withLock {
             if (!shouldSkipCache) {
@@ -245,7 +228,7 @@ class BrokerDiscoveryClient(
                 Logger.info(
                     methodTag,
                     "Will skip broker discovery via IPC and fall back to AccountManager " +
-                        "for the next 60 minutes."
+                            "for the next 60 minutes."
                 )
                 cache.clearCachedActiveBroker()
                 cache.setShouldUseAccountManagerForTheNextMilliseconds(
@@ -262,9 +245,8 @@ class BrokerDiscoveryClient(
 
             val accountManagerResult = getActiveBrokerFromAccountManager()
             Logger.info(
-                methodTag,
-                "Tried getting active broker from account manager, " +
-                    "get ${accountManagerResult?.packageName}."
+                methodTag, "Tried getting active broker from account manager, " +
+                        "get ${accountManagerResult?.packageName}."
             )
 
             return accountManagerResult

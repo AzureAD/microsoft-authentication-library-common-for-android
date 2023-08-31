@@ -29,8 +29,9 @@ import com.microsoft.identity.common.java.util.ported.Predicate
 import kotlinx.coroutines.sync.Mutex
 import org.junit.Assert
 import org.junit.Test
+import java.util.concurrent.TimeUnit
 
-class ActiveBrokerCacheTest {
+class BaseActiveBrokerCacheTest {
 
     companion object {
         private const val MOCK_HASH = "MOCK_HASH"
@@ -42,7 +43,7 @@ class ActiveBrokerCacheTest {
      * A value written by the first one should be readable by the 2nd one.
      **/
     @Test
-    fun testReadWriteAcrossInstances() {
+    fun testReadWriteAcrossInstances(){
         val lock = Mutex()
         val storage = InMemoryStorage<String>()
 
@@ -61,7 +62,7 @@ class ActiveBrokerCacheTest {
     }
 
     @Test
-    fun testRead() {
+    fun testRead(){
         val readOnlyStorage = object : INameValueStorage<String> {
             override fun get(name: String): String? {
                 if (name == BaseActiveBrokerCache.ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY) {
@@ -105,7 +106,7 @@ class ActiveBrokerCacheTest {
     }
 
     @Test
-    fun testWrite() {
+    fun testWrite(){
         val readOnlyStorage = object : INameValueStorage<String> {
             var brokerPkgName: String? = null
             var brokerSigHash: String? = null
@@ -158,7 +159,7 @@ class ActiveBrokerCacheTest {
     }
 
     @Test
-    fun testClear() {
+    fun testClear(){
         val clearOnlyStorage = object : INameValueStorage<String> {
             var isCleared = false
 
@@ -198,7 +199,7 @@ class ActiveBrokerCacheTest {
     }
 
     @Test
-    fun testE2EWriteReadClear() {
+    fun testE2EWriteReadClear(){
         val cache = BaseActiveBrokerCache(InMemoryStorage(), Mutex())
         Assert.assertNull(cache.getCachedActiveBroker())
 

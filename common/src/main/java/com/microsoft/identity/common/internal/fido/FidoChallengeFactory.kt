@@ -43,7 +43,7 @@ class FidoChallengeFactory {
         @Throws(ClientException::class)
         fun createFidoChallengeFromRedirect(redirectUri: String): IFidoChallenge {
             val parameters = UrlUtil.getParameters(redirectUri)
-            // At the moment, only auth FIDO requests will be sent by the server.
+            //At the moment, only auth FIDO requests will be sent by the server.
             return AuthFidoChallenge(
                 challenge = validateRequiredParameter(
                     FidoRequestField.Challenge.name,

@@ -56,8 +56,7 @@ class AccountManagerBrokerDiscoveryUtilTests {
             },
             getAccountManagerApps = {
                 accountManager.authenticatorTypes
-            }
-        )
+            })
         Assert.assertNull(util.getActiveBrokerFromAccountManager())
     }
 
@@ -71,8 +70,7 @@ class AccountManagerBrokerDiscoveryUtilTests {
             },
             getAccountManagerApps = {
                 getMockedAccountManager()?.authenticatorTypes!!
-            }
-        )
+            })
         Assert.assertNotNull(util.getActiveBrokerFromAccountManager())
     }
 
@@ -86,8 +84,7 @@ class AccountManagerBrokerDiscoveryUtilTests {
             },
             getAccountManagerApps = {
                 getMockedAccountManager()?.authenticatorTypes!!
-            }
-        )
+            })
         Assert.assertNotNull(util.getActiveBrokerFromAccountManager())
     }
 
@@ -114,8 +111,7 @@ class AccountManagerBrokerDiscoveryUtilTests {
             },
             getAccountManagerApps = {
                 accountManager.authenticatorTypes
-            }
-        )
+            })
         Assert.assertNull(util.getActiveBrokerFromAccountManager())
     }
 
@@ -139,9 +135,9 @@ class AccountManagerBrokerDiscoveryUtilTests {
         val authenticatorDescription = AuthenticatorDescription(
             "com.microsoft.workaccount",
             AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
-            0, // label id
-            0, // icon id
-            0, // small icon id
+            0,  // label id
+            0,  // icon id
+            0,  // small icon id
             0 // pref id
         )
         val mockedAuthenticator = Mockito.spy(authenticatorDescription)

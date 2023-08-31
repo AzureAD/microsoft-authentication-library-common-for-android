@@ -247,13 +247,4 @@ abstract class BaseNativeAuthController : BaseController() {
     override fun getCachedAccountRecordFromAllCaches(parameters: SilentTokenCommandParameters): AccountRecord? {
         throw ClientException("getCachedAccountRecordFromAllCaches() not supported in NativeAuthController")
     }
-
-    @Throws(Exception::class)
-    @Deprecated(
-        level = DeprecationLevel.HIDDEN,
-        message = "isMsaAccount() not supported in NativeAuthController"
-    )
-    override fun isMsaAccount(microsoftTokenResponse: MicrosoftTokenResponse?): Boolean {
-        throw ClientException("isMsaAccount() not supported in NativeAuthController")
-    }
 }

@@ -27,6 +27,7 @@ import android.os.Bundle
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.internal.broker.BrokerValidator
 import com.microsoft.identity.common.logging.Logger
+import java.util.concurrent.TimeUnit
 
 /**
  * With the new broker selection mechanism, it is possible that the active broker that actually
@@ -43,10 +44,9 @@ import com.microsoft.identity.common.logging.Logger
  * */
 class ActiveBrokerCacheUpdater(
     private val isValidBroker: (BrokerData) -> Boolean,
-    private val cache: IActiveBrokerCache
-) {
+    private val cache: IClientActiveBrokerCache) {
 
-    constructor(context: Context, cache: IActiveBrokerCache) : this(
+    constructor(context: Context, cache: IClientActiveBrokerCache): this(
         isValidBroker = { brokerData: BrokerData ->
             BrokerValidator(context).isSignedByKnownKeys(brokerData)
         },
@@ -64,6 +64,15 @@ class ActiveBrokerCacheUpdater(
         const val ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_KEY = "active.broker.signing.certificate.thumbprint"
 
         /**
+         * Keys indicating that the "broker discovery" feature is turned off on the Broker side.
+         * (and therefore the SDK should fall back to using Account Manager to figure out which app is the active broker.)
+         *
+         * Do NOT change the value of these parameters (it's a breaking change!)
+         */
+        const val BROKER_DISCOVERY_DISABLED_KEY = "broker.discovery.disabled"
+
+
+        /**
          * Adds the active broker information to the result bundle.
          *
          * @param bundle       The result bundle.
@@ -71,26 +80,44 @@ class ActiveBrokerCacheUpdater(
          */
         @JvmStatic
         fun appendActiveBrokerToResultBundle(bundle: Bundle, activeBroker: BrokerData) {
-            bundle.putString(
-                ACTIVE_BROKER_PACKAGE_NAME_KEY,
-                activeBroker.packageName
-            )
-            bundle.putString(
-                ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_KEY,
-                activeBroker.signingCertificateThumbprint
-            )
+            bundle.putString(ACTIVE_BROKER_PACKAGE_NAME_KEY,
+                activeBroker.packageName)
+            bundle.putString(ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_KEY,
+                activeBroker.signingCertificateThumbprint)
+        }
+
+        /**
+         * Adds the "broker discovery is now disabled" to the result bundle.
+         *
+         * @param bundle       The result bundle.
+         */
+        @JvmStatic
+        fun appendBrokerDiscoveryDisabledToResultBundle(bundle: Bundle) {
+            bundle.putBoolean(BROKER_DISCOVERY_DISABLED_KEY, true)
         }
     }
 
     /**
-     * If the active broker is returned with the result bundle,
-     * update [IActiveBrokerCache] with it.
+     * If the active broker is returned with the result bundle, update [IActiveBrokerCache] with it.
+     * If the active broker indicates that the broker discovery is disabled, wipe [IActiveBrokerCache].
      *
-     * @param bundle       The result bundle. could be null (for backward compatibility).
+     * @param bundle    The result bundle. could be null (for backward compatibility).
      */
     fun updateCachedActiveBrokerFromResultBundle(bundle: Bundle?) {
         val methodTag = "$TAG:updateCachedActiveBrokerFromResultBundle"
         if (bundle == null) {
+            return
+        }
+
+        val shouldWipeCachedActiveBroker = bundle.getBoolean(BROKER_DISCOVERY_DISABLED_KEY, false)
+        if (shouldWipeCachedActiveBroker) {
+            Logger.info(methodTag, "Got a response indicating that the broker discovery is disabled." +
+                    "Will also wipe the local active broker cache," +
+                    "and skip broker discovery via IPC (only fall back to AccountManager) for the next 60 minutes.")
+            cache.clearCachedActiveBroker()
+            cache.setShouldUseAccountManagerForTheNextMilliseconds(
+                TimeUnit.MINUTES.toMillis(60)
+            )
             return
         }
 
@@ -103,11 +130,8 @@ class ActiveBrokerCacheUpdater(
 
         val brokerData = BrokerData(packageName, signingCertThumbprint)
         if (!isValidBroker(brokerData)) {
-            Logger.warn(
-                methodTag,
-                "Cannot find an installed $packageName with a matching " +
-                    "signing certificate thumbprint."
-            )
+            Logger.warn(methodTag, "Cannot find an installed $packageName with a matching " +
+                    "signing certificate thumbprint.")
             return
         }
 

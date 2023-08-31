@@ -49,7 +49,7 @@ class AccountManagerBrokerDiscoveryUtil(
         val TAG = AccountManagerBrokerDiscoveryUtil::class.simpleName
     }
 
-    constructor(context: Context) : this(
+    constructor(context: Context): this(
         knownBrokerApps = BrokerData.getKnownBrokerApps(),
         isSignedByKnownKeys = { brokerData ->
             BrokerValidator(context).isSignedByKnownKeys(brokerData)
@@ -63,8 +63,8 @@ class AccountManagerBrokerDiscoveryUtil(
      * Returns the owner of [AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE], which we (previously)
      * use to determine the active broker (if installed).
      **/
-    fun getActiveBrokerFromAccountManager(): BrokerData? {
-        val methodTag = "$TAG:getActiveBrokerFromAccountManager"
+    fun getActiveBrokerFromAccountManager() : BrokerData? {
+        val methodTag = "${TAG}:getActiveBrokerFromAccountManager"
 
         val authenticators = try {
             getAccountManagerApps()
@@ -75,7 +75,7 @@ class AccountManagerBrokerDiscoveryUtil(
         Logger.info(methodTag, "${authenticators.size} Authenticators registered.")
 
         authenticators.forEach { authenticator ->
-            if (authenticator.packageName == null || authenticator.type == null) {
+            if (authenticator.packageName == null || authenticator.type == null){
                 return@forEach
             }
 

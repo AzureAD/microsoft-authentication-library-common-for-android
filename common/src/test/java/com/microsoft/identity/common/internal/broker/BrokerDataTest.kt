@@ -45,8 +45,8 @@ import org.robolectric.RobolectricTestRunner
 class BrokerDataTest {
 
     @After
-    fun tearDown() {
-        // Reset value.
+    fun tearDown(){
+        //Reset value.
         setShouldTrustDebugBrokers(BuildConfig.DEBUG)
     }
 
@@ -75,10 +75,8 @@ class BrokerDataTest {
     }
 
     @Test
-    fun testEqual() {
-        Assert.assertTrue(
-            BrokerData("HelloPackage", "HelloCertHash")
-                == BrokerData("HelloPackage", "HelloCertHash")
-        )
+    fun testEqual(){
+        Assert.assertTrue(BrokerData("HelloPackage", "HelloCertHash")
+                == BrokerData("HelloPackage", "HelloCertHash"))
     }
 }
