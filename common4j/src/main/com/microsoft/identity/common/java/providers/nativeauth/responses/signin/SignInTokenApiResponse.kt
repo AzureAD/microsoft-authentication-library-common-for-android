@@ -49,7 +49,7 @@ data class SignInTokenApiResponse(
                     )
                 }
                 errorCodes[0].isOtpCodeIncorrect() -> {
-                    SignInTokenApiResult.InvalidAuthenticationType(
+                    SignInTokenApiResult.CodeIncorrect(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
                         errorCodes = errorCodes

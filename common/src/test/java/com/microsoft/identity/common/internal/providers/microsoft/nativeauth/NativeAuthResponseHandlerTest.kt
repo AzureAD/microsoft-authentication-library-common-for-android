@@ -2602,7 +2602,7 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
-    fun testSignInTokenApiResponseOtpCodeIncorrectWithErrorCode1() {
+    fun testSignInTokenApiResponseOtpCodeIncorrectWithInvalidGrantErrorCode1() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
             credentialToken = null,
@@ -2629,7 +2629,34 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
-    fun testSignInTokenApiResponseOtpCodeIncorrectWithErrorCode2() {
+    fun testSignInTokenApiResponseOtpCodeIncorrectWithInvalidRequestErrorCode1() {
+        val signInTokenApiResponse = SignInTokenApiResponse(
+            statusCode = errorStatusCode,
+            credentialToken = null,
+            error = invalidRequestError,
+            errorCodes = listOf(incorrectOOBErrorCode1),
+            errorDescription = incorrectOtpDescription,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = null,
+            scope = null,
+            expiresIn = null,
+            extExpiresIn = null,
+            accessToken = null,
+            refreshToken = null,
+            idToken = null,
+            clientInfo = null,
+            details = null
+        )
+
+        val apiResult = signInTokenApiResponse.toErrorResult()
+        assertTrue(apiResult is SignInTokenApiResult.CodeIncorrect)
+        assertEquals(invalidRequestError, (apiResult as SignInTokenApiResult.CodeIncorrect).error)
+        assertEquals(incorrectOtpDescription, apiResult.errorDescription)
+    }
+
+    @Test
+    fun testSignInTokenApiResponseOtpCodeIncorrectWithInvalidGrantErrorCode2() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
             credentialToken = null,
@@ -2656,7 +2683,34 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
-    fun testSignInTokenApiResponseOtpCodeIncorrectWithErrorCode3() {
+    fun testSignInTokenApiResponseOtpCodeIncorrectWithInvalidRequestErrorCode2() {
+        val signInTokenApiResponse = SignInTokenApiResponse(
+            statusCode = errorStatusCode,
+            credentialToken = null,
+            error = invalidRequestError,
+            errorCodes = listOf(incorrectOOBErrorCode2),
+            errorDescription = incorrectOtpDescription,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = null,
+            scope = null,
+            expiresIn = null,
+            extExpiresIn = null,
+            accessToken = null,
+            refreshToken = null,
+            idToken = null,
+            clientInfo = null,
+            details = null
+        )
+
+        val apiResult = signInTokenApiResponse.toErrorResult()
+        assertTrue(apiResult is SignInTokenApiResult.CodeIncorrect)
+        assertEquals(invalidRequestError, (apiResult as SignInTokenApiResult.CodeIncorrect).error)
+        assertEquals(incorrectOtpDescription, apiResult.errorDescription)
+    }
+
+    @Test
+    fun testSignInTokenApiResponseOtpCodeIncorrectWithInvalidGrantErrorCode3() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
             credentialToken = null,
@@ -2679,6 +2733,33 @@ class NativeAuthResponseHandlerTest {
         val apiResult = signInTokenApiResponse.toErrorResult()
         assertTrue(apiResult is SignInTokenApiResult.CodeIncorrect)
         assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.CodeIncorrect).error)
+        assertEquals(incorrectOtpDescription, apiResult.errorDescription)
+    }
+
+    @Test
+    fun testSignInTokenApiResponseOtpCodeIncorrectWithInvalidRequestErrorCode3() {
+        val signInTokenApiResponse = SignInTokenApiResponse(
+            statusCode = errorStatusCode,
+            credentialToken = null,
+            error = invalidRequestError,
+            errorCodes = listOf(incorrectOOBErrorCode3),
+            errorDescription = incorrectOtpDescription,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = null,
+            scope = null,
+            expiresIn = null,
+            extExpiresIn = null,
+            accessToken = null,
+            refreshToken = null,
+            idToken = null,
+            clientInfo = null,
+            details = null
+        )
+
+        val apiResult = signInTokenApiResponse.toErrorResult()
+        assertTrue(apiResult is SignInTokenApiResult.CodeIncorrect)
+        assertEquals(invalidRequestError, (apiResult as SignInTokenApiResult.CodeIncorrect).error)
         assertEquals(incorrectOtpDescription, apiResult.errorDescription)
     }
 
