@@ -69,6 +69,7 @@ class NativeAuthResponseHandler {
                 null,
                 null,
                 null,
+                null,
                 null
             )
         }

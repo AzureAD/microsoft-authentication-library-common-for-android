@@ -78,12 +78,12 @@ data class SignInInitiateApiResponse(
                 else {
                     SignInInitiateApiResult.Success(
                         credentialToken = credentialToken
-                        ?: return SignInInitiateApiResult.UnknownError(
-                            error = "invalid_state",
-                            errorDescription = "SignIn /initiate did not return a flow token",
-                            details = details,
-                            errorCodes = errorCodes.orEmpty()
-                        )
+                            ?: return SignInInitiateApiResult.UnknownError(
+                                error = "invalid_state",
+                                errorDescription = "SignIn /initiate did not return a flow token",
+                                details = details,
+                                errorCodes = errorCodes.orEmpty()
+                            )
                     )
                 }
             }

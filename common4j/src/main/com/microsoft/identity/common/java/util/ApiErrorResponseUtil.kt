@@ -90,6 +90,10 @@ internal fun Int?.isUserNotFound(): Boolean {
     return this == 50034
 }
 
+internal fun Int?.isInvalidEmail() : Boolean {
+    return this == 90100
+}
+
 internal fun Int?.isInvalidCredentials(): Boolean {
     return this == 50126
 }

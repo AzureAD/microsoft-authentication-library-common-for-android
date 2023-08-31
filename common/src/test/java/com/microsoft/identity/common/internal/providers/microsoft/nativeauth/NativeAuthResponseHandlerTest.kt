@@ -103,6 +103,7 @@ class NativeAuthResponseHandlerTest {
     private val userNotFoundError = "user_not_found"
     private val userAlreadyExistsError = "user_already_exists"
     private val invalidErrorCode = 0
+    private val invalidEmailErrorCode = 90100
     private val userNotFoundErrorCode = 50034
     private val errorStatusCode = 400
     private val successStatusCode = 200
@@ -180,6 +181,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = null,
             signupToken = signupToken,
             error = verificationRequiredErrorCode,
+            errorCodes = null,
             errorDescription = null,
             unverifiedAttributes = userAttributes,
             invalidAttributes = null,
@@ -201,6 +203,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = null,
             signupToken = null,
             error = null,
+            errorCodes = null,
             errorDescription = null,
             unverifiedAttributes = userAttributes,
             invalidAttributes = null,
@@ -218,6 +221,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = null,
             signupToken = signupToken,
             error = null,
+            errorCodes = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -235,6 +239,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = null,
             signupToken = null,
             error = userAlreadyExistsError,
+            errorCodes = null,
             errorDescription = passwordBasedAuthNotSupported,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -245,12 +250,30 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
+    fun testSignUpStartApiResponseInvalidEmail() {
+        val signUpStartApiResponse = SignUpStartApiResponse(
+            statusCode = errorStatusCode,
+            challengeType = null,
+            signupToken = null,
+            error = null,
+            errorCodes = listOf(invalidEmailErrorCode),
+            errorDescription = null,
+            unverifiedAttributes = null,
+            invalidAttributes = null,
+            details = null
+        )
+        val apiResult = signUpStartApiResponse.toResult()
+        assertTrue(apiResult is SignUpStartApiResult.InvalidEmail)
+    }
+
+    @Test
     fun testSignUpStartApiResponseUnsupportedChallengeType() {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
             signupToken = null,
             error = unsupportedChallengeTypeError,
+            errorCodes = null,
             errorDescription = passwordBasedAuthNotSupported,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -267,6 +290,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = null,
             signupToken = null,
             error = passwordTooWeakError,
+            errorCodes = null,
             errorDescription = passwordBasedAuthNotSupported,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -283,6 +307,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = null,
             signupToken = null,
             error = passwordTooLongError,
+            errorCodes = null,
             errorDescription = passwordBasedAuthNotSupported,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -299,6 +324,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = null,
             signupToken = null,
             error = passwordTooShortError,
+            errorCodes = null,
             errorDescription = passwordBasedAuthNotSupported,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -315,6 +341,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = null,
             signupToken = null,
             error = passwordBannedError,
+            errorCodes = null,
             errorDescription = passwordBasedAuthNotSupported,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -331,6 +358,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = null,
             signupToken = null,
             error = passwordRecentlyUsedError,
+            errorCodes = null,
             errorDescription = passwordBasedAuthNotSupported,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -347,6 +375,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = redirect,
             signupToken = null,
             error = null,
+            errorCodes = null,
             errorDescription = null,
             unverifiedAttributes = invalidAttributes,
             invalidAttributes = null,
@@ -364,6 +393,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = null,
             signupToken = null,
             error = authNotSupportedErrorCode,
+            errorCodes = null,
             errorDescription = passwordBasedAuthNotSupported,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -380,6 +410,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = null,
             signupToken = null,
             error = attributeValidationFailedErrorCode,
+            errorCodes = null,
             errorDescription = attributesValidationFailed,
             unverifiedAttributes = null,
             invalidAttributes = invalidAttributes,
@@ -396,6 +427,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = null,
             signupToken = null,
             error = null,
+            errorCodes = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,

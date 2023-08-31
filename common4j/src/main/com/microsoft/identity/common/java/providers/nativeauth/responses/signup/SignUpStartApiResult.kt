@@ -78,6 +78,14 @@ sealed interface SignUpStartApiResult {
         errorDescription = errorDescription,
     ), SignUpStartApiResult
 
+    data class InvalidEmail(
+        override val error: String,
+        override val errorDescription: String
+    ): ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), SignUpStartApiResult
+
     data class AuthNotSupported(
         override val error: String,
         override val errorDescription: String,

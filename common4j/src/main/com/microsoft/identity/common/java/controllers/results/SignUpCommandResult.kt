@@ -69,6 +69,12 @@ interface SignUpCommandResult {
         SignUpSubmitUserAttributesCommandResult,
         SignUpSubmitCodeCommandResult
 
+    data class InvalidEmail(
+        val error: String,
+        val errorDescription: String,
+        val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()
+    ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult
+
     data class InvalidPassword(
         val error: String,
         val errorDescription: String,

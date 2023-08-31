@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
 import com.microsoft.identity.common.java.util.isAttributeValidationFailed
 import com.microsoft.identity.common.java.util.isAuthNotSupported
+import com.microsoft.identity.common.java.util.isInvalidEmail
 import com.microsoft.identity.common.java.util.isPasswordBanned
 import com.microsoft.identity.common.java.util.isPasswordRecentlyUsed
 import com.microsoft.identity.common.java.util.isPasswordTooLong
@@ -48,7 +49,8 @@ data class SignUpStartApiResponse(
     @Expose @SerializedName("unverified_attributes") val unverifiedAttributes: List<Map<String, String>>?,
     @Expose @SerializedName("invalid_attributes") val invalidAttributes: List<Map<String, String>>?,
     @Expose @SerializedName("details") val details: List<Map<String, String>>?,
-    @Expose @SerializedName("challenge_type") val challengeType: String?
+    @Expose @SerializedName("challenge_type") val challengeType: String?,
+    @Expose @SerializedName("error_codes") val errorCodes: List<Int>?
 ) : IApiResponse(statusCode) {
 
     companion object {
@@ -65,6 +67,12 @@ data class SignUpStartApiResponse(
                 when {
                     error.isUserAlreadyExists() -> {
                         SignUpStartApiResult.UsernameAlreadyExists(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    errorCodes?.get(0).isInvalidEmail() -> {
+                        SignUpStartApiResult.InvalidEmail(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty()
                         )

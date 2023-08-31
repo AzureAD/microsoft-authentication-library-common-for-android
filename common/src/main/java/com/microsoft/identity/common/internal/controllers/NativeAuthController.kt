@@ -382,7 +382,12 @@ class NativeAuthController : BaseNativeAuthController() {
                         errorDescription = signUpStartApiResult.errorDescription
                     )
                 }
-
+                is SignUpStartApiResult.InvalidEmail -> {
+                    SignUpCommandResult.InvalidEmail(
+                        error = signUpStartApiResult.error,
+                        errorDescription = signUpStartApiResult.errorDescription
+                    )
+                }
                 is SignUpStartApiResult.AuthNotSupported -> {
                     SignUpCommandResult.AuthNotSupported(
                         error = signUpStartApiResult.error,
