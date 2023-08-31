@@ -88,7 +88,7 @@ public class BrowserEdge extends App implements IBrowser {
         launch();
 
         //  Click on the search bar in the browser UI
-        UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/search_box_text");
+        UiAutomatorUtils.handleButtonClickForObjectWithText("Search or type web address");
 
         final UiObject inputField = UiAutomatorUtils.obtainUiObjectWithResourceId(
                 "com.microsoft.emmx:id/url_bar"
