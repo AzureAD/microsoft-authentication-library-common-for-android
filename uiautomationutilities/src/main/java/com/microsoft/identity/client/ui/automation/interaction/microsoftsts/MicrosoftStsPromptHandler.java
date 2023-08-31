@@ -137,7 +137,11 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
         }
 
         if (parameters.isSecondPasswordPageExpected()) {
-            loginComponentHandler.handlePasswordField(password);
+            try {
+                loginComponentHandler.handlePasswordField(password);
+            } catch (AssertionError e) {
+                throw new AssertionError("Prompt handler failed to handle second password prompt...", e);
+            }
         }
     }
 }

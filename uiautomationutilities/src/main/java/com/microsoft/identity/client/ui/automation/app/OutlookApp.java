@@ -86,8 +86,8 @@ public class OutlookApp extends App implements IFirstPartyApp {
         // Make sure we are on add another account (shows up after an account is added)
         final UiObject addAnotherAccountScreen = UiAutomatorUtils.obtainUiObjectWithText("Add another account");
         Assert.assertTrue(
-                "Add another account screen appears in Outlook account.",
-                addAnotherAccountScreen.waitForExists(CommonUtils.FIND_UI_ELEMENT_TIMEOUT)
+                "Add another account screen doesn't appear in Outlook.",
+                addAnotherAccountScreen.waitForExists(FIND_UI_ELEMENT_TIMEOUT_LONG)
         );
 
         // click may be later
