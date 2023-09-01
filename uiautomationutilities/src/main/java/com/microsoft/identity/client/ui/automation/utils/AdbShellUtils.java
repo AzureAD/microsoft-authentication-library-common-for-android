@@ -96,6 +96,7 @@ public class AdbShellUtils {
         installCmdBuilder.append(packageName);
         final String result = executeShellCommand(installCmdBuilder.toString());
         final String result2 = executeShellCommand("ls /data/local/tmp");
+        final String result3 = executeShellCommand("ls /sdcard");
         Assert.assertNotNull(result);
         Assert.assertEquals(result2, "Success", result.trim());
     }
