@@ -154,54 +154,26 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
         }
     }
 
-    private String getStringInternal(final String key, String valueFromSharedPrefs)
-    {
-        // Check the cache for the (potentially decrypted) value from the cache, and return
-        synchronized (cacheLock) {
-            String memCache = fileCache.get(key);
-            if (memCache != null) {
-                return memCache;
-            }
-        }
-
-        // Only lookup a value if one was not provided.  Calls like 'getAll' already know the value
-        // and only use this function for caching and decryption.
-        if (valueFromSharedPrefs == null)
-        {
-            valueFromSharedPrefs = mSharedPreferences.getString(key, null);
-        }
-
-        String value = valueFromSharedPrefs;
-        if (null != mEncryptionManager && !StringUtil.isNullOrEmpty(value)) {
-            value = decrypt(value);
-
-            if (StringUtil.isNullOrEmpty(value)) {
-                logWarningAndRemoveKey(key);
-            }
-        }
-
-        // Write back any (potentially decrypted) value from shared prefs read into the cache,
-        // the same way we would on an explicit write.
-        //
-        // This will also check the cache under the lock one more time, so any new values that came in while
-        // decryption was happening outside the lock will still win over our SharedPreferences-based value.    
-        synchronized (cacheLock) {
-            String memCache = fileCache.get(key);
-            if (memCache != null) {
-                return memCache;
-            }
-            if (!StringUtil.isNullOrEmpty(value)) {
-                fileCache.put(key, value);
-            }
-        }
-
-        return value;
-    }
-
     @Override
     @Nullable
     public final String getString(final String key) {
-        return getStringInternal(key, null);
+        synchronized (cacheLock) {
+            String memCache = fileCache.get(key);
+            if (memCache != null) {
+                return memCache;
+            }
+            String restoredValue = mSharedPreferences.getString(key, null);
+
+            if (null != mEncryptionManager && !StringUtil.isNullOrEmpty(restoredValue)) {
+                restoredValue = decrypt(restoredValue);
+
+                if (StringUtil.isNullOrEmpty(restoredValue)) {
+                    logWarningAndRemoveKey(key);
+                }
+            }
+
+            return restoredValue;
+        }
     }
 
     @Override
@@ -244,7 +216,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
                 final Map.Entry<String, String> entry = iterator.next();
                 //This is slightly wasteful, but we have no better key iterator and decryption
                 //is probably more painful than the additional file read when we miss in the cache.
-                String decryptedValue = getStringInternal(entry.getKey(), entry.getValue());
+                String decryptedValue = getString(entry.getKey());
                 if (!StringUtil.isNullOrEmpty(decryptedValue)) {
                     entry.setValue(decryptedValue);
                 }
@@ -275,7 +247,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
                     Map.Entry<String, String> nextElement = iterator.next();
                     if (keyFilter.test(nextElement.getKey())) {
                         if (mEncryptionManager != null) {
-                            String decryptedValue = getStringInternal(nextElement.getKey(), nextElement.getValue());
+                            String decryptedValue = getString(nextElement.getKey());
                             if (!StringUtil.isNullOrEmpty(decryptedValue)) {
                                 nextEntry = new AbstractMap.SimpleEntry<String, String>(nextElement.getKey(), decryptedValue);
                             }

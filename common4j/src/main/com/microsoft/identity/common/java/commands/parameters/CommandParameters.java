@@ -115,6 +115,7 @@ public class CommandParameters {
     public String getApplicationIdentifier(){
         return String.format(APPLICATION_IDENTIFIER_FORMAT, this.callerPackageName, this.callerSignature);
     }
+
 }
 
 

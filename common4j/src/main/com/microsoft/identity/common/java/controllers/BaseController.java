@@ -22,6 +22,12 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.controllers;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_HEADER;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_VERSION;
+import static com.microsoft.identity.common.java.authorities.Authority.B2C;
+import static com.microsoft.identity.common.java.exception.ServiceException.SERVICE_NOT_AVAILABLE;
+import static com.microsoft.identity.common.java.util.ResultUtil.logExposedFieldsOfObject;
+
 import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authorities.Authority;
@@ -92,12 +98,6 @@ import java.util.regex.Pattern;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_HEADER;
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_VERSION;
-import static com.microsoft.identity.common.java.authorities.Authority.B2C;
-import static com.microsoft.identity.common.java.exception.ServiceException.SERVICE_NOT_AVAILABLE;
-import static com.microsoft.identity.common.java.util.ResultUtil.logExposedFieldsOfObject;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class BaseController {

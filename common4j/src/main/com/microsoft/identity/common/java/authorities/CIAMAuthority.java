@@ -81,7 +81,7 @@ public class CIAMAuthority extends Authority {
     public OAuth2Strategy createOAuth2Strategy(OAuth2StrategyParameters parameters) throws ClientException {
         final MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
 
-        // CIAM Authorities fetch endpoints from open id configuration, communicate that to
+        // CIAM Authorities fetch endpoints from open if configuration, communicate that to
         // strategy through parameters
         parameters.setUsingOpenIdConfiguration(CIAM_USE_OPENID_CONFIGURATION);
 

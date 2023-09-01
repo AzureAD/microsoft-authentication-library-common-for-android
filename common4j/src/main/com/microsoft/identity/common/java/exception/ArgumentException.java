@@ -49,6 +49,7 @@ public class ArgumentException extends BaseException {
     public final static String AUTHENTICATION_SCHEME_ARGUMENT_NAME = "authentication_scheme";
 
     public final static String ILLEGAL_ARGUMENT_ERROR_CODE = "illegal_argument_exception";
+
     private String mOperationName;
     private String mArgumentName;
 

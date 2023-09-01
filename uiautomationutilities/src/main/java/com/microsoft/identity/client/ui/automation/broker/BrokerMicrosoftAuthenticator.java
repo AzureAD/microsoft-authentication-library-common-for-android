@@ -390,11 +390,6 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         ((BrokerAuthenticatorUpdatedVersionImpl) brokerMicrosoftAuthenticatorImpl).shouldUseDeviceSettingsPage = shouldUseDeviceSettingsPage;
     }
 
-    public void setShouldUseDeviceSettingsPage(final boolean shouldUseDeviceSettingsPage) {
-        Assert.assertTrue("Cannot set shouldUseDeviceSettingsPage for BrokerAuthenticatorPreviousVersionImpl", brokerMicrosoftAuthenticatorImpl instanceof BrokerAuthenticatorUpdatedVersionImpl);
-        ((BrokerAuthenticatorUpdatedVersionImpl) brokerMicrosoftAuthenticatorImpl).shouldUseDeviceSettingsPage = shouldUseDeviceSettingsPage;
-    }
-
     @Override
     public void handleFirstRun() {
         if (shouldHandleFirstRun) {

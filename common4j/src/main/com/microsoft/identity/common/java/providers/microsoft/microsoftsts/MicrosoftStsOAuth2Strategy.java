@@ -22,6 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_VERSION;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.CHALLENGE_REQUEST_HEADER;
+import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2Scopes.CLAIMS_UPDATE_RESOURCE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_ID;
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
+import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
+
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
@@ -86,16 +96,6 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_VERSION;
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.CHALLENGE_REQUEST_HEADER;
-import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2Scopes.CLAIMS_UPDATE_RESOURCE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
-import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
-import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_ID;
-import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
-import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
-
 // Suppressing rawtype warnings due to the generic type AuthorizationStrategy, AuthorizationResult, AuthorizationResultFactory and MicrosoftAuthorizationRequest
 @SuppressWarnings(WarningType.rawtype_warning)
 public class MicrosoftStsOAuth2Strategy
@@ -124,7 +124,7 @@ public class MicrosoftStsOAuth2Strategy
      */
     private static final String RESOURCE_DEFAULT_SCOPE = "/.default";
 
-    public final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
+    private final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
     private OpenIdProviderConfiguration mOpenIdProviderConfiguration;
 
     /**

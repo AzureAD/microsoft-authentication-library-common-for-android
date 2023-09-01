@@ -36,4 +36,3 @@ interface IBrokerDiscoveryClient {
      * **/
     fun getActiveBroker(shouldSkipCache: Boolean = false) : BrokerData?
 }
-
