@@ -1,6 +1,6 @@
 V.Next
 ----------
-- [MINOR] Add isMsaHomeTenantAlias util method in AzureActiveDirectoryAudience (#2165)
+- [MINOR] Add MsaGrantedRefreshTokenNotSupportedOnAadTenant error code to ServiceException (#2165)
 - [MAJOR] Separate Broker API and Client SDK Active Broker caches (#2164)
 - [MINOR] Deprecate Common logger wrapper (#2157)
 - [PATCH] Fix NPE in OTEL code for DCF flow (#2139)
