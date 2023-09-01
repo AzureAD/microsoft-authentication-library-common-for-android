@@ -25,6 +25,8 @@ package com.microsoft.identity.common.java.providers.oauth2;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 
+import java.util.List;
+
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Builder;
 import lombok.Getter;
@@ -44,8 +46,17 @@ public class OAuth2StrategyParameters {
     @Nullable
     private final transient AbstractAuthenticationScheme mAuthenticationScheme;
 
+    // TODO preferably this would live in a dedicated NativeAuthOAuth2StrategyParameters class, but
+    // that would require adding generics to Authority.java
+    @Nullable
+    public final List<String> mChallengeTypes;
+
     // TODO: Consider moving this field into MicrosoftStsOAuth2Configuration and updating it's endpoint methods
     //  to use OpenId Configuration.
     @Setter
     private transient boolean mUsingOpenIdConfiguration;
+
+    public void setUsingOpenIdConfiguration(final boolean isUsingOpenIdConfiguration){
+        mUsingOpenIdConfiguration = isUsingOpenIdConfiguration;
+    }
 }
