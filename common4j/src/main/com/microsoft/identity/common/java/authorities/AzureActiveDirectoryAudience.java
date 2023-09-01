@@ -141,6 +141,17 @@ public abstract class AzureActiveDirectoryAudience {
                 || tenantId.equalsIgnoreCase(ORGANIZATIONS);
     }
 
+
+    /**
+     * Util method which returns true if the tenant alias is "common" ,
+     * "consumers" or MSA mega tenant.
+     */
+    public static boolean isMsaHomeTenantAlias(@NonNull final String tenantId) {
+        return tenantId.equalsIgnoreCase(AzureActiveDirectoryAudience.ALL)
+                || tenantId.equalsIgnoreCase(AzureActiveDirectoryAudience.CONSUMERS)
+                || tenantId.equalsIgnoreCase(AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID);
+    }
+
     private static OpenIdProviderConfiguration loadOpenIdProviderConfigurationMetadata(
             @NonNull final String requestAuthority) throws ServiceException, ClientException {
         final String methodName = ":loadOpenIdProviderConfigurationMetadata";
