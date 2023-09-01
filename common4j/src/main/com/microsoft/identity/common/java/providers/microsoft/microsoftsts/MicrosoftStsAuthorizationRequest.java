@@ -294,7 +294,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         }
 
         try {
-            return UrlUtil.appendPathToURL(this.getAuthority(), AUTHORIZATION_ENDPOINT, null).toString();
+            return UrlUtil.appendPathToURL(this.getAuthority(), AUTHORIZATION_ENDPOINT).toString();
         } catch (final URISyntaxException | MalformedURLException e) {
             throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
         }

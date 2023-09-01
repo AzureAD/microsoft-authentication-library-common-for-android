@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
+import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -60,28 +62,28 @@ public class UrlUtilTest {
     @Test
     public void testAppendEmptyPathUrl() throws MalformedURLException, URISyntaxException {
         Assert.assertEquals(new URL("https://www.test.com"),
-                UrlUtil.appendPathToURL(new URL("https://www.test.com"), null, null));
+                UrlUtil.appendPathToURL(new URL("https://www.test.com"), null));
 
         Assert.assertEquals(new URL("https://www.test.com"),
-                UrlUtil.appendPathToURL(new URL("https://www.test.com"), "", null));
+                UrlUtil.appendPathToURL(new URL("https://www.test.com"), ""));
     }
 
     @Test
     public void testAppendPathStringWithExtraSlashes() throws MalformedURLException, URISyntaxException {
         Assert.assertEquals(new URL("https://www.test.com/this/is/a/path"),
-                UrlUtil.appendPathToURL(new URL("https://www.test.com"), "//this/is/a//path", null));
+                UrlUtil.appendPathToURL(new URL("https://www.test.com"), "//this/is/a//path"));
     }
 
     @Test
     public void testAppendPathStringWithoutStartingSlash() throws MalformedURLException, URISyntaxException {
         Assert.assertEquals(new URL("https://www.test.com/path"),
-                UrlUtil.appendPathToURL(new URL("https://www.test.com"), "path", null));
+                UrlUtil.appendPathToURL(new URL("https://www.test.com"), "path"));
     }
 
     @Test
     public void testAppendPathStringToUrlWithPath() throws MalformedURLException, URISyntaxException {
         Assert.assertEquals(new URL("https://www.test.com/path/another/path"),
-                UrlUtil.appendPathToURL(new URL("https://www.test.com/path"), "/another/path", null));
+                UrlUtil.appendPathToURL(new URL("https://www.test.com/path"), "/another/path"));
     }
 
     @Test

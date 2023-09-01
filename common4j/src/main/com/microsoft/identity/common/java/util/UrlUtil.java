@@ -43,6 +43,12 @@ import lombok.NonNull;
 public class UrlUtil {
     private static final String TAG = UrlUtil.class.getSimpleName();
 
+    public static URL appendPathToURL(@NonNull final URL urlToAppend,
+                                      @Nullable final String pathString) // TODO remove post test slice
+            throws URISyntaxException, MalformedURLException {
+        return appendPathToURL(urlToAppend, pathString, null);
+    }
+
     /**
      * Append a given path string to a URL.
      *

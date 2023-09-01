@@ -215,7 +215,7 @@ class NativeAuthOAuth2Configuration(
             if (BuildValues.DC.isNotEmpty()) {
                 UrlUtil.appendPathToURL(root, endpointSuffix, "dc=${BuildValues.DC}")
             } else {
-                UrlUtil.appendPathToURL(root, endpointSuffix, null)
+                UrlUtil.appendPathToURL(root, endpointSuffix)
             }
         } catch (e: URISyntaxException) {
             LogSession.logException(tag = TAG, throwable = e)
