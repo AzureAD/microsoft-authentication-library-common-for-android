@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Add isMsaHomeTenantAlias util method in AzureActiveDirectoryAudience (#2165)
 - [MINOR] Deprecate Common logger wrapper (#2157)
 - [PATCH] Fix NPE in OTEL code for DCF flow (#2139)
 - [PATCH] Fixed debug apps not recognized as active broker issue (#2138)
