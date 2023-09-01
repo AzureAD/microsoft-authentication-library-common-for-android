@@ -64,7 +64,7 @@ public class BrokerHost extends AbstractTestBroker {
     // name for broker host APKs
     public final static String BROKER_HOST_APK = "BrokerHost.apk";
     public final static String OLD_BROKER_HOST_APK = "OldBrokerHost.apk";
-    public final static String BROKER_HOST_WITHOUT_BROKER_SELECTION_APK = "BrokerHostWithoutBrokerSelection.apk";
+    public final static String BROKER_HOST_WITHOUT_BROKER_SELECTION_APK = "brokerhostWithoutBrokerSelectionEnabled.apk";
     public final static String BROKER_HOST_APK_PROD = "BrokerHostProd.apk";
     public final static String BROKER_HOST_APK_RC = "BrokerHostRC.apk";
     // Fragments for BrokerHost

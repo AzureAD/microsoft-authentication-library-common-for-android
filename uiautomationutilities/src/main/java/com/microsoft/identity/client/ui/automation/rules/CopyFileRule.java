@@ -57,6 +57,7 @@ public class CopyFileRule implements TestRule {
     private final String[] mApkFileNames = {
             BrokerHost.BROKER_HOST_APK,
             BrokerHost.OLD_BROKER_HOST_APK,
+            BrokerHost.BROKER_HOST_WITHOUT_BROKER_SELECTION_APK,
             AzureSampleApp.AZURE_SAMPLE_APK,
             AzureSampleApp.OLD_AZURE_SAMPLE_APK,
             BrokerMicrosoftAuthenticator.AUTHENTICATOR_APK,
