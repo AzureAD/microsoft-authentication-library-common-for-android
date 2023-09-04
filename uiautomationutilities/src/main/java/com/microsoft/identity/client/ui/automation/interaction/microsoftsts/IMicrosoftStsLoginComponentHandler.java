@@ -56,6 +56,11 @@ public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponen
     void handleRegistration();
 
     /**
+     * Respond to the Get the app page.
+     */
+    void handleGetTheAppPage();
+
+    /**
      * Clicks yes or no on the "Stay signed in?" screen that gets shown after user signs in.
      *
      * @param staySignedInResponse denotes whether to accept or decline the staySignedIn prompt.
@@ -69,12 +74,12 @@ public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponen
     void handleVerifyYourIdentity();
 
     /**
-     * Clickes "Select" when prompted with the choose certificate prompt
+     * Clickes "Select" when prompted with the choose certificate prompt.
      */
     void handleChooseCertificate();
 
     /**
-     * Handle the How would you like to sign in
+     * Handle the How would you like to sign in page.
      */
     void handleHowWouldYouLikeToSignIn();
 }

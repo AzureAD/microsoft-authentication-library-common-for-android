@@ -1,5 +1,7 @@
 V.Next
 ----------
+- [MINOR] Add MsaGrantedRefreshTokenNotSupportedOnAadTenant error code to ServiceException (#2165)
+- [MAJOR] Separate Broker API and Client SDK Active Broker caches (#2164)
 - [MINOR] Deprecate Common logger wrapper (#2157)
 - [PATCH] Fix NPE in OTEL code for DCF flow (#2139)
 - [PATCH] Fixed debug apps not recognized as active broker issue (#2138)
@@ -11,6 +13,7 @@ V.Next
 - [MINOR] Updated target, compile sdk, AGP and gradle versions  (#2142)
 - [MINOR] Add new apk name to BrokerHost infra (#2152)
 - [MINOR] Send key to request broker data in all BrokerOperationBundle (#2159)
+- [MINOR] Catch strongbox exception on Android 14 (#2158)
 
 V.15.0.0
 ----------

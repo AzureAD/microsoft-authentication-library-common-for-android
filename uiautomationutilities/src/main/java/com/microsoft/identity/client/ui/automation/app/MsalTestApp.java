@@ -99,7 +99,6 @@ public class MsalTestApp extends App {
         return result.getText();
     }
 
-
     // click on button acquire token silent
     public String acquireTokenSilent() throws UiObjectNotFoundException, InterruptedException {
         final UiObject acquireTokenSilentButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_acquiretokensilent");
