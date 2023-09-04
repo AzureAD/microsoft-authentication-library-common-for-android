@@ -27,6 +27,13 @@ V.15.0.0
 - [MINOR] Capture perf telemetry for cache & network operations (#2124)
 - [MINOR] Add method to flush shared preference file manager (#2130)
 - [PATCH] Improve logging in BrokerMsalController.verifyBrokerVersionIsSupported (#2132)
+- [MINOR] Refactored OneAuthTestApp infra in order to process LTW test cases (#2136)
+- [PATCH] Fix NPE in OTEL code for DCF flow (#2139)
+- [PATCH] Fixed debug apps not recognized as active broker issue (#2138)
+- [MINOR] Updated target, compile sdk, AGP and gradle versions  (#2142)
+- [MINOR] Add checkMode method to msaltestapp infra (#2141)
+- [MINOR] Update TokenRequest.java with NAA params (#2143)
+- [MINOR] Add new apk name to BrokerHost infra (#2152)
 
 V.14.0.1
 ----------
