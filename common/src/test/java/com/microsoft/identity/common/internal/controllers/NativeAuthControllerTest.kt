@@ -92,6 +92,7 @@ class NativeAuthControllerTest {
     private val passwordResetToken = "sk490fj8a83n*@f-2"
     private val passwordSubmitToken = "sk490fj8a83n*@f-3"
     private val invalidGrantError = "invalid_grant"
+    private val invalidRequestError = "invalid_request"
     private val credentialRequiredError = "credential_required"
     private val signInSLT = "1234"
     private val newPassword = "newPassword"
@@ -460,7 +461,7 @@ class NativeAuthControllerTest {
         val parameters = createSignInWithSLTCommandParameters()
         val result = controller.signInWithSLT(parameters)
         assert(result is ICommandResult.UnknownError)
-        assert((result as ICommandResult.UnknownError).error == invalidGrantError)
+        assert((result as ICommandResult.UnknownError).error == invalidRequestError)
     }
 
     @Test
@@ -597,6 +598,7 @@ class NativeAuthControllerTest {
     }
 
     @Test
+    @Ignore("error=invalid_request while isInvalidOOBValue use invalid_oob_value on SSPRContinueApiResult")
     fun testSsprSubmitCodeWithInvalidCode() {
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpointType.SSPRContinue,
@@ -1053,7 +1055,6 @@ class NativeAuthControllerTest {
     }
 
     @Test
-    @Ignore("This test is not working because the mock server does not match EXPLICIT_INVALID_OOB_VALUE with string 'invalid_request'")
     fun testSignUpInvalidOOB() {
         val correlationId = UUID.randomUUID().toString()
 

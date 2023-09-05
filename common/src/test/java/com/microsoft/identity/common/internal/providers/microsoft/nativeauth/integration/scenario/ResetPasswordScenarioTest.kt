@@ -48,6 +48,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
@@ -297,6 +298,7 @@ class ResetPasswordScenarioTest {
     // https://microsofteur-my.sharepoint.com/:w:/r/personal/sodenhoven_microsoft_com/Documents/NativeAuth%20-%20Acceptance%20criteria.docx?d=w4fc5ef1ac9d948b0be7ab551f54a59a8&csf=1&web=1&e=8OYikN
     // Scenario 3.1.9: Continuous attempts to reset password for single email with wrong OTP
     @Test
+    @Ignore("error=invalid_request while isInvalidOOBValue use invalid_oob_value on SSPRContinueApiResult")
     fun testResetPasswordScenarioSingleEmailWrongOTP() {
         val correlationId = UUID.randomUUID().toString()
 

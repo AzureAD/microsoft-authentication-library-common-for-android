@@ -61,6 +61,7 @@ import io.mockk.mockk
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
@@ -217,7 +218,7 @@ class ResetPasswordOAuth2StrategyTest {
         configureMockApi(
             endpointType = MockApiEndpointType.SSPRStart,
             correlationId = UUID.randomUUID().toString(),
-            responseType = MockApiResponseType.EXPLICITLY_USER_NOT_FOUND
+            responseType = MockApiResponseType.EXPLICIT_USER_NOT_FOUND
         )
 
         val mockResetPasswordStartCommandParameters = mockk<ResetPasswordStartCommandParameters>()

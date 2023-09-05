@@ -143,6 +143,8 @@ class NativeAuthResponseHandlerTest {
     private val failedStatus = "failed"
     private val unknownError = ":("
     private val unknownErrorCode = 1234
+    private val unauthorizedClientError = "unauthorized_client"
+    private val invalidClientError = "invalid_client"
     private val credentialRequiredError = "credential_required"
     private val tenantMisconfiguration = "Tenant misconfiguration"
     private val unknownErrorDescription = "An unknown error happened"
@@ -194,6 +196,24 @@ class NativeAuthResponseHandlerTest {
             signupToken,
             (apiResult as SignUpStartApiResult.VerificationRequired).signupToken
         )
+    }
+
+    @Test
+    fun testSignUpStartApiResponseUnknownErrorWithUnauthorizedClientError() {
+        val signUpStartApiResponse = SignUpStartApiResponse(
+            statusCode = errorStatusCode,
+            challengeType = null,
+            signupToken = null,
+            error = unauthorizedClientError,
+            errorCodes = null,
+            errorDescription = null,
+            unverifiedAttributes = userAttributes,
+            invalidAttributes = null,
+            details = null
+        )
+
+        val apiResult = signUpStartApiResponse.toResult()
+        assertTrue(apiResult is SignUpStartApiResult.UnknownError)
     }
 
     @Test
@@ -1176,6 +1196,24 @@ class NativeAuthResponseHandlerTest {
         assertTrue(apiResult is ResetPasswordStartApiResult.Success)
         assertNotNull((apiResult as ResetPasswordStartApiResult.Success).passwordResetToken)
     }
+
+    @Test
+    fun testSsprStartResultUnknownErrorWithUnauthorizedClientError() {
+        val resetPasswordStartApiResponse = ResetPasswordStartApiResponse(
+            statusCode = errorStatusCode,
+            passwordResetToken = null,
+            challengeType = null,
+            error = unauthorizedClientError,
+            errorDescription = null,
+            errorUri = null,
+            innerErrors = null,
+            details = null
+        )
+
+        val apiResult = resetPasswordStartApiResponse.toResult()
+        assertTrue(apiResult is ResetPasswordStartApiResult.UnknownError)
+    }
+
 
     @Test
     fun testValidateSsprStartResultWithSuccessNoRedirectButMissingToken() {
@@ -2186,6 +2224,24 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
+    fun testSignInInitiateApiResponseUnknownErrorWithUnauthorizedClientError() {
+        val signInInitiateApiResponse = SignInInitiateApiResponse(
+            statusCode = errorStatusCode,
+            challengeType = null,
+            credentialToken = null,
+            error = unauthorizedClientError,
+            errorCodes = listOf(),
+            errorDescription = null,
+            errorUri = null,
+            innerErrors = null,
+            details = null
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInInitiateApiResult.UnknownError)
+    }
+
+    @Test
     fun testSignInInitiateApiResponseInvalidGrantWithMissingErrorCodes() {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = errorStatusCode,
@@ -2548,9 +2604,59 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
+    fun testSignInTokenApiResponseUnknownErrorWithUnauthorizedClientError() {
+        val signInTokenApiResponse = SignInTokenApiResponse(
+            statusCode = errorStatusCode,
+            credentialToken = null,
+            error = unauthorizedClientError,
+            errorCodes = null,
+            errorDescription = null,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = null,
+            scope = null,
+            expiresIn = null,
+            extExpiresIn = null,
+            accessToken = null,
+            refreshToken = null,
+            idToken = null,
+            details = null,
+            clientInfo = null
+        )
+
+        val apiResult = signInTokenApiResponse.toErrorResult()
+        assertTrue(apiResult is SignInTokenApiResult.UnknownError)
+    }
+
+    @Test
+    fun testSignInTokenApiResponseUnknownErrorWithInvalidClientError() {
+        val signInTokenApiResponse = SignInTokenApiResponse(
+            statusCode = errorStatusCode,
+            credentialToken = null,
+            error = invalidClientError,
+            errorCodes = null,
+            errorDescription = null,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = null,
+            scope = null,
+            expiresIn = null,
+            extExpiresIn = null,
+            accessToken = null,
+            refreshToken = null,
+            idToken = null,
+            details = null,
+            clientInfo = null
+        )
+
+        val apiResult = signInTokenApiResponse.toErrorResult()
+        assertTrue(apiResult is SignInTokenApiResult.UnknownError)
+    }
+
+    @Test
     fun testSignInTokenApiResponseUserNotFound() {
         val signInTokenApiResponse = SignInTokenApiResponse(
-            statusCode = 400,
+            statusCode = errorStatusCode,
             credentialToken = null,
             error = invalidGrantError,
             errorCodes = listOf(userNotFoundErrorCode),

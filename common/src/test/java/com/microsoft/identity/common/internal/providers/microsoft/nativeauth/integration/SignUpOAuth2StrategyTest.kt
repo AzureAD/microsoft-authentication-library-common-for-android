@@ -47,7 +47,6 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 import junit.framework.TestCase.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
@@ -72,6 +71,7 @@ import java.util.UUID
 @Config(sdk = [Build.VERSION_CODES.O_MR1])
 class SignUpOAuth2StrategyTest {
     private val username = "user@email.com"
+    private val invalidUsername = "invalidUsername"
     private val password = "verySafePassword"
     private val tenant = "samtoso.onmicrosoft.com"
     private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
@@ -187,6 +187,26 @@ class SignUpOAuth2StrategyTest {
             signUpStartCommandParameters
         )
         assertTrue(signupResult is SignUpStartApiResult.InvalidPassword)
+    }
+
+    @Test
+    fun testPerformSignUpStartWithInvalidPEmail() {
+        configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.INVALID_USERNAME
+        )
+
+        val signUpStartCommandParameters = SignUpStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(invalidUsername)
+            .clientId(clientId)
+            .build()
+
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
+            signUpStartCommandParameters
+        )
+        assertTrue(signupResult is SignUpStartApiResult.InvalidEmail)
     }
 
     @Test
@@ -325,7 +345,6 @@ class SignUpOAuth2StrategyTest {
     }
 
     @Test
-    @Ignore("This test is not working because the mock server does not match EXPLICIT_INVALID_OOB_VALUE with string 'invalid_request'.")
     fun testPerformSignUpChallengeWithInvalidOOB() {
         configureMockApi(
             endpointType = MockApiEndpointType.SignUpContinue,
