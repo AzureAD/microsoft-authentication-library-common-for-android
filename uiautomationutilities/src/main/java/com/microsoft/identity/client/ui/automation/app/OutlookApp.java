@@ -37,6 +37,8 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * A model for interacting with the Outlook Android App during UI Test.
  */
@@ -84,8 +86,8 @@ public class OutlookApp extends App implements IFirstPartyApp {
         // Make sure we are on add another account (shows up after an account is added)
         final UiObject addAnotherAccountScreen = UiAutomatorUtils.obtainUiObjectWithText("Add another account");
         Assert.assertTrue(
-                "Add another account screen appears in Outlook account.",
-                addAnotherAccountScreen.waitForExists(CommonUtils.FIND_UI_ELEMENT_TIMEOUT)
+                "Add another account screen doesn't appear in Outlook.",
+                addAnotherAccountScreen.waitForExists(FIND_UI_ELEMENT_TIMEOUT_LONG)
         );
 
         // click may be later
@@ -139,5 +141,48 @@ public class OutlookApp extends App implements IFirstPartyApp {
         // handle login prompt
         final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
         microsoftStsPromptHandler.handlePrompt(username, password);
+    }
+
+    /**
+     * Add an account to outlook that would show up in the "accounts found" page
+     * @param username username of the acount to be added
+     */
+    public void addExistingFirstAccount(@NonNull final String username) {
+        Logger.i(TAG, "Adding Existing Account..");
+        // Click start btn
+        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/btn_primary_button");
+
+        Assert.assertTrue("Not on Accounts found page", UiAutomatorUtils.obtainUiObjectWithExactText("Accounts found").exists());
+        Assert.assertTrue("Couldn't find account:" + username, UiAutomatorUtils.obtainUiObjectWithText(username).exists());
+
+        // Click Continue btn
+        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/btn_primary_button");
+    }
+
+    /**
+     * Sign in through the SIGN IN button shown through snackbar after a token expires.
+     *
+     * @param username username to be signed in
+     * @param password password to be used
+     * @param promptHandlerParameters prompt handling parameters
+     */
+    public void signInThroughSnackBar(@NonNull final String username,
+                                      @NonNull final String password,
+                                      @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+        // Click SIGN IN Button in snackBar
+        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/snackbar_action");
+
+        // handle login prompt
+        final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
+        microsoftStsPromptHandler.handlePrompt(username, password);
+    }
+
+    /**
+     * Check to see if the sign in snackbar is present in outlook
+     * @return whether or not snackbar is present
+     */
+    public boolean isSignInSnackBarPresent() {
+        // Check if the sign in SnackBar is present
+        return UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.office.outlook:id/snackbar_action", TimeUnit.SECONDS.toMillis(5)).exists();
     }
 }

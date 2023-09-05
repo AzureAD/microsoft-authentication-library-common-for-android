@@ -34,9 +34,15 @@ internal constructor(private val storage: INameValueStorage<String>,
 
     companion object {
         /**
-         * File name of [ClientActiveBrokerCache] used by the SDK code.
+         * File name of [ClientActiveBrokerCache] used by the broker SDK (WPJ API, Broker API) code.
+         * We need a separate storage as SDK might have their own encryption mechanism.
          **/
-        private const val BROKER_METADATA_CACHE_STORE_ON_SDK_SIDE_STORAGE_NAME = "BROKER_METADATA_CACHE_STORE_ON_SDK_SIDE"
+        private const val BROKER_METADATA_CACHE_STORE_ON_BROKER_SDK_SIDE_STORAGE_NAME = "BROKER_METADATA_CACHE_STORE_ON_BROKER_SDK_SIDE"
+
+        /**
+         * File name of [ClientActiveBrokerCache] used by the client SDK (MSAL, OneAuth) code.
+         **/
+        private const val BROKER_METADATA_CACHE_STORE_ON_CLIENT_SDK_SIDE_STORAGE_NAME = "BROKER_METADATA_CACHE_STORE_ON_CLIENT_SDK_SIDE"
 
         /**
          * The Mutex for all [ClientActiveBrokerCache] instances used by the SDK code.
@@ -44,21 +50,38 @@ internal constructor(private val storage: INameValueStorage<String>,
          *  I don't think it's worth implementing our own (for now).
          *  If we eventually are seeing a perf hit, sure...)
          **/
-        private val sSdkSideLock = Mutex()
+        private val sBrokerSdkSideLock = Mutex()
+        private val sClientSdkSideLock = Mutex()
 
         /**
-         * If the caller is an SDK, invoke this function.
+         * If the caller is a broker SDK (WPJ API, Broker API), invoke this function.
          *
          * @param storageSupplier an [IStorageSupplier] component.
          * @return a thread-safe [IClientActiveBrokerCache].
          */
         @JvmStatic
-        fun getCache(storageSupplier: IStorageSupplier)
+        fun getBrokerSdkCache(storageSupplier: IStorageSupplier)
                 : IClientActiveBrokerCache {
             return ClientActiveBrokerCache(
                 storage = storageSupplier.getEncryptedNameValueStore(
-                    BROKER_METADATA_CACHE_STORE_ON_SDK_SIDE_STORAGE_NAME, String::class.java),
-                lock = sSdkSideLock
+                    BROKER_METADATA_CACHE_STORE_ON_BROKER_SDK_SIDE_STORAGE_NAME, String::class.java),
+                lock = sBrokerSdkSideLock
+            )
+        }
+
+        /**
+         * If the caller is a client SDK (MSAL, OneAuth), invoke this function.
+         *
+         * @param storageSupplier an [IStorageSupplier] component.
+         * @return a thread-safe [IClientActiveBrokerCache].
+         */
+        @JvmStatic
+        fun getClientSdkCache(storageSupplier: IStorageSupplier)
+                : IClientActiveBrokerCache {
+            return ClientActiveBrokerCache(
+                storage = storageSupplier.getEncryptedNameValueStore(
+                    BROKER_METADATA_CACHE_STORE_ON_CLIENT_SDK_SIDE_STORAGE_NAME, String::class.java),
+                lock = sClientSdkSideLock
             )
         }
 
