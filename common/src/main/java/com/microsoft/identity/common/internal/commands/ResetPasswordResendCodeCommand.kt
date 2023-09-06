@@ -43,7 +43,7 @@ class ResetPasswordResendCodeCommand(
     }
 
     override fun execute(): ResetPasswordResendCodeCommandResult {
-        LogSession.logMethodCall(TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.execute")
         val result = controller.resetPasswordResendCode(
             parameters = parameters
         )

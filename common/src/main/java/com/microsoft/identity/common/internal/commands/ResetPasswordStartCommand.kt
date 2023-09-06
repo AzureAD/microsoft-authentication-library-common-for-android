@@ -43,7 +43,7 @@ class ResetPasswordStartCommand(
     }
 
     override fun execute(): ResetPasswordStartCommandResult {
-        LogSession.logMethodCall(TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.execute")
         val result = controller.resetPasswordStart(
             parameters = parameters
         )

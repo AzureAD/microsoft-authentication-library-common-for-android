@@ -43,7 +43,7 @@ class SignInStartCommand(
     }
 
     override fun execute(): SignInStartCommandResult {
-        LogSession.logMethodCall(TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.execute")
         val result = controller.signInStart(
             parameters = parameters
         )

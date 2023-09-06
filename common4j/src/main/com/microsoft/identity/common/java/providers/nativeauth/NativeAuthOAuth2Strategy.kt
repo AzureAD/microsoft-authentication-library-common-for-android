@@ -87,21 +87,21 @@ class NativeAuthOAuth2Strategy(
     fun performSignUpStart(
         commandParameters: SignUpStartCommandParameters
     ): SignUpStartApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSignUpStart")
         return signUpInteractor.performSignUpStart(commandParameters)
     }
 
     fun performSignUpStartUsingPassword(
         commandParameters: SignUpStartUsingPasswordCommandParameters
     ): SignUpStartApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSignUpStartUsingPassword")
         return signUpInteractor.performSignUpStartUsingPassword(commandParameters)
     }
 
     fun performSignUpChallenge(
         signUpToken: String
     ): SignUpChallengeApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSignUpChallenge")
         return signUpInteractor.performSignUpChallenge(
             signUpToken = signUpToken
         )
@@ -110,7 +110,7 @@ class NativeAuthOAuth2Strategy(
     fun performSignUpSubmitCode(
         commandParameters: SignUpSubmitCodeCommandParameters
     ): SignUpContinueApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSignUpSubmitCode")
         return signUpInteractor.performSignUpSubmitCode(
             commandParameters = commandParameters
         )
@@ -119,7 +119,7 @@ class NativeAuthOAuth2Strategy(
     fun performSignUpSubmitPassword(
         commandParameters: SignUpSubmitPasswordCommandParameters
     ): SignUpContinueApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSignUpSubmitPassword")
         return signUpInteractor.performSignUpSubmitPassword(
             commandParameters = commandParameters
         )
@@ -128,7 +128,7 @@ class NativeAuthOAuth2Strategy(
     fun performSignUpSubmitUserAttributes(
         commandParameters: SignUpSubmitUserAttributesCommandParameters
     ): SignUpContinueApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSignUpSubmitUserAttributes")
         return signUpInteractor.performSignUpSubmitUserAttributes(
             commandParameters = commandParameters
         )
@@ -137,14 +137,14 @@ class NativeAuthOAuth2Strategy(
     fun performSignInInitiate(
         parameters: SignInStartCommandParameters
     ): SignInInitiateApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSignInInitiate")
         return signInInteractor.performSignInInitiate(parameters)
     }
 
     fun performSignInChallenge(
         credentialToken: String,
     ): SignInChallengeApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSignInChallenge")
         return signInInteractor.performSignInChallenge(
             credentialToken = credentialToken,
         )
@@ -153,7 +153,7 @@ class NativeAuthOAuth2Strategy(
     fun performSLTTokenRequest(
         parameters: SignInWithSLTCommandParameters
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSLTTokenRequest")
         return signInInteractor.performSLTTokenRequest(
             parameters = parameters
         )
@@ -162,7 +162,7 @@ class NativeAuthOAuth2Strategy(
     fun performOOBTokenRequest(
         parameters: SignInSubmitCodeCommandParameters
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performOOBTokenRequest")
         return signInInteractor.performOOBTokenRequest(
             parameters = parameters
         )
@@ -171,7 +171,7 @@ class NativeAuthOAuth2Strategy(
     fun performPasswordTokenRequest(
         parameters: SignInSubmitPasswordCommandParameters
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performPasswordTokenRequest")
         return signInInteractor.performPasswordTokenRequest(
             parameters = parameters
         )
@@ -180,7 +180,7 @@ class NativeAuthOAuth2Strategy(
     fun performResetPasswordStart(
         parameters: ResetPasswordStartCommandParameters
     ): ResetPasswordStartApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordStart")
         return resetPasswordInteractor.performResetPasswordStart(
             parameters = parameters
         )
@@ -189,7 +189,7 @@ class NativeAuthOAuth2Strategy(
     fun performResetPasswordChallenge(
         passwordResetToken: String
     ): ResetPasswordChallengeApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordChallenge")
         return resetPasswordInteractor.performResetPasswordChallenge(
             passwordResetToken = passwordResetToken
         )
@@ -198,7 +198,7 @@ class NativeAuthOAuth2Strategy(
     fun performResetPasswordContinue(
         parameters: ResetPasswordSubmitCodeCommandParameters
     ): ResetPasswordContinueApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordContinue")
         return resetPasswordInteractor.performResetPasswordContinue(
             parameters = parameters
         )
@@ -207,7 +207,7 @@ class NativeAuthOAuth2Strategy(
     fun performResetPasswordSubmit(
         parameters: ResetPasswordSubmitNewPasswordCommandParameters
     ): ResetPasswordSubmitApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordSubmit")
         return resetPasswordInteractor.performResetPasswordSubmit(
             commandParameters = parameters
         )
@@ -216,7 +216,7 @@ class NativeAuthOAuth2Strategy(
     fun performResetPasswordPollCompletion(
         passwordResetToken: String
     ): ResetPasswordPollCompletionApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordPollCompletion")
         return resetPasswordInteractor.performResetPasswordPollCompletion(
             passwordResetToken = passwordResetToken
         )

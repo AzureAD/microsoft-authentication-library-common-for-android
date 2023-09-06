@@ -54,7 +54,7 @@ class ResetPasswordPollCompletionApiResponse(
     }
 
     fun toResult(): ResetPasswordPollCompletionApiResult {
-        LogSession.logMethodCall(TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.toResult")
 
         return when (statusCode) {
 

@@ -73,7 +73,7 @@ class NativeAuthCIAMAuthority (
     }
 
     private fun createNativeAuthOAuth2Configuration(challengeTypes: List<String>?): NativeAuthOAuth2Configuration {
-       LogSession.logMethodCall(tag = TAG)
+       LogSession.logMethodCall(TAG, "${TAG}.createNativeAuthOAuth2Configuration")
         return NativeAuthOAuth2Configuration(
             authorityUrl = this.authorityURL,
             clientId = this.clientId,
@@ -82,13 +82,16 @@ class NativeAuthCIAMAuthority (
     }
 
     /**
-     * TODO add documentation (learn.microsoft.com) that explains challengeTypes
+     * Challenge types represent different authentication flows supported by the auth server and
+     * client application.
+     * e.g. "password" challenge type requires a user to supply username and password. "oob" challenge
+     * type requires user to submit a code sent to them via out of band mechanism.
      * "redirect" is added by the SDK as a default challenge type, as the server always expects
      * this. Duplicates are removed, and the list is then converted in a whitespace separated string
      * (e.g. "oob password redirect")
      */
     private fun getChallengeTypesWithDefault(challengeTypes: List<String>?): String {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.getChallengeTypesWithDefault")
         LogSession.log(tag = TAG, logLevel = Logger.LogLevel.INFO, message = "Challenge Types passed = $challengeTypes")
         return (challengeTypes ?: emptyList()).plus(listOf("redirect")).distinct().joinToString(" ")
     }

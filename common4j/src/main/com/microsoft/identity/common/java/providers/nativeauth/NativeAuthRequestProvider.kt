@@ -72,7 +72,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     fun createSignUpStartRequest(
         commandParameters: SignUpStartCommandParameters
     ): SignUpStartRequest {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.createSignUpStartRequest")
 
         return SignUpStartRequest.create(
             username = commandParameters.username,
@@ -87,7 +87,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     fun createSignUpUsingPasswordStartRequest(
         commandParameters: SignUpStartUsingPasswordCommandParameters
     ): SignUpStartRequest {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.createSignUpUsingPasswordStartRequest")
 
         if (commandParameters.password.isBlank())
         {
@@ -111,7 +111,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     fun createSignUpChallengeRequest(
         signUpToken: String
     ): SignUpChallengeRequest {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.createSignUpChallengeRequest")
 
         return SignUpChallengeRequest.create(
             signUpToken = signUpToken,
@@ -127,7 +127,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     fun createSignInInitiateRequest(
         parameters: SignInStartCommandParameters
     ): SignInInitiateRequest {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.createSignInInitiateRequest")
 
         return SignInInitiateRequest.create(
             username = parameters.username,
@@ -143,7 +143,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     fun createSignInChallengeRequest(
         credentialToken: String
     ): SignInChallengeRequest {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.createSignInChallengeRequest")
 
         return SignInChallengeRequest.create(
             clientId = config.clientId,
@@ -159,7 +159,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     fun createOOBTokenRequest(
         parameters: SignInSubmitCodeCommandParameters
     ): SignInTokenRequest {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.createOOBTokenRequest")
 
         return SignInTokenRequest.createOOBTokenRequest(
             oob = parameters.code,
@@ -175,7 +175,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     fun createSLTTokenRequest(
         parameters: SignInWithSLTCommandParameters
     ): SignInTokenRequest {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.createSLTTokenRequest")
 
         return SignInTokenRequest.createSltTokenRequest(
             signInSlt = parameters.signInSLT,
@@ -191,7 +191,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     fun createPasswordTokenRequest(
         parameters: SignInSubmitPasswordCommandParameters
     ): SignInTokenRequest {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.createPasswordTokenRequest")
 
         return SignInTokenRequest.createPasswordTokenRequest(
             password = parameters.password,
@@ -209,7 +209,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     fun createSignUpSubmitCodeRequest(
         commandParameters: SignUpSubmitCodeCommandParameters
     ): SignUpContinueRequest {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.createSignUpSubmitCodeRequest")
 
         return SignUpContinueRequest.create(
             oob = commandParameters.code,
@@ -224,7 +224,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     fun createSignUpSubmitPasswordRequest(
         commandParameters: SignUpSubmitPasswordCommandParameters
     ): SignUpContinueRequest {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.createSignUpSubmitPasswordRequest")
 
         return SignUpContinueRequest.create(
             password = commandParameters.password,
@@ -239,7 +239,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     fun createSignUpSubmitUserAttributesRequest(
         commandParameters: SignUpSubmitUserAttributesCommandParameters
     ): SignUpContinueRequest {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.createSignUpSubmitUserAttributesRequest")
 
         return SignUpContinueRequest.create(
             attributes = commandParameters.userAttributes,
@@ -256,7 +256,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     fun createResetPasswordStartRequest(
         parameters: ResetPasswordStartCommandParameters
     ): ResetPasswordStartRequest {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordStartRequest")
 
         return ResetPasswordStartRequest.create(
             clientId = config.clientId,
@@ -272,7 +272,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     fun createResetPasswordChallengeRequest(
         passwordResetToken: String
     ): ResetPasswordChallengeRequest {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordChallengeRequest")
 
         return ResetPasswordChallengeRequest.create(
             clientId = config.clientId,
@@ -288,7 +288,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     fun createResetPasswordContinueRequest(
         parameters: ResetPasswordSubmitCodeCommandParameters
     ): ResetPasswordContinueRequest {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordContinueRequest")
 
         return ResetPasswordContinueRequest.create(
             clientId = config.clientId,
@@ -304,7 +304,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     fun createResetPasswordSubmitRequest(
         commandParameters: ResetPasswordSubmitNewPasswordCommandParameters
     ): ResetPasswordSubmitRequest {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordSubmitRequest")
 
         return ResetPasswordSubmitRequest.create(
             clientId = config.clientId,
@@ -320,7 +320,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     fun createResetPasswordPollCompletionRequest(
         passwordResetToken: String
     ): ResetPasswordPollCompletionRequest {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordPollCompletionRequest")
 
         return ResetPasswordPollCompletionRequest.create(
             clientId = config.clientId,

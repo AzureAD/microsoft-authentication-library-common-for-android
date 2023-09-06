@@ -32,7 +32,7 @@ class SignUpInteractor(
     fun performSignUpStart(
         commandParameters: SignUpStartCommandParameters
     ): SignUpStartApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSignUpStart")
 
         val request = nativeAuthRequestProvider.createSignUpStartRequest(
             commandParameters = commandParameters
@@ -43,7 +43,7 @@ class SignUpInteractor(
     fun performSignUpStartUsingPassword(
         commandParameters: SignUpStartUsingPasswordCommandParameters
     ): SignUpStartApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSignUpStartUsingPassword")
         val request = nativeAuthRequestProvider.createSignUpUsingPasswordStartRequest(
             commandParameters = commandParameters
         )
@@ -51,7 +51,7 @@ class SignUpInteractor(
     }
 
     private fun performSignUpStart(request: SignUpStartRequest): SignUpStartApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSignUpStart")
 
         val encodedRequest: String = request.parameters.getEncodedRequest()
         val headers = request.headers
@@ -73,7 +73,7 @@ class SignUpInteractor(
     fun performSignUpChallenge(
         signUpToken: String
     ): SignUpChallengeApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSignUpChallenge")
 
         val request = nativeAuthRequestProvider.createSignUpChallengeRequest(
             signUpToken = signUpToken
@@ -82,7 +82,7 @@ class SignUpInteractor(
     }
 
     private fun performSignUpChallenge(request: SignUpChallengeRequest): SignUpChallengeApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSignUpChallenge")
 
         val encodedRequest: String = request.parameters.getEncodedRequest()
         val headers = request.headers

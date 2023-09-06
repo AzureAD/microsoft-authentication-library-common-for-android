@@ -43,7 +43,7 @@ class SignInSubmitCodeCommand(
     }
 
     override fun execute(): SignInSubmitCodeCommandResult {
-        LogSession.logMethodCall(TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.execute")
         val result = controller.signInSubmitCode(
             parameters = parameters
         )

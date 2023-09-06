@@ -119,7 +119,7 @@ class NativeAuthController : BaseNativeAuthController() {
     }
 
     fun signInStart(parameters: SignInStartCommandParameters): SignInStartCommandResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.signInStart")
 
         try {
             val oAuth2Strategy = composeOAuth2Strategy(parameters)
@@ -153,7 +153,7 @@ class NativeAuthController : BaseNativeAuthController() {
     }
 
     fun signInWithSLT(parameters: SignInWithSLTCommandParameters): SignInWithSLTCommandResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.signInWithSLT")
 
         try {
             val oAuth2Strategy = composeOAuth2Strategy(parameters)
@@ -202,7 +202,7 @@ class NativeAuthController : BaseNativeAuthController() {
     }
 
     fun signInSubmitCode(parameters: SignInSubmitCodeCommandParameters): SignInSubmitCodeCommandResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.signInSubmitCode")
 
         try {
             // Add default scopes
@@ -260,7 +260,7 @@ class NativeAuthController : BaseNativeAuthController() {
     }
 
     fun signInResendCode(parameters: SignInResendCodeCommandParameters): SignInResendCodeCommandResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.signInResendCode")
 
         try {
             val oAuth2Strategy = composeOAuth2Strategy(parameters)
@@ -313,7 +313,7 @@ class NativeAuthController : BaseNativeAuthController() {
     }
 
     fun signInSubmitPassword(parameters: SignInSubmitPasswordCommandParameters): SignInSubmitPasswordCommandResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.signInSubmitPassword")
 
         try {
             val oAuth2Strategy = composeOAuth2Strategy(parameters)
@@ -339,7 +339,7 @@ class NativeAuthController : BaseNativeAuthController() {
     }
 
     fun signUpStart(parameters: BaseSignUpStartCommandParameters): SignUpStartCommandResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.signUpStart")
         try {
             val oAuth2Strategy = composeOAuth2Strategy(parameters)
 
@@ -417,7 +417,7 @@ class NativeAuthController : BaseNativeAuthController() {
     }
 
     fun signUpSubmitCode(parameters: SignUpSubmitCodeCommandParameters): SignUpSubmitCodeCommandResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.signUpSubmitCode")
 
         try {
             val oAuth2Strategy = composeOAuth2Strategy(parameters)
@@ -434,7 +434,7 @@ class NativeAuthController : BaseNativeAuthController() {
     }
 
     fun signUpResendCode(parameters: SignUpResendCodeCommandParameters): SignUpResendCodeCommandResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.signUpResendCode")
 
         try {
             val oAuth2Strategy = composeOAuth2Strategy(parameters)
@@ -450,7 +450,7 @@ class NativeAuthController : BaseNativeAuthController() {
     }
 
     fun signUpSubmitUserAttributes(parameters: SignUpSubmitUserAttributesCommandParameters): SignUpSubmitUserAttributesCommandResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.signUpSubmitUserAttributes")
 
         try {
             val oAuth2Strategy = composeOAuth2Strategy(parameters)
@@ -467,7 +467,7 @@ class NativeAuthController : BaseNativeAuthController() {
     }
 
     fun signUpSubmitPassword(parameters: SignUpSubmitPasswordCommandParameters): SignUpSubmitPasswordCommandResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.signUpSubmitPassword")
 
         try {
             val oAuth2Strategy = composeOAuth2Strategy(parameters)
@@ -498,7 +498,7 @@ class NativeAuthController : BaseNativeAuthController() {
     fun acquireTokenSilent(
         parameters: AcquireTokenNoFixedScopesCommandParameters
     ): AcquireTokenResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.acquireTokenSilent")
 
         val acquireTokenSilentResult = AcquireTokenResult()
 
@@ -654,7 +654,7 @@ class NativeAuthController : BaseNativeAuthController() {
     }
 
     fun resetPasswordStart(parameters: ResetPasswordStartCommandParameters): ResetPasswordStartCommandResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.resetPasswordStart")
 
         try {
             val oAuth2Strategy = composeOAuth2Strategy(parameters)
@@ -701,7 +701,7 @@ class NativeAuthController : BaseNativeAuthController() {
     }
 
     fun resetPasswordSubmitCode(parameters: ResetPasswordSubmitCodeCommandParameters): ResetPasswordSubmitCodeCommandResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.resetPasswordSubmitCode")
 
         try {
             val oAuth2Strategy = composeOAuth2Strategy(parameters)
@@ -747,7 +747,7 @@ class NativeAuthController : BaseNativeAuthController() {
     }
 
     fun resetPasswordResendCode(parameters: ResetPasswordResendCodeCommandParameters): ResetPasswordResendCodeCommandResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.resetPasswordResendCode")
 
         try {
             val oAuth2Strategy = composeOAuth2Strategy(parameters)
@@ -792,7 +792,7 @@ class NativeAuthController : BaseNativeAuthController() {
     }
 
     fun resetPasswordSubmitNewPassword(parameters: ResetPasswordSubmitNewPasswordCommandParameters): ResetPasswordSubmitNewPasswordCommandResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.resetPasswordSubmitNewPassword")
 
         try {
             val oAuth2Strategy = composeOAuth2Strategy(parameters)
@@ -854,7 +854,7 @@ class NativeAuthController : BaseNativeAuthController() {
 
         val methodTag = "$TAG:resetPasswordPollCompletion"
 
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.resetPasswordPollCompletion")
 
         try {
             val pollWaitInterval: Int = if (!pollIntervalIsAppropriate(pollIntervalInSeconds)) {
@@ -889,8 +889,6 @@ class NativeAuthController : BaseNativeAuthController() {
                         errorDescription = ResetPasswordSubmitNewPasswordCommand.POLL_COMPLETION_TIMEOUT_ERROR_DESCRIPTION
                     )
                 }
-
-                LogSession.logMethodCall(tag = TAG)
 
                 pollCompletionApiResult = performResetPasswordPollCompletionCall(
                     oAuth2Strategy = oAuth2Strategy,
@@ -950,7 +948,7 @@ class NativeAuthController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignInWithSLTCommandParameters
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSLTTokenRequest")
         return oAuth2Strategy.performSLTTokenRequest(
             parameters = parameters
         )
@@ -960,7 +958,7 @@ class NativeAuthController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignInSubmitCodeCommandParameters
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performOOBTokenRequest")
         return oAuth2Strategy.performOOBTokenRequest(
             parameters = parameters
         )
@@ -971,7 +969,7 @@ class NativeAuthController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignInSubmitPasswordCommandParameters
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performPasswordTokenCall")
         return oAuth2Strategy.performPasswordTokenRequest(
             parameters = parameters
         )
@@ -981,7 +979,7 @@ class NativeAuthController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignInStartCommandParameters,
     ): SignInInitiateApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSignInInitiateCall")
         return oAuth2Strategy.performSignInInitiate(
             parameters = parameters
         )
@@ -991,7 +989,7 @@ class NativeAuthController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         credentialToken: String
     ): SignInChallengeApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSignInChallengeCall")
         return oAuth2Strategy.performSignInChallenge(credentialToken = credentialToken)
     }
 
@@ -999,7 +997,7 @@ class NativeAuthController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: ResetPasswordStartCommandParameters,
     ): ResetPasswordStartApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordStartCall")
         return oAuth2Strategy.performResetPasswordStart(
             parameters = parameters
         )
@@ -1009,7 +1007,7 @@ class NativeAuthController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         passwordResetToken: String
     ): ResetPasswordChallengeApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordChallengeCall")
         return oAuth2Strategy.performResetPasswordChallenge(
             passwordResetToken = passwordResetToken
         )
@@ -1019,7 +1017,7 @@ class NativeAuthController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: ResetPasswordSubmitCodeCommandParameters,
     ): ResetPasswordContinueApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordContinueCall")
         return oAuth2Strategy.performResetPasswordContinue(
             parameters = parameters
         )
@@ -1029,7 +1027,7 @@ class NativeAuthController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: ResetPasswordSubmitNewPasswordCommandParameters,
     ): ResetPasswordSubmitApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordSubmitCall")
         return oAuth2Strategy.performResetPasswordSubmit(
             parameters = parameters,
         )
@@ -1039,7 +1037,7 @@ class NativeAuthController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         passwordResetToken: String,
     ): ResetPasswordPollCompletionApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordPollCompletionCall")
         return oAuth2Strategy.performResetPasswordPollCompletion(
             passwordResetToken = passwordResetToken
         )
@@ -1050,7 +1048,7 @@ class NativeAuthController : BaseNativeAuthController() {
         parametersWithScopes: BaseSignInTokenCommandParameters,
         tokenApiResult: SignInTokenApiResult.Success
     ): SignInCommandResult.Complete {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.saveAndReturnTokens")
         val records: List<ICacheRecord> = saveTokens(
             oAuth2Strategy as MicrosoftStsOAuth2Strategy,
             createAuthorizationRequest(
@@ -1086,7 +1084,7 @@ class NativeAuthController : BaseNativeAuthController() {
         clientId: String,
         applicationIdentifier: String
     ): MicrosoftStsAuthorizationRequest {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.createAuthorizationRequest")
         val builder = MicrosoftStsAuthorizationRequest.Builder()
         builder.setAuthority(URL(strategy.getAuthority()))
         builder.setClientId(clientId)
@@ -1096,7 +1094,7 @@ class NativeAuthController : BaseNativeAuthController() {
     }
 
     private fun addDefaultScopes(scopes: List<String>?): List<String> {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.addDefaultScopes")
         val requestScopes = scopes?.toMutableList() ?: mutableListOf()
         requestScopes.addAll(AuthenticationConstants.DEFAULT_SCOPES)
         // sanitize empty and null scopes
@@ -1105,7 +1103,7 @@ class NativeAuthController : BaseNativeAuthController() {
     }
 
     private fun ResetPasswordChallengeApiResult.toResetPasswordStartCommandResult(): ResetPasswordStartCommandResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.toResetPasswordStartCommandResult")
         return when (this) {
             is ResetPasswordChallengeApiResult.CodeRequired -> {
                 ResetPasswordCommandResult.CodeRequired(
@@ -1468,7 +1466,7 @@ class NativeAuthController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parametersWithScopes: SignInStartUsingPasswordCommandParameters,
     ): SignInStartCommandResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.execute")
         return when (this) {
             is SignInTokenApiResult.InvalidCredentials -> {
                 SignInCommandResult.InvalidCredentials(
@@ -1506,7 +1504,7 @@ class NativeAuthController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parametersWithScopes: SignInSubmitPasswordCommandParameters,
     ): SignInSubmitPasswordCommandResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.execute")
 
         return when (this) {
             is SignInTokenApiResult.InvalidCredentials -> {

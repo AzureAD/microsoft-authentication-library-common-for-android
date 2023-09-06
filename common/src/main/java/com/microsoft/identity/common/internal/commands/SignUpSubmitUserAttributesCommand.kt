@@ -21,7 +21,7 @@ class SignUpSubmitUserAttributesCommand(
     }
 
     override fun execute(): SignUpSubmitUserAttributesCommandResult {
-        LogSession.logMethodCall(TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.execute")
 
         val result = controller.signUpSubmitUserAttributes(
             parameters = parameters

@@ -47,7 +47,7 @@ class AcquireTokenNoFixedScopesCommand(
     }
 
     override fun execute(): AcquireTokenResult {
-        LogSession.logMethodCall(TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.execute")
 
         val result = controller.acquireTokenSilent(
             parameters

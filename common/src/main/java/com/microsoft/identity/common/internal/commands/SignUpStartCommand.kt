@@ -21,7 +21,7 @@ class SignUpStartCommand(
     }
 
     override fun execute(): SignUpStartCommandResult {
-        LogSession.logMethodCall(TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.execute")
 
         val result = controller.signUpStart(
             parameters = parameters

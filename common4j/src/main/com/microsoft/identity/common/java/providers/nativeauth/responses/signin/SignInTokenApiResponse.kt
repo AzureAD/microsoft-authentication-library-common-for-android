@@ -36,7 +36,7 @@ data class SignInTokenApiResponse(
         private val TAG = SignInTokenApiResponse::class.java.simpleName
     }
     fun toErrorResult(): SignInTokenApiResult {
-        LogSession.logMethodCall(TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.toResult")
 
         if (error.isInvalidRequest()) {
             return when {

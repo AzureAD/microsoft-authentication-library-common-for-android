@@ -47,7 +47,7 @@ class ResetPasswordSubmitNewPasswordCommand(
     }
 
     override fun execute(): ResetPasswordSubmitNewPasswordCommandResult {
-        LogSession.logMethodCall(TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.execute")
         val result = controller.resetPasswordSubmitNewPassword(
             parameters = parameters
         )

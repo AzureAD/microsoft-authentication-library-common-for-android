@@ -52,7 +52,7 @@ data class SignUpChallengeApiResponse(
     }
 
     fun toResult(): SignUpChallengeApiResult {
-        LogSession.logMethodCall(TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.toResult")
 
         return when (statusCode) {
 

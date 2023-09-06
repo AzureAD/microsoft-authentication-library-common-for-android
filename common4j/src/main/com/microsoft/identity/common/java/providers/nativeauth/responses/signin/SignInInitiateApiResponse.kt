@@ -27,7 +27,7 @@ data class SignInInitiateApiResponse(
     }
 
     fun toResult(): SignInInitiateApiResult {
-        LogSession.logMethodCall(TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.toResult")
 
         return when (statusCode) {
 

@@ -21,7 +21,7 @@ class SignUpSubmitPasswordCommand(
     }
 
     override fun execute(): SignUpSubmitPasswordCommandResult {
-        LogSession.logMethodCall(TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.execute")
 
         val result = controller.signUpSubmitPassword(
             parameters = parameters

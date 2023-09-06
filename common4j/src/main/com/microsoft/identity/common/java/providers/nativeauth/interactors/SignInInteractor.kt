@@ -27,7 +27,7 @@ class SignInInteractor(
     fun performSignInInitiate(
         parameters: SignInStartCommandParameters
     ): SignInInitiateApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSignInInitiate(parameters: SignInStartCommandParameters)")
         val request = nativeAuthRequestProvider.createSignInInitiateRequest(
             parameters = parameters
         )
@@ -35,7 +35,7 @@ class SignInInteractor(
     }
 
     private fun performSignInInitiate(request: SignInInitiateRequest): SignInInitiateApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSignInInitiate")
         val encodedRequest: String = request.parameters.getEncodedRequest()
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -56,7 +56,7 @@ class SignInInteractor(
     fun performSignInChallenge(
         credentialToken: String,
     ): SignInChallengeApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSignInChallenge(credentialToken: String)")
         val request = nativeAuthRequestProvider.createSignInChallengeRequest(
             credentialToken = credentialToken
         )
@@ -64,7 +64,7 @@ class SignInInteractor(
     }
 
     private fun performSignInChallenge(request: SignInChallengeRequest): SignInChallengeApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSignInChallenge")
         val encodedRequest: String = request.parameters.getEncodedRequest()
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -85,7 +85,7 @@ class SignInInteractor(
     fun performOOBTokenRequest(
         parameters: SignInSubmitCodeCommandParameters
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performOOBTokenRequest")
         val request = nativeAuthRequestProvider.createOOBTokenRequest(
             parameters = parameters
         )
@@ -95,7 +95,7 @@ class SignInInteractor(
     fun performSLTTokenRequest(
         parameters: SignInWithSLTCommandParameters
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performSLTTokenRequest")
         val request = nativeAuthRequestProvider.createSLTTokenRequest(
             parameters = parameters
         )
@@ -105,7 +105,7 @@ class SignInInteractor(
     fun performPasswordTokenRequest(
         parameters: SignInSubmitPasswordCommandParameters
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performPasswordTokenRequest")
         val request = nativeAuthRequestProvider.createPasswordTokenRequest(
             parameters = parameters
         )
@@ -113,7 +113,7 @@ class SignInInteractor(
     }
 
     private fun performGetToken(request: SignInTokenRequest): SignInTokenApiResult {
-        LogSession.logMethodCall(tag = TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.performGetToken")
         val encodedRequest: String = request.parameters.getEncodedRequest()
         val headers = request.headers
         val requestUrl = request.requestUrl

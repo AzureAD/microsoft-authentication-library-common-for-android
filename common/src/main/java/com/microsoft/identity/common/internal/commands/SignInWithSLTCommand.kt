@@ -43,7 +43,7 @@ class SignInWithSLTCommand(
     }
 
     override fun execute(): SignInWithSLTCommandResult {
-        LogSession.logMethodCall(TAG)
+        LogSession.logMethodCall(TAG, "${TAG}.execute")
 
         val result = controller.signInWithSLT(
             parameters = parameters
