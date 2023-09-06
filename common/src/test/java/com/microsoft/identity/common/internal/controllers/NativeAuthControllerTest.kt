@@ -64,7 +64,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -598,7 +597,6 @@ class NativeAuthControllerTest {
     }
 
     @Test
-    @Ignore("error=invalid_request while isInvalidOOBValue use invalid_oob_value on SSPRContinueApiResult")
     fun testSsprSubmitCodeWithInvalidCode() {
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpointType.SSPRContinue,
@@ -1061,7 +1059,7 @@ class NativeAuthControllerTest {
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpointType.SignUpContinue,
             correlationId = correlationId,
-            responseType = MockApiResponseType.EXPLICIT_INVALID_OOB_VALUE
+            responseType = MockApiResponseType.INVALID_OOB_VALUE
         )
 
         val parameters = createSignUpSubmitCodeCommandParameters()

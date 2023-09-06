@@ -349,7 +349,7 @@ class SignUpOAuth2StrategyTest {
         configureMockApi(
             endpointType = MockApiEndpointType.SignUpContinue,
             correlationId = UUID.randomUUID().toString(),
-            responseType = MockApiResponseType.EXPLICIT_INVALID_OOB_VALUE
+            responseType = MockApiResponseType.INVALID_OOB_VALUE
         )
 
         val signUpSubmitCodeCommandParameters = SignUpSubmitCodeCommandParameters.builder()
