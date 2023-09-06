@@ -334,6 +334,7 @@ public class BrokerMsalController extends BaseController {
                         .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
         );
 
+
         //Create BrokerResultFuture to block on response from the broker... response will be return as an activity result
         //BrokerActivity will receive the result and ask the API dispatcher to complete the request
         //In completeAcquireToken below we will set the result on the future and unblock the flow.
@@ -1168,6 +1169,14 @@ public class BrokerMsalController extends BaseController {
                 && !BrokerProtocolVersionUtil.canSupportPopAuthenticationSchemeWithClientKey(requiredProtocolVersion)) {
             throw new ClientException(ClientException.AUTH_SCHEME_NOT_SUPPORTED,
                     "The min broker protocol version for PopAuthenticationSchemeWithClientKey should be equal or more than 11.0."
+                            + " Current required version is set to: " + parameters.getRequiredBrokerProtocolVersion());
+        }
+
+        // Also add a check for NAA here
+        if ((parameters.getChildClientId() != null || parameters.getChildRedirectUri() != null)
+                && !BrokerProtocolVersionUtil.canSupportNestedAppAuthentication(requiredProtocolVersion)) {
+            throw new ClientException(ClientException.NESTED_APP_AUTH_NOT_SUPPORTED,
+                    "The min broker protocol version for Nested app auth should be equal or more than 15.0."
                             + " Current required version is set to: " + parameters.getRequiredBrokerProtocolVersion());
         }
     }

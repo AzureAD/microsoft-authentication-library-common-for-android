@@ -272,6 +272,19 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         }
 
         try {
+//            builder.addParameterIfAbsent(AzureActiveDirectorySlice.DC_PARAMETER, "ESTS-PUB-WUS2-AZ1-FD000-TEST1");
+//            builder.addParameterIfAbsent(
+//                    "jwtcredsmsa",
+//                    "true"
+//            );
+//            builder.addParameterIfAbsent(
+//                    "pwbrokerpuidtoguid",
+//                    "true"
+//            );
+//            builder.addParameterIfAbsent(
+//                    "bypasspwpoliciesmsa",
+//                    "true"
+//            );
             return builder.build();
         } catch (final URISyntaxException e) {
             throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
