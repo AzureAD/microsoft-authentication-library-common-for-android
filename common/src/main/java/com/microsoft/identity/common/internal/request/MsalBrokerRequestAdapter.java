@@ -100,6 +100,12 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .scope(TextUtils.join(" ", parameters.getScopes()))
                 .redirect(parameters.getRedirectUri())
                 .clientId(parameters.getClientId())
+                .childRedirect(parameters.getChildRedirectUri())
+                .childClientId(parameters.getChildClientId())
+//                .redirect("msauth://com.microsoft.teams/VCpKgbYCXucoq1mZ4BZPsh5taNE=")
+//                .clientId("8ec6bc83-69c8-4392-8f08-b3c986009232")
+//                .childRedirect("brk-multihub://localhost:3000")
+//                .childClientId("be742297-5370-4852-8cd0-6cbf49754e48")
                 .userName(parameters.getLoginHint())
                 .extraQueryStringParameter(extraQueryStringParameter)
                 .extraOptions(extraOptions)
@@ -127,6 +133,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 )
                 .preferredBrowser(parameters.getPreferredBrowser())
                 .build();
+com.microsoft.identity.common.java.logging.Logger.info(methodTag, "brkRedirectURI "+ brokerRequest.getRedirect() + " brkClientId " + brokerRequest.getClientId() + " clientId "+ brokerRequest.getChildClientId() + " redirectURI "+ brokerRequest.getChildRedirect());
 
         return brokerRequest;
     }
@@ -174,6 +181,12 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .redirect(parameters.getRedirectUri())
                 .extraOptions(extraOptions)
                 .clientId(parameters.getClientId())
+                .childRedirect(parameters.getChildRedirectUri())
+                .childClientId(parameters.getChildClientId())
+//                .redirect("msauth://com.microsoft.teams/VCpKgbYCXucoq1mZ4BZPsh5taNE=")
+//                .clientId("8ec6bc83-69c8-4392-8f08-b3c986009232")
+//                .childRedirect("brk-multihub://localhost:3000")
+//                .childClientId("be742297-5370-4852-8cd0-6cbf49754e48")
                 .homeAccountId(parameters.getAccount().getHomeAccountId())
                 .localAccountId(parameters.getAccount().getLocalAccountId())
                 .userName(parameters.getAccount().getUsername())

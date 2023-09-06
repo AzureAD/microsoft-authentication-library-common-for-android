@@ -35,6 +35,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 
+import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.DefaultConnectionService;
 import com.microsoft.identity.common.internal.broker.BrokerData;
@@ -148,7 +149,11 @@ public class AndroidPlatformUtil implements IPlatformUtil {
                 isValidBrokerRedirect |= StringUtil.equalsIgnoreCase(redirectUri, AuthenticationConstants.Broker.BROKER_REDIRECT_URI);
             }
         }
-
+        if (BuildConfig.DEBUG) {
+            // To handle the NAA scenario
+            if (redirectUri.equals("msauth://com.microsoft.teams/VCpKgbYCXucoq1mZ4BZPsh5taNE="))
+                return true;
+        }
         if (!isValidBrokerRedirect) {
             com.microsoft.identity.common.logging.Logger.error(
                     methodTag,
