@@ -41,9 +41,6 @@ public class AuthTestParams {
     private final String resource;
     private final String clientId;
     private final String redirectUri;
-
-    private final String childClientId;
-    private final String childRedirectUri;
     private final String authority;
     private final Activity activity;
     private final AuthScheme authScheme;

@@ -110,7 +110,7 @@ public class BrokerProtocolVersionUtil {
      * Verifies if client required broker protocol version supports NestedApp parameters.
      *
      * @param clientRequiredBrokerProtocolVersion broker protocol version of the calling app.
-     * @return true if the broker protocol version of the calling app is larger or equal than
+     * @return true if the broker protocol version of the calling app is larger or equal to
      * the {@link BrokerProtocolVersionUtil#MSAL_TO_BROKER_PROTOCOL_NAA_MINIMUM_VERSION}.
      */
     public static boolean canSupportNestedAppAuthentication(@Nullable final String clientRequiredBrokerProtocolVersion) {

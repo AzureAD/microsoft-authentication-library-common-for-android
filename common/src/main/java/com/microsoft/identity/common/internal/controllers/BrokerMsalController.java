@@ -334,7 +334,6 @@ public class BrokerMsalController extends BaseController {
                         .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
         );
 
-
         //Create BrokerResultFuture to block on response from the broker... response will be return as an activity result
         //BrokerActivity will receive the result and ask the API dispatcher to complete the request
         //In completeAcquireToken below we will set the result on the future and unblock the flow.
@@ -1172,7 +1171,7 @@ public class BrokerMsalController extends BaseController {
                             + " Current required version is set to: " + parameters.getRequiredBrokerProtocolVersion());
         }
 
-        // Also add a check for NAA here
+        // Nested app auth is only supported when required protocol version is >=15
         if ((parameters.getChildClientId() != null || parameters.getChildRedirectUri() != null)
                 && !BrokerProtocolVersionUtil.canSupportNestedAppAuthentication(requiredProtocolVersion)) {
             throw new ClientException(ClientException.NESTED_APP_AUTH_NOT_SUPPORTED,

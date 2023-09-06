@@ -77,8 +77,6 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     @Expose
     private final String homeTenantId;
 
-    private boolean isNAA;
-
     @Override
     public void validate() throws ArgumentException {
         super.validate();
@@ -120,7 +118,6 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
             }
             if (getSdkType().isCapableOfMSA() &&
                     !getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
-                // MsalTestApp has a different package signature and the redirectURI used for testing does not match the sig hash
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
                         ArgumentException.REDIRECT_URI_ARGUMENT_NAME, "The redirect URI doesn't match the uri" +
