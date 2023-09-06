@@ -39,7 +39,6 @@ import com.microsoft.identity.common.java.cache.CacheRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
-import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
@@ -64,7 +63,6 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
@@ -79,7 +77,6 @@ import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptPa
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.java.request.BrokerRequestType;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
@@ -89,7 +86,6 @@ import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ResultUtil;
-import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
@@ -270,14 +266,15 @@ public abstract class BaseController {
         }
 
 
-        if (parameters.getChildRedirectUri() != null && parameters.getChildClientId() !=null) {
+        if (parameters.getChildRedirectUri() != null && parameters.getChildClientId() != null) {
+            // is NAA scenario, set all NAA params for auth flow
             builder.setBrkRedirectUri(parameters.getRedirectUri());
             builder.setClientId(parameters.getChildClientId())
                     .setRedirectUri(parameters.getChildRedirectUri());
             builder.setBrkClientId(parameters.getClientId());
         } else {
             builder.setClientId(parameters.getClientId())
-                .setRedirectUri(parameters.getRedirectUri());
+                    .setRedirectUri(parameters.getRedirectUri());
         }
         if (builder instanceof MicrosoftAuthorizationRequest.Builder) {
             ((MicrosoftAuthorizationRequest.Builder) builder).setCorrelationId(correlationId);
@@ -451,62 +448,43 @@ public abstract class BaseController {
                     methodTag,
                     "Token request was successful"
             );
-
+            List<ICacheRecord> acquireTokenResultRecords = null;
             if (parameters.getChildClientId() != null) {
-                // DO NOT SAVE THE  TOKEN IN NAA FLOW
-                // Create a new AuthenticationResult to hold the saved record
-                setAcquireTokenResult(
-                        parameters,
+                // Do not save the token in naa flow
+                acquireTokenResultRecords = getAcquireTokenResultRecords(
                         (MicrosoftStsTokenResponse) tokenResult.getTokenResponse(),
                         (MicrosoftStsOAuth2Strategy) strategy,
-                        acquireTokenSilentResult,
-                        (MicrosoftStsAuthorizationRequest) getAuthorizationRequest(strategy, parameters),
-                        false
-                );
-                // Set the client telemetry...
-                if (null != tokenResult.getCliTelemInfo()) {
-                    final CliTelemInfo cliTelemInfo = tokenResult.getCliTelemInfo();
-                    LocalAuthenticationResult localAuthenticationResult =  (LocalAuthenticationResult) acquireTokenSilentResult.getLocalAuthenticationResult();
-                    localAuthenticationResult.setSpeRing(cliTelemInfo.getSpeRing());
-                    localAuthenticationResult.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
-                    Telemetry.emit(new CacheEndEvent().putSpeInfo(tokenResult.getCliTelemInfo().getSpeRing()));
-                } else {
-                    // we can't put SpeInfo as the CliTelemInfo is null
-                    Telemetry.emit(new CacheEndEvent());
-                }
-            }
-            else {
-                // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance tokenCache while calling method saveAndLoadAggregatedAccountData
-                @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> savedRecords = tokenCache.saveAndLoadAggregatedAccountData(
+                        (MicrosoftStsAuthorizationRequest) getAuthorizationRequest(strategy, parameters));
+            } else {
+                acquireTokenResultRecords = tokenCache.saveAndLoadAggregatedAccountData(
                         strategy,
                         getAuthorizationRequest(strategy, parameters),
                         tokenResult.getTokenResponse()
                 );
-
-                final ICacheRecord savedRecord = savedRecords.get(0);
-
-                // Create a new AuthenticationResult to hold the saved record
-                final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
-                        finalizeCacheRecordForResult(savedRecord, parameters.getAuthenticationScheme()),
-                        savedRecords,
-                        parameters.getSdkType(),
-                        false
-                );
-
-                // Set the client telemetry...
-                if (null != tokenResult.getCliTelemInfo()) {
-                    final CliTelemInfo cliTelemInfo = tokenResult.getCliTelemInfo();
-                    authenticationResult.setSpeRing(cliTelemInfo.getSpeRing());
-                    authenticationResult.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
-                    Telemetry.emit(new CacheEndEvent().putSpeInfo(tokenResult.getCliTelemInfo().getSpeRing()));
-                } else {
-                    // we can't put SpeInfo as the CliTelemInfo is null
-                    Telemetry.emit(new CacheEndEvent());
-                }
-
-                // Set the AuthenticationResult on the final result object
-                acquireTokenSilentResult.setLocalAuthenticationResult(authenticationResult);
             }
+            final ICacheRecord savedRecord = acquireTokenResultRecords.get(0);
+
+            // Create a new AuthenticationResult to hold the saved record
+            final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
+                    finalizeCacheRecordForResult(savedRecord, parameters.getAuthenticationScheme()),
+                    acquireTokenResultRecords,
+                    parameters.getSdkType(),
+                    false
+            );
+
+            // Set the client telemetry...
+            if (null != tokenResult.getCliTelemInfo()) {
+                final CliTelemInfo cliTelemInfo = tokenResult.getCliTelemInfo();
+                authenticationResult.setSpeRing(cliTelemInfo.getSpeRing());
+                authenticationResult.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
+                Telemetry.emit(new CacheEndEvent().putSpeInfo(tokenResult.getCliTelemInfo().getSpeRing()));
+            } else {
+                // we can't put SpeInfo as the CliTelemInfo is null
+                Telemetry.emit(new CacheEndEvent());
+            }
+
+            // Set the AuthenticationResult on the final result object
+            acquireTokenSilentResult.setLocalAuthenticationResult(authenticationResult);
         } else {
             if (tokenResult.getErrorResponse() != null) {
                 final String errorCode = tokenResult.getErrorResponse().getError();
@@ -643,13 +621,9 @@ public abstract class BaseController {
         return tokenResult;
     }
 
-    protected void setAcquireTokenResult(@NonNull SilentTokenCommandParameters brokerParameters,
-                                         @NonNull final MicrosoftStsTokenResponse microsoftStsTokenResponse,
-                                         @NonNull final MicrosoftStsOAuth2Strategy oAuth2Strategy,
-                                         @NonNull final AcquireTokenResult acquireTokenResult,
-                                         @NonNull final MicrosoftStsAuthorizationRequest authorizationRequest,
-                                         final boolean isServicedFromCache)
-            throws ClientException, ServiceException {
+    private List<ICacheRecord> getAcquireTokenResultRecords(@NonNull final MicrosoftStsTokenResponse microsoftStsTokenResponse,
+                                                            @NonNull final MicrosoftStsOAuth2Strategy oAuth2Strategy,
+                                                            @NonNull final MicrosoftStsAuthorizationRequest authorizationRequest) {
         final MicrosoftStsAccountCredentialAdapter credentialAdapter = new MicrosoftStsAccountCredentialAdapter();
         final AccountRecord accountRecord = credentialAdapter.createAccount(
                 oAuth2Strategy,
@@ -658,11 +632,11 @@ public abstract class BaseController {
         );
 
         final AccessTokenRecord accessTokenRecord;
-            accessTokenRecord = credentialAdapter.createAccessToken(
-                    oAuth2Strategy,
-                    authorizationRequest,
-                    microsoftStsTokenResponse
-            );
+        accessTokenRecord = credentialAdapter.createAccessToken(
+                oAuth2Strategy,
+                authorizationRequest,
+                microsoftStsTokenResponse
+        );
 
         final IdTokenRecord idTokenRecord = credentialAdapter.createIdToken(
                 oAuth2Strategy,
@@ -686,25 +660,7 @@ public abstract class BaseController {
         final List<ICacheRecord> cacheRecordList = new ArrayList<>();
         cacheRecordList.add(cacheRecord);
 
-        // Create the local authentication result
-        final LocalAuthenticationResult localAuthenticationResult =
-                new LocalAuthenticationResult(
-                        finalizeCacheRecordForResult(
-                                cacheRecord,
-                                brokerParameters.getAuthenticationScheme()
-                        ),
-                        cacheRecordList,
-                        SdkType.MSAL,
-                        isServicedFromCache
-                );
-
-        if (null != acquireTokenResult.getTokenResult().getCliTelemInfo()) {
-            final CliTelemInfo cliTelemInfo = acquireTokenResult.getTokenResult().getCliTelemInfo();
-            localAuthenticationResult.setSpeRing(cliTelemInfo.getSpeRing());
-            localAuthenticationResult.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
-        }
-
-        acquireTokenResult.setLocalAuthenticationResult(localAuthenticationResult);
+        return cacheRecordList;
     }
 
     public OAuth2Strategy getStrategy(@NonNull final SilentTokenCommandParameters parameters) throws ClientException {
@@ -723,8 +679,7 @@ public abstract class BaseController {
         final OAuth2TokenCache cache = parameters.getOAuth2TokenCache();
 
         //Get cacheRecord from cache
-        @SuppressWarnings("unchecked")
-        final List<ICacheRecord> cacheRecords = cache.loadWithAggregatedAccountData(
+        @SuppressWarnings("unchecked") final List<ICacheRecord> cacheRecords = cache.loadWithAggregatedAccountData(
                 parameters.getClientId(),
                 parameters.getApplicationIdentifier(),
                 parameters.getMamEnrollmentId(),
@@ -837,7 +792,7 @@ public abstract class BaseController {
 
         final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest(parameters.getAuthenticationScheme());
         refreshTokenRequest.setClientId(parameters.getClientId());
-        if (parameters.getChildClientId()!=null) {
+        if (parameters.getChildClientId() != null) {
             refreshTokenRequest.setClientId(parameters.getChildClientId());
             refreshTokenRequest.setBrkClientId(parameters.getClientId());
             refreshTokenRequest.setRedirectUri(parameters.getChildRedirectUri());

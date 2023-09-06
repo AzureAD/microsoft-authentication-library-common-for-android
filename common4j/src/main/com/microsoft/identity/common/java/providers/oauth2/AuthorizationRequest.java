@@ -85,21 +85,17 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     @SerializedName("redirect_uri")
     private final String mRedirectUri;
 
-
-
     /**
      * A required value.
      * <p>
-     * The client identifier as assigned by the authorization server, when the client was registered.
+     * The brk client identifier as assigned by the authorization server, when the client was registered (ClientId of the hub app).
      */
     @Expose()
     @SerializedName("brk_client_id")
     private final String mBrkClientId;
 
     /**
-     * Redirect URLs are a critical part of the OAuth flow. After a user successfully authorizes an
-     * application, the authorization server will redirect the user back to the application with
-     * either an authorization code or access token in the URL.
+     * Redirect URL of the hub app.
      */
     @SerializedName("brk_redirect_uri")
     private final String mBrkRedirectUri;
@@ -214,7 +210,6 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
             return self();
         }
 
-
         public B setBrkClientId(String brkClientId) {
             mBrkClientId = brkClientId;
             return self();
@@ -224,7 +219,6 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
             mBrkRedirectUri = brkRedirectUri;
             return self();
         }
-
 
         public B setState(String state) {
             mState = state;
@@ -274,7 +268,6 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
                 "mResponseType='" + mResponseType + '\'' +
                 ", mClientId='" + mClientId + '\'' +
                 ", mRedirectUri='" + mRedirectUri + '\'' +
-
                 ", mBrkClientId='" + mBrkClientId + '\'' +
                 ", mBrkRedirectUri='" + mBrkRedirectUri + '\'' +
                 ", mScope='" + mScope + '\'' +

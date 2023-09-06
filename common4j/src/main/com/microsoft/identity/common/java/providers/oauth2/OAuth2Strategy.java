@@ -198,61 +198,55 @@ public abstract class OAuth2Strategy
                 "Performing token request..."
         );
 
-        try {
-            final String requestBody = getRequestBody(request);
-            final Map<String, String> headers = new TreeMap<>();
-            headers.put(CLIENT_REQUEST_ID, DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+        final String requestBody = getRequestBody(request);
+        final Map<String, String> headers = new TreeMap<>();
+        headers.put(CLIENT_REQUEST_ID, DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
 
-            if (request instanceof MicrosoftTokenRequest &&
-                    !StringUtil.isNullOrEmpty(((MicrosoftTokenRequest) request).getBrokerVersion())) {
-                headers.put(
-                        Device.PlatformIdParameters.BROKER_VERSION,
-                        ((MicrosoftTokenRequest) request).getBrokerVersion()
-                );
-            }
-            headers.putAll(Device.getPlatformIdParameters());
-            headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT,
-                    DiagnosticContext.INSTANCE.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
-            headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, Device.getProductVersion());
-            headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
-            headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
-
-            if (request instanceof MicrosoftTokenRequest) {
-                headers.put(
-                        AuthenticationConstants.AAD.APP_PACKAGE_NAME,
-                        ((MicrosoftTokenRequest) request).getClientAppName()
-                );
-                headers.put(
-                        AuthenticationConstants.AAD.APP_VERSION,
-                        ((MicrosoftTokenRequest) request).getClientAppVersion()
-                );
-                if (((MicrosoftTokenRequest) request).isPKeyAuthHeaderAllowed()) {
-                    headers.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
-                }
-            }
-         //   final URL requestUrl = new URL(getTokenEndpoint());
-
-            final URL requestUrl = new URL(getTokenEndpoint()+"?dc=ESTS-PUB-WUS2-AZ1-FD000-TEST1&pwbrokerpuidtoguid=true&bypasspwpoliciesmsa=true&jwtcredsmsa=true");
-            Logger.info(TAG, "token endpoint used is "+ requestUrl);
-            final long networkStartTime = System.currentTimeMillis();
-            final HttpResponse response = httpClient.post(
-                    requestUrl,
-                    headers,
-                    requestBody.getBytes(ObjectMapper.ENCODING_SCHEME)
+        if (request instanceof MicrosoftTokenRequest &&
+                !StringUtil.isNullOrEmpty(((MicrosoftTokenRequest) request).getBrokerVersion())) {
+            headers.put(
+                    Device.PlatformIdParameters.BROKER_VERSION,
+                    ((MicrosoftTokenRequest) request).getBrokerVersion()
             );
-            final long networkEndTime = System.currentTimeMillis();
-            final long networkTime = networkEndTime - networkStartTime;
-            SpanExtension.current().setAttribute(AttributeName.elapsed_time_network_acquire_at.name(), networkTime);
-
-
-            // Record the clock skew between *this device* and EVO...
-            if (null != response.getDate()) {
-                recordClockSkew(response.getDate().getTime());
-            }
-            return response;
-        } catch (Exception e) {
-            throw e;
         }
+        headers.putAll(Device.getPlatformIdParameters());
+        headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT,
+                DiagnosticContext.INSTANCE.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
+        headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, Device.getProductVersion());
+        headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
+        headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
+
+        if (request instanceof MicrosoftTokenRequest) {
+            headers.put(
+                    AuthenticationConstants.AAD.APP_PACKAGE_NAME,
+                    ((MicrosoftTokenRequest) request).getClientAppName()
+            );
+            headers.put(
+                    AuthenticationConstants.AAD.APP_VERSION,
+                    ((MicrosoftTokenRequest) request).getClientAppVersion()
+            );
+            if (((MicrosoftTokenRequest) request).isPKeyAuthHeaderAllowed()) {
+                headers.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
+            }
+        }
+
+        final URL requestUrl = new URL(getTokenEndpoint());
+        final long networkStartTime = System.currentTimeMillis();
+        final HttpResponse response = httpClient.post(
+                requestUrl,
+                headers,
+                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME)
+        );
+        final long networkEndTime = System.currentTimeMillis();
+        final long networkTime = networkEndTime - networkStartTime;
+        SpanExtension.current().setAttribute(AttributeName.elapsed_time_network_acquire_at.name(), networkTime);
+
+
+        // Record the clock skew between *this device* and EVO...
+        if (null != response.getDate()) {
+            recordClockSkew(response.getDate().getTime());
+        }
+        return response;
     }
 
     protected String getTokenEndpoint() {

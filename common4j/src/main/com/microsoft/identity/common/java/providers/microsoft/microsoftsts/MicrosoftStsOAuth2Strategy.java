@@ -590,7 +590,6 @@ public class MicrosoftStsOAuth2Strategy
             tokenErrorResponse.setStatusCode(response.getStatusCode());
 
             if (null != response.getHeaders()) {
-
                 tokenErrorResponse.setResponseHeadersJson(
                         HeaderSerializationUtil.toJson(response.getHeaders())
                 );
