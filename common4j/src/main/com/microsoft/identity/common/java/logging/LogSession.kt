@@ -60,26 +60,6 @@ class LogSession {
         /**
          * @param tag          Used to identify the source of a log message.
          *                     It usually identifies the class or activity where the log call occurs.
-         */
-        fun logMethodCall(tag: String) {
-            val methodNameMessage = try {
-                val throwable = Throwable()
-                "${throwable.stackTrace[PARENT_METHOD_INDEX].methodName.replace(Regex("\\$\\w+"), "")} method was called"
-            } catch (exception: ArrayIndexOutOfBoundsException) {
-                "<Unidentified method>"
-            }
-
-            log(
-                tag,
-                LogLevel.INFO,
-                methodNameMessage,
-                false
-            )
-        }
-
-        /**
-         * @param tag          Used to identify the source of a log message.
-         *                     It usually identifies the class or activity where the log call occurs.
          * @param methodName   The methodName to log.
          */
         fun logMethodCall(tag: String, methodName: String) {

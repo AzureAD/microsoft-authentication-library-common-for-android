@@ -118,7 +118,7 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
     }
 
     private boolean isAuthorityCIAM() {
-        return getAuthority() instanceof CIAMAuthority;
+        return true;
     }
 
     /**
