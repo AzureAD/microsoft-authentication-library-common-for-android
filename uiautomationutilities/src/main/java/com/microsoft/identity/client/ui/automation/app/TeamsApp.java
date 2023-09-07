@@ -36,6 +36,8 @@ import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * A model for interacting with the Teams Android App during UI Test.
  */
@@ -63,6 +65,13 @@ public class TeamsApp extends App implements IFirstPartyApp {
     @Override
     public void initialiseAppImpl() {
         // nothing needed here
+    }
+
+    /**
+     * Handle UI shown when launching teams with an account already signed in
+     */
+    public void handleLaunchWhileSignedIn() {
+        UiAutomatorUtils.handleButtonClickSafely("android:id/button2", TimeUnit.SECONDS.toMillis(5));
     }
 
     @Override
@@ -157,5 +166,19 @@ public class TeamsApp extends App implements IFirstPartyApp {
     public void confirmAccount(@NonNull final String username) {
         Logger.w(TAG, "confirmAccount function Not Implemented..");
         throw new UnsupportedOperationException("Not implemented");
+    }
+
+    /**
+     * Sign out of teams
+     */
+    public void signOut() {
+        Logger.i(TAG, "Handling UI to sign out an account from Teams..");
+        launch();
+        handleLaunchWhileSignedIn();
+        UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/avatarView");
+        UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/more_settings_button");
+        UiAutomatorUtils.obtainChildInScrollable("Sign out");
+        UiAutomatorUtils.handleButtonClickForObjectWithText("Sign out");
+        UiAutomatorUtils.handleButtonClick("android:id/button1");
     }
 }
