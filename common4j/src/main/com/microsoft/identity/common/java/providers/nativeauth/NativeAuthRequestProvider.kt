@@ -39,7 +39,6 @@ import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.net.HttpConstants
-import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAuthGrantType
 import com.microsoft.identity.common.java.providers.nativeauth.requests.resetpassword.ResetPasswordChallengeRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.resetpassword.ResetPasswordContinueRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.resetpassword.ResetPasswordPollCompletionRequest
@@ -215,7 +214,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             oob = commandParameters.code,
             clientId = config.clientId,
             signUpToken = commandParameters.signupToken,
-            grantType = NativeAuthGrantType.PASSWORDLESS_OTP.jsonValue,
+            grantType = NativeAuthConstants.GrantType.OOB,
             requestUrl = signUpContinueEndpoint,
             headers = getRequestHeaders()
         )
@@ -230,7 +229,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             password = commandParameters.password,
             clientId = config.clientId,
             signUpToken = commandParameters.signupToken,
-            grantType = NativeAuthGrantType.PASSWORD.jsonValue,
+            grantType = NativeAuthConstants.GrantType.PASSWORD,
             requestUrl = signUpContinueEndpoint,
             headers = getRequestHeaders()
         )
@@ -245,7 +244,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             attributes = commandParameters.userAttributes,
             clientId = config.clientId,
             signUpToken = commandParameters.signupToken,
-            grantType = NativeAuthGrantType.ATTRIBUTES.jsonValue,
+            grantType = NativeAuthConstants.GrantType.ATTRIBUTES,
             requestUrl = signUpContinueEndpoint,
             headers = getRequestHeaders()
         )

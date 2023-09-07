@@ -48,9 +48,9 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
+import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthConstants
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthRequestProvider
-import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAuthGrantType
 import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAuthRequest.Companion.toJsonString
 import io.mockk.every
 import io.mockk.mockk
@@ -76,7 +76,7 @@ class NativeAuthRequestHandlerTest {
     private val signInSLT = "1234"
     private val emptyString = ""
     private val credentialToken = "uY29tL2F1dGhlbnRpY"
-    private val grantType = NativeAuthGrantType.PASSWORDLESS_OTP.jsonValue
+    private val grantType = NativeAuthConstants.GrantType.OOB
     private val signupToken = "ifQ"
 
     private val mockConfig = mockk<NativeAuthOAuth2Configuration> {

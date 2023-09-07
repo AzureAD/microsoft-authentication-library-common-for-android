@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.java.providers.nativeauth.requests.resetpassword
 
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAuthGrantType
+import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthConstants
 import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAuthRequest
 import com.microsoft.identity.common.java.util.ArgUtils
 import java.net.URL
@@ -54,7 +54,7 @@ class ResetPasswordContinueRequest private constructor(
                 headers = headers,
                 parameters = NativeAuthResetPasswordContinueRequestBody(
                     clientId = clientId,
-                    grantType = NativeAuthGrantType.PASSWORDLESS_OTP.jsonValue,
+                    grantType = NativeAuthConstants.GrantType.OOB,
                     passwordResetToken = passwordResetToken,
                     oob = oob
                 )
