@@ -123,12 +123,24 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
             aadLoginComponentHandler.handleRegistration();
         }
 
+        if (parameters.isGetTheAppExpected()) {
+            aadLoginComponentHandler.handleGetTheAppPage();
+        }
+
         if (parameters.isEnrollPageExpected()) {
             final UiResponse enrollPageResponse = parameters.getEnrollPageResponse();
             if (enrollPageResponse == UiResponse.ACCEPT) {
                 aadLoginComponentHandler.acceptEnroll();
             } else {
                 aadLoginComponentHandler.declineEnroll();
+            }
+        }
+
+        if (parameters.isSecondPasswordPageExpected()) {
+            try {
+                loginComponentHandler.handlePasswordField(password);
+            } catch (AssertionError e) {
+                throw new AssertionError("Prompt handler failed to handle second password prompt...", e);
             }
         }
     }

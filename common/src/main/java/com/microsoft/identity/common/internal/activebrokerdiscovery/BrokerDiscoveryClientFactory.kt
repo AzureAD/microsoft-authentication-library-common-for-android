@@ -24,6 +24,8 @@ package com.microsoft.identity.common.internal.activebrokerdiscovery
 
 import android.content.Context
 import com.microsoft.identity.common.BuildConfig
+import com.microsoft.identity.common.internal.cache.ClientActiveBrokerCache
+import com.microsoft.identity.common.internal.cache.IClientActiveBrokerCache
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
@@ -33,7 +35,9 @@ import kotlinx.coroutines.sync.withLock
  * A class for initializing a new [IBrokerDiscoveryClient] object.
  **/
 class BrokerDiscoveryClientFactory {
+
     companion object {
+
         @Volatile
         private var IS_NEW_DISCOVERY_ENABLED = false
 
@@ -70,14 +74,36 @@ class BrokerDiscoveryClientFactory {
          * Initializes a new [IBrokerDiscoveryClient] object.
          **/
         @JvmStatic
-        fun getInstance(context: Context,
-                        platformComponents: IPlatformComponents) : IBrokerDiscoveryClient{
+        fun getInstanceForClientSdk(context: Context,
+                                    platformComponents: IPlatformComponents) : IBrokerDiscoveryClient{
+            return getInstance(context,
+                ClientActiveBrokerCache.getClientSdkCache(platformComponents.storageSupplier))
+        }
+
+        /**
+         * Initializes a new [IBrokerDiscoveryClient] object
+         * to be used by Broker API, WPJ API.
+         **/
+        @JvmStatic
+        fun getInstanceForBrokerSdk(context: Context,
+                                    platformComponents: IPlatformComponents) : IBrokerDiscoveryClient{
+            return getInstance(context,
+                ClientActiveBrokerCache.getBrokerSdkCache(platformComponents.storageSupplier))
+        }
+
+        /**
+         * Initializes a new [IBrokerDiscoveryClient] object.
+         * to be used by OneAuth/MSAL.
+         **/
+        @JvmStatic
+        private fun getInstance(context: Context,
+                                cache: IClientActiveBrokerCache) : IBrokerDiscoveryClient{
             if (instance == null){
                 runBlocking {
                     lock.withLock {
                         if (instance == null) {
                             instance = if (isNewBrokerDiscoveryEnabled()) {
-                                BrokerDiscoveryClient(context, platformComponents)
+                                BrokerDiscoveryClient(context, cache)
                             } else {
                                 LegacyBrokerDiscoveryClient(context)
                             }

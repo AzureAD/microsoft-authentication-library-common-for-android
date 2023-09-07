@@ -147,7 +147,7 @@ public class BrokerMsalController extends BaseController {
         mBrokerOperationExecutor = new BrokerOperationExecutor(
                 ipcStrategies,
                 new ActiveBrokerCacheUpdater(applicationContext,
-                        ClientActiveBrokerCache.getCache(components.getStorageSupplier())));
+                        ClientActiveBrokerCache.getClientSdkCache(components.getStorageSupplier())));
         mHelloCache = getHelloCache();
     }
 
