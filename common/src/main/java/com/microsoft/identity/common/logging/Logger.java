@@ -28,7 +28,10 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-// Android's Logger. Wraps around common4j's logger (with an addition of Logcat).
+
+/**
+ * Android's Logger. Wraps around common4j's logger (with an addition of Logcat).
+ */
 public class Logger {
 
     private static final String ANDROID_LOGCAT_LOGGER_IDENTIFIER = "ANDROID_LOGCAT_LOGGER";

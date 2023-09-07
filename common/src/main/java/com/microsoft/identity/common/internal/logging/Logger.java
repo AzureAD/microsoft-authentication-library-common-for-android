@@ -31,11 +31,12 @@ import com.microsoft.identity.common.java.telemetry.events.DeprecatedApiUsageEve
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
- * Deprecated.
- * <p>
  * This is now acting as an adapter for {@link com.microsoft.identity.common.java.logging.Logger}.
+ * <p>
+ * Deprecated: Broker partners should use class linked above.
  **/
 @SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
+@Deprecated
 public class Logger extends com.microsoft.identity.common.logging.Logger {
 
     private static boolean sEmitDeprecationEvent = true;

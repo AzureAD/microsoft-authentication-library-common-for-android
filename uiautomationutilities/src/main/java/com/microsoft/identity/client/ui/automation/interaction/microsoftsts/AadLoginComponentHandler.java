@@ -183,6 +183,15 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     }
 
     @Override
+    public void handleGetTheAppPage() {
+        Logger.i(TAG, "Handle Get the app page..");
+        final UiObject getAppBtn = UiAutomatorUtils.obtainUiObjectWithText("Get the app", mFindLoginUiElementTimeout);
+        Assert.assertTrue("Get the app page appears.", getAppBtn.exists());
+
+        handleNextButton();
+    }
+
+    @Override
     public void handleStaySignedIn(final UiResponse staySignedInResponse) {
         final UiObject staySignedInView = UiAutomatorUtils.obtainUiObjectWithText("Stay signed in?", mFindLoginUiElementTimeout);
 
