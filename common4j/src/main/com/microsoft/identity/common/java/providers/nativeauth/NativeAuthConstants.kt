@@ -6,5 +6,6 @@ object NativeAuthConstants {
         const val OOB = "oob"
         const val SLT = "slt"
         const val REDIRECT = "redirect"
+        const val ATTRIBUTES = "attributes"
     }
 }

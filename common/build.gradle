@@ -169,9 +169,9 @@ dependencies {
     testImplementation 'org.json:json:20160810'
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
-    testImplementation "io.mockk:mockk:1.11.0"
-    testImplementation "io.mockk:mockk-agent-jvm:1.12.0"
-    testImplementation group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: '1.5.30'
+    testImplementation "io.mockk:mockk:$rootProject.ext.mockkVersion"
+    testImplementation "io.mockk:mockk:$rootProject.ext.mockkAgentJvmVersion"
+    testImplementation group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: '$rootProject.ext.kotlinReflectVersion'
     testImplementation "org.mockito:mockito-inline:$rootProject.ext.mockitoCoreVersion"
     testImplementation("org.mockito.kotlin:mockito-kotlin:$rootProject.ext.mockitoKotlinVersion") {
         exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib'
@@ -190,8 +190,6 @@ dependencies {
     testImplementation("org.mockito.kotlin:mockito-kotlin:$rootProject.ext.mockitoKotlinVersion") {
         exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib'
     }
-
-    testImplementation "io.mockk:mockk:1.11.0"
 
     testCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     testAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
