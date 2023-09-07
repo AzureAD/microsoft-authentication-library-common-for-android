@@ -43,6 +43,12 @@ import lombok.NonNull;
 public class UrlUtil {
     private static final String TAG = UrlUtil.class.getSimpleName();
 
+    public static URL appendPathToURL(@NonNull final URL urlToAppend,
+                                      @Nullable final String pathString) // TODO remove post test slice
+            throws URISyntaxException, MalformedURLException {
+        return appendPathToURL(urlToAppend, pathString, null);
+    }
+
     /**
      * Append a given path string to a URL.
      *
@@ -51,7 +57,8 @@ public class UrlUtil {
      * @return appended URL
      */
     public static URL appendPathToURL(@NonNull final URL urlToAppend,
-                                      @Nullable final String pathString)
+                                      @Nullable final String pathString,
+                                      @Nullable final String queryParam) // TODO remove post test slice
             throws URISyntaxException, MalformedURLException {
 
         if (StringUtil.isNullOrEmpty(pathString)) {
@@ -66,8 +73,17 @@ public class UrlUtil {
         final CommonURIBuilder builder = new CommonURIBuilder(urlToAppend.toString());
         final List<String> pathSegments = builder.getPathSegments();
 
-        final List<String> combinedPathSegments = new ArrayList<>(pathSegments);
+        final List<String> combinedPathSegments = new ArrayList<>();
 
+        // TODO check this with MSAL team
+        // Add all non-empty path segments from the base URL
+        for (final String path : pathSegments) {
+            if (!StringUtil.isNullOrEmpty(path)) {
+                combinedPathSegments.add(path);
+            }
+        }
+
+        // Add all non-empty path segments from the path to append
         for (final String path : pathSegmentsToAppend) {
             if (!StringUtil.isNullOrEmpty(path)) {
                 combinedPathSegments.add(path);
@@ -75,6 +91,9 @@ public class UrlUtil {
         }
 
         builder.setPathSegments(combinedPathSegments);
+        if (queryParam != null && !queryParam.isEmpty()) {
+            builder.setQuery(queryParam);
+        }
         return builder.build().toURL();
     }
 

@@ -394,6 +394,11 @@ public class ClientException extends BaseException {
     public static final String UNSUPPORTED_ANDROID_API_VERSION = "unsupported_android_api_version";
 
     /**
+     * Invalid CIAM Authority used when creative Native Auth Authority
+     */
+    public static final String NATIVE_AUTH_INVALID_CIAM_AUTHORITY = "native_auth_invalid_ciam_authority";
+
+    /**
      * Error code to be returned when the broker determines that only account manager can be used
      * in the Broker Discovery process.
      **/
