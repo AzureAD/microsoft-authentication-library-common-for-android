@@ -28,7 +28,9 @@ import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
 import com.microsoft.identity.common.java.util.isAttributeValidationFailed
 import com.microsoft.identity.common.java.util.isAuthNotSupported
+import com.microsoft.identity.common.java.util.isInvalidClient
 import com.microsoft.identity.common.java.util.isInvalidEmail
+import com.microsoft.identity.common.java.util.isInvalidParameter
 import com.microsoft.identity.common.java.util.isPasswordBanned
 import com.microsoft.identity.common.java.util.isPasswordRecentlyUsed
 import com.microsoft.identity.common.java.util.isPasswordTooLong
@@ -71,7 +73,7 @@ data class SignUpStartApiResponse(
                             errorDescription = errorDescription.orEmpty()
                         )
                     }
-                    errorCodes?.get(0).isInvalidEmail() -> {
+                    errorCodes?.get(0).isInvalidParameter() and (errorDescription?.isInvalidEmail() == true) -> {
                         SignUpStartApiResult.InvalidEmail(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty()

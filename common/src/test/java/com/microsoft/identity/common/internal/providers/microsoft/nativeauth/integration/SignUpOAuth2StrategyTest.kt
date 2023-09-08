@@ -72,6 +72,7 @@ import java.util.UUID
 class SignUpOAuth2StrategyTest {
     private val username = "user@email.com"
     private val invalidUsername = "invalidUsername"
+    private val invalidClientId = "d7ce036a-8cc5-4734-b475-5ae4a0d5ab" // missing digits
     private val password = "verySafePassword"
     private val tenant = "samtoso.onmicrosoft.com"
     private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
@@ -207,6 +208,26 @@ class SignUpOAuth2StrategyTest {
             signUpStartCommandParameters
         )
         assertTrue(signupResult is SignUpStartApiResult.InvalidEmail)
+    }
+
+    @Test
+    fun testPerformSignUpStartWithInvalidClientId() {
+        configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.INVALID_CLIENT
+        )
+
+        val signUpStartCommandParameters = SignUpStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .clientId(invalidClientId)
+            .build()
+
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
+            signUpStartCommandParameters
+        )
+        assertTrue(signupResult is SignUpStartApiResult.UnknownError)
     }
 
     @Test

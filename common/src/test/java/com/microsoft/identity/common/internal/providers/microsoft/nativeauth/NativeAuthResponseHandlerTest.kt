@@ -103,7 +103,7 @@ class NativeAuthResponseHandlerTest {
     private val userNotFoundError = "user_not_found"
     private val userAlreadyExistsError = "user_already_exists"
     private val invalidErrorCode = 0
-    private val invalidEmailErrorCode = 90100
+    private val invalidParameterErrorCode = 90100
     private val userNotFoundErrorCode = 50034
     private val errorStatusCode = 400
     private val successStatusCode = 200
@@ -276,14 +276,31 @@ class NativeAuthResponseHandlerTest {
             challengeType = null,
             signupToken = null,
             error = null,
-            errorCodes = listOf(invalidEmailErrorCode),
-            errorDescription = null,
+            errorCodes = listOf(invalidParameterErrorCode),
+            errorDescription = "username parameter is empty or not valid.",
             unverifiedAttributes = null,
             invalidAttributes = null,
             details = null
         )
         val apiResult = signUpStartApiResponse.toResult()
         assertTrue(apiResult is SignUpStartApiResult.InvalidEmail)
+    }
+
+    @Test
+    fun testSignUpStartApiResponseInvalidParameter() {
+        val signUpStartApiResponse = SignUpStartApiResponse(
+            statusCode = errorStatusCode,
+            challengeType = null,
+            signupToken = null,
+            error = null,
+            errorCodes = listOf(invalidParameterErrorCode),
+            errorDescription = "client_id parameter is empty or not valid.",
+            unverifiedAttributes = null,
+            invalidAttributes = null,
+            details = null
+        )
+        val apiResult = signUpStartApiResponse.toResult()
+        assertTrue(apiResult is SignUpStartApiResult.UnknownError)
     }
 
     @Test

@@ -90,7 +90,7 @@ internal fun Int?.isUserNotFound(): Boolean {
     return this == 50034
 }
 
-internal fun Int?.isInvalidEmail() : Boolean {
+internal fun Int?.isInvalidParameter() : Boolean {
     return this == 90100
 }
 
@@ -112,6 +112,14 @@ fun Int?.isMFARequired(): Boolean {
 
 internal fun String?.isVerificationRequired(): Boolean {
     return this.contentEquals(other = "verification_required", ignoreCase = true)
+}
+
+internal fun String?.isInvalidEmail(): Boolean {
+    return (this?.contains(other = "username parameter is empty or not valid", ignoreCase = true) == true )
+}
+
+internal fun String?.isInvalidClient(): Boolean {
+    return (this?.contains(other = "client_id parameter is empty or not valid", ignoreCase = true) == true)
 }
 
 internal fun String?.isAttributeValidationFailed(): Boolean {
