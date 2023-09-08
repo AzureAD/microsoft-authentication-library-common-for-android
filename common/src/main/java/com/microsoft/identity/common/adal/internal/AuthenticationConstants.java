@@ -1072,10 +1072,16 @@ public final class AuthenticationConstants {
         public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE = "1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
 
         /**
-         * Signature info for Intune Company portal app that installs authenticator
+         * Signature info for Intune Company portal release app that installs authenticator
          * component. Generated with SHA-512.
          */
         public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512 = "jPpMoaNvcxSLMX4yG4C3Gf86rtTqh33SqpuRKg4WOP+MnnpA52zZgvKLW76U4Cqqf68iaBk9W7k/jhciiSAtgQ==";
+
+        /**
+         * Signature info for Intune Company portal debug app that installs authenticator
+         * component. Generated with SHA-512.
+         */
+        public static final String COMPANY_PORTAL_APP_DEBUG_SIGNATURE_SHA512 = "oIuNoUwMsxC10VneTQXnt/GXN+Pjqd6mpOKEMF/cH3i06K93TZMBWq+fHN/zt4zUe/W6zGj6YLymd1/tGuypNQ==";
 
         /**
          * Signature info for Azure authenticator release app that installs authenticator

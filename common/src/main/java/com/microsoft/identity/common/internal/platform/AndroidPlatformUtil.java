@@ -22,7 +22,12 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE_SHA512;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE_SHA512;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_DEBUG_SIGNATURE_SHA512;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512;
 
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -137,20 +142,16 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         final String methodTag = TAG + ":isValidCallingApp";
         final String expectedBrokerRedirectUri = PackageHelper.getBrokerRedirectUri(mContext, packageName);
         boolean isValidBrokerRedirect = StringUtil.equalsIgnoreCase(redirectUri, expectedBrokerRedirectUri);
-        if (packageName.equals(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)) {
-            final PackageHelper info = new PackageHelper(mContext.getPackageManager());
-            //For merely verifying that the app is AuthApp, use a 512 hash.
-            final String signatureDigest = info.getSha512SignatureForPackage(packageName);
-            if (BrokerData.getProdMicrosoftAuthenticator().getSigningCertificateThumbprint().equals(signatureDigest)
-                    || BrokerData.getDebugMicrosoftAuthenticator().getSigningCertificateThumbprint().equals(signatureDigest)) {
-                // If the caller is the Authenticator, check if the redirect uri matches with either
-                // the one generated with package name and signature or broker redirect uri.
-                isValidBrokerRedirect |= StringUtil.equalsIgnoreCase(redirectUri, AuthenticationConstants.Broker.BROKER_REDIRECT_URI);
-            }
+
+        if (shouldAllowBrokerUri(packageName)){
+            // If the caller is cp/authapp, check if the redirect uri matches with either
+            // the one generated with package name and signature or broker redirect uri.
+            isValidBrokerRedirect |= StringUtil.equalsIgnoreCase(redirectUri,
+                    AuthenticationConstants.Broker.BROKER_REDIRECT_URI);
         }
 
         if (!isValidBrokerRedirect) {
-            com.microsoft.identity.common.logging.Logger.error(
+            Logger.error(
                     methodTag,
                     "Broker redirect uri is invalid. Expected: "
                             + expectedBrokerRedirectUri
@@ -162,6 +163,28 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         }
 
         return isValidBrokerRedirect;
+    }
+
+    boolean shouldAllowBrokerUri(@NonNull final String packageName){
+        if (!(packageName.equals(AZURE_AUTHENTICATOR_APP_PACKAGE_NAME) ||
+                packageName.equals(COMPANY_PORTAL_APP_PACKAGE_NAME))) {
+            return false;
+        }
+
+        final PackageHelper info = new PackageHelper(mContext.getPackageManager());
+        final String signingCertificateThumbprint = info.getSha512SignatureForPackage(packageName);
+
+        if (AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE_SHA512.equals(signingCertificateThumbprint) ||
+                COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512.equals(signingCertificateThumbprint)) {
+            return true;
+        }
+
+        if (BrokerData.getShouldTrustDebugBrokers()){
+            return AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE_SHA512.equals(signingCertificateThumbprint) ||
+                    COMPANY_PORTAL_APP_DEBUG_SIGNATURE_SHA512.equals(signingCertificateThumbprint);
+        }
+
+        return false;
     }
 
     @Override
