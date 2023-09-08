@@ -82,6 +82,12 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     @Override
     public void handleFirstRun() {
         CommonUtils.grantPackagePermission();
+        try {
+            selectFromAppConfiguration("com.microsoft.identity.LabsApi.Guest");
+        } catch (UiObjectNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        handlePreferBrokerSwitchButton();
     }
 
     @Override
