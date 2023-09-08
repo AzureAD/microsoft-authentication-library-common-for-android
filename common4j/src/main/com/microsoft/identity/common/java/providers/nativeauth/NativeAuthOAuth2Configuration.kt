@@ -38,7 +38,7 @@ class NativeAuthOAuth2Configuration(
     val challengeType: String,
     // Need this to decide whether or not to return mock api authority or actual authority supplied in configuration
     // Turn this on if you plan to use web auth and/or open id configuration
-    val useRealAuthority: Boolean = BuildValues.USE_REAL_AUTHORITY
+    val useRealAuthority: Boolean = BuildValues.shouldUseReadAuthority()
 ) : MicrosoftStsOAuth2Configuration() {
 
     private val TAG = NativeAuthOAuth2Configuration::class.java.simpleName
@@ -55,8 +55,8 @@ class NativeAuthOAuth2Configuration(
     private fun getEndpointUrlFromRootAndTenantAndSuffix(root: URL, endpointSuffix: String): URL {
         LogSession.logMethodCall(TAG, "${TAG}.getEndpointUrlFromRootAndTenantAndSuffix")
         return try {
-            if (BuildValues.DC.isNotEmpty()) {
-                UrlUtil.appendPathToURL(root, endpointSuffix, "dc=${BuildValues.DC}")
+            if (BuildValues.getDC().isNotEmpty()) {
+                UrlUtil.appendPathToURL(root, endpointSuffix, "dc=${BuildValues.getDC()}")
             } else {
                 UrlUtil.appendPathToURL(root, endpointSuffix)
             }
