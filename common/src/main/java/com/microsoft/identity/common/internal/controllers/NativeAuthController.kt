@@ -539,6 +539,10 @@ class NativeAuthController : BaseNativeAuthController() {
         // other tenants. Those tokens will be 'sparse', meaning that their AT/RT will not be loaded
         val fullCacheRecord = cacheRecords[0]
 
+        if (accessTokenIsNull(fullCacheRecord)) {
+            throw ServiceException(ErrorStrings.NATIVE_AUTH_NO_ACCESS_TOKEN_FOUND, "No access token found during refresh - user must be signed out.", null)
+        }
+
         if (LibraryConfiguration.getInstance().isRefreshInEnabled &&
             fullCacheRecord.accessToken != null && fullCacheRecord.accessToken.refreshOnIsActive()
         ) {
@@ -563,8 +567,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     message = "Access token is expired. Removing from cache..."
 
                 )
-                // Remove the expired token
-                tokenCache.removeCredential(fullCacheRecord.accessToken)
+
                 renewAT(
                     silentTokenCommandParameters,
                     acquireTokenSilentResult,
@@ -610,8 +613,7 @@ class NativeAuthController : BaseNativeAuthController() {
                 message = "Access token is expired. Removing from cache..."
 
             )
-            // Remove the expired token
-            tokenCache.removeCredential(fullCacheRecord.accessToken)
+
             renewAT(
                 silentTokenCommandParameters,
                 acquireTokenSilentResult,
@@ -1170,6 +1172,7 @@ class NativeAuthController : BaseNativeAuthController() {
             logLevel = Logger.LogLevel.VERBOSE,
             message = "Renewing access token..."
         )
+
         // Add the AT's scopes to the parameters so that they can be used to perform the refresh
         // token call.
         val accessTokenScopes = cacheRecord.accessToken
