@@ -169,8 +169,8 @@ dependencies {
     testImplementation 'org.json:json:20160810'
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
-    
-    testImplementation("org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion") {
+
+    testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0") {
         exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib'
     }
     testImplementation "org.powermock:powermock-module-junit4:$rootProject.ext.powerMockVersion"
