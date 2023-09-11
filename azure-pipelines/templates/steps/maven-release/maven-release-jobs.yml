@@ -1,6 +1,5 @@
 # File: azure-pipelines\templates\steps\maven-release\maven-release-jobs.yml
 # Description: Job template to publish to maven central (sonatype)
-# This templates require mvnAccessToken
 
 parameters:
 # general

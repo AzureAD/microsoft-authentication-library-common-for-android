@@ -1,6 +1,5 @@
 # File: azure-pipelines\templates\steps\vsts-release\vsts-release-template.yml
 # Description: Job template to publish to VSTS
-# This templates require mvnAccessToken
 
 parameters:
 - name: project
