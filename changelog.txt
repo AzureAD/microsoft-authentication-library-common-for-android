@@ -14,6 +14,7 @@ V.Next
 - [MINOR] Add new apk name to BrokerHost infra (#2152)
 - [MINOR] Send key to request broker data in all BrokerOperationBundle (#2159)
 - [MINOR] Catch strongbox exception on Android 14 (#2158)
+- [MINOR] Nested app auth implementation (#2168)
 
 V.15.0.0
 ----------

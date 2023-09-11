@@ -54,7 +54,7 @@ public class BrokerRequest implements Serializable {
         final static String SCOPE = "scopes";
         final static String REDIRECT = "redirect_uri";
         final static String CLIENT_ID = "client_id";
-        final static String CHILD_REDIRECT = "child_redirect_uri";
+        final static String CHILD_REDIRECT_URI = "child_redirect_uri";
         final static String CHILD_CLIENT_ID = "child_client_id";
         final static String HOME_ACCOUNT_ID = "home_account_id";
         final static String LOCAL_ACCOUNT_ID = "local_account_id";
@@ -158,13 +158,13 @@ public class BrokerRequest implements Serializable {
     private String mPrompt;
 
     /**
-     * The redirect uri for the request.
+     * The child redirect uri for the request.
      */
-    @SerializedName(SerializedNames.CHILD_REDIRECT)
-    private String mChildRedirect;
+    @SerializedName(SerializedNames.CHILD_REDIRECT_URI)
+    private String mChildRedirectUri;
 
     /**
-     * The client id of the application.
+     * The child client id of the application.
      */
     @SerializedName(SerializedNames.CHILD_CLIENT_ID)
     private String mChildClientId;
