@@ -7,9 +7,27 @@ import androidx.annotation.NonNull;
 public class BuildValues {
     //Appended to the URL constructed in NativeAuthOAuth2Configuration, used for making calls to tenants on test slices
     @NonNull
-    public static String DC = BuildConfig.DC;
+    private static String DC = BuildConfig.DC;
+
+    public static String getDC()
+    {
+        return DC;
+    }
+
+    public static void setDC(String dc) {
+        DC = dc;
+    }
 
     //The mock API authority used for testing will be rejected by validation logic run on instantiation. This flag is used to bypass those checks in various points in the application
     @NonNull
-    public static Boolean USE_REAL_AUTHORITY = BuildConfig.USE_REAL_AUTHORITY;
+    private static Boolean USE_REAL_AUTHORITY = BuildConfig.USE_REAL_AUTHORITY;
+
+    public static Boolean shouldUseReadAuthority()
+    {
+        return USE_REAL_AUTHORITY;
+    }
+
+    public static void setUseRealAuthority(Boolean ura) {
+        USE_REAL_AUTHORITY = ura;
+    }
 }
