@@ -53,7 +53,6 @@ public class OAuth2StrategyParameters {
 
     // TODO: Consider moving this field into MicrosoftStsOAuth2Configuration and updating it's endpoint methods
     //  to use OpenId Configuration.
-    @Setter
     private transient boolean mUsingOpenIdConfiguration;
 
     public void setUsingOpenIdConfiguration(final boolean isUsingOpenIdConfiguration){

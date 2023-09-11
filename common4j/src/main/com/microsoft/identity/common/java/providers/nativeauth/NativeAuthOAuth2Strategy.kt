@@ -39,9 +39,6 @@ class NativeAuthOAuth2Strategy(
     MicrosoftStsOAuth2Strategy(config, strategyParameters) {
     private val TAG = NativeAuthOAuth2Strategy::class.java.simpleName
 
-    // Hardcoding so that the environment parameter from the mock API token response matches
-    // with the environment retrieved from the (authority) endpoints.
-    // TODO fix after mock APIs
     override fun getIssuerCacheIdentifierFromTokenEndpoint(): String {
         if (config.useRealAuthority) {
             return super.getIssuerCacheIdentifierFromTokenEndpoint()
@@ -50,7 +47,6 @@ class NativeAuthOAuth2Strategy(
         }
     }
 
-    // TODO unit tests & compare with getAuthorityFromTokenEndpoint()
     fun getAuthority(): String {
         return config.authorityUrl.toString()
     }
