@@ -26,6 +26,7 @@ package com.microsoft.identity.common.internal.fido
  * Representation of WebAuthn's PublicKeyCredentialRequestOptions.
  * https://w3c.github.io/webauthn/#dictdef-publickeycredentialrequestoptions
  */
+@kotlinx.serialization.Serializable
 data class PublicKeyCredentialRequestOptions(
     val challenge: String,
     val rpId: String,

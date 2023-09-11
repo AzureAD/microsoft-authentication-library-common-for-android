@@ -4,7 +4,8 @@ plugins {
     id 'pmd'
     id 'checkstyle'
     id 'maven-publish'
-    id 'kotlin-android'
+    id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.7.21'
 }
 
 apply from: '../versioning/version_tasks.gradle'
@@ -144,6 +145,7 @@ dependencies {
     testImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
     androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$rootProject.ext.kotlinxSerializationVersion"
 
     implementation "androidx.datastore:datastore-preferences:1.0.0"
 
@@ -163,10 +165,6 @@ dependencies {
 
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
-
-    implementation "com.squareup.moshi:moshi:$rootProject.ext.moshiVersion"
-    implementation "com.squareup.moshi:moshi-kotlin:$rootProject.ext.moshiVersion"
-    implementation "com.squareup.moshi:moshi-adapters:$rootProject.ext.moshiAdaptersVersion"
 
     // Test dependencies
     // Needed to resolve JSONObject inside of non-instrumented tests

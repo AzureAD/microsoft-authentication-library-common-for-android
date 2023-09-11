@@ -22,14 +22,17 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.microsoft.identity.common.java.logging.Logger
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 /**
  * A utility class to help convert to and from strings in WebAuthn json format.
  */
 class WebAuthnJsonUtil {
     companion object {
+        private val TAG = WebAuthnJsonUtil::class.simpleName
         /**
          * Takes applicable parameters from an AuthFidoChallenge object and creates a string
          * representation of PublicKeyCredentialRequestOptionsJSON (https://w3c.github.io/webauthn/#dictdef-publickeycredentialrequestoptionsjson)
@@ -38,6 +41,7 @@ class WebAuthnJsonUtil {
          */
         @JvmStatic
         fun createJsonAuthRequestFromChallengeObject(challengeObject: AuthFidoChallenge): String {
+            val methodTag = "$TAG:CreateJsonAuthRequestFromChallengeObject"
             //Create classes
             val publicKeyCredDescriptorList = ArrayList<PublicKeyCredentialDescriptor>()
             challengeObject.allowedCredentials?.let { allowedCredentials ->
@@ -58,9 +62,17 @@ class WebAuthnJsonUtil {
                 userVerification = challengeObject.userVerificationPolicy
             )
 
-            val moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
-            val jsonAdapter = moshi.adapter(PublicKeyCredentialRequestOptions::class.java)
-            return jsonAdapter.toJson(request).toString()
+            try {
+                return Json.encodeToString(request)
+            } catch (e: Exception) {
+                //This would be either SerializationException or IllegalArgumentException,
+                // and both are very unlikely to be thrown since we're only working with one class,
+                // but this catch block is here in case I'm wrong about that, or somethings changes
+                // in the future.
+                val errorMessage = "Error while encoding PublicKeyCredentialRequestOptions to string."
+                Logger.error(methodTag, errorMessage, e)
+                throw Exception(errorMessage + " " + e::class.simpleName + ": " + e.message)
+            }
         }
     }
 }

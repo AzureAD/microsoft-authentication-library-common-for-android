@@ -26,6 +26,7 @@ package com.microsoft.identity.common.internal.fido
  * Representation of WebAuthn's PublicKeyCredentialDescriptor.
  * https://w3c.github.io/webauthn/#dictdef-publickeycredentialdescriptor
  */
+@kotlinx.serialization.Serializable
 data class PublicKeyCredentialDescriptor(
     val type: String,
     val id: String
