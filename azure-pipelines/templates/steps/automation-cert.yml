@@ -15,13 +15,13 @@ steps:
   inputs:
     ConnectedServiceName: 9a9308ae-59b4-475f-b49c-3e828c508d8b
     KeyVaultName: ADALTestInfo
-    SecretsFilter: AndroidAutomationRunner
+    SecretsFilter: AndroidAutomationRunnerAppSecret
 - task: PowerShell@2
   displayName: Install Automation Cert
   inputs:
     targetType: inline
     script: >
-      $kvSecretBytes = [System.Convert]::FromBase64String('$(AndroidAutomationRunner)')
+      $kvSecretBytes = [System.Convert]::FromBase64String('$(AndroidAutomationRunnerAppSecret)')
 
       $certCollection = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
 
