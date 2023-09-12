@@ -266,12 +266,12 @@ public abstract class BaseController {
         }
 
 
-        if (parameters.getChildRedirectUri() != null && parameters.getChildClientId() != null) {
+        if (parameters.hasNestedAppParameters()) {
             // is NAA scenario, set all NAA params for auth flow
-            builder.setBrkRedirectUri(parameters.getRedirectUri());
-            builder.setClientId(parameters.getChildClientId())
+            builder.setBrkRedirectUri(parameters.getRedirectUri())
+                    .setBrkClientId(parameters.getClientId())
+                    .setClientId(parameters.getChildClientId())
                     .setRedirectUri(parameters.getChildRedirectUri());
-            builder.setBrkClientId(parameters.getClientId());
         } else {
             builder.setClientId(parameters.getClientId())
                     .setRedirectUri(parameters.getRedirectUri());
@@ -449,7 +449,7 @@ public abstract class BaseController {
                     "Token request was successful"
             );
             List<ICacheRecord> acquireTokenResultRecords = null;
-            if (parameters.getChildClientId() != null) {
+            if (parameters.hasNestedAppParameters()) {
                 // Do not save the token in naa flow
                 acquireTokenResultRecords = getAcquireTokenResultRecords(
                         (MicrosoftStsTokenResponse) tokenResult.getTokenResponse(),
@@ -631,8 +631,7 @@ public abstract class BaseController {
                 microsoftStsTokenResponse
         );
 
-        final AccessTokenRecord accessTokenRecord;
-        accessTokenRecord = credentialAdapter.createAccessToken(
+        final AccessTokenRecord accessTokenRecord = credentialAdapter.createAccessToken(
                 oAuth2Strategy,
                 authorizationRequest,
                 microsoftStsTokenResponse
@@ -791,12 +790,16 @@ public abstract class BaseController {
         }
 
         final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest(parameters.getAuthenticationScheme());
-        refreshTokenRequest.setClientId(parameters.getClientId());
-        if (parameters.getChildClientId() != null) {
+
+        if (parameters.hasNestedAppParameters()) {
+            // isNAA request, set hub/brk and nested app parameters
             refreshTokenRequest.setClientId(parameters.getChildClientId());
             refreshTokenRequest.setBrkClientId(parameters.getClientId());
             refreshTokenRequest.setRedirectUri(parameters.getChildRedirectUri());
             refreshTokenRequest.setBrkRedirectUri(parameters.getRedirectUri());
+        }
+        else {
+            refreshTokenRequest.setClientId(parameters.getClientId());
         }
         refreshTokenRequest.setScope(StringUtil.join(" ", parameters.getScopes()));
         refreshTokenRequest.setRefreshToken(refreshToken.getSecret());
