@@ -102,6 +102,7 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
+import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
@@ -1173,17 +1174,21 @@ public class BrokerMsalController extends BaseController {
                             + " Current required version is set to: " + parameters.getRequiredBrokerProtocolVersion());
         }
 
+        if (parameters.hasNestedAppParameters()) {
+            // Nested app auth is only supported when required protocol version is >= 15
+            if (!StringUtil.isNullOrEmpty(parameters.getChildClientId()) && !StringUtil.isNullOrEmpty(parameters.getChildRedirectUri())
+                    && !BrokerProtocolVersionUtil.canSupportNestedAppAuthentication(requiredProtocolVersion)) {
+                throw new ClientException(ClientException.NESTED_APP_AUTH_NOT_SUPPORTED,
+                        "The min broker protocol version for Nested app auth should be equal or more than 15.0."
+                                + " Current required version is set to: " + parameters.getRequiredBrokerProtocolVersion());
+            } else if ((StringUtil.isNullOrEmpty(parameters.getChildClientId()) || StringUtil.isNullOrEmpty(parameters.getChildRedirectUri()))) {
+                // If only one of the nested app params are sent
+                throw new ClientException(ClientException.NESTED_APP_INVALID_PARAMETERS, "One of the required parameters for nested app is null or empty");
+            }
 
-        // Nested app auth is only supported when required protocol version is >= 15
-        if (!StringUtil.isNullOrEmpty(parameters.getChildClientId()) && !StringUtil.isNullOrEmpty(parameters.getChildRedirectUri())
-                && !BrokerProtocolVersionUtil.canSupportNestedAppAuthentication(requiredProtocolVersion)) {
-            throw new ClientException(ClientException.NESTED_APP_AUTH_NOT_SUPPORTED,
-                    "The min broker protocol version for Nested app auth should be equal or more than 15.0."
-                            + " Current required version is set to: " + parameters.getRequiredBrokerProtocolVersion());
-        } else if ((StringUtil.isNullOrEmpty(parameters.getChildClientId()) && !StringUtil.isNullOrEmpty(parameters.getChildRedirectUri()))
-                || (!StringUtil.isNullOrEmpty(parameters.getChildClientId()) && StringUtil.isNullOrEmpty(parameters.getChildRedirectUri()))) {
-            // If only one of the nested app params are sent
-            throw new ClientException(ClientException.NESTED_APP_INVALID_PARAMETERS, "One of the required parameters for nested app is null or empty");
+            if (parameters.getSdkType() != SdkType.MSAL_CPP) {
+                throw new ClientException(ClientException.NESTED_APP_INVALID_PARAMETERS, "Nested app auth is only supported for request originating from OneAuth");
+            }
         }
     }
 
