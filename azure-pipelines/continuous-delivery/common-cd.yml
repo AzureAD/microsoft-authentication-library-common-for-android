@@ -1,7 +1,6 @@
 # File: azure-pipelines/continuous-delivery/common-cd.yml
 # Description: Assemble & publish latest common4j, common, keyvault, labapi, labapiutilities, testutil release to internal vsts feed
 # Variable: 'ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME' was defined in the Variables tab
-# Variable: 'mvnAccessToken' access token to access internal vsts feed
 # Variable: 'customVersion' overrides the version number of the published libraries
 
 name: 0.0.$(Date:yyyyMMdd)$(Rev:.r) # $(Build.BuildNumber) = name
