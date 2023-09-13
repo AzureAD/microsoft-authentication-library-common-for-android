@@ -24,12 +24,15 @@ package com.microsoft.identity.common.internal.ui.browser;
 
 import android.content.ComponentName;
 import android.content.Context;
+import android.net.Uri;
+import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.browser.customtabs.CustomTabsCallback;
 import androidx.browser.customtabs.CustomTabsClient;
 import androidx.browser.customtabs.CustomTabsIntent;
+import androidx.browser.customtabs.CustomTabsService;
 import androidx.browser.customtabs.CustomTabsServiceConnection;
 import androidx.browser.customtabs.CustomTabsSession;
 
@@ -66,9 +69,12 @@ public class CustomTabsManager {
         public void onCustomTabsServiceConnected(final ComponentName name, final CustomTabsClient client) {
             final String methodTag = TAG + ":onCustomTabsServiceConnection";
             Logger.info(methodTag,"CustomTabsService is connected");
+
             client.warmup(0L);
-            mCustomTabsServiceIsBound = true;
             mCustomTabsClient.set(client);
+
+            mCustomTabsServiceIsBound = true;
+
             mClientLatch.countDown();
         }
 

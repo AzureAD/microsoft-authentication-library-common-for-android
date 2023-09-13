@@ -26,9 +26,14 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.browser.customtabs.CustomTabsCallback;
+import androidx.browser.customtabs.CustomTabsIntent;
+import androidx.browser.customtabs.CustomTabsService;
+import androidx.browser.customtabs.CustomTabsSession;
 import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidAuthorizationStrategy;
@@ -46,6 +51,7 @@ import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
@@ -89,7 +95,7 @@ public abstract class BrowserAuthorizationStrategy<
         mAuthorizationResultFuture = new ResultFuture<>();
 
         //ClientException will be thrown if no browser found.
-        Intent authIntent;
+        final Intent[] authIntent = new Intent[1];
         if (mBrowser.isCustomTabsServiceSupported()) {
             Logger.info(
                     methodTag,
@@ -99,9 +105,49 @@ public abstract class BrowserAuthorizationStrategy<
             mCustomTabManager = new CustomTabsManager(context);
             if (!mCustomTabManager.bind(context, mBrowser.getPackageName())) {
                 //create browser auth intent
-                authIntent = new Intent(Intent.ACTION_VIEW);
+                authIntent[0] = new Intent(Intent.ACTION_VIEW);
             } else {
-                authIntent = mCustomTabManager.getCustomTabsIntent().intent;
+                final Bundle headersBundle = new Bundle();
+
+                final Map<String, String> headers = authorizationRequest.getRequestHeaders();
+
+                for (final String headerName : headers.keySet()) {
+                    headersBundle.putString(headerName, headers.get(headerName));
+                }
+
+                final CustomTabsSession customTabsSession = mCustomTabManager.getClient().newSession(
+                        new CustomTabsCallback() {
+                            @Override
+                            public void onRelationshipValidationResult(int relation, @NonNull Uri requestedOrigin,
+                                                                       boolean result, @Nullable Bundle extras) {
+                                try {
+                                    // Launch custom tabs intent after session was validated as the same origin.
+                                    authIntent[0] = mCustomTabManager
+                                            .getCustomTabsIntent()
+                                            .intent.putExtra(
+                                                    android.provider.Browser.EXTRA_HEADERS,
+                                                    headersBundle
+                                            );
+
+                                    authIntent[0].setPackage(mBrowser.getPackageName());
+                                    final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
+
+                                    authIntent[0].setData(Uri.parse(requestUrl.toString()));
+
+                                    final Intent intent = buildAuthorizationActivityStartIntent(authIntent[0], requestUrl);
+                                    launchIntent(intent);
+                                } catch (ClientException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                        }
+                );
+
+                final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
+
+                // Validate the session as the same origin to allow cross origin headers.
+                customTabsSession.validateRelationship(CustomTabsService.RELATION_USE_AS_ORIGIN,
+                        Uri.parse(requestUrl.toString()), null);
             }
         } else {
             Logger.warn(
@@ -109,16 +155,16 @@ public abstract class BrowserAuthorizationStrategy<
                     "CustomTabsService is NOT supported"
             );
             //create browser auth intent
-            authIntent = new Intent(Intent.ACTION_VIEW);
+            authIntent[0] = new Intent(Intent.ACTION_VIEW);
         }
 
-        authIntent.setPackage(mBrowser.getPackageName());
-        final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
-
-        authIntent.setData(Uri.parse(requestUrl.toString()));
-
-        final Intent intent = buildAuthorizationActivityStartIntent(authIntent, requestUrl);
-        launchIntent(intent);
+//        authIntent[0].setPackage(mBrowser.getPackageName());
+//        final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
+//
+//        authIntent[0].setData(Uri.parse(requestUrl.toString()));
+//
+//        final Intent intent = buildAuthorizationActivityStartIntent(authIntent[0], requestUrl);
+//        launchIntent(intent);
 
         return mAuthorizationResultFuture;
     }
