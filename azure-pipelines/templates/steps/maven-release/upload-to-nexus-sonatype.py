@@ -55,6 +55,7 @@ with open(credentialsdirectory) as f:
 
 data = '<promoteRequest><data><description>{}</description></data></promoteRequest>'.format(prj)
 response = requests.post('https://oss.sonatype.org/service/local/staging/profiles/{}/start'.format(CONFIG[prj]['profile_id']), headers=HEADERS, data=data, verify=False, auth=(credentials["username"], credentials["password"]))
+print(response.content)
 xmldoc = minidom.parseString(response.content)
 repository_id = xmldoc.getElementsByTagName('stagedRepositoryId')[0].firstChild.nodeValue
 
