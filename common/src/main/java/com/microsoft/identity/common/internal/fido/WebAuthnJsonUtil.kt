@@ -32,16 +32,16 @@ import kotlinx.serialization.json.Json
  */
 class WebAuthnJsonUtil {
     companion object {
-        private val TAG = WebAuthnJsonUtil::class.simpleName
         /**
          * Takes applicable parameters from an AuthFidoChallenge object and creates a string
          * representation of PublicKeyCredentialRequestOptionsJSON (https://w3c.github.io/webauthn/#dictdef-publickeycredentialrequestoptionsjson)
          * @param challengeObject AuthFidoChallenge
          * @return a string representation of PublicKeyCredentialRequestOptionsJSON.
+         * @throws SerializationException from kotlinx.serialization.json.Json
+         * @throws IllegalArgumentException from kotlinx.serialization.json.Json
          */
         @JvmStatic
         fun createJsonAuthRequestFromChallengeObject(challengeObject: AuthFidoChallenge): String {
-            val methodTag = "$TAG:CreateJsonAuthRequestFromChallengeObject"
             //Create classes
             val publicKeyCredDescriptorList = ArrayList<PublicKeyCredentialDescriptor>()
             challengeObject.allowedCredentials?.let { allowedCredentials ->
@@ -62,17 +62,9 @@ class WebAuthnJsonUtil {
                 userVerification = challengeObject.userVerificationPolicy
             )
 
-            try {
-                return Json.encodeToString(request)
-            } catch (e: Exception) {
-                //This would be either SerializationException or IllegalArgumentException,
-                // and both are very unlikely to be thrown since we're only working with one class,
-                // but this catch block is here in case I'm wrong about that, or somethings changes
-                // in the future.
-                val errorMessage = "Error while encoding PublicKeyCredentialRequestOptions to string."
-                Logger.error(methodTag, errorMessage, e)
-                throw Exception(errorMessage + " " + e::class.simpleName + ": " + e.message)
-            }
+            //Note that this could throw either SerializationException or IllegalArgumentException,
+            // but both are very unlikely to be thrown since we're only working with one class.
+            return Json.encodeToString(request)
         }
     }
 }

@@ -75,6 +75,4 @@ class WebAuthnJsonUtilTest {
 
     //No tests created for missing required fields because
     // the AuthFidoChallenge's required fields are non-null.
-    //Note that there's also a catch block to handle any exceptions thrown by kotlinx.serialization,
-    // but it is very unlikely that such an exception would be thrown given the tests above pass.
 }
