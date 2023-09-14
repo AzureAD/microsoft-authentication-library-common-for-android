@@ -1,4 +1,4 @@
-V.16.0.0
+V.16.0.1
 ----------
 - [MINOR] Add LTW as prod broker app (#2179)
 
