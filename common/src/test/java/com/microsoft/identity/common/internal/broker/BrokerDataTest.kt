@@ -30,6 +30,7 @@ import com.microsoft.identity.common.internal.broker.BrokerData.Companion.debugM
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.debugMockCp
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.debugMockLtw
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.prodCompanyPortal
+import com.microsoft.identity.common.internal.broker.BrokerData.Companion.prodLTW
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.prodMicrosoftAuthenticator
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.setShouldTrustDebugBrokers
 import org.junit.After
@@ -54,11 +55,12 @@ class BrokerDataTest {
     fun testGetValidBrokersInDebugMode() {
         setShouldTrustDebugBrokers(true)
         val brokerData: Set<BrokerData> = BrokerData.getKnownBrokerApps()
-        Assert.assertEquals(8, brokerData.size.toLong())
+        Assert.assertEquals(9, brokerData.size.toLong())
         Assert.assertTrue(brokerData.contains(debugBrokerHost))
         Assert.assertTrue(brokerData.contains(prodCompanyPortal))
         Assert.assertTrue(brokerData.contains(debugMicrosoftAuthenticator))
         Assert.assertTrue(brokerData.contains(prodMicrosoftAuthenticator))
+        Assert.assertTrue(brokerData.contains(prodLTW))
         Assert.assertTrue(brokerData.contains(debugLTW))
         Assert.assertTrue(brokerData.contains(debugMockLtw))
         Assert.assertTrue(brokerData.contains(debugMockCp))
@@ -69,9 +71,10 @@ class BrokerDataTest {
     fun testGetValidBrokersInReleaseMode() {
         setShouldTrustDebugBrokers(false)
         val brokerData: Set<BrokerData> = BrokerData.getKnownBrokerApps()
-        Assert.assertEquals(2, brokerData.size.toLong())
+        Assert.assertEquals(3, brokerData.size.toLong())
         Assert.assertTrue(brokerData.contains(prodCompanyPortal))
         Assert.assertTrue(brokerData.contains(prodMicrosoftAuthenticator))
+        Assert.assertTrue(brokerData.contains(prodLTW))
     }
 
     @Test
