@@ -1,5 +1,9 @@
 V.16.0.0
 ----------
+- [MINOR] Add LTW as prod broker app (#2179)
+
+V.16.0.0
+----------
 - [MINOR] Add MsaGrantedRefreshTokenNotSupportedOnAadTenant error code to ServiceException (#2165)
 - [MAJOR] Separate Broker API and Client SDK Active Broker caches (#2164)
 - [MINOR] Deprecate Common logger wrapper (#2157)
