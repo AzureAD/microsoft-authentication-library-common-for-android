@@ -1,6 +1,5 @@
 # File: azure-pipelines\code-coverage\common.yml
 # Description: Code coverage for common
-# Variable: 'mvnAccessToken' was defined in the variables tab
 # https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
 # Variable: 'commonBranchName' common branch to be used when running the pipeline manually
 name: $(date:yyyyMMdd)$(rev:.r)
