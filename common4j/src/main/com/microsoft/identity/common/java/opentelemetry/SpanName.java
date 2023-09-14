@@ -55,5 +55,7 @@ public enum SpanName {
     BrokerDiscoveryManagerPerformDiscoveryProcess,
     BrokerDiscoveryMetadataAggregator,
     BrokerSelectionProtocolManager,
-    BrokerDiscoveryV1ProtocolBroadcastResult
+    BrokerDiscoveryV1ProtocolBroadcastResult,
+
+    MultipleWpjDataStore
 }
