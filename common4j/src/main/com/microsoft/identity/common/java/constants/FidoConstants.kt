@@ -36,5 +36,11 @@ class FidoConstants {
          * Extra query parameter value to declare WebAuthn capability for a host app.
          */
         const val WEBAUTHN_QUERY_PARAMETER_VALUE = "1"
+
+        const val PASSKEY_AUTH_HEADER = "x-ms-PassKeyAuth"
+
+        const val PASSKEY_AUTH_VERSION = "1.0"
+
+        const val PASSKEY_AUTH_KEY_TYPES = "passkey"
     }
 }
