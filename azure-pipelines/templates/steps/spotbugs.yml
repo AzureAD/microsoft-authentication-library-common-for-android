@@ -24,6 +24,6 @@ steps:
 - task: PublishPipelineArtifact@1
   displayName: 'Publish Artifact: SpotBugs'
   inputs:
-    targetPath: '$(Build.SourcesDirectory)\${{ parameters.project }}\build\reports\'
+    targetPath: '$(Build.SourcesDirectory)/${{ parameters.project }}/build/reports/spotbugs'
     ArtifactName: ${{ parameters.artifactName }}
   condition: failed()

@@ -50,7 +50,9 @@ class AccountManagerBrokerDiscoveryUtil(
     }
 
     constructor(context: Context): this(
-        knownBrokerApps = BrokerData.getKnownBrokerApps(),
+        knownBrokerApps = BrokerData.getKnownBrokerApps().filter {
+            BrokerData.isAccountManagerSupported(it.packageName)
+        }.toSet(),
         isSignedByKnownKeys = { brokerData ->
             BrokerValidator(context).isSignedByKnownKeys(brokerData)
         },
