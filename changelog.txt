@@ -1,6 +1,7 @@
 V.Next
 ----------
 - [MINOR] Add LTW as prod broker app (#2179)
+- [MINOR] Added passkey protocol header (behind a flag) (#2181)
 
 V.16.0.0
 ----------
