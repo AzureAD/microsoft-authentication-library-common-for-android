@@ -44,9 +44,9 @@ public class UrlUtil {
     private static final String TAG = UrlUtil.class.getSimpleName();
 
     public static URL appendPathToURL(@NonNull final URL urlToAppend,
-                                      @Nullable final String pathString) // TODO remove post test slice
+                                      @Nullable final String pathString)
             throws URISyntaxException, MalformedURLException {
-        return appendPathToURL(urlToAppend, pathString, null);
+        return appendPathToURL(urlToAppend, pathString, false, null);
     }
 
     /**
@@ -54,11 +54,14 @@ public class UrlUtil {
      *
      * @param urlToAppend URL to be appended to.
      * @param pathString  a string containing path segments to be appended to the URL.
+     * @param removeEmptySegments flag to denote if empty path segments should be removed
+     * @param queryParam Query parameters to add at the end of url
      * @return appended URL
      */
     public static URL appendPathToURL(@NonNull final URL urlToAppend,
                                       @Nullable final String pathString,
-                                      @Nullable final String queryParam) // TODO remove post test slice
+                                      @Nullable final boolean removeEmptySegments,
+                                      @Nullable final String queryParam)
             throws URISyntaxException, MalformedURLException {
 
         if (StringUtil.isNullOrEmpty(pathString)) {
@@ -75,11 +78,12 @@ public class UrlUtil {
 
         final List<String> combinedPathSegments = new ArrayList<>();
 
-        // TODO check this with MSAL team
         // Add all non-empty path segments from the base URL
-        for (final String path : pathSegments) {
-            if (!StringUtil.isNullOrEmpty(path)) {
-                combinedPathSegments.add(path);
+        if (removeEmptySegments) {
+            for (final String path : pathSegments) {
+                if (!StringUtil.isNullOrEmpty(path)) {
+                    combinedPathSegments.add(path);
+                }
             }
         }
 

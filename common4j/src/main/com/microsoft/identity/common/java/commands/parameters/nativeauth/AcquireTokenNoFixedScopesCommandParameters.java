@@ -104,21 +104,7 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
             // if the authority is B2C, then we do not need check if matches with the account environment
             // as B2C only exists in one cloud and can use custom domains
             // This logic should also apply to CIAM authorities
-        } else if (!isAuthorityB2C() && !isAuthorityCIAM() && !authorityMatchesAccountEnvironment()) {
-            throw new ArgumentException(
-                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    ArgumentException.AUTHORITY_ARGUMENT_NAME,
-                    "Authority passed to silent parameters does not match with the cloud associated to the account."
-            );
         }
-    }
-
-    private boolean isAuthorityB2C() {
-        return false;
-    }
-
-    private boolean isAuthorityCIAM() {
-        return true;
     }
 
     /**
