@@ -37,10 +37,32 @@ class FidoConstants {
          */
         const val WEBAUTHN_QUERY_PARAMETER_VALUE = "1"
 
+        /**
+         * Header name to signal that the custom passkey protocol should be used.
+         */
         const val PASSKEY_AUTH_HEADER = "x-ms-PassKeyAuth"
 
+        /**
+         * Version of the passkey protocol that we want to use.
+         */
         const val PASSKEY_AUTH_VERSION = "1.0"
 
+        /**
+         * Key types that we support with the passkey protocol.
+         * Possible values: securitykey, passkey, ngc
+         * String should be delimited with commas and no spaces.
+         * Ex. "securitykey,passkey"
+         */
         const val PASSKEY_AUTH_KEY_TYPES = "passkey"
+
+        /**
+         * Corresponding value to the passkey protocol header.
+         */
+        const val PASSKEY_AUTH_HEADER_VALUE = "$PASSKEY_AUTH_VERSION/$PASSKEY_AUTH_KEY_TYPES"
+
+        /**
+         * Used to disable passkey logic until the feature is ready.
+         */
+        const val IS_PASSKEY_SUPPORT_READY = false
     }
 }
