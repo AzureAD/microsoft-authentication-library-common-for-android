@@ -394,7 +394,7 @@ public class ClientException extends BaseException {
     public static final String UNSUPPORTED_ANDROID_API_VERSION = "unsupported_android_api_version";
 
     /**
-     * The android version used does not support the operation.
+     * The workplacejoin data is null.
      */
     public static final String WORKPLACE_JOIN_DATA_NULL = "workplace_join_data_null";
 
