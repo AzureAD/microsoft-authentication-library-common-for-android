@@ -1,7 +1,6 @@
 # File: azure-pipelines\pull-request-validation\build-consumers.yml
 # Description: Test new common in ADAL / MSAL / Broker (assembleLocal and testLocalDebugUnitTest)
 # Variable: 'ENV_VSTS_MVN_ANDROIDADACCOUNTS_USERNAME' was defined in the Variables tab
-# Variable: 'mvnAccessToken' was defined in the Variables tab
 # https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
 # Variable: 'commonBranchName' common branch to be used when running the pipeline manually
 # Variable: 'skipConsumerValidationLabel' PR label used to skip the checks in this pipeline
