@@ -230,6 +230,7 @@ public abstract class OAuth2Strategy
             if (microsoftTokenRequest.isPKeyAuthHeaderAllowed()) {
                 headers.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
             }
+            // Not going to add passkey protocol header until full feature is ready.
             if (FidoConstants.IS_PASSKEY_SUPPORT_READY
                     && microsoftTokenRequest.isPasskeyAuthHeaderAllowed()) {
                 headers.put(FidoConstants.PASSKEY_AUTH_HEADER, FidoConstants.PASSKEY_AUTH_HEADER_VALUE);

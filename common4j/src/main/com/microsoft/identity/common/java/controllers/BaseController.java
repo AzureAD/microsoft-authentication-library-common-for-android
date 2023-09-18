@@ -398,6 +398,7 @@ public abstract class BaseController {
         if (tokenRequest instanceof MicrosoftTokenRequest) {
             ((MicrosoftTokenRequest) tokenRequest).setClientAppName(parameters.getApplicationName());
             ((MicrosoftTokenRequest) tokenRequest).setClientAppVersion(parameters.getApplicationVersion());
+            // Not going to add passkey protocol header until full feature is ready.
             if (FidoConstants.IS_PASSKEY_SUPPORT_READY) {
                 ((MicrosoftTokenRequest) tokenRequest).setPasskeyAuthHeaderAllowed(parameters.getAuthorizationAgent() == AuthorizationAgent.WEBVIEW);
             }
