@@ -30,6 +30,7 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
+import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -217,16 +218,21 @@ public abstract class OAuth2Strategy
         headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
 
         if (request instanceof MicrosoftTokenRequest) {
+            MicrosoftTokenRequest microsoftTokenRequest = (MicrosoftTokenRequest) request;
             headers.put(
                     AuthenticationConstants.AAD.APP_PACKAGE_NAME,
-                    ((MicrosoftTokenRequest) request).getClientAppName()
+                    microsoftTokenRequest.getClientAppName()
             );
             headers.put(
                     AuthenticationConstants.AAD.APP_VERSION,
-                    ((MicrosoftTokenRequest) request).getClientAppVersion()
+                    microsoftTokenRequest.getClientAppVersion()
             );
-            if (((MicrosoftTokenRequest) request).isPKeyAuthHeaderAllowed()) {
+            if (microsoftTokenRequest.isPKeyAuthHeaderAllowed()) {
                 headers.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
+            }
+            if (FidoConstants.IS_PASSKEY_SUPPORT_READY
+                    && microsoftTokenRequest.isPasskeyAuthHeaderAllowed()) {
+                headers.put(FidoConstants.PASSKEY_AUTH_HEADER, FidoConstants.PASSKEY_AUTH_HEADER_VALUE);
             }
         }
 

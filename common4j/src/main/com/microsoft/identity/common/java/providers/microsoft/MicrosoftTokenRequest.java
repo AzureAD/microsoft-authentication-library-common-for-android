@@ -106,6 +106,11 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
     @Accessors(prefix = "m")
     private boolean mPKeyAuthHeaderAllowed;
 
+    @Getter
+    @Setter
+    @Accessors(prefix = "m")
+    private boolean mPasskeyAuthHeaderAllowed;
+
     public String getCodeVerifier() {
         return this.mCodeVerifier;
     }

@@ -398,6 +398,9 @@ public abstract class BaseController {
         if (tokenRequest instanceof MicrosoftTokenRequest) {
             ((MicrosoftTokenRequest) tokenRequest).setClientAppName(parameters.getApplicationName());
             ((MicrosoftTokenRequest) tokenRequest).setClientAppVersion(parameters.getApplicationVersion());
+            if (FidoConstants.IS_PASSKEY_SUPPORT_READY) {
+                ((MicrosoftTokenRequest) tokenRequest).setPasskeyAuthHeaderAllowed(parameters.getAuthorizationAgent() == AuthorizationAgent.WEBVIEW);
+            }
         }
 
         if (parameters instanceof IHasExtraParameters) {
