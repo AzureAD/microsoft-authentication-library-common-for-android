@@ -230,6 +230,7 @@ public class BrokerOperationExecutor {
 
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             span.setAttribute(AttributeName.ipc_strategy.name(), strategy.getType().name());
+            span.setAttribute(AttributeName.broker_operation_name.name(), operation.getMethodName());
             operation.performPrerequisites(strategy);
             final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
             final Bundle resultBundle = strategy.communicateToBroker(brokerOperationBundle);

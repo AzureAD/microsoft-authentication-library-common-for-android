@@ -247,5 +247,10 @@ public enum AttributeName {
     /**
      * The time (in milliseconds) spent on network when acquiring AT.
      */
-    elapsed_time_network_acquire_at;
+    elapsed_time_network_acquire_at,
+
+    /**
+     * The broker operation name.
+     */
+    broker_operation_name;
 }
