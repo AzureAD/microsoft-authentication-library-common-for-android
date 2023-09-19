@@ -169,7 +169,7 @@ jobs:
       Intent: 'PackageDistribution'
       ContentType: 'Maven'
       ContentSource: 'Folder'
-      FolderLocation: '$(Build.SourcesDirectory)/$(BuildOutputs)'
+      FolderLocation: '$(Build.ArtifactStagingDirectory)'
       WaitForReleaseCompletion: true
       Owners: 'amgusain@microsoft.com'
       Approvers: 'amgusain@microsoft.com'
