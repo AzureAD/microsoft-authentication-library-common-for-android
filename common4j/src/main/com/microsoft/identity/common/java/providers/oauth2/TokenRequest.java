@@ -58,10 +58,18 @@ public class TokenRequest implements IHasExtraParameters {
     @SerializedName("client_id")
     private String mClientId;
 
+    /**
+     * The hub/brk redirectUri for the request.
+     * <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview/pullrequest/7876">...</a>
+     */
     @Expose()
     @SerializedName("brk_redirect_uri")
     private String mBrkRedirectUri;
 
+    /**
+     * The hub/brk clientId for the request.
+     * <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview/pullrequest/7876">...</a>
+     */
     @Expose()
     @SerializedName("brk_client_id")
 

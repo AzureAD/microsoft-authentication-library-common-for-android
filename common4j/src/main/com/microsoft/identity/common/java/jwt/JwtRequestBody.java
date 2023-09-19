@@ -59,6 +59,10 @@ public final class JwtRequestBody extends AbstractJwtRequest {
     private String mRedirectUri;
 
 
+    /**
+     * The hub/brk redirectUri for the request.
+     * <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview/pullrequest/7876">...</a>
+     */
     @SerializedName(ClaimNames.BRK_REDIRECT_URI)
     private String mBrkRedirectUri;
 

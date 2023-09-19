@@ -69,7 +69,10 @@ public abstract class AbstractJwtRequest {
     @SerializedName(ClaimNames.CLIENT_ID)
     private String mClientId;
 
-
+    /**
+     * The hub/brk clientId for the request.
+     * <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview/pullrequest/7876">...</a>
+     */
     @SerializedName(ClaimNames.BRK_CLIENT_ID)
     private String mBrkClientId;
 
