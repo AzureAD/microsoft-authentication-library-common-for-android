@@ -241,7 +241,7 @@ public class BrokerMsalController extends BaseController {
                 clientMaxProtocolVersion
         );
 
-        if (!isEmpty(cachedProtocolVersion)) {
+        if (!StringUtil.isNullOrEmpty(cachedProtocolVersion)) {
             return cachedProtocolVersion;
         }
 
@@ -255,7 +255,7 @@ public class BrokerMsalController extends BaseController {
                 clientMaxProtocolVersion
         );
 
-        if (!isEmpty(minRequestedVersion)) {
+        if (!StringUtil.isNullOrEmpty(minRequestedVersion)) {
             bundle.putString(
                     CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
                     minRequestedVersion
@@ -312,7 +312,7 @@ public class BrokerMsalController extends BaseController {
             throw new UnsupportedBrokerException(mActiveBrokerPackageName);
         }
         final String cachedProtocolVersion = helloCacheResult.getNegotiatedProtocolVersion();
-        if (!isEmpty(cachedProtocolVersion)) {
+        if (!StringUtil.isNullOrEmpty(cachedProtocolVersion)) {
             return cachedProtocolVersion;
         } else {
             Logger.warn(methodTag, "Unexpected: cachedProtocolVersion is empty. Continue with hello IPC protocol.");
@@ -1120,7 +1120,7 @@ public class BrokerMsalController extends BaseController {
                 AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(brokerResult.getTenantId())) {
             Logger.info(methodTag, "Result returned for MSA Account, saving to cache");
 
-            if (isEmpty(brokerResult.getClientInfo())) {
+            if (StringUtil.isNullOrEmpty(brokerResult.getClientInfo())) {
                 Logger.error(methodTag, "ClientInfo is empty.", null);
                 throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "ClientInfo is empty.");
             }
@@ -1171,7 +1171,7 @@ public class BrokerMsalController extends BaseController {
                 && !BrokerProtocolVersionUtil.canSupportPopAuthenticationSchemeWithClientKey(requiredProtocolVersion)) {
             throw new ClientException(ClientException.AUTH_SCHEME_NOT_SUPPORTED,
                     "The min broker protocol version for PopAuthenticationSchemeWithClientKey should be equal or more than 11.0."
-                            + " Current required version is set to: " + parameters.getRequiredBrokerProtocolVersion());
+                            + " Current required version is set to: " + requiredProtocolVersion);
         }
 
         if (parameters.hasNestedAppParameters()) {
@@ -1180,7 +1180,7 @@ public class BrokerMsalController extends BaseController {
                     && !BrokerProtocolVersionUtil.canSupportNestedAppAuthentication(requiredProtocolVersion)) {
                 throw new ClientException(ClientException.NESTED_APP_AUTH_NOT_SUPPORTED,
                         "The min broker protocol version for Nested app auth should be equal or more than 15.0."
-                                + " Current required version is set to: " + parameters.getRequiredBrokerProtocolVersion());
+                                + " Current required version is set to: " + requiredProtocolVersion);
             } else if ((StringUtil.isNullOrEmpty(parameters.getChildClientId()) || StringUtil.isNullOrEmpty(parameters.getChildRedirectUri()))) {
                 // If only one of the nested app params are sent
                 throw new ClientException(ClientException.NESTED_APP_INVALID_PARAMETERS, "One of the required parameters for nested app is null or empty");

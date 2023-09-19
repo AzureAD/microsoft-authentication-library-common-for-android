@@ -149,7 +149,7 @@ public class AndroidPlatformUtil implements IPlatformUtil {
                 isValidBrokerRedirect |= StringUtil.equalsIgnoreCase(redirectUri, AuthenticationConstants.Broker.BROKER_REDIRECT_URI);
             }
         }
-        if (BuildConfig.DEBUG && isValidRedirectURIForNAA(redirectUri)) {
+        if (isValidRedirectURIForNAATests(redirectUri)) {
             // To handle the testing of NAA scenario, we have to allow list teams app redirectURIs. Do not do this in Release build
             return true;
         }
@@ -210,10 +210,12 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         return mContext.getPackageManager().getNameForUid(uid);
     }
 
-    private boolean isValidRedirectURIForNAA(String redirectUri) {
+    private boolean isValidRedirectURIForNAATests(String redirectUri) {
         // The only allow-listed hub app on ESTS is Teams app. We cannot use our test app's clientId/redirecrURI for testing NAA scenarios
         // Below redirectURI is being used in our automation tests and also by OneAuth tests for NAA
-        return redirectUri.equals("msauth://com.microsoft.teams/VCpKgbYCXucoq1mZ4BZPsh5taNE=") || redirectUri.equals("msauth://com.microsoft.teams/fcg80qvoM1YMKJZibjBwQcDfOno=");
+        return BuildConfig.DEBUG && (redirectUri.equals("msauth://com.microsoft.teams/VCpKgbYCXucoq1mZ4BZPsh5taNE=")
+                        || redirectUri.equals("msauth://com.microsoft.teams/fcg80qvoM1YMKJZibjBwQcDfOno=")
+                        || redirectUri.equals("msauth://com.microsoft.teams/fcg80qvoM1YMKJZibjBwQcDfOno%3D"));
     }
 
     /**

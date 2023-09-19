@@ -450,7 +450,8 @@ public abstract class BaseController {
             );
             List<ICacheRecord> acquireTokenResultRecords = null;
             if (parameters.hasNestedAppParameters()) {
-                // Do not save the token in naa flow
+                // Do not save the token in naa flow. This is because, NAA is curerntly only supported with OneAuth and OneAuth already caches AT until it is expired.
+                // Design doc : https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview/pullrequest/7876
                 acquireTokenResultRecords = getAcquireTokenResultRecords(
                         (MicrosoftStsTokenResponse) tokenResult.getTokenResponse(),
                         (MicrosoftStsOAuth2Strategy) strategy,

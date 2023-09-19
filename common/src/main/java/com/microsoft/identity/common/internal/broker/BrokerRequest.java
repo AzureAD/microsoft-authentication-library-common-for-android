@@ -159,12 +159,14 @@ public class BrokerRequest implements Serializable {
 
     /**
      * The child redirect uri for the request.
+     * <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview/pullrequest/7876">...</a>
      */
     @SerializedName(SerializedNames.CHILD_REDIRECT_URI)
     private String mChildRedirectUri;
 
     /**
      * The child client id of the application.
+     * <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview/pullrequest/7876">...</a>
      */
     @SerializedName(SerializedNames.CHILD_CLIENT_ID)
     private String mChildClientId;
