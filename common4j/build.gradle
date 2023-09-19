@@ -246,3 +246,7 @@ afterEvaluate {
     // above in the plugins block.
     compileJava.dependsOn generateBuildConfig, generateTestBuildConfig
 }
+
+tasks.withType(GenerateMavenPom).all {
+    destination = layout.buildDirectory.file("poms/${project.name}-${project.version}.pom").get().asFile
+}
