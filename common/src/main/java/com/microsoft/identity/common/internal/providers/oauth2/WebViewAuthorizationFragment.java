@@ -30,6 +30,8 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.PermissionRequest;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ProgressBar;
@@ -171,6 +173,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                             }
                         }
                     }
+
+
+
                 },
                 mRedirectUri);
         setUpWebView(view, mAADWebViewClient);
@@ -219,6 +224,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 return false;
             }
         });
+        mWebView.getSettings().setPluginState(WebSettings.PluginState.ON);
 
         mWebView.getSettings().setLoadWithOverviewMode(true);
         mWebView.getSettings().setDomStorageEnabled(true);
@@ -227,6 +233,22 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
+
+
+
+        mWebView.setWebChromeClient(new WebChromeClient() {
+
+            @Override
+            public void onPermissionRequest(final PermissionRequest request) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    request.grant(request.getResources());
+                }
+            }
+
+
+        });
+
+
     }
 
     /**
@@ -241,7 +263,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
 
                 mAADWebViewClient.setRequestHeaders(mRequestHeaders);
-                mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
+
+                mWebView.loadUrl("https://gentle-pebble-09da6fb1e.3.azurestaticapps.net/");
 
                 // The first page load could take time, and we do not want to just show a blank page.
                 // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.
