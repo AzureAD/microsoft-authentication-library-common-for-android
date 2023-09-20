@@ -247,6 +247,7 @@ afterEvaluate {
     compileJava.dependsOn generateBuildConfig, generateTestBuildConfig
 }
 
-tasks.withType(GenerateMavenPom).all {
+// This is used to generate the pom file for publishing to external maven in maven-release-jobs.yml
+generatePomFileForAarPublication {
     destination = layout.buildDirectory.file("poms/${project.name}-${project.version}.pom").get().asFile
 }

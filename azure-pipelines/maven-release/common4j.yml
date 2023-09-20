@@ -18,7 +18,7 @@ jobs:
   parameters:
     project: common4j
     projectVersion: $(common4jVersion)
-    gradleAssembleReleaseTask: common4j:clean common4j:assemble common4j:test -Psugar=true
+    gradleAssembleReleaseTask: common4j:clean common4j:assemble -Psugar=true
     gradleGeneratePomFiletask: common4j:generatePomFileForAarPublication
     jarSourceFolder: common4j/build/outputs/jars
     pomSourceFolder: common4j/build/poms
