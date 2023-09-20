@@ -3,7 +3,6 @@
 # https://search.maven.org/search?q=g:com.microsoft.identity%20AND%20a:common
 # Variable: 'commonVersion' was defined in the Variables tab
 # Variable: 'ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME' was defined in the Variables tab
-# Variable: 'mvnAccessToken' was defined in the Variables tab
 # https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
 name: $(date:yyyyMMdd)$(rev:.r)
 

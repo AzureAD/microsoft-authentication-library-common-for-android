@@ -20,13 +20,16 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.constants;
+package com.microsoft.identity.common.internal.fido
 
 /**
- * Class used to hold some constant variables for UI testing automation.
+ * Representation of WebAuthn's PublicKeyCredentialRequestOptions.
+ * https://w3c.github.io/webauthn/#dictdef-publickeycredentialrequestoptions
  */
-public class GlobalConstants {
-    public static final boolean IS_STAY_SIGN_IN_PAGE_EXPECTED = true;
-
-    public static final String PIN = "1234";
-}
+@kotlinx.serialization.Serializable
+data class PublicKeyCredentialRequestOptions(
+    val challenge: String,
+    val rpId: String,
+    val allowCredentials: List<PublicKeyCredentialDescriptor>,
+    val userVerification: String
+)

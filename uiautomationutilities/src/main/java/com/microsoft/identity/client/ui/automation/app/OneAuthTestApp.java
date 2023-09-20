@@ -82,6 +82,12 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     @Override
     public void handleFirstRun() {
         CommonUtils.grantPackagePermission();
+        try {
+            selectFromAppConfiguration("com.microsoft.identity.LabsApi.Guest");
+        } catch (UiObjectNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        handlePreferBrokerSwitchButton();
     }
 
     @Override
@@ -143,8 +149,6 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
 
     public void handleSignInWithoutPrompt() {
         UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/sign_in_button");
-        final String token = getTokenSecret();
-        Assert.assertTrue("Token is not empty", !TextUtils.isEmpty(token));
         assertSuccess();
     }
 
