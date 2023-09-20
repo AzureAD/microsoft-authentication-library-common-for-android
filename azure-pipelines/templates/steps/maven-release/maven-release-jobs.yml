@@ -170,7 +170,7 @@ jobs:
       ContentType: 'Maven'
       ContentSource: 'Folder'
       FolderLocation: '$(Build.ArtifactStagingDirectory)'
-      WaitForReleaseCompletion: true
+      WaitForReleaseCompletion: false
       Owners: 'amgusain@microsoft.com'
       Approvers: 'amgusain@microsoft.com'
       ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
