@@ -94,7 +94,7 @@ jobs:
       displayName: Copy pom to Artifact Staging Directory
       inputs:
         SourceFolder: ${{ parameters.pomSourceFolder }}
-        Contents: '**/*.xml'
+        Contents: '**/*.pom'
         TargetFolder: $(Build.ArtifactStagingDirectory)
   - task: PublishPipelineArtifact@1
     name: PublishPipelineArtifact1
