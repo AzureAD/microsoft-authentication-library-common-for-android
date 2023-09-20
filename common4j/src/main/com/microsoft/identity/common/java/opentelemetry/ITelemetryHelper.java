@@ -22,36 +22,30 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.opentelemetry;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
-/**
- * Assists classes associated with Certificate Based Authentication (CBA) with
- *  telemetry-related tasks.
- */
-public interface ICertBasedAuthTelemetryHelper extends ITelemetryHelper {
+public interface ITelemetryHelper {
+    /**
+     * Indicates on the Span that the operation was successful and then ends current Span.
+     */
+    //Suppressing warnings for RETURN_VALUE_IGNORED_NO_SIDE_EFFECT
+    @SuppressFBWarnings
+    void setResultSuccess();
 
     /**
-     * Sets attribute that indicates the ICertBasedAuthChallengeHandler handling the current CBA flow.
-     * @param challengeHandlerName name of the ICertBasedAuthChallengeHandler class.
+     * Indicates on the Span that the operation failed and then ends current Span.
+     * @param message descriptive cause of failure message.
      */
-    void setCertBasedAuthChallengeHandler(@NonNull final String challengeHandlerName);
+    //Suppressing warnings for RETURN_VALUE_IGNORED_NO_SIDE_EFFECT
+    @SuppressFBWarnings
+    void setResultFailure(@NonNull final String message);
 
     /**
-     * Sets attribute that indicates if a PivProvider instance is already present in the
-     *  Java Security static list upon adding a new instance.
-     * @param present true if PivProvider instance present; false otherwise.
+     * Indicates on the Span that the operation failed and then ends current Span.
+     * @param exception exception thrown upon error.
      */
-    void setExistingPivProviderPresent(final boolean present);
-
-    /**
-     * Sets attribute that indicates the user's intended choice for CBA (smartcard or on-device).
-     * @param choice enum indicating user's intended choice for CBA.
-     */
-    void setUserChoice(@NonNull final CertBasedAuthChoice choice);
-
-    /**
-     * Sets attribute that indicates the selected certificate's public key algorithm type.
-     * @param type algorithm name as a string.
-     */
-    void setPublicKeyAlgoType(@NonNull final String type);
+    //Suppressing warnings for RETURN_VALUE_IGNORED_NO_SIDE_EFFECT
+    @SuppressFBWarnings
+    void setResultFailure(@NonNull final Exception exception);
 }

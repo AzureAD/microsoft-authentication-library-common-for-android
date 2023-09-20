@@ -24,34 +24,16 @@ package com.microsoft.identity.common.java.opentelemetry;
 
 import lombok.NonNull;
 
-/**
- * Assists classes associated with Certificate Based Authentication (CBA) with
- *  telemetry-related tasks.
- */
-public interface ICertBasedAuthTelemetryHelper extends ITelemetryHelper {
+public interface IFidoTelemetryHelper extends ITelemetryHelper {
+    /**
+     * Sets attribute indicating the type of FIDO challenge received from the server.
+     * @param challengeName name of the FidoChallenge class.
+     */
+    void setFidoChallenge(@NonNull final String challengeName);
 
     /**
-     * Sets attribute that indicates the ICertBasedAuthChallengeHandler handling the current CBA flow.
-     * @param challengeHandlerName name of the ICertBasedAuthChallengeHandler class.
+     * Sets attribute indicating the type of FIDO challenge handler handling the current FIDO operation.
+     * @param challengeHandlerName name of the FidoChallengeHandler class.
      */
-    void setCertBasedAuthChallengeHandler(@NonNull final String challengeHandlerName);
-
-    /**
-     * Sets attribute that indicates if a PivProvider instance is already present in the
-     *  Java Security static list upon adding a new instance.
-     * @param present true if PivProvider instance present; false otherwise.
-     */
-    void setExistingPivProviderPresent(final boolean present);
-
-    /**
-     * Sets attribute that indicates the user's intended choice for CBA (smartcard or on-device).
-     * @param choice enum indicating user's intended choice for CBA.
-     */
-    void setUserChoice(@NonNull final CertBasedAuthChoice choice);
-
-    /**
-     * Sets attribute that indicates the selected certificate's public key algorithm type.
-     * @param type algorithm name as a string.
-     */
-    void setPublicKeyAlgoType(@NonNull final String type);
+    void setFidoChallengeHandler(@NonNull final String challengeHandlerName);
 }
