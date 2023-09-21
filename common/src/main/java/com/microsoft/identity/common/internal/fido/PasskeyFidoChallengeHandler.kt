@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.fido
 import android.webkit.WebView
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.microsoft.identity.common.java.constants.FidoConstants
 import com.microsoft.identity.common.java.opentelemetry.IFidoTelemetryHelper
 import com.microsoft.identity.common.logging.Logger
 import kotlinx.coroutines.launch
@@ -52,17 +53,18 @@ class PasskeyFidoChallengeHandler
         telemetryHelper.setFidoChallenge(fidoChallenge::class.simpleName.toString())
         telemetryHelper.setFidoChallengeHandler(TAG)
         var assertion: String
-        if (lifecycleOwner != null && fidoChallenge is AuthFidoChallenge) {
+        if (lifecycleOwner != null
+            && fidoChallenge is AuthFidoChallenge) {
             lifecycleOwner.lifecycleScope.launch {
                 try {
                     assertion = fidoManager.authenticate(fidoChallenge)
                     telemetryHelper.setResultSuccess()
                 } catch (e: Exception) {
-                    assertion = fidoManager.getExceptionMessage(e)
+                    assertion = e.message.toString()
                     Logger.error(methodTag, assertion, e)
                     telemetryHelper.setResultFailure(e)
                 }
-                respondToChallenge(fidoChallenge.submitUrl, fidoChallenge.context, assertion)
+                respondToChallenge(fidoChallenge.submitUrl, assertion, fidoChallenge.context)
             }
             return null
         }
@@ -75,7 +77,7 @@ class PasskeyFidoChallengeHandler
         }
         Logger.error(methodTag, errorMessage, null)
         telemetryHelper.setResultFailure(errorMessage)
-        respondToChallenge(fidoChallenge.submitUrl, fidoChallenge.context, errorMessage)
+        respondToChallenge(fidoChallenge.submitUrl, errorMessage, fidoChallenge.context)
         return null
     }
 
@@ -85,13 +87,27 @@ class PasskeyFidoChallengeHandler
      * @param context Server state that needs to be maintained between challenge and response.
      * @param assertion string representing response with signed challenge.
      */
-    private fun respondToChallenge(submitUrl: String,
-                                   context: String,
-                                   assertion: String) {
+    fun respondToChallenge(submitUrl: String,
+                           assertion: String,
+                           context: String) {
         val methodTag = "$TAG:respondToChallenge"
+        //We're splitting the context value here because ESTS is expected to also send the flow token in the same string.
+        //They want us to send the flow token value via a header separate from the actual context value.
+        val splitContextList = context.split(FidoConstants.PASSKEY_AUTH_CONTEXT_DELIMITER)
+        val actualContext: String
+        val flowToken: String
+        if (splitContextList.size == 2) {
+            actualContext = splitContextList[0]
+            flowToken = splitContextList[1]
+        } else {
+            //Put everything under the actual context header.
+            actualContext = splitContextList[0]
+            flowToken = ""
+        }
         val header = mapOf(
-            FidoResponseField.Assertion.name to assertion,
-            FidoResponseField.Context.name to context
+            FidoConstants.PASSKEY_AUTH_RESPONSE_ASSERTION_HEADER to assertion,
+            FidoConstants.PASSKEY_AUTH_RESPONSE_CONTEXT_HEADER to actualContext,
+            FidoConstants.PASSKEY_AUTH_RESPONSE_FLOWTOKEN_HEADER to flowToken
         )
         webView.post {
             Logger.info(methodTag, "Responding to Fido challenge.")

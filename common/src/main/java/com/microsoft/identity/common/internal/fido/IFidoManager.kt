@@ -33,11 +33,4 @@ interface IFidoManager {
      * @throws Exception
      */
     suspend fun authenticate(challenge: AuthFidoChallenge): String
-
-    /**
-     * Identifies the exception thrown and returns a helpful message pertaining to the exception.
-     * @param exception The exception thrown
-     * @return message related to exception
-     */
-    fun getExceptionMessage(exception: Exception): String
 }

@@ -38,7 +38,7 @@ class PasskeyFidoChallengeHandlerTest {
     val userVerificationPolicy = "required"
     val version = "1.0"
     val submitUrl = "submiturl"
-    val context = "123456"
+    val context = "contextValue flowToken"
 
     //Challenge auth parameters
     val allowCredentialsOneUser = listOf("user")
@@ -129,5 +129,41 @@ class PasskeyFidoChallengeHandlerTest {
         assertFalse(webView.isRegularAssertion())
         assertFalse(testFidoTelemetryHelper.successFlag)
         assertTrue(testFidoTelemetryHelper.failureFlag)
+    }
+
+    @Test
+    fun testRespondToChallenge_RegularContext() {
+        passkeyFidoChallengeHandler.respondToChallenge(
+            submitUrl,
+            TestFidoManager.SAMPLE_ASSERTION,
+            context
+        )
+        assertTrue(webView.urlLoaded)
+        assertTrue(webView.hasContext())
+        assertTrue(webView.hasFlowToken())
+    }
+
+    @Test
+    fun testRespondToChallenge_NoFlowTokenInContext() {
+        passkeyFidoChallengeHandler.respondToChallenge(
+            submitUrl,
+            TestFidoManager.SAMPLE_ASSERTION,
+            "contextValue"
+        )
+        assertTrue(webView.urlLoaded)
+        assertTrue(webView.hasContext())
+        assertFalse(webView.hasFlowToken())
+    }
+
+    @Test
+    fun testRespondToChallenge_EmptyContext() {
+        passkeyFidoChallengeHandler.respondToChallenge(
+            submitUrl,
+            TestFidoManager.SAMPLE_ASSERTION,
+            ""
+        )
+        assertTrue(webView.urlLoaded)
+        assertFalse(webView.hasContext())
+        assertFalse(webView.hasFlowToken())
     }
 }

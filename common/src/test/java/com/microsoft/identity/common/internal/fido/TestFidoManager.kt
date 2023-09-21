@@ -40,8 +40,4 @@ class TestFidoManager () : IFidoManager {
         }
         return SAMPLE_ASSERTION
     }
-
-    override fun getExceptionMessage(exception: Exception): String {
-        return EXCEPTION_MESSAGE
-    }
 }

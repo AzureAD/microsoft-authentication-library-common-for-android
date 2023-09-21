@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.fido
 
 import android.webkit.WebView
 import androidx.test.core.app.ApplicationProvider
+import com.microsoft.identity.common.java.constants.FidoConstants
 
 class ExtendedTestWebView : WebView(ApplicationProvider.getApplicationContext()) {
     var urlLoaded = false
@@ -42,9 +43,27 @@ class ExtendedTestWebView : WebView(ApplicationProvider.getApplicationContext())
 
     fun isRegularAssertion() : Boolean {
         headers?.let {
-            val assertion = it[FidoResponseField.Assertion.name]
+            val assertion = it[FidoConstants.PASSKEY_AUTH_RESPONSE_ASSERTION_HEADER]
                 ?: throw Exception("No assertion header found.")
             return assertion == TestFidoManager.SAMPLE_ASSERTION
+        }
+        throw Exception("Headers is null.")
+    }
+
+    fun hasContext() : Boolean {
+        headers?.let {
+            val context = it[FidoConstants.PASSKEY_AUTH_RESPONSE_CONTEXT_HEADER]
+                ?: throw Exception("No context header found.")
+            return context.isNotEmpty()
+        }
+        throw Exception("Headers is null.")
+    }
+
+    fun hasFlowToken() : Boolean {
+        headers?.let {
+            val flowToken = it[FidoConstants.PASSKEY_AUTH_RESPONSE_FLOWTOKEN_HEADER]
+                ?: throw Exception("No flow token header found.")
+            return flowToken.isNotEmpty()
         }
         throw Exception("Headers is null.")
     }

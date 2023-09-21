@@ -36,5 +36,25 @@ class FidoConstants {
          * Extra query parameter value to declare WebAuthn capability for a host app.
          */
         const val WEBAUTHN_QUERY_PARAMETER_VALUE = "1"
+
+        /**
+         * Header name for the passkey auth assertion that is passed back to the server.
+         */
+        const val PASSKEY_AUTH_RESPONSE_ASSERTION_HEADER = "Assertion"
+
+        /**
+         * Header name for the passkey auth context that we're relaying back to the server.
+         */
+        const val PASSKEY_AUTH_RESPONSE_CONTEXT_HEADER = "Context"
+
+        /**
+         * Header name for the passkey auth flow token that we're relaying back to the server.
+         */
+        const val PASSKEY_AUTH_RESPONSE_FLOWTOKEN_HEADER = "x-ms-flowToken"
+
+        /**
+         * Delimiter for server context query parameter value, which can contain a context value and flow token value.
+         */
+        const val PASSKEY_AUTH_CONTEXT_DELIMITER = " "
     }
 }

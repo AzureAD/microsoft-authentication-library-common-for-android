@@ -50,7 +50,6 @@ class FidoChallengeHandlerFactoryTest {
             manager = testFidoManager,
             webView = webView,
             telemetryHelper = testFidoTelemetryHelper,
-            keyTypes = keyTypes
         )
         assertTrue(challengeHandler is PasskeyFidoChallengeHandler)
     }
