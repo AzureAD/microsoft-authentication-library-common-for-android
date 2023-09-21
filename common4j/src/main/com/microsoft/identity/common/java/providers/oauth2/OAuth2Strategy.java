@@ -233,7 +233,7 @@ public abstract class OAuth2Strategy
             // Not going to add passkey protocol header until full feature is ready.
             if (FidoConstants.IS_PASSKEY_SUPPORT_READY
                     && microsoftTokenRequest.isPasskeyAuthHeaderAllowed()) {
-                headers.put(FidoConstants.PASSKEY_AUTH_HEADER, FidoConstants.PASSKEY_AUTH_HEADER_VALUE);
+                headers.put(FidoConstants.PASSKEY_PROTOCOL_HEADER, FidoConstants.PASSKEY_PROTOCOL_HEADER_VALUE);
             }
         }
 

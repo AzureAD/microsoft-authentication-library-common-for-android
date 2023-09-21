@@ -62,7 +62,6 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse;
@@ -85,7 +84,6 @@ import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ResultUtil;
-import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
@@ -317,7 +315,7 @@ public abstract class BaseController {
             // Not going to add passkey protocol header until full feature is ready.
             if (FidoConstants.IS_PASSKEY_SUPPORT_READY
                     && interactiveTokenCommandParameters.getAuthorizationAgent() == AuthorizationAgent.WEBVIEW) {
-                completeRequestHeaders.put(FidoConstants.PASSKEY_AUTH_HEADER, FidoConstants.PASSKEY_AUTH_HEADER_VALUE);
+                completeRequestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER, FidoConstants.PASSKEY_PROTOCOL_HEADER_VALUE);
             }
 
             // Add additional fields to the AuthorizationRequest.Builder to support interactive
