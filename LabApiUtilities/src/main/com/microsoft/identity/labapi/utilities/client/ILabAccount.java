@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.client;
 
+import com.microsoft.identity.labapi.utilities.constants.AzureEnvironment;
 import com.microsoft.identity.labapi.utilities.constants.UserType;
 
 /**
@@ -71,4 +72,6 @@ public interface ILabAccount {
      * @return a String representing the authority host for this lab account
      */
     String getAuthority();
+
+    String getAzureEnvironment();
 }
