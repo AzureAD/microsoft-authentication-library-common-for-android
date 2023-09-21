@@ -100,7 +100,6 @@ publishing {
         aar(MavenPublication) {
             groupId 'com.microsoft.testing'
             artifactId 'common4j'
-            version = project.version
             from components.java
 
             pom {
@@ -248,6 +247,6 @@ afterEvaluate {
 }
 
 // This is used to generate the pom file for publishing to external maven in maven-release-jobs.yml
-generatePomFileForAarPublication {
+tasks.withType(GenerateMavenPom).all {
     destination = layout.buildDirectory.file("poms/${project.name}-${project.version}.pom").get().asFile
 }
