@@ -171,7 +171,7 @@ jobs:
       ContentSource: 'Folder'
       FolderLocation: '$(Build.ArtifactStagingDirectory)'
       WaitForReleaseCompletion: true
-      Owners: '$(Build.RequestedFor)'
+      Owners: '$(Build.RequestedForEmail)'
       Approvers: 'androidauth@microsoft.com'
       ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
       MainPublisher: 'AndroidAuthSDK'
