@@ -30,7 +30,7 @@ class FidoConstants {
         /**
          * Redirect origin for passkey protocol.
          */
-        const val PASSKEY_REDIRECT = "urn:http-auth:PassKey"
+        const val PASSKEY_PROTOCOL_REDIRECT = "urn:http-auth:PassKey"
 
         /**
          * Extra query parameter field to declare WebAuthn capability for a host app.

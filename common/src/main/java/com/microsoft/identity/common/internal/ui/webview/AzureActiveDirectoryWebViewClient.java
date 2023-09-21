@@ -40,6 +40,10 @@ import androidx.annotation.RequiresApi;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
+import com.microsoft.identity.common.internal.fido.AbstractFidoChallengeHandler;
+import com.microsoft.identity.common.internal.fido.FidoChallengeHandlerFactory;
+import com.microsoft.identity.common.internal.fido.FidoManagerFactory;
+import com.microsoft.identity.common.internal.fido.FidoTelemetryHelper;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
@@ -161,6 +165,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url);
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
+            } else if (isPasskeyUrl(formattedURL)) {
+                Logger.info(methodTag,"WebView detected request for passkey protocol.");
+                final AbstractFidoChallengeHandler challengeHandler = FidoChallengeHandlerFactory.createFidoChallengeHandler(
+                        FidoManagerFactory.createFidoManager(view.getContext()),
+                        view,
+                        new FidoTelemetryHelper()
+                );
             } else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
                 processRedirectUrl(view, url);
@@ -227,6 +238,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isPkeyAuthUrl(@NonNull final String url) {
         return url.startsWith(AuthenticationConstants.Broker.PKEYAUTH_REDIRECT.toLowerCase(Locale.ROOT));
+    }
+
+    private boolean isPasskeyUrl(@NonNull final String url) {
+        return url.startsWith(FidoConstants.PASSKEY_PROTOCOL_REDIRECT.toLowerCase(Locale.ROOT));
     }
 
     private boolean isRedirectUrl(@NonNull final String url) {
