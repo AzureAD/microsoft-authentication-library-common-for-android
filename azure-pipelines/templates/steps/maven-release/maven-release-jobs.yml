@@ -172,7 +172,7 @@ jobs:
       WaitForReleaseCompletion: true
       Owners: '$(releaseOwners)'
       Approvers: '$(releaseApprovers)'
-      ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
-      MainPublisher: 'AndroidAuthSDK'
-      DomainTenantId: '72f988bf-86f1-41af-91ab-2d7cd011db47'
+      ServiceEndpointUrl: '$(esrpServiceEndpointUrl)'
+      MainPublisher: '$(esrpMainPublisher)'
+      DomainTenantId: '$(esrpDomainTenantId)'
 ...
