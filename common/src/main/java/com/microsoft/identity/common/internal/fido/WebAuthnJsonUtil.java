@@ -45,11 +45,14 @@ public class WebAuthnJsonUtil {
         final List<PublicKeyCredentialDescriptor> publicKeyCredentialDescriptorList = new ArrayList<>();
         if (challengeObject.getAllowedCredentials() != null) {
             for (final String id : challengeObject.getAllowedCredentials()) {
-                publicKeyCredentialDescriptorList.add(new PublicKeyCredentialDescriptor("public-key", id));
+                publicKeyCredentialDescriptorList.add(
+                        new PublicKeyCredentialDescriptor("public-key", id)
+                );
             }
         }
-        Moshi moshi = new Moshi.Builder().build();
-        JsonAdapter<PublicKeyCredentialRequestOptions> jsonAdapter = moshi.adapter(PublicKeyCredentialRequestOptions.class);
+        final JsonAdapter<PublicKeyCredentialRequestOptions> jsonAdapter = new Moshi.Builder()
+                .build()
+                .adapter(PublicKeyCredentialRequestOptions.class);
         final PublicKeyCredentialRequestOptions options = new PublicKeyCredentialRequestOptions(
                 challengeObject.getChallenge(),
                 challengeObject.getRelyingPartyIdentifier(),
