@@ -170,9 +170,9 @@ jobs:
       ContentType: 'Maven'
       ContentSource: 'Folder'
       FolderLocation: '$(Build.ArtifactStagingDirectory)'
-      WaitForReleaseCompletion: false
-      Owners: 'amgusain@microsoft.com'
-      Approvers: 'amgusain@microsoft.com'
+      WaitForReleaseCompletion: true
+      Owners: '$(Build.RequestedFor)'
+      Approvers: 'androidauth@microsoft.com'
       ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
       MainPublisher: 'AndroidAuthSDK'
       DomainTenantId: '72f988bf-86f1-41af-91ab-2d7cd011db47'
