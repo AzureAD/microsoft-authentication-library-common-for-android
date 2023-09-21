@@ -36,7 +36,6 @@ parameters:
 - name: gpgJavadocJar
   default: false
 
-
 jobs:
 - job: sdl_maven
   displayName: SDL and Maven Tasks
@@ -171,8 +170,8 @@ jobs:
       ContentSource: 'Folder'
       FolderLocation: '$(Build.ArtifactStagingDirectory)'
       WaitForReleaseCompletion: true
-      Owners: '$(Build.RequestedForEmail)'
-      Approvers: 'androidauth@microsoft.com'
+      Owners: '$(releaseOwners)'
+      Approvers: '$(releaseApprovers)'
       ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
       MainPublisher: 'AndroidAuthSDK'
       DomainTenantId: '72f988bf-86f1-41af-91ab-2d7cd011db47'
