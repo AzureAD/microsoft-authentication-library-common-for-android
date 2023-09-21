@@ -30,8 +30,6 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParamet
 /**
  * Factory class that takes care of the creation of NativeAuthOAuth2Strategy
  */
-// TODO platform components (created through reference to activity context) aren't needed, but
-// have to be provided due to legacy architecture in [OAuth2Strategy]
 class NativeAuthOAuth2StrategyFactory {
     companion object {
         fun createStrategy(

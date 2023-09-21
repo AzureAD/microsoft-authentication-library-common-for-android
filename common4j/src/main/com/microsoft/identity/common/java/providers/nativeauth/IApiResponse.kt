@@ -22,6 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.nativeauth
 
+/**
+ * Base class to represent the various responses for Native Auth API requests.
+ */
 abstract class IApiResponse(
+    //HTTP status code
     @Transient open val statusCode: Int
 )

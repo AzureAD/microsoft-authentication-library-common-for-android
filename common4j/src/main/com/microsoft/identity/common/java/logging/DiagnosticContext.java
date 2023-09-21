@@ -70,6 +70,11 @@ public enum DiagnosticContext {
         return REQUEST_CONTEXT_THREAD_LOCAL.get();
     }
 
+    public String getThreadCorrelationId() {
+        return getRequestContext().containsKey(DiagnosticContext.CORRELATION_ID)
+                ? getRequestContext().get(DiagnosticContext.CORRELATION_ID) :"UNSET";
+    }
+
     /**
      * Clear the local request context thread.
      */

@@ -29,6 +29,10 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import org.powermock.reflect.Whitebox
 
+/**
+ * MockApiUtils class provides various methods used by the integration tests to call the MockApi
+ * class to make HTTP POST requests to the Mock APIs for Native Auth.
+ */
 class MockApiUtils {
     companion object {
         init {
@@ -49,7 +53,7 @@ class MockApiUtils {
         }
 
         fun configureMockApiResponse(endpointType: MockApiEndpointType, responseType: MockApiResponseType, correlationId: String) {
-            MockApi.instance.addErrorToStack(
+            MockApi.instance.performRequest(
                 endpointType = endpointType,
                 responseType = responseType,
                 correlationId = correlationId

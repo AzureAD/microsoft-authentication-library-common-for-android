@@ -31,6 +31,10 @@ import org.junit.Assert.assertTrue
 import java.net.URL
 import java.util.TreeMap
 
+const val CORRELATION_ID =  "correlationId"
+const val ENDPOINT = "endpoint"
+const val RESPONSE_LIST = "responseList"
+
 class MockApi private constructor(
     private val httpClient: UrlConnectionHttpClient = UrlConnectionHttpClient.getDefaultInstance()
 ) {
@@ -57,7 +61,12 @@ class MockApi private constructor(
         }
     }
 
-    fun addErrorToStack(endpointType: MockApiEndpointType, responseType: MockApiResponseType, correlationId: String) {
+
+    /**
+     * Performs a HTTP POST request to the MockAPI for Native Auth. This method validates the request
+     * was successful
+     */
+    fun performRequest(endpointType: MockApiEndpointType, responseType: MockApiResponseType, correlationId: String) {
         val requestUrl = URL(RESPONSE_URL)
         val request = Request(
             correlationId = correlationId,
@@ -75,8 +84,11 @@ class MockApi private constructor(
     }
 }
 
+/**
+ * Data class to represent the request object send to the MockAPI for Native Auth
+ */
 data class Request(
-    @SerializedName("correlationId") val correlationId: String,
-    @SerializedName("endpoint") val endpoint: String,
-    @SerializedName("responseList") val responseList: List<String>
+    @SerializedName(CORRELATION_ID) val correlationId: String,
+    @SerializedName(ENDPOINT) val endpoint: String,
+    @SerializedName(RESPONSE_LIST) val responseList: List<String>
 )

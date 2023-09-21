@@ -27,6 +27,9 @@ import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
 import java.net.HttpURLConnection
 
+/**
+ * Helper class to log responses received from Native Auth API
+ */
 object ApiResultUtil {
     /**
      * Log IApiResponse objects. IResult objects are returned from all native auth endpoints

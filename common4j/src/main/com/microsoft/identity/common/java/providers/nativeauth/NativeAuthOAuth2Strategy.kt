@@ -23,7 +23,6 @@
 
 package com.microsoft.identity.common.java.providers.nativeauth
 
-import androidx.annotation.VisibleForTesting
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
@@ -33,7 +32,6 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParamet
  */
 class NativeAuthOAuth2Strategy(
     private val strategyParameters: OAuth2StrategyParameters,
-    @get:VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     val config: NativeAuthOAuth2Configuration
 ) :
     MicrosoftStsOAuth2Strategy(config, strategyParameters) {

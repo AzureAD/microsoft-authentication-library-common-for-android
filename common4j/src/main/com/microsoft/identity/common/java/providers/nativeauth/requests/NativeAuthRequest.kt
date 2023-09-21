@@ -26,11 +26,19 @@ package com.microsoft.identity.common.java.providers.nativeauth.requests
 import org.json.JSONObject
 import java.net.URL
 
+/**
+ * Base class to represent all Native Auth API requests
+ */
 abstract class NativeAuthRequest {
     abstract var requestUrl: URL
     abstract var headers: Map<String, String?>
     abstract val parameters: NativeAuthRequestParameters
 
+
+    /**
+     * Base class to represent parameters for all Native Auth API requests. These parameters
+     * are sent as part of HTTP POST request
+     */
     abstract class NativeAuthRequestParameters {
         abstract val clientId: String
     }

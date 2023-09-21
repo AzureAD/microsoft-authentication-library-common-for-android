@@ -24,7 +24,11 @@ package com.microsoft.identity.common.java.providers.nativeauth.interactors
 
 import com.google.gson.annotations.SerializedName
 
+/**
+ * Data class to denote the inner error in a data class for Native Auth API errors. This represents
+ * the source error that causes the Native Auth API operation to fail.
+ */
 data class InnerError(
-    @SerializedName("inner_error") val innerError: String?,
-    @SerializedName("error_description") val errorDescription: String?
+    @SerializedName("inner_error") val innerError: String?,      //Error name
+    @SerializedName("error_description") val errorDescription: String?   //Detailed error message
 )

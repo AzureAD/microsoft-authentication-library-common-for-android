@@ -57,10 +57,9 @@ import lombok.EqualsAndHashCode
  * logic. Doing this will make [BaseNativeAuthCommand] obsolete as well.
  */
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-
 abstract class BaseNativeAuthController : BaseController() {
 
-    @Throws(Exception::class)
+    @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
         message = "acquireToken() not supported in NativeAuthController"
@@ -69,7 +68,7 @@ abstract class BaseNativeAuthController : BaseController() {
         throw ClientException("acquireToken() not supported in NativeAuthController")
     }
 
-    @Throws(Exception::class)
+    @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
         message = "acquireTokenSilent() not supported in NativeAuthController"
@@ -78,7 +77,7 @@ abstract class BaseNativeAuthController : BaseController() {
         throw ClientException("acquireTokenSilent() not supported in NativeAuthController")
     }
 
-    @Throws(Exception::class)
+    @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
         message = "onFinishAuthorizationSession() not supported in NativeAuthController"
@@ -91,7 +90,7 @@ abstract class BaseNativeAuthController : BaseController() {
         throw ClientException("onFinishAuthorizationSession() not supported in NativeAuthController")
     }
 
-    @Throws(Exception::class)
+    @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
         message = "getAccounts() not supported in NativeAuthController"
@@ -100,7 +99,7 @@ abstract class BaseNativeAuthController : BaseController() {
         throw ClientException("getAccounts() not supported in NativeAuthController")
     }
 
-    @Throws(Exception::class)
+    @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
         message = "removeAccount() not supported in NativeAuthController"
@@ -109,7 +108,7 @@ abstract class BaseNativeAuthController : BaseController() {
         throw ClientException("removeAccount() not supported in NativeAuthController")
     }
 
-    @Throws(Exception::class)
+    @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
         message = "getDeviceMode() not supported in NativeAuthController"
@@ -118,7 +117,7 @@ abstract class BaseNativeAuthController : BaseController() {
         throw ClientException("getDeviceMode() not supported in NativeAuthController")
     }
 
-    @Throws(Exception::class)
+    @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
         message = "getCurrentAccount() not supported in NativeAuthController"
@@ -127,7 +126,7 @@ abstract class BaseNativeAuthController : BaseController() {
         throw ClientException("getCurrentAccount() not supported in NativeAuthController")
     }
 
-    @Throws(Exception::class)
+    @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
         message = "removeCurrentAccount() not supported in NativeAuthController"
@@ -136,7 +135,7 @@ abstract class BaseNativeAuthController : BaseController() {
         throw ClientException("removeCurrentAccount() not supported in NativeAuthController")
     }
 
-    @Throws(Exception::class)
+    @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
         message = "deviceCodeFlowAuthRequest() not supported in NativeAuthController"
@@ -145,7 +144,7 @@ abstract class BaseNativeAuthController : BaseController() {
         throw ClientException("deviceCodeFlowAuthRequest() not supported in NativeAuthController")
     }
 
-    @Throws(Exception::class)
+    @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
         message = "acquireDeviceCodeFlowToken() not supported in NativeAuthController"
@@ -157,7 +156,7 @@ abstract class BaseNativeAuthController : BaseController() {
         throw ClientException("acquireDeviceCodeFlowToken() not supported in NativeAuthController")
     }
 
-    @Throws(Exception::class)
+    @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
         message = "generateSignedHttpRequest() not supported in NativeAuthController"
@@ -166,7 +165,7 @@ abstract class BaseNativeAuthController : BaseController() {
         throw ClientException("generateSignedHttpRequest() not supported in NativeAuthController")
     }
 
-    @Throws(Exception::class)
+    @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
         message = "acquireTokenWithPassword() not supported in NativeAuthController"
@@ -175,7 +174,7 @@ abstract class BaseNativeAuthController : BaseController() {
         throw ClientException("acquireTokenWithPassword() not supported in NativeAuthController")
     }
 
-    @Throws(Exception::class)
+    @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
         message = "renewAccessToken() not supported in NativeAuthController"
@@ -184,7 +183,7 @@ abstract class BaseNativeAuthController : BaseController() {
         throw ClientException("renewAccessToken() not supported in NativeAuthController")
     }
 
-    @Throws(Exception::class)
+    @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
         message = "getStrategy() not supported in NativeAuthController"
@@ -195,7 +194,7 @@ abstract class BaseNativeAuthController : BaseController() {
         throw ClientException("getStrategy() not supported in NativeAuthController")
     }
 
-    @Throws(Exception::class)
+    @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
         message = "getCacheRecord() not supported in NativeAuthController"
@@ -204,7 +203,7 @@ abstract class BaseNativeAuthController : BaseController() {
         throw ClientException("getCacheRecord() not supported in NativeAuthController")
     }
 
-    @Throws(Exception::class)
+    @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
         message = "getTokenCache() not supported in NativeAuthController"
@@ -216,7 +215,7 @@ abstract class BaseNativeAuthController : BaseController() {
         throw ClientException("getTokenCache() not supported in NativeAuthController")
     }
 
-    @Throws(Exception::class)
+    @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
         message = "performTokenRequest() not supported in NativeAuthController"
@@ -230,7 +229,7 @@ abstract class BaseNativeAuthController : BaseController() {
         throw ClientException("performTokenRequest() not supported in NativeAuthController")
     }
 
-    @Throws(Exception::class)
+    @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
         message = "idTokenIsNull() not supported in NativeAuthController"
@@ -239,7 +238,7 @@ abstract class BaseNativeAuthController : BaseController() {
         throw ClientException("idTokenIsNull() not supported in NativeAuthController")
     }
 
-    @Throws(Exception::class)
+    @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
         message = "getCachedAccountRecordFromAllCaches() not supported in NativeAuthController"

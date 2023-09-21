@@ -23,6 +23,9 @@
 
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils
 
+/**
+ * Enumerates all of the different endpoints supported by MockAPI for Native Auth
+ */
 enum class MockApiEndpointType(val stringValue: String) {
     SignInInitiate("SignInInitiate"),
     SignInChallenge("SignInChallenge"),

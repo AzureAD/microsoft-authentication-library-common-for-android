@@ -22,12 +22,16 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.nativeauth.responses
 
-import com.microsoft.identity.common.java.util.CommonUtils
+import com.microsoft.identity.common.java.logging.DiagnosticContext
 
+
+/**
+ * Base class to encapsulate various error response from the Native Auth API
+ */
 open class ApiErrorResult(
     open val error: String?,
     open val errorDescription: String?,
     open val details: List<Map<String, String>>? = null,
-    open val correlationId: String = CommonUtils.getCurrentThreadCorrelationId(),
+    open val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
     open val errorCodes: List<Int>? = null
 )

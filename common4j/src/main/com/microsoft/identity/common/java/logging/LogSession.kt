@@ -25,8 +25,6 @@ package com.microsoft.identity.common.java.logging
 import com.microsoft.identity.common.java.logging.Logger.LogLevel
 import java.util.Collections.replaceAll
 
-private const val PARENT_METHOD_INDEX = 2
-
 /**
  * LogSession provides a wrapper on the Logger class from package
  * com.microsoft.identity.common.java.logging

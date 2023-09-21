@@ -32,6 +32,11 @@ import java.net.MalformedURLException
 import java.net.URISyntaxException
 import java.net.URL
 
+/**
+ * NativeAuthOAuth2Configuration stores the parameters used for creating various Native Auth APIs
+ * for Signup, SignIn and SSPR scenarios. This class also provides helper methods to generate urls
+ * for those scenarios.
+ */
 class NativeAuthOAuth2Configuration(
     private val authorityUrl: URL,
     val clientId: String,
