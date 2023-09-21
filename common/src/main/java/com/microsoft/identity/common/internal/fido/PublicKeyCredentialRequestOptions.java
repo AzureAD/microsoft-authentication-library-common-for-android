@@ -20,16 +20,32 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.fido
+package com.microsoft.identity.common.internal.fido;
+
+import androidx.annotation.NonNull;
+
+import java.util.List;
+
+import lombok.Getter;
 
 /**
  * Representation of WebAuthn's PublicKeyCredentialRequestOptions.
  * https://w3c.github.io/webauthn/#dictdef-publickeycredentialrequestoptions
  */
-@kotlinx.serialization.Serializable
-data class PublicKeyCredentialRequestOptions(
-    val challenge: String,
-    val rpId: String,
-    val allowCredentials: List<PublicKeyCredentialDescriptor>,
-    val userVerification: String
-)
+@Getter
+public class PublicKeyCredentialRequestOptions {
+    public final String challenge;
+    public final String rpId;
+    public final List<PublicKeyCredentialDescriptor> allowCredentials;
+    public final String userVerification;
+
+    public PublicKeyCredentialRequestOptions(@NonNull final String challenge,
+                                             @NonNull final String rpId,
+                                             @NonNull final List<PublicKeyCredentialDescriptor> allowCredentials,
+                                             @NonNull final String userVerification) {
+        this.challenge = challenge;
+        this.rpId = rpId;
+        this.allowCredentials = allowCredentials;
+        this.userVerification = userVerification;
+    }
+}
