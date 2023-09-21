@@ -43,6 +43,7 @@ import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
+import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;

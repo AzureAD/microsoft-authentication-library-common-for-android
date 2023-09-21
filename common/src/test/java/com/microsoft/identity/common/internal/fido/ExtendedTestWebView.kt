@@ -43,7 +43,7 @@ class ExtendedTestWebView : WebView(ApplicationProvider.getApplicationContext())
 
     fun isRegularAssertion() : Boolean {
         headers?.let {
-            val assertion = it[FidoConstants.PASSKEY_AUTH_RESPONSE_ASSERTION_HEADER]
+            val assertion = it[FidoConstants.PASSKEY_RESPONSE_ASSERTION_HEADER]
                 ?: throw Exception("No assertion header found.")
             return assertion == TestFidoManager.SAMPLE_ASSERTION
         }
@@ -52,7 +52,7 @@ class ExtendedTestWebView : WebView(ApplicationProvider.getApplicationContext())
 
     fun hasContext() : Boolean {
         headers?.let {
-            val context = it[FidoConstants.PASSKEY_AUTH_RESPONSE_CONTEXT_HEADER]
+            val context = it[FidoConstants.PASSKEY_RESPONSE_CONTEXT_HEADER]
                 ?: throw Exception("No context header found.")
             return context.isNotEmpty()
         }
@@ -61,7 +61,7 @@ class ExtendedTestWebView : WebView(ApplicationProvider.getApplicationContext())
 
     fun hasFlowToken() : Boolean {
         headers?.let {
-            val flowToken = it[FidoConstants.PASSKEY_AUTH_RESPONSE_FLOWTOKEN_HEADER]
+            val flowToken = it[FidoConstants.PASSKEY_RESPONSE_FLOWTOKEN_HEADER]
                 ?: throw Exception("No flow token header found.")
             return flowToken.isNotEmpty()
         }

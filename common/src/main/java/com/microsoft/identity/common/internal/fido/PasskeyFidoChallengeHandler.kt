@@ -93,7 +93,7 @@ class PasskeyFidoChallengeHandler
         val methodTag = "$TAG:respondToChallenge"
         //We're splitting the context value here because ESTS is expected to also send the flow token in the same string.
         //They want us to send the flow token value via a header separate from the actual context value.
-        val splitContextList = context.split(FidoConstants.PASSKEY_AUTH_CONTEXT_DELIMITER)
+        val splitContextList = context.split(FidoConstants.PASSKEY_CONTEXT_DELIMITER)
         val actualContext: String
         val flowToken: String
         if (splitContextList.size == 2) {
@@ -105,9 +105,9 @@ class PasskeyFidoChallengeHandler
             flowToken = ""
         }
         val header = mapOf(
-            FidoConstants.PASSKEY_AUTH_RESPONSE_ASSERTION_HEADER to assertion,
-            FidoConstants.PASSKEY_AUTH_RESPONSE_CONTEXT_HEADER to actualContext,
-            FidoConstants.PASSKEY_AUTH_RESPONSE_FLOWTOKEN_HEADER to flowToken
+            FidoConstants.PASSKEY_RESPONSE_ASSERTION_HEADER to assertion,
+            FidoConstants.PASSKEY_RESPONSE_CONTEXT_HEADER to actualContext,
+            FidoConstants.PASSKEY_RESPONSE_FLOWTOKEN_HEADER to flowToken
         )
         webView.post {
             Logger.info(methodTag, "Responding to Fido challenge.")

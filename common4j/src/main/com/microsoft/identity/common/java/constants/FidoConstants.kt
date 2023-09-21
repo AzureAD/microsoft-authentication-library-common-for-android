@@ -28,6 +28,11 @@ package com.microsoft.identity.common.java.constants
 class FidoConstants {
     companion object {
         /**
+         * Redirect origin for passkey protocol.
+         */
+        const val PASSKEY_REDIRECT = "urn:http-auth:PassKey"
+
+        /**
          * Extra query parameter field to declare WebAuthn capability for a host app.
          */
         const val WEBAUTHN_QUERY_PARAMETER_FIELD = "webauthn"
@@ -38,23 +43,23 @@ class FidoConstants {
         const val WEBAUTHN_QUERY_PARAMETER_VALUE = "1"
 
         /**
-         * Header name for the passkey auth assertion that is passed back to the server.
+         * Header name for the passkey assertion that is passed back to the server.
          */
-        const val PASSKEY_AUTH_RESPONSE_ASSERTION_HEADER = "Assertion"
+        const val PASSKEY_RESPONSE_ASSERTION_HEADER = "Assertion"
 
         /**
-         * Header name for the passkey auth context that we're relaying back to the server.
+         * Header name for the passkey protocol context that we're relaying back to the server.
          */
-        const val PASSKEY_AUTH_RESPONSE_CONTEXT_HEADER = "Context"
+        const val PASSKEY_RESPONSE_CONTEXT_HEADER = "Context"
 
         /**
-         * Header name for the passkey auth flow token that we're relaying back to the server.
+         * Header name for the passkey protocol flow token that we're relaying back to the server.
          */
-        const val PASSKEY_AUTH_RESPONSE_FLOWTOKEN_HEADER = "x-ms-flowToken"
+        const val PASSKEY_RESPONSE_FLOWTOKEN_HEADER = "x-ms-flowToken"
 
         /**
          * Delimiter for server context query parameter value, which can contain a context value and flow token value.
          */
-        const val PASSKEY_AUTH_CONTEXT_DELIMITER = " "
+        const val PASSKEY_CONTEXT_DELIMITER = " "
     }
 }
