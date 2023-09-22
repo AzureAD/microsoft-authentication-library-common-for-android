@@ -252,5 +252,14 @@ public enum AttributeName {
     /**
      * The broker operation name.
      */
-    broker_operation_name;
+    broker_operation_name,
+
+    /**
+     * Fido challenge type.
+     */
+    fido_challenge,
+    /**
+     * Fido challenge handler type.
+     */
+    fido_challenge_handler
 }
