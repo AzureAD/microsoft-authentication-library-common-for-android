@@ -5,6 +5,7 @@ plugins {
     id 'checkstyle'
     id 'maven-publish'
     id 'kotlin-android'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.7.21'
 }
 
 apply from: '../versioning/version_tasks.gradle'
@@ -144,6 +145,7 @@ dependencies {
     testImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
     androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$rootProject.ext.kotlinxSerializationVersion"
 
     implementation "androidx.datastore:datastore-preferences:1.0.0"
 

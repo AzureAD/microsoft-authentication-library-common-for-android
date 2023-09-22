@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.util.UrlUtil
 class FidoChallengeFactory {
     companion object {
         const val DELIMITER = ","
+        const val DEFAULT_USER_VERIFICATION_POLICY = "required"
         private const val PASSKEY_PROTOCOL_REQUEST_INVALID = "Passkey protocol request is invalid"
 
         /**
@@ -53,9 +54,10 @@ class FidoChallengeFactory {
                     FidoRequestField.RelyingPartyIdentifier.name,
                     parameters[FidoRequestField.RelyingPartyIdentifier.name]
                 ),
-                userVerificationPolicy = validateRequiredParameter(
+                userVerificationPolicy = validateParameterOrReturnDefault(
                     FidoRequestField.UserVerificationPolicy.name,
-                    parameters[FidoRequestField.UserVerificationPolicy.name]
+                    parameters[FidoRequestField.UserVerificationPolicy.name],
+                    DEFAULT_USER_VERIFICATION_POLICY
                 ),
                 version = validateRequiredParameter(
                     FidoRequestField.Version.name,
@@ -88,7 +90,7 @@ class FidoChallengeFactory {
          * @throws ClientException if the parameter is null or empty.
          */
         @Throws(ClientException::class)
-        fun validateRequiredParameter(field: String, value: String?): String {
+        internal fun validateRequiredParameter(field: String, value: String?): String {
             if (value == null) {
                 throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field not provided")
             } else if (value.isBlank()) {
@@ -105,7 +107,7 @@ class FidoChallengeFactory {
          * @throws ClientException if the parameter is empty.
          */
         @Throws(ClientException::class)
-        fun validateOptionalParameter(field: String, value: String?): String? {
+        internal fun validateOptionalParameter(field: String, value: String?): String? {
             if (value != null && value.isBlank()) {
                 throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field is empty")
             }
@@ -120,12 +122,30 @@ class FidoChallengeFactory {
          * @throws ClientException if the parameter is empty
          */
         @Throws(ClientException::class)
-        fun validateOptionalListParameter(field: String, value: String?): List<String>? {
+        internal fun validateOptionalListParameter(field: String, value: String?): List<String>? {
             val param = validateOptionalParameter(field, value)
             if (param != null) {
                 return param.split(DELIMITER).toList()
             }
             return param
+        }
+
+        /**
+         * If parameter is empty, replace parameter value with given default value.
+         * @param field passkey protocol field
+         * @param value value for a passkey protocol parameter
+         * @param defaultValue value to be used as default
+         * @return validated parameter value, or default value if initial value is null.
+         * @throws ClientException if the parameter is empty
+         */
+        @Throws(ClientException::class)
+        internal fun validateParameterOrReturnDefault(field: String, value: String?, defaultValue: String): String {
+            if (value == null) {
+                return defaultValue
+            } else if (value.isBlank()) {
+                throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field is empty")
+            }
+            return value
         }
     }
 }
