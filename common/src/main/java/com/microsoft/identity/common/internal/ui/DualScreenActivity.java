@@ -27,7 +27,6 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Rect;
-import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.Surface;
 import android.view.WindowManager;
@@ -51,9 +50,6 @@ public class DualScreenActivity extends FragmentActivity {
     @Override
     public void setContentView(int layoutResID) {
         initializeContentView();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            this.requestPermissions(new String[]{"android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE"}, 1); //
-        }
         final RelativeLayout contentLayout = findViewById(R.id.dual_screen_content);
         LayoutInflater.from(this).inflate(layoutResID, contentLayout);
     }

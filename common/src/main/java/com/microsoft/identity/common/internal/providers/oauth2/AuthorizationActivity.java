@@ -33,6 +33,7 @@ import com.microsoft.identity.common.logging.Logger;
 public class AuthorizationActivity extends DualScreenActivity {
 
     public static final String TAG = AuthorizationActivity.class.getSimpleName();
+
     private AuthorizationFragment mFragment;
 
     @Override
