@@ -50,7 +50,8 @@ public class DualScreenActivity extends FragmentActivity {
     @Override
     public void setContentView(int layoutResID) {
         initializeContentView();
-        final RelativeLayout contentLayout = findViewById(R.id.dual_screen_content);
+
+        final RelativeLayout contentLayout = findViewById(com.microsoft.identity.common.R.id.dual_screen_content);
         LayoutInflater.from(this).inflate(layoutResID, contentLayout);
     }
 
