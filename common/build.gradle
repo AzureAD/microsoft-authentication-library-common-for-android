@@ -5,7 +5,6 @@ plugins {
     id 'checkstyle'
     id 'maven-publish'
     id 'kotlin-android'
-    id 'org.jetbrains.kotlin.plugin.serialization' version '1.7.21'
 }
 
 apply from: '../versioning/version_tasks.gradle'
@@ -145,7 +144,6 @@ dependencies {
     testImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
     androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$rootProject.ext.kotlinxSerializationVersion"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$rootProject.ext.lifecycleKtxVersion"
 
     implementation "androidx.datastore:datastore-preferences:1.0.0"
@@ -156,6 +154,7 @@ dependencies {
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation "androidx.appcompat:appcompat:$rootProject.ext.appCompatVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
+    implementation "com.squareup.moshi:moshi:$rootProject.ext.moshiVersion"
     implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintLayoutVersion"
     //For Executive Order work
