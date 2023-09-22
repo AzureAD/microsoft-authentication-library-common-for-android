@@ -22,13 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
@@ -37,7 +33,6 @@ import com.microsoft.identity.common.logging.Logger;
 public class AuthorizationActivity extends DualScreenActivity {
 
     public static final String TAG = AuthorizationActivity.class.getSimpleName();
-    public static final int CAMERA_PERMISSION_REQUEST_CODE = 1;
     private AuthorizationFragment mFragment;
 
     @Override
@@ -55,6 +50,4 @@ public class AuthorizationActivity extends DualScreenActivity {
         }
         setFragment(mFragment);
     }
-
-
 }
