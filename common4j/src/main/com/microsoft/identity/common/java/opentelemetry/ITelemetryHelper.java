@@ -1,4 +1,3 @@
-package com.microsoft.identity.common.java.opentelemetry;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -21,40 +20,32 @@ package com.microsoft.identity.common.java.opentelemetry;
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.java.opentelemetry;
 
-public enum SpanName {
-    AcquirePrtUsingBrt,
-    RefreshPrt,
-    AcquireAtUsingPrt,
-    AcquireTokenInteractive,
-    AcquireTokenSilent,
-    CryptoFactoryEvent,
-    SetScopeForDMAgentForFoci,
-    GetAccounts,
-    RemoveAccount,
-    WorkplaceJoin,
-    DoDiscovery,
-    WorkplaceLeave,
-    DeviceState,
-    CertBasedAuth,
-    UploadBrokerLogs,
-    InitializePowerLift,
-    MSAL_PerformIpcStrategy,
-    DeviceRegistrationApi,
-    WorkplaceJoinApi,
-    AcquirePrtInteractively,
-    PrtUpgrade,
-    AcquireTokenDcf,
-    AcquireTokenDcfAuthRequest,
-    AcquireTokenDcfFetchToken,
-    AccountStorageWithBackup,
-    EncryptionManager,
-    Passthrough,
-    BrokerOperationRequestDispatcher,
-    BrokerDiscoveryManagerGetActiveBroker,
-    BrokerDiscoveryManagerPerformDiscoveryProcess,
-    BrokerDiscoveryMetadataAggregator,
-    BrokerSelectionProtocolManager,
-    BrokerDiscoveryV1ProtocolBroadcastResult,
-    Fido
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.NonNull;
+
+public interface ITelemetryHelper {
+    /**
+     * Indicates on the Span that the operation was successful and then ends current Span.
+     */
+    //Suppressing warnings for RETURN_VALUE_IGNORED_NO_SIDE_EFFECT
+    @SuppressFBWarnings
+    void setResultSuccess();
+
+    /**
+     * Indicates on the Span that the operation failed and then ends current Span.
+     * @param message descriptive cause of failure message.
+     */
+    //Suppressing warnings for RETURN_VALUE_IGNORED_NO_SIDE_EFFECT
+    @SuppressFBWarnings
+    void setResultFailure(@NonNull final String message);
+
+    /**
+     * Indicates on the Span that the operation failed and then ends current Span.
+     * @param exception exception thrown upon error.
+     */
+    //Suppressing warnings for RETURN_VALUE_IGNORED_NO_SIDE_EFFECT
+    @SuppressFBWarnings
+    void setResultFailure(@NonNull final Exception exception);
 }

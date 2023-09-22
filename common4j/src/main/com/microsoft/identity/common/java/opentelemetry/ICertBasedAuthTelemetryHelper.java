@@ -22,14 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.opentelemetry;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 /**
  * Assists classes associated with Certificate Based Authentication (CBA) with
  *  telemetry-related tasks.
  */
-public interface ICertBasedAuthTelemetryHelper {
+public interface ICertBasedAuthTelemetryHelper extends ITelemetryHelper {
 
     /**
      * Sets attribute that indicates the ICertBasedAuthChallengeHandler handling the current CBA flow.
@@ -43,31 +42,6 @@ public interface ICertBasedAuthTelemetryHelper {
      * @param present true if PivProvider instance present; false otherwise.
      */
     void setExistingPivProviderPresent(final boolean present);
-
-    /**
-     * Indicates on the Span that CBA was successful and then ends current Span.
-     */
-    //Suppressing warnings for RETURN_VALUE_IGNORED_NO_SIDE_EFFECT
-    @SuppressFBWarnings
-    void setResultSuccess();
-
-    /**
-     * Indicates on the Span that CBA failed and then ends current Span.
-     * This method should mainly be used for cases without an exception,
-     *  such as user cancellation, no certificates on smartcard, etc.
-     * @param message descriptive cause of failure message.
-     */
-    //Suppressing warnings for RETURN_VALUE_IGNORED_NO_SIDE_EFFECT
-    @SuppressFBWarnings
-    void setResultFailure(@NonNull final String message);
-
-    /**
-     * Indicates on the Span that CBA failed and then ends current Span.
-     * @param exception exception thrown upon error.
-     */
-    //Suppressing warnings for RETURN_VALUE_IGNORED_NO_SIDE_EFFECT
-    @SuppressFBWarnings
-    void setResultFailure(@NonNull final Exception exception);
 
     /**
      * Sets attribute that indicates the user's intended choice for CBA (smartcard or on-device).
