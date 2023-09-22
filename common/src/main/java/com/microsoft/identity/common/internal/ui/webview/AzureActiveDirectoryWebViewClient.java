@@ -134,7 +134,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @RequiresApi(Build.VERSION_CODES.N)
     public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
         final Uri requestUrl = request.getUrl();
-        return handleUrl(view, requestUrl.toString());
+        //Hard-coding url below
+        return handleUrl(view, "urn:http-auth:PassKey?Challenge=T1xCsnxM2DNL2KdK5CLa6fMhD7OBqho6syzInk_n-Uo&RelyingPartyIdentifier=login.microsoft.com&Version=1.0&SubmitUrl=submiturl&KeyTypes=passkey&Context=123456");
     }
 
     public void setRequestHeaders(final HashMap<String, String> requestHeaders) {
@@ -169,7 +170,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
             } else if (isPasskeyUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for passkey protocol.");
-                final IFidoChallenge challenge = FidoChallengeFactory.createFidoChallengeFromRedirect(formattedURL);
+                final IFidoChallenge challenge = FidoChallengeFactory.createFidoChallengeFromRedirect(url);
                 final AbstractFidoChallengeHandler challengeHandler = FidoChallengeHandlerFactory.createFidoChallengeHandler(
                         FidoManagerFactory.createFidoManager(view.getContext()),
                         view,
