@@ -43,8 +43,9 @@ public class WebAuthnJsonUtil {
     public static String createJsonAuthRequestFromChallengeObject(@NonNull final AuthFidoChallenge challengeObject) {
         //Create classes
         final List<PublicKeyCredentialDescriptor> publicKeyCredentialDescriptorList = new ArrayList<>();
-        if (challengeObject.getAllowedCredentials() != null) {
-            for (final String id : challengeObject.getAllowedCredentials()) {
+        final List<String> allowedCredentials = challengeObject.getAllowedCredentials();
+        if (allowedCredentials != null) {
+            for (final String id : allowedCredentials) {
                 publicKeyCredentialDescriptorList.add(
                         new PublicKeyCredentialDescriptor("public-key", id)
                 );
