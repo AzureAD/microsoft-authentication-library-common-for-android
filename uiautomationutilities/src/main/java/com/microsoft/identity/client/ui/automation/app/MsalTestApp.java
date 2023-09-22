@@ -89,7 +89,7 @@ public class MsalTestApp extends App {
         acquireTokenButton.click();
 
         if (promptHandlerParameters.getBroker() == null && browser != null && shouldHandleBrowserFirstRun) {
-            // handle browser first run as applicable
+            // handle browser first run as applicable 
             browser.handleFirstRun();
         }
         // handle prompt if needed
