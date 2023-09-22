@@ -1,4 +1,4 @@
-package com.microsoft.identity.common.internal.fido
+package com.microsoft.identity.common.java.opentelemetry
 
 import com.microsoft.identity.common.java.opentelemetry.IFidoTelemetryHelper
 

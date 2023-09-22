@@ -41,9 +41,11 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.fido.AbstractFidoChallengeHandler;
+import com.microsoft.identity.common.internal.fido.FidoChallengeFactory;
 import com.microsoft.identity.common.internal.fido.FidoChallengeHandlerFactory;
 import com.microsoft.identity.common.internal.fido.FidoManagerFactory;
-import com.microsoft.identity.common.internal.fido.FidoTelemetryHelper;
+import com.microsoft.identity.common.java.opentelemetry.FidoTelemetryHelper;
+import com.microsoft.identity.common.internal.fido.IFidoChallenge;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
@@ -167,11 +169,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
             } else if (isPasskeyUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for passkey protocol.");
+                final IFidoChallenge challenge = FidoChallengeFactory.createFidoChallengeFromRedirect(formattedURL);
                 final AbstractFidoChallengeHandler challengeHandler = FidoChallengeHandlerFactory.createFidoChallengeHandler(
                         FidoManagerFactory.createFidoManager(view.getContext()),
                         view,
                         new FidoTelemetryHelper()
                 );
+                challengeHandler.processChallenge(challenge);
             } else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
                 processRedirectUrl(view, url);
