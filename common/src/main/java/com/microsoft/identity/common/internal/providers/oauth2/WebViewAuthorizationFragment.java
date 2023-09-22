@@ -183,16 +183,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                             }
                         }
                     }
-
-
-
                 },
                 mRedirectUri);
         setUpWebView(view, mAADWebViewClient);
         checkPermissionsAndLaunchWebView(runTimeRequiredPermissions());
         return view;
     }
-
 
     private void checkPermissionsAndLaunchWebView(@NonNull final List<String> requiredPermissions) {
         if (allRequiredPermissionsGranted(requiredPermissions)) {
@@ -203,7 +199,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             requestPermissionLauncher.launch(requiredPermissions.toArray(new String[0]));
         }
     }
-
 
     private void showRequestPermissionRationale(@NonNull final List<String> permissions) {
         final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
@@ -248,6 +243,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         }
         return true;
     }
+
     private List<String> runTimeRequiredPermissions() {
         final List<String> permissions = new ArrayList();
         if (isQRCodePlusPin()) {
@@ -302,7 +298,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 return false;
             }
         });
-        mWebView.getSettings().setPluginState(WebSettings.PluginState.ON);
 
         mWebView.getSettings().setLoadWithOverviewMode(true);
         mWebView.getSettings().setDomStorageEnabled(true);
@@ -310,20 +305,15 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setBuiltInZoomControls(webViewZoomControlsEnabled);
         mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
         mWebView.setVisibility(View.INVISIBLE);
+        mWebView.getSettings().setPluginState(WebSettings.PluginState.ON);
         mWebView.setWebViewClient(webViewClient);
-
-
-
         mWebView.setWebChromeClient(new WebChromeClient() {
-
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     request.grant(request.getResources());
                 }
             }
-
-
         });
 
 
