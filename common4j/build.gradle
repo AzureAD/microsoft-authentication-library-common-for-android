@@ -98,7 +98,7 @@ jar {
 publishing {
     publications {
         aar(MavenPublication) {
-            groupId 'com.microsoft.identity'
+            groupId 'com.microsoft.testing'
             artifactId 'common4j'
             from components.java
 
