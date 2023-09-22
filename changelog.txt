@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Handle crypto error gracefully (#2190)
 - [MINOR] Add LTW as prod broker app (#2179)
 
 V.16.0.0
