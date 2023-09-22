@@ -22,8 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -35,10 +40,16 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
@@ -53,9 +64,11 @@ import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizatio
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.List;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
@@ -179,8 +192,76 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 },
                 mRedirectUri);
         setUpWebView(view, mAADWebViewClient);
-        launchWebView();
+        checkPermissionsAndLaunchWebView(runTimeRequiredPermissions());
         return view;
+    }
+
+
+    private void checkPermissionsAndLaunchWebView(@NonNull final List<String> requiredPermissions) {
+        if (allRequiredPermissionsGranted(requiredPermissions)) {
+            launchWebView();
+        } else if (shouldShowRequestPermissionRationale(requiredPermissions)) {
+            showRequestPermissionRationale(requiredPermissions);
+        } else {
+            requestPermissionLauncher.launch(requiredPermissions.toArray(new String[0]));
+        }
+    }
+
+
+    private void showRequestPermissionRationale(@NonNull final List<String> permissions) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setMessage("This app requires the following permissions to continue:" + permissions.toString())
+                .setTitle("Permission required")
+                .setCancelable(false)
+                .setPositiveButton("OK", (dialog, id) -> {
+                   if (shouldShowRequestPermissionRationale(permissions))
+                   {
+                       requestPermissionLauncher.launch(permissions.toArray(new String[0]));
+                   } else {
+                       // User has permanently denied the permission, take them to settings
+                       final Intent intent = new Intent(
+                               android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                               Uri.fromParts("package", getContext().getPackageName(), null)
+                       );
+                       someActivityResultLauncher.launch(intent);
+                   }
+                })
+                .setNegativeButton("Cancel", (dialog, id) -> {
+                    // User cancelled the dialog
+                    dialog.dismiss();
+                    cancelAuthorization(true);
+                });
+        builder.show();
+    }
+
+    private Boolean shouldShowRequestPermissionRationale(@NonNull final List<String> permissions) {
+        for (final String permission : permissions) {
+            if(shouldShowRequestPermissionRationale(permission)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Boolean allRequiredPermissionsGranted(@NonNull final List<String> permissions) {
+        for (final String permission : permissions) {
+            if (ContextCompat.checkSelfPermission(getContext(), permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+    private List<String> runTimeRequiredPermissions() {
+        final List<String> permissions = new ArrayList();
+        if (isQRCodePlusPin()) {
+            permissions.add(Manifest.permission.CAMERA);
+        }
+        return permissions;
+    }
+
+    private Boolean isQRCodePlusPin() {
+        return true;
+        //mAuthorizationRequestUrl.contains("login");
     }
 
     @Override
@@ -286,6 +367,36 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             Logger.error(methodTag, "Fragment destroyed, but smartcard usb discovery was unable to be stopped.", null);
         }
     }
+
+    private ActivityResultLauncher<String[]> requestPermissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestMultiplePermissions(),
+            permissions   -> {
+                final List<String> rejectedPermissions = new ArrayList();
+                for (final String permission : permissions.keySet()) {
+                    if (permissions.get(permission) == false) {
+                        rejectedPermissions.add(permission);
+                        //Toast.makeText(getContext(), "We cannot proceed without the permission:" + permission, Toast.LENGTH_SHORT).show();
+                    }
+                }
+                if (rejectedPermissions.isEmpty()) {
+                    // ALL PERMISSIONS GRANTED
+                    launchWebView();
+                } else {
+                    showRequestPermissionRationale(rejectedPermissions);
+                }
+            }
+    );
+
+
+    // You can do the assignment inside onAttach or onCreate, i.e, before the activity is displayed
+    private ActivityResultLauncher<Intent> someActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_CANCELED) {
+                    checkPermissionsAndLaunchWebView(runTimeRequiredPermissions());
+                }
+            });
+
 
     /**
      * Extracts request headers from the given bundle object.
