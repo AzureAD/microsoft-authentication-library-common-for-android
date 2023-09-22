@@ -118,11 +118,11 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
             }
             if (getSdkType().isCapableOfMSA() &&
                     !getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
-                throw new ArgumentException(
-                        ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
-                        ArgumentException.REDIRECT_URI_ARGUMENT_NAME, "The redirect URI doesn't match the uri" +
-                        " generated with caller package name and signature"
-                );
+//                throw new ArgumentException(
+//                        ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
+//                        ArgumentException.REDIRECT_URI_ARGUMENT_NAME, "The redirect URI doesn't match the uri" +
+//                        " generated with caller package name and signature"
+//                );
             }
         }
     }

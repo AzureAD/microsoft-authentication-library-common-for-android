@@ -48,7 +48,7 @@ public interface IAuthorizationStrategy<
             throws ClientException;
 
     /**
-     * Submit the authorization results.
+     * Submit the authorization rCults.
      *
      * @param requestCode
      * @param data

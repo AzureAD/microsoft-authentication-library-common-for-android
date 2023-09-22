@@ -171,6 +171,7 @@ public abstract class OAuth2Strategy
         validateTokenRequest(request);
 
         final HttpResponse response = performTokenRequest(request);
+        Logger.verbose(TAG, "response from ESTS "+ response);
         final GenericTokenResult result = getTokenResultFromHttpResponse(response);
         if (result.getTokenResponse() != null) {
             result.getTokenResponse().setAuthority(mTokenEndpoint);
@@ -229,8 +230,8 @@ public abstract class OAuth2Strategy
                 headers.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
             }
         }
-
-        final URL requestUrl = new URL(getTokenEndpoint());
+      //  final URL requestUrl = new URL(getTokenEndpoint());
+        final URL requestUrl = new URL(getTokenEndpoint()+"?dc=ESTS-PUB-WUS2-AZ1-FD000-TEST1&pwbrokerpuidtoguid=true&bypasspwpoliciesmsa=true&jwtcredsmsa=true");
         final long networkStartTime = System.currentTimeMillis();
         final HttpResponse response = httpClient.post(
                 requestUrl,

@@ -50,6 +50,7 @@ import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
+import com.microsoft.identity.common.java.util.CacheUtil;
 import com.microsoft.identity.common.java.util.ThreadUtils;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authorities.Authority;
@@ -350,12 +351,12 @@ public class LocalMSALController extends BaseController {
                 );
             }
         } else
-            if ((accessTokenIsNull(fullCacheRecord)
-                || refreshTokenIsNull(fullCacheRecord)
+            if ((CacheUtil.accessTokenIsNull(fullCacheRecord)
+                || CacheUtil.refreshTokenIsNull(fullCacheRecord)
                 || parametersWithScopes.isForceRefresh()
-                || !isRequestAuthorityRealmSameAsATRealm(parametersWithScopes.getAuthority(), fullCacheRecord.getAccessToken())
+                || !CacheUtil.isRequestAuthorityRealmSameAsATRealm(parametersWithScopes.getAuthority(), fullCacheRecord.getAccessToken())
                 || !strategy.validateCachedResult(authScheme, fullCacheRecord))) {
-            if (!refreshTokenIsNull(fullCacheRecord)) {
+            if (!CacheUtil.refreshTokenIsNull(fullCacheRecord)) {
                 // No AT found, but the RT checks out, so we'll use it
                 renewAT(
                         parametersWithScopes,

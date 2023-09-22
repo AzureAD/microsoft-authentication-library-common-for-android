@@ -596,6 +596,7 @@ public class MicrosoftStsOAuth2Strategy
             }
             tokenErrorResponse.setResponseBody(response.getBody());
         } else {
+            Logger.verbose(TAG, "response code "+ response.getStatusCode());
             tokenResponse = ObjectMapper.deserializeJsonStringToObject(
                     getBodyFromSuccessfulResponse(response.getBody()),
                     MicrosoftStsTokenResponse.class
@@ -650,6 +651,7 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     protected String getBodyFromSuccessfulResponse(@NonNull final String responseBody) throws ClientException {
+        Logger.verbose(TAG, "response body... "+ responseBody);
         return responseBody;
     }
 

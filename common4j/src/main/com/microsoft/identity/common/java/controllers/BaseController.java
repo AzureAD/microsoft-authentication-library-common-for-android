@@ -84,6 +84,7 @@ import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
+import com.microsoft.identity.common.java.util.CacheUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ResultUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -257,123 +258,13 @@ public abstract class BaseController {
     @SuppressWarnings(WarningType.rawtype_warning)
     protected final AuthorizationRequest.Builder initializeAuthorizationRequestBuilder(@NonNull final AuthorizationRequest.Builder builder,
                                                                                        @NonNull final TokenCommandParameters parameters) {
-        UUID correlationId = null;
-
-        try {
-            correlationId = UUID.fromString(DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
-        } catch (IllegalArgumentException ex) {
-            Logger.error(TAG, "correlation id from diagnostic context is not a UUID", ex);
-        }
-
-
-        if (parameters.hasNestedAppParameters()) {
-            // is NAA scenario, set all NAA params for auth flow
-            builder.setBrkRedirectUri(parameters.getRedirectUri())
-                    .setBrkClientId(parameters.getClientId())
-                    .setClientId(parameters.getChildClientId())
-                    .setRedirectUri(parameters.getChildRedirectUri());
-        } else {
-            builder.setClientId(parameters.getClientId())
-                    .setRedirectUri(parameters.getRedirectUri());
-        }
-        if (builder instanceof MicrosoftAuthorizationRequest.Builder) {
-            ((MicrosoftAuthorizationRequest.Builder) builder).setCorrelationId(correlationId);
-        }
-
-        if (builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
-            ((MicrosoftStsAuthorizationRequest.Builder) builder).setApplicationIdentifier(parameters.getApplicationIdentifier());
-        }
-
-        final Set<String> scopes = parameters.getScopes();
-
-        if (parameters instanceof InteractiveTokenCommandParameters) {
-            final InteractiveTokenCommandParameters interactiveTokenCommandParameters = (InteractiveTokenCommandParameters) parameters;
-            // Set the multipleCloudAware and slice fields.
-            if (builder instanceof MicrosoftAuthorizationRequest.Builder) {
-                ((MicrosoftStsAuthorizationRequest.Builder) builder).setTokenScope(StringUtil.join(" ", parameters.getScopes()));
-                if (interactiveTokenCommandParameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
-                    final AzureActiveDirectoryAuthority requestAuthority = (AzureActiveDirectoryAuthority) interactiveTokenCommandParameters.getAuthority();
-                    ((MicrosoftStsAuthorizationRequest.Builder) builder)
-                            .setAuthority(requestAuthority.getAuthorityURL())
-                            .setMultipleCloudAware(requestAuthority.isMultipleCloudsSupported())
-                            .setState(interactiveTokenCommandParameters.getPlatformComponents().getStateGenerator().generate())
-                            .setSlice(requestAuthority.mSlice)
-                            .setApplicationIdentifier(parameters.getApplicationIdentifier());
-                }
-            }
-
-            // Adding getExtraScopesToConsent to "Auth" request only.
-            // https://docs.microsoft.com/bs-latn-ba/azure/active-directory/develop/msal-net-user-gets-consent-for-multiple-resources
-            if (interactiveTokenCommandParameters.getExtraScopesToConsent() != null) {
-                scopes.addAll(interactiveTokenCommandParameters.getExtraScopesToConsent());
-            }
-
-            final HashMap<String, String> completeRequestHeaders = new HashMap<>();
-
-            if (interactiveTokenCommandParameters.getRequestHeaders() != null) {
-                completeRequestHeaders.putAll(interactiveTokenCommandParameters.getRequestHeaders());
-            }
-
-            completeRequestHeaders.put(
-                    AuthenticationConstants.AAD.APP_PACKAGE_NAME,
-                    parameters.getApplicationName()
-            );
-            completeRequestHeaders.put(AuthenticationConstants.AAD.APP_VERSION,
-                    parameters.getApplicationVersion()
-            );
-            completeRequestHeaders.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
-
-            // Add additional fields to the AuthorizationRequest.Builder to support interactive
-            setBuilderProperties(builder, parameters, interactiveTokenCommandParameters, completeRequestHeaders);
-
-            // We don't want to show the SELECT_ACCOUNT page if login_hint is set.
-            if (!StringUtil.isNullOrEmpty(interactiveTokenCommandParameters.getLoginHint()) &&
-                    interactiveTokenCommandParameters.getPrompt() == OpenIdConnectPromptParameter.SELECT_ACCOUNT &&
-                    builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
-                ((MicrosoftStsAuthorizationRequest.Builder) builder).setPrompt(null);
-            }
-        }
-
-        builder.setScope(StringUtil.join(" ", scopes));
-
+        AcquireTokenAndSaveResultStrategyFactory.createATAndSaveResultStrategy(parameters).initializeAuthorizationRequestBuilder(builder, parameters);
         return builder;
     }
 
-    // Suppressing unchecked warning as the generic type was not provided during constructing builder object.
-    @SuppressWarnings(WarningType.unchecked_warning)
-    private void setBuilderProperties(@SuppressWarnings(WarningType.rawtype_warning) @NonNull AuthorizationRequest.Builder builder, @NonNull TokenCommandParameters parameters, InteractiveTokenCommandParameters interactiveTokenCommandParameters, HashMap<String, String> completeRequestHeaders) {
-        builder.setExtraQueryParams(
-                interactiveTokenCommandParameters.getExtraQueryStringParameters()
-        ).setClaims(
-                parameters.getClaimsRequestJson()
-        ).setRequestHeaders(
-                completeRequestHeaders
-        ).setWebViewZoomEnabled(
-                interactiveTokenCommandParameters.isWebViewZoomEnabled()
-        ).setWebViewZoomControlsEnabled(
-                interactiveTokenCommandParameters.isWebViewZoomControlsEnabled()
-        );
-
-        if (builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
-            final MicrosoftStsAuthorizationRequest.Builder msBuilder = (MicrosoftStsAuthorizationRequest.Builder) builder;
-            msBuilder.setLoginHint(
-                    interactiveTokenCommandParameters.getLoginHint()
-            ).setPrompt(
-                    interactiveTokenCommandParameters.getPrompt().toString()
-            );
-
-            final String installedCompanyPortalVersion =
-                    parameters.getPlatformComponents().getPlatformUtil().getInstalledCompanyPortalVersion();
-
-            if (!StringUtil.isNullOrEmpty(installedCompanyPortalVersion)) {
-                msBuilder.setInstalledCompanyPortalVersion(installedCompanyPortalVersion);
-            }
-        }
-    }
-
     // Suppressing rawtype warnings due to the generic type AuthorizationRequest, OAuth2Strategy and Builder
-    @SuppressWarnings(WarningType.rawtype_warning)
-    protected AuthorizationRequest getAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
+    @SuppressWarnings({WarningType.unchecked_warning, WarningType.rawtype_warning})
+    public AuthorizationRequest getAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
                                                            @NonNull final TokenCommandParameters parameters) {
         final AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
         initializeAuthorizationRequestBuilder(builder, parameters);
@@ -448,21 +339,22 @@ public abstract class BaseController {
                     methodTag,
                     "Token request was successful"
             );
-            List<ICacheRecord> acquireTokenResultRecords = null;
-            if (parameters.hasNestedAppParameters()) {
-                // Do not save the token in naa flow. This is because, NAA is curerntly only supported with OneAuth and OneAuth already caches AT until it is expired.
-                // Design doc : https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview/pullrequest/7876
-                acquireTokenResultRecords = getAcquireTokenResultRecords(
-                        (MicrosoftStsTokenResponse) tokenResult.getTokenResponse(),
-                        (MicrosoftStsOAuth2Strategy) strategy,
-                        (MicrosoftStsAuthorizationRequest) getAuthorizationRequest(strategy, parameters));
-            } else {
-                acquireTokenResultRecords = tokenCache.saveAndLoadAggregatedAccountData(
-                        strategy,
-                        getAuthorizationRequest(strategy, parameters),
-                        tokenResult.getTokenResponse()
-                );
-            }
+            List<ICacheRecord> acquireTokenResultRecords = AcquireTokenAndSaveResultStrategyFactory.createATAndSaveResultStrategy(parameters).constructRenewATResultFromTokenResult(  (MicrosoftStsOAuth2Strategy) strategy,
+                    (MicrosoftStsAuthorizationRequest) getAuthorizationRequest(strategy, parameters), tokenResult, tokenCache);
+//            if (parameters.hasNestedAppParameters()) {
+//                // Do not save the token in naa flow. This is because, NAA is curerntly only supported with OneAuth and OneAuth already caches AT until it is expired.
+//                // Design doc : https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview/pullrequest/7876
+//                acquireTokenResultRecords = getAcquireTokenResultRecords(
+//                        (MicrosoftStsTokenResponse) tokenResult.getTokenResponse(),
+//                        (MicrosoftStsOAuth2Strategy) strategy,
+//                        (MicrosoftStsAuthorizationRequest) getAuthorizationRequest(strategy, parameters));
+//            } else {
+//                acquireTokenResultRecords = tokenCache.saveAndLoadAggregatedAccountData(
+//                        strategy,
+//                        getAuthorizationRequest(strategy, parameters),
+//                        tokenResult.getTokenResponse()
+//                );
+//            }
             final ICacheRecord savedRecord = acquireTokenResultRecords.get(0);
 
             // Create a new AuthenticationResult to hold the saved record
@@ -791,41 +683,41 @@ public abstract class BaseController {
         }
 
         final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest(parameters.getAuthenticationScheme());
-
-        if (parameters.hasNestedAppParameters()) {
-            // isNAA request, set hub/brk and nested app parameters
-            refreshTokenRequest.setClientId(parameters.getChildClientId());
-            refreshTokenRequest.setBrkClientId(parameters.getClientId());
-            refreshTokenRequest.setRedirectUri(parameters.getChildRedirectUri());
-            refreshTokenRequest.setBrkRedirectUri(parameters.getRedirectUri());
-        }
-        else {
-            refreshTokenRequest.setClientId(parameters.getClientId());
-        }
-        refreshTokenRequest.setScope(StringUtil.join(" ", parameters.getScopes()));
-        refreshTokenRequest.setRefreshToken(refreshToken.getSecret());
-
-        if (refreshTokenRequest instanceof MicrosoftTokenRequest) {
-            ((MicrosoftTokenRequest) refreshTokenRequest).setClaims(parameters.getClaimsRequestJson());
-            ((MicrosoftTokenRequest) refreshTokenRequest).setClientAppName(parameters.getApplicationName());
-            ((MicrosoftTokenRequest) refreshTokenRequest).setClientAppVersion(parameters.getApplicationVersion());
-
-            //NOTE: this should be moved to the strategy; however requires a larger refactor
-            if (parameters.getSdkType() == SdkType.ADAL) {
-                ((MicrosoftTokenRequest) refreshTokenRequest).setIdTokenVersion("1");
-            }
-
-            if (parameters instanceof BrokerSilentTokenCommandParameters) {
-                // Set Broker version to Token Request if it's a brokered request.
-                ((MicrosoftTokenRequest) refreshTokenRequest).setBrokerVersion(
-                        ((BrokerSilentTokenCommandParameters) parameters).getBrokerVersion()
-                );
-                // Set PKeyAuth Header for token endpoint.
-                ((MicrosoftTokenRequest) refreshTokenRequest).setPKeyAuthHeaderAllowed(
-                        ((BrokerSilentTokenCommandParameters) parameters).isPKeyAuthHeaderAllowed()
-                );
-            }
-        }
+        AcquireTokenAndSaveResultStrategyFactory.createATAndSaveResultStrategy(parameters).setRefreshTokenParameters(refreshTokenRequest, refreshToken, parameters);
+//        if (parameters.hasNestedAppParameters()) {
+//            // isNAA request, set hub/brk and nested app parameters
+//            refreshTokenRequest.setClientId(parameters.getChildClientId());
+//            refreshTokenRequest.setBrkClientId(parameters.getClientId());
+//            refreshTokenRequest.setRedirectUri(parameters.getChildRedirectUri());
+//            refreshTokenRequest.setBrkRedirectUri(parameters.getRedirectUri());
+//        }
+//        else {
+//            refreshTokenRequest.setClientId(parameters.getClientId());
+//        }
+//        refreshTokenRequest.setScope(StringUtil.join(" ", parameters.getScopes()));
+//        refreshTokenRequest.setRefreshToken(refreshToken.getSecret());
+//
+//        if (refreshTokenRequest instanceof MicrosoftTokenRequest) {
+//            ((MicrosoftTokenRequest) refreshTokenRequest).setClaims(parameters.getClaimsRequestJson());
+//            ((MicrosoftTokenRequest) refreshTokenRequest).setClientAppName(parameters.getApplicationName());
+//            ((MicrosoftTokenRequest) refreshTokenRequest).setClientAppVersion(parameters.getApplicationVersion());
+//
+//            //NOTE: this should be moved to the strategy; however requires a larger refactor
+//            if (parameters.getSdkType() == SdkType.ADAL) {
+//                ((MicrosoftTokenRequest) refreshTokenRequest).setIdTokenVersion("1");
+//            }
+//
+//            if (parameters instanceof BrokerSilentTokenCommandParameters) {
+//                // Set Broker version to Token Request if it's a brokered request.
+//                ((MicrosoftTokenRequest) refreshTokenRequest).setBrokerVersion(
+//                        ((BrokerSilentTokenCommandParameters) parameters).getBrokerVersion()
+//                );
+//                // Set PKeyAuth Header for token endpoint.
+//                ((MicrosoftTokenRequest) refreshTokenRequest).setPKeyAuthHeaderAllowed(
+//                        ((BrokerSilentTokenCommandParameters) parameters).isPKeyAuthHeaderAllowed()
+//                );
+//            }
+//        }
 
         if (!StringUtil.isNullOrEmpty(refreshTokenRequest.getScope())) {
             Logger.infoPII(
@@ -865,21 +757,21 @@ public abstract class BaseController {
         return cacheRecords;
     }
 
-    protected boolean refreshTokenIsNull(@NonNull final ICacheRecord cacheRecord) {
-        return null == cacheRecord.getRefreshToken();
-    }
-
-    protected boolean accessTokenIsNull(@NonNull final ICacheRecord cacheRecord) {
-        return null == cacheRecord.getAccessToken();
-    }
-
-    protected boolean idTokenIsNull(@NonNull final ICacheRecord cacheRecord,
-                                    @NonNull final SdkType sdkType) {
-        final IdTokenRecord idTokenRecord = (sdkType == SdkType.ADAL) ?
-                cacheRecord.getV1IdToken() : cacheRecord.getIdToken();
-
-        return null == idTokenRecord;
-    }
+//    public boolean refreshTokenIsNull(@NonNull final ICacheRecord cacheRecord) {
+//        return null == cacheRecord.getRefreshToken();
+//    }
+//
+//    public boolean accessTokenIsNull(@NonNull final ICacheRecord cacheRecord) {
+//        return null == cacheRecord.getAccessToken();
+//    }
+//
+//    public boolean idTokenIsNull(@NonNull final ICacheRecord cacheRecord,
+//                                    @NonNull final SdkType sdkType) {
+//        final IdTokenRecord idTokenRecord = (sdkType == SdkType.ADAL) ?
+//                cacheRecord.getV1IdToken() : cacheRecord.getIdToken();
+//
+//        return null == idTokenRecord;
+//    }
 
     protected Set<String> addDefaultScopes(@NonNull final TokenCommandParameters commandParameters) {
         final Set<String> requestScopes = commandParameters.getScopes();
@@ -1051,54 +943,10 @@ public abstract class BaseController {
     }
 
 
-    /**
-     * Helper method which returns false if the tenant id of the authority
-     * doesn't match with the tenant of the Access token for AADAuthority.
-     * <p>
-     * Returns true otherwise.
-     */
-    protected boolean isRequestAuthorityRealmSameAsATRealm(@NonNull final Authority requestAuthority,
-                                                           @NonNull final AccessTokenRecord accessTokenRecord)
-            throws ServiceException, ClientException {
-        if (requestAuthority instanceof AzureActiveDirectoryAuthority) {
-
-            String tenantId = ((AzureActiveDirectoryAuthority) requestAuthority).getAudience().getTenantId();
-
-            if (AzureActiveDirectoryAudience.isHomeTenantAlias(tenantId)) {
-                // if realm on AT and home account's tenant id do not match, we have a token for guest and
-                // requested authority here is for home, so return false we need to refresh the token
-                final String utidFromHomeAccountId = accessTokenRecord
-                        .getHomeAccountId()
-                        .split(Pattern.quote("."))[1];
-
-                return utidFromHomeAccountId.equalsIgnoreCase(accessTokenRecord.getRealm());
-
-            } else {
-                tenantId = ((AzureActiveDirectoryAuthority) requestAuthority)
-                        .getAudience()
-                        .getTenantUuidForAlias(requestAuthority.getAuthorityURL().toString());
-                return tenantId.equalsIgnoreCase(accessTokenRecord.getRealm());
-            }
-        }
-        return true;
-    }
 
     public ICacheRecord finalizeCacheRecordForResult(@NonNull final ICacheRecord cacheRecord,
                                                      @NonNull final AbstractAuthenticationScheme scheme) throws ClientException {
-        if (scheme instanceof ITokenAuthenticationSchemeInternal &&
-                !StringUtil.isNullOrEmpty(cacheRecord.getAccessToken().getSecret())) {
-            final ITokenAuthenticationSchemeInternal tokenAuthScheme = (ITokenAuthenticationSchemeInternal) scheme;
-            cacheRecord
-                    .getAccessToken()
-                    .setSecret(
-                            tokenAuthScheme
-                                    .getAccessTokenForScheme(
-                                            cacheRecord.getAccessToken().getSecret()
-                                    )
-                    );
-        }
-
-        return cacheRecord;
+        return CacheUtil.finalizeCacheRecordForResult(cacheRecord, scheme);
     }
 
     /**
