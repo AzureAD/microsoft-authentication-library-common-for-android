@@ -226,7 +226,7 @@ stages:
             eval $(dbus-launch --sh-syntax)
             sudo apt install gnome-keyring
             /usr/bin/gnome-keyring-daemon --start --components=secrets
-            ./gradlew LinuxBroker:linuxBrokerUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PcodeCoverageEnabled=true -Psystemd_mode_enabled=false
+            ./gradlew LinuxBroker:linuxBrokerUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PlabSecret=$(AndroidAutomationRunnerAppSecret) -PcodeCoverageEnabled=true -Psystemd_mode_enabled=false
       - task: PublishTestResults@2
         condition: succeededOrFailed()
         inputs:
