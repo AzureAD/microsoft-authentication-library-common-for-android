@@ -23,6 +23,7 @@ variables:
 - name: robolectricSdkVersion
   value: 28
 - group: AndroidAuthClientVariables
+- group: AndroidAuthClientAutomationSecrets
 
 resources:
   repositories:
