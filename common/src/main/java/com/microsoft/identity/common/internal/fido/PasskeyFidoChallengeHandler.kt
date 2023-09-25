@@ -26,8 +26,11 @@ import android.webkit.WebView
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.microsoft.identity.common.java.constants.FidoConstants
-import com.microsoft.identity.common.java.opentelemetry.IFidoTelemetryHelper
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility
+import com.microsoft.identity.common.java.opentelemetry.SpanName
 import com.microsoft.identity.common.logging.Logger
+import io.opentelemetry.api.trace.StatusCode
 import kotlinx.coroutines.launch
 
 /**
@@ -39,31 +42,35 @@ class PasskeyFidoChallengeHandler
  * @param fidoManager IFidoManager instance.
  * @param webView Current WebView.
  * @param lifecycleOwner instance to get coroutine scope from.
- * @param telemetryHelper IFidoTelemetryHelper instance.
  */(
     private val fidoManager: IFidoManager,
     webView: WebView,
     private val lifecycleOwner: LifecycleOwner?,
-    telemetryHelper: IFidoTelemetryHelper
-) : AbstractFidoChallengeHandler(webView, telemetryHelper) {
+) : AbstractFidoChallengeHandler(webView) {
     val TAG = PasskeyFidoChallengeHandler::class.simpleName.toString()
+    val span = OTelUtility.createSpan(SpanName.Fido.name)
 
     override fun processChallenge(fidoChallenge: IFidoChallenge): Void? {
         val methodTag = "$TAG:processChallenge"
-        telemetryHelper.setFidoChallenge(fidoChallenge::class.simpleName.toString())
-        telemetryHelper.setFidoChallengeHandler(TAG)
+        span.setAttribute(
+            AttributeName.fido_challenge_handler.name,
+            TAG);
+        span.setAttribute(
+            AttributeName.fido_challenge.name,
+            fidoChallenge::class.simpleName.toString());
         var assertion: String
         if (lifecycleOwner != null
             && fidoChallenge is AuthFidoChallenge) {
             lifecycleOwner.lifecycleScope.launch {
                 try {
                     assertion = fidoManager.authenticate(fidoChallenge)
-                    telemetryHelper.setResultSuccess()
+                    span.setStatus(StatusCode.OK)
                 } catch (e: Exception) {
                     assertion = e.message.toString()
                     Logger.error(methodTag, assertion, e)
-                    telemetryHelper.setResultFailure(e)
+                    span.setStatus(StatusCode.ERROR)
                 }
+                span.end()
                 respondToChallenge(fidoChallenge.submitUrl, assertion, fidoChallenge.context)
             }
             return null
@@ -76,7 +83,8 @@ class PasskeyFidoChallengeHandler
             errorMessage += " FidoChallenge object is of type " + fidoChallenge::class.simpleName.toString() + ", which is unexpected and not supported."
         }
         Logger.error(methodTag, errorMessage, null)
-        telemetryHelper.setResultFailure(errorMessage)
+        span.setStatus(StatusCode.ERROR)
+        span.end()
         respondToChallenge(fidoChallenge.submitUrl, errorMessage, fidoChallenge.context)
         return null
     }

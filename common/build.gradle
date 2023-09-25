@@ -369,7 +369,7 @@ tasks.register("dependenciesSizeCheck") {
                     out << "${String.format(formatStr, (it.length() / 1024))} kb\n"
                 }
         println(out)
-        if (size > dependenciesSizeInMb.toDouble() ) {
+        if (size > dependenciesSizeInMb.toDouble()) {
             throw new GradleException("Total dependencies size is $size Mb. " +
                     "It should be less than ${dependenciesSizeInMb} Mb")
         }
