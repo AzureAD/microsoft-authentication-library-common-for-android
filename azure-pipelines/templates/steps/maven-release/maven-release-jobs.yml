@@ -36,7 +36,6 @@ parameters:
 - name: gpgJavadocJar
   default: false
 
-
 jobs:
 - job: sdl_maven
   displayName: SDL and Maven Tasks
@@ -94,7 +93,7 @@ jobs:
       displayName: Copy pom to Artifact Staging Directory
       inputs:
         SourceFolder: ${{ parameters.pomSourceFolder }}
-        Contents: '**/*.xml'
+        Contents: '**/*.pom'
         TargetFolder: $(Build.ArtifactStagingDirectory)
   - task: PublishPipelineArtifact@1
     name: PublishPipelineArtifact1
@@ -163,16 +162,17 @@ jobs:
     displayName: Download Python Requests Library
     inputs:
       script: pip install requests
-  - task: DownloadSecureFile@1
-    name: credentials
-    displayName: Download Nexus Sonatype Login Credentials
+  - task: EsrpRelease@4
     inputs:
-      secureFile: NugetADDSonatypeCredentials.json
-      retryCount: 5
-  - task: PythonScript@0
-    displayName: Upload to Nexus Sonatype Staging Directory
-    inputs:
-      arguments: ${{ parameters.project }} ${{ parameters.projectVersion }}
-      scriptSource: filePath
-      scriptPath: azure-pipelines/templates/steps/maven-release/upload-to-nexus-sonatype.py
+      ConnectedServiceName: 'AndroidAuth_ESRP_Release'
+      Intent: 'PackageDistribution'
+      ContentType: 'Maven'
+      ContentSource: 'Folder'
+      FolderLocation: '$(Build.ArtifactStagingDirectory)'
+      WaitForReleaseCompletion: true
+      Owners: '$(releaseOwners)'
+      Approvers: '$(releaseApprovers)'
+      ServiceEndpointUrl: '$(esrpServiceEndpointUrl)'
+      MainPublisher: '$(esrpMainPublisher)'
+      DomainTenantId: '$(esrpDomainTenantId)'
 ...
