@@ -45,14 +45,16 @@ public interface ICertBasedAuthTelemetryHelper {
     void setExistingPivProviderPresent(final boolean present);
 
     /**
-     * Indicates on the Span that the operation was successful and then ends current Span.
+     * Indicates on the Span that CBA was successful and then ends current Span.
      */
     //Suppressing warnings for RETURN_VALUE_IGNORED_NO_SIDE_EFFECT
     @SuppressFBWarnings
     void setResultSuccess();
 
     /**
-     * Indicates on the Span that the operation failed and then ends current Span.
+     * Indicates on the Span that CBA failed and then ends current Span.
+     * This method should mainly be used for cases without an exception,
+     *  such as user cancellation, no certificates on smartcard, etc.
      * @param message descriptive cause of failure message.
      */
     //Suppressing warnings for RETURN_VALUE_IGNORED_NO_SIDE_EFFECT
@@ -60,7 +62,7 @@ public interface ICertBasedAuthTelemetryHelper {
     void setResultFailure(@NonNull final String message);
 
     /**
-     * Indicates on the Span that the operation failed and then ends current Span.
+     * Indicates on the Span that CBA failed and then ends current Span.
      * @param exception exception thrown upon error.
      */
     //Suppressing warnings for RETURN_VALUE_IGNORED_NO_SIDE_EFFECT
