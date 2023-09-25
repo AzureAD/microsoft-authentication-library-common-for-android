@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Stop logging thread name (#2185)
 - [MINOR] Add LTW as prod broker app (#2179)
 - [MINOR] Adding Moshi, and WebAuthnJsonUtil(#2189)
 

@@ -442,10 +442,10 @@ public class Logger {
      */
     private static String getDiagnosticContextMetadata(@Nullable String correlationId) {
         final IRequestContext requestContext = DiagnosticContext.INSTANCE.getRequestContext();
-        String threadName = requestContext.get(DiagnosticContext.THREAD_NAME);
+        String threadId = requestContext.get(DiagnosticContext.THREAD_ID);
 
-        if (StringUtil.isNullOrEmpty(threadName)) {
-            threadName = UNSET;
+        if (StringUtil.isNullOrEmpty(threadId)) {
+            threadId = UNSET;
         }
         if (StringUtil.isNullOrEmpty(correlationId)) {
             correlationId = requestContext.get(DiagnosticContext.CORRELATION_ID);
@@ -455,6 +455,6 @@ public class Logger {
         }
 
         return String.format("%s: %s, %s: %s",
-                DiagnosticContext.THREAD_NAME, threadName, DiagnosticContext.CORRELATION_ID, correlationId);
+                DiagnosticContext.THREAD_ID, threadId, DiagnosticContext.CORRELATION_ID, correlationId);
     }
 }
