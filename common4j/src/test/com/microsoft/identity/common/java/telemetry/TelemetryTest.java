@@ -52,7 +52,6 @@ public class TelemetryTest {
         if (DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID) == null) {
             final RequestContext defaultRequestContext = new RequestContext();
             defaultRequestContext.put(DiagnosticContext.THREAD_ID, String.valueOf(Thread.currentThread().getId()));
-            defaultRequestContext.put(DiagnosticContext.THREAD_NAME, Thread.currentThread().getName());
             defaultRequestContext.put(DiagnosticContext.CORRELATION_ID, "UNSET");
             DiagnosticContext.INSTANCE.setRequestContext(defaultRequestContext);
 
