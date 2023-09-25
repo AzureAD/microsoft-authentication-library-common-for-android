@@ -315,7 +315,7 @@ public abstract class BaseController {
             // Not going to add passkey protocol header until full feature is ready.
             if (FidoConstants.IS_PASSKEY_SUPPORT_READY
                     && interactiveTokenCommandParameters.getAuthorizationAgent() == AuthorizationAgent.WEBVIEW) {
-                completeRequestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER, FidoConstants.PASSKEY_PROTOCOL_HEADER_VALUE);
+                completeRequestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_VALUE);
             }
 
             // Add additional fields to the AuthorizationRequest.Builder to support interactive
@@ -396,10 +396,6 @@ public abstract class BaseController {
         if (tokenRequest instanceof MicrosoftTokenRequest) {
             ((MicrosoftTokenRequest) tokenRequest).setClientAppName(parameters.getApplicationName());
             ((MicrosoftTokenRequest) tokenRequest).setClientAppVersion(parameters.getApplicationVersion());
-            // Not going to add passkey protocol header until full feature is ready.
-            if (FidoConstants.IS_PASSKEY_SUPPORT_READY) {
-                ((MicrosoftTokenRequest) tokenRequest).setPasskeyAuthHeaderAllowed(parameters.getAuthorizationAgent() == AuthorizationAgent.WEBVIEW);
-            }
         }
 
         if (parameters instanceof IHasExtraParameters) {

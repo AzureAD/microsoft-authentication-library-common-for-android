@@ -106,12 +106,6 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
     @Accessors(prefix = "m")
     private boolean mPKeyAuthHeaderAllowed;
 
-    // Send Passkey Auth header for interactive calls with WebView as authorization agent.
-    @Getter
-    @Setter
-    @Accessors(prefix = "m")
-    private boolean mPasskeyAuthHeaderAllowed;
-
     public String getCodeVerifier() {
         return this.mCodeVerifier;
     }

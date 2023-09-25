@@ -218,7 +218,7 @@ public abstract class OAuth2Strategy
         headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
 
         if (request instanceof MicrosoftTokenRequest) {
-            MicrosoftTokenRequest microsoftTokenRequest = (MicrosoftTokenRequest) request;
+            final MicrosoftTokenRequest microsoftTokenRequest = (MicrosoftTokenRequest) request;
             headers.put(
                     AuthenticationConstants.AAD.APP_PACKAGE_NAME,
                     microsoftTokenRequest.getClientAppName()
@@ -229,11 +229,6 @@ public abstract class OAuth2Strategy
             );
             if (microsoftTokenRequest.isPKeyAuthHeaderAllowed()) {
                 headers.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
-            }
-            // Not going to add passkey protocol header until full feature is ready.
-            if (FidoConstants.IS_PASSKEY_SUPPORT_READY
-                    && microsoftTokenRequest.isPasskeyAuthHeaderAllowed()) {
-                headers.put(FidoConstants.PASSKEY_PROTOCOL_HEADER, FidoConstants.PASSKEY_PROTOCOL_HEADER_VALUE);
             }
         }
 
