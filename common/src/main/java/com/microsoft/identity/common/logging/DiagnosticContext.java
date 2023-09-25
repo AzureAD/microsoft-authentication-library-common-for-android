@@ -32,10 +32,6 @@ import com.microsoft.identity.common.java.logging.IRequestContext;
 // TODO @Deprecate
 public class DiagnosticContext{
 
-    public static final String CORRELATION_ID = com.microsoft.identity.common.java.logging.DiagnosticContext.CORRELATION_ID;
-    public static final String THREAD_ID = com.microsoft.identity.common.java.logging.DiagnosticContext.THREAD_ID;
-    public static final String THREAD_NAME = com.microsoft.identity.common.java.logging.DiagnosticContext.THREAD_NAME;
-
     /**
      * Set the request context.
      *
