@@ -33,7 +33,7 @@ import static com.microsoft.identity.common.java.exception.ClientException.INVAL
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
 import static com.microsoft.identity.common.java.exception.ClientException.UNEXPECTED_HMAC_LENGTH;
-import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_ERROR;
+import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_CRYPTO_ERROR;
 
 import com.microsoft.identity.common.java.crypto.key.AbstractSecretKeyLoader;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
@@ -182,7 +182,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             errCode = INVALID_ALG_PARAMETER;
             exception = e;
         } catch (final Throwable e) {
-            errCode = UNKNOWN_ERROR;
+            errCode = UNKNOWN_CRYPTO_ERROR;
             exception = e;
         }
 
