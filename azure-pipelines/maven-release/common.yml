@@ -26,7 +26,7 @@ jobs:
     gradleGeneratePomFiletask: common:generatePomFileForDistReleasePublication
     aarSourceFolder: common/build/outputs/aar
     jarSourceFolder: common/build/outputs/jar
-    pomSourceFolder: common/build/publications/distRelease
+    pomSourceFolder: common/build/poms
     gpgAar: true
     gpgSourcesJar: true
     gpgJavadocJar: false
