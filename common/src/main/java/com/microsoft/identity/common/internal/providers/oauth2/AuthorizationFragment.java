@@ -39,7 +39,7 @@ import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
-import com.microsoft.identity.common.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.logging.Logger;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
@@ -166,7 +166,7 @@ public abstract class AuthorizationFragment extends Fragment {
         final String methodTag = TAG + ":setDiagnosticContextForAuthorizationActivity";
         final RequestContext rc = new RequestContext();
         rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
-        DiagnosticContext.setRequestContext(rc);
+        DiagnosticContext.INSTANCE.setRequestContext(rc);
         Logger.verbose(
                 methodTag,
                 "Initializing diagnostic context for AuthorizationActivity"
