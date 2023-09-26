@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.commands.parameters;
 
 import com.google.gson.annotations.Expose;
+import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.exception.ArgumentException;
@@ -119,7 +120,7 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
                     !getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
-                        "mRedirectUri", "The redirect URI doesn't match the uri" +
+                        ArgumentException.REDIRECT_URI_ARGUMENT_NAME, "The redirect URI doesn't match the uri" +
                         " generated with caller package name and signature"
                 );
             }
