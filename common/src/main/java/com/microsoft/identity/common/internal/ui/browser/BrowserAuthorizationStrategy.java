@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PRT_RESPONSE_HEADER;
 import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
 
 // Suppressing rawtype warnings due to the generic types OAuth2Strategy, AuthorizationRequest and AuthorizationResult
@@ -111,9 +112,15 @@ public abstract class BrowserAuthorizationStrategy<
 
                 final Map<String, String> headers = authorizationRequest.getRequestHeaders();
 
-                for (final String headerName : headers.keySet()) {
-                    headersBundle.putString(headerName, headers.get(headerName));
-                }
+                final String prtHeaderName = PRT_RESPONSE_HEADER;
+
+                headersBundle.putString(prtHeaderName, headers.get(prtHeaderName));
+
+//                for (final String headerName : headers.keySet()) {
+//                    headersBundle.putString(headerName, headers.get(headerName));
+//                }
+
+                headersBundle.putString("Custom-Header", "Custom-Value");
 
                 final CustomTabsSession customTabsSession = mCustomTabManager.getClient().newSession(
                         new CustomTabsCallback() {

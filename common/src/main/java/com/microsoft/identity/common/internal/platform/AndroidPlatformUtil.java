@@ -81,15 +81,25 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     @Override
     public List<BrowserDescriptor> getBrowserSafeListForBroker() {
         List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
-        final HashSet<String> signatureHashes = new HashSet<String>();
-        signatureHashes.add("7fmduHKTdHHrlMvldlEqAIlSfii1tl35bxj1OXN5Ve8c4lU6URVu4xtSHc3BVZxS6WWJnxMDhIfQN0N0K2NDJg==");
+        final HashSet<String> chromeSignatureHash = new HashSet<String>();
+        chromeSignatureHash.add("7fmduHKTdHHrlMvldlEqAIlSfii1tl35bxj1OXN5Ve8c4lU6URVu4xtSHc3BVZxS6WWJnxMDhIfQN0N0K2NDJg==");
         final BrowserDescriptor chrome = new BrowserDescriptor(
                 "com.android.chrome",
-                signatureHashes,
+                chromeSignatureHash,
                 null,
                 null
         );
         browserDescriptors.add(chrome);
+
+        final HashSet<String> edgeSignatureHash = new HashSet<String>();
+        edgeSignatureHash.add("Ivy-Rk6ztai_IudfbyUrSHugzRqAtHWslFvHT0PTvLMsEKLUIgv7ZZbVxygWy_M5mOPpfjZrd3vOx3t-cA6fVQ==");
+        final BrowserDescriptor edge = new BrowserDescriptor(
+                "com.microsoft.emmx",
+                edgeSignatureHash,
+                null,
+                null
+        );
+        browserDescriptors.add(edge);
 
         return browserDescriptors;
     }

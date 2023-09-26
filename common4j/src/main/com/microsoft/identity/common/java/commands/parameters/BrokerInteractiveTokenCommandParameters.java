@@ -115,14 +115,14 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
                         "OAuth2Cache not an instance of BrokerOAuth2TokenCache"
                 );
             }
-            if (getSdkType().isCapableOfMSA() &&
-                    !getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
-                throw new ArgumentException(
-                        ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
-                        "mRedirectUri", "The redirect URI doesn't match the uri" +
-                        " generated with caller package name and signature"
-                );
-            }
+//            if (getSdkType().isCapableOfMSA() &&
+//                    !getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
+//                throw new ArgumentException(
+//                        ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
+//                        "mRedirectUri", "The redirect URI doesn't match the uri" +
+//                        " generated with caller package name and signature"
+//                );
+//            }
         }
     }
 

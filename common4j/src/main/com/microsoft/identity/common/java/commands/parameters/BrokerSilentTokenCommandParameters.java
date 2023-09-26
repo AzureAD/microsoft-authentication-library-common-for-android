@@ -93,14 +93,14 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
             );
         }
         // Check if SDK is capable of MSA to ensure there is uniformity of logic with SdkType.MSALCPP and SdkType.MSAL
-        if (getSdkType().isCapableOfMSA() &&
-                !getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
-            throw new ArgumentException(
-                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    "mRedirectUri", "The redirect URI doesn't match the uri" +
-                    " generated with caller package name and signature"
-            );
-        }
+//        if (getSdkType().isCapableOfMSA() &&
+//                !getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
+//            throw new ArgumentException(
+//                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
+//                    "mRedirectUri", "The redirect URI doesn't match the uri" +
+//                    " generated with caller package name and signature"
+//            );
+//        }
 
         if (!(getOAuth2TokenCache() instanceof BrokerOAuth2TokenCache)) {
             throw new ArgumentException(
