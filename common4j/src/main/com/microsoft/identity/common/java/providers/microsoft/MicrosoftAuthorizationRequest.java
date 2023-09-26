@@ -128,6 +128,13 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @SerializedName(INSTANCE_AWARE)
     private final Boolean mMultipleCloudAware;
 
+    @Expose()
+    @Getter
+    @Accessors(prefix = "m")
+    @SerializedName("prefcred")
+    private final String mPreferredAuthMethod;
+
+
     /**
      * Constructor of MicrosoftAuthorizationRequest.
      */
@@ -147,6 +154,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mMultipleCloudAware = builder.mMultipleCloudAware;
         mLibraryVersion = builder.mLibraryVersion;
         mLibraryName = builder.mLibraryName;
+        mPreferredAuthMethod = builder.mPreferredAuthMethod;
 
         mDiagnosticOS = Device.getOsForEsts();
         mDiagnosticDM = Device.getModel();
@@ -170,6 +178,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         private UUID mCorrelationId;
         private String mLoginHint;
         private PkceChallenge mPkceChallenge;
+        private String mPreferredAuthMethod;
 
         public Builder() {
             setState(new DefaultStateGenerator().generate());
@@ -205,6 +214,11 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
             return self();
         }
 
+        public B setPreferredAuthMethod(String preferredAuthMethod) {
+            mPreferredAuthMethod = preferredAuthMethod;
+            return self();
+        }
+        
         /**
          * Used to secure authorization code grants via Proof Key for Code Exchange (PKCE) from a native client.
          */
