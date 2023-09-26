@@ -188,6 +188,11 @@ public class ClientException extends BaseException {
     public static final String UNKNOWN_ERROR = "unknown_error";
 
     /**
+     * An unknown error that happens in the crypto layer.
+     */
+    public static final String UNKNOWN_CRYPTO_ERROR = "unknown_crypto_error";
+
+    /**
      * Temporary non-exposed error code to indicate that ADFS authority validation fails. ADFS as authority is not supported
      * for preview.
      */
