@@ -1,3 +1,7 @@
+V.16.0.2
+----------
+- [PATCH] Handle crypto error gracefully
+
 V.16.0.1
 ----------
 - [PATCH] Add LTW as prod broker app (#2179)
