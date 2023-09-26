@@ -42,6 +42,7 @@ import java.util.Set;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 @Getter
@@ -62,6 +63,7 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
     private final String claimsRequestJson;
 
     @Expose()
+    @NonNull
     private final AbstractAuthenticationScheme authenticationScheme;
 
     @Expose()
@@ -76,35 +78,6 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
 
     public Set<String> getScopes() {
         return this.scopes == null ? null : new HashSet<>(this.scopes);
-    }
-
-    public String getMamEnrollmentId(){
-        return mamEnrollmentId;
-    }
-
-    public void validate() throws ArgumentException {
-        final String methodName = ":validate";
-
-        Logger.verbose(
-                TAG + methodName,
-                "Validating operation params..."
-        );
-
-        // AuthenticationScheme is present...
-        if (null == authenticationScheme) {
-            throw new ArgumentException(
-                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME, // TODO update argument name
-                    ArgumentException.AUTHENTICATION_SCHEME_ARGUMENT_NAME,
-                    "authentication scheme is undefined"
-            );
-        }
-
-        if (getAccount() == null) {
-            Logger.warn(TAG, "The account set on silent operation parameters is NULL.");
-            // if the authority is B2C, then we do not need check if matches with the account environment
-            // as B2C only exists in one cloud and can use custom domains
-            // This logic should also apply to CIAM authorities
-        }
     }
 
     /**

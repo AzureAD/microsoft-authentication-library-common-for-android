@@ -166,6 +166,8 @@ if (project.hasProperty("dc")) {
     dcParameter = dc
 }
 
+// This flag is set to false to allow running tests against our mock APIs
+// as our mock API is not a 'real' tenant.
 if (project.hasProperty("useRealAuthority")) {
     useRealAuthorityParameter = useRealAuthority
 }

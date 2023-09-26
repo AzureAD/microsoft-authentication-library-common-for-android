@@ -47,8 +47,4 @@ public class BaseNativeAuthCommandParameters extends CommandParameters {
     @Expose()
     @Nullable
     public final List<String> challengeType;
-
-    public void validate() throws ArgumentException {
-        // TODO
-    }
 }

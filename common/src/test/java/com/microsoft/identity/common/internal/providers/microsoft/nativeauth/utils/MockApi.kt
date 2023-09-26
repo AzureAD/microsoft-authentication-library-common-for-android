@@ -35,11 +35,17 @@ const val CORRELATION_ID =  "correlationId"
 const val ENDPOINT = "endpoint"
 const val RESPONSE_LIST = "responseList"
 
+/**
+ * MockApi class performs the various tasks associated with making request to the mock API
+ * for Native Auth. These mock APIs are useful in performing integration tests for
+ * Native Auth classes
+ */
 class MockApi private constructor(
     private val httpClient: UrlConnectionHttpClient = UrlConnectionHttpClient.getDefaultInstance()
 ) {
     companion object {
         private const val CONFIG_BASE_URL = "https://native-ux-mock-api.azurewebsites.net/config"
+        //
         private const val RESPONSE_URL = "$CONFIG_BASE_URL/response"
 
         private val headers = TreeMap<String, String?>().also {
