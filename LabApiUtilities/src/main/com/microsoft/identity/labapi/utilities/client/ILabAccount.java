@@ -71,4 +71,9 @@ public interface ILabAccount {
      * @return a String representing the authority host for this lab account
      */
     String getAuthority();
+
+    /**
+     * Get Azure Environment associated to this lab account.
+     **/
+    String getAzureEnvironment();
 }
