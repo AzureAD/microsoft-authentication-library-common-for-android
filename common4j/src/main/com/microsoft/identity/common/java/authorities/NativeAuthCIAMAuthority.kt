@@ -98,7 +98,7 @@ class NativeAuthCIAMAuthority (
      */
     private fun getChallengeTypesWithDefault(challengeTypes: List<String>?): String {
         LogSession.logMethodCall(TAG, "${TAG}.getChallengeTypesWithDefault")
-        LogSession.log(tag = TAG, logLevel = Logger.LogLevel.INFO, message = "Challenge Types passed = $challengeTypes")
+        Logger.info(TAG, "Challenge Types passed = $challengeTypes")
         return (challengeTypes ?: emptyList()).plus(listOf(NativeAuthConstants.GrantType.REDIRECT)).distinct().joinToString(" ")
     }
 

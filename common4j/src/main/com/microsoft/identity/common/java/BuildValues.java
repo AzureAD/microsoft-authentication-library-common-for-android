@@ -27,7 +27,8 @@ import javax.annotation.Nonnull;
 //Used as a wrapper for setting and accessing values through either the generated BuildConfig.java class,
 //or from parameters set via the NativeAuthPublicClientApplicationConfiguration.kt file
 public class BuildValues {
-    //Appended to the URL constructed in NativeAuthOAuth2Configuration, used for making calls to tenants on test slices
+    //Appended to the URL constructed in NativeAuthOAuth2Configuration,
+    // used for making calls to tenants on test slices
     @Nonnull
     private static String DC = BuildConfig.DC;
 

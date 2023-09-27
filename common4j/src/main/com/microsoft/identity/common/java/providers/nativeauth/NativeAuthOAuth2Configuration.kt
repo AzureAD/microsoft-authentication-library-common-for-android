@@ -26,6 +26,7 @@ package com.microsoft.identity.common.java.providers.nativeauth
 import com.microsoft.identity.common.java.BuildConfig
 import com.microsoft.identity.common.java.BuildValues
 import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration
 import com.microsoft.identity.common.java.util.UrlUtil
 import java.net.MalformedURLException
@@ -66,10 +67,10 @@ class NativeAuthOAuth2Configuration(
                 UrlUtil.appendPathToURL(root, endpointSuffix)
             }
         } catch (e: URISyntaxException) {
-            LogSession.logException(tag = TAG, throwable = e)
+            Logger.error(TAG, "appendPathToURL failed", e)
             throw e
         } catch (e: MalformedURLException) {
-            LogSession.logException(tag = TAG, throwable = e)
+            Logger.error(TAG, "appendPathToURL failed", e)
             throw e
         }
     }

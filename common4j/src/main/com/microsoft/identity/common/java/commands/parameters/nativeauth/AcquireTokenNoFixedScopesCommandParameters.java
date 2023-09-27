@@ -60,14 +60,8 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
     private final Set<String> scopes;
 
     @Expose()
-    private final String claimsRequestJson;
-
-    @Expose()
     @NonNull
     private final AbstractAuthenticationScheme authenticationScheme;
-
-    @Expose()
-    private final String mamEnrollmentId;
 
     @Expose()
     private final boolean forceRefresh;

@@ -22,7 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.util
 
-import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
 import java.net.HttpURLConnection
@@ -37,17 +36,16 @@ object ApiResultUtil {
      * @param tag    The log tag to use.
      * @param response The result object to log.
      */
-    // TODO: Do we consider response fields PII?
     fun logResponse(
         tag: String,
         response: IApiResponse
     ) {
         val TAG = tag + ":" + response.javaClass.simpleName
         if (response.statusCode < HttpURLConnection.HTTP_BAD_REQUEST) {
-            LogSession.log(tag = TAG, logLevel = Logger.LogLevel.INFO, message = "Success Result")
+            Logger.info(TAG, "Success Result")
         } else {
             val code = response.statusCode
-            LogSession.log(tag = TAG, logLevel = Logger.LogLevel.WARN, message = "Failure Result (Status Code: $code)")
+            Logger.warn(TAG, "Failure Result (Status Code: $code)")
         }
         logExposedFieldsOfObject(TAG, response)
     }
@@ -57,10 +55,6 @@ object ApiResultUtil {
         `object`: Any
     ) {
         val TAG = tag + ":" + `object`.javaClass.simpleName
-        LogSession.log(
-            tag = TAG,
-            logLevel = Logger.LogLevel.WARN,
-            message = ObjectMapper.serializeExposedFieldsOfObjectToJsonString(`object`)
-        )
+        Logger.warn(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(`object`))
     }
 }

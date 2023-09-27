@@ -45,8 +45,9 @@ class MockApi private constructor(
 ) {
     companion object {
         private const val CONFIG_BASE_URL = "https://native-ux-mock-api.azurewebsites.net/config"
-        //
-        private const val RESPONSE_URL = "$CONFIG_BASE_URL/response"
+
+        //url on the mockAPI for posting requests
+        private const val MOCK_URL = "$CONFIG_BASE_URL/response"
 
         private val headers = TreeMap<String, String?>().also {
             it[HttpConstants.HeaderField.CONTENT_TYPE] = "application/json"
@@ -73,7 +74,7 @@ class MockApi private constructor(
      * was successful
      */
     fun performRequest(endpointType: MockApiEndpointType, responseType: MockApiResponseType, correlationId: String) {
-        val requestUrl = URL(RESPONSE_URL)
+        val requestUrl = URL(MOCK_URL)
         val request = Request(
             correlationId = correlationId,
             endpoint = endpointType.stringValue,
