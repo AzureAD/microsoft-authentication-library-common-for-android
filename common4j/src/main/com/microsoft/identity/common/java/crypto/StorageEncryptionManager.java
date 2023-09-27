@@ -114,8 +114,6 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             throws ClientException {
         final String methodName = ":encrypt";
 
-        Logger.verbose(TAG + methodName, "Starting encryption");
-
         final String errCode;
         final Throwable exception;
 
@@ -192,7 +190,6 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
     @Override
     public byte[] decrypt(final byte[] cipherText) throws ClientException {
         final String methodName = ":decrypt";
-        Logger.verbose(TAG + methodName, "Starting decryption");
 
         final byte[] dataBytes;
         try {
@@ -217,9 +214,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             }
             
             try {
-                final byte[] result = decryptWithSecretKey(dataBytes, keyLoader);
-                Logger.verbose(TAG + methodName, "Finished decryption with key:" + keyLoader.getAlias());
-                return result;
+                return decryptWithSecretKey(dataBytes, keyLoader);
             } catch (final Throwable e) {
                 Logger.warn(TAG + methodName, "Failed to decrypt with key:" + keyLoader.getAlias() +
                         " thumbprint : " + KeyUtil.getKeyThumbPrint(keyLoader));
