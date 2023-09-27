@@ -50,8 +50,6 @@ class NativeAuthCIAMAuthority (
             // Piggy back on the existing authority creation to improve reliability.
             val authority = Authority.getAuthorityFromAuthorityUrl(authorityUrl)
 
-
-
             if (authority is NativeAuthCIAMAuthority) {
                 // Authority is already a NativeAuthCIAMAuthority
                 return authority as NativeAuthCIAMAuthority

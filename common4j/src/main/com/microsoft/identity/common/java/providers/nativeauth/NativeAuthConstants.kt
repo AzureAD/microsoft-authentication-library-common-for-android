@@ -36,7 +36,7 @@ object NativeAuthConstants {
         const val SLT = "slt"
         //Authentication must be performed by following the redirect url
         const val REDIRECT = "redirect"
-        //
+        //The client is submitting custom user attributes like Name, City
         const val ATTRIBUTES = "attributes"
     }
 }

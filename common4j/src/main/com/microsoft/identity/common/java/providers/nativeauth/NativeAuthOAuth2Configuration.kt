@@ -48,13 +48,19 @@ class NativeAuthOAuth2Configuration(
 ) : MicrosoftStsOAuth2Configuration() {
 
     private val TAG = NativeAuthOAuth2Configuration::class.java.simpleName
+    companion object {
+        //Base url for the mock API to make Native Auth calls. See the swagger at
+        // https://native-ux-mock-api.azurewebsites.net/doc#/ for all possible urls
+        private const val MOCK_API_URL_WITH_NATIVE_AUTH_TENANT = "https://native-ux-mock-api.azurewebsites.net/lumonconvergedps.onmicrosoft.com"
+    }
+
 
     override fun getAuthorityUrl(): URL {
         return if (useRealAuthority) {
             authorityUrl
         } else {
             // TODO return real authorityUrl once we move away from using mock APIs
-            URL("https://native-ux-mock-api.azurewebsites.net/lumonconvergedps.onmicrosoft.com")
+            URL(MOCK_API_URL_WITH_NATIVE_AUTH_TENANT)
         }
     }
 
