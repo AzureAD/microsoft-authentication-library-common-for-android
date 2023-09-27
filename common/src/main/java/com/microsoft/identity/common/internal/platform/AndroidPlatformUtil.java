@@ -215,7 +215,7 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         // Below redirectURI is being used in our automation tests and also by OneAuth tests for NAA
         return BuildConfig.DEBUG && (redirectUri.equals("msauth://com.microsoft.teams/VCpKgbYCXucoq1mZ4BZPsh5taNE=")
                         || redirectUri.equals("msauth://com.microsoft.teams/fcg80qvoM1YMKJZibjBwQcDfOno=")
-                        || redirectUri.equals("msauth://com.microsoft.teams/fcg80qvoM1YMKJZibjBwQcDfOno%3D"));
+                        || redirectUri.equals("https://login.microsoftonline.com/common/oauth2/nativeclient"));
     }
 
     /**
