@@ -358,6 +358,11 @@ tasks.configureEach { task ->
     }
 }
 
+// This is used to generate the pom file for publishing to external maven in maven-release-jobs.yml
+tasks.withType(GenerateMavenPom).all {
+    destination = layout.buildDirectory.file("poms/${project.name}-${project.version}.pom").get().asFile
+}
+
 def dependenciesSizeInMb = project.hasProperty("dependenciesSizeMb") ? project.dependenciesSizeMb : "11"
 String configToCheck = project.hasProperty("dependenciesSizeCheckConfig") ? project.dependenciesSizeCheckConfig : "distReleaseRuntimeClasspath"
 tasks.register("dependenciesSizeCheck") {
@@ -373,9 +378,10 @@ tasks.register("dependenciesSizeCheck") {
                     out << "${String.format(formatStr, (it.length() / 1024))} kb\n"
                 }
         println(out)
-        if (size > dependenciesSizeInMb.toDouble() ) {
+        if (size > dependenciesSizeInMb.toDouble()) {
             throw new GradleException("Total dependencies size is $size Mb. " +
                     "It should be less than ${dependenciesSizeInMb} Mb")
         }
     }
 }
+

@@ -44,7 +44,6 @@ import com.microsoft.identity.common.internal.fido.AbstractFidoChallengeHandler;
 import com.microsoft.identity.common.internal.fido.FidoChallengeFactory;
 import com.microsoft.identity.common.internal.fido.FidoChallengeHandlerFactory;
 import com.microsoft.identity.common.internal.fido.FidoManagerFactory;
-import com.microsoft.identity.common.java.opentelemetry.FidoTelemetryHelper;
 import com.microsoft.identity.common.internal.fido.IFidoChallenge;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
@@ -173,8 +172,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 final IFidoChallenge challenge = FidoChallengeFactory.createFidoChallengeFromRedirect(url);
                 final AbstractFidoChallengeHandler challengeHandler = FidoChallengeHandlerFactory.createFidoChallengeHandler(
                         FidoManagerFactory.createFidoManager(view.getContext()),
-                        view,
-                        new FidoTelemetryHelper()
+                        view
                 );
                 challengeHandler.processChallenge(challenge);
             } else if (isRedirectUrl(formattedURL)) {

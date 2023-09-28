@@ -24,8 +24,6 @@ package com.microsoft.identity.common.internal.fido
 
 import android.webkit.WebView
 import androidx.lifecycle.ViewTreeLifecycleOwner
-import androidx.lifecycle.findViewTreeLifecycleOwner
-import com.microsoft.identity.common.java.opentelemetry.IFidoTelemetryHelper
 
 /**
  * Instantiates AbstractFidoChallengeHandler objects.
@@ -43,7 +41,6 @@ class FidoChallengeHandlerFactory {
         fun createFidoChallengeHandler(
             manager: IFidoManager,
             webView: WebView,
-            telemetryHelper: IFidoTelemetryHelper
         ): AbstractFidoChallengeHandler {
             //Once we get security key support, this is where we will prompt a user with a dialog to choose which type of credentials they want to sign in with.
             //But for now, this will always return a PassKeyFidoChallengeHandler or throw an exception.
@@ -51,7 +48,6 @@ class FidoChallengeHandlerFactory {
                 manager,
                 webView,
                 ViewTreeLifecycleOwner.get(webView),
-                telemetryHelper
             )
         }
     }
