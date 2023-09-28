@@ -82,9 +82,9 @@ public class BaseException extends Exception implements IErrorInformation, ITele
      */
     @Getter
     @Accessors(prefix = "m")
-    private final List<Exception> mSuppressedException = new ArrayList<>();
+    private final List<Throwable> mSuppressedException = new ArrayList<>();
 
-    public void addSuppressedException(@NonNull final Exception e) {
+    public void addSuppressedException(@NonNull final Throwable e) {
         mSuppressedException.add(e);
     }
 

@@ -77,7 +77,7 @@ public class KeyUtil {
         final String methodName = ":getKeyThumbPrint";
         try {
             return getKeyThumbPrint(keyLoader.getKey());
-        } catch (final ClientException e) {
+        } catch (final Throwable e) {
             Logger.warn(TAG + methodName, "failed to load key:" + e.getMessage());
             return UNKNOWN_THUMBPRINT;
         }
@@ -94,7 +94,7 @@ public class KeyUtil {
         final String methodName = ":getKeyThumbPrint";
         try {
             return getKeyThumbPrintFromHmacKey(getHMacKey(key));
-        } catch (NoSuchAlgorithmException e) {
+        } catch (Throwable e) {
             Logger.warn(TAG + methodName, "failed to calculate thumbprint:" + e.getMessage());
             return UNKNOWN_THUMBPRINT;
         }
@@ -116,7 +116,7 @@ public class KeyUtil {
             thumbprintMac.init(hmacKey);
             byte[] thumbPrintFinal = thumbprintMac.doFinal(thumbprintBytes);
             return StringUtil.encodeUrlSafeString(thumbPrintFinal);
-        } catch (final NoSuchAlgorithmException | InvalidKeyException e) {
+        } catch (final Throwable e) {
             Logger.warn(TAG + methodName, "failed to calculate thumbprint:" + e.getMessage());
             return UNKNOWN_THUMBPRINT;
         }
