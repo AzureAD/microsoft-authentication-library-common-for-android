@@ -38,8 +38,7 @@ class WebAuthnJsonUtil {
         fun createJsonAuthRequestFromChallengeObject(challengeObject: AuthFidoChallenge): String? {
             //Create classes
             val publicKeyCredentialDescriptorList = ArrayList<PublicKeyCredentialDescriptor>()
-            val allowedCredentials = challengeObject.allowedCredentials
-            if (allowedCredentials != null) {
+            challengeObject.allowedCredentials?.let { allowedCredentials ->
                 for (id in allowedCredentials) {
                     publicKeyCredentialDescriptorList.add(
                         PublicKeyCredentialDescriptor("public-key", id)
