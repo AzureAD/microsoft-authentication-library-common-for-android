@@ -25,8 +25,6 @@ package com.microsoft.identity.common.java.controllers.results
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 
 interface ICommandResult {
-
-
     /**
      * UnknownError extends the [Error] class by adding an exception field.
      */

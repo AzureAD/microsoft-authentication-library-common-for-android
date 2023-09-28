@@ -52,7 +52,7 @@ class MockApiUtils {
             whenever(mockDiagnosticContext.requestContext).thenReturn(mockRequestContext)
         }
 
-        fun configureMockApiResponse(endpointType: MockApiEndpointType, responseType: MockApiResponseType, correlationId: String) {
+        fun configureMockApiResponse(endpointType: MockApiEndpoint, responseType: MockApiResponseType, correlationId: String) {
             MockApi.instance.performRequest(
                 endpointType = endpointType,
                 responseType = responseType,
@@ -72,7 +72,7 @@ class MockApiUtils {
          * @param responseType The type of response to return from the mock API.
          */
         fun configureMockApi(
-            endpointType: MockApiEndpointType,
+            endpointType: MockApiEndpoint,
             correlationId: String,
             responseType: MockApiResponseType
         ) {

@@ -28,7 +28,7 @@ import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 
 /**
- * Factory class that takes care of the creation of NativeAuthOAuth2Strategy
+ * Factory class that takes care of the creation of NativeAuthOAuth2Strategy.
  */
 class NativeAuthOAuth2StrategyFactory {
     companion object {

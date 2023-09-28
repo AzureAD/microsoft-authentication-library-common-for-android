@@ -31,7 +31,7 @@ import java.util.Collections.replaceAll
  */
 class LogSession {
     companion object {
-        /**
+        /** logMethodCall is used to log the name of the method at info log level.
          * @param tag          Used to identify the source of a log message.
          *                     It usually identifies the class or activity where the log call occurs.
          * @param methodName   The methodName to log.

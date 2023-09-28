@@ -68,7 +68,7 @@ class NativeAuthOAuth2Configuration(
         LogSession.logMethodCall(TAG, "${TAG}.getEndpointUrlFromRootAndTenantAndSuffix")
         return try {
             if (BuildValues.getDC().isNotEmpty()) {
-                UrlUtil.appendPathToURL(root, endpointSuffix, true, "dc=${BuildValues.getDC()}")
+                UrlUtil.appendPathAndQueryToURL(root, endpointSuffix, "dc=${BuildValues.getDC()}")
             } else {
                 UrlUtil.appendPathToURL(root, endpointSuffix)
             }

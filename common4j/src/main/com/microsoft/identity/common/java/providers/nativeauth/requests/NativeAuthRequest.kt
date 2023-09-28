@@ -34,7 +34,6 @@ abstract class NativeAuthRequest {
     abstract var headers: Map<String, String?>
     abstract val parameters: NativeAuthRequestParameters
 
-
     /**
      * Base class to represent parameters for all Native Auth API requests. These parameters
      * are sent as part of HTTP POST request

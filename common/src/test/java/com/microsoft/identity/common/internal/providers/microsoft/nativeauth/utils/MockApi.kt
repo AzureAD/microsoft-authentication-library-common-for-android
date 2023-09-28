@@ -78,7 +78,7 @@ class MockApi private constructor(
      * Performs a HTTP POST request to the MockAPI for Native Auth. This method validates the request
      * was successful
      */
-    fun performRequest(endpointType: MockApiEndpointType, responseType: MockApiResponseType, correlationId: String) {
+    fun performRequest(endpointType: MockApiEndpoint, responseType: MockApiResponseType, correlationId: String) {
         val addResponseUrl = URL(MOCK_ADD_RESPONSE_URL)
         val request = Request(
             correlationId = correlationId,

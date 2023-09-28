@@ -43,24 +43,29 @@ import lombok.NonNull;
 public class UrlUtil {
     private static final String TAG = UrlUtil.class.getSimpleName();
 
-    public static URL appendPathToURL(@NonNull final URL urlToAppend,
-                                      @Nullable final String pathString)
-            throws URISyntaxException, MalformedURLException {
-        return appendPathToURL(urlToAppend, pathString, false, null);
-    }
-
     /**
-     * Append a given path string to a URL.
+     * Append a given path string and query parameters to a URL.
      *
      * @param urlToAppend URL to be appended to.
      * @param pathString  a string containing path segments to be appended to the URL.
-     * @param removeEmptySegments flag to denote if empty path segments should be removed
-     * @param queryParam Query parameters to add at the end of url
      * @return appended URL
      */
     public static URL appendPathToURL(@NonNull final URL urlToAppend,
+                                      @Nullable final String pathString)
+            throws URISyntaxException, MalformedURLException {
+        return appendPathAndQueryToURL(urlToAppend, pathString, null);
+    }
+
+    /**
+     * Append a given path string and query parameters to a URL.
+     *
+     * @param urlToAppend URL to be appended to.
+     * @param pathString  a string containing path segments to be appended to the URL.
+     * @param queryParam Query parameters to add at the end of url
+     * @return appended URL
+     */
+    public static URL appendPathAndQueryToURL(@NonNull final URL urlToAppend,
                                       @Nullable final String pathString,
-                                      @Nullable final boolean removeEmptySegments,
                                       @Nullable final String queryParam)
             throws URISyntaxException, MalformedURLException {
 
@@ -76,16 +81,7 @@ public class UrlUtil {
         final CommonURIBuilder builder = new CommonURIBuilder(urlToAppend.toString());
         final List<String> pathSegments = builder.getPathSegments();
 
-        final List<String> combinedPathSegments = new ArrayList<>();
-
-        // Add all non-empty path segments from the base URL
-        if (removeEmptySegments) {
-            for (final String path : pathSegments) {
-                if (!StringUtil.isNullOrEmpty(path)) {
-                    combinedPathSegments.add(path);
-                }
-            }
-        }
+        final List<String> combinedPathSegments = new ArrayList<>(pathSegments);
 
         // Add all non-empty path segments from the path to append
         for (final String path : pathSegmentsToAppend) {

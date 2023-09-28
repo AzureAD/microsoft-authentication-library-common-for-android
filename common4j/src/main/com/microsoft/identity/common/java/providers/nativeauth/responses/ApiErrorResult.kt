@@ -24,9 +24,8 @@ package com.microsoft.identity.common.java.providers.nativeauth.responses
 
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 
-
 /**
- * Base class to encapsulate various error response from the Native Auth API
+ * Base class to encapsulate various error response from the Native Auth API.
  */
 open class ApiErrorResult(
     open val error: String?,

@@ -104,8 +104,7 @@ class NativeAuthCIAMAuthority (
     override fun createOAuth2Strategy(parameters: OAuth2StrategyParameters): NativeAuthOAuth2Strategy {
         val config = createNativeAuthOAuth2Configuration(parameters.mChallengeTypes)
 
-        // CIAM Authorities fetch endpoints from open id configuration, communicate that to
-        // strategy through parameters
+        // CIAM Authorities can fetch endpoints from open id configuration. We disable this option.
         parameters.setUsingOpenIdConfiguration(NATIVE_AUTH_USE_OPENID_CONFIGURATION)
 
         return NativeAuthOAuth2StrategyFactory.createStrategy(

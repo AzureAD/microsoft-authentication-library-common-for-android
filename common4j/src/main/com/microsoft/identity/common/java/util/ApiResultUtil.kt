@@ -31,7 +31,7 @@ import java.net.HttpURLConnection
  */
 object ApiResultUtil {
     /**
-     * Log IApiResponse objects. IResult objects are returned from all native auth endpoints
+     * Log IApiResponse objects. IResult objects are returned from all native auth endpoints.
      *
      * @param tag    The log tag to use.
      * @param response The result object to log.
@@ -41,7 +41,7 @@ object ApiResultUtil {
         response: IApiResponse
     ) {
         val TAG = tag + ":" + response.javaClass.simpleName
-        if (response.statusCode < HttpURLConnection.HTTP_BAD_REQUEST) {
+        if (response.statusCode == HttpURLConnection.HTTP_OK) {
             Logger.info(TAG, "Success Result")
         } else {
             val code = response.statusCode
