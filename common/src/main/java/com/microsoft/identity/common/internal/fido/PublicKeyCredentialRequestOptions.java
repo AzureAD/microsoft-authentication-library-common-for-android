@@ -24,6 +24,8 @@ package com.microsoft.identity.common.internal.fido;
 
 import androidx.annotation.NonNull;
 
+import com.squareup.moshi.Json;
+
 import java.util.List;
 
 import lombok.Getter;
@@ -34,9 +36,13 @@ import lombok.Getter;
  */
 @Getter
 public class PublicKeyCredentialRequestOptions {
+    @Json(name = "challenge")
     public final String challenge;
+    @Json(name = "rpId")
     public final String rpId;
+    @Json(name = "allowCredentials")
     public final List<PublicKeyCredentialDescriptor> allowCredentials;
+    @Json(name = "userVerification")
     public final String userVerification;
 
     public PublicKeyCredentialRequestOptions(@NonNull final String challenge,

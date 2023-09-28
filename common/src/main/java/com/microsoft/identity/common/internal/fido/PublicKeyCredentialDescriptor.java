@@ -24,6 +24,8 @@ package com.microsoft.identity.common.internal.fido;
 
 import androidx.annotation.NonNull;
 
+import com.squareup.moshi.Json;
+
 import lombok.Getter;
 
 /**
@@ -32,7 +34,9 @@ import lombok.Getter;
  */
 @Getter
 public class PublicKeyCredentialDescriptor {
+    @Json(name = "type")
     public final String type;
+    @Json(name = "id")
     public final String id;
     PublicKeyCredentialDescriptor(@NonNull final String type,
                                   @NonNull final String id) {
