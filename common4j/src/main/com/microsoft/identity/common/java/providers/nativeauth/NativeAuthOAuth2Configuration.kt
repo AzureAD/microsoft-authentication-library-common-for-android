@@ -23,7 +23,6 @@
 
 package com.microsoft.identity.common.java.providers.nativeauth
 
-import com.microsoft.identity.common.java.BuildConfig
 import com.microsoft.identity.common.java.BuildValues
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
@@ -44,7 +43,7 @@ class NativeAuthOAuth2Configuration(
     val challengeType: String,
     // Need this to decide whether or not to return mock api authority or actual authority supplied in configuration
     // Turn this on if you plan to use web auth and/or open id configuration
-    val useRealAuthority: Boolean = BuildValues.shouldUseRealAuthority()
+    val useMockApiForNativeAuth: Boolean = BuildValues.shouldUseMockApiForNativeAuth()
 ) : MicrosoftStsOAuth2Configuration() {
 
     private val TAG = NativeAuthOAuth2Configuration::class.java.simpleName
@@ -56,11 +55,11 @@ class NativeAuthOAuth2Configuration(
 
 
     override fun getAuthorityUrl(): URL {
-        return if (useRealAuthority) {
-            authorityUrl
-        } else {
+        return if (useMockApiForNativeAuth) {
             // TODO return real authorityUrl once we move away from using mock APIs
             URL(MOCK_API_URL_WITH_NATIVE_AUTH_TENANT)
+        } else {
+            authorityUrl
         }
     }
 

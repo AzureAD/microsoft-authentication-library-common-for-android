@@ -41,7 +41,9 @@ class NativeAuthCIAMAuthority (
 ) : CIAMAuthority(authorityUrl) {
     companion object {
         private val TAG = NativeAuthCIAMAuthority::class.java.simpleName
-        //This parameter ensures that authorization endpoint is not fetched from OpenId Configuration.
+        //This parameter ensures that authorization endpoint is not fetched from OpenId
+        // Configuration as fetching endpoints from OpenID config is not supported for
+        // native auth currently.
         private const val NATIVE_AUTH_USE_OPENID_CONFIGURATION = false
 
         @Throws(Exception::class)
@@ -52,7 +54,7 @@ class NativeAuthCIAMAuthority (
 
             if (authority is NativeAuthCIAMAuthority) {
                 // Authority is already a NativeAuthCIAMAuthority
-                return authority as NativeAuthCIAMAuthority
+                return authority
             }
             else if (authority is CIAMAuthority) {
                 // Authority returned was a base CIAM authority
@@ -67,10 +69,6 @@ class NativeAuthCIAMAuthority (
         }
     }
 
-
-    // TODO audience, slice, flight parameters, multiple clouds supported,
-    // isAuthorityHostValidationEnabled (AzureActiveDirectoryOAuth2Configuration). Consider extending
-    // AzureActiveDirectoryAuthority
     init {
         mAuthorityTypeString = "AAD_NA" // AAD Native Auth
         mAuthorityUrlString = authorityUrl

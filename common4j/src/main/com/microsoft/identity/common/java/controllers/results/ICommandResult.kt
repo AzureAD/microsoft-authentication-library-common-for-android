@@ -24,28 +24,19 @@ package com.microsoft.identity.common.java.controllers.results
 
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 
+/**
+ * ICommandResult interface defines the base class for errors used in Native Auth.
+ */
 interface ICommandResult {
     /**
-     * UnknownError extends the [Error] class by adding an exception field.
+     * UnknownError is base class to represent various kinds of errors in NativeAuth.
      */
     data class UnknownError(
-        override val error: String?,
-        override val errorDescription: String?,
-        override val details: List<Map<String, String>>? = null,
-        override val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
-        override val errorCodes: List<Int>? = null,
+        val error: String?,
+        val errorDescription: String?,
+        val details: List<Map<String, String>>? = null,
+        val correlationId: String ,//= DiagnosticContext.INSTANCE.threadCorrelationId,
+        val errorCodes: List<Int>? = null,
         val exception: Exception? = null
-    ): Error(error, errorDescription, details, correlationId, errorCodes), ICommandResult
-
-
-    /**
-     * Error is base class to represent various kinds of errors in NativeAuth
-     */
-    open class Error(
-        open val error: String?,
-        open val errorDescription: String?,
-        open val details: List<Map<String, String>>? = null,
-        open val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
-        open val errorCodes: List<Int>? = null
-    )
+    ) : ICommandResult
 }

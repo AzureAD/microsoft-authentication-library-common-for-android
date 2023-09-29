@@ -70,45 +70,6 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
 
     private final List<Map.Entry<String, String>> extraOptions;
 
-    public Set<String> getScopes() {
-        return this.scopes == null ? null : new HashSet<>(this.scopes);
-    }
-
-    /**
-     * Note - this method may throw a variety of RuntimeException if we cannot perform cloud
-     * discovery to determine the set of cloud aliases.
-     * @return true if the authority matches the cloud environment that the account is homed in.
-     */
-    private boolean authorityMatchesAccountEnvironment() {
-        final String methodName = ":authorityMatchesAccountEnvironment";
-
-        final Exception cause;
-        final String errorCode;
-
-        try {
-            if (!AzureActiveDirectory.isInitialized()) {
-                performCloudDiscovery();
-            }
-            final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloudFromHostName(getAccount().getEnvironment());
-            return cloud != null && cloud.getPreferredNetworkHostName().equals(getAuthority().getAuthorityURL().getAuthority());
-        } catch (final IOException e) {
-            cause = e;
-            errorCode = ClientException.IO_ERROR;
-        } catch (final URISyntaxException e) {
-            cause = e;
-            errorCode = ClientException.MALFORMED_URL;
-        }
-
-        Logger.error(
-                TAG + methodName,
-                "Unable to perform cloud discovery",
-                cause);
-        throw new TerminalException(
-                "Unable to perform cloud discovery in order to validate request authority",
-                cause,
-                errorCode);
-    }
-
     private static void performCloudDiscovery()
             throws IOException, URISyntaxException {
         final String methodName = ":performCloudDiscovery";

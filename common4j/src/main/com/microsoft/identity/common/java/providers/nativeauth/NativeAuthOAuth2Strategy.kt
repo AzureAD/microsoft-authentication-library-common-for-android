@@ -41,10 +41,10 @@ class NativeAuthOAuth2Strategy(
 
 
     override fun getIssuerCacheIdentifierFromTokenEndpoint(): String {
-        if (config.useRealAuthority) {
-            return super.getIssuerCacheIdentifierFromTokenEndpoint()
-        } else {
+        if (config.useMockApiForNativeAuth) {
             return CACHE_IDENTIFIER_MOCK
+        } else {
+            return super.getIssuerCacheIdentifierFromTokenEndpoint()
         }
     }
 

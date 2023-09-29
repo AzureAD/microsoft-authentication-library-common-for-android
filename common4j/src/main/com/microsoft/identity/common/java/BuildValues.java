@@ -43,14 +43,14 @@ public class BuildValues {
 
     //The mock API authority used for testing will be rejected by validation logic run on instantiation. This flag is used to bypass those checks in various points in the application
     @Nonnull
-    private static Boolean USE_REAL_AUTHORITY = BuildConfig.USE_REAL_AUTHORITY;
+    private static Boolean USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY = BuildConfig.USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY;
 
-    public static Boolean shouldUseRealAuthority()
+    public static Boolean shouldUseMockApiForNativeAuth()
     {
-        return USE_REAL_AUTHORITY;
+        return USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY;
     }
 
     public static void setUseRealAuthority(Boolean ura) {
-        USE_REAL_AUTHORITY = ura;
+        USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY = ura;
     }
 }
