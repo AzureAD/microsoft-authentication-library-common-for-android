@@ -2,6 +2,7 @@ V.Next
 ----------
 - [MINOR] Handle crypto error gracefully (#2190)
 - [MINOR] Stop logging thread name (#2185)
+- [MINOR] Adding Moshi, and WebAuthnJsonUtil(#2189)
 
 V.16.0.1
 ----------
@@ -23,7 +24,6 @@ V.16.0.0
 - [MINOR] Add new apk name to BrokerHost infra (#2152)
 - [MINOR] Send key to request broker data in all BrokerOperationBundle (#2159)
 - [MINOR] Catch strongbox exception on Android 14 (#2158)
-- [MINOR] WebAuthnJsonUtil; giving default value for UserVerificationPolicy (#2172)
 - [MINOR] Nested app auth implementation (#2168)
 
 V.15.0.0
