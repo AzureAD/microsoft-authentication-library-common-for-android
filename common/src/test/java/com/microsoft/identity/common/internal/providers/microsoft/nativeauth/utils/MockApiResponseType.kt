@@ -24,7 +24,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils
 
 /**
- * Enumerates all of the different types of responses received by Mock API for Native Auth
+ * Enumerates all of the different types of responses received by Mock API for Native Auth.
  */
 enum class MockApiResponseType(val stringValue: String) {
     ATTRIBUTE_VALIDATION_FAILED("AttributeValidationFailed"),

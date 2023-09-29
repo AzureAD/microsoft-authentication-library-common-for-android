@@ -27,7 +27,7 @@ import java.util.Collections.replaceAll
 
 /**
  * LogSession provides a wrapper on the Logger class from package
- * com.microsoft.identity.common.java.logging
+ * com.microsoft.identity.common.java.logging.
  */
 class LogSession {
     companion object {

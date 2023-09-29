@@ -35,6 +35,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * BaseNativeAuthCommandParameters is the base class for parameters for all Native Auth commands.
+ */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)

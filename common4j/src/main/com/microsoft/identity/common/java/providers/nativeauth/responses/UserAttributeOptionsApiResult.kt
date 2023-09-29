@@ -25,7 +25,7 @@ package com.microsoft.identity.common.java.providers.nativeauth.responses
 import com.google.gson.annotations.SerializedName
 
 /**
- *  The required user attribute for Signup should match the specified regular expression
+ *  The required user attribute for Signup should match the specified regular expression.
  */
 data class UserAttributeOptionsApiResult(
     @SerializedName("regex") val regex: String?

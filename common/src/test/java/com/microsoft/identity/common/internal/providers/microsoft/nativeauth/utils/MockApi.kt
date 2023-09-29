@@ -38,7 +38,7 @@ const val RESPONSE_LIST = "responseList"
 /**
  * MockApi class performs the various tasks associated with making request to the mock API
  * for Native Auth. These mock APIs are useful in performing integration tests for
- * Native Auth classes
+ * Native Auth classes.
  */
 class MockApi private constructor(
     private val httpClient: UrlConnectionHttpClient = UrlConnectionHttpClient.getDefaultInstance()

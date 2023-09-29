@@ -45,6 +45,10 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * AcquireTokenNoFixedScopesCommandParameters defines the parameters used for
+ * [AcquireTokenNoFixedScopesCommand] class.
+ */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)

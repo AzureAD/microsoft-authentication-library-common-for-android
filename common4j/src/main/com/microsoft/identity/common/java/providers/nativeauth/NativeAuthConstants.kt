@@ -24,13 +24,13 @@
 package com.microsoft.identity.common.java.providers.nativeauth
 
 /**
- * Various grant types supported by Native Auth
+ * Various grant types supported by Native Auth.
  */
 object NativeAuthConstants {
     object GrantType {
         //password is required for authentication
         const val PASSWORD = "password"
-        //Authentication is done by presenting an Out of band tokem
+        //Authentication is done by presenting an Out of band token
         const val OOB = "oob"
         //Authentication is done by presenting a short lived token
         const val SLT = "slt"
