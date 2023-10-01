@@ -1,6 +1,6 @@
 V.16.0.2
 ----------
-- [PATCH] Handle crypto error gracefully
+- [PATCH] Handle crypto error gracefully (#2199)
 
 V.16.0.1
 ----------
