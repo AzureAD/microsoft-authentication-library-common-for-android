@@ -1,3 +1,7 @@
+V.15.0.1
+----------
+- [PATCH] Handle crypto error gracefully (#2198)
+
 V.15.0.0
 ----------
 - [MAJOR] Move Broker side active broker cache to broker repo (#2123)
