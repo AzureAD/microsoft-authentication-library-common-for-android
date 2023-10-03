@@ -50,7 +50,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         return acquireTokenSilentResult
     }
     
-    private fun composeOAuth2Strategy(parameters: BaseNativeAuthCommandParameters): NativeAuthOAuth2Strategy {
+    private fun createOAuth2Strategy(parameters: BaseNativeAuthCommandParameters): NativeAuthOAuth2Strategy {
         val strategyParameters = OAuth2StrategyParameters.builder()
             .platformComponents(parameters.platformComponents)
             .challengeTypes(parameters.challengeType)
