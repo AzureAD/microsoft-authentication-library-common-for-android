@@ -83,7 +83,10 @@ public final class InstallCertActivityLauncher extends AppCompatActivity {
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (savedInstanceState == null) {
-            mInstallCertificateIntent = getIntent().getExtras().getParcelable(INSTALL_CERT_INTENT);
+            Bundle extras = getIntent().getExtras();
+            if(extras != null) {
+                mInstallCertificateIntent = extras.getParcelable(INSTALL_CERT_INTENT);
+            }
         } else {
             // If the activity is being re-initialized after previously being shut down
             // then this Bundle contains the data it most recently supplied.

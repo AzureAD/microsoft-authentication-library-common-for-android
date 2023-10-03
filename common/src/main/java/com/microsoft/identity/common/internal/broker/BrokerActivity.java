@@ -62,7 +62,10 @@ public final class BrokerActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         if (savedInstanceState == null) {
-            mBrokerInteractiveRequestIntent = getIntent().getExtras().getParcelable(BROKER_INTENT);
+            Bundle extras = getIntent().getExtras();
+            if(extras != null) {
+                mBrokerInteractiveRequestIntent = extras.getParcelable(BROKER_INTENT);
+            }
         } else {
             mBrokerInteractiveRequestIntent = savedInstanceState.getParcelable(BROKER_INTENT);
             mBrokerIntentStarted = savedInstanceState.getBoolean(BROKER_INTENT_STARTED);
