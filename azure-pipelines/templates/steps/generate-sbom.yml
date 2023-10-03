@@ -24,7 +24,7 @@ steps:
     useDefaultDetectors: false
     detectorsToRun: 'Maven'
     verbosity: 'Verbose'
-    sourceScanPath: $(Build.SourcesDirectory)/${{ parameters.project }}/gradle
+    sourceScanPath: $(Build.SourcesDirectory)/${{ parameters.project }}
     alertWarningLevel: 'High'
 - task: ManifestGeneratorTask@0
   displayName: 'Generate SBOM manifest file'
