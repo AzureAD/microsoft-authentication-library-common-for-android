@@ -33,5 +33,5 @@ steps:
 - task: PublishPipelineArtifact@1
   displayName: 'Publish Artifact: dependencies lockfile'
   inputs:
-    targetPath: $(Build.SourcesDirectory)/${{ parameters.project }}/gradle/dependency-locks
+    targetPath: $(Build.SourcesDirectory)/${{ parameters.project }}/
     ArtifactName: ${{ parameters.artifactName }}
