@@ -39,6 +39,7 @@ import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationB
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SIGN_OUT_FROM_SHARED_DEVICE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SSO_TOKEN;
 import static com.microsoft.identity.common.internal.controllers.BrokerOperationExecutor.BrokerOperation;
+import static com.microsoft.identity.common.internal.util.StringUtil.isEmpty;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
@@ -74,7 +75,6 @@ import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
 import com.microsoft.identity.common.internal.util.AccountManagerUtil;
-import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
@@ -102,10 +102,12 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
+import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.ResultFuture;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ThreadUtils;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
@@ -147,7 +149,7 @@ public class BrokerMsalController extends BaseController {
         mBrokerOperationExecutor = new BrokerOperationExecutor(
                 ipcStrategies,
                 new ActiveBrokerCacheUpdater(applicationContext,
-                        ClientActiveBrokerCache.getCache(components.getStorageSupplier())));
+                        ClientActiveBrokerCache.getClientSdkCache(components.getStorageSupplier())));
         mHelloCache = getHelloCache();
     }
 
@@ -222,8 +224,8 @@ public class BrokerMsalController extends BaseController {
     /**
      * MSAL-Broker handshake operation.
      *
-     * @param strategy            an {@link IIpcStrategy}
-     * @param minRequestedVersion the minimum allowed broker protocol version, may be null.
+     * @param strategy                 an {@link IIpcStrategy}
+     * @param minRequestedVersion      the minimum allowed broker protocol version, may be null.
      * @param clientMaxProtocolVersion the maximum broker protocol version known by client.
      * @return a protocol version negotiated by MSAL and Broker.
      */
@@ -239,7 +241,7 @@ public class BrokerMsalController extends BaseController {
                 clientMaxProtocolVersion
         );
 
-        if (!StringUtil.isEmpty(cachedProtocolVersion)) {
+        if (!StringUtil.isNullOrEmpty(cachedProtocolVersion)) {
             return cachedProtocolVersion;
         }
 
@@ -253,7 +255,7 @@ public class BrokerMsalController extends BaseController {
                 clientMaxProtocolVersion
         );
 
-        if (!StringUtil.isEmpty(minRequestedVersion)) {
+        if (!StringUtil.isNullOrEmpty(minRequestedVersion)) {
             bundle.putString(
                     CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
                     minRequestedVersion
@@ -288,6 +290,7 @@ public class BrokerMsalController extends BaseController {
 
     /**
      * Tries reading negotiated protocol version from hello cache and returns it.
+     *
      * @throws UnsupportedBrokerException when there's handshake error present in hello cache.
      */
     @edu.umd.cs.findbugs.annotations.Nullable
@@ -309,7 +312,7 @@ public class BrokerMsalController extends BaseController {
             throw new UnsupportedBrokerException(mActiveBrokerPackageName);
         }
         final String cachedProtocolVersion = helloCacheResult.getNegotiatedProtocolVersion();
-        if (!StringUtil.isEmpty(cachedProtocolVersion)){
+        if (!StringUtil.isNullOrEmpty(cachedProtocolVersion)) {
             return cachedProtocolVersion;
         } else {
             Logger.warn(methodTag, "Unexpected: cachedProtocolVersion is empty. Continue with hello IPC protocol.");
@@ -1117,7 +1120,7 @@ public class BrokerMsalController extends BaseController {
                 AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(brokerResult.getTenantId())) {
             Logger.info(methodTag, "Result returned for MSA Account, saving to cache");
 
-            if (StringUtil.isEmpty(brokerResult.getClientInfo())) {
+            if (StringUtil.isNullOrEmpty(brokerResult.getClientInfo())) {
                 Logger.error(methodTag, "ClientInfo is empty.", null);
                 throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "ClientInfo is empty.");
             }
@@ -1168,13 +1171,38 @@ public class BrokerMsalController extends BaseController {
                 && !BrokerProtocolVersionUtil.canSupportPopAuthenticationSchemeWithClientKey(requiredProtocolVersion)) {
             throw new ClientException(ClientException.AUTH_SCHEME_NOT_SUPPORTED,
                     "The min broker protocol version for PopAuthenticationSchemeWithClientKey should be equal or more than 11.0."
-                            + " Current required version is set to: " + parameters.getRequiredBrokerProtocolVersion());
+                            + " Current required version is set to: " + requiredProtocolVersion);
+        }
+        validateNestedAppAuthParameters(parameters, requiredProtocolVersion);
+    }
+
+    private void validateNestedAppAuthParameters(@NonNull final TokenCommandParameters parameters, @NonNull final String requiredProtocolVersion) throws ClientException {
+        if (parameters.hasNestedAppParameters()) {
+            // Nested app auth is only supported when required protocol version is >= 15
+            if (!StringUtil.isNullOrEmpty(parameters.getChildClientId()) && !StringUtil.isNullOrEmpty(parameters.getChildRedirectUri())
+                    && !BrokerProtocolVersionUtil.canSupportNestedAppAuthentication(requiredProtocolVersion)) {
+                throw new ClientException(ClientException.NESTED_APP_AUTH_NOT_SUPPORTED,
+                        "The min broker protocol version for Nested app auth should be equal or more than 15.0."
+                                + " Current required version is set to: " + requiredProtocolVersion);
+            } else if (StringUtil.isNullOrEmpty(parameters.getChildClientId())) {
+                // Only one of the nested app params are sent
+                throw new ClientException(ClientException.NESTED_APP_INVALID_PARAMETERS, "ClientId of the nested app is null or empty");
+            } else if (StringUtil.isNullOrEmpty(parameters.getChildRedirectUri())) {
+                // Only one of the nested app params are sent
+                throw new ClientException(ClientException.NESTED_APP_INVALID_PARAMETERS, "RedirectURI of the nested app is null or empty");
+            }
+
+            if (parameters.getSdkType() != SdkType.MSAL_CPP) {
+                // Nested app support is only for clients using OneAuth as this is only supported for first party apps currently
+                throw new ClientException(ClientException.NESTED_APP_INVALID_PARAMETERS, "Nested app auth is only supported for request originating from OneAuth");
+            }
         }
     }
 
     /**
      * Check if have received broker version not supported error.
-     * @param resultBundle Result bundle from a broker operation.
+     *
+     * @param resultBundle                  Result bundle from a broker operation.
      * @param requiredBrokerProtocolVersion Required broker protocol version sent in request.
      * @throws UnsupportedBrokerException if result contains broker not supported error.
      */

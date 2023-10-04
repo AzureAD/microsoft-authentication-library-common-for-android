@@ -88,6 +88,12 @@ public class ServiceException extends BaseException {
      */
     public static final String UNKNOWN_ERROR = "unknown_error";
 
+    /**
+     * When service response contains 1000030 -> MsaGrantedRefreshTokenNotSupportedOnAadTenant
+     * <a href="https://msazure.visualstudio.com/One/_git/ESTS-Main?path=/src/Product/Microsoft.AzureAD.Common/Diagnostics/ErrrorCodes/StsErrorCode.xml&version=GBmaster&line=16896&lineEnd=16897&lineStartColumn=1&lineEndColumn=1&lineStyle=plain&_a=contents">...</a>
+     */
+    public static final String MsaGrantedRefreshTokenNotSupportedOnAadTenantErrorCode = "1000030";
+
     private String mOauthSubErrorCode;
 
     private int mHttpStatusCode;

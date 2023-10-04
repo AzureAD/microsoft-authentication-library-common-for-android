@@ -33,6 +33,7 @@ import static com.microsoft.identity.common.java.exception.ClientException.INVAL
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
 import static com.microsoft.identity.common.java.exception.ClientException.UNEXPECTED_HMAC_LENGTH;
+import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_CRYPTO_ERROR;
 
 import com.microsoft.identity.common.java.crypto.key.AbstractSecretKeyLoader;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
@@ -113,14 +114,17 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             throws ClientException {
         final String methodName = ":encrypt";
 
-        Logger.verbose(TAG + methodName, "Starting encryption");
-
         final String errCode;
-        final Exception exception;
-        try {
-            // load key for encryption if not loaded
-            final AbstractSecretKeyLoader keyLoader = getKeyLoaderForEncryption();
+        final Throwable exception;
 
+        // load key for encryption if not loaded
+        final AbstractSecretKeyLoader keyLoader = getKeyLoaderForEncryption();
+        if (keyLoader == null) {
+            // Developer error. Throw.
+            throw new IllegalStateException("KeyLoader list must not be null.");
+        }
+
+        try {
             final SecretKey encryptionKey = keyLoader.getKey();
             final SecretKey encryptionHMACKey = KeyUtil.getHMacKey(encryptionKey);
             final byte[] keyIdentifier = keyLoader.getKeyTypeIdentifier().getBytes(ENCODING_UTF8);
@@ -175,6 +179,9 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
         } catch (final InvalidAlgorithmParameterException e) {
             errCode = INVALID_ALG_PARAMETER;
             exception = e;
+        } catch (final Throwable e) {
+            errCode = UNKNOWN_CRYPTO_ERROR;
+            exception = e;
         }
 
         throw new ClientException(errCode, exception.getMessage(), exception);
@@ -183,7 +190,6 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
     @Override
     public byte[] decrypt(final byte[] cipherText) throws ClientException {
         final String methodName = ":decrypt";
-        Logger.verbose(TAG + methodName, "Starting decryption");
 
         final byte[] dataBytes;
         try {
@@ -208,10 +214,8 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             }
             
             try {
-                final byte[] result = decryptWithSecretKey(dataBytes, keyLoader);
-                Logger.verbose(TAG + methodName, "Finished decryption with key:" + keyLoader.getAlias());
-                return result;
-            } catch (final ClientException e) {
+                return decryptWithSecretKey(dataBytes, keyLoader);
+            } catch (final Throwable e) {
                 Logger.warn(TAG + methodName, "Failed to decrypt with key:" + keyLoader.getAlias() +
                         " thumbprint : " + KeyUtil.getKeyThumbPrint(keyLoader));
                 exceptionToThrowIfAllFails.addSuppressedException(e);

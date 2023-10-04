@@ -20,14 +20,27 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.constants;
+package com.microsoft.identity.common.internal.fido;
+
+import androidx.annotation.NonNull;
+
+import com.squareup.moshi.Json;
+
+import lombok.Getter;
 
 /**
- * Class used to hold some constant variables for UI testing automation.
+ * Representation of WebAuthn's PublicKeyCredentialDescriptor.
+ * https://w3c.github.io/webauthn/#dictdef-publickeycredentialdescriptor
  */
-public class GlobalConstants {
-    public static final boolean IS_STAY_SIGN_IN_PAGE_EXPECTED = true;
-
-    public static final String PIN = "1234";
-
+@Getter
+public class PublicKeyCredentialDescriptor {
+    @Json(name = "type")
+    public final String type;
+    @Json(name = "id")
+    public final String id;
+    PublicKeyCredentialDescriptor(@NonNull final String type,
+                                  @NonNull final String id) {
+        this.type = type;
+        this.id = id;
+    }
 }

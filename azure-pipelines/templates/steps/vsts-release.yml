@@ -1,7 +1,6 @@
 # File: azure-pipelines\templates\steps\nightly-snapshot-releases\vsts-release.yml
 # Description: Template to assemble and publish Snapshot/Latest versions of ${{ parameters.projectName }}
 # Variable: 'ENV_VSTS_MVN_ANDROIDADACCOUNTS_USERNAME' was defined in the Variables tab
-# Variable: 'mvnAccessToken' was defined in the Variables tab
 # Variable: 'gradleTasks' list all the gradle tasks to be used.
 # Variable: 'accessTokenName'  secret used to access the private azure devops maven feed.
 # Variable: 'runUnitTest' boolean: refers to whether the pipeline will run unit tests or not.
@@ -39,7 +38,7 @@ jobs:
     displayName: Set MVN Access Token in Environment
     inputs:
       filename: echo
-      arguments: '##vso[task.setvariable variable=${{ parameters.accessTokenName }}]$(mvnAccessToken)'
+      arguments: '##vso[task.setvariable variable=${{ parameters.accessTokenName }}]$(System.AccessToken)'
   - task: Gradle@2
     displayName: Run unit tests
     condition: eq(variables['parameters.runUnitTests'], 'true')
