@@ -31,6 +31,13 @@ sealed interface SignInSubmitCodeCommandResult: ICommandResult
 sealed interface SignInResendCodeCommandResult: ICommandResult
 sealed interface SignInSubmitPasswordCommandResult: ICommandResult
 
+/**
+ * Reflects the possible results from sign in commands.
+ * Conforms to the ICommandResult interface, and is mapped from the respective API result classes returned for each endpoint.
+ * @see com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResult
+ * @see com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResult
+ * @see com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResult
+ */
 interface SignInCommandResult {
     data class Complete(val authenticationResult: ILocalAuthenticationResult) :
         SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult,

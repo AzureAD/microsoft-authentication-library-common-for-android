@@ -118,6 +118,15 @@ class NativeAuthController : BaseNativeAuthController() {
         private val TAG = NativeAuthController::class.java.simpleName
     }
 
+    /**
+     * Acts as the starting point for the Sign In flow.
+     * Starts off with the sign in initiate call, and returns any error results if produced.
+     * If successful, continues ot the sign in challenge call, again returning any error results if produced.
+     * If the challenge endpoint returns a password required result,
+     * a call to the token endpoint will be made with the password provided in the SignInStartCommandParameters,
+     * again returning any error results, or returning the token if the call succeeds.
+     * If a token is acquired, it is also cached locally as part of this flow.
+     */
     fun signInStart(parameters: SignInStartCommandParameters): SignInStartCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.signInStart")
 
@@ -152,6 +161,9 @@ class NativeAuthController : BaseNativeAuthController() {
         }
     }
 
+    /**
+     * Makes a call to the /token endpoint with the provided SLT, and caches the returned token if successful.
+     */
     fun signInWithSLT(parameters: SignInWithSLTCommandParameters): SignInWithSLTCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.signInWithSLT")
 
@@ -201,6 +213,9 @@ class NativeAuthController : BaseNativeAuthController() {
         }
     }
 
+    /**
+     * Makes a call to the /token endpoint with the provided code, and caches the returned token if successful.
+     */
     fun signInSubmitCode(parameters: SignInSubmitCodeCommandParameters): SignInSubmitCodeCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.signInSubmitCode")
 
@@ -259,6 +274,9 @@ class NativeAuthController : BaseNativeAuthController() {
         }
     }
 
+    /**
+     * Makes a call to the resend code endpoint, mapping responses returned from the server into a command result.
+     */
     fun signInResendCode(parameters: SignInResendCodeCommandParameters): SignInResendCodeCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.signInResendCode")
 
@@ -312,6 +330,9 @@ class NativeAuthController : BaseNativeAuthController() {
         }
     }
 
+    /**
+     * Makes a call to the submit password endpoint, mapping responses returned from the server into a command result.
+     */
     fun signInSubmitPassword(parameters: SignInSubmitPasswordCommandParameters): SignInSubmitPasswordCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.signInSubmitPassword")
 
