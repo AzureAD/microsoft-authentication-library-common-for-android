@@ -1,4 +1,4 @@
-V.Next
+V.16.1.0
 ----------
 - [MINOR] Handle crypto error gracefully (#2190)
 - [MINOR] Stop logging thread name (#2185)
