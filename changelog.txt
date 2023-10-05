@@ -1,15 +1,5 @@
 V.Next
 ----------
-- [MINOR] Handle crypto error gracefully (#2190)
-- [MINOR] Stop logging thread name (#2185)
-- [MINOR] Adding Moshi, and WebAuthnJsonUtil(#2189)
-
-V.16.0.1
-----------
-- [MINOR] Add LTW as prod broker app (#2179)
-
-V.16.0.0
-----------
 - [MINOR] Add MsaGrantedRefreshTokenNotSupportedOnAadTenant error code to ServiceException (#2165)
 - [MAJOR] Separate Broker API and Client SDK Active Broker caches (#2164)
 - [MINOR] Deprecate Common logger wrapper (#2157)
@@ -24,7 +14,6 @@ V.16.0.0
 - [MINOR] Add new apk name to BrokerHost infra (#2152)
 - [MINOR] Send key to request broker data in all BrokerOperationBundle (#2159)
 - [MINOR] Catch strongbox exception on Android 14 (#2158)
-- [MINOR] Nested app auth implementation (#2168)
 
 V.15.0.0
 ----------
