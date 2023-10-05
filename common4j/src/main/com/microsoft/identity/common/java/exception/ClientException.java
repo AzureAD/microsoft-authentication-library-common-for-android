@@ -188,6 +188,11 @@ public class ClientException extends BaseException {
     public static final String UNKNOWN_ERROR = "unknown_error";
 
     /**
+     * An unknown error that happens in the crypto layer.
+     */
+    public static final String UNKNOWN_CRYPTO_ERROR = "unknown_crypto_error";
+
+    /**
      * Temporary non-exposed error code to indicate that ADFS authority validation fails. ADFS as authority is not supported
      * for preview.
      */
@@ -299,6 +304,17 @@ public class ClientException extends BaseException {
     public static final String AUTH_SCHEME_NOT_SUPPORTED = "auth_scheme_not_supported";
 
     /**
+     * The requested nested app auth request is not supported
+     * by the required broker protocol version.
+     */
+    public static final String NESTED_APP_AUTH_NOT_SUPPORTED = "nested_app_auth_not_supported";
+
+    /**
+     * The requested nested app auth request does not have valid parameters
+     */
+    public static final String NESTED_APP_INVALID_PARAMETERS = "nested_app_invalid_parameters";
+
+    /**
      * Bound service is unavailable or not supported.
      */
     public static final String BOUND_SERVICE_UNAVAILABLE_OR_NOT_SUPPORTED = "bound_service_unavaliable_or_not_supported";
@@ -397,6 +413,11 @@ public class ClientException extends BaseException {
      * Invalid CIAM Authority used when creative Native Auth Authority.
      */
     public static final String NATIVE_AUTH_INVALID_CIAM_AUTHORITY = "native_auth_invalid_ciam_authority";
+
+    /**    
+    * The workplacejoin data is null.
+     */
+    public static final String WORKPLACE_JOIN_DATA_NULL = "workplace_join_data_null";
 
     /**
      * Error code to be returned when the broker determines that only account manager can be used
