@@ -44,7 +44,7 @@ public class UrlUtil {
     private static final String TAG = UrlUtil.class.getSimpleName();
 
     /**
-     * Append a given path string to a URL.
+     * Append a given path string and query parameters to a URL.
      *
      * @param urlToAppend URL to be appended to.
      * @param pathString  a string containing path segments to be appended to the URL.
@@ -52,6 +52,21 @@ public class UrlUtil {
      */
     public static URL appendPathToURL(@NonNull final URL urlToAppend,
                                       @Nullable final String pathString)
+            throws URISyntaxException, MalformedURLException {
+        return appendPathAndQueryToURL(urlToAppend, pathString, null);
+    }
+
+    /**
+     * Append a given path string and query parameters to a URL.
+     *
+     * @param urlToAppend URL to be appended to.
+     * @param pathString  a string containing path segments to be appended to the URL.
+     * @param queryParam Query parameters to add at the end of url
+     * @return appended URL
+     */
+    public static URL appendPathAndQueryToURL(@NonNull final URL urlToAppend,
+                                      @Nullable final String pathString,
+                                      @Nullable final String queryParam)
             throws URISyntaxException, MalformedURLException {
 
         if (StringUtil.isNullOrEmpty(pathString)) {
@@ -68,6 +83,7 @@ public class UrlUtil {
 
         final List<String> combinedPathSegments = new ArrayList<>(pathSegments);
 
+        // Add all non-empty path segments from the path to append
         for (final String path : pathSegmentsToAppend) {
             if (!StringUtil.isNullOrEmpty(path)) {
                 combinedPathSegments.add(path);
@@ -75,6 +91,9 @@ public class UrlUtil {
         }
 
         builder.setPathSegments(combinedPathSegments);
+        if (queryParam != null && !queryParam.isEmpty()) {
+            builder.setQuery(queryParam);
+        }
         return builder.build().toURL();
     }
 
