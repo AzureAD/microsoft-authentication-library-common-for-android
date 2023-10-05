@@ -51,6 +51,12 @@ jobs:
       javaHomeSelection: JDKVersion
       jdkVersionOption: "1.11"
       tasks: common:testLocalDebugUnitTest
+  - task: Gradle@3
+    displayName: Check Dependencies size
+    condition: eq(variables['system.pullRequest.targetBranch'], 'dev')
+    inputs:
+      tasks: common:dependenciesSizeCheck -PdependenciesSizeCheckConfig=distReleaseRuntimeClasspath
+      jdkVersionOption: "1.11"
 
 - job: spotbugs
   displayName: SpotBugs

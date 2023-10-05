@@ -1,7 +1,6 @@
 # File: azure-pipelines\pull-request-validation\build-consumers.yml
 # Description: Test new common in ADAL / MSAL / Broker (assembleLocal and testLocalDebugUnitTest)
 # Variable: 'ENV_VSTS_MVN_ANDROIDADACCOUNTS_USERNAME' was defined in the Variables tab
-# Variable: 'mvnAccessToken' was defined in the Variables tab
 # https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
 # Variable: 'commonBranchName' common branch to be used when running the pipeline manually
 # Variable: 'skipConsumerValidationLabel' PR label used to skip the checks in this pipeline
@@ -24,6 +23,7 @@ variables:
 - name: robolectricSdkVersion
   value: 28
 - group: AndroidAuthClientVariables
+- group: AndroidAuthClientAutomationSecrets
 
 resources:
   repositories:
@@ -227,7 +227,7 @@ stages:
             eval $(dbus-launch --sh-syntax)
             sudo apt install gnome-keyring
             /usr/bin/gnome-keyring-daemon --start --components=secrets
-            ./gradlew LinuxBroker:linuxBrokerUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PcodeCoverageEnabled=true -Psystemd_mode_enabled=false
+            ./gradlew LinuxBroker:linuxBrokerUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PlabSecret=$(AndroidAutomationRunnerAppSecret) -PcodeCoverageEnabled=true -Psystemd_mode_enabled=false
       - task: PublishTestResults@2
         condition: succeededOrFailed()
         inputs:

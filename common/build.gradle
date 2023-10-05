@@ -153,6 +153,7 @@ dependencies {
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation "androidx.appcompat:appcompat:$rootProject.ext.appCompatVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
+    implementation "com.squareup.moshi:moshi:$rootProject.ext.moshiVersion"
     implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintLayoutVersion"
     //For Executive Order work
@@ -349,3 +350,31 @@ tasks.configureEach { task ->
         task.dependsOn 'sourcesJar'
     }
 }
+
+// This is used to generate the pom file for publishing to external maven in maven-release-jobs.yml
+tasks.withType(GenerateMavenPom).all {
+    destination = layout.buildDirectory.file("poms/${project.name}-${project.version}.pom").get().asFile
+}
+
+def dependenciesSizeInMb = project.hasProperty("dependenciesSizeMb") ? project.dependenciesSizeMb : "11"
+String configToCheck = project.hasProperty("dependenciesSizeCheckConfig") ? project.dependenciesSizeCheckConfig : "distReleaseRuntimeClasspath"
+tasks.register("dependenciesSizeCheck") {
+    doLast() {
+        def size = configurations.getByName(configToCheck).collect { it.length() / (1024 * 1024) }.sum()
+        def formatStr = "%,10.2f"
+        def out = new StringBuffer()
+        out << 'Total dependencies size:'.padRight(65)
+        out << "${String.format(formatStr, size)} Mb\n\n"
+        configurations.getByName(configToCheck).sort { -it.length() }
+                .each {
+                    out << "${it.name}".padRight(65)
+                    out << "${String.format(formatStr, (it.length() / 1024))} kb\n"
+                }
+        println(out)
+        if (size > dependenciesSizeInMb.toDouble() ) {
+            throw new GradleException("Total dependencies size is $size Mb. " +
+                    "It should be less than ${dependenciesSizeInMb} Mb")
+        }
+    }
+}
+
