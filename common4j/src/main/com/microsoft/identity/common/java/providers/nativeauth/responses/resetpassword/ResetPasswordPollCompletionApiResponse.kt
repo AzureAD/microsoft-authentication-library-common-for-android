@@ -38,6 +38,10 @@ import com.microsoft.identity.common.java.util.isPollInProgress
 import com.microsoft.identity.common.java.util.isPollSucceeded
 import java.net.HttpURLConnection
 
+/**
+ * Represents the raw response from the Reset Password /poll_completion endpoint.
+ * Can be converted to ResetPasswordChallengeApiResult using the provided toResult() method.
+ */
 class ResetPasswordPollCompletionApiResponse(
     @Expose override var statusCode: Int,
     @Expose @SerializedName("status") val status: String?,
@@ -53,6 +57,10 @@ class ResetPasswordPollCompletionApiResponse(
         private val TAG = ResetPasswordPollCompletionApiResponse::class.java.simpleName
     }
 
+    /**
+     * Maps potential errors returned from the server response, and provide different states based on the response.
+     * @see com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordPollCompletionApiResult
+     */
     fun toResult(): ResetPasswordPollCompletionApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.toResult")
 

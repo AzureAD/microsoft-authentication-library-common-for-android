@@ -30,6 +30,15 @@ sealed interface ResetPasswordSubmitCodeCommandResult: ICommandResult
 sealed interface ResetPasswordResendCodeCommandResult: ICommandResult
 sealed interface ResetPasswordSubmitNewPasswordCommandResult: ICommandResult
 
+/**
+ * Reflects the possible results from reset password commands.
+ * Conforms to the ICommandResult interface, and is mapped from the respective API result classes returned for each endpoint.
+ * @see com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordStartApiResult
+ * @see com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordChallengeApiResult
+ * @see com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordContinueApiResult
+ * @see com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordSubmitApiResult
+ * @see com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordPollCompletionApiResult
+ */
 interface ResetPasswordCommandResult {
     data class CodeRequired(
         val passwordResetToken: String,

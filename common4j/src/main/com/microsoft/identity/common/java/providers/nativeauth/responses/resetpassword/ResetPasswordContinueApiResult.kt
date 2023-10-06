@@ -24,6 +24,10 @@ package com.microsoft.identity.common.java.providers.nativeauth.responses.resetp
 
 import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
 
+/**
+ * Represents the potential result types returned from the Reset Password /continue endpoint,
+ * including a case for unexpected errors received from the server.
+ */
 sealed interface ResetPasswordContinueApiResult {
     object Redirect : ResetPasswordContinueApiResult
 

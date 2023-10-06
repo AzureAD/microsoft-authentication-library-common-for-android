@@ -666,6 +666,10 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         )
     }
 
+    /**
+     * Makes a call to the resetpassword/start endpoint with the provided username.
+     * If successful, makes a call to the resetpassword/challenge endpoint, returning the result of that call.
+     */
     fun resetPasswordStart(parameters: ResetPasswordStartCommandParameters): ResetPasswordStartCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.resetPasswordStart")
 
@@ -712,6 +716,9 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         }
     }
 
+    /**
+     * Makes a call to the resetpassword/continue endpoint with the provided code and password reset token.
+     */
     fun resetPasswordSubmitCode(parameters: ResetPasswordSubmitCodeCommandParameters): ResetPasswordSubmitCodeCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.resetPasswordSubmitCode")
 
@@ -757,6 +764,9 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         }
     }
 
+    /**
+     * Makes a call to the resetpassword/challenge endpoint to trigger a code to be re-sent.
+     */
     fun resetPasswordResendCode(parameters: ResetPasswordResendCodeCommandParameters): ResetPasswordResendCodeCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.resetPasswordResendCode")
 
@@ -801,6 +811,10 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         }
     }
 
+    /**
+     * Makes a call to the resetpassword/submit endpoint with the provided password.
+     * If successful, calls the resetpassword/poll_completion endpoint, continuing to do so until a success response is returned, or the polling times out.
+     */
     fun resetPasswordSubmitNewPassword(parameters: ResetPasswordSubmitNewPasswordCommandParameters): ResetPasswordSubmitNewPasswordCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.resetPasswordSubmitNewPassword")
 

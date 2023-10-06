@@ -33,6 +33,10 @@ import com.microsoft.identity.common.java.util.isRedirect
 import com.microsoft.identity.common.java.util.isUnsupportedChallengeType
 import java.net.HttpURLConnection
 
+/**
+ * Represents the raw response from the Reset Password /challenge endpoint.
+ * Can be converted to ResetPasswordChallengeApiResult using the provided toResult() method.
+ */
 class ResetPasswordChallengeApiResponse(
     @Expose override var statusCode: Int,
     @Expose @SerializedName("password_reset_token") val passwordResetToken: String?,
@@ -53,6 +57,10 @@ class ResetPasswordChallengeApiResponse(
         private val TAG = ResetPasswordChallengeApiResponse::class.java.simpleName
     }
 
+    /**
+     * Maps potential errors returned from the server response, and provide different states based on the response.
+     * @see com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordChallengeApiResult
+     */
     fun toResult(): ResetPasswordChallengeApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.toResult")
 

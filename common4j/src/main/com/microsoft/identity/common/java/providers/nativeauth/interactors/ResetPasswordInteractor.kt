@@ -41,6 +41,16 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpa
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordSubmitApiResult
 import com.microsoft.identity.common.java.util.ObjectMapper
 
+/**
+ * Acts as a binding layer between the request providers and response handlers for a given request.
+ * The ResetPasswordInteractor constructs a request for a given endpoint using the command parameters passed into the method,
+ * passes that request to the provided HTTP client, and maps the response from that request.
+ * @param UrlConnectionHttpClient Used for making HTTP requests with the request object returned from the NativeAuthRequestProvider
+ * @param NativeAuthRequestProvider Constructs a request for a given endpoint using the passed command parameters
+ * @param NativeAuthResponseHandler Maps the raw HTTP response into a Kotlin class, handling any errors present in the response
+ *
+ * Used for performing requests to the /start, /challenge, /continue, /submit, and /poll_completion Reset Password endpoints.
+ */
 class ResetPasswordInteractor(
     private val httpClient: UrlConnectionHttpClient,
     private val nativeAuthRequestProvider: NativeAuthRequestProvider,

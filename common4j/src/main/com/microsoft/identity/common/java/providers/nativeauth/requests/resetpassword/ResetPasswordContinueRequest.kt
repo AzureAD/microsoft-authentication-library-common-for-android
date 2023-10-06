@@ -28,6 +28,9 @@ import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAu
 import com.microsoft.identity.common.java.util.ArgUtils
 import java.net.URL
 
+/**
+ * Represents a request to the Reset Password /continue endpoint, and provides a create() function to instantiate the request using the provided parameters.
+ */
 class ResetPasswordContinueRequest private constructor(
     override var requestUrl: URL,
     override var headers: Map<String, String?>,
@@ -35,6 +38,14 @@ class ResetPasswordContinueRequest private constructor(
 ) : NativeAuthRequest() {
 
     companion object {
+        /**
+         * Returns a request object using the provided parameters.
+         * The request URL and headers passed will be set directly.
+         * The clientId, password reset token, oob, and grantType will be mapped to the NativeAuthResetPasswordContinueRequestBody object.
+         *
+         * Parameters that are null or empty will throw a ClientException.
+         * @see com.microsoft.identity.common.java.exception.ClientException
+         */
         fun create(
             clientId: String,
             passwordResetToken: String,
