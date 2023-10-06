@@ -468,8 +468,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                         KeyProperties.DIGEST_SHA1,
                         KeyProperties.DIGEST_SHA256
                 ).setEncryptionPaddings(
-                        KeyProperties.ENCRYPTION_PADDING_RSA_OAEP,
-                        KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
+                        KeyProperties.ENCRYPTION_PADDING_RSA_OAEP
                 );
 
         if (trySetAttestationChallenge && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
