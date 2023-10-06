@@ -33,4 +33,3 @@ import lombok.experimental.SuperBuilder;
 public class SignUpStartCommandParameters extends BaseSignUpStartCommandParameters {
 	private static final String TAG = SignUpStartCommandParameters.class.getSimpleName();
 }
-

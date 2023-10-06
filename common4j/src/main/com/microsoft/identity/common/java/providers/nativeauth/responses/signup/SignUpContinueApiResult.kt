@@ -25,6 +25,10 @@ package com.microsoft.identity.common.java.providers.nativeauth.responses.signup
 import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.RequiredUserAttributeApiResult
 
+/**
+ * Represents the potential result types returned from the Sign Up /continue endpoint,
+ * including a case for unexpected errors received from the server.
+ */
 sealed interface SignUpContinueApiResult {
     object Redirect : SignUpContinueApiResult
 

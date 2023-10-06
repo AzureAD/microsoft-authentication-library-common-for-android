@@ -31,6 +31,13 @@ sealed interface SignUpSubmitPasswordCommandResult: ICommandResult
 sealed interface SignUpResendCodeCommandResult: ICommandResult
 sealed interface SignUpStartCommandResult: ICommandResult
 
+/**
+ * Reflects the possible results from sign up commands.
+ * Conforms to the ICommandResult interface, and is mapped from the respective API result classes returned for each endpoint.
+ * @see com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpStartApiResult
+ * @see com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpChallengeApiResult
+ * @see com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpContinueApiResult
+ */
 interface SignUpCommandResult {
     data class UsernameAlreadyExists(
         val error: String,

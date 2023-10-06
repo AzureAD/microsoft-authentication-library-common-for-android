@@ -33,6 +33,10 @@ import com.microsoft.identity.common.java.util.isRedirect
 import com.microsoft.identity.common.java.util.isUnsupportedChallengeType
 import java.net.HttpURLConnection
 
+/**
+ * Represents the raw response from the Sign Up /challenge endpoint.
+ * Can be converted to SignUpChallengeApiResult using the provided toResult() method.
+ */
 data class SignUpChallengeApiResponse(
     @Expose override var statusCode: Int,
     @SerializedName("challenge_type") val challengeType: String?,
@@ -51,6 +55,10 @@ data class SignUpChallengeApiResponse(
         private val TAG = SignUpChallengeApiResponse::class.java.simpleName
     }
 
+    /**
+     * Maps potential errors returned from the server response, and provide different states based on the response.
+     * @see com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpChallengeApiResult
+     */
     fun toResult(): SignUpChallengeApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.toResult")
 

@@ -44,6 +44,10 @@ import com.microsoft.identity.common.java.util.isVerificationRequired
 import com.microsoft.identity.common.java.util.toAttributeList
 import java.net.HttpURLConnection
 
+/**
+ * Represents the raw response from the Sign Up /continue endpoint.
+ * Can be converted to SignUpContinueApiResult using the provided toResult() method.
+ */
 data class SignUpContinueApiResponse(
     @Expose override var statusCode: Int,
     @Expose @SerializedName("signin_slt") val signInSLT: String?,

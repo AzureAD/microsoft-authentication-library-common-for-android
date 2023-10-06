@@ -355,6 +355,10 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         }
     }
 
+    /**
+     * Makes a call to the signup/start endpoint, mapping responses returned from the server into a command result.
+     * If the call is successful, additionally calls the signup/challenge endpoint, returning the result.
+     */
     fun signUpStart(parameters: BaseSignUpStartCommandParameters): SignUpStartCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.signUpStart")
         try {
@@ -432,6 +436,9 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         }
     }
 
+    /**
+     * Makes a call to the signup/continue endpoint using the provided code, mapping responses returned from the server into a command result.
+     */
     fun signUpSubmitCode(parameters: SignUpSubmitCodeCommandParameters): SignUpSubmitCodeCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.signUpSubmitCode")
 
@@ -449,6 +456,9 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         }
     }
 
+    /**
+     * Makes a call to the signup/challenge endpoint to trigger a code to be re-sent.
+     */
     fun signUpResendCode(parameters: SignUpResendCodeCommandParameters): SignUpResendCodeCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.signUpResendCode")
 
@@ -465,6 +475,9 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         }
     }
 
+    /**
+     * Makes a call to the signup/continue endpoint with the provided user attributes.
+     */
     fun signUpSubmitUserAttributes(parameters: SignUpSubmitUserAttributesCommandParameters): SignUpSubmitUserAttributesCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.signUpSubmitUserAttributes")
 
@@ -482,6 +495,9 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         }
     }
 
+    /**
+     * Makes a call to the signup/continue endpoint with the provided password.
+     */
     fun signUpSubmitPassword(parameters: SignUpSubmitPasswordCommandParameters): SignUpSubmitPasswordCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.signUpSubmitPassword")
 

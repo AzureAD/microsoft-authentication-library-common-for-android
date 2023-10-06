@@ -24,6 +24,10 @@ package com.microsoft.identity.common.java.providers.nativeauth.responses.signup
 
 import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
 
+/**
+ * Represents the potential result types returned from the Sign Up /start endpoint,
+ * including a case for unexpected errors received from the server.
+ */
 sealed interface SignUpStartApiResult {
     object Redirect : SignUpStartApiResult
     data class VerificationRequired(

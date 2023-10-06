@@ -27,6 +27,9 @@ import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAu
 import com.microsoft.identity.common.java.util.ArgUtils
 import java.net.URL
 
+/**
+ * Represents a request to the Sign Up /continue endpoint, and provides a create() function to instantiate the request using the provided parameters.
+ */
 data class SignUpContinueRequest private constructor(
     override var requestUrl: URL,
     override var headers: Map<String, String?>,
@@ -34,6 +37,15 @@ data class SignUpContinueRequest private constructor(
 ) : NativeAuthRequest() {
 
     companion object {
+        /**
+         * Returns a request object using the provided parameters.
+         * The request URL and headers passed will be set directly.
+         * The provided parameters based on the grant type will be mapped to the NativeAuthRequestSignUpContinueParameters object.
+         *
+         * Based on the grant type, the respective parameter (password, attributes, oob) will be validated,
+         * and if null or empty will throw a ClientException.
+         * @see com.microsoft.identity.common.java.exception.ClientException
+         */
         fun create(
             password: String? = null,
             attributes: Map<String, String>? = null,

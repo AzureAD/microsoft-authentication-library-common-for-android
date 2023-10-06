@@ -36,4 +36,3 @@ public class SignUpContinueCommandParameters extends BaseNativeAuthCommandParame
 	@NonNull
 	public final String signupToken;
 }
-
