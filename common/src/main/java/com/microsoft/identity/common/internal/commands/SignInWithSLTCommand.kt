@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands
 
-import com.microsoft.identity.common.internal.controllers.NativeAuthController
+import com.microsoft.identity.common.internal.controllers.NativeAuthMsalController
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInWithSLTCommandParameters
 import com.microsoft.identity.common.java.controllers.results.SignInWithSLTCommandResult
 import com.microsoft.identity.common.java.logging.LogSession
@@ -30,7 +30,7 @@ import com.microsoft.identity.common.java.logging.Logger
 
 class SignInWithSLTCommand(
     private val parameters: SignInWithSLTCommandParameters,
-    private val controller: NativeAuthController,
+    private val controller: NativeAuthMsalController,
     publicApiId: String
 ) : BaseNativeAuthCommand<SignInWithSLTCommandResult>(
     parameters,
@@ -49,9 +49,8 @@ class SignInWithSLTCommand(
             parameters = parameters
         )
 
-        LogSession.log(
+        Logger.info(
             TAG,
-            Logger.LogLevel.INFO,
             "Returning result: $result"
         )
         return result

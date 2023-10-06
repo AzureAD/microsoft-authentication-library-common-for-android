@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.controllers
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory
-import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiEndpointType
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiEndpoint
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiResponseType
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiUtils
 import com.microsoft.identity.common.internal.util.capture
@@ -78,7 +78,7 @@ import org.robolectric.RobolectricTestRunner
 import java.util.UUID
 
 /**
- * Tests for [com.microsoft.identity.common.internal.controllers.NativeAuthController].
+ * Tests for [com.microsoft.identity.common.internal.controllers.NativeAuthMsalController].
  */
 @RunWith(RobolectricTestRunner::class)
 class NativeAuthControllerTest {
@@ -103,7 +103,7 @@ class NativeAuthControllerTest {
     private lateinit var platformComponents: IPlatformComponents
     private lateinit var context: Context
 
-    private val controller = spy(NativeAuthController())
+    private val controller = spy(NativeAuthMsalController())
     private val localController = LocalMSALController()
 
     @Captor
@@ -142,17 +142,17 @@ class NativeAuthControllerTest {
     fun testSignInStartWithPasswordSuccess() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInInitiate,
+            endpointType = MockApiEndpoint.SignInInitiate,
             correlationId = correlationId,
             responseType = MockApiResponseType.INITIATE_SUCCESS
         )
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInChallenge,
+            endpointType = MockApiEndpoint.SignInChallenge,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
         )
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = correlationId,
             responseType = MockApiResponseType.TOKEN_SUCCESS
         )
@@ -166,17 +166,17 @@ class NativeAuthControllerTest {
     fun testSignInStartWithPasswordAssertScopes() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInInitiate,
+            endpointType = MockApiEndpoint.SignInInitiate,
             correlationId = correlationId,
             responseType = MockApiResponseType.INITIATE_SUCCESS
         )
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInChallenge,
+            endpointType = MockApiEndpoint.SignInChallenge,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
         )
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = correlationId,
             responseType = MockApiResponseType.TOKEN_SUCCESS
         )
@@ -201,17 +201,17 @@ class NativeAuthControllerTest {
     fun testSignInStartWithPasswordPasswordIncorrect() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInInitiate,
+            endpointType = MockApiEndpoint.SignInInitiate,
             correlationId = correlationId,
             responseType = MockApiResponseType.INITIATE_SUCCESS
         )
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInChallenge,
+            endpointType = MockApiEndpoint.SignInChallenge,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
         )
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = correlationId,
             responseType = MockApiResponseType.SIGNIN_INVALID_PASSWORD
         )
@@ -225,7 +225,7 @@ class NativeAuthControllerTest {
     fun testSignInStartWithPasswordUserNotFound() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInInitiate,
+            endpointType = MockApiEndpoint.SignInInitiate,
             correlationId = correlationId,
             responseType = MockApiResponseType.USER_NOT_FOUND
         )
@@ -239,12 +239,12 @@ class NativeAuthControllerTest {
     fun testSignInStartWithPasswordCodeRequired() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInInitiate,
+            endpointType = MockApiEndpoint.SignInInitiate,
             correlationId = correlationId,
             responseType = MockApiResponseType.INITIATE_SUCCESS
         )
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInChallenge,
+            endpointType = MockApiEndpoint.SignInChallenge,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
@@ -258,7 +258,7 @@ class NativeAuthControllerTest {
     fun testSignInStartWithPasswordMFARequired() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = correlationId,
             responseType = MockApiResponseType.MFA_REQUIRED
         )
@@ -272,7 +272,7 @@ class NativeAuthControllerTest {
     fun testSignInStartWithEmailUserNotFound() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInInitiate,
+            endpointType = MockApiEndpoint.SignInInitiate,
             correlationId = correlationId,
             responseType = MockApiResponseType.USER_NOT_FOUND
         )
@@ -286,12 +286,12 @@ class NativeAuthControllerTest {
     fun testSignInStartWithEmailCodeRequired() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInInitiate,
+            endpointType = MockApiEndpoint.SignInInitiate,
             correlationId = correlationId,
             responseType = MockApiResponseType.INITIATE_SUCCESS
         )
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInChallenge,
+            endpointType = MockApiEndpoint.SignInChallenge,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
@@ -305,7 +305,7 @@ class NativeAuthControllerTest {
     fun testSignInSubmitCodeWithSuccess() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = correlationId,
             responseType = MockApiResponseType.TOKEN_SUCCESS
         )
@@ -319,7 +319,7 @@ class NativeAuthControllerTest {
     fun testSignInSubmitCodeWithInvalidCode() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = correlationId,
             responseType = MockApiResponseType.INVALID_OOB_VALUE
         )
@@ -333,7 +333,7 @@ class NativeAuthControllerTest {
     fun testSignInResendCodeSuccess() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInChallenge,
+            endpointType = MockApiEndpoint.SignInChallenge,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
@@ -346,7 +346,7 @@ class NativeAuthControllerTest {
     fun testSignInSubmitPasswordWithPasswordInvalid() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = correlationId,
             responseType = MockApiResponseType.SIGNIN_INVALID_PASSWORD
         )
@@ -372,7 +372,7 @@ class NativeAuthControllerTest {
     fun testSignInSubmitPasswordWithSuccess() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = correlationId,
             responseType = MockApiResponseType.TOKEN_SUCCESS
         )
@@ -395,12 +395,12 @@ class NativeAuthControllerTest {
     fun testSignInStartWithEmailPasswordRequired() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInInitiate,
+            endpointType = MockApiEndpoint.SignInInitiate,
             correlationId = correlationId,
             responseType = MockApiResponseType.INITIATE_SUCCESS
         )
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInChallenge,
+            endpointType = MockApiEndpoint.SignInChallenge,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
         )
@@ -414,7 +414,7 @@ class NativeAuthControllerTest {
     fun testSignInWithSLTSuccess() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = correlationId,
             responseType = MockApiResponseType.TOKEN_SUCCESS
         )
@@ -437,7 +437,7 @@ class NativeAuthControllerTest {
     fun testSignInWithSLTInvalidGrant() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = correlationId,
             responseType = MockApiResponseType.INVALID_GRANT
         )
@@ -452,7 +452,7 @@ class NativeAuthControllerTest {
     fun testSignInWithSLTCodeIncorrect() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = correlationId,
             responseType = MockApiResponseType.INVALID_OOB_VALUE
         )
@@ -467,7 +467,7 @@ class NativeAuthControllerTest {
     fun testSignInWithSLTUserNotFound() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = correlationId,
             responseType = MockApiResponseType.USER_NOT_FOUND
         )
@@ -482,7 +482,7 @@ class NativeAuthControllerTest {
     fun testSignInWithSLTPasswordIncorrect() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = correlationId,
             responseType = MockApiResponseType.SIGNIN_INVALID_PASSWORD
         )
@@ -497,7 +497,7 @@ class NativeAuthControllerTest {
     fun testSignInStartWithPasswordBrowserRequired() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInInitiate,
+            endpointType = MockApiEndpoint.SignInInitiate,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
@@ -513,7 +513,7 @@ class NativeAuthControllerTest {
     fun testSignOutSuccess() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = correlationId,
             responseType = MockApiResponseType.TOKEN_SUCCESS
         )
@@ -541,13 +541,13 @@ class NativeAuthControllerTest {
     fun testSsprStartSsprEmailVerificationRequired() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SSPRStart,
+            endpointType = MockApiEndpoint.SSPRStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.SSPR_START_SUCCESS
         )
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SSPRChallenge,
+            endpointType = MockApiEndpoint.SSPRChallenge,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
@@ -560,7 +560,7 @@ class NativeAuthControllerTest {
     @Test
     fun testSsprStartSsprRedirect() {
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SSPRStart,
+            endpointType = MockApiEndpoint.SSPRStart,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
@@ -573,7 +573,7 @@ class NativeAuthControllerTest {
     @Test
     fun testSsprStartUserNotFound() {
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SSPRStart,
+            endpointType = MockApiEndpoint.SSPRStart,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.EXPLICIT_USER_NOT_FOUND
         )
@@ -586,7 +586,7 @@ class NativeAuthControllerTest {
     @Test
     fun testSsprSubmitCodeWithSuccess() {
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SSPRContinue,
+            endpointType = MockApiEndpoint.SSPRContinue,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.SSPR_CONTINUE_SUCCESS
         )
@@ -599,7 +599,7 @@ class NativeAuthControllerTest {
     @Test
     fun testSsprSubmitCodeWithInvalidCode() {
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SSPRContinue,
+            endpointType = MockApiEndpoint.SSPRContinue,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.EXPLICIT_INVALID_OOB_VALUE
         )
@@ -612,7 +612,7 @@ class NativeAuthControllerTest {
     @Test
     fun testSsprResendCode() {
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SSPRChallenge,
+            endpointType = MockApiEndpoint.SSPRChallenge,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
@@ -626,13 +626,13 @@ class NativeAuthControllerTest {
     fun testSsprSubmitNewPasswordSuccess() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SSPRSubmit,
+            endpointType = MockApiEndpoint.SSPRSubmit,
             correlationId = correlationId,
             responseType = MockApiResponseType.SSPR_SUBMIT_SUCCESS
         )
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SSPRPoll,
+            endpointType = MockApiEndpoint.SSPRPoll,
             correlationId = correlationId,
             responseType = MockApiResponseType.SSPR_POLL_SUCCESS
         )
@@ -646,13 +646,13 @@ class NativeAuthControllerTest {
     fun testSsprSubmitNewPasswordFailed() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SSPRSubmit,
+            endpointType = MockApiEndpoint.SSPRSubmit,
             correlationId = correlationId,
             responseType = MockApiResponseType.SSPR_SUBMIT_SUCCESS
         )
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SSPRPoll,
+            endpointType = MockApiEndpoint.SSPRPoll,
             correlationId = correlationId,
             responseType = MockApiResponseType.SSPR_POLL_FAILED
         )
@@ -669,13 +669,13 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.VERIFICATION_REQUIRED
         )
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpChallenge,
+            endpointType = MockApiEndpoint.SignUpChallenge,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
         )
@@ -698,7 +698,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.PASSWORD_TOO_LONG
         )
@@ -713,7 +713,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.USER_ALREADY_EXISTS
         )
@@ -736,7 +736,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.PASSWORD_TOO_WEAK
         )
@@ -759,7 +759,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.PASSWORD_TOO_SHORT
         )
@@ -783,7 +783,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.PASSWORD_BANNED
         )
@@ -807,7 +807,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.PASSWORD_TOO_LONG
         )
@@ -831,7 +831,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.PASSWORD_RECENTLY_USED
         )
@@ -855,7 +855,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.AUTH_NOT_SUPPORTED
         )
@@ -878,7 +878,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.AUTH_NOT_SUPPORTED
         )
@@ -893,7 +893,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpChallenge,
+            endpointType = MockApiEndpoint.SignUpChallenge,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
@@ -908,7 +908,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpContinue,
+            endpointType = MockApiEndpoint.SignUpContinue,
             correlationId = correlationId,
             responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
         )
@@ -923,7 +923,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpContinue,
+            endpointType = MockApiEndpoint.SignUpContinue,
             correlationId = correlationId,
             responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
         )
@@ -938,7 +938,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpContinue,
+            endpointType = MockApiEndpoint.SignUpContinue,
             correlationId = correlationId,
             responseType = MockApiResponseType.PASSWORD_TOO_WEAK
         )
@@ -953,7 +953,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpContinue,
+            endpointType = MockApiEndpoint.SignUpContinue,
             correlationId = correlationId,
             responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
         )
@@ -976,7 +976,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpContinue,
+            endpointType = MockApiEndpoint.SignUpContinue,
             correlationId = correlationId,
             responseType = MockApiResponseType.ATTRIBUTES_REQUIRED
         )
@@ -991,7 +991,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
@@ -1006,7 +1006,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
@@ -1021,13 +1021,13 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.VERIFICATION_REQUIRED
         )
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpChallenge,
+            endpointType = MockApiEndpoint.SignUpChallenge,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
@@ -1042,7 +1042,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpContinue,
+            endpointType = MockApiEndpoint.SignUpContinue,
             correlationId = correlationId,
             responseType = MockApiResponseType.ATTRIBUTES_REQUIRED
         )
@@ -1057,7 +1057,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpContinue,
+            endpointType = MockApiEndpoint.SignUpContinue,
             correlationId = correlationId,
             responseType = MockApiResponseType.INVALID_OOB_VALUE
         )
@@ -1072,7 +1072,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpContinue,
+            endpointType = MockApiEndpoint.SignUpContinue,
             correlationId = correlationId,
             responseType = MockApiResponseType.ATTRIBUTE_VALIDATION_FAILED
         )
@@ -1087,7 +1087,7 @@ class NativeAuthControllerTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.ATTRIBUTE_VALIDATION_FAILED
         )

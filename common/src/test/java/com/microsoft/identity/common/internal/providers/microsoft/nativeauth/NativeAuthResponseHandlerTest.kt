@@ -170,7 +170,7 @@ class NativeAuthResponseHandlerTest {
         every { getSignUpStartEndpoint() } returns requestUrl
         every { challengeType } returns this@NativeAuthResponseHandlerTest.challengeType
         every { clientId } returns this@NativeAuthResponseHandlerTest.clientId
-        every { useRealAuthority } returns false
+        every { useMockApiForNativeAuth  } returns true
     }
 
     private val nativeAuthResponseHandler = NativeAuthResponseHandler()

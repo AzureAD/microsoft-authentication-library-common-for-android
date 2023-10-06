@@ -67,19 +67,18 @@ class NativeAuthOAuth2Strategy(
 ) :
     MicrosoftStsOAuth2Strategy(config, strategyParameters) {
     private val TAG = NativeAuthOAuth2Strategy::class.java.simpleName
+    //Cache identifier returned by the mock API
+    private val CACHE_IDENTIFIER_MOCK = "login.windows.net"
 
-    // Hardcoding so that the environment parameter from the mock API token response matches
-    // with the environment retrieved from the (authority) endpoints.
-    // TODO fix after mock APIs
+
     override fun getIssuerCacheIdentifierFromTokenEndpoint(): String {
-        if (config.useRealAuthority) {
-            return super.getIssuerCacheIdentifierFromTokenEndpoint()
+        if (config.useMockApiForNativeAuth) {
+            return CACHE_IDENTIFIER_MOCK
         } else {
-            return "login.windows.net"
+            return super.getIssuerCacheIdentifierFromTokenEndpoint()
         }
     }
 
-    // TODO unit tests & compare with getAuthorityFromTokenEndpoint()
     fun getAuthority(): String {
         return config.authorityUrl.toString()
     }

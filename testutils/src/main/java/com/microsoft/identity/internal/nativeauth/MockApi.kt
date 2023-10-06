@@ -31,12 +31,28 @@ import org.junit.Assert.assertTrue
 import java.net.URL
 import java.util.TreeMap
 
+const val CORRELATION_ID =  "correlationId"
+const val ENDPOINT = "endpoint"
+const val RESPONSE_LIST = "responseList"
+
+/**
+ * MockApi class performs the various tasks associated with making request to the mock API
+ * for Native Auth. These mock APIs are useful in performing integration tests for
+ * Native Auth classes.
+ */
 class MockApi private constructor(
     private val httpClient: UrlConnectionHttpClient = UrlConnectionHttpClient.getDefaultInstance()
 ) {
     companion object {
+
+        // Base url for the config endpoint. The config endpoint for the mock API provides the
+        // ability to clients to add a response to the queue, see existing responses and
+        // delete all responses in the queue
         private const val CONFIG_BASE_URL = "https://native-ux-mock-api.azurewebsites.net/config"
-        private const val RESPONSE_URL = "$CONFIG_BASE_URL/response"
+
+        // This endpoint allows a client to add a response to the response queue. When the client
+        // makes a request with the matching correlation-id, the mock API will return that response
+        private const val MOCK_ADD_RESPONSE_URL = "$CONFIG_BASE_URL/response"
 
         private val headers = TreeMap<String, String?>().also {
             it[HttpConstants.HeaderField.CONTENT_TYPE] = "application/json"
@@ -57,8 +73,13 @@ class MockApi private constructor(
         }
     }
 
-    fun addErrorToStack(endpointType: MockApiEndpointType, responseType: MockApiResponseType, correlationId: String) {
-        val requestUrl = URL(RESPONSE_URL)
+
+    /**
+     * Performs a HTTP POST request to the MockAPI for Native Auth. This method validates the request
+     * was successful
+     */
+    fun performRequest(endpointType: MockApiEndpoint, responseType: MockApiResponseType, correlationId: String) {
+        val addResponseUrl = URL(MOCK_ADD_RESPONSE_URL)
         val request = Request(
             correlationId = correlationId,
             endpoint = endpointType.stringValue,
@@ -67,7 +88,7 @@ class MockApi private constructor(
         val encodedRequest = getEncodedRequest(request)
 
         val result = httpClient.post(
-            requestUrl,
+            addResponseUrl,
             headers,
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
@@ -75,8 +96,11 @@ class MockApi private constructor(
     }
 }
 
+/**
+ * Data class to represent the request object send to the MockAPI for Native Auth
+ */
 data class Request(
-    @SerializedName("correlationId") val correlationId: String,
-    @SerializedName("endpoint") val endpoint: String,
-    @SerializedName("responseList") val responseList: List<String>
+    @SerializedName(CORRELATION_ID) val correlationId: String,
+    @SerializedName(ENDPOINT) val endpoint: String,
+    @SerializedName(RESPONSE_LIST) val responseList: List<String>
 )

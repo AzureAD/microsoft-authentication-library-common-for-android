@@ -26,24 +26,34 @@ package com.microsoft.identity.common.java.providers.nativeauth
 import com.microsoft.identity.common.java.BuildConfig
 import com.microsoft.identity.common.java.BuildValues
 import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration
 import com.microsoft.identity.common.java.util.UrlUtil
 import java.net.MalformedURLException
 import java.net.URISyntaxException
 import java.net.URL
 
+/**
+ * NativeAuthOAuth2Configuration stores the parameters used for creating various Native Auth APIs
+ * for Signup, SignIn and SSPR scenarios. This class also provides helper methods to generate urls
+ * for those scenarios.
+ */
 class NativeAuthOAuth2Configuration(
     private val authorityUrl: URL,
     val clientId: String,
     val challengeType: String,
     // Need this to decide whether or not to return mock api authority or actual authority supplied in configuration
     // Turn this on if you plan to use web auth and/or open id configuration
-    val useRealAuthority: Boolean = BuildValues.shouldUseReadAuthority()
+    val useMockApiForNativeAuth: Boolean = BuildValues.shouldUseMockApiForNativeAuth()
 ) : MicrosoftStsOAuth2Configuration() {
 
     private val TAG = NativeAuthOAuth2Configuration::class.java.simpleName
 
     companion object {
+        //Base url for the mock API to make Native Auth calls. See the swagger at
+        // https://native-ux-mock-api.azurewebsites.net/doc#/ for all possible urls
+        private const val MOCK_API_URL_WITH_NATIVE_AUTH_TENANT = "https://native-ux-mock-api.azurewebsites.net/lumonconvergedps.onmicrosoft.com"
+
         private const val SIGNUP_START_ENDPOINT_SUFFIX = "/signup/v1.0/start"
         private const val SIGNUP_CHALLENGE_ENDPOINT_SUFFIX = "/signup/v1.0/challenge"
         private const val SIGNUP_CONTINUE_ENDPOINT_SUFFIX = "/signup/v1.0/continue"
@@ -58,11 +68,10 @@ class NativeAuthOAuth2Configuration(
     }
 
     override fun getAuthorityUrl(): URL {
-        return if (useRealAuthority) {
-            authorityUrl
+        return if (useMockApiForNativeAuth) {
+            URL(MOCK_API_URL_WITH_NATIVE_AUTH_TENANT)
         } else {
-            // TODO return real authorityUrl once we move away from using mock APIs
-            URL("https://native-ux-mock-api.azurewebsites.net/lumonconvergedps.onmicrosoft.com")
+            authorityUrl
         }
     }
 
@@ -213,15 +222,15 @@ class NativeAuthOAuth2Configuration(
         LogSession.logMethodCall(TAG, "${TAG}.getEndpointUrlFromRootAndTenantAndSuffix")
         return try {
             if (BuildValues.getDC().isNotEmpty()) {
-                UrlUtil.appendPathToURL(root, endpointSuffix, "dc=${BuildValues.getDC()}")
+                UrlUtil.appendPathAndQueryToURL(root, endpointSuffix, "dc=${BuildValues.getDC()}")
             } else {
                 UrlUtil.appendPathToURL(root, endpointSuffix)
             }
         } catch (e: URISyntaxException) {
-            LogSession.logException(tag = TAG, throwable = e)
+            Logger.error(TAG, "appendPathToURL failed", e)
             throw e
         } catch (e: MalformedURLException) {
-            LogSession.logException(tag = TAG, throwable = e)
+            Logger.error(TAG, "appendPathToURL failed", e)
             throw e
         }
     }

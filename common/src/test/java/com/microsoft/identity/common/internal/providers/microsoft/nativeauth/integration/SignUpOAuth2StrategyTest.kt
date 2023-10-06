@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.in
 
 import android.os.Build
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants
-import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiEndpointType
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiEndpoint
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiResponseType
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiUtils.Companion.configureMockApi
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
@@ -133,7 +133,7 @@ class SignUpOAuth2StrategyTest {
     @Test
     fun testPerformSignUpStartSuccessWithVerificationRequired() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.VERIFICATION_REQUIRED
         )
@@ -153,7 +153,7 @@ class SignUpOAuth2StrategyTest {
     @Test
     fun testPerformSignUpStartSuccessWithRedirect() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
@@ -173,7 +173,7 @@ class SignUpOAuth2StrategyTest {
     @Test
     fun testPerformSignUpStartWithInvalidPassword() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.PASSWORD_TOO_LONG
         )
@@ -193,7 +193,7 @@ class SignUpOAuth2StrategyTest {
     @Test
     fun testPerformSignUpStartWithInvalidPEmail() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.INVALID_USERNAME
         )
@@ -213,7 +213,7 @@ class SignUpOAuth2StrategyTest {
     @Test
     fun testPerformSignUpStartWithInvalidClientId() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.INVALID_CLIENT
         )
@@ -233,13 +233,13 @@ class SignUpOAuth2StrategyTest {
     @Test
     fun testPerformSignUpStartSuccessWithUnsupportedChallengeType() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.VERIFICATION_REQUIRED
         )
 
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpChallenge,
+            endpointType = MockApiEndpoint.SignUpChallenge,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.UNSUPPORTED_CHALLENGE_TYPE
         )
@@ -259,7 +259,7 @@ class SignUpOAuth2StrategyTest {
     @Test
     fun testPerformSignUpWithSubmitPasswordSuccess() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpContinue,
+            endpointType = MockApiEndpoint.SignUpContinue,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
         )
@@ -279,7 +279,7 @@ class SignUpOAuth2StrategyTest {
     @Test
     fun testPerformSignUpWithSubmitCodeSuccess() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpContinue,
+            endpointType = MockApiEndpoint.SignUpContinue,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
         )
@@ -299,7 +299,7 @@ class SignUpOAuth2StrategyTest {
     @Test
     fun testPerformSignUpWithSubmitUserAttributesSuccess() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpContinue,
+            endpointType = MockApiEndpoint.SignUpContinue,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
         )
@@ -320,7 +320,7 @@ class SignUpOAuth2StrategyTest {
     @Test
     fun testPerformSignUpWithSubmitPasswordAttributesRequired() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpContinue,
+            endpointType = MockApiEndpoint.SignUpContinue,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.ATTRIBUTES_REQUIRED
         )
@@ -340,7 +340,7 @@ class SignUpOAuth2StrategyTest {
     @Test
     fun testPerformSignUpChallengeSuccessOOBRequired() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpChallenge,
+            endpointType = MockApiEndpoint.SignUpChallenge,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
@@ -354,7 +354,7 @@ class SignUpOAuth2StrategyTest {
     @Test
     fun testPerformSignUpChallengeSuccessPasswordRequired() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpChallenge,
+            endpointType = MockApiEndpoint.SignUpChallenge,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
         )
@@ -368,7 +368,7 @@ class SignUpOAuth2StrategyTest {
     @Test
     fun testPerformSignUpChallengeWithInvalidOOB() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpContinue,
+            endpointType = MockApiEndpoint.SignUpContinue,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.INVALID_OOB_VALUE
         )
@@ -388,7 +388,7 @@ class SignUpOAuth2StrategyTest {
     @Test
     fun testPerformSignUpWithSubmitPasswordInvalidPassword() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpContinue,
+            endpointType = MockApiEndpoint.SignUpContinue,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.PASSWORD_TOO_WEAK
         )
@@ -408,7 +408,7 @@ class SignUpOAuth2StrategyTest {
     @Test
     fun testPerformSignUpWithSubmitAttributesWithInvalidAttributes() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpContinue,
+            endpointType = MockApiEndpoint.SignUpContinue,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.ATTRIBUTE_VALIDATION_FAILED
         )
@@ -429,7 +429,7 @@ class SignUpOAuth2StrategyTest {
     @Test
     fun testPerformSignUpStartWithAttributesWithInvalidAttributes() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.ATTRIBUTE_VALIDATION_FAILED
         )

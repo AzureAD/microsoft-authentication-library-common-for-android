@@ -22,7 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.controllers.results
 
-import com.microsoft.identity.common.java.util.CommonUtils
+import com.microsoft.identity.common.java.logging.DiagnosticContext
+
 
 sealed interface ResetPasswordStartCommandResult: ICommandResult
 sealed interface ResetPasswordSubmitCodeCommandResult: ICommandResult
@@ -37,24 +38,24 @@ interface ResetPasswordCommandResult {
         val challengeChannel: String,
     ) : ResetPasswordStartCommandResult, ResetPasswordResendCodeCommandResult
 
-    data class EmailNotVerified(val error: String, val errorDescription: String, val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()) :
+    data class EmailNotVerified(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
         ResetPasswordStartCommandResult
 
-    data class PasswordNotSet(val error: String, val errorDescription: String, val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()) :
+    data class PasswordNotSet(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
         ResetPasswordStartCommandResult
 
-    data class UserNotFound(val error: String, val errorDescription: String, val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()) :
+    data class UserNotFound(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
         ResetPasswordStartCommandResult, ResetPasswordSubmitNewPasswordCommandResult
 
     data class PasswordRequired(val passwordSubmitToken: String) : ResetPasswordSubmitCodeCommandResult
 
-    data class IncorrectCode(val error: String, val errorDescription: String, val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()) :
+    data class IncorrectCode(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
         ResetPasswordSubmitCodeCommandResult
 
-    data class PasswordNotAccepted(val error: String, val errorDescription: String, val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()) :
+    data class PasswordNotAccepted(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
         ResetPasswordSubmitNewPasswordCommandResult
 
-    data class PasswordResetFailed(val error: String, val errorDescription: String, val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()) :
+    data class PasswordResetFailed(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
         ResetPasswordSubmitNewPasswordCommandResult
 
     object Complete : ResetPasswordSubmitNewPasswordCommandResult

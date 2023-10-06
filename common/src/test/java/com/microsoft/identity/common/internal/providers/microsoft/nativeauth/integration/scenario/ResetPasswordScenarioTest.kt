@@ -24,7 +24,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration.scenario
 
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants
-import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiEndpointType
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiEndpoint
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiResponseType
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiUtils.Companion.configureMockApi
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordStartCommandParameters
@@ -122,7 +122,7 @@ class ResetPasswordScenarioTest {
 
         // Call /start
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRStart,
+            endpointType = MockApiEndpoint.SSPRStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.SSPR_START_SUCCESS
         )
@@ -136,7 +136,7 @@ class ResetPasswordScenarioTest {
 
         // Call /challenge
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRChallenge,
+            endpointType = MockApiEndpoint.SSPRChallenge,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
@@ -148,7 +148,7 @@ class ResetPasswordScenarioTest {
 
         // Call /continue
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRContinue,
+            endpointType = MockApiEndpoint.SSPRContinue,
             correlationId = correlationId,
             responseType = MockApiResponseType.SSPR_CONTINUE_SUCCESS
         )
@@ -163,7 +163,7 @@ class ResetPasswordScenarioTest {
 
         // Call /submit
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRSubmit,
+            endpointType = MockApiEndpoint.SSPRSubmit,
             correlationId = correlationId,
             responseType = MockApiResponseType.SSPR_SUBMIT_SUCCESS
         )
@@ -178,7 +178,7 @@ class ResetPasswordScenarioTest {
 
         // Call /poll_completion
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRPoll,
+            endpointType = MockApiEndpoint.SSPRPoll,
             correlationId = correlationId,
             responseType = MockApiResponseType.SSPR_POLL_SUCCESS
         )
@@ -197,7 +197,7 @@ class ResetPasswordScenarioTest {
 
         // Call /start
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRStart,
+            endpointType = MockApiEndpoint.SSPRStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.EXPLICIT_USER_NOT_FOUND
         )
@@ -222,7 +222,7 @@ class ResetPasswordScenarioTest {
 
         // Call /start
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRStart,
+            endpointType = MockApiEndpoint.SSPRStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.SSPR_START_SUCCESS
         )
@@ -236,7 +236,7 @@ class ResetPasswordScenarioTest {
 
         // Call /challenge
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRChallenge,
+            endpointType = MockApiEndpoint.SSPRChallenge,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
@@ -248,7 +248,7 @@ class ResetPasswordScenarioTest {
 
         // Call /continue
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRContinue,
+            endpointType = MockApiEndpoint.SSPRContinue,
             correlationId = correlationId,
             responseType = MockApiResponseType.SSPR_CONTINUE_SUCCESS
         )
@@ -263,7 +263,7 @@ class ResetPasswordScenarioTest {
 
         // Call /submit
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRSubmit,
+            endpointType = MockApiEndpoint.SSPRSubmit,
             correlationId = correlationId,
             responseType = MockApiResponseType.PASSWORD_TOO_WEAK
         )
@@ -282,7 +282,7 @@ class ResetPasswordScenarioTest {
 
         // Call /poll_completion
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRPoll,
+            endpointType = MockApiEndpoint.SSPRPoll,
             correlationId = correlationId,
             responseType = MockApiResponseType.SSPR_POLL_FAILED
         )
@@ -302,7 +302,7 @@ class ResetPasswordScenarioTest {
 
         // Call /start
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRStart,
+            endpointType = MockApiEndpoint.SSPRStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.SSPR_START_SUCCESS
         )
@@ -316,7 +316,7 @@ class ResetPasswordScenarioTest {
 
         // Call /challenge
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRChallenge,
+            endpointType = MockApiEndpoint.SSPRChallenge,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
@@ -328,7 +328,7 @@ class ResetPasswordScenarioTest {
 
         // Call /continue
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRContinue,
+            endpointType = MockApiEndpoint.SSPRContinue,
             correlationId = correlationId,
             responseType = MockApiResponseType.EXPLICIT_INVALID_OOB_VALUE
         )

@@ -24,7 +24,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration.scenario
 
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants
-import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiEndpointType
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiEndpoint
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiResponseType
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiUtils.Companion.configureMockApi
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
@@ -117,7 +117,7 @@ class SignUpScenarioTest {
         val correlationId = UUID.randomUUID().toString()
 
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.VERIFICATION_REQUIRED
         )
@@ -136,7 +136,7 @@ class SignUpScenarioTest {
         signUpToken = (signupStartResult as SignUpStartApiResult.VerificationRequired).signupToken
 
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpChallenge,
+            endpointType = MockApiEndpoint.SignUpChallenge,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
@@ -148,7 +148,7 @@ class SignUpScenarioTest {
         signUpToken = (signupChallengeResult as SignUpChallengeApiResult.OOBRequired).signupToken
 
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpContinue,
+            endpointType = MockApiEndpoint.SignUpContinue,
             correlationId = correlationId,
             responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
         )
@@ -174,7 +174,7 @@ class SignUpScenarioTest {
         val correlationId = UUID.randomUUID().toString()
 
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpStart,
+            endpointType = MockApiEndpoint.SignUpStart,
             correlationId = correlationId,
             responseType = MockApiResponseType.VERIFICATION_REQUIRED
         )
@@ -193,7 +193,7 @@ class SignUpScenarioTest {
         signUpToken = (signupStartResult as SignUpStartApiResult.VerificationRequired).signupToken
 
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpChallenge,
+            endpointType = MockApiEndpoint.SignUpChallenge,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
@@ -205,7 +205,7 @@ class SignUpScenarioTest {
         signUpToken = (signupChallengeResult as SignUpChallengeApiResult.OOBRequired).signupToken
 
         configureMockApi(
-            endpointType = MockApiEndpointType.SignUpContinue,
+            endpointType = MockApiEndpoint.SignUpContinue,
             correlationId = correlationId,
             responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
         )

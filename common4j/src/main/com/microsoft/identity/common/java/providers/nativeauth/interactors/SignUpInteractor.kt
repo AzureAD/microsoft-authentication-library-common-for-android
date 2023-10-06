@@ -1,6 +1,5 @@
 package com.microsoft.identity.common.java.providers.nativeauth.interactors
 
-import com.microsoft.identity.common.internal.util.getEncodedRequest
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseNativeAuthCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
@@ -53,7 +52,7 @@ class SignUpInteractor(
     private fun performSignUpStart(request: SignUpStartRequest): SignUpStartApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performSignUpStart")
 
-        val encodedRequest: String = request.parameters.getEncodedRequest()
+        val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
 
@@ -84,7 +83,7 @@ class SignUpInteractor(
     private fun performSignUpChallenge(request: SignUpChallengeRequest): SignUpChallengeApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performSignUpChallenge")
 
-        val encodedRequest: String = request.parameters.getEncodedRequest()
+        val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
 
@@ -126,7 +125,7 @@ class SignUpInteractor(
     }
 
     private fun performSignUpContinue(request: SignUpContinueRequest): SignUpContinueApiResult {
-        val encodedRequest: String = request.parameters.getEncodedRequest()
+        val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
 

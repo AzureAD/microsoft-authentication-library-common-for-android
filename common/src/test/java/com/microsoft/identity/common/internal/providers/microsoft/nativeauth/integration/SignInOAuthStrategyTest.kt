@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.in
 
 import android.os.Build
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants
-import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiEndpointType
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiEndpoint
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiResponseType
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiUtils
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
@@ -134,7 +134,7 @@ class SignInOAuthStrategyTest {
     @Test
     fun testPerformSignInInitiateSuccess() {
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInInitiate,
+            endpointType = MockApiEndpoint.SignInInitiate,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.INITIATE_SUCCESS
         )
@@ -154,7 +154,7 @@ class SignInOAuthStrategyTest {
     @Test
     fun testPerformSignInChallengeSuccess() {
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInChallenge,
+            endpointType = MockApiEndpoint.SignInChallenge,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
@@ -169,7 +169,7 @@ class SignInOAuthStrategyTest {
     @Test
     fun testPerformSignInTokenWithPasswordSuccess() {
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInInitiate,
+            endpointType = MockApiEndpoint.SignInInitiate,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.INITIATE_SUCCESS
         )
@@ -190,7 +190,7 @@ class SignInOAuthStrategyTest {
     @Test
     fun testPerformSignInTokenWithOobSuccess() {
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.TOKEN_SUCCESS
         )
@@ -210,7 +210,7 @@ class SignInOAuthStrategyTest {
     @Test
     fun testPerformOobTokenWithInvalidOob() {
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.INVALID_OOB_VALUE
         )
@@ -229,7 +229,7 @@ class SignInOAuthStrategyTest {
     @Test
     fun testPerformSignInInitiateWithChallengeTypeRedirectSuccess() {
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInInitiate,
+            endpointType = MockApiEndpoint.SignInInitiate,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
@@ -248,7 +248,7 @@ class SignInOAuthStrategyTest {
     @Test
     fun testPerformSignInChallengeWithChallengeTypeOobSuccess() {
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInChallenge,
+            endpointType = MockApiEndpoint.SignInChallenge,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
@@ -262,7 +262,7 @@ class SignInOAuthStrategyTest {
     @Test
     fun testPerformSignInChallengeWithChallengeTypePasswordSuccess() {
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInChallenge,
+            endpointType = MockApiEndpoint.SignInChallenge,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
         )
@@ -276,7 +276,7 @@ class SignInOAuthStrategyTest {
     @Test
     fun testPerformSignInChallengeWithRedirectSuccess() {
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInChallenge,
+            endpointType = MockApiEndpoint.SignInChallenge,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
@@ -289,7 +289,7 @@ class SignInOAuthStrategyTest {
     @Test
     fun testPerformTokenWithInvalidGrantError() {
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.INVALID_GRANT
         )
@@ -309,7 +309,7 @@ class SignInOAuthStrategyTest {
     @Test
     fun testPerformPasswordTokenRequestSuccess() {
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.TOKEN_SUCCESS
         )
@@ -329,7 +329,7 @@ class SignInOAuthStrategyTest {
     @Test
     fun testPerformPasswordTokenRequestIncorrectPassword() {
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.SIGNIN_INVALID_PASSWORD
         )
@@ -349,7 +349,7 @@ class SignInOAuthStrategyTest {
     @Test
     fun testPerformPasswordTokenRequestUserNotFound() {
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.USER_NOT_FOUND
         )
@@ -370,7 +370,7 @@ class SignInOAuthStrategyTest {
     fun testPerformSLTTokenRequest() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = correlationId,
             responseType = MockApiResponseType.TOKEN_SUCCESS
         )
@@ -391,7 +391,7 @@ class SignInOAuthStrategyTest {
     fun testSignInStartWithPasswordMFARequired() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = correlationId,
             responseType = MockApiResponseType.MFA_REQUIRED
         )
@@ -412,7 +412,7 @@ class SignInOAuthStrategyTest {
     fun testPerformSLTTokenRequestUserNotFound() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
+            endpointType = MockApiEndpoint.SignInToken,
             correlationId = correlationId,
             responseType = MockApiResponseType.USER_NOT_FOUND
         )

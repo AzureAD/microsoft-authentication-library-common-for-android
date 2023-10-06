@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands
 
-import com.microsoft.identity.common.internal.controllers.NativeAuthController
+import com.microsoft.identity.common.internal.controllers.NativeAuthMsalController
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInResendCodeCommandParameters
 import com.microsoft.identity.common.java.controllers.results.SignInResendCodeCommandResult
 import com.microsoft.identity.common.java.logging.LogSession
@@ -30,7 +30,7 @@ import com.microsoft.identity.common.java.logging.Logger
 
 class SignInResendCodeCommand(
     private val parameters: SignInResendCodeCommandParameters,
-    private val controller: NativeAuthController,
+    private val controller: NativeAuthMsalController,
     publicApiId: String
 ) : BaseNativeAuthCommand<SignInResendCodeCommandResult>(
     parameters,
@@ -48,9 +48,8 @@ class SignInResendCodeCommand(
             parameters = parameters
         )
 
-        LogSession.log(
+        Logger.info(
             TAG,
-            Logger.LogLevel.INFO,
             "Returning result: $result"
         )
         return result

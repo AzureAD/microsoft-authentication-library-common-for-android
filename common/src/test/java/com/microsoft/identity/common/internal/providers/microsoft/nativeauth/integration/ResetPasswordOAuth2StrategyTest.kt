@@ -35,7 +35,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.uti
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.ssprPollCompletionRequestUrl
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.ssprStartRequestUrl
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.ssprSubmitRequestUrl
-import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiEndpointType
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiEndpoint
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiResponseType
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiUtils.Companion.configureMockApi
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordStartCommandParameters
@@ -158,7 +158,7 @@ class ResetPasswordOAuth2StrategyTest {
     @Test
     fun testPerformResetPasswordStartVerificationInvalidClientError() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRStart,
+            endpointType = MockApiEndpoint.SSPRStart,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.INVALID_CLIENT
         )
@@ -176,7 +176,7 @@ class ResetPasswordOAuth2StrategyTest {
     @Test
     fun testPerformResetPasswordStartUnsupportedChallengeTypeRequestError() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRStart,
+            endpointType = MockApiEndpoint.SSPRStart,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.UNSUPPORTED_CHALLENGE_TYPE
         )
@@ -194,7 +194,7 @@ class ResetPasswordOAuth2StrategyTest {
     @Test
     fun testPerformResetPasswordStartChallengeTypeRedirectError() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRStart,
+            endpointType = MockApiEndpoint.SSPRStart,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
@@ -216,7 +216,7 @@ class ResetPasswordOAuth2StrategyTest {
     @Test
     fun testPerformResetPasswordStartUserNotFoundError() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRStart,
+            endpointType = MockApiEndpoint.SSPRStart,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.EXPLICIT_USER_NOT_FOUND
         )
@@ -236,7 +236,7 @@ class ResetPasswordOAuth2StrategyTest {
     @Test
     fun testPerformResetPasswordChallengeSuccess() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRChallenge,
+            endpointType = MockApiEndpoint.SSPRChallenge,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
@@ -250,7 +250,7 @@ class ResetPasswordOAuth2StrategyTest {
     @Test
     fun testPerformResetPasswordChallengeExpiredTokenError() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRChallenge,
+            endpointType = MockApiEndpoint.SSPRChallenge,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.EXPIRED_TOKEN
         )
@@ -266,7 +266,7 @@ class ResetPasswordOAuth2StrategyTest {
     @Test
     fun testPerformResetPasswordContinueSuccess() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRContinue,
+            endpointType = MockApiEndpoint.SSPRContinue,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.SSPR_CONTINUE_SUCCESS
         )
@@ -297,7 +297,7 @@ class ResetPasswordOAuth2StrategyTest {
     @Test
     fun testPerformResetPasswordSubmitPasswordTooWeakError() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRSubmit,
+            endpointType = MockApiEndpoint.SSPRSubmit,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.PASSWORD_TOO_WEAK
         )
@@ -316,7 +316,7 @@ class ResetPasswordOAuth2StrategyTest {
     @Test
     fun testPerformResetPasswordSubmitPasswordTooShortError() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRSubmit,
+            endpointType = MockApiEndpoint.SSPRSubmit,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.PASSWORD_TOO_SHORT
         )
@@ -335,7 +335,7 @@ class ResetPasswordOAuth2StrategyTest {
     @Test
     fun testPerformResetPasswordSubmitPasswordTooLongError() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRSubmit,
+            endpointType = MockApiEndpoint.SSPRSubmit,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.PASSWORD_TOO_LONG
         )
@@ -354,7 +354,7 @@ class ResetPasswordOAuth2StrategyTest {
     @Test
     fun testPerformResetPasswordSubmitPasswordRecentlyUsedError() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRSubmit,
+            endpointType = MockApiEndpoint.SSPRSubmit,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.PASSWORD_RECENTLY_USED
         )
@@ -373,7 +373,7 @@ class ResetPasswordOAuth2StrategyTest {
     @Test
     fun testPerformResetPasswordSubmitPasswordBannedError() {
         configureMockApi(
-            endpointType = MockApiEndpointType.SSPRSubmit,
+            endpointType = MockApiEndpoint.SSPRSubmit,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.PASSWORD_BANNED
         )

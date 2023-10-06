@@ -20,16 +20,22 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.util
 
-import com.microsoft.identity.common.java.logging.DiagnosticContext
+package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils
 
-object CommonUtils {
-    /**
-     * Utility method to get the current thread's correlation ID
-     */
-    fun getCurrentThreadCorrelationId() : String {
-        return DiagnosticContext.INSTANCE.requestContext[DiagnosticContext.CORRELATION_ID]
-            ?: "UNSET"
-    }
+/**
+ * Enumerates all of the different endpoints supported by MockAPI for Native Auth.
+ */
+enum class MockApiEndpoint(val stringValue: String) {
+    SignInInitiate("SignInInitiate"),
+    SignInChallenge("SignInChallenge"),
+    SignInToken("SignInToken"),
+    SignUpStart("SignUpStart"),
+    SignUpChallenge("SignUpChallenge"),
+    SignUpContinue("SignUpContinue"),
+    SSPRStart("SSPRStart"),
+    SSPRChallenge("SSPRChallenge"),
+    SSPRContinue("SSPRContinue"),
+    SSPRSubmit("SSPRSubmit"),
+    SSPRPoll("SSPRPoll")
 }

@@ -22,8 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.controllers.results
 
+import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
-import com.microsoft.identity.common.java.util.CommonUtils
 
 sealed interface SignInStartCommandResult: ICommandResult
 sealed interface SignInWithSLTCommandResult: ICommandResult
@@ -54,12 +54,12 @@ interface SignInCommandResult {
     ) :
         SignInStartCommandResult, SignInWithSLTCommandResult, SignInResendCodeCommandResult
 
-    data class UserNotFound(val error: String, val errorDescription: String, val correlationId: String = CommonUtils.getCurrentThreadCorrelationId(), val errorCodes: List<Int>) :
+    data class UserNotFound(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId, val errorCodes: List<Int>) :
         SignInStartCommandResult
 
-    data class InvalidCredentials(val error: String, val errorDescription: String, val correlationId: String = CommonUtils.getCurrentThreadCorrelationId(), val errorCodes: List<Int>) :
+    data class InvalidCredentials(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId, val errorCodes: List<Int>) :
         SignInStartCommandResult, SignInSubmitPasswordCommandResult
 
-    data class IncorrectCode(val error: String, val errorDescription: String, val correlationId: String = CommonUtils.getCurrentThreadCorrelationId(), val errorCodes: List<Int>) :
+    data class IncorrectCode(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId, val errorCodes: List<Int>) :
         SignInSubmitCodeCommandResult
 }

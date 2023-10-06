@@ -155,7 +155,7 @@ publishing {
 
 def sliceParameter = "" // will be blank unless specified by developer
 def dcParameter = "" // will be blank unless specified by developer
-def useRealAuthorityParameter = true // will be true unless specified by developer
+def useMockApiForNativeAuthParameter = false // will be false unless specified by developer
 def disableAcquireTokenSilentTimeoutParameter = false // will be false unless specified by developer
 
 if (project.hasProperty("slice")) {
@@ -166,8 +166,10 @@ if (project.hasProperty("dc")) {
     dcParameter = dc
 }
 
-if (project.hasProperty("useRealAuthority")) {
-    useRealAuthorityParameter = useRealAuthority
+// This flag is set to false to allow running tests against our mock APIs
+// as our mock API is not a 'real' tenant.
+if (project.hasProperty("useMockApiForNativeAuth")) {
+    useMockApiForNativeAuthParameter = useMockApiForNativeAuth
 }
 
 // By adding -PdisableAcquireTokenSilentTimeout in your dev environment, you will no longer subject to the ATS timeout,
@@ -181,7 +183,7 @@ sourceSets {
         java.srcDirs = ['src/main', "$project.buildDir/generated/source/buildConfig/main"]
         buildConfigField("String", "SLICE", "\"$sliceParameter\"")
         buildConfigField("String", "DC", "\"$dcParameter\"")
-        buildConfigField("boolean", "USE_REAL_AUTHORITY", "${useRealAuthorityParameter}")
+        buildConfigField("boolean", "USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY", "${useMockApiForNativeAuthParameter}")
         buildConfigField("boolean", "DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT", "${disableAcquireTokenSilentTimeoutParameter}")
     }
     test {

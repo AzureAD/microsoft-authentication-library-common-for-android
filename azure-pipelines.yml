@@ -51,19 +51,19 @@ jobs:
       - task: Gradle@2
         displayName: Run Unit tests in common providers package
         inputs:
-          tasks: common:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PuseRealAuthority=false --tests *com.microsoft.identity.common.internal.controllers*
+          tasks: common:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PuseMockApiForNativeAuth=true --tests *com.microsoft.identity.common.internal.controllers*
           javaHomeSelection: $(BuildParameters.javaHomeSelection)
           jdkVersion: 1.11
       - task: Gradle@2
         displayName: Run Unit tests in common controllers package
         inputs:
-          tasks: common:testLocalDebugUnitTest -Psugar=true -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PuseRealAuthority=false --tests *com.microsoft.identity.common.internal.providers.microsoft.nativeauth*
+          tasks: common:testLocalDebugUnitTest -Psugar=true -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PuseMockApiForNativeAuth=true --tests *com.microsoft.identity.common.internal.providers.microsoft.nativeauth*
           javaHomeSelection: $(BuildParameters.javaHomeSelection)
           jdkVersion: 1.11
       - task: Gradle@2
         displayName: Run Unit tests in common4j providers package
         inputs:
-          tasks: common4j:test -Psugar=true -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PuseRealAuthority=false --tests *com.microsoft.identity.common.java.providers*
+          tasks: common4j:test -Psugar=true -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PuseMockApiForNativeAuth=true --tests *com.microsoft.identity.common.java.providers*
           javaHomeSelection: $(BuildParameters.javaHomeSelection)
           jdkVersion: 1.11
 

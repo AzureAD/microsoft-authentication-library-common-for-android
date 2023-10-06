@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.library'
     id 'maven-publish'
+    id 'kotlin-android'
 }
 
 apply from: '../versioning/version_tasks.gradle'
@@ -199,6 +200,7 @@ dependencies {
 
     implementation project(":LabApiUtilities")
 
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
     implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"

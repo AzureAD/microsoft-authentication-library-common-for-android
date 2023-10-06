@@ -43,22 +43,30 @@ import lombok.NonNull;
 public class UrlUtil {
     private static final String TAG = UrlUtil.class.getSimpleName();
 
-    public static URL appendPathToURL(@NonNull final URL urlToAppend,
-                                      @Nullable final String pathString) // TODO remove post test slice
-            throws URISyntaxException, MalformedURLException {
-        return appendPathToURL(urlToAppend, pathString, null);
-    }
-
     /**
-     * Append a given path string to a URL.
+     * Append a given path string and query parameters to a URL.
      *
      * @param urlToAppend URL to be appended to.
      * @param pathString  a string containing path segments to be appended to the URL.
      * @return appended URL
      */
     public static URL appendPathToURL(@NonNull final URL urlToAppend,
+                                      @Nullable final String pathString)
+            throws URISyntaxException, MalformedURLException {
+        return appendPathAndQueryToURL(urlToAppend, pathString, null);
+    }
+
+    /**
+     * Append a given path string and query parameters to a URL.
+     *
+     * @param urlToAppend URL to be appended to.
+     * @param pathString  a string containing path segments to be appended to the URL.
+     * @param queryParam Query parameters to add at the end of url
+     * @return appended URL
+     */
+    public static URL appendPathAndQueryToURL(@NonNull final URL urlToAppend,
                                       @Nullable final String pathString,
-                                      @Nullable final String queryParam) // TODO remove post test slice
+                                      @Nullable final String queryParam)
             throws URISyntaxException, MalformedURLException {
 
         if (StringUtil.isNullOrEmpty(pathString)) {
@@ -71,26 +79,26 @@ public class UrlUtil {
         final List<String> pathSegmentsToAppend = pathBuilder.getPathSegments();
 
         final CommonURIBuilder builder = new CommonURIBuilder(urlToAppend.toString());
-        final List<String> pathSegments = builder.getPathSegments();
+        ArrayList<String> pathSegments = new ArrayList<>(builder.getPathSegments());
 
-        final List<String> combinedPathSegments = new ArrayList<>();
-
-        // TODO check this with MSAL team
-        // Add all non-empty path segments from the base URL
-        for (final String path : pathSegments) {
-            if (!StringUtil.isNullOrEmpty(path)) {
-                combinedPathSegments.add(path);
+        //If last path segment in the base url is empty and pathString is non empty then we can
+        //remove the last empty path segment.
+        if(pathSegments.size() > 0) {
+            int lastIndex = pathSegments.size()-1;
+            if (pathSegments.get(lastIndex).equals("") && !pathBuilder.isPathEmpty())
+            {
+                pathSegments.remove(lastIndex);
             }
         }
 
         // Add all non-empty path segments from the path to append
         for (final String path : pathSegmentsToAppend) {
             if (!StringUtil.isNullOrEmpty(path)) {
-                combinedPathSegments.add(path);
+                pathSegments.add(path);
             }
         }
 
-        builder.setPathSegments(combinedPathSegments);
+        builder.setPathSegments(pathSegments);
         if (queryParam != null && !queryParam.isEmpty()) {
             builder.setQuery(queryParam);
         }

@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.nativeauth.interactors
 
-import com.microsoft.identity.common.internal.util.getEncodedRequest
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
@@ -68,7 +67,7 @@ class SignInInteractor(
 
     private fun performSignInInitiate(request: SignInInitiateRequest): SignInInitiateApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performSignInInitiate")
-        val encodedRequest: String = request.parameters.getEncodedRequest()
+        val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
 
@@ -97,7 +96,7 @@ class SignInInteractor(
 
     private fun performSignInChallenge(request: SignInChallengeRequest): SignInChallengeApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performSignInChallenge")
-        val encodedRequest: String = request.parameters.getEncodedRequest()
+        val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
 
@@ -146,7 +145,7 @@ class SignInInteractor(
 
     private fun performGetToken(request: SignInTokenRequest): SignInTokenApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performGetToken")
-        val encodedRequest: String = request.parameters.getEncodedRequest()
+        val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
 

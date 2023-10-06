@@ -1,6 +1,6 @@
 package com.microsoft.identity.common.internal.commands
 
-import com.microsoft.identity.common.internal.controllers.NativeAuthController
+import com.microsoft.identity.common.internal.controllers.NativeAuthMsalController
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.controllers.results.SignUpSubmitPasswordCommandResult
 import com.microsoft.identity.common.java.logging.LogSession
@@ -8,7 +8,7 @@ import com.microsoft.identity.common.java.logging.Logger
 
 class SignUpSubmitPasswordCommand(
     private val parameters: SignUpSubmitPasswordCommandParameters,
-    private val controller: NativeAuthController,
+    private val controller: NativeAuthMsalController,
     publicApiId: String
 ) : BaseNativeAuthCommand<SignUpSubmitPasswordCommandResult>(
     parameters,
@@ -27,9 +27,8 @@ class SignUpSubmitPasswordCommand(
             parameters = parameters
         )
 
-        LogSession.log(
+        Logger.info(
             TAG,
-            Logger.LogLevel.INFO,
             "Returning result: $result"
         )
         return result

@@ -22,8 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.controllers.results
 
+import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.providers.nativeauth.responses.RequiredUserAttributeApiResult
-import com.microsoft.identity.common.java.util.CommonUtils
 
 sealed interface SignUpSubmitCodeCommandResult: ICommandResult
 sealed interface SignUpSubmitUserAttributesCommandResult: ICommandResult
@@ -35,7 +35,7 @@ interface SignUpCommandResult {
     data class UsernameAlreadyExists(
         val error: String,
         val errorDescription: String,
-        val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()
+        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId
     ) : SignUpStartCommandResult, SignUpSubmitCodeCommandResult,
         SignUpSubmitUserAttributesCommandResult, SignUpSubmitPasswordCommandResult
 
@@ -64,7 +64,7 @@ interface SignUpCommandResult {
         val error: String,
         val errorDescription: String,
         val requiredAttributes: List<RequiredUserAttributeApiResult>,
-        val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()
+        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId
     ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult,
         SignUpSubmitUserAttributesCommandResult,
         SignUpSubmitCodeCommandResult
@@ -72,31 +72,31 @@ interface SignUpCommandResult {
     data class InvalidEmail(
         val error: String,
         val errorDescription: String,
-        val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()
+        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId
     ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult
 
     data class InvalidPassword(
         val error: String,
         val errorDescription: String,
-        val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()
+        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId
     ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult
 
     data class InvalidCode(
         val error: String,
         val errorDescription: String,
-        val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()
+        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId
     ) : SignUpSubmitCodeCommandResult
 
     data class InvalidAttributes(
         val error: String,
         val errorDescription: String,
         val invalidAttributes: List<String>,
-        val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()
+        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId
     ) : SignUpStartCommandResult, SignUpSubmitUserAttributesCommandResult
 
     data class AuthNotSupported(
         val error: String,
         val errorDescription: String,
-        val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()
+        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId
     ) : SignUpStartCommandResult
 }
