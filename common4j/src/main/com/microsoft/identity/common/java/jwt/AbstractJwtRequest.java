@@ -40,12 +40,15 @@ public abstract class AbstractJwtRequest {
         public static final String REFRESH_TOKEN = "refresh_token";
         public static final String X5C = "x5c";
         public static final String CLIENT_ID = "client_id";
+        public static final String BRK_CLIENT_ID = "brk_client_id";
         public static final String SCOPE = "scope";
         public static final String AUDIENCE = "aud";
         public static final String ISSUER = "iss";
         public static final String GRANT_TYPE = "grant_type";
         public static final String NONCE = "request_nonce";
         public static final String REDIRECT_URI = "redirect_uri";
+
+        public static final String BRK_REDIRECT_URI = "brk_redirect_uri";
         public static final String RESOURCE = "resource";
         public static final String USE = "use";
         public static final String ALG = "alg";
@@ -65,6 +68,13 @@ public abstract class AbstractJwtRequest {
 
     @SerializedName(ClaimNames.CLIENT_ID)
     private String mClientId;
+
+    /**
+     * The hub/brk clientId for the request.
+     * <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview/pullrequest/7876">...</a>
+     */
+    @SerializedName(ClaimNames.BRK_CLIENT_ID)
+    private String mBrkClientId;
 
     @SerializedName(ClaimNames.USE)
     private String mUse;

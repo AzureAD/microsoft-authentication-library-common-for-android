@@ -135,14 +135,14 @@ public class LoggerTest {
         final Logger.LogLevel logLevel = Logger.LogLevel.VERBOSE;
         final boolean containsPII = false;
         final String newCorrelationId = "NEW_CORRELATION_ID";
-        final String newThreadName = Thread.currentThread().getName();
+        final String newThreadId = String.valueOf(Thread.currentThread().getId());
 
         final RequestContext requestContext = new RequestContext();
         requestContext.put(DiagnosticContext.CORRELATION_ID, newCorrelationId);
         DiagnosticContext.INSTANCE.setRequestContext(requestContext);
 
         Logger.setAllowPii(false);
-        testLogger(tag, logLevel, newCorrelationId, newThreadName, containsPII, new IOperationToTest() {
+        testLogger(tag, logLevel, newCorrelationId, newThreadId, containsPII, new IOperationToTest() {
             @Override
             public void execute() {
                 Logger.verbose(tag, "");
@@ -158,27 +158,27 @@ public class LoggerTest {
 
         final String correlationId_1 = "CORRELATIONID_1";
         final String correlationId_2 = "CORRELATIONID_2";
-        final String threadName_1 = Thread.currentThread().getName();
+        final String threadId_1 = String.valueOf(Thread.currentThread().getId());
 
         final RequestContext requestContext = new RequestContext();
         requestContext.put(DiagnosticContext.CORRELATION_ID, correlationId_1);
         DiagnosticContext.INSTANCE.setRequestContext(requestContext);
 
         final CountDownLatch countDownLatch = new CountDownLatch(1);
-        final String[] threadName_2 = {null};
+        final String[] threadId_2 = {null};
 
         // Spin a background thread.
         new Thread(new Runnable() {
             @SneakyThrows
             @Override
             public void run() {
-                threadName_2[0] = Thread.currentThread().getName();
+                threadId_2[0] = String.valueOf(Thread.currentThread().getId());
 
                 final RequestContext requestContext = new RequestContext();
                 requestContext.put(DiagnosticContext.CORRELATION_ID, correlationId_2);
                 DiagnosticContext.INSTANCE.setRequestContext(requestContext);
 
-                testLogger(tag, logLevel, correlationId_2, threadName_2[0], containsPII, new IOperationToTest() {
+                testLogger(tag, logLevel, correlationId_2, threadId_2[0], containsPII, new IOperationToTest() {
                     @Override
                     public void execute() {
                         Logger.verbose(tag, "");
@@ -189,14 +189,14 @@ public class LoggerTest {
         }).start();
 
         countDownLatch.await();
-        testLogger(tag, logLevel, correlationId_1, threadName_1, containsPII, new IOperationToTest() {
+        testLogger(tag, logLevel, correlationId_1, threadId_1, containsPII, new IOperationToTest() {
             @Override
             public void execute() {
                 Logger.verbose(tag, "");
             }
         }, false);
 
-        Assert.assertNotEquals(threadName_2[0], threadName_1);
+        Assert.assertNotEquals(threadId_2[0], threadId_1);
     }
 
     private interface IOperationToTest {

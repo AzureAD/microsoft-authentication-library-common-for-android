@@ -29,7 +29,6 @@ public enum DiagnosticContext {
 
     public static final String CORRELATION_ID = "correlation_id";
     public static final String THREAD_ID = "thread_id";
-    public static final String THREAD_NAME = "thread_name";
 
     // This is thread-safe.
     @SuppressFBWarnings("SE_BAD_FIELD_STORE")
@@ -39,7 +38,6 @@ public enum DiagnosticContext {
                 protected RequestContext initialValue() {
                     final RequestContext defaultRequestContext = new RequestContext();
                     defaultRequestContext.put(THREAD_ID, String.valueOf(Thread.currentThread().getId()));
-                    defaultRequestContext.put(THREAD_NAME, Thread.currentThread().getName());
                     defaultRequestContext.put(CORRELATION_ID, "UNSET");
                     return defaultRequestContext;
                 }
@@ -57,7 +55,6 @@ public enum DiagnosticContext {
         }
 
         requestContext.put(THREAD_ID, String.valueOf(Thread.currentThread().getId()));
-        requestContext.put(THREAD_NAME, Thread.currentThread().getName());
         REQUEST_CONTEXT_THREAD_LOCAL.set(requestContext);
     }
 

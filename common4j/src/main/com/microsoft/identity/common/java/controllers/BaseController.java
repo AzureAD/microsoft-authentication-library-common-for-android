@@ -35,7 +35,9 @@ import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudien
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.ITokenAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.cache.CacheRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
@@ -61,8 +63,9 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
@@ -83,11 +86,11 @@ import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ResultUtil;
-import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -262,9 +265,17 @@ public abstract class BaseController {
             Logger.error(TAG, "correlation id from diagnostic context is not a UUID", ex);
         }
 
-        builder.setClientId(parameters.getClientId())
-                .setRedirectUri(parameters.getRedirectUri());
 
+        if (parameters.hasNestedAppParameters()) {
+            // is NAA scenario, set all NAA params for auth flow
+            builder.setBrkRedirectUri(parameters.getRedirectUri())
+                    .setBrkClientId(parameters.getClientId())
+                    .setClientId(parameters.getChildClientId())
+                    .setRedirectUri(parameters.getChildRedirectUri());
+        } else {
+            builder.setClientId(parameters.getClientId())
+                    .setRedirectUri(parameters.getRedirectUri());
+        }
         if (builder instanceof MicrosoftAuthorizationRequest.Builder) {
             ((MicrosoftAuthorizationRequest.Builder) builder).setCorrelationId(correlationId);
         }
@@ -437,20 +448,27 @@ public abstract class BaseController {
                     methodTag,
                     "Token request was successful"
             );
-
-            // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance tokenCache while calling method saveAndLoadAggregatedAccountData
-            @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> savedRecords = tokenCache.saveAndLoadAggregatedAccountData(
-                    strategy,
-                    getAuthorizationRequest(strategy, parameters),
-                    tokenResult.getTokenResponse()
-            );
-
-            final ICacheRecord savedRecord = savedRecords.get(0);
+            List<ICacheRecord> acquireTokenResultRecords;
+            if (parameters.hasNestedAppParameters()) {
+                // Do not save the token in naa flow. This is because, NAA is currently only supported with OneAuth and OneAuth already caches AT until it is expired.
+                // Design doc : https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview/pullrequest/7876
+                acquireTokenResultRecords = getAcquireTokenResultRecords(
+                        (MicrosoftStsTokenResponse) tokenResult.getTokenResponse(),
+                        (MicrosoftStsOAuth2Strategy) strategy,
+                        (MicrosoftStsAuthorizationRequest) getAuthorizationRequest(strategy, parameters));
+            } else {
+                acquireTokenResultRecords = tokenCache.saveAndLoadAggregatedAccountData(
+                        strategy,
+                        getAuthorizationRequest(strategy, parameters),
+                        tokenResult.getTokenResponse()
+                );
+            }
+            final ICacheRecord savedRecord = acquireTokenResultRecords.get(0);
 
             // Create a new AuthenticationResult to hold the saved record
             final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
                     finalizeCacheRecordForResult(savedRecord, parameters.getAuthenticationScheme()),
-                    savedRecords,
+                    acquireTokenResultRecords,
                     parameters.getSdkType(),
                     false
             );
@@ -546,20 +564,25 @@ public abstract class BaseController {
                     "Token request was successful"
             );
 
-            // Remove old Access Token
-            Logger.info(
-                    methodTag,
-                    "Access token is refresh-expired. Removing from cache..."
-            );
-            final AccessTokenRecord accessTokenRecord = cacheRecord.getAccessToken();
-            cache.removeCredential(accessTokenRecord);
+            List<ICacheRecord> savedRecords;
+            if (!parameters.hasNestedAppParameters()) {
+                // Remove old Access Token
+                Logger.info(
+                        methodTag,
+                        "Access token is refresh-expired. Removing from cache..."
+                );
+                final AccessTokenRecord accessTokenRecord = cacheRecord.getAccessToken();
+                cache.removeCredential(accessTokenRecord);
 
-            // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance tokenCache while calling method saveAndLoadAggregatedAccountData
-            @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> savedRecords = cache.saveAndLoadAggregatedAccountData(
-                    strategy,
-                    getAuthorizationRequest(strategy, parameters),
-                    tokenResult.getTokenResponse()
-            );
+                // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance tokenCache while calling method saveAndLoadAggregatedAccountData
+                savedRecords = cache.saveAndLoadAggregatedAccountData(
+                        strategy,
+                        getAuthorizationRequest(strategy, parameters),
+                        tokenResult.getTokenResponse()
+                );
+            } else {
+                savedRecords = getAcquireTokenResultRecords((MicrosoftStsTokenResponse) tokenResult.getTokenResponse(), (MicrosoftStsOAuth2Strategy) strategy, (MicrosoftStsAuthorizationRequest) getAuthorizationRequest(strategy, parameters));
+            }
 
             final ICacheRecord savedRecord = savedRecords.get(0);
             finalizeCacheRecordForResult(savedRecord, parameters.getAuthenticationScheme());
@@ -604,6 +627,47 @@ public abstract class BaseController {
         return tokenResult;
     }
 
+    private List<ICacheRecord> getAcquireTokenResultRecords(@NonNull final MicrosoftStsTokenResponse microsoftStsTokenResponse,
+                                                            @NonNull final MicrosoftStsOAuth2Strategy oAuth2Strategy,
+                                                            @NonNull final MicrosoftStsAuthorizationRequest authorizationRequest) {
+        final MicrosoftStsAccountCredentialAdapter credentialAdapter = new MicrosoftStsAccountCredentialAdapter();
+        final AccountRecord accountRecord = credentialAdapter.createAccount(
+                oAuth2Strategy,
+                authorizationRequest,
+                microsoftStsTokenResponse
+        );
+
+        final AccessTokenRecord accessTokenRecord = credentialAdapter.createAccessToken(
+                oAuth2Strategy,
+                authorizationRequest,
+                microsoftStsTokenResponse
+        );
+
+        final IdTokenRecord idTokenRecord = credentialAdapter.createIdToken(
+                oAuth2Strategy,
+                authorizationRequest,
+                microsoftStsTokenResponse
+        );
+
+
+        // Create the cache record from the token response
+        final CacheRecord cacheRecord = CacheRecord.builder()
+                .idToken(idTokenRecord)
+                .accessToken(accessTokenRecord)
+                .account(accountRecord)
+                .refreshToken(credentialAdapter.createRefreshToken(
+                        oAuth2Strategy,
+                        authorizationRequest,
+                        microsoftStsTokenResponse
+                )).build();
+
+        // Create the CacheRecord list
+        final List<ICacheRecord> cacheRecordList = new ArrayList<>();
+        cacheRecordList.add(cacheRecord);
+
+        return cacheRecordList;
+    }
+
     public OAuth2Strategy getStrategy(@NonNull final SilentTokenCommandParameters parameters) throws ClientException {
         final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
                 .platformComponents(parameters.getPlatformComponents())
@@ -620,8 +684,7 @@ public abstract class BaseController {
         final OAuth2TokenCache cache = parameters.getOAuth2TokenCache();
 
         //Get cacheRecord from cache
-        @SuppressWarnings("unchecked")
-        final List<ICacheRecord> cacheRecords = cache.loadWithAggregatedAccountData(
+        @SuppressWarnings("unchecked") final List<ICacheRecord> cacheRecords = cache.loadWithAggregatedAccountData(
                 parameters.getClientId(),
                 parameters.getApplicationIdentifier(),
                 parameters.getMamEnrollmentId(),
@@ -733,7 +796,17 @@ public abstract class BaseController {
         }
 
         final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest(parameters.getAuthenticationScheme());
-        refreshTokenRequest.setClientId(parameters.getClientId());
+
+        if (parameters.hasNestedAppParameters()) {
+            // isNAA request, set hub/brk and nested app parameters
+            refreshTokenRequest.setClientId(parameters.getChildClientId());
+            refreshTokenRequest.setBrkClientId(parameters.getClientId());
+            refreshTokenRequest.setRedirectUri(parameters.getChildRedirectUri());
+            refreshTokenRequest.setBrkRedirectUri(parameters.getRedirectUri());
+        }
+        else {
+            refreshTokenRequest.setClientId(parameters.getClientId());
+        }
         refreshTokenRequest.setScope(StringUtil.join(" ", parameters.getScopes()));
         refreshTokenRequest.setRefreshToken(refreshToken.getSecret());
 
