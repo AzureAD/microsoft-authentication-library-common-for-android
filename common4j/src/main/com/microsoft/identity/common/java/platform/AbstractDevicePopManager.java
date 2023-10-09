@@ -299,7 +299,9 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         try {
             sCodeMarkerManager.markCode(GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_START);
             final KeyPair keyPair = generateNewRsaKeyPair(RSA_KEY_SIZE);
+            Logger.info(TAG, "generating RSA key pair");
             final RSAKey rsaKey = getRsaKeyForKeyPair(keyPair);
+            Logger.info(TAG, "Thumbprint for RSA key : " + getThumbprintForRsaKey(rsaKey));
             return getThumbprintForRsaKey(rsaKey);
         } catch (final UnsupportedOperationException e) {
             exception = e;
@@ -978,6 +980,9 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
 
             signedJWT.sign(signer);
 
+            Logger.info(methodTag, "Unable to access asymmetric key, clearing the key.");
+            clearAsymmetricKey();
+            Logger.info(methodTag, "Returning the serialized jwt.");
             return signedJWT.serialize();
         } catch (final NoSuchAlgorithmException e) {
             exception = e;
@@ -988,6 +993,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         } catch (final JOSEException e) {
             exception = e;
             errCode = JWT_SIGNING_FAILURE;
+            Logger.info(methodTag, "Encountered JOSEException with message: " + e.getMessage());
         } catch (final UnrecoverableEntryException e) {
             exception = e;
             errCode = INVALID_PROTECTION_PARAMS;
