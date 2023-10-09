@@ -79,18 +79,26 @@ public class UrlUtil {
         final List<String> pathSegmentsToAppend = pathBuilder.getPathSegments();
 
         final CommonURIBuilder builder = new CommonURIBuilder(urlToAppend.toString());
-        final List<String> pathSegments = builder.getPathSegments();
+        ArrayList<String> pathSegments = new ArrayList<>(builder.getPathSegments());
 
-        final List<String> combinedPathSegments = new ArrayList<>(pathSegments);
+        //If last path segment in the base url is empty and pathString is non empty then we can
+        //remove the last empty path segment.
+        if(pathSegments.size() > 0) {
+            int lastIndex = pathSegments.size()-1;
+            if (pathSegments.get(lastIndex).equals("") && !pathBuilder.isPathEmpty())
+            {
+                pathSegments.remove(lastIndex);
+            }
+        }
 
         // Add all non-empty path segments from the path to append
         for (final String path : pathSegmentsToAppend) {
             if (!StringUtil.isNullOrEmpty(path)) {
-                combinedPathSegments.add(path);
+                pathSegments.add(path);
             }
         }
 
-        builder.setPathSegments(combinedPathSegments);
+        builder.setPathSegments(pathSegments);
         if (queryParam != null && !queryParam.isEmpty()) {
             builder.setQuery(queryParam);
         }

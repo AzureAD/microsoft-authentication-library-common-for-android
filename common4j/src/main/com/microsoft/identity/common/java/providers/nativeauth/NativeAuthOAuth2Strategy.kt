@@ -23,8 +23,16 @@
 
 package com.microsoft.identity.common.java.providers.nativeauth
 
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInWithSLTCommandParameters
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
+import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignInInteractor
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 
 /**
@@ -32,7 +40,8 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParamet
  */
 class NativeAuthOAuth2Strategy(
     private val strategyParameters: OAuth2StrategyParameters,
-    val config: NativeAuthOAuth2Configuration
+    val config: NativeAuthOAuth2Configuration,
+    private val signInInteractor: SignInInteractor,
 ) :
     MicrosoftStsOAuth2Strategy(config, strategyParameters) {
     private val TAG = NativeAuthOAuth2Strategy::class.java.simpleName
@@ -50,5 +59,48 @@ class NativeAuthOAuth2Strategy(
 
     fun getAuthority(): String {
         return config.authorityUrl.toString()
+    }
+
+    fun performSignInInitiate(
+        parameters: SignInStartCommandParameters
+    ): SignInInitiateApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performSignInInitiate")
+        return signInInteractor.performSignInInitiate(parameters)
+    }
+
+    fun performSignInChallenge(
+        credentialToken: String,
+    ): SignInChallengeApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performSignInChallenge")
+        return signInInteractor.performSignInChallenge(
+            credentialToken = credentialToken,
+        )
+    }
+
+    fun performSLTTokenRequest(
+        parameters: SignInWithSLTCommandParameters
+    ): SignInTokenApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performSLTTokenRequest")
+        return signInInteractor.performSLTTokenRequest(
+            parameters = parameters
+        )
+    }
+
+    fun performOOBTokenRequest(
+        parameters: SignInSubmitCodeCommandParameters
+    ): SignInTokenApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performOOBTokenRequest")
+        return signInInteractor.performOOBTokenRequest(
+            parameters = parameters
+        )
+    }
+
+    fun performPasswordTokenRequest(
+        parameters: SignInSubmitPasswordCommandParameters
+    ): SignInTokenApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performPasswordTokenRequest")
+        return signInInteractor.performPasswordTokenRequest(
+            parameters = parameters
+        )
     }
 }

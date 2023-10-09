@@ -20,32 +20,21 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.java.commands.parameters.nativeauth;
 
-package com.microsoft.identity.common.java.providers.nativeauth
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.SuperBuilder;
 
-/**
- * Various grant types supported by Native Auth.
- */
-object NativeAuthConstants {
-    object GrantType {
-        //password is required for authentication
-        const val PASSWORD = "password"
-        //Authentication is done by presenting an Out of band token
-        const val OOB = "oob"
-        //Authentication is done by presenting a short lived token
-        const val SLT = "slt"
-        //Authentication must be performed by following the redirect url
-        const val REDIRECT = "redirect"
-        //The client is submitting custom user attributes like Name, City
-        const val ATTRIBUTES = "attributes"
-    }
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
+public class SignInSubmitCodeCommandParameters extends BaseSignInTokenCommandParameters {
+    private static final String TAG = SignInSubmitCodeCommandParameters.class.getSimpleName();
 
-    object ChallengeType {
-        //password is required for authentication
-        const val PASSWORD = "password"
-        //Authentication is done by presenting an Out of band token
-        const val OOB = "oob"
-        //Authentication must be performed by following the redirect url
-        const val REDIRECT = "redirect"
-    }
+    @NonNull
+    public final String code;
+    @NonNull
+    public final String credentialToken;
 }

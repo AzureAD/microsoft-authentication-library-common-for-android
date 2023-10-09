@@ -20,32 +20,21 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-
-package com.microsoft.identity.common.java.providers.nativeauth
-
-import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
-import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignInInteractor
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
+package com.microsoft.identity.common.java.exception
 
 /**
- * Factory class that takes care of the creation of NativeAuthOAuth2Strategy.
+ * This exception indicates that no (valid) refresh token was found in the cache to perform
+ * the refresh token flow with. The user should sign in again.
  */
-class NativeAuthOAuth2StrategyFactory {
-    companion object {
-        fun createStrategy(
-            config: NativeAuthOAuth2Configuration,
-            strategyParameters: OAuth2StrategyParameters,
-        ): NativeAuthOAuth2Strategy {
-            return NativeAuthOAuth2Strategy(
-                strategyParameters = strategyParameters,
-                config = config,
-                signInInteractor = SignInInteractor(
-                    httpClient = UrlConnectionHttpClient.getDefaultInstance(),
-                    nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
-                    nativeAuthResponseHandler = NativeAuthResponseHandler()
-                ),
-            )
-        }
+class RefreshTokenNotFoundException(errorCode: String, errorMessage: String, throwable: Throwable? = null) :
+    ServiceException(errorCode, errorMessage, throwable) {
+    // This is needed for backward compatibility with older versions of MSAL (pre 3.0.0)
+    // When MSAL converts the result bundle it looks for this value to know about exception type
+    // We moved the exception class to a new package with refactoring work,
+    // but need to keep this value to older package name to avoid breaking older MSAL clients.
+    val sName = "com.microsoft.identity.common.exception.RefreshTokenNotFoundException"
+
+    override fun getExceptionName(): String? {
+        return sName
     }
 }

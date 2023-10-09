@@ -30,6 +30,7 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext
 open class ApiErrorResult(
     open val error: String?,
     open val errorDescription: String?,
-    open val correlationId: String,
+    open val details: List<Map<String, String>>? = null,
+    open val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
     open val errorCodes: List<Int>? = null
 )

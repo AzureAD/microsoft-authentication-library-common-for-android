@@ -20,32 +20,34 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.java.providers.nativeauth.responses.signin
 
-package com.microsoft.identity.common.java.providers.nativeauth
-
-import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
-import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignInInteractor
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
+import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
 
 /**
- * Factory class that takes care of the creation of NativeAuthOAuth2Strategy.
+ * Represents the potential result types returned from the OAuth /challenge endpoint,
+ * including a case for unexpected errors received from the server.
  */
-class NativeAuthOAuth2StrategyFactory {
-    companion object {
-        fun createStrategy(
-            config: NativeAuthOAuth2Configuration,
-            strategyParameters: OAuth2StrategyParameters,
-        ): NativeAuthOAuth2Strategy {
-            return NativeAuthOAuth2Strategy(
-                strategyParameters = strategyParameters,
-                config = config,
-                signInInteractor = SignInInteractor(
-                    httpClient = UrlConnectionHttpClient.getDefaultInstance(),
-                    nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
-                    nativeAuthResponseHandler = NativeAuthResponseHandler()
-                ),
-            )
-        }
-    }
+sealed interface SignInChallengeApiResult {
+    object Redirect : SignInChallengeApiResult
+    data class OOBRequired(
+        val credentialToken: String,
+        val challengeTargetLabel: String,
+        val challengeChannel: String,
+        val codeLength: Int
+    ) : SignInChallengeApiResult
+
+    data class PasswordRequired(val credentialToken: String) : SignInChallengeApiResult
+
+    data class UnknownError(
+        override val error: String,
+        override val errorDescription: String,
+        override val errorCodes: List<Int>,
+        override val details: List<Map<String, String>>?
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+        errorCodes = errorCodes,
+        details = details
+    ), SignInChallengeApiResult
 }

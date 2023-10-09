@@ -20,32 +20,25 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.java.commands.parameters.nativeauth;
 
-package com.microsoft.identity.common.java.providers.nativeauth
+import com.google.gson.annotations.Expose;
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 
-/**
- * Various grant types supported by Native Auth.
- */
-object NativeAuthConstants {
-    object GrantType {
-        //password is required for authentication
-        const val PASSWORD = "password"
-        //Authentication is done by presenting an Out of band token
-        const val OOB = "oob"
-        //Authentication is done by presenting a short lived token
-        const val SLT = "slt"
-        //Authentication must be performed by following the redirect url
-        const val REDIRECT = "redirect"
-        //The client is submitting custom user attributes like Name, City
-        const val ATTRIBUTES = "attributes"
-    }
+import java.util.List;
 
-    object ChallengeType {
-        //password is required for authentication
-        const val PASSWORD = "password"
-        //Authentication is done by presenting an Out of band token
-        const val OOB = "oob"
-        //Authentication must be performed by following the redirect url
-        const val REDIRECT = "redirect"
-    }
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.experimental.SuperBuilder;
+
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
+public class BaseSignInTokenCommandParameters extends BaseNativeAuthCommandParameters {
+   private static final String TAG = BaseSignInTokenCommandParameters.class.getSimpleName();
+
+   public final List<String> scopes;
+
+   @Expose()
+   private final AbstractAuthenticationScheme authenticationScheme;
 }

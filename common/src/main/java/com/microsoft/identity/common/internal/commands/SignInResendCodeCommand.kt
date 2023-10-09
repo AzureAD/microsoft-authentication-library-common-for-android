@@ -20,32 +20,38 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.internal.commands
 
-package com.microsoft.identity.common.java.providers.nativeauth
+import com.microsoft.identity.common.internal.controllers.NativeAuthMsalController
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInResendCodeCommandParameters
+import com.microsoft.identity.common.java.controllers.results.SignInResendCodeCommandResult
+import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
 
-/**
- * Various grant types supported by Native Auth.
- */
-object NativeAuthConstants {
-    object GrantType {
-        //password is required for authentication
-        const val PASSWORD = "password"
-        //Authentication is done by presenting an Out of band token
-        const val OOB = "oob"
-        //Authentication is done by presenting a short lived token
-        const val SLT = "slt"
-        //Authentication must be performed by following the redirect url
-        const val REDIRECT = "redirect"
-        //The client is submitting custom user attributes like Name, City
-        const val ATTRIBUTES = "attributes"
+class SignInResendCodeCommand(
+    private val parameters: SignInResendCodeCommandParameters,
+    private val controller: NativeAuthMsalController,
+    publicApiId: String
+) : BaseNativeAuthCommand<SignInResendCodeCommandResult>(
+    parameters,
+    controller,
+    publicApiId
+) {
+
+    companion object {
+        private val TAG = SignInResendCodeCommand::class.java.simpleName
     }
 
-    object ChallengeType {
-        //password is required for authentication
-        const val PASSWORD = "password"
-        //Authentication is done by presenting an Out of band token
-        const val OOB = "oob"
-        //Authentication must be performed by following the redirect url
-        const val REDIRECT = "redirect"
+    override fun execute(): SignInResendCodeCommandResult {
+        LogSession.logMethodCall(TAG, "${TAG}.execute")
+        val result = controller.signInResendCode(
+            parameters = parameters
+        )
+
+        Logger.info(
+            TAG,
+            "Returning result: $result"
+        )
+        return result
     }
 }

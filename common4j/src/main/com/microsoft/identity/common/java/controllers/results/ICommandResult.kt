@@ -20,6 +20,7 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+
 package com.microsoft.identity.common.java.controllers.results
 
 import com.microsoft.identity.common.java.logging.DiagnosticContext
@@ -28,15 +29,30 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext
  * ICommandResult interface defines the base class for errors used in Native Auth.
  */
 interface ICommandResult {
+    data class Redirect(val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
+        SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult,
+        SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult
+
+
     /**
      * UnknownError is base class to represent various kinds of errors in NativeAuth.
      */
     data class UnknownError(
-        val error: String?,
-        val errorDescription: String?,
-        val details: List<Map<String, String>>? = null,
-        val correlationId: String ,//= DiagnosticContext.INSTANCE.threadCorrelationId,
-        val errorCodes: List<Int>? = null,
+        override val error: String?,
+        override val errorDescription: String?,
+        override val details: List<Map<String, String>>? = null,
+        override val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
+        override val errorCodes: List<Int>? = null,
         val exception: Exception? = null
-    ) : ICommandResult
+    ): Error(error, errorDescription, details, correlationId, errorCodes), ICommandResult,
+        SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult,
+        SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult
+
+    open class Error(
+        open val error: String?,
+        open val errorDescription: String?,
+        open val details: List<Map<String, String>>? = null,
+        open val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
+        open val errorCodes: List<Int>? = null
+    )
 }
