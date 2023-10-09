@@ -25,6 +25,9 @@ package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.ut
 
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.logging.IRequestContext
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
+import org.powermock.reflect.Whitebox
 
 /**
  * MockApiUtils class provides various methods used by the integration tests to call the MockApi
@@ -37,9 +40,16 @@ class MockApiUtils {
         }
 
         private fun setCorrelationIdHeader(correlationId: String) {
-            var context = DiagnosticContext.INSTANCE.requestContext
-            context[DiagnosticContext.CORRELATION_ID] = correlationId
-            DiagnosticContext.INSTANCE.requestContext = context
+            val mockDiagnosticContext = mock<DiagnosticContext>()
+            Whitebox.setInternalState(
+                DiagnosticContext::class.java,
+                "INSTANCE",
+                mockDiagnosticContext
+            )
+            val mockRequestContext = mock<IRequestContext>()
+            whenever(mockDiagnosticContext.requestContext).thenReturn(mockRequestContext)
+            whenever(mockRequestContext[DiagnosticContext.CORRELATION_ID]).thenReturn(correlationId)
+            whenever(mockDiagnosticContext.threadCorrelationId).thenReturn(correlationId)
         }
 
         private fun configureMockApiResponse(endpointType: MockApiEndpoint, responseType: MockApiResponseType, correlationId: String) {
@@ -67,15 +77,13 @@ class MockApiUtils {
             correlationId: String,
             responseType: MockApiResponseType
         ) {
-            MockApiUtils.configureMockApiResponse(
+            configureMockApiResponse(
                 endpointType = endpointType,
                 responseType = responseType,
                 correlationId = correlationId
             )
 
-            MockApiUtils.setCorrelationIdHeader(
-                correlationId = correlationId
-            )
+            setCorrelationIdHeader(correlationId)
         }
     }
 }
