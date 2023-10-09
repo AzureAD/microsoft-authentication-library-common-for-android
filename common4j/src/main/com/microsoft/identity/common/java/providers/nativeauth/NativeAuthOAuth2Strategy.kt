@@ -23,7 +23,6 @@
 
 package com.microsoft.identity.common.java.providers.nativeauth
 
-import androidx.annotation.VisibleForTesting
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitNewPasswordCommandParameters
@@ -59,7 +58,6 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParamet
  */
 class NativeAuthOAuth2Strategy(
     private val strategyParameters: OAuth2StrategyParameters,
-    @get:VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     val config: NativeAuthOAuth2Configuration,
     private val signInInteractor: SignInInteractor,
     private val signUpInteractor: SignUpInteractor,

@@ -69,10 +69,6 @@ class NativeAuthCIAMAuthority (
         }
     }
 
-
-                                                                          
-                                                                                                     
-                                    
     init {
         mAuthorityTypeString = "AAD_NA" // AAD Native Auth
         mAuthorityUrlString = authorityUrl
@@ -107,7 +103,6 @@ class NativeAuthCIAMAuthority (
         val config = createNativeAuthOAuth2Configuration(parameters.mChallengeTypes)
 
         // CIAM Authorities can fetch endpoints from open id configuration. We disable this option.
-                                      
         parameters.setUsingOpenIdConfiguration(NATIVE_AUTH_USE_OPENID_CONFIGURATION)
 
         return NativeAuthOAuth2StrategyFactory.createStrategy(

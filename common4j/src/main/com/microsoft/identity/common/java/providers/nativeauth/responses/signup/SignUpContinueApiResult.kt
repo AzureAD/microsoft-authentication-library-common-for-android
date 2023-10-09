@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.java.providers.nativeauth.responses.signup
 
 import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.RequiredUserAttributeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.UserAttributeApiResult
 
 /**
  * Represents the potential result types returned from the Sign Up /continue endpoint,
@@ -41,7 +41,7 @@ sealed interface SignUpContinueApiResult {
         val signupToken: String,
         override val error: String,
         override val errorDescription: String,
-        val requiredAttributes: List<RequiredUserAttributeApiResult>
+        val requiredAttributes: List<UserAttributeApiResult>
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,

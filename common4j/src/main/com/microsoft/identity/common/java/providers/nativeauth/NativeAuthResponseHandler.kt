@@ -22,7 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.nativeauth
 
-import androidx.annotation.VisibleForTesting
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.net.HttpResponse
@@ -46,15 +45,14 @@ import java.net.HttpURLConnection
 class NativeAuthResponseHandler {
 
     companion object {
-        @VisibleForTesting const val DEFAULT_ERROR = "unknown_error"
-        @VisibleForTesting const val DEFAULT_ERROR_DESCRIPTION = "No error description received"
+        const val DEFAULT_ERROR = "unknown_error"
+        const val DEFAULT_ERROR_DESCRIPTION = "No error description received"
     }
 
     private val TAG = NativeAuthResponseHandler::class.java.simpleName
 
     //region signup/start
     @Throws(ClientException::class)
-    @VisibleForTesting
     fun getSignUpStartResultFromHttpResponse(
         response: HttpResponse
     ): SignUpStartApiResponse {
@@ -89,7 +87,6 @@ class NativeAuthResponseHandler {
 
     //region signup/challenge
     @Throws(ClientException::class)
-    @VisibleForTesting
     fun getSignUpChallengeResultFromHttpResponse(
         response: HttpResponse
     ): SignUpChallengeApiResponse {
@@ -125,7 +122,6 @@ class NativeAuthResponseHandler {
 
     //region /signup/continue
     @Throws(ClientException::class)
-    @VisibleForTesting
     fun getSignUpContinueResultFromHttpResponse(
         response: HttpResponse
     ): SignUpContinueApiResponse {
@@ -160,7 +156,6 @@ class NativeAuthResponseHandler {
 
     //region /oauth/v2.0/initiate
     @Throws(ClientException::class)
-    @VisibleForTesting
     fun getSignInInitiateResultFromHttpResponse(
         response: HttpResponse
     ): SignInInitiateApiResponse {
@@ -194,7 +189,6 @@ class NativeAuthResponseHandler {
 
     //region /oauth/v2.0/challenge
     @Throws(ClientException::class)
-    @VisibleForTesting
     fun getSignInChallengeResultFromHttpResponse(
         response: HttpResponse
     ): SignInChallengeApiResponse {
@@ -233,7 +227,6 @@ class NativeAuthResponseHandler {
 
     //region /oauth/v2.0/token
     @Throws(ClientException::class)
-    @VisibleForTesting
     fun getSignInTokenApiResultFromHttpResponse(
         response: HttpResponse
     ): SignInTokenApiResult {
@@ -284,7 +277,6 @@ class NativeAuthResponseHandler {
 
     //region /resetpassword/start
     @Throws(ClientException::class)
-    @VisibleForTesting
     fun getResetPasswordStartApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordStartApiResponse {
@@ -316,7 +308,6 @@ class NativeAuthResponseHandler {
 
     //region /resetpassword/challenge
     @Throws(ClientException::class)
-    @VisibleForTesting
     fun getResetPasswordChallengeApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordChallengeApiResponse {
@@ -353,7 +344,6 @@ class NativeAuthResponseHandler {
 
     //region /resetpassword/continue
     @Throws(ClientException::class)
-    @VisibleForTesting
     fun getResetPasswordContinueApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordContinueApiResponse {
@@ -386,7 +376,6 @@ class NativeAuthResponseHandler {
 
     //region /resetpassword/submit
     @Throws(ClientException::class)
-    @VisibleForTesting
     fun getResetPasswordSubmitApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordSubmitApiResponse {
@@ -418,7 +407,6 @@ class NativeAuthResponseHandler {
 
     //region /resetpassword/poll_completion
     @Throws(ClientException::class)
-    @VisibleForTesting
     fun getResetPasswordPollCompletionApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordPollCompletionApiResponse {

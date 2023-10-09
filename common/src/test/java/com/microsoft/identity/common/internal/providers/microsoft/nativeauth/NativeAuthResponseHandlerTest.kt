@@ -25,8 +25,8 @@ package com.microsoft.identity.common.internal.providers.microsoft.nativeauth
 import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthResponseHandler
-import com.microsoft.identity.common.java.providers.nativeauth.responses.RequiredUserAttributeApiResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.RequiredUserAttributeOptionsApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.UserAttributeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.UserAttributeOptionsApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordChallengeApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordChallengeApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordContinueApiResponse
@@ -76,15 +76,15 @@ class NativeAuthResponseHandlerTest {
     private val emptyHttpResponse = HttpResponse(400, "", mapOf())
     private val requiredAttributes =
         listOf(
-            RequiredUserAttributeApiResult(
+            UserAttributeApiResult(
                 "city",
                 "string",
                 true,
-                RequiredUserAttributeOptionsApiResult(
+                UserAttributeOptionsApiResult(
                     "someregex"
                 )
             ),
-            RequiredUserAttributeApiResult(
+            UserAttributeApiResult(
                 "surname",
                 "string",
                 true,

@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.java.controllers.results
 
 import com.microsoft.identity.common.java.logging.DiagnosticContext
-import com.microsoft.identity.common.java.providers.nativeauth.responses.RequiredUserAttributeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.UserAttributeApiResult
 
 sealed interface SignUpSubmitCodeCommandResult: ICommandResult
 sealed interface SignUpSubmitUserAttributesCommandResult: ICommandResult
@@ -70,7 +70,7 @@ interface SignUpCommandResult {
         val signupToken: String,
         val error: String,
         val errorDescription: String,
-        val requiredAttributes: List<RequiredUserAttributeApiResult>,
+        val requiredAttributes: List<UserAttributeApiResult>,
         val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId
     ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult,
         SignUpSubmitUserAttributesCommandResult,

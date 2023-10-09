@@ -188,10 +188,9 @@ dependencies {
     testImplementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
     testImplementation project(":LabApiUtilities")
     testImplementation project(":testutils")
-    
     testImplementation(testFixtures(project(":common4j")))
 
-    testImplementation project(':testutils')
+    
     testImplementation("org.mockito.kotlin:mockito-kotlin:$rootProject.ext.mockitoKotlinVersion") {
         exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib'
     }
