@@ -200,7 +200,7 @@ dependencies {
 
     implementation project(":LabApiUtilities")
 
-    implementation "org.mockito.kotlin:mockito-kotlin:$rootProject.ext.mockitoKotlinVersion"
+    implementation "org.mockito.kotlin:mockito-kotlin:3.6.28"
     
     implementation "org.powermock:powermock-module-junit4:$rootProject.ext.powerMockVersion"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
