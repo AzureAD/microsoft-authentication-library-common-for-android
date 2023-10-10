@@ -153,8 +153,13 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
 
     @Override
     protected void performCleanupIfMintShrFails(@NonNull final Exception e) {
+        final String methodTag = TAG + ":performCleanupIfMintShrFails";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                 && e.getCause() instanceof KeyPermanentlyInvalidatedException) {
+            Logger.info(methodTag, "Getting Invalid key blob, Invalid private RSA key", e.getMessage());
+            if (e.getMessage().contains("internal Keystore code: -33")) {
+                Logger.error(methodTag, "Getting Invalid key blob, Invalid private RSA key", e);
+            }
             Logger.warn(TAG, "Unable to access asymmetric key - clearing.");
             clearAsymmetricKey();
         }

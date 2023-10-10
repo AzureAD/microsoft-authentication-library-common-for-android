@@ -301,7 +301,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
             final KeyPair keyPair = generateNewRsaKeyPair(RSA_KEY_SIZE);
             Logger.info(TAG, "generating RSA key pair");
             final RSAKey rsaKey = getRsaKeyForKeyPair(keyPair);
-            Logger.info(TAG, "Thumbprint for RSA key : " + getThumbprintForRsaKey(rsaKey));
+            Logger.info(TAG, "Thumbprint for RSA key generated");
             return getThumbprintForRsaKey(rsaKey);
         } catch (final UnsupportedOperationException e) {
             exception = e;
@@ -990,8 +990,9 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         } catch (final JOSEException e) {
             Logger.info(methodTag, "Unable to access asymmetric key, clearing the key.");
             clearAsymmetricKey();
-            final String thumbPrint = generateAsymmetricKey();
-            Logger.info(methodTag, "Generated new PoP asymmetric key with thumbprint: " + thumbPrint);
+            Logger.info(methodTag, "Generating new PoP asymmetric key with thumbprint.");
+            generateAsymmetricKey();
+            Logger.info(methodTag, "Generated new PoP asymmetric key with thumbprint.");
             exception = e;
             errCode = JWT_SIGNING_FAILURE;
             Logger.info(methodTag, "Encountered JOSEException with message: " + e.getMessage());
