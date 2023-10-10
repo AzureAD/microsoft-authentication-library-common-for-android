@@ -980,9 +980,6 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
 
             signedJWT.sign(signer);
 
-            Logger.info(methodTag, "Unable to access asymmetric key, clearing the key.");
-            clearAsymmetricKey();
-            Logger.info(methodTag, "Returning the serialized jwt.");
             return signedJWT.serialize();
         } catch (final NoSuchAlgorithmException e) {
             exception = e;
@@ -991,6 +988,10 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
             exception = e;
             errCode = KEYSTORE_NOT_INITIALIZED;
         } catch (final JOSEException e) {
+            Logger.info(methodTag, "Unable to access asymmetric key, clearing the key.");
+            clearAsymmetricKey();
+            final String thumbPrint = generateAsymmetricKey();
+            Logger.info(methodTag, "Generated new PoP asymmetric key with thumbprint: " + thumbPrint);
             exception = e;
             errCode = JWT_SIGNING_FAILURE;
             Logger.info(methodTag, "Encountered JOSEException with message: " + e.getMessage());
