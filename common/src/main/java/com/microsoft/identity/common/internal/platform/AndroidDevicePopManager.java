@@ -155,7 +155,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
     protected void performCleanupIfMintShrFails(@NonNull final Exception e) {
         final String methodTag = TAG + ":performCleanupIfMintShrFails";
         Logger.info(methodTag, "Getting Invalid key blob, Invalid private RSA key", e.getMessage());
-        if (e.getMessage().contains("internal Keystore code: -33")) {
+        if (e.getMessage()!=null && e.getMessage().contains("internal Keystore code: -33")) {
             Logger.error(methodTag, "Getting Invalid key blob, Invalid private RSA key", e);
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
