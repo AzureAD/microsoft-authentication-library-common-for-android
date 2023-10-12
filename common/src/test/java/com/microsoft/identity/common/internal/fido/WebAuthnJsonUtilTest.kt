@@ -38,8 +38,9 @@ class WebAuthnJsonUtilTest {
     val allowCredentials1 = "id1"
     val allowCredentials2 = "id2"
 
-    val expectedJsonAllFieldsFilled = """{"challenge":"$challengeStr","rpId":"$relyingPartyIdentifier","allowCredentials":[{"type":"public-key","id":"$allowCredentials1"},{"type":"public-key","id":"$allowCredentials2"}],"userVerification":"$userVerificationPolicy"}"""
-    val expectedJsonOnlyRequiredFields = """{"challenge":"$challengeStr","rpId":"$relyingPartyIdentifier","allowCredentials":[],"userVerification":"$userVerificationPolicy"}"""
+    //Moshi's built in adapter alphabetizes  the fields.
+    val expectedJsonAllFieldsFilled = """{"allowCredentials":[{"id":"$allowCredentials1","type":"public-key"},{"id":"$allowCredentials2","type":"public-key"}],"challenge":"$challengeStr","rpId":"$relyingPartyIdentifier","userVerification":"$userVerificationPolicy"}"""
+    val expectedJsonOnlyRequiredFields = """{"allowCredentials":[],"challenge":"$challengeStr","rpId":"$relyingPartyIdentifier","userVerification":"$userVerificationPolicy"}"""
 
     @Test
     fun testCreateJsonAuthRequestFromChallengeObject_AllFieldsFilled() {
@@ -54,7 +55,7 @@ class WebAuthnJsonUtilTest {
             allowedCredentials = listOf(allowCredentials1, allowCredentials2)
         )
         val result = WebAuthnJsonUtil.createJsonAuthRequestFromChallengeObject(authChallenge)
-        assertEquals(result, expectedJsonAllFieldsFilled)
+        assertEquals(expectedJsonAllFieldsFilled, result)
     }
 
     @Test
@@ -70,7 +71,7 @@ class WebAuthnJsonUtilTest {
             allowedCredentials = null
         )
         val result = WebAuthnJsonUtil.createJsonAuthRequestFromChallengeObject(authChallenge)
-        assertEquals(result, expectedJsonOnlyRequiredFields)
+        assertEquals(expectedJsonOnlyRequiredFields, result)
     }
 
     //No tests created for missing required fields because

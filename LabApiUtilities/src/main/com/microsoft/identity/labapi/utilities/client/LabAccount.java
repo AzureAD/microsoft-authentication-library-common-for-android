@@ -65,4 +65,9 @@ public class LabAccount implements ILabAccount {
     public String getAuthority() {
         return mConfigInfo.getLabInfo().getAuthority();
     }
+
+    @Override
+    public String getAzureEnvironment() {
+        return mConfigInfo.getLabInfo().getAzureEnvironment();
+    }
 }

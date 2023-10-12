@@ -58,13 +58,22 @@ public class TokenRequest implements IHasExtraParameters {
     @SerializedName("client_id")
     private String mClientId;
 
+    /**
+     * The hub/brk redirectUri for the request.
+     * <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview/pullrequest/7876">...</a>
+     */
     @Expose()
-    @SerializedName("child_redirect_uri")
-    private String mChildRedirectUri;
+    @SerializedName("brk_redirect_uri")
+    private String mBrkRedirectUri;
 
+    /**
+     * The hub/brk clientId for the request.
+     * <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview/pullrequest/7876">...</a>
+     */
     @Expose()
-    @SerializedName("child_client_id")
-    private String mChildClientId;
+    @SerializedName("brk_client_id")
+
+    private String mBrkClientId;
 
     @SerializedName("client_secret")
     private String mClientSecret;
@@ -171,31 +180,31 @@ public class TokenRequest implements IHasExtraParameters {
     }
 
     /**
-     * @return mChildRedirectUri of the token request.
+     * @return mBrkRedirectUri of the token request.
      */
-    public String getChildRedirectUri() {
-        return mChildRedirectUri;
+    public String getBrkRedirectUri() {
+        return mBrkRedirectUri;
     }
 
     /**
-     * @param childRedirectUri child redirect URI of the token request.
+     * @param brkRedirectUri brk redirect URI of the token request.
      */
-    public void setChildRedirectUri(final String childRedirectUri) {
-        mChildRedirectUri = childRedirectUri;
+    public void setBrkRedirectUri(final String brkRedirectUri) {
+        mBrkRedirectUri = brkRedirectUri;
     }
 
     /**
-     * @return mChildClientId of the token request.
+     * @return mBrkClientId of the token request.
      */
-    public String getChildClientId() {
-        return mChildClientId;
+    public String getBrkClientId() {
+        return mBrkClientId;
     }
 
     /**
-     * @param childClientId child client ID of the token request.
+     * @param brkClientId brk client ID of the token request.
      */
-    public void setChildClientId(final String childClientId) {
-        mChildClientId = childClientId;
+    public void setBrkClientId(final String brkClientId) {
+        mBrkClientId = brkClientId;
     }
 
     /**
