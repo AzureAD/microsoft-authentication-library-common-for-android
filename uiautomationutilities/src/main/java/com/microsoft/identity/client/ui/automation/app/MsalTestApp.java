@@ -28,10 +28,12 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
+import com.microsoft.identity.client.ui.automation.browser.IBrowser;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
@@ -68,16 +70,28 @@ public class MsalTestApp extends App {
         install();
     }
 
+    public String acquireToken(@NonNull final String username,
+                               @NonNull final String password,
+                               @NonNull final PromptHandlerParameters promptHandlerParameters,
+                               @NonNull final boolean shouldHandlePrompt) throws UiObjectNotFoundException, InterruptedException {
+        return acquireToken(username, password, promptHandlerParameters, null, false, shouldHandlePrompt);
+    }
     // click on button acquire token interactive
     public String acquireToken(@NonNull final String username,
                                @NonNull final String password,
                                @NonNull final PromptHandlerParameters promptHandlerParameters,
+                               @Nullable final IBrowser browser,
+                               final boolean shouldHandleBrowserFirstRun,
                                @NonNull final boolean shouldHandlePrompt) throws UiObjectNotFoundException, InterruptedException {
 
         final UiObject acquireTokenButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_acquiretoken");
         scrollToElement(acquireTokenButton);
         acquireTokenButton.click();
 
+        if (promptHandlerParameters.getBroker() == null && browser != null && shouldHandleBrowserFirstRun) {
+            // handle browser first run as applicable
+            browser.handleFirstRun();
+        }
         // handle prompt if needed
         if (shouldHandlePrompt) {
             try {
