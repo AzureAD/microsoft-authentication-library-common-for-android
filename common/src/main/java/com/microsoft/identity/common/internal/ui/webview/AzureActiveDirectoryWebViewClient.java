@@ -134,7 +134,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
         final Uri requestUrl = request.getUrl();
         //Hard-coding url below
-        return handleUrl(view, "urn:http-auth:PassKey?Challenge=T1xCsnxM2DNL2KdK5CLa6fMhD7OBqho6syzInk_n-Uo&RelyingPartyIdentifier=login.microsoft.com&Version=1.0&SubmitUrl=submiturl&KeyTypes=passkey&Context=123456");
+        return handleUrl(view, "urn:http-auth:PassKey?Challenge=T1xCsnxM2DNL2KdK5CLa6fMhD7OBqho6syzInk_n-Uo&RelyingPartyIdentifier=login.microsoft.com&Version=1.0&SubmitUrl=https://login.microsoft.com&KeyTypes=passkey&Context=123456");
     }
 
     public void setRequestHeaders(final HashMap<String, String> requestHeaders) {

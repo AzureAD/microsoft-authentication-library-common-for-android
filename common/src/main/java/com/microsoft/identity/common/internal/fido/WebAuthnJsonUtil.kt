@@ -35,7 +35,7 @@ class WebAuthnJsonUtil {
          * @param challengeObject AuthFidoChallenge
          * @return a string representation of PublicKeyCredentialRequestOptionsJSON.
          */
-        fun createJsonAuthRequestFromChallengeObject(challengeObject: AuthFidoChallenge): String? {
+        fun createJsonAuthRequestFromChallengeObject(challengeObject: AuthFidoChallenge): String {
             //Create classes
             val publicKeyCredentialDescriptorList = ArrayList<PublicKeyCredentialDescriptor>()
             challengeObject.allowedCredentials?.let { allowedCredentials ->

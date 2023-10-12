@@ -58,8 +58,7 @@ class PasskeyFidoChallengeHandlerTest {
         passkeyFidoChallengeHandler = PasskeyFidoChallengeHandler(
             fidoManager = testFidoManager,
             webView = webView,
-            lifecycleOwner = testLifecycleOwner,
-            telemetryHelper = testFidoTelemetryHelper
+            lifecycleOwner = testLifecycleOwner
         )
     }
 
@@ -110,8 +109,7 @@ class PasskeyFidoChallengeHandlerTest {
         passkeyFidoChallengeHandler = PasskeyFidoChallengeHandler(
             fidoManager = testFidoManager,
             webView = webView,
-            lifecycleOwner = null,
-            telemetryHelper = testFidoTelemetryHelper
+            lifecycleOwner = null
         )
         assertFalse(webView.urlLoaded)
         passkeyFidoChallengeHandler.processChallenge(
