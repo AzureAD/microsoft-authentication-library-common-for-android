@@ -205,7 +205,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                         Logger.error(TAG, "Import unsupported. Skipping import flag then retry.", e);
                         tryImport = false;
 
-                        if (tryStrongBox && null != e.getCause() && (isStrongBoxUnavailableException(e.getCause()) || isNegativeInternalError(e.getCause()))) {
+                        if (tryStrongBox && null != e.getCause() && (isStrongBoxUnavailableException(e.getCause()))) {
                             // On some devices (notably, Huawei Mate 9 Pro), StrongBox errors are
                             // the cause of the surfaced SecureKeyImportUnavailableException.
                             tryStrongBox = false;
@@ -216,15 +216,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                         Logger.error(TAG, "Failed to generate attestation cert. Skipping attestation then retry.", e);
                         trySetAttestationChallenge = false;
 
-                        continue;
-                    } else if (tryStrongBox && (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
-                            && (null != e.getCause()) && isNegativeInternalError(e.getCause())) {
-                        // Android 14 specific error where strong box is failing, most likely because of IAR requirement in android 14
-                        // https://android.googlesource.com/platform/compatibility/cdd/+/e2fee2f/9_security-model/9_11_keys-and-credentials.md
-                        // Had to check code name, as android 14 device in beta seems to still show 33 as SDK int
-                        // TO-DO : https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2574078
-                        Logger.error(TAG, "Android 14 Internal Key store error with StrongBox. Skipping strongbox then retry.", e);
-                        tryStrongBox = false;
                         continue;
                     }
 
@@ -443,6 +434,30 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
         return builder.setIsStrongBoxBacked(true);
     }
 
+    /**
+     * Applies encryption paddings to the supplied {@link KeyGenParameterSpec.Builder}.
+     *
+     * @param builder The builder.
+     * @return A reference to the supplied builder instance.
+     */
+    private static KeyGenParameterSpec.Builder applyEncryptionPaddings(
+            @androidx.annotation.NonNull final KeyGenParameterSpec.Builder builder, final boolean useStrongbox) {
+        if (useStrongbox && (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)) {
+            // Due to a bug in some versions of Android (starting Android 14 beta), we have seen that the key pair generation fails when encryption padding KeyProperties.ENCRYPTION_PADDING_RSA_OAEP is also added.
+            // Issue reported to google : https://issuetracker.google.com/issues/293391873
+            // We will only do this when we are using strongbox. Without strongbox, we do not expect to see an exception.
+            builder.setEncryptionPaddings(
+                    KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
+            );
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            builder.setEncryptionPaddings(
+                    KeyProperties.ENCRYPTION_PADDING_RSA_OAEP,
+                    KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
+            );
+        }
+        return builder;
+    }
+
     @SuppressLint("InlinedApi")
     @RequiresApi(api = Build.VERSION_CODES.P)
     private void initialize28(@androidx.annotation.NonNull final KeyPairGenerator keyPairGenerator,
@@ -467,9 +482,9 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                         KeyProperties.DIGEST_NONE,
                         KeyProperties.DIGEST_SHA1,
                         KeyProperties.DIGEST_SHA256
-                ).setEncryptionPaddings(
-                        KeyProperties.ENCRYPTION_PADDING_RSA_OAEP
                 );
+
+        applyEncryptionPaddings(builder, useStrongbox);
 
         if (trySetAttestationChallenge && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             builder = setAttestationChallenge(builder);
