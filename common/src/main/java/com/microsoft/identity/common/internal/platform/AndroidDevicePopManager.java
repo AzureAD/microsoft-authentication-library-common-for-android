@@ -260,16 +260,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
         return isStrongBoxException;
     }
 
-    private static boolean isNegativeInternalError(@androidx.annotation.NonNull final Throwable t) {
-        final boolean isNegativeInternalError = t.getMessage() != null && t.getMessage().contains(NEGATIVE_THOUSAND_INTERNAL_ERROR);
-
-        if (isNegativeInternalError) {
-            Logger.error(TAG, "StrongBox not supported. internal Keystore code: -1000", t);
-        }
-
-        return isNegativeInternalError;
-    }
-
     /**
      * Generates a new {@link KeyPair}.
      *
@@ -434,30 +424,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
         return builder.setIsStrongBoxBacked(true);
     }
 
-    /**
-     * Applies encryption paddings to the supplied {@link KeyGenParameterSpec.Builder}.
-     *
-     * @param builder The builder.
-     * @return A reference to the supplied builder instance.
-     */
-    private static KeyGenParameterSpec.Builder applyEncryptionPaddings(
-            @androidx.annotation.NonNull final KeyGenParameterSpec.Builder builder, final boolean useStrongbox) {
-        if (useStrongbox && (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)) {
-            // Due to a bug in some versions of Android (starting Android 14 beta), we have seen that the key pair generation fails when encryption padding KeyProperties.ENCRYPTION_PADDING_RSA_OAEP is also added.
-            // Issue reported to google : https://issuetracker.google.com/issues/293391873
-            // We will only do this when we are using strongbox. Without strongbox, we do not expect to see an exception.
-            builder.setEncryptionPaddings(
-                    KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
-            );
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            builder.setEncryptionPaddings(
-                    KeyProperties.ENCRYPTION_PADDING_RSA_OAEP,
-                    KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
-            );
-        }
-        return builder;
-    }
-
     @SuppressLint("InlinedApi")
     @RequiresApi(api = Build.VERSION_CODES.P)
     private void initialize28(@androidx.annotation.NonNull final KeyPairGenerator keyPairGenerator,
@@ -465,10 +431,8 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                               final boolean useStrongbox,
                               final boolean enableImport,
                               final boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
-        int purposes = KeyProperties.PURPOSE_SIGN
-                | KeyProperties.PURPOSE_VERIFY
-                | KeyProperties.PURPOSE_ENCRYPT
-                | KeyProperties.PURPOSE_DECRYPT;
+        int purposes = KeyProperties.PURPOSE_SIGN;
+
         if (enableImport && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             purposes |= KeyProperties.PURPOSE_WRAP_KEY;
         }
@@ -483,8 +447,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                         KeyProperties.DIGEST_SHA1,
                         KeyProperties.DIGEST_SHA256
                 );
-
-        applyEncryptionPaddings(builder, useStrongbox);
 
         if (trySetAttestationChallenge && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             builder = setAttestationChallenge(builder);
