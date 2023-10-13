@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.providers.nativeauth
 
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResponse
@@ -34,6 +35,10 @@ import com.microsoft.identity.common.java.util.ApiResultUtil
 import com.microsoft.identity.common.java.util.ObjectMapper
 import java.net.HttpURLConnection
 
+/**
+ * NativeAuthResponseHandler provides methods to transform the HTTP responses received
+ * from various REST APIs to Java response objects.
+ */
 class NativeAuthResponseHandler {
 
     companion object {
@@ -44,6 +49,10 @@ class NativeAuthResponseHandler {
     private val TAG = NativeAuthResponseHandler::class.java.simpleName
 
     //region /oauth/v2.0/initiate
+    /**
+     * Converts the response for /oauth/v2.0/initiate REST API to Java object
+     * @param response HTTP response received from REST API
+     */
     @Throws(ClientException::class)
     fun getSignInInitiateResultFromHttpResponse(
         response: HttpResponse
@@ -77,6 +86,10 @@ class NativeAuthResponseHandler {
     //endregion
 
     //region /oauth/v2.0/challenge
+    /**
+     * Converts the response for /oauth/v2.0/challenge REST API to Java object
+     * @param response HTTP response received from REST API
+     */
     @Throws(ClientException::class)
     fun getSignInChallengeResultFromHttpResponse(
         response: HttpResponse
@@ -115,6 +128,10 @@ class NativeAuthResponseHandler {
     //endregion
 
     //region /oauth/v2.0/token
+    /**
+     * Converts the response for /oauth/v2.0/token REST API to Java object
+     * @param response HTTP response received from REST API
+     */
     @Throws(ClientException::class)
     fun getSignInTokenApiResultFromHttpResponse(
         response: HttpResponse
@@ -156,8 +173,10 @@ class NativeAuthResponseHandler {
                                 response.body,
                                 MicrosoftStsTokenResponse::class.java
                             )
-
-            // TODO logging
+            Logger.info(TAG, "MicrosoftStsTokenResponse authority:$apiResponse.authority" +
+                    " cloud_instance_host_name:${apiResponse.refreshTokenExpiresIn}" +
+                    " isMsaAccount:$apiResponse.isMsaAccount() tenantId $apiResponse.tenantId" +
+                    " cloudInstanceHostName $apiResponse.cloudInstanceHostName")
 
             return SignInTokenApiResult.Success(tokenResponse = apiResponse)
         }

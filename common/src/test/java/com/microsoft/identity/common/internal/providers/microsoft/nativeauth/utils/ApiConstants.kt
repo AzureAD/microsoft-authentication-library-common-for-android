@@ -2,6 +2,9 @@ package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.ut
 
 import java.net.URL
 
+/**
+ * ApiConstants provides various endpoints for mock API for Native Auth endpoints.
+ */
 interface ApiConstants {
     companion object {
         val signUpStartRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/v1.0/start")

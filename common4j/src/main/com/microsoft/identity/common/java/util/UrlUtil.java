@@ -79,7 +79,7 @@ public class UrlUtil {
         final List<String> pathSegmentsToAppend = pathBuilder.getPathSegments();
 
         final CommonURIBuilder builder = new CommonURIBuilder(urlToAppend.toString());
-        ArrayList<String> pathSegments = new ArrayList<>(builder.getPathSegments());
+        final ArrayList<String> pathSegments = new ArrayList<>(builder.getPathSegments());
 
         //If last path segment in the base url is empty and pathString is non empty then we can
         //remove the last empty path segment.

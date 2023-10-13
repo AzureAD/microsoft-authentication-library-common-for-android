@@ -101,29 +101,30 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
         try {
             val oAuth2Strategy = createOAuth2Strategy(parameters)
-
-            val usePassword = parameters is SignInStartUsingPasswordCommandParameters
-
-            var parametersWithScopes: SignInStartUsingPasswordCommandParameters? = null
-            if (usePassword) {
-                val mergedScopes = addDefaultScopes(parameters.scopes)
-                parametersWithScopes = CommandUtil.createSignInStartCommandParametersWithScopes(
-                    parameters as SignInStartUsingPasswordCommandParameters,
-                    mergedScopes
-                )
-            }
-
             val initiateApiResult = performSignInInitiateCall(
                 oAuth2Strategy = oAuth2Strategy,
-                parameters = parameters // Downcast, because we don't need the password in this API call
-            )
+                parameters = parameters)
 
-            return processSignInInitiateApiResult(
-                initiateApiResult = initiateApiResult,
-                oAuth2Strategy = oAuth2Strategy,
-                parametersWithScopes = parametersWithScopes, // Include the scopes, to send to /token endpoint in case of password flow
-                usePassword = usePassword
-            )
+            if (parameters is SignInStartUsingPasswordCommandParameters)
+            {
+                val mergedScopes = addDefaultScopes(parameters.scopes)
+                var parametersWithScopes = CommandUtil.createSignInStartCommandParametersWithScopes(
+                    parameters as SignInStartUsingPasswordCommandParameters,
+                    mergedScopes)
+
+                return processSignInInitiateApiResult(
+                    initiateApiResult = initiateApiResult,
+                    oAuth2Strategy = oAuth2Strategy,
+                    parametersWithScopes = parametersWithScopes,
+                    usePassword = true)
+            }
+            else
+            {
+                return processSignInInitiateApiResult(
+                    initiateApiResult = initiateApiResult,
+                    oAuth2Strategy = oAuth2Strategy)
+            }
+
         } catch (e: Exception) {
             Logger.error(TAG, "Exception thrown in signInStart", e)
             throw e
@@ -131,7 +132,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     }
 
     /**
-     * Makes a call to the /token endpoint with the provided SLT, and caches the returned token if successful.
+     * Makes a call to the /token endpoint with the provided Short Lived Token (SLT), and caches the returned token
+     * if successful. In case of error [ICommandResult.UnknownError] is returned.
      */
     fun signInWithSLT(parameters: SignInWithSLTCommandParameters): SignInWithSLTCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.signInWithSLT")
@@ -182,7 +184,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     }
 
     /**
-     * Makes a call to the /token endpoint with the provided code, and caches the returned token if successful.
+     * Makes a call to the /token endpoint with the provided OOB code, and caches the returned token
+     * if successful.  In case of error [ICommandResult.UnknownError] is returned.
      */
     fun signInSubmitCode(parameters: SignInSubmitCodeCommandParameters): SignInSubmitCodeCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.signInSubmitCode")
@@ -714,9 +717,9 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     @VisibleForTesting
     fun processSignInInitiateApiResult(
         initiateApiResult: SignInInitiateApiResult,
-        parametersWithScopes: SignInStartUsingPasswordCommandParameters?,
+        parametersWithScopes: SignInStartUsingPasswordCommandParameters? = null,
         oAuth2Strategy: NativeAuthOAuth2Strategy,
-        usePassword: Boolean
+        usePassword: Boolean = false
     ): SignInStartCommandResult {
         return when (initiateApiResult) {
             SignInInitiateApiResult.Redirect -> {

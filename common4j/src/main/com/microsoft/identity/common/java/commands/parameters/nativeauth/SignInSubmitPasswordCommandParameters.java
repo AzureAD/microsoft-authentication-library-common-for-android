@@ -31,7 +31,7 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 public class SignInSubmitPasswordCommandParameters extends BaseSignInTokenCommandParameters {
-	private static final String TAG = SignInSubmitCodeCommandParameters.class.getSimpleName();
+	private static final String TAG = SignInSubmitPasswordCommandParameters.class.getSimpleName();
 
 	@NonNull
 	public final String password;

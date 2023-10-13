@@ -61,14 +61,11 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
     private final IAccountRecord account;
 
     @Expose()
-    private final Set<String> scopes;
+    @NonNull
+    private final AbstractAuthenticationScheme authenticationScheme;
 
     @Expose()
     private final String claimsRequestJson;
-
-    @Expose()
-    @NonNull
-    private final AbstractAuthenticationScheme authenticationScheme;
 
     @Expose()
     private final String mamEnrollmentId;
@@ -80,14 +77,15 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
 
     private final List<Map.Entry<String, String>> extraOptions;
 
-    public Set<String> getScopes() {
-        return this.scopes == null ? null : new HashSet<>(this.scopes);
-    }
-
     public String getMamEnrollmentId(){
         return mamEnrollmentId;
     }
 
+    /**
+     * validates the command parameters in this object are consistent and can be used for
+     * command execution.
+     * @throws ArgumentException
+     */
     public void validate() throws ArgumentException {
         final String methodName = ":validate";
 
