@@ -82,10 +82,13 @@ public final class InstallCertActivityLauncher extends AppCompatActivity {
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        final String methodTag = TAG + ":onCreate";
         if (savedInstanceState == null) {
             Bundle extras = getIntent().getExtras();
             if(extras != null) {
                 mInstallCertificateIntent = extras.getParcelable(INSTALL_CERT_INTENT);
+            } else {
+                Logger.warn(methodTag, "Extras is null.");
             }
         } else {
             // If the activity is being re-initialized after previously being shut down
