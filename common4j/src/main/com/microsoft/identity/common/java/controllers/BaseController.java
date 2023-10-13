@@ -49,6 +49,7 @@ import com.microsoft.identity.common.java.commands.parameters.RemoveAccountComma
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
+import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
@@ -84,6 +85,7 @@ import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
+import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ResultUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -322,6 +324,12 @@ public abstract class BaseController {
                     parameters.getApplicationVersion()
             );
             completeRequestHeaders.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
+
+            // Not going to add passkey protocol header until full feature is ready.
+            if (FidoConstants.IS_PASSKEY_SUPPORT_READY
+                    && interactiveTokenCommandParameters.getAuthorizationAgent() == AuthorizationAgent.WEBVIEW) {
+                completeRequestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_VALUE);
+            }
 
             // Add additional fields to the AuthorizationRequest.Builder to support interactive
             setBuilderProperties(builder, parameters, interactiveTokenCommandParameters, completeRequestHeaders);
