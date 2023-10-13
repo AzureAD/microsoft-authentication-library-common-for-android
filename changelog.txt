@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Added passkey protocol header (behind a flag) (#2181)
 
 V.16.1.0
 ----------
