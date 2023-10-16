@@ -217,7 +217,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                         trySetAttestationChallenge = false;
 
                         continue;
-                    } else if (tryStrongBox && (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+                    } else if (tryStrongBox && (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH)
                             && (null != e.getCause()) && isNegativeInternalError(e.getCause())) {
                         // Android 14 specific error where strong box is failing, most likely because of IAR requirement in android 14
                         // https://android.googlesource.com/platform/compatibility/cdd/+/e2fee2f/9_security-model/9_11_keys-and-credentials.md

@@ -33,9 +33,15 @@ import lombok.experimental.SuperBuilder;
 public class SignInWithSLTCommandParameters extends BaseSignInTokenCommandParameters {
     private static final String TAG = SignInWithSLTCommandParameters.class.getSimpleName();
 
+    /**
+     * A short-lived token for sign in in the user from sign up or self-service-password-reset flow.
+     */
     @NonNull
     public final String signInSLT;
 
+    /**
+     * The email of the user.
+     */
     @NonNull
     public final String username;
 }

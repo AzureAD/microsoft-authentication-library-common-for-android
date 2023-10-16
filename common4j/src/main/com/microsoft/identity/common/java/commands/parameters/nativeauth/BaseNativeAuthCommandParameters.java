@@ -44,9 +44,15 @@ import lombok.experimental.SuperBuilder;
 public class BaseNativeAuthCommandParameters extends CommandParameters {
     private static final String TAG = BaseNativeAuthCommandParameters.class.getSimpleName();
 
+    /**
+     * The authority for the token being fetched.
+     */
     @Expose()
     public final NativeAuthCIAMAuthority authority;
 
+    /**
+     * The initial challenge type for the user being authenticated.
+     */
     @Expose()
     @Nullable
     public final List<String> challengeType;

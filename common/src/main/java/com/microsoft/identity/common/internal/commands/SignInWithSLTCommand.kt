@@ -28,6 +28,10 @@ import com.microsoft.identity.common.java.controllers.results.SignInWithSLTComma
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 
+/**
+ * Command class to call controllers to use short live token generated from sign in/self-service-password-reset flow to get the user authenticated.
+ * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
+ */
 class SignInWithSLTCommand(
     private val parameters: SignInWithSLTCommandParameters,
     private val controller: NativeAuthMsalController,
@@ -42,6 +46,10 @@ class SignInWithSLTCommand(
         private val TAG = SignInWithSLTCommand::class.java.simpleName
     }
 
+    /**
+     * The execution part of the command, to be run on the background thread.
+     * It calls the signInWithSLT method of the native auth MSAL controller with the given parameters.
+     */
     override fun execute(): SignInWithSLTCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.execute")
 
