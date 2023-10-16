@@ -22,8 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.opentelemetry;
 
+import javax.annotation.Nullable;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
 import lombok.NonNull;
 
@@ -35,8 +38,16 @@ public class CertBasedAuthTelemetryHelper implements ICertBasedAuthTelemetryHelp
 
     private final Span mSpan;
 
-    public CertBasedAuthTelemetryHelper() {
-        mSpan = OTelUtility.createSpan(SpanName.CertBasedAuth.name());
+    /**
+     * Creates an instance of CertBasedAuthTelemetryHelper.
+     * @param spanContext current span context.
+     */
+    public CertBasedAuthTelemetryHelper(@Nullable final SpanContext spanContext) {
+        if (spanContext != null) {
+            mSpan = OTelUtility.createSpanFromParent(SpanName.CertBasedAuth.name(), spanContext);
+        } else {
+            mSpan = OTelUtility.createSpan(SpanName.CertBasedAuth.name());
+        }
     }
 
     /**

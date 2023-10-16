@@ -31,6 +31,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthChoice;
 import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
@@ -90,7 +91,12 @@ public class CertBasedAuthFactory {
      * @param callback logic to run after an AbstractCertBasedAuthChallengeHandler is chosen.
      */
     public void createCertBasedAuthChallengeHandler(@NonNull final CertBasedAuthChallengeHandlerCallback callback) {
-        final ICertBasedAuthTelemetryHelper telemetryHelper = new CertBasedAuthTelemetryHelper();
+        final ICertBasedAuthTelemetryHelper telemetryHelper;
+        if (mActivity instanceof AuthorizationActivity) {
+           telemetryHelper = new CertBasedAuthTelemetryHelper(((AuthorizationActivity) mActivity).spanContext);
+        } else {
+            telemetryHelper = new CertBasedAuthTelemetryHelper(null);
+        }
         telemetryHelper.setUserChoice(CertBasedAuthChoice.NON_APPLICABLE);
         telemetryHelper.setCertBasedAuthChallengeHandler(NON_APPLICABLE);
         telemetryHelper.setPublicKeyAlgoType(NON_APPLICABLE);

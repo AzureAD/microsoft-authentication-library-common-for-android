@@ -28,12 +28,15 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
+import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
 import com.microsoft.identity.common.logging.Logger;
+
+import io.opentelemetry.api.trace.SpanContext;
 
 public class AuthorizationActivity extends DualScreenActivity {
 
     public static final String TAG = AuthorizationActivity.class.getSimpleName();
-
+    public SpanContext spanContext;
     private AuthorizationFragment mFragment;
 
     @Override
@@ -41,6 +44,7 @@ public class AuthorizationActivity extends DualScreenActivity {
         super.onCreate(savedInstanceState);
 
         final String methodTag = TAG + ":onCreate";
+        spanContext = (SpanContext) getIntent().getExtras().getSerializable(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT);
         final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());
         if (fragment instanceof AuthorizationFragment) {
             mFragment = (AuthorizationFragment) fragment;
