@@ -36,5 +36,53 @@ class FidoConstants {
          * Extra query parameter value to declare WebAuthn capability for a host app.
          */
         const val WEBAUTHN_QUERY_PARAMETER_VALUE = "1"
+
+        /**
+         * Header name to signal that the custom passkey protocol should be used.
+         */
+        const val PASSKEY_PROTOCOL_HEADER_NAME = "x-ms-PassKeyAuth"
+
+        /**
+         * Version of the passkey protocol that we want to use.
+         */
+        const val PASSKEY_PROTOCOL_VERSION = "1.0"
+
+        /**
+         * Constant to put in PASSKEY_PROTOCOL_KEY_TYPES_SUPPORTED if we support passkeys.
+         */
+        const val PASSKEY_PROTOCOL_KEY_TYPES_PASSKEY_OPTION = "passkey"
+
+        /**
+         * Constant to put in PASSKEY_PROTOCOL_KEY_TYPES_SUPPORTED if we support securitykeys.
+         */
+        const val PASSKEY_PROTOCOL_KEY_TYPES_SECURITYKEY_OPTION = "securitykey"
+
+        /**
+         * We shouldn't ever use this constant, but putting here for documentation purposes.
+         */
+        const val PASSKEY_PROTOCOL_KEY_TYPES_NGC_OPTION = "ngc"
+
+        /**
+         * Delimiter for PASSKEY_PROTOCOL_KEY_TYPES_SUPPORTED.
+         */
+        const val PASSKEY_PROTOCOL_KEY_TYPES_DELIMITER = ","
+
+        /**
+         * Key types that we support with the passkey protocol.
+         * Possible values: PASSKEY_PROTOCOL_KEY_TYPES_PASSKEY_OPTION, PASSKEY_PROTOCOL_KEY_TYPES_SECURITYKEY_OPTION, PASSKEY_PROTOCOL_KEY_TYPES_NGC_OPTION
+         * String should be delimited with commas and no spaces, or the value of  PASSKEY_PROTOCOL_KEY_TYPES_DELIMITER.
+         * Ex. "securitykey,passkey"
+         */
+        const val PASSKEY_PROTOCOL_KEY_TYPES_SUPPORTED = PASSKEY_PROTOCOL_KEY_TYPES_PASSKEY_OPTION
+
+        /**
+         * Corresponding value to the passkey protocol header.
+         */
+        const val PASSKEY_PROTOCOL_HEADER_VALUE = "$PASSKEY_PROTOCOL_VERSION/$PASSKEY_PROTOCOL_KEY_TYPES_SUPPORTED"
+
+        /**
+         * Used to disable passkey logic until the feature is ready.
+         */
+        const val IS_PASSKEY_SUPPORT_READY = false
     }
 }
