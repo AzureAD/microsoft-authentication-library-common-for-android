@@ -93,7 +93,7 @@ public class CertBasedAuthFactory {
     public void createCertBasedAuthChallengeHandler(@NonNull final CertBasedAuthChallengeHandlerCallback callback) {
         final ICertBasedAuthTelemetryHelper telemetryHelper;
         if (mActivity instanceof AuthorizationActivity) {
-           telemetryHelper = new CertBasedAuthTelemetryHelper(((AuthorizationActivity) mActivity).spanContext);
+           telemetryHelper = new CertBasedAuthTelemetryHelper(((AuthorizationActivity) mActivity).getSpanContext());
         } else {
             telemetryHelper = new CertBasedAuthTelemetryHelper(null);
         }
