@@ -53,7 +53,7 @@ public class OpenIdProviderConfigurationClient {
     private static final String TAG = OpenIdProviderConfigurationClient.class.getSimpleName();
     private static final String HTTPS_SCHEME = "https";
     private static final String WELL_KNOWN_CONFIG_HOST = "login.microsoftonline.com";
-    private static final String WELL_KNOWN_CONFIG_PATH = "/.well-known/openid-configuration";
+    private static final String WELL_KNOWN_CONFIG_PATH = "/v2.0/.well-known/openid-configuration";
     private static final ExecutorService sBackgroundExecutor = Executors.newCachedThreadPool();
     private static final Map<URI, OpenIdProviderConfiguration> sConfigCache = new HashMap<>();
     private static final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
