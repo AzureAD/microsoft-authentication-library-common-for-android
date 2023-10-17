@@ -2,6 +2,7 @@ V.Next
 ----------
 - [PATCH] Use v2.0 url for OpenID Client (#2208)
 - [MINOR] Added passkey protocol header (behind a flag) (#2181)
+- [MINOR] Fix crash during onCreate() (#2202)
 
 V.16.1.0
 ----------
