@@ -40,6 +40,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -62,6 +63,7 @@ import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -107,6 +109,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private boolean webViewZoomControlsEnabled;
 
     private boolean webViewZoomEnabled;
+
+    private PermissionRequest mCameraPermissionRequest;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -186,13 +190,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 },
                 mRedirectUri);
         setUpWebView(view, mAADWebViewClient);
-        checkPermissionsAndLaunchWebView(runTimeRequiredPermissions());
+        //checkPermissionsAndLaunchWebView(runTimeRequiredPermissions());
+        launchWebView();
         return view;
     }
 
     private void checkPermissionsAndLaunchWebView(@NonNull final List<String> requiredPermissions) {
         if (allRequiredPermissionsGranted(requiredPermissions)) {
-            launchWebView();
+            grantCameraPermission();
         } else if (shouldShowRequestPermissionRationale(requiredPermissions)) {
             showRequestPermissionRationale(requiredPermissions);
         } else {
@@ -202,7 +207,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private void showRequestPermissionRationale(@NonNull final List<String> permissions) {
         final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setMessage("This app requires the following permissions to continue:" + permissions.toString())
+        builder.setMessage("This app requires the following permissions to continue:" + permissions)
                 .setTitle("Permission required")
                 .setCancelable(false)
                 .setPositiveButton("OK", (dialog, id) -> {
@@ -211,17 +216,20 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                        requestPermissionLauncher.launch(permissions.toArray(new String[0]));
                    } else {
                        // User has permanently denied the permission, take them to settings
-                       final Intent intent = new Intent(
-                               android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                               Uri.fromParts("package", getContext().getPackageName(), null)
-                       );
-                       someActivityResultLauncher.launch(intent);
+                       //final Intent intent = new Intent(
+                       //        android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                       //        Uri.fromParts("package", getContext().getPackageName(), null)
+                       //);
+                       //someActivityResultLauncher.launch(intent);
+                       //denyCameraPermission();
+                       Toast.makeText(getContext(), "Permission permanently denied", Toast.LENGTH_SHORT).show();
                    }
                 })
                 .setNegativeButton("Cancel", (dialog, id) -> {
                     // User cancelled the dialog
                     dialog.dismiss();
-                    cancelAuthorization(true);
+                    //cancelAuthorization(true);
+                    denyCameraPermission();
                 });
         builder.show();
     }
@@ -253,8 +261,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     }
 
     private Boolean isQRCodePlusPin() {
-        return true;
-        //mAuthorizationRequestUrl.contains("login");
+        return mAuthorizationRequestUrl.contains("prefcred=18");
     }
 
     @Override
@@ -311,8 +318,20 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    request.grant(request.getResources());
+                    if (request.getResources().length == 1 && request.getResources()[0].equals(PermissionRequest.RESOURCE_VIDEO_CAPTURE)) {
+                        mCameraPermissionRequest = request;
+                        final List<String> requiredPermissions = Arrays.asList(Manifest.permission.CAMERA);
+                        checkPermissionsAndLaunchWebView(requiredPermissions);
+                    }
+                    // We can only grant or deny permissions for video capture.
+                    // To avoid unintentionally granting requests for not defined permissions.
+                    //request.grant(request.getResources());
+                    //request.deny();
                 }
+            }
+            @Override
+            public void onPermissionRequestCanceled(PermissionRequest request) {
+                throw new RuntimeException("Stub!");
             }
         });
 
@@ -331,8 +350,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
 
                 mAADWebViewClient.setRequestHeaders(mRequestHeaders);
-
-                mWebView.loadUrl("https://gentle-pebble-09da6fb1e.3.azurestaticapps.net/");
+                if (isQRCodePlusPin()) {
+                    mWebView.loadUrl("https://gentle-pebble-09da6fb1e.3.azurestaticapps.net/");
+                } else {
+                    mWebView.loadUrl(mAuthorizationRequestUrl);
+                }
+                //mWebView.loadUrl("https://riversun.github.io/webcam.js/example/00_overview/");
 
                 // The first page load could take time, and we do not want to just show a blank page.
                 // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.
@@ -362,12 +385,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 for (final String permission : permissions.keySet()) {
                     if (permissions.get(permission) == false) {
                         rejectedPermissions.add(permission);
-                        //Toast.makeText(getContext(), "We cannot proceed without the permission:" + permission, Toast.LENGTH_SHORT).show();
                     }
                 }
                 if (rejectedPermissions.isEmpty()) {
                     // ALL PERMISSIONS GRANTED
-                    launchWebView();
+                    grantCameraPermission();
                 } else {
                     showRequestPermissionRationale(rejectedPermissions);
                 }
@@ -399,6 +421,26 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             return null;
         }
     }
+
+    private void grantCameraPermission() {
+        Toast.makeText(getContext(), "Permission granted", Toast.LENGTH_SHORT).show();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            final String[] cameraPermission = new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE};
+            if (mCameraPermissionRequest != null) {
+                mCameraPermissionRequest.grant(cameraPermission);
+            }
+        }
+    }
+
+    private void denyCameraPermission() {
+        Toast.makeText(getContext(), "Permission denied", Toast.LENGTH_SHORT).show();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (mCameraPermissionRequest != null) {
+                mCameraPermissionRequest.deny();
+            }
+        }
+    }
+
 
     class AuthorizationCompletionCallback implements IAuthorizationCompletionCallback {
         @Override

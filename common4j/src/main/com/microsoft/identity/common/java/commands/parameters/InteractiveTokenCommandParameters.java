@@ -26,6 +26,7 @@ import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,7 +46,7 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
 
     private final transient BrowserDescriptor preferredBrowser;
 
-    private final String preferredAuthMethod;
+    private final PreferredAuthMethod preferredAuthMethod;
     
     private final transient HashMap<String, String> requestHeaders;
 

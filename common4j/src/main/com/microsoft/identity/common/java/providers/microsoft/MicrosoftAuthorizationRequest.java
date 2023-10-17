@@ -29,10 +29,13 @@ import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.DefaultStateGenerator;
 import com.microsoft.identity.common.java.providers.oauth2.PkceChallenge;
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.net.URL;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import cz.msebera.android.httpclient.extras.Base64;
 import lombok.Getter;
@@ -132,7 +135,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @Getter
     @Accessors(prefix = "m")
     @SerializedName("prefcred")
-    private final String mPreferredAuthMethod;
+    private final int mPreferredAuthMethod;
 
 
     /**
@@ -178,7 +181,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         private UUID mCorrelationId;
         private String mLoginHint;
         private PkceChallenge mPkceChallenge;
-        private String mPreferredAuthMethod;
+        private int mPreferredAuthMethod;
 
         public Builder() {
             setState(new DefaultStateGenerator().generate());
@@ -214,8 +217,10 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
             return self();
         }
 
-        public B setPreferredAuthMethod(String preferredAuthMethod) {
-            mPreferredAuthMethod = preferredAuthMethod;
+        public B setPreferredAuthMethod(@Nullable final PreferredAuthMethod preferredAuthMethod) {
+            if (preferredAuthMethod != null) {
+                mPreferredAuthMethod = preferredAuthMethod.code;
+            }
             return self();
         }
         
