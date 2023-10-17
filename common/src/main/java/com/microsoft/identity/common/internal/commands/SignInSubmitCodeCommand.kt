@@ -28,6 +28,10 @@ import com.microsoft.identity.common.java.controllers.results.SignInSubmitCodeCo
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 
+/**
+ * Command class to call controllers to submit the user's otp code to the server in the sign in flow.
+ * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
+ */
 class SignInSubmitCodeCommand(
     private val parameters: SignInSubmitCodeCommandParameters,
     private val controller: NativeAuthMsalController,
@@ -42,6 +46,10 @@ class SignInSubmitCodeCommand(
         private val TAG = SignInSubmitCodeCommand::class.java.simpleName
     }
 
+    /**
+     * The execution part of the command, to be run on the background thread.
+     * It calls the signInSubmitCode method of the native auth MSAL controller with the given parameters.
+     */
     override fun execute(): SignInSubmitCodeCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.execute")
         val result = controller.signInSubmitCode(

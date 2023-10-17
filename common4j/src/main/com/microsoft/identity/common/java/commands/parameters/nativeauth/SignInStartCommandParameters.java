@@ -27,12 +27,19 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * a set of Sign In Start command parameters for sending the start request to trigger the sign in flow.
+ * extends from {@link BaseSignInTokenCommandParameters}
+ */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 public class SignInStartCommandParameters extends BaseSignInTokenCommandParameters {
    private static final String TAG = SignInStartCommandParameters.class.getSimpleName();
 
+   /**
+    * The email address of the user.
+    */
    @NonNull
    public final String username;
 }

@@ -49,7 +49,7 @@ data class SignInTokenApiResponse(
     @Expose @SerializedName("ext_expires_in") val extExpiresIn: Long?,
     @SerializedName("access_token") val accessToken: String?,
     @SerializedName("refresh_token") val refreshToken: String?,
-    @Expose @SerializedName("id_token") val idToken: String?,
+    @SerializedName("id_token") val idToken: String?,
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
     @Expose @SerializedName("error_uri") val errorUri: String?,

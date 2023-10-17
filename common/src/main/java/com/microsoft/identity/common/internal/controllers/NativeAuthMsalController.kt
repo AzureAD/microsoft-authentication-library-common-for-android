@@ -331,7 +331,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
      * Native-auth specific implementation of fetching a token from the cache, and/or refreshing it.
      * Main differences with standard implementation in [LocalMSALController] are:
      * - No scopes are passed in as part of the (developer provided) parameters. The scopes from the
-     * AT are used to make the refresh token call.
+     * Access Token cache are used to make the refresh token call.
      * - When the RT is expired or the refresh token call fails, a different exception is thrown.
      */
     @Throws(
@@ -350,14 +350,18 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         // Validate original AcquireTokenNoScopesCommandParameters parameters
         parameters.validate()
 
-        // Convert AcquireTokenNoScopesCommandParameters into SilentTokenCommandParameters
-        // so we can re-use existing MSAL logic
+        // Convert AcquireTokenNoScopesCommandParameters into SilentTokenCommandParameters,
+        // so we can use it in BaseController.getCachedAccountRecord()
         val silentTokenCommandParameters =
             CommandUtil.convertAcquireTokenNoFixedScopesCommandParameters(
                 parameters
             )
-        // Not adding any (default) scopes, because we want to retrieve all tokens (regardless of scope).
-        // Scopes will be added later in the flow, if necessary.
+
+        // We want to retrieve all tokens from the cache, regardless of their scopes. Since in the
+        // native auth get token flow the developer doesn't have the ability to specify scopes,
+        // we can't filter on it.
+        // In reality only 1 token should be returned, as native auth currently doesn't support
+        // multiple tokens.
         val targetAccount: AccountRecord = getCachedAccountRecord(silentTokenCommandParameters)
 
         // Build up params for Strategy construction

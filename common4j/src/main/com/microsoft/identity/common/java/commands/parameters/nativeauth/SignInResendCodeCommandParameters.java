@@ -27,12 +27,19 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * a set of Sign In Resend Code command parameters for sending the challenge request again under sign in flow using credential token.
+ * extends from {@link BaseNativeAuthCommandParameters}
+ */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 public class SignInResendCodeCommandParameters extends BaseNativeAuthCommandParameters {
     private static final String TAG = SignInResendCodeCommandParameters.class.getSimpleName();
 
+    /**
+     * The credential token obtained from the initiate endpoint.
+     */
     @NonNull
     public final String credentialToken;
 }

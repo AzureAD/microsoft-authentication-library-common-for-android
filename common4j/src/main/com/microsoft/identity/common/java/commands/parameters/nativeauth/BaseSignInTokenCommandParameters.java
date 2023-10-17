@@ -31,12 +31,18 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * BaseSignInTokenCommandParameters is the base class for parameters for all all Native Auth sign in related commands.
+ */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 public class BaseSignInTokenCommandParameters extends BaseNativeAuthCommandParameters {
    private static final String TAG = BaseSignInTokenCommandParameters.class.getSimpleName();
 
+   /**
+    * The scopes for the token being fetched.
+    */
    public final List<String> scopes;
 
    @Expose()

@@ -27,14 +27,25 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * A set of Sign In Submit Code command parameters for getting token through otp code authentication.
+ * extends from {@link BaseSignInTokenCommandParameters}
+ */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 public class SignInSubmitCodeCommandParameters extends BaseSignInTokenCommandParameters {
     private static final String TAG = SignInSubmitCodeCommandParameters.class.getSimpleName();
 
+    /**
+     * The one-time password used for authentication.
+     */
     @NonNull
     public final String code;
+
+    /**
+     * The credential token obtained from the initiate endpoint.
+     */
     @NonNull
     public final String credentialToken;
 }

@@ -27,14 +27,25 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * A set of Sign In Submit Password command parameters for getting token through email password authentication.
+ * extends from {@link BaseSignInTokenCommandParameters}
+ */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 public class SignInSubmitPasswordCommandParameters extends BaseSignInTokenCommandParameters {
-	private static final String TAG = SignInSubmitPasswordCommandParameters.class.getSimpleName();
+	private static final String TAG = SignInSubmitCodeCommandParameters.class.getSimpleName();
 
+	/**
+	 * The password of the user.
+	 */
 	@NonNull
 	public final String password;
+
+	/**
+	 * The credential token obtained from the initiate endpoint.
+	 */
 	@NonNull
 	public final String credentialToken;
 }
