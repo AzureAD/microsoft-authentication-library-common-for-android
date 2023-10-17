@@ -173,7 +173,7 @@ dependencies {
 
     // Test dependencies
     // Needed to resolve JSONObject inside of non-instrumented tests
-    testImplementation 'org.json:json:20160810'
+    testImplementation 'org.json:json:20231013'
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
     testImplementation "org.powermock:powermock-module-junit4:$rootProject.ext.powerMockVersion"

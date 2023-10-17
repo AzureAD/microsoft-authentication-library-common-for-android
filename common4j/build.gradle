@@ -210,7 +210,7 @@ dependencies {
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
-    implementation 'org.json:json:20230227'
+    implementation 'org.json:json:20231013'
     implementation 'com.github.stephenc.jcip:jcip-annotations:1.0-1'
     implementation "cz.msebera.android:httpclient:$rootProject.ext.mseberaApacheHttpClientVersion"
 
