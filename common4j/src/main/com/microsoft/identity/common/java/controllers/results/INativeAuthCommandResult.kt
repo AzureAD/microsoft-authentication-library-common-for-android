@@ -41,6 +41,7 @@ interface INativeAuthCommandResult {
         override val error: String?,
         override val errorDescription: String?,
         override val details: List<Map<String, String>>? = null,
+        //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
         override val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
         override val errorCodes: List<Int>? = null,
         val exception: Exception? = null

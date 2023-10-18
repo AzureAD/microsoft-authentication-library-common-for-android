@@ -41,7 +41,7 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInWithSLTCommandParameters
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration
 import com.microsoft.identity.common.java.controllers.CommandDispatcher
-import com.microsoft.identity.common.java.controllers.results.ICommandResult
+import com.microsoft.identity.common.java.controllers.results.INativeAuthCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignInCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignInResendCodeCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignInStartCommandResult
@@ -107,6 +107,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
             if (parameters is SignInStartUsingPasswordCommandParameters)
             {
+                Logger.verbose(TAG, "Parameters is of type SignInStartUsingPasswordCommandParameters");
                 val mergedScopes = addDefaultScopes(parameters.scopes)
                 var parametersWithScopes = CommandUtil.createSignInStartCommandParametersWithScopes(
                     parameters as SignInStartUsingPasswordCommandParameters,
@@ -120,6 +121,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             }
             else
             {
+                Logger.verbose(TAG, "Parameters is not of type SignInStartUsingPasswordCommandParameters");
                 return processSignInInitiateApiResult(
                     initiateApiResult = initiateApiResult,
                     oAuth2Strategy = oAuth2Strategy)
@@ -133,7 +135,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
     /**
      * Makes a call to the /token endpoint with the provided Short Lived Token (SLT), and caches the returned token
-     * if successful. In case of error [ICommandResult.UnknownError] is returned.
+     * if successful. In case of error [INativeAuthCommandResult.UnknownError] is returned.
      */
     fun signInWithSLT(parameters: SignInWithSLTCommandParameters): SignInWithSLTCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.signInWithSLT")
@@ -170,7 +172,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     )
                     tokenApiResult as ApiErrorResult
 
-                    return ICommandResult.UnknownError(
+                    return INativeAuthCommandResult.UnknownError(
                         error = tokenApiResult.error,
                         errorDescription = "API returned unexpected result: $tokenApiResult",
                         errorCodes = tokenApiResult.errorCodes
@@ -185,7 +187,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
     /**
      * Makes a call to the /token endpoint with the provided OOB code, and caches the returned token
-     * if successful.  In case of error [ICommandResult.UnknownError] is returned.
+     * if successful.  In case of error [INativeAuthCommandResult.UnknownError] is returned.
      */
     fun signInSubmitCode(parameters: SignInSubmitCodeCommandParameters): SignInSubmitCodeCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.signInSubmitCode")
@@ -230,7 +232,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         "Unexpected result: $tokenApiResult"
                     )
                     tokenApiResult as ApiErrorResult
-                    ICommandResult.UnknownError(
+                    INativeAuthCommandResult.UnknownError(
                         error = tokenApiResult.error,
                         errorDescription = tokenApiResult.errorDescription,
                         details = tokenApiResult.details,
@@ -271,20 +273,20 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         TAG,
                         "Unexpected result: $result"
                     )
-                    ICommandResult.UnknownError(
+                    INativeAuthCommandResult.UnknownError(
                         error = "unexpected_api_result",
                         errorDescription = "API returned unexpected result: $result"
                     )
                 }
                 SignInChallengeApiResult.Redirect -> {
-                    ICommandResult.Redirect()
+                    INativeAuthCommandResult.Redirect()
                 }
                 is SignInChallengeApiResult.UnknownError -> {
                     Logger.warn(
                         TAG,
                         "Unexpected result: $result"
                     )
-                    ICommandResult.UnknownError(
+                    INativeAuthCommandResult.UnknownError(
                         error = result.error,
                         errorDescription = result.errorDescription,
                         details = result.details,
@@ -671,7 +673,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     "Unexpected result: $this"
                 )
                 this as ApiErrorResult
-                ICommandResult.UnknownError(
+                INativeAuthCommandResult.UnknownError(
                     error = "unexpected_api_result",
                     errorDescription = "API returned unexpected result: $this",
                     errorCodes = this.errorCodes
@@ -709,7 +711,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     "Unexpected result: $this"
                 )
                 this as ApiErrorResult
-                ICommandResult.UnknownError(
+                INativeAuthCommandResult.UnknownError(
                     error = "unexpected_api_result",
                     errorDescription = "API returned unexpected result: $this",
                     errorCodes = this.errorCodes
@@ -727,7 +729,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     ): SignInStartCommandResult {
         return when (initiateApiResult) {
             SignInInitiateApiResult.Redirect -> {
-                ICommandResult.Redirect()
+                INativeAuthCommandResult.Redirect()
             }
             is SignInInitiateApiResult.Success -> {
                 val signInChallengeResult = performSignInChallengeCall(
@@ -753,7 +755,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     TAG,
                     "Unexpected result: $initiateApiResult"
                 )
-                ICommandResult.UnknownError(
+                INativeAuthCommandResult.UnknownError(
                     error = initiateApiResult.error,
                     errorDescription = initiateApiResult.errorDescription,
                     errorCodes = initiateApiResult.errorCodes
@@ -804,7 +806,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 }
             }
             SignInChallengeApiResult.Redirect -> {
-                ICommandResult.Redirect()
+                INativeAuthCommandResult.Redirect()
             }
 
             is SignInChallengeApiResult.UnknownError -> {
@@ -812,7 +814,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     TAG,
                     "Unexpected result: $result"
                 )
-                ICommandResult.UnknownError(
+                INativeAuthCommandResult.UnknownError(
                     error = result.error,
                     errorDescription = result.errorDescription,
                     details = result.details,
