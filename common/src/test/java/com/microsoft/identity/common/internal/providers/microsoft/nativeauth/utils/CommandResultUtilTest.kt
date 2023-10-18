@@ -27,7 +27,6 @@ import com.microsoft.identity.common.java.controllers.CommandResult
 import com.microsoft.identity.common.java.controllers.results.*
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
-import com.microsoft.identity.common.java.result.LocalAuthenticationResult
 import com.microsoft.identity.common.java.util.checkAndWrapCommandResultType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -53,9 +52,9 @@ private const val CODE_LENGTH = 6
 
 //region sign-up
 
-private val redirectCommandResult = ICommandResult.Redirect()
+private val redirectCommandResult = INativeAuthCommandResult.Redirect()
 
-private val unknownErrorCommandResult = ICommandResult.UnknownError(
+private val unknownErrorCommandResult = INativeAuthCommandResult.UnknownError(
     error = ERROR,
     errorDescription = ERROR_DESCRIPTION,
 )
@@ -133,7 +132,7 @@ class CommandResultUtilTestSignInStartCommandResult(private val resultValue: Any
         )
 
         val result = commandResult.checkAndWrapCommandResultType<SignInStartCommandResult>()
-        assertTrue(result is ICommandResult.UnknownError)
+        assertTrue(result is INativeAuthCommandResult.UnknownError)
     }
 
     @Test
@@ -147,7 +146,7 @@ class CommandResultUtilTestSignInStartCommandResult(private val resultValue: Any
         )
 
         val result = commandResult.checkAndWrapCommandResultType<SignInStartCommandResult>()
-        assertTrue(result is ICommandResult.UnknownError)
+        assertTrue(result is INativeAuthCommandResult.UnknownError)
     }
 
     @Test
@@ -161,7 +160,7 @@ class CommandResultUtilTestSignInStartCommandResult(private val resultValue: Any
         )
 
         val result = commandResult.checkAndWrapCommandResultType<SignInStartCommandResult>()
-        assertTrue(result is ICommandResult.UnknownError)
+        assertTrue(result is INativeAuthCommandResult.UnknownError)
     }
 }
 
@@ -202,7 +201,7 @@ class CommandResultUtilTestSignInWithSLTCommandResult(private val resultValue: A
         )
 
         val result = commandResult.checkAndWrapCommandResultType<SignInWithSLTCommandResult>()
-        assertTrue(result is ICommandResult.UnknownError)
+        assertTrue(result is INativeAuthCommandResult.UnknownError)
     }
 
     @Test
@@ -216,7 +215,7 @@ class CommandResultUtilTestSignInWithSLTCommandResult(private val resultValue: A
         )
 
         val result = commandResult.checkAndWrapCommandResultType<SignInWithSLTCommandResult>()
-        assertTrue(result is ICommandResult.UnknownError)
+        assertTrue(result is INativeAuthCommandResult.UnknownError)
     }
 
     @Test
@@ -230,7 +229,7 @@ class CommandResultUtilTestSignInWithSLTCommandResult(private val resultValue: A
         )
 
         val result = commandResult.checkAndWrapCommandResultType<SignInWithSLTCommandResult>()
-        assertTrue(result is ICommandResult.UnknownError)
+        assertTrue(result is INativeAuthCommandResult.UnknownError)
     }
 }
 
@@ -270,7 +269,7 @@ class CommandResultUtilTestSignInSubmitCodeCommandResult(private val resultValue
         )
 
         val result = commandResult.checkAndWrapCommandResultType<SignInSubmitCodeCommandResult>()
-        assertTrue(result is ICommandResult.UnknownError)
+        assertTrue(result is INativeAuthCommandResult.UnknownError)
     }
 
     @Test
@@ -284,7 +283,7 @@ class CommandResultUtilTestSignInSubmitCodeCommandResult(private val resultValue
         )
 
         val result = commandResult.checkAndWrapCommandResultType<SignInSubmitCodeCommandResult>()
-        assertTrue(result is ICommandResult.UnknownError)
+        assertTrue(result is INativeAuthCommandResult.UnknownError)
     }
 
     @Test
@@ -298,7 +297,7 @@ class CommandResultUtilTestSignInSubmitCodeCommandResult(private val resultValue
         )
 
         val result = commandResult.checkAndWrapCommandResultType<SignInSubmitCodeCommandResult>()
-        assertTrue(result is ICommandResult.UnknownError)
+        assertTrue(result is INativeAuthCommandResult.UnknownError)
     }
 }
 
@@ -337,7 +336,7 @@ class CommandResultUtilTestSignInResendCodeCommandResult(private val resultValue
         )
 
         val result = commandResult.checkAndWrapCommandResultType<SignInResendCodeCommandResult>()
-        assertTrue(result is ICommandResult.UnknownError)
+        assertTrue(result is INativeAuthCommandResult.UnknownError)
     }
 
     @Test
@@ -351,7 +350,7 @@ class CommandResultUtilTestSignInResendCodeCommandResult(private val resultValue
         )
 
         val result = commandResult.checkAndWrapCommandResultType<SignInResendCodeCommandResult>()
-        assertTrue(result is ICommandResult.UnknownError)
+        assertTrue(result is INativeAuthCommandResult.UnknownError)
     }
 
     @Test
@@ -365,7 +364,7 @@ class CommandResultUtilTestSignInResendCodeCommandResult(private val resultValue
         )
 
         val result = commandResult.checkAndWrapCommandResultType<SignInResendCodeCommandResult>()
-        assertTrue(result is ICommandResult.UnknownError)
+        assertTrue(result is INativeAuthCommandResult.UnknownError)
     }
 }
 
@@ -406,7 +405,7 @@ class CommandResultUtilTestSignInSubmitPasswordCommandResult(private val resultV
         )
 
         val result = commandResult.checkAndWrapCommandResultType<SignInSubmitPasswordCommandResult>()
-        assertTrue(result is ICommandResult.UnknownError)
+        assertTrue(result is INativeAuthCommandResult.UnknownError)
     }
 
     @Test
@@ -420,7 +419,7 @@ class CommandResultUtilTestSignInSubmitPasswordCommandResult(private val resultV
         )
 
         val result = commandResult.checkAndWrapCommandResultType<SignInSubmitPasswordCommandResult>()
-        assertTrue(result is ICommandResult.UnknownError)
+        assertTrue(result is INativeAuthCommandResult.UnknownError)
     }
 
     @Test
@@ -434,7 +433,7 @@ class CommandResultUtilTestSignInSubmitPasswordCommandResult(private val resultV
         )
 
         val result = commandResult.checkAndWrapCommandResultType<SignInSubmitPasswordCommandResult>()
-        assertTrue(result is ICommandResult.UnknownError)
+        assertTrue(result is INativeAuthCommandResult.UnknownError)
     }
 }
 //endregion

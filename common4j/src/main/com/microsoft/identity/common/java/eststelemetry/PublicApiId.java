@@ -156,7 +156,7 @@ public final class PublicApiId {
     public static final String NATIVE_AUTH_SIGN_UP_SUBMIT_PASSWORD = "234";
     public static final String NATIVE_AUTH_SIGN_UP_SUBMIT_ATTRIBUTES = "234";
     public static final String NATIVE_AUTH_SIGN_UP_SUBMIT_CODE = "235";
-    public static final String NATIVE_AUTH_ACCOUNT_SIGN_OUT = "236";
-    public static final String NATIVE_AUTH_ACCOUNT_GET_ACCESS_TOKEN = "237";
+    public static final String NATIVE_AUTH_ACCOUNT_SIGN_OUT = "240";
+    public static final String NATIVE_AUTH_ACCOUNT_GET_ACCESS_TOKEN = "250";
     //endregion
 }

@@ -28,7 +28,7 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext
 /**
  * ICommandResult interface defines the base class for errors used in Native Auth.
  */
-interface ICommandResult {
+interface INativeAuthCommandResult {
     data class Redirect(val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
         SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult,
         SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult
@@ -44,7 +44,7 @@ interface ICommandResult {
         override val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
         override val errorCodes: List<Int>? = null,
         val exception: Exception? = null
-    ): Error(error, errorDescription, details, correlationId, errorCodes), ICommandResult,
+    ): Error(error, errorDescription, details, correlationId, errorCodes), INativeAuthCommandResult,
         SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult,
         SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult
 

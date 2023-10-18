@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.java.commands.parameters.nativeauth;
 
 import com.google.gson.annotations.Expose;
-import com.microsoft.identity.common.java.authorities.CIAMAuthority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.exception.ArgumentException;
@@ -35,10 +34,8 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

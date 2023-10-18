@@ -25,10 +25,10 @@ package com.microsoft.identity.common.java.controllers.results
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 
 
-sealed interface ResetPasswordStartCommandResult: ICommandResult
-sealed interface ResetPasswordSubmitCodeCommandResult: ICommandResult
-sealed interface ResetPasswordResendCodeCommandResult: ICommandResult
-sealed interface ResetPasswordSubmitNewPasswordCommandResult: ICommandResult
+sealed interface ResetPasswordStartCommandResult: INativeAuthCommandResult
+sealed interface ResetPasswordSubmitCodeCommandResult: INativeAuthCommandResult
+sealed interface ResetPasswordResendCodeCommandResult: INativeAuthCommandResult
+sealed interface ResetPasswordSubmitNewPasswordCommandResult: INativeAuthCommandResult
 
 /**
  * Reflects the possible results from reset password commands.

@@ -25,11 +25,11 @@ package com.microsoft.identity.common.java.controllers.results
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 
-sealed interface SignInStartCommandResult: ICommandResult
-sealed interface SignInWithSLTCommandResult: ICommandResult
-sealed interface SignInSubmitCodeCommandResult: ICommandResult
-sealed interface SignInResendCodeCommandResult: ICommandResult
-sealed interface SignInSubmitPasswordCommandResult: ICommandResult
+sealed interface SignInStartCommandResult: INativeAuthCommandResult
+sealed interface SignInWithSLTCommandResult: INativeAuthCommandResult
+sealed interface SignInSubmitCodeCommandResult: INativeAuthCommandResult
+sealed interface SignInResendCodeCommandResult: INativeAuthCommandResult
+sealed interface SignInSubmitPasswordCommandResult: INativeAuthCommandResult
 
 /**
  * Reflects the possible results from sign in commands.
