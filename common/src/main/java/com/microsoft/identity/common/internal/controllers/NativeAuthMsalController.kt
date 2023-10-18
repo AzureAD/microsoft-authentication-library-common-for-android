@@ -379,7 +379,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             silentTokenCommandParameters.clientId,
             parameters.applicationIdentifier,
             parameters.mamEnrollmentId,
-            null, // TODO see where else this is needed
+            null,
             targetAccount,
             authScheme
         ) as List<ICacheRecord>
