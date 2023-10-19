@@ -28,6 +28,10 @@ import com.microsoft.identity.common.java.controllers.results.ResetPasswordStart
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 
+/**
+ * Command class to call controllers to trigger user self service password reset start flow.
+ * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
+ */
 class ResetPasswordStartCommand(
     private val parameters: ResetPasswordStartCommandParameters,
     private val controller: NativeAuthMsalController,
@@ -42,6 +46,10 @@ class ResetPasswordStartCommand(
         private val TAG = ResetPasswordStartCommand::class.java.simpleName
     }
 
+    /**
+     * The execution part of the command, to be run on the background thread.
+     * It calls the resetPasswordStart method of the native auth MSAL controller with the given parameters.
+     */
     override fun execute(): ResetPasswordStartCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.execute")
         val result = controller.resetPasswordStart(

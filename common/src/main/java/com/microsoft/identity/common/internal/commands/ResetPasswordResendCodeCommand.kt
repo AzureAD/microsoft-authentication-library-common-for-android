@@ -28,6 +28,10 @@ import com.microsoft.identity.common.java.controllers.results.ResetPasswordResen
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 
+/**
+ * Command class to call controllers to resend otp code request in the self service password reset flow.
+ * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
+ */
 class ResetPasswordResendCodeCommand(
     private val parameters: ResetPasswordResendCodeCommandParameters,
     private val controller: NativeAuthMsalController,
@@ -42,6 +46,10 @@ class ResetPasswordResendCodeCommand(
         private val TAG = ResetPasswordResendCodeCommand::class.java.simpleName
     }
 
+    /**
+     * The execution part of the command, to be run on the background thread.
+     * It calls the resetPasswordResendCode method of the native auth MSAL controller with the given parameters.
+     */
     override fun execute(): ResetPasswordResendCodeCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.execute")
         val result = controller.resetPasswordResendCode(

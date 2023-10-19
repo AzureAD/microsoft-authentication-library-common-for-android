@@ -27,12 +27,19 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * a set of Sign Up Continue command parameters for sending the continue request to proceed the sign up flow.
+ * extends from {@link BaseNativeAuthCommandParameters}
+ */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 public class SignUpContinueCommandParameters extends BaseNativeAuthCommandParameters {
 	private static final String TAG = SignUpContinueCommandParameters.class.getSimpleName();
 
+	/**
+	 * The sign up token obtained from the challenge endpoint.
+	 */
 	@NonNull
 	public final String signupToken;
 }

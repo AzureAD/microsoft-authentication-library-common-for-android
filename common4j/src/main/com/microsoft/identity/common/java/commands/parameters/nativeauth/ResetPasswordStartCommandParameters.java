@@ -27,12 +27,19 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * a set of Reset Password Start command parameters for sending the start request to trigger the self service password reset flow.
+ * extends from {@link BaseNativeAuthCommandParameters}
+ */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 public class ResetPasswordStartCommandParameters extends BaseNativeAuthCommandParameters {
     private static final String TAG = ResetPasswordStartCommandParameters.class.getSimpleName();
 
+    /**
+     * The email address of the user.
+     */
     @NonNull
     public final String username;
 }

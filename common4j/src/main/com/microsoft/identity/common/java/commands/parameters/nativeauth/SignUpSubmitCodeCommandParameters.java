@@ -27,12 +27,19 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * a set of Sign Up Submit Code command parameters for submitting the one-time password to the server for authentication.
+ * extends from {@link SignUpContinueCommandParameters}
+ */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 public class SignUpSubmitCodeCommandParameters extends SignUpContinueCommandParameters {
     private static final String TAG = SignUpSubmitCodeCommandParameters.class.getSimpleName();
 
+    /**
+     * The one-time password used for authentication.
+     */
     @NonNull
     public final String code;
 }

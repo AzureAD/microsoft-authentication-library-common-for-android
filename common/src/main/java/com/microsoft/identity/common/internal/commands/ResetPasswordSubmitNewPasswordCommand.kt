@@ -28,6 +28,10 @@ import com.microsoft.identity.common.java.controllers.results.ResetPasswordSubmi
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 
+/**
+ * Command class to call controllers to submit the user's new password to the server in the self service password reset flow
+ * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
+ */
 class ResetPasswordSubmitNewPasswordCommand(
     private val parameters: ResetPasswordSubmitNewPasswordCommandParameters,
     private val controller: NativeAuthMsalController,
@@ -46,6 +50,10 @@ class ResetPasswordSubmitNewPasswordCommand(
         const val POLL_COMPLETION_TIMEOUT_ERROR_DESCRIPTION = "Command timed out while polling for password reset result."
     }
 
+    /**
+     * The execution part of the command, to be run on the background thread.
+     * It calls the resetPasswordSubmitNewPassword method of the native auth MSAL controller with the given parameters.
+     */
     override fun execute(): ResetPasswordSubmitNewPasswordCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.execute")
         val result = controller.resetPasswordSubmitNewPassword(

@@ -26,6 +26,10 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * a set of Sign Up Challenge command parameters for sending the challenge request to get authentication method.
+ * extends from {@link BaseNativeAuthCommandParameters}
+ */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)

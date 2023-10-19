@@ -27,10 +27,19 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * a set of Reset Password Resend Code command parameters for sending the challenge request again under self service password reset flow using password reset token.
+ * extends from {@link BaseNativeAuthCommandParameters}
+ */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 public class ResetPasswordResendCodeCommandParameters extends BaseNativeAuthCommandParameters {
+    private static final String TAG = ResetPasswordResendCodeCommandParameters.class.getSimpleName();
+
+    /**
+     * The password reset token obtained from the start endpoint.
+     */
     @NonNull
     public final String passwordResetToken;
 }

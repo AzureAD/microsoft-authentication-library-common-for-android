@@ -28,13 +28,19 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * A set of Sign Up Submit User Attributes command parameters for submitting the collected user attributes set in the user flow.
+ * extends from {@link SignUpContinueCommandParameters}
+ */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 public class SignUpSubmitUserAttributesCommandParameters extends SignUpContinueCommandParameters {
     private static final String TAG = SignUpSubmitUserAttributesCommandParameters.class.getSimpleName();
 
-    // TODO @EqualsAndHashCode.Exclude?
+    /**
+     * The user attributes of the user set in the user flow need to be collected.
+     */
     @NonNull
     public final Map<String, String> userAttributes;
 }

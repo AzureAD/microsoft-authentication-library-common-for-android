@@ -27,12 +27,19 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * A set of Reset Password Submit Password command parameters for submitting the password of the user for authentication.
+ * extends from {@link SignUpContinueCommandParameters}
+ */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 public class SignUpSubmitPasswordCommandParameters extends SignUpContinueCommandParameters {
     private static final String TAG = SignUpSubmitPasswordCommandParameters.class.getSimpleName();
 
+    /**
+     * The new password collected from the user.
+     */
     @NonNull
     public final String password;
 }

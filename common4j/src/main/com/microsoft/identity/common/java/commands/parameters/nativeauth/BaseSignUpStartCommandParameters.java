@@ -30,14 +30,24 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * BaseSignUpTokenCommandParameters is the base class for parameters for all all Native Auth sign up related commands.
+ */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 public class BaseSignUpStartCommandParameters extends BaseNativeAuthCommandParameters {
     private static final String TAG = BaseSignUpStartCommandParameters.class.getSimpleName();
 
+    /**
+     * The email address of the user.
+     */
     @NonNull
     public final String username;
+
+    /**
+     * The user attributes of the user set in the user flow need to be collected.
+     */
     @EqualsAndHashCode.Exclude
     @Nullable
     public final Map<String, String> userAttributes;

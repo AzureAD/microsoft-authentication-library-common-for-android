@@ -6,6 +6,10 @@ import com.microsoft.identity.common.java.controllers.results.SignUpSubmitUserAt
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 
+/**
+ * Command class to call controllers to submit the user's attributes to the server in the sign up flow.
+ * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
+ */
 class SignUpSubmitUserAttributesCommand(
     private val parameters: SignUpSubmitUserAttributesCommandParameters,
     private val controller: NativeAuthMsalController,
@@ -20,6 +24,10 @@ class SignUpSubmitUserAttributesCommand(
         private val TAG = SignUpSubmitUserAttributesCommand::class.java.simpleName
     }
 
+    /**
+     * The execution part of the command, to be run on the background thread.
+     * It calls the signUpSubmitUserAttributes method of the native auth MSAL controller with the given parameters.
+     */
     override fun execute(): SignUpSubmitUserAttributesCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.execute")
 
