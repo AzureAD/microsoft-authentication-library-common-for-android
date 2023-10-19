@@ -4,6 +4,10 @@ V.Next
 - [MINOR] Added passkey protocol header (behind a flag) (#2181)
 - [MINOR] Fix crash during onCreate() (#2202)
 
+V.16.1.1
+----------
+- [PATCH] Fix client Discovery (#2213)
+
 V.16.1.0
 ----------
 - [MINOR] Handle crypto error gracefully (#2190)
