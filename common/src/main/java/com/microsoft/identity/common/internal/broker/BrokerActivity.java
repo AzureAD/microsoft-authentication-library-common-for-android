@@ -60,9 +60,15 @@ public final class BrokerActivity extends Activity {
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        final String methodTag = TAG + ":onCreate";
 
         if (savedInstanceState == null) {
-            mBrokerInteractiveRequestIntent = getIntent().getExtras().getParcelable(BROKER_INTENT);
+            Bundle extras = getIntent().getExtras();
+            if(extras != null) {
+                mBrokerInteractiveRequestIntent = extras.getParcelable(BROKER_INTENT);
+            } else {
+                Logger.warn(methodTag, "Extras is null.");
+            }
         } else {
             mBrokerInteractiveRequestIntent = savedInstanceState.getParcelable(BROKER_INTENT);
             mBrokerIntentStarted = savedInstanceState.getBoolean(BROKER_INTENT_STARTED);
