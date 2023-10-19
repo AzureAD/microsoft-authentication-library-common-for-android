@@ -5,6 +5,10 @@ V.Next
 - [MINOR] Fix crash during onCreate() (#2202)
 - [MINOR] Bumping Moshi and JSON versions; force setting Okio version (#2210)
 
+V.16.1.1
+----------
+- [PATCH] Fix client Discovery (#2213)
+
 V.16.1.0
 ----------
 - [MINOR] Handle crypto error gracefully (#2190)

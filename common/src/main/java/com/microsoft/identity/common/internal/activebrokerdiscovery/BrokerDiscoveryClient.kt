@@ -95,14 +95,13 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         internal suspend fun queryFromBroker(brokerCandidates: Set<BrokerData>,
                                              ipcStrategy: IIpcStrategy,
                                              isPackageInstalled: (BrokerData) -> Boolean,
-                                             isValidBroker: (BrokerData) -> Boolean,
-                                             shouldStopQueryForAWhile: () -> Unit
+                                             isValidBroker: (BrokerData) -> Boolean
         ): BrokerData? {
             return coroutineScope {
                 val installedCandidates = brokerCandidates.filter(isPackageInstalled).filter(isValidBroker)
                 val deferredResults = installedCandidates.map { candidate ->
                     async(dispatcher) {
-                        return@async makeRequest(candidate, ipcStrategy, shouldStopQueryForAWhile)
+                        return@async makeRequest(candidate, ipcStrategy)
                     }
                 }
                 return@coroutineScope deferredResults.awaitAll().filterNotNull().firstOrNull()
@@ -110,8 +109,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         }
 
         private fun makeRequest(candidate: BrokerData,
-                                ipcStrategy: IIpcStrategy,
-                                shouldStopQueryForAWhile: () -> Unit): BrokerData? {
+                                ipcStrategy: IIpcStrategy): BrokerData? {
             val methodTag = "$TAG:makeRequest"
             val operationBundle = BrokerOperationBundle(
                 BrokerOperationBundle.Operation.BROKER_DISCOVERY_FROM_SDK,
@@ -127,12 +125,10 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                     BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE == t.category) {
                     Logger.info(methodTag,
                         "Tried broker discovery on ${candidate}. It doesn't support the IPC mechanism.")
-                    shouldStopQueryForAWhile()
                 } else if (t is ClientException && ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE == t.errorCode){
                     Logger.info(methodTag,
                         "Tried broker discovery on ${candidate}. " +
                                 "The Broker side indicates that only AccountManager is supported.")
-                    shouldStopQueryForAWhile()
                 } else {
                     Logger.error(methodTag,
                         "Tried broker discovery on ${candidate}, get an error", t)
@@ -223,24 +219,24 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                 ipcStrategy = ipcStrategy,
                 isPackageInstalled = isPackageInstalled,
                 isValidBroker = isValidBroker
-            ) {
-                Logger.info(
-                    methodTag,
-                    "Will skip broker discovery via IPC and fall back to AccountManager " +
-                            "for the next 60 minutes."
-                )
-                cache.clearCachedActiveBroker()
-                cache.setShouldUseAccountManagerForTheNextMilliseconds(
-                    TimeUnit.MINUTES.toMillis(
-                        60
-                    )
-                )
-            }
+            )
 
             if (brokerData != null) {
                 cache.setCachedActiveBroker(brokerData)
                 return brokerData
             }
+
+            Logger.info(
+                methodTag,
+                "Will skip broker discovery via IPC and fall back to AccountManager " +
+                        "for the next 60 minutes."
+            )
+            cache.clearCachedActiveBroker()
+            cache.setShouldUseAccountManagerForTheNextMilliseconds(
+                TimeUnit.MINUTES.toMillis(
+                    60
+                )
+            )
 
             val accountManagerResult = getActiveBrokerFromAccountManager()
             Logger.info(
