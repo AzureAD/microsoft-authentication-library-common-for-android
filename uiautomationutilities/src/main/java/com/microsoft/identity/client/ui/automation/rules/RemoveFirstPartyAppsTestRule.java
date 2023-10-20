@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
+import com.microsoft.identity.client.ui.automation.app.MsalTestApp;
 import com.microsoft.identity.client.ui.automation.app.OneAuthTestApp;
 import com.microsoft.identity.client.ui.automation.app.OutlookApp;
 import com.microsoft.identity.client.ui.automation.app.TeamsApp;
@@ -52,7 +53,7 @@ public class RemoveFirstPartyAppsTestRule implements TestRule {
                 new BrowserEdge().uninstall();
                 new OneAuthTestApp().uninstall();
                 // Commenting this until new msalAutomationApp name is added
-                // new MsalTestApp().uninstall();
+                 new MsalTestApp().uninstall();
                 base.evaluate();
             }
         };
