@@ -22,10 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
-import com.microsoft.identity.common.java.logging.Logger
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import com.squareup.moshi.Moshi
 
 /**
  * A utility class to help convert to and from strings in WebAuthn json format.
@@ -37,34 +34,27 @@ class WebAuthnJsonUtil {
          * representation of PublicKeyCredentialRequestOptionsJSON (https://w3c.github.io/webauthn/#dictdef-publickeycredentialrequestoptionsjson)
          * @param challengeObject AuthFidoChallenge
          * @return a string representation of PublicKeyCredentialRequestOptionsJSON.
-         * @throws SerializationException from kotlinx.serialization.json.Json
-         * @throws IllegalArgumentException from kotlinx.serialization.json.Json
          */
-        @JvmStatic
-        fun createJsonAuthRequestFromChallengeObject(challengeObject: AuthFidoChallenge): String {
+        fun createJsonAuthRequestFromChallengeObject(challengeObject: AuthFidoChallenge): String? {
             //Create classes
-            val publicKeyCredDescriptorList = ArrayList<PublicKeyCredentialDescriptor>()
+            val publicKeyCredentialDescriptorList = ArrayList<PublicKeyCredentialDescriptor>()
             challengeObject.allowedCredentials?.let { allowedCredentials ->
                 for (id in allowedCredentials) {
-                    publicKeyCredDescriptorList.add(
-                        PublicKeyCredentialDescriptor(
-                            type = "public-key",
-                            id = id
-                        )
+                    publicKeyCredentialDescriptorList.add(
+                        PublicKeyCredentialDescriptor("public-key", id)
                     )
                 }
             }
-
-            val request = PublicKeyCredentialRequestOptions(
-                challenge = challengeObject.challenge,
-                rpId = challengeObject.relyingPartyIdentifier,
-                allowCredentials = publicKeyCredDescriptorList,
-                userVerification = challengeObject.userVerificationPolicy
+            val jsonAdapter = Moshi.Builder()
+                .build()
+                .adapter(PublicKeyCredentialRequestOptions::class.java)
+            val options = PublicKeyCredentialRequestOptions(
+                challengeObject.challenge,
+                challengeObject.relyingPartyIdentifier,
+                publicKeyCredentialDescriptorList,
+                challengeObject.userVerificationPolicy
             )
-
-            //Note that this could throw either SerializationException or IllegalArgumentException,
-            // but both are very unlikely to be thrown since we're only working with one class.
-            return Json.encodeToString(request)
+            return jsonAdapter.toJson(options)
         }
     }
 }

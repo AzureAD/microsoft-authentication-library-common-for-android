@@ -543,4 +543,57 @@ class BrokerDiscoveryClientTests {
             isValidBroker = { true }
         )
     }
+
+
+    /**
+     * Test if authapp does not support broker discovery, but cp does.
+     * */
+    @Test
+    fun testOneAppDoesNotSupportNewBrokerDiscovery() {
+        val cache = InMemoryActiveBrokerCache()
+
+        val client = BrokerDiscoveryClient(
+            brokerCandidates = setOf(
+                prodMicrosoftAuthenticator, prodCompanyPortal
+            ),
+            getActiveBrokerFromAccountManager = {
+                throw IllegalStateException()
+            },
+            ipcStrategy = object : IIpcStrategy {
+                override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
+                    if (bundle.targetBrokerAppPackageName == prodCompanyPortal.packageName) {
+                        val returnBundle = Bundle()
+                        returnBundle.putString(
+                            BrokerDiscoveryClient.ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY,
+                            prodCompanyPortal.packageName
+                        )
+                        returnBundle.putString(
+                            BrokerDiscoveryClient.ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY,
+                            prodCompanyPortal.signingCertificateThumbprint
+                        )
+                        return returnBundle
+                    }
+
+                    throw BrokerCommunicationException(
+                        BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE,
+                        IIpcStrategy.Type.CONTENT_PROVIDER,
+                        null,
+                        null
+                    )
+                }
+                override fun getType(): IIpcStrategy.Type {
+                    return IIpcStrategy.Type.CONTENT_PROVIDER
+                }
+            },
+            cache = cache,
+            isPackageInstalled =  {
+                it == prodMicrosoftAuthenticator || it == prodCompanyPortal
+            },
+            isValidBroker = { true }
+        )
+
+        Assert.assertEquals(prodCompanyPortal, client.getActiveBroker())
+        Assert.assertFalse(cache.shouldUseAccountManager())
+    }
+
 }

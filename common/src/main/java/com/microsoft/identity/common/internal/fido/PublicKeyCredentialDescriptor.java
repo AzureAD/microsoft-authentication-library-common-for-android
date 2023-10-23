@@ -20,14 +20,27 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.fido
+package com.microsoft.identity.common.internal.fido;
+
+import androidx.annotation.NonNull;
+
+import com.squareup.moshi.Json;
+
+import lombok.Getter;
 
 /**
  * Representation of WebAuthn's PublicKeyCredentialDescriptor.
  * https://w3c.github.io/webauthn/#dictdef-publickeycredentialdescriptor
  */
-@kotlinx.serialization.Serializable
-data class PublicKeyCredentialDescriptor(
-    val type: String,
-    val id: String
-)
+@Getter
+public class PublicKeyCredentialDescriptor {
+    @Json(name = "type")
+    public final String type;
+    @Json(name = "id")
+    public final String id;
+    PublicKeyCredentialDescriptor(@NonNull final String type,
+                                  @NonNull final String id) {
+        this.type = type;
+        this.id = id;
+    }
+}
