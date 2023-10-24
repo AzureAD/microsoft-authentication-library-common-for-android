@@ -79,7 +79,7 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
     }
 
     /**
-     * validates the command parameters in this object are consistent and can be used for
+     * Validates the command parameters in this object are consistent and can be used for
      * command execution.
      * @throws ArgumentException
      */
