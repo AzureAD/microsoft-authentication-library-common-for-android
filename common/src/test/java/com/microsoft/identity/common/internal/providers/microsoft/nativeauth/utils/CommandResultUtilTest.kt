@@ -376,7 +376,6 @@ class CommandResultUtilTestSignInSubmitPasswordCommandResult(private val resultV
         @JvmStatic
         @Parameters
         fun getSignInSubmitPasswordCommandResults() = listOf(
-            signInCodeRequiredCommandResult,
             signInCompleteCommandResult,
             signInInvalidCredentialsCommandResult,
             redirectCommandResult,
