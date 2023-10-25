@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.jwt;
 
+import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 
 import lombok.AccessLevel;
@@ -77,6 +78,12 @@ public final class JwtRequestBody extends AbstractJwtRequest {
     @Setter(AccessLevel.NONE)
     @SerializedName(ClaimNames.EXP)
     private String mExp;
+
+    @SerializedName("jwe_crypto")
+    private JsonObject mJweCrypto;
+
+    @SerializedName("session_key_crypto")
+    private JsonObject mSessionKeyCrypto;
 
     public void setIat(final long iat) {
         mIat = String.valueOf(iat);
