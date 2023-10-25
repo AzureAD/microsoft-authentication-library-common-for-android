@@ -27,6 +27,7 @@ import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.internal.cache.ClientActiveBrokerCache
 import com.microsoft.identity.common.internal.cache.IClientActiveBrokerCache
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
+import com.microsoft.identity.common.logging.Logger
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -38,11 +39,16 @@ class BrokerDiscoveryClientFactory {
 
     companion object {
 
+        private val TAG = BrokerDiscoveryClientFactory::class.simpleName
+
         @Volatile
         private var IS_NEW_DISCOVERY_ENABLED = false
 
         @Volatile
-        private var instance: IBrokerDiscoveryClient? = null
+        private var clientSdkInstance: IBrokerDiscoveryClient? = null
+
+        @Volatile
+        private var brokerSdkInstance: IBrokerDiscoveryClient? = null
 
         /**
          * Coroutine-level lock.
@@ -57,7 +63,8 @@ class BrokerDiscoveryClientFactory {
         fun setNewBrokerDiscoveryEnabled(isEnabled: Boolean){
             // If the flag changes, wipe the existing singleton.
             if (isEnabled != IS_NEW_DISCOVERY_ENABLED) {
-                instance = null
+                clientSdkInstance = null
+                brokerSdkInstance = null
                 IS_NEW_DISCOVERY_ENABLED = isEnabled
             }
         }
@@ -76,8 +83,17 @@ class BrokerDiscoveryClientFactory {
         @JvmStatic
         fun getInstanceForClientSdk(context: Context,
                                     platformComponents: IPlatformComponents) : IBrokerDiscoveryClient{
-            return getInstance(context,
-                ClientActiveBrokerCache.getClientSdkCache(platformComponents.storageSupplier))
+            if (clientSdkInstance == null){
+                runBlocking {
+                    lock.withLock {
+                        if (clientSdkInstance == null) {
+                            clientSdkInstance = getInstance(context,
+                                ClientActiveBrokerCache.getClientSdkCache(platformComponents.storageSupplier))
+                        }
+                    }
+                }
+            }
+            return clientSdkInstance!!
         }
 
         /**
@@ -87,8 +103,17 @@ class BrokerDiscoveryClientFactory {
         @JvmStatic
         fun getInstanceForBrokerSdk(context: Context,
                                     platformComponents: IPlatformComponents) : IBrokerDiscoveryClient{
-            return getInstance(context,
-                ClientActiveBrokerCache.getBrokerSdkCache(platformComponents.storageSupplier))
+            if (brokerSdkInstance == null){
+                runBlocking {
+                    lock.withLock {
+                        if (brokerSdkInstance == null) {
+                            brokerSdkInstance = getInstance(context,
+                                ClientActiveBrokerCache.getBrokerSdkCache(platformComponents.storageSupplier))
+                        }
+                    }
+                }
+            }
+            return brokerSdkInstance!!
         }
 
         /**
@@ -98,20 +123,14 @@ class BrokerDiscoveryClientFactory {
         @JvmStatic
         private fun getInstance(context: Context,
                                 cache: IClientActiveBrokerCache) : IBrokerDiscoveryClient{
-            if (instance == null){
-                runBlocking {
-                    lock.withLock {
-                        if (instance == null) {
-                            instance = if (isNewBrokerDiscoveryEnabled()) {
-                                BrokerDiscoveryClient(context, cache)
-                            } else {
-                                LegacyBrokerDiscoveryClient(context)
-                            }
-                        }
-                    }
-                }
+            val methodTag = "$TAG:getInstance"
+            return if (isNewBrokerDiscoveryEnabled()) {
+                Logger.info(methodTag, "Broker Discovery is enabled. Use the new logic on the SDK side")
+                BrokerDiscoveryClient(context, cache)
+            } else {
+                Logger.info(methodTag, "Broker Discovery is disabled. Use AccountManager on the SDK side.")
+                LegacyBrokerDiscoveryClient(context)
             }
-            return instance!!
         }
     }
 }

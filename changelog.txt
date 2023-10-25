@@ -1,8 +1,19 @@
 V.Next
 ----------
+- [PATCH] Use v2.0 url for OpenID Client (#2208)
+- [MINOR] Added passkey protocol header (behind a flag) (#2181)
+- [MINOR] Fix crash during onCreate() (#2202)
+- [MINOR] add removeUserLegacy method in MsalTestApp infra (#2212)
+
+V.16.1.1
+----------
+- [PATCH] Fix client Discovery (#2213)
+
+V.16.1.0
+----------
 - [MINOR] Handle crypto error gracefully (#2190)
 - [MINOR] Stop logging thread name (#2185)
-- [MINOR] Adding Moshi, and WebAuthnJsonUtil(#2189)
+- [MINOR] Adding Moshi, and WebAuthnJsonUtil (#2189)
 
 V.16.0.1
 ----------
