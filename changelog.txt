@@ -1,5 +1,26 @@
 V.Next
 ----------
+- [PATCH] Use v2.0 url for OpenID Client (#2208)
+- [MINOR] Added passkey protocol header (behind a flag) (#2181)
+- [MINOR] Fix crash during onCreate() (#2202)
+- [MINOR] add removeUserLegacy method in MsalTestApp infra (#2212)
+
+V.16.1.1
+----------
+- [PATCH] Fix client Discovery (#2213)
+
+V.16.1.0
+----------
+- [MINOR] Handle crypto error gracefully (#2190)
+- [MINOR] Stop logging thread name (#2185)
+- [MINOR] Adding Moshi, and WebAuthnJsonUtil (#2189)
+
+V.16.0.1
+----------
+- [MINOR] Add LTW as prod broker app (#2179)
+
+V.16.0.0
+----------
 - [MINOR] Add MsaGrantedRefreshTokenNotSupportedOnAadTenant error code to ServiceException (#2165)
 - [MAJOR] Separate Broker API and Client SDK Active Broker caches (#2164)
 - [MINOR] Deprecate Common logger wrapper (#2157)
@@ -14,6 +35,7 @@ V.Next
 - [MINOR] Add new apk name to BrokerHost infra (#2152)
 - [MINOR] Send key to request broker data in all BrokerOperationBundle (#2159)
 - [MINOR] Catch strongbox exception on Android 14 (#2158)
+- [MINOR] Nested app auth implementation (#2168)
 
 V.15.0.0
 ----------

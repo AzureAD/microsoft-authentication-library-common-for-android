@@ -41,7 +41,6 @@ public enum DiagnosticContext {
                     final RequestContext defaultRequestContext = new RequestContext();
                     defaultRequestContext.put(THREAD_ID, String.valueOf(Thread.currentThread().getId()));
                     defaultRequestContext.put(CORRELATION_ID, UNSET);
-
                     return defaultRequestContext;
                 }
             };

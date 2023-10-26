@@ -415,7 +415,7 @@ public class ClientException extends BaseException {
     public static final String NATIVE_AUTH_INVALID_CIAM_AUTHORITY = "native_auth_invalid_ciam_authority";
 
     /**    
-    * The workplacejoin data is null.
+     * The workplacejoin data is null.
      */
     public static final String WORKPLACE_JOIN_DATA_NULL = "workplace_join_data_null";
 
