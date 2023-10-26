@@ -510,6 +510,16 @@ public class LocalMSALController extends BaseController {
     }
 
     @Override
+    public boolean isQrPinAvailable() throws Exception {
+        final String methodTag = TAG + ":isQrPinAvailable";
+
+        final String warnMessage = "LocalMSALController is not eligible to use the broker. Do not check if QR + PIN is available and return false immediately.";
+        Logger.warn(methodTag, warnMessage);
+
+        return false;
+    }
+
+    @Override
     public boolean getDeviceMode(CommandParameters parameters) throws Exception {
         final String methodTag = TAG + ":getDeviceMode";
 

@@ -144,6 +144,9 @@ public abstract class BaseController {
     public abstract boolean getDeviceMode(final CommandParameters parameters)
             throws Exception;
 
+    public abstract boolean isQrPinAvailable()
+            throws Exception;
+
     public abstract List<ICacheRecord> getCurrentAccount(final CommandParameters parameters)
             throws Exception;
 

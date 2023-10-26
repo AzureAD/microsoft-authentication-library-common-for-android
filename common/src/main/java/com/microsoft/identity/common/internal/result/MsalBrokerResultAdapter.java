@@ -32,6 +32,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.HELLO_ERROR_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.HELLO_ERROR_MESSAGE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IS_QR_PIN_AVAILABLE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
 import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
 import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BROKER_BUNDLE;
@@ -815,5 +816,13 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         );
 
         return shrResult;
+    }
+
+    public boolean getIfQrPinIsAvailableFromResultBundle(@NonNull final Bundle bundle) throws BaseException {
+        if (!bundle.containsKey(IS_QR_PIN_AVAILABLE)) {
+            throw new MsalBrokerResultAdapter().getBaseExceptionFromBundle(bundle);
+        }
+
+        return bundle.getBoolean(IS_QR_PIN_AVAILABLE);
     }
 }

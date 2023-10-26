@@ -35,6 +35,7 @@ import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationB
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_DEVICE_MODE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_IS_QR_PIN_AVAILABLE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_REMOVE_ACCOUNT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SIGN_OUT_FROM_SHARED_DEVICE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SSO_TOKEN;
@@ -55,6 +56,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.PropertyBagUtil;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.BrokerActivity;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient;
@@ -114,6 +116,7 @@ import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -799,6 +802,70 @@ public class BrokerMsalController extends BaseController {
                     }
                 });
     }
+
+
+    /**
+     * Checks if QR + PIN authorization is available.
+     *
+     * @param parameters a {@link CommandParameters}
+     * @return true if if QR + PIN authorization is available. False otherwise.
+     */
+    @Override
+    public boolean isQrPinAvailable() throws BaseException {
+        return mBrokerOperationExecutor.execute(null,
+                new BrokerOperation<Boolean>() {
+                    @Override
+                    public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BrokerCommunicationException {
+                        if (strategy instanceof BoundServiceStrategy ||
+                                strategy instanceof AccountManagerAddAccountStrategy) {
+                            final String errorMessage = "Strategy not supported for isQrPinAvailable operation";
+                            throw new BrokerCommunicationException(
+                                    BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
+                                    strategy.getType(),
+                                    errorMessage,
+                                    new ClientException(ErrorStrings.BROKER_BIND_SERVICE_FAILED, errorMessage)
+                            );
+                        }
+                    }
+
+                    @Override
+                    public @NonNull
+                    BrokerOperationBundle getBundle() {
+                        return new BrokerOperationBundle(
+                                MSAL_IS_QR_PIN_AVAILABLE,
+                                mActiveBrokerPackageName,
+                                null);
+                    }
+
+                    @Override
+                    public @NonNull
+                    Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
+                        }
+                        return mResultAdapter.getIfQrPinIsAvailableFromResultBundle(resultBundle);
+                    }
+
+                    @Override
+                    public @NonNull
+                    String getMethodName() {
+                        return ":isQrPinAvailable";
+                    }
+
+                    @Override
+                    public @NonNull
+                    String getTelemetryApiId() {
+                        return TelemetryEventStrings.Api.IS_QR_PIN_AVAILABLE;
+                    }
+
+                    @Override
+                    public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull Boolean result) {
+                        // Deprecated telemetry.
+                    }
+                });
+    }
+
+
 
     /**
      * Get device mode from broker.
