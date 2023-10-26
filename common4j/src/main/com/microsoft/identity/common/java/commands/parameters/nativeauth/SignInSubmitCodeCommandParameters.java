@@ -28,7 +28,7 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 /**
- * a set of Sign In Submit Code command parameters for getting token through otp code authentication.
+ * A set of Sign In Submit Code command parameters for getting token through otp code authentication.
  * extends from {@link BaseSignInTokenCommandParameters}
  */
 @Getter

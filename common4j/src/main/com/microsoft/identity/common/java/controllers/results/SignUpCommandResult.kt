@@ -25,15 +25,15 @@ package com.microsoft.identity.common.java.controllers.results
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.providers.nativeauth.responses.UserAttributeApiResult
 
-sealed interface SignUpSubmitCodeCommandResult: ICommandResult
-sealed interface SignUpSubmitUserAttributesCommandResult: ICommandResult
-sealed interface SignUpSubmitPasswordCommandResult: ICommandResult
-sealed interface SignUpResendCodeCommandResult: ICommandResult
-sealed interface SignUpStartCommandResult: ICommandResult
+sealed interface SignUpSubmitCodeCommandResult: INativeAuthCommandResult
+sealed interface SignUpSubmitUserAttributesCommandResult: INativeAuthCommandResult
+sealed interface SignUpSubmitPasswordCommandResult: INativeAuthCommandResult
+sealed interface SignUpResendCodeCommandResult: INativeAuthCommandResult
+sealed interface SignUpStartCommandResult: INativeAuthCommandResult
 
 /**
  * Reflects the possible results from sign up commands.
- * Conforms to the ICommandResult interface, and is mapped from the respective API result classes returned for each endpoint.
+ * Conforms to the INativeAuthCommandResult interface, and is mapped from the respective API result classes returned for each endpoint.
  * @see com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpStartApiResult
  * @see com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpChallengeApiResult
  * @see com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpContinueApiResult

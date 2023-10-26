@@ -40,7 +40,7 @@ public class SignInWithSLTCommandParameters extends BaseSignInTokenCommandParame
     public final String signInSLT;
 
     /**
-     * The email of the user.
+     * The email address of the user.
      */
     @NonNull
     public final String username;

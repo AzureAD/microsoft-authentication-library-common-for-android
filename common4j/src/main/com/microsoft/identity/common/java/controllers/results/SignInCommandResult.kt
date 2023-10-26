@@ -25,15 +25,15 @@ package com.microsoft.identity.common.java.controllers.results
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 
-sealed interface SignInStartCommandResult: ICommandResult
-sealed interface SignInWithSLTCommandResult: ICommandResult
-sealed interface SignInSubmitCodeCommandResult: ICommandResult
-sealed interface SignInResendCodeCommandResult: ICommandResult
-sealed interface SignInSubmitPasswordCommandResult: ICommandResult
+sealed interface SignInStartCommandResult: INativeAuthCommandResult
+sealed interface SignInWithSLTCommandResult: INativeAuthCommandResult
+sealed interface SignInSubmitCodeCommandResult: INativeAuthCommandResult
+sealed interface SignInResendCodeCommandResult: INativeAuthCommandResult
+sealed interface SignInSubmitPasswordCommandResult: INativeAuthCommandResult
 
 /**
  * Reflects the possible results from sign in commands.
- * Conforms to the ICommandResult interface, and is mapped from the respective API result classes returned for each endpoint.
+ * Conforms to the INativeAuthCommandResult interface, and is mapped from the respective API result classes returned for each endpoint.
  * @see com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResult
  * @see com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResult
  * @see com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResult

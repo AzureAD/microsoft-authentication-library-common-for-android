@@ -33,7 +33,7 @@ const val UNSUCCESSFUL_COMMAND_ERROR = "unsuccessful_command"
  * CommandResult.result and returns the result value if it's of ExpectedType, or it wraps it in an
  * UnknownError in all other cases.
  */
-inline fun <reified ExpectedType: com.microsoft.identity.common.java.controllers.results.ICommandResult> CommandResult<Any>.checkAndWrapCommandResultType() : ExpectedType {
+inline fun <reified ExpectedType: com.microsoft.identity.common.java.controllers.results.INativeAuthCommandResult> CommandResult<Any>.checkAndWrapCommandResultType() : ExpectedType {
     // We first check the command status. If this is not COMPLETED, then most likely an exception
     // happened which we want to wrap
      if (this.status != ICommandResult.ResultStatus.COMPLETED) {
@@ -45,7 +45,7 @@ inline fun <reified ExpectedType: com.microsoft.identity.common.java.controllers
             exceptionMessage = exception.message
         }
 
-        return com.microsoft.identity.common.java.controllers.results.ICommandResult.UnknownError(
+        return com.microsoft.identity.common.java.controllers.results.INativeAuthCommandResult.UnknownError(
             error = UNSUCCESSFUL_COMMAND_ERROR,
             errorDescription = exceptionMessage,
             exception = exception,
@@ -57,7 +57,7 @@ inline fun <reified ExpectedType: com.microsoft.identity.common.java.controllers
                 // Extra check in case the status is COMPLETED, but the CommandResult.result value
                 // is not of type ExpectedType
                 (result is Exception) -> {
-                    return@let com.microsoft.identity.common.java.controllers.results.ICommandResult.UnknownError(
+                    return@let com.microsoft.identity.common.java.controllers.results.INativeAuthCommandResult.UnknownError(
                         error = UNSUCCESSFUL_COMMAND_ERROR,
                         errorDescription = "Type casting error: result of $this is of type Exception, even though the command was marked as COMPLETED",
                         correlationId = this.correlationId
@@ -67,7 +67,7 @@ inline fun <reified ExpectedType: com.microsoft.identity.common.java.controllers
                     return@let try {
                         result as ExpectedType
                     } catch (exception: java.lang.ClassCastException) {
-                        com.microsoft.identity.common.java.controllers.results.ICommandResult.UnknownError(
+                        com.microsoft.identity.common.java.controllers.results.INativeAuthCommandResult.UnknownError(
                             error = UNSUCCESSFUL_COMMAND_ERROR,
                             errorDescription = "Type casting error: result of $this is not of type ${ExpectedType::class}, but of type ${result::class}, even though the command was marked as COMPLETED",
                             correlationId = this.correlationId
