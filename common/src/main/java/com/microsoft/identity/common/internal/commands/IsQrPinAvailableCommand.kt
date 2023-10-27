@@ -36,14 +36,12 @@ import lombok.EqualsAndHashCode
  * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
  */
 @EqualsAndHashCode(callSuper = true)
-class IsQrPinAvailableCommand : BaseCommand<Boolean?> {
-
-    constructor(
-        parameters: CommandParameters,
-        controllers: List<BaseController?>,
-        callback: CommandCallback<*, *>,
-        publicApiId: String
-    ) : super(parameters, controllers, callback, publicApiId)
+class IsQrPinAvailableCommand(
+    parameters: CommandParameters,
+    controllers: List<BaseController?>,
+    callback: CommandCallback<*, *>,
+    publicApiId: String
+) : BaseCommand<Boolean?>(parameters, controllers, callback, publicApiId) {
 
     @Throws(Exception::class)
     override fun execute(): Boolean {
