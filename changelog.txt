@@ -1,7 +1,14 @@
 V.Next
 ----------
+- [PATCH] Use v2.0 url for OpenID Client (#2208)
 - [MINOR] Added passkey protocol header (behind a flag) (#2181)
+- [MINOR] Fix crash during onCreate() (#2202)
+- [MINOR] add removeUserLegacy method in MsalTestApp infra (#2212)
 - [PATCH] Passing span context to AuthorizationActivity (#2209)
+
+V.16.1.1
+----------
+- [PATCH] Fix client Discovery (#2213)
 
 V.16.1.0
 ----------

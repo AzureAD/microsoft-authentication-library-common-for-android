@@ -139,6 +139,7 @@ public class MsalTestApp extends App {
         return users;
     }
 
+    // select from Auth Scheme dropdown
     public void selectFromAuthScheme(@NonNull final String text) throws UiObjectNotFoundException {
         final UiObject authSchemeSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/authentication_scheme");
         authSchemeSpinner.click();
@@ -146,6 +147,7 @@ public class MsalTestApp extends App {
         authScheme.click();
     }
 
+    // click on button generateSHR
     public String generateSHR() throws UiObjectNotFoundException {
         final UiObject generateSHRButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_generate_shr");
         scrollToElement(generateSHRButton);
@@ -154,6 +156,7 @@ public class MsalTestApp extends App {
         return result.getText();
     }
 
+    // click on button removeUser
     public String removeUser() throws UiObjectNotFoundException {
         final UiObject removeUserButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_clearCache");
         scrollToElement(removeUserButton);
@@ -163,6 +166,17 @@ public class MsalTestApp extends App {
         return text;
     }
 
+    // click on button removeUser on Legacy MsalTestApp
+    public String removeUserLegacy() throws UiObjectNotFoundException {
+        final UiObject removeUserButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_clearCache");
+        scrollToElement(removeUserButton);
+        removeUserButton.click();
+        final UiObject textView = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/status");
+        final String text = textView.getText();
+        return text;
+    }
+
+    // click on button getActiveBroker
     public String getActiveBrokerPackageName() throws UiObjectNotFoundException {
         final UiObject getPackageNameButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btnGetActiveBroker");
         scrollToElement(getPackageNameButton);
@@ -172,6 +186,7 @@ public class MsalTestApp extends App {
         return text;
     }
 
+    // check MsalTestApp mode
     public String checkMode() throws UiObjectNotFoundException {
         final UiObject modeText = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/public_application_mode");
         return modeText.getText();
