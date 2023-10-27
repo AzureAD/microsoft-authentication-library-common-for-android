@@ -807,18 +807,23 @@ public class BrokerMsalController extends BaseController {
     /**
      * Checks if QR + PIN authorization is available.
      *
-     * @param parameters a {@link CommandParameters}
      * @return true if if QR + PIN authorization is available. False otherwise.
      */
     @Override
     public boolean isQrPinAvailable() throws BaseException {
-        return mBrokerOperationExecutor.execute(null,
+        final String methodTag = TAG + ":isQrPinAvailable";
+        return mBrokerOperationExecutor.execute(
+                null,
                 new BrokerOperation<Boolean>() {
+
                     @Override
                     public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BrokerCommunicationException {
-                        if (strategy instanceof BoundServiceStrategy ||
-                                strategy instanceof AccountManagerAddAccountStrategy) {
-                            final String errorMessage = "Strategy not supported for isQrPinAvailable operation";
+                        // AccountManagerAddAccountStrategy and BoundServiceStrategy are not supported for this operation.
+                        // We are failing fast here to avoid unnecessary IPC calls.
+                        // IPC calls through BoundServiceStrategy takes approximate 25s to timeout.
+                        if (strategy instanceof BoundServiceStrategy || strategy instanceof AccountManagerAddAccountStrategy) {
+                            final String errorMessage = strategy + " is not supported for isQrPinAvailable operation";
+                            Logger.warn(methodTag,  errorMessage);
                             throw new BrokerCommunicationException(
                                     BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
                                     strategy.getType(),
@@ -834,7 +839,8 @@ public class BrokerMsalController extends BaseController {
                         return new BrokerOperationBundle(
                                 MSAL_IS_QR_PIN_AVAILABLE,
                                 mActiveBrokerPackageName,
-                                null);
+                                null
+                        );
                     }
 
                     @Override
@@ -864,8 +870,6 @@ public class BrokerMsalController extends BaseController {
                     }
                 });
     }
-
-
 
     /**
      * Get device mode from broker.

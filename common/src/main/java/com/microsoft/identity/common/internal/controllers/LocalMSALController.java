@@ -509,13 +509,17 @@ public class LocalMSALController extends BaseController {
         return localRemoveAccountSuccess;
     }
 
+    /**
+     * Checks if QR + PIN auth is available.
+     * LocalMSALController is not eligible to use the broker.
+     * Do not check if QR + PIN is available and return false immediately.
+     *
+     * @return true false
+     */
     @Override
-    public boolean isQrPinAvailable() throws Exception {
+    public boolean isQrPinAvailable() {
         final String methodTag = TAG + ":isQrPinAvailable";
-
-        final String warnMessage = "LocalMSALController is not eligible to use the broker. Do not check if QR + PIN is available and return false immediately.";
-        Logger.warn(methodTag, warnMessage);
-
+        Logger.warn(methodTag, "LocalMSALController is not eligible to use the broker.");
         return false;
     }
 

@@ -818,11 +818,17 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         return shrResult;
     }
 
+    /**
+     * Checks if the provided {@link Bundle} contains a key indicating that the broker is capable of QR code + PIN auth.
+     *
+     * @param bundle The {@link Bundle} to check.
+     * @return True if the broker is capable of QR code + PIN auth, false otherwise.
+     * @throws BaseException If the bundle does not contain the key.
+     */
     public boolean getIfQrPinIsAvailableFromResultBundle(@NonNull final Bundle bundle) throws BaseException {
         if (!bundle.containsKey(IS_QR_PIN_AVAILABLE)) {
             throw new MsalBrokerResultAdapter().getBaseExceptionFromBundle(bundle);
         }
-
         return bundle.getBoolean(IS_QR_PIN_AVAILABLE);
     }
 }
