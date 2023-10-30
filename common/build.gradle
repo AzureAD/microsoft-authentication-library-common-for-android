@@ -160,6 +160,12 @@ dependencies {
     implementation "com.yubico.yubikit:android:$rootProject.ext.yubikitAndroidVersion"
     implementation "com.yubico.yubikit:piv:$rootProject.ext.yubikitPivVersion"
 
+    constraints {
+        implementation ("com.squareup.okio:okio:3.4.0") {
+            because "Versions previous to 3.4.0 are associated with a signed to unsigned conversion error vulnerability. See this CVE: https://github.com/advisories/GHSA-w33c-445m-f8w7"
+        }
+    }
+
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.3.0'
 
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
