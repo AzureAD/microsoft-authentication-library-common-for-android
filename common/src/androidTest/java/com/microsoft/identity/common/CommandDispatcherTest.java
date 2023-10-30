@@ -1063,6 +1063,10 @@ public class CommandDispatcherTest {
             return null;
         }
 
+        @Override
+        public boolean isQrPinAvailable() throws Exception {
+            return false;
+        }
     }
 
     private static CommandParameters getEmptyTestParams() {
