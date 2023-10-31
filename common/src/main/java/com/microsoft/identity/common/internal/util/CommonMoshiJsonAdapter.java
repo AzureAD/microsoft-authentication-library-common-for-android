@@ -75,7 +75,7 @@ public class CommonMoshiJsonAdapter {
         try {
             return jsonAdapter.fromJson(json);
         } catch (final IOException e) {
-            throw new TerminalException(e.getMessage(), e, ErrorStrings.IO_ERROR);
+            throw new TerminalException(e.getMessage(), e, ErrorStrings.JSON_DESERIALIZATION_FAILURE);
         }
     }
 }

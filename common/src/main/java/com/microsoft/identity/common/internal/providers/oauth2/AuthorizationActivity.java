@@ -52,7 +52,7 @@ public class AuthorizationActivity extends DualScreenActivity {
         final String methodTag = TAG + ":onCreate";
         if (getIntent().getExtras() != null) {
             try {
-                mSpanContext = (SpanContext) new CommonMoshiJsonAdapter().fromJson(
+                mSpanContext = new CommonMoshiJsonAdapter().fromJson(
                         getIntent().getExtras().getString(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT),
                         SerializableSpanContext.class
                 );
