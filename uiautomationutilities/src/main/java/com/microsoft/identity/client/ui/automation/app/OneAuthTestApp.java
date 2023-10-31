@@ -82,12 +82,14 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     @Override
     public void handleFirstRun() {
         CommonUtils.grantPackagePermission();
+        // Because switching the App Configuration will decide whether to truly enable the Broker,
+        // it's essential to turn on the Broker beforehand.
+        handlePreferBrokerSwitchButton();
         try {
             selectFromAppConfiguration("com.microsoft.identity.LabsApi.Guest");
         } catch (UiObjectNotFoundException e) {
             throw new RuntimeException(e);
         }
-        handlePreferBrokerSwitchButton();
     }
 
     @Override

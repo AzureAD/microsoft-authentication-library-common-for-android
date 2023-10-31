@@ -49,6 +49,7 @@ import com.microsoft.identity.common.java.commands.parameters.RemoveAccountComma
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
+import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
@@ -84,6 +85,7 @@ import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
+import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ResultUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -323,6 +325,12 @@ public abstract class BaseController {
             );
             completeRequestHeaders.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
 
+            // Not going to add passkey protocol header until full feature is ready.
+            if (FidoConstants.IS_PASSKEY_SUPPORT_READY
+                    && interactiveTokenCommandParameters.getAuthorizationAgent() == AuthorizationAgent.WEBVIEW) {
+                completeRequestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_VALUE);
+            }
+
             // Add additional fields to the AuthorizationRequest.Builder to support interactive
             setBuilderProperties(builder, parameters, interactiveTokenCommandParameters, completeRequestHeaders);
 
@@ -448,9 +456,9 @@ public abstract class BaseController {
                     methodTag,
                     "Token request was successful"
             );
-            List<ICacheRecord> acquireTokenResultRecords = null;
+            List<ICacheRecord> acquireTokenResultRecords;
             if (parameters.hasNestedAppParameters()) {
-                // Do not save the token in naa flow. This is because, NAA is curerntly only supported with OneAuth and OneAuth already caches AT until it is expired.
+                // Do not save the token in naa flow. This is because, NAA is currently only supported with OneAuth and OneAuth already caches AT until it is expired.
                 // Design doc : https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview/pullrequest/7876
                 acquireTokenResultRecords = getAcquireTokenResultRecords(
                         (MicrosoftStsTokenResponse) tokenResult.getTokenResponse(),
@@ -564,20 +572,25 @@ public abstract class BaseController {
                     "Token request was successful"
             );
 
-            // Remove old Access Token
-            Logger.info(
-                    methodTag,
-                    "Access token is refresh-expired. Removing from cache..."
-            );
-            final AccessTokenRecord accessTokenRecord = cacheRecord.getAccessToken();
-            cache.removeCredential(accessTokenRecord);
+            List<ICacheRecord> savedRecords;
+            if (!parameters.hasNestedAppParameters()) {
+                // Remove old Access Token
+                Logger.info(
+                        methodTag,
+                        "Access token is refresh-expired. Removing from cache..."
+                );
+                final AccessTokenRecord accessTokenRecord = cacheRecord.getAccessToken();
+                cache.removeCredential(accessTokenRecord);
 
-            // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance tokenCache while calling method saveAndLoadAggregatedAccountData
-            @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> savedRecords = cache.saveAndLoadAggregatedAccountData(
-                    strategy,
-                    getAuthorizationRequest(strategy, parameters),
-                    tokenResult.getTokenResponse()
-            );
+                // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance tokenCache while calling method saveAndLoadAggregatedAccountData
+                savedRecords = cache.saveAndLoadAggregatedAccountData(
+                        strategy,
+                        getAuthorizationRequest(strategy, parameters),
+                        tokenResult.getTokenResponse()
+                );
+            } else {
+                savedRecords = getAcquireTokenResultRecords((MicrosoftStsTokenResponse) tokenResult.getTokenResponse(), (MicrosoftStsOAuth2Strategy) strategy, (MicrosoftStsAuthorizationRequest) getAuthorizationRequest(strategy, parameters));
+            }
 
             final ICacheRecord savedRecord = savedRecords.get(0);
             finalizeCacheRecordForResult(savedRecord, parameters.getAuthenticationScheme());
