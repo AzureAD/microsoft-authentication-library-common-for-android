@@ -28,12 +28,21 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
+import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter;
+import com.microsoft.identity.common.java.exception.TerminalException;
+import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
 import com.microsoft.identity.common.logging.Logger;
+
+import io.opentelemetry.api.trace.SpanContext;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 
 public class AuthorizationActivity extends DualScreenActivity {
 
     public static final String TAG = AuthorizationActivity.class.getSimpleName();
-
+    @Getter
+    @Accessors(prefix = "m")
+    private SpanContext mSpanContext;
     private AuthorizationFragment mFragment;
 
     @Override
@@ -41,6 +50,17 @@ public class AuthorizationActivity extends DualScreenActivity {
         super.onCreate(savedInstanceState);
 
         final String methodTag = TAG + ":onCreate";
+        if (getIntent().getExtras() != null) {
+            try {
+                mSpanContext = new CommonMoshiJsonAdapter().fromJson(
+                        getIntent().getExtras().getString(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT),
+                        SerializableSpanContext.class
+                );
+            } catch (final TerminalException e) {
+                // Don't want to block any features if an error occurs during deserialization of the span context.
+                mSpanContext = null;
+            }
+        }
         final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());
         if (fragment instanceof AuthorizationFragment) {
             mFragment = (AuthorizationFragment) fragment;
