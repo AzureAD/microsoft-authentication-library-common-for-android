@@ -42,12 +42,16 @@ public class CertBasedAuthTelemetryHelper implements ICertBasedAuthTelemetryHelp
      * Creates an instance of CertBasedAuthTelemetryHelper.
      * @param spanContext current span context.
      */
-    public CertBasedAuthTelemetryHelper(@Nullable final SpanContext spanContext) {
-        if (spanContext != null) {
-            mSpan = OTelUtility.createSpanFromParent(SpanName.CertBasedAuth.name(), spanContext);
-        } else {
-            mSpan = OTelUtility.createSpan(SpanName.CertBasedAuth.name());
-        }
+    public CertBasedAuthTelemetryHelper(@NonNull final SpanContext spanContext) {
+        mSpan = OTelUtility.createSpanFromParent(SpanName.CertBasedAuth.name(), spanContext);
+    }
+
+    /**
+     * Creates an instance of CertBasedAuthTelemetryHelper.
+     * This constructor should only be used when the parent span context is not available.
+     */
+    public CertBasedAuthTelemetryHelper() {
+        mSpan = OTelUtility.createSpan(SpanName.CertBasedAuth.name());
     }
 
     /**

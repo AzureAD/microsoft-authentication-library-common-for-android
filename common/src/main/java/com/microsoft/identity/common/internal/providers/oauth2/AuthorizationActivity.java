@@ -48,7 +48,11 @@ public class AuthorizationActivity extends DualScreenActivity {
         super.onCreate(savedInstanceState);
 
         final String methodTag = TAG + ":onCreate";
-        mSpanContext = (SpanContext) getIntent().getExtras().getSerializable(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT);
+        if (getIntent().getExtras() != null) {
+            mSpanContext = (SpanContext) SerializableSpanContextJsonAdapter.fromJson(
+                    getIntent().getExtras().getString(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT)
+            );
+        }
         final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());
         if (fragment instanceof AuthorizationFragment) {
             mFragment = (AuthorizationFragment) fragment;

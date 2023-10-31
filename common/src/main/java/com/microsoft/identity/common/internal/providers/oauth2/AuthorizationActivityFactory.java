@@ -98,11 +98,13 @@ public class AuthorizationActivityFactory {
         intent.putExtra(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         intent.putExtra(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
         intent.putExtra(CORRELATION_ID, DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
-        intent.putExtra(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT, SerializableSpanContext.builder()
-                .traceId(SpanExtension.current().getSpanContext().getTraceId())
-                .spanId(SpanExtension.current().getSpanContext().getSpanId())
-                .traceFlags(SpanExtension.current().getSpanContext().getTraceFlags().asByte())
-                .build()
+        intent.putExtra(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT, SerializableSpanContextJsonAdapter.toJson(
+                SerializableSpanContext.builder()
+                        .traceId(SpanExtension.current().getSpanContext().getTraceId())
+                        .spanId(SpanExtension.current().getSpanContext().getSpanId())
+                        .traceFlags(SpanExtension.current().getSpanContext().getTraceFlags().asByte())
+                        .build()
+                )
         );
         return intent;
     }

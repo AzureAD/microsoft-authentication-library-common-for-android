@@ -92,10 +92,13 @@ public class CertBasedAuthFactory {
      */
     public void createCertBasedAuthChallengeHandler(@NonNull final CertBasedAuthChallengeHandlerCallback callback) {
         final ICertBasedAuthTelemetryHelper telemetryHelper;
-        if (mActivity instanceof AuthorizationActivity) {
+        if (mActivity instanceof AuthorizationActivity
+                && ((AuthorizationActivity) mActivity).getSpanContext() != null) {
            telemetryHelper = new CertBasedAuthTelemetryHelper(((AuthorizationActivity) mActivity).getSpanContext());
         } else {
-            telemetryHelper = new CertBasedAuthTelemetryHelper(null);
+            //Unlikely we'll get here, but this exists in case AADWebViewClient has a different Activity subclass.
+            // The feature shouldn't be blocked on getting the proper span context.
+            telemetryHelper = new CertBasedAuthTelemetryHelper();
         }
         telemetryHelper.setUserChoice(CertBasedAuthChoice.NON_APPLICABLE);
         telemetryHelper.setCertBasedAuthChallengeHandler(NON_APPLICABLE);
