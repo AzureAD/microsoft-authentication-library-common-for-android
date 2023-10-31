@@ -25,7 +25,6 @@ package com.microsoft.identity.common.java.controllers.results
 
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 
-
 /**
  * INativeAuthCommandResult interface defines the base class for errors used in Native Auth.
  */
@@ -60,6 +59,7 @@ interface INativeAuthCommandResult {
         open val error: String?,
         open val errorDescription: String?,
         open val details: List<Map<String, String>>? = null,
+        //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
         open val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
         open val errorCodes: List<Int>? = null
     )

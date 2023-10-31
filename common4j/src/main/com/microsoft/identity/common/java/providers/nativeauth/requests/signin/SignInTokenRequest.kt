@@ -163,7 +163,7 @@ data class SignInTokenRequest private constructor(
         val username: String? = null,
         val password: String? = null,
         val oob: String? = null,
-        @SerializedName("nca") val nca: Int? = null,
+        @SerializedName("nca") val nca: Int? = null,  //nca=1 forces Azure AD to lookup the account via the signInNames attribute, rather than the userPrincipalName (default identifier for AAD).
         @SerializedName("client_info") private val clientInfo: Boolean = true,
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("grant_type") val grantType: String,

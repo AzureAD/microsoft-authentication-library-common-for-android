@@ -132,29 +132,32 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
         try {
             val oAuth2Strategy = createOAuth2Strategy(parameters)
-
-            val usePassword = parameters is SignInStartUsingPasswordCommandParameters
-
-            var parametersWithScopes: SignInStartUsingPasswordCommandParameters? = null
-            if (usePassword) {
-                val mergedScopes = addDefaultScopes(parameters.scopes)
-                parametersWithScopes = CommandUtil.createSignInStartCommandParametersWithScopes(
-                    parameters as SignInStartUsingPasswordCommandParameters,
-                    mergedScopes
-                )
-            }
-
             val initiateApiResult = performSignInInitiateCall(
                 oAuth2Strategy = oAuth2Strategy,
-                parameters = parameters // Downcast, because we don't need the password in this API call
-            )
+                parameters = parameters)
 
-            return processSignInInitiateApiResult(
-                initiateApiResult = initiateApiResult,
-                oAuth2Strategy = oAuth2Strategy,
-                parametersWithScopes = parametersWithScopes, // Include the scopes, to send to /token endpoint in case of password flow
-                usePassword = usePassword
-            )
+            if (parameters is SignInStartUsingPasswordCommandParameters)
+            {
+                Logger.verbose(TAG, "Parameters is of type SignInStartUsingPasswordCommandParameters");
+                val mergedScopes = addDefaultScopes(parameters.scopes)
+                var parametersWithScopes = CommandUtil.createSignInStartCommandParametersWithScopes(
+                    parameters as SignInStartUsingPasswordCommandParameters,
+                    mergedScopes)
+
+                return processSignInInitiateApiResult(
+                    initiateApiResult = initiateApiResult,
+                    oAuth2Strategy = oAuth2Strategy,
+                    parametersWithScopes = parametersWithScopes,
+                    usePassword = true)
+            }
+            else
+            {
+                Logger.verbose(TAG, "Parameters is not of type SignInStartUsingPasswordCommandParameters");
+                return processSignInInitiateApiResult(
+                    initiateApiResult = initiateApiResult,
+                    oAuth2Strategy = oAuth2Strategy)
+            }
+
         } catch (e: Exception) {
             Logger.error(TAG, "Exception thrown in signInStart", e)
             throw e
@@ -162,7 +165,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     }
 
     /**
-     * Makes a call to the /token endpoint with the provided SLT, and caches the returned token if successful.
+     * Makes a call to the /token endpoint with the provided Short Lived Token (SLT), and caches the returned token
+     * if successful. In case of error [INativeAuthCommandResult.UnknownError] is returned.
      */
     fun signInWithSLT(parameters: SignInWithSLTCommandParameters): SignInWithSLTCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.signInWithSLT")
@@ -213,7 +217,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     }
 
     /**
-     * Makes a call to the /token endpoint with the provided code, and caches the returned token if successful.
+     * Makes a call to the /token endpoint with the provided OOB code, and caches the returned token
+     * if successful.  In case of error [INativeAuthCommandResult.UnknownError] is returned.
      */
     fun signInSubmitCode(parameters: SignInSubmitCodeCommandParameters): SignInSubmitCodeCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.signInSubmitCode")
@@ -518,7 +523,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
      * Native-auth specific implementation of fetching a token from the cache, and/or refreshing it.
      * Main differences with standard implementation in [LocalMSALController] are:
      * - No scopes are passed in as part of the (developer provided) parameters. The scopes from the
-     * AT are used to make the refresh token call.
+     * Access Token cache are used to make the refresh token call.
      * - When the RT is expired or the refresh token call fails, a different exception is thrown.
      */
     @Throws(
@@ -537,14 +542,18 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         // Validate original AcquireTokenNoScopesCommandParameters parameters
         parameters.validate()
 
-        // Convert AcquireTokenNoScopesCommandParameters into SilentTokenCommandParameters
-        // so we can re-use existing MSAL logic
+        // Convert AcquireTokenNoScopesCommandParameters into SilentTokenCommandParameters,
+        // so we can use it in BaseController.getCachedAccountRecord()
         val silentTokenCommandParameters =
             CommandUtil.convertAcquireTokenNoFixedScopesCommandParameters(
                 parameters
             )
-        // Not adding any (default) scopes, because we want to retrieve all tokens (regardless of scope).
-        // Scopes will be added later in the flow, if necessary.
+
+        // We want to retrieve all tokens from the cache, regardless of their scopes. Since in the
+        // native auth get token flow the developer doesn't have the ability to specify scopes,
+        // we can't filter on it.
+        // In reality only 1 token should be returned, as native auth currently doesn't support
+        // multiple tokens.
         val targetAccount: AccountRecord = getCachedAccountRecord(silentTokenCommandParameters)
 
         // Build up params for Strategy construction
@@ -560,7 +569,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             silentTokenCommandParameters.clientId,
             parameters.applicationIdentifier,
             parameters.mamEnrollmentId,
-            null, // TODO see where else this is needed
+            null,
             targetAccount,
             authScheme
         ) as List<ICacheRecord>
@@ -1567,9 +1576,9 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     @VisibleForTesting
     fun processSignInInitiateApiResult(
         initiateApiResult: SignInInitiateApiResult,
-        parametersWithScopes: SignInStartUsingPasswordCommandParameters?,
+        parametersWithScopes: SignInStartUsingPasswordCommandParameters? = null,
         oAuth2Strategy: NativeAuthOAuth2Strategy,
-        usePassword: Boolean
+        usePassword: Boolean = false
     ): SignInStartCommandResult {
         return when (initiateApiResult) {
             SignInInitiateApiResult.Redirect -> {

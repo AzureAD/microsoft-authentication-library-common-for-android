@@ -41,7 +41,7 @@ data class SignInChallengeApiResponse(
     @Expose @SerializedName("credential_token") val credentialToken: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
     @Expose @SerializedName("binding_method") val bindingMethod: String?,
-    @Expose @SerializedName("challenge_target_label") val challengeTargetLabel: String?,
+    @SerializedName("challenge_target_label") val challengeTargetLabel: String?,
     @Expose @SerializedName("challenge_channel") val challengeChannel: String?,
     @Expose @SerializedName("code_length") val codeLength: Int?,
     @Expose @SerializedName("interval") val interval: Int?,
@@ -55,6 +55,7 @@ data class SignInChallengeApiResponse(
 
     companion object {
         private val TAG = SignInChallengeApiResponse::class.java.simpleName
+        private const val INVALID_GRANT = "invalid_grant";
     }
 
     /**
@@ -68,7 +69,7 @@ data class SignInChallengeApiResponse(
 
             // Handle 400 errors
             HttpURLConnection.HTTP_BAD_REQUEST -> {
-                if (error == "invalid_grant") {
+                if (error == INVALID_GRANT) {
                     SignInChallengeApiResult.UnknownError(
                         error = error,
                         errorDescription = errorDescription.orEmpty(),

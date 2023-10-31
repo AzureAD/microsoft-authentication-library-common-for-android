@@ -32,7 +32,6 @@ class RefreshTokenNotFoundException(errorCode: String, errorMessage: String, thr
     // When MSAL converts the result bundle it looks for this value to know about exception type
     // We moved the exception class to a new package with refactoring work,
     // but need to keep this value to older package name to avoid breaking older MSAL clients.
-    val sName = "com.microsoft.identity.common.exception.RefreshTokenNotFoundException"
 
     override fun getExceptionName(): String? {
         return sName

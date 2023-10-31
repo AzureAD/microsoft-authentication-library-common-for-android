@@ -52,6 +52,10 @@ import com.microsoft.identity.common.java.providers.nativeauth.requests.signup.S
 import com.microsoft.identity.common.java.providers.nativeauth.requests.signup.SignUpStartRequest
 import java.util.TreeMap
 
+/**
+ * NativeAuthRequestProvider creates request objects that encapsulate all information required
+ * for making REST API calls to Native Auth.
+ */
 class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuration) {
     private val TAG = NativeAuthRequestProvider::class.java.simpleName
 
@@ -123,6 +127,10 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //endregion
 
     //region /oauth/v2.0/initiate
+    /**
+     * Creates request object for /oauth/v2.0/initiate API call from [SignInStartCommandParameters]
+     * @param parameters: command parameters object
+     */
     fun createSignInInitiateRequest(
         parameters: SignInStartCommandParameters
     ): SignInInitiateRequest {
@@ -139,6 +147,10 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //endregion
 
     //region /oauth/v2.0/challenge
+    /**
+     * Creates request object for /oauth/v2.0/challenge API call from credential token
+     * @param credentialToken: credential token from a previous signin command
+     */
     fun createSignInChallengeRequest(
         credentialToken: String
     ): SignInChallengeRequest {
@@ -155,6 +167,10 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //endregion
 
     //region /oauth/v2.0/token
+    /**
+     * Creates request object for /oauth/v2.0/token API call from [SignInSubmitCodeCommandParameters]
+     * @param parameters: command parameters object
+     */
     fun createOOBTokenRequest(
         parameters: SignInSubmitCodeCommandParameters
     ): SignInTokenRequest {
@@ -171,6 +187,10 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         )
     }
 
+    /**
+     * Creates request object for /oauth/v2.0/token API call from [SignInWithSLTCommandParameters]
+     * @param parameters: command parameters object
+     */
     fun createSLTTokenRequest(
         parameters: SignInWithSLTCommandParameters
     ): SignInTokenRequest {
@@ -187,6 +207,10 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         )
     }
 
+    /**
+     * Creates request object for /oauth/v2.0/token API call from [SignInSubmitPasswordCommandParameters]
+     * @param parameters: command parameters object
+     */
     fun createPasswordTokenRequest(
         parameters: SignInSubmitPasswordCommandParameters
     ): SignInTokenRequest {
