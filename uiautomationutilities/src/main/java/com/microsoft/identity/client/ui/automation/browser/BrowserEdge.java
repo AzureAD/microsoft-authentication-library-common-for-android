@@ -88,18 +88,7 @@ public class BrowserEdge extends App implements IBrowser {
         launch();
 
         // Click on the search bar in the browser UI
-        try {
-            UiAutomatorUtils.handleButtonClickForObjectWithText("Search");
-        } catch (AssertionError e) {
-            if (e.getMessage().contains("UiObjectNotFoundException")) {
-                final UiObject descObject = UiAutomatorUtils.obtainUiObjectWithDescription("Search or type web address");
-                try {
-                    descObject.click();
-                } catch (final UiObjectNotFoundException uiException) {
-                    throw new AssertionError(uiException);
-                }
-            }
-        }
+        UiAutomatorUtils.handleButtonClickForObjectWithText("Search or type web address");
 
         final UiObject inputField = UiAutomatorUtils.obtainUiObjectWithResourceId(
                 "com.microsoft.emmx:id/url_bar"
