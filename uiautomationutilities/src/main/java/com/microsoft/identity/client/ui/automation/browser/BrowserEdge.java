@@ -87,7 +87,7 @@ public class BrowserEdge extends App implements IBrowser {
         Logger.i(TAG, "Navigate to the given URL:" + url + " in the browser..");
         launch();
 
-        //  Click on the search bar in the browser UI
+        // Click on the search bar in the browser UI
         UiAutomatorUtils.handleButtonClickForObjectWithText("Search or type web address");
 
         final UiObject inputField = UiAutomatorUtils.obtainUiObjectWithResourceId(
