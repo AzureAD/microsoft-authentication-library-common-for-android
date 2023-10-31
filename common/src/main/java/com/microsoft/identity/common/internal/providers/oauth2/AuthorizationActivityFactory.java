@@ -30,6 +30,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
@@ -98,7 +99,7 @@ public class AuthorizationActivityFactory {
         intent.putExtra(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         intent.putExtra(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
         intent.putExtra(CORRELATION_ID, DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
-        intent.putExtra(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT, SerializableSpanContextJsonAdapter.toJson(
+        intent.putExtra(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT, new CommonMoshiJsonAdapter().toJson(
                 SerializableSpanContext.builder()
                         .traceId(SpanExtension.current().getSpanContext().getTraceId())
                         .spanId(SpanExtension.current().getSpanContext().getSpanId())
