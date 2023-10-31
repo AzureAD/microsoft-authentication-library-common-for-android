@@ -4,7 +4,9 @@ V.Next
 - [MINOR] Added passkey protocol header (behind a flag) (#2181)
 - [MINOR] Fix crash during onCreate() (#2202)
 - [MINOR] add removeUserLegacy method in MsalTestApp infra (#2212)
-- [MINOR] Bumping Moshi and JSON versions; force setting Okio version (#2210)
+- [PATCH] Always validate calling app's redirect URI (#2211)
+- [MINOR] Updating JSON version (#2221)
+- [MINOR] Bumping Moshi versions; force setting Okio version (#2210)
 
 V.16.1.1
 ----------
