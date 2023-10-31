@@ -58,7 +58,7 @@ public final class JwtRequestHeader extends AbstractJwtRequest {
     @SerializedName(ClaimNames.KID)
     private String mKId;
 
-    @SerializedName("kdf_ver")
+    @SerializedName(ClaimNames.KDF_VER)
     private int mKdfVersion;
 
     public void setType() {
