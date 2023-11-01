@@ -992,7 +992,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
             exception = e;
             errCode = KEYSTORE_NOT_INITIALIZED;
         } catch (final JOSEException e) {
-            if ((e.getMessage()!=null && e.getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR)) ||
+            if ((e.getMessage() != null && e.getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR)) ||
                     (e.getCause() != null && e.getCause().getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR)) ||
                     (e.getCause() != null && isNegativeInternalErrorInvalidKeyException(e.getCause()))
             ) {
@@ -1033,7 +1033,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     }
 
     private static boolean isNegativeInternalErrorInvalidKeyException(@NonNull final Throwable t) {
-        if ((t.getMessage()!=null && t.getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR)) ||
+        if ((t.getMessage() != null && t.getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR)) ||
                 (t.getCause() != null && t.getCause().getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR)) ||
                 (t.getCause() != null && isNegativeInternalErrorKeyStoreException(t.getCause()))
         ) {
@@ -1044,7 +1044,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     }
 
     private static boolean isNegativeInternalErrorKeyStoreException(@NonNull final Throwable t) {
-        if ((t.getMessage()!=null && t.getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR)) ||
+        if ((t.getMessage() != null && t.getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR)) ||
                 (t.getCause() != null && t.getCause().getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR))
         ) {
             Logger.info(TAG, "Found internal Keystore code: -33 error from KeyStoreException");
@@ -1055,6 +1055,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
 
     /**
      * Perform any cleanup such as clear asymmetric key if unable to mint SHR with existing keys.
+     *
      * @param e the exception that occurred while minting SHR
      */
     protected abstract void performCleanupIfMintShrFails(@NonNull final Exception e);
