@@ -7,6 +7,8 @@ V.Next
 - [MINOR] add removeUserLegacy method in MsalTestApp infra (#2212)
 - [PATCH] Always validate calling app's redirect URI (#2211)
 - [MINOR] Updating JSON version (#2221)
+- [PATCH] Passing span context to AuthorizationActivity (#2209)
+- [MINOR] Bumping Moshi versions; force setting Okio version (#2210)
 
 V.16.1.1
 ----------
