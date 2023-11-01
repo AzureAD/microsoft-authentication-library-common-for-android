@@ -59,7 +59,7 @@ public final class JwtRequestHeader extends AbstractJwtRequest {
     private String mKId;
 
     @SerializedName(ClaimNames.KDF_VER)
-    private int mKdfVersion;
+    private int mKdfVersion = 1;
 
     public void setType() {
         mType = JWT_VALUE;
