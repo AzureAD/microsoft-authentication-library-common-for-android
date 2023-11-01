@@ -986,6 +986,19 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
             exception = e;
             errCode = KEYSTORE_NOT_INITIALIZED;
         } catch (final JOSEException e) {
+            if (e.getMessage()!=null && e.getMessage().contains("internal Keystore code: -33")) {
+                Logger.error(methodTag, "Getting Invalid key blob, Invalid private RSA key", e);
+                Logger.info(methodTag, "Unable to access asymmetric key, clearing the key.");
+                clearAsymmetricKey();
+                Logger.info(methodTag, "Generating new PoP asymmetric key.");
+                final String thumbprint = generateAsymmetricKey();
+                Logger.info(methodTag, "Generated new PoP asymmetric key.");
+                Logger.verbosePII(
+                        methodTag,
+                        "Generated new PoP asymmetric key with thumbprint: "
+                                + thumbprint
+                );
+            }
             exception = e;
             errCode = JWT_SIGNING_FAILURE;
         } catch (final UnrecoverableEntryException e) {
