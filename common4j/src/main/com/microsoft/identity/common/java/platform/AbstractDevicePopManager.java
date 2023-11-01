@@ -996,7 +996,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
                     (e.getCause() != null && e.getCause().getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR)) ||
                     (e.getCause() != null && isNegativeInternalErrorInvalidKeyException(e.getCause()))
             ) {
-                Logger.error(methodTag, "Getting Invalid key blob, Invalid private RSA key", e);
+                Logger.error(methodTag, "Getting Invalid key blob, Invalid private RSA key.", e);
                 Logger.info(methodTag, "Unable to access asymmetric key, clearing the key.");
                 clearAsymmetricKey();
                 Logger.info(methodTag, "Generating new PoP asymmetric key.");
@@ -1037,7 +1037,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
                 (t.getCause() != null && t.getCause().getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR)) ||
                 (t.getCause() != null && isNegativeInternalErrorKeyStoreException(t.getCause()))
         ) {
-            Logger.info(TAG, "Found internal Keystore code: -33 error from InvalidKeyException");
+            Logger.info(TAG, "Found internal Keystore code: -33 error from InvalidKeyException.");
             return true;
         }
         return false;
@@ -1047,7 +1047,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         if ((t.getMessage() != null && t.getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR)) ||
                 (t.getCause() != null && t.getCause().getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR))
         ) {
-            Logger.info(TAG, "Found internal Keystore code: -33 error from KeyStoreException");
+            Logger.info(TAG, "Found internal Keystore code: -33 error from KeyStoreException.");
             return true;
         }
         return false;
