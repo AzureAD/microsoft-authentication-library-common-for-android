@@ -123,6 +123,12 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     private static final int RSA_KEY_SIZE = 2048;
 
     /**
+     * Seeing this on android 13, we think it's being caused by the new Samsung patch release Build Number : G991BXXS9EWIA
+     * <a href="https://doc.samsungmobile.com/sm-g991b/xeo/doc.html">...</a>
+     */
+    public static final String NEGATIVE_THIRTY_THREE_INTERNAL_ERROR = "internal Keystore code: -33";
+
+    /**
      * Log message when private key material cannot be found.
      */
     private static final String PRIVATE_KEY_NOT_FOUND = "Not an instance of a PrivateKeyEntry";
@@ -986,7 +992,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
             exception = e;
             errCode = KEYSTORE_NOT_INITIALIZED;
         } catch (final JOSEException e) {
-            if (e.getMessage()!=null && e.getMessage().contains("internal Keystore code: -33")) {
+            if (e.getMessage()!=null && e.getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR)) {
                 Logger.error(methodTag, "Getting Invalid key blob, Invalid private RSA key", e);
                 Logger.info(methodTag, "Unable to access asymmetric key, clearing the key.");
                 clearAsymmetricKey();
