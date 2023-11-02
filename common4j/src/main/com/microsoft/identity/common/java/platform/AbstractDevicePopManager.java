@@ -992,9 +992,9 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
             exception = e;
             errCode = KEYSTORE_NOT_INITIALIZED;
         } catch (final JOSEException e) {
-            if ((e.getMessage() != null && e.getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR)) ||
-                    (e.getCause() != null && e.getCause().getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR)) ||
-                    (e.getCause() != null && isNegativeInternalErrorInvalidKeyException(e.getCause()))
+            if((e != null && isNegativeInternalError(e)) ||
+                    (e.getCause() != null && isNegativeInternalError(e.getCause())) ||
+                    (e.getCause().getCause() != null && isNegativeInternalError(e.getCause().getCause()))
             ) {
                 Logger.error(methodTag, "Getting Invalid key blob, Invalid private RSA key.", e);
                 Logger.info(methodTag, "Unable to access asymmetric key, clearing the key.");
@@ -1032,22 +1032,11 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         throw clientException;
     }
 
-    private static boolean isNegativeInternalErrorInvalidKeyException(@NonNull final Throwable t) {
-        if ((t.getMessage() != null && t.getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR)) ||
-                (t.getCause() != null && t.getCause().getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR)) ||
-                (t.getCause() != null && isNegativeInternalErrorKeyStoreException(t.getCause()))
-        ) {
-            Logger.info(TAG, "Found internal Keystore code: -33 error from InvalidKeyException.");
-            return true;
-        }
-        return false;
-    }
-
-    private static boolean isNegativeInternalErrorKeyStoreException(@NonNull final Throwable t) {
+    private static boolean isNegativeInternalError(@NonNull final Throwable t) {
         if ((t.getMessage() != null && t.getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR)) ||
                 (t.getCause() != null && t.getCause().getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR))
         ) {
-            Logger.info(TAG, "Found internal Keystore code: -33 error from KeyStoreException.");
+            Logger.info(TAG, "Found internal Keystore code: -33 error.");
             return true;
         }
         return false;
