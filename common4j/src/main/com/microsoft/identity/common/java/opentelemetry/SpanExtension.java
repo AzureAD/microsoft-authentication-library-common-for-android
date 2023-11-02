@@ -63,10 +63,7 @@ public class SpanExtension {
             );
 
     public static Span current() {
-
-            Logger.error(TAG + ":getCurrentSpan", error.getMessage(), error);
             return new NoopSpan(INVALID);
-
     }
 
     /**
