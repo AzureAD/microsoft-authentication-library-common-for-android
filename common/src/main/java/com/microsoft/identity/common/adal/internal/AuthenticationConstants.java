@@ -1026,7 +1026,7 @@ public final class AuthenticationConstants {
         public static final String MOCK_AUTH_APP_PACKAGE_NAME = "com.microsoft.mockauthapp";
 
         /**
-         * Signing certificate hash of MockAuthApp (signed with debug broker keystore key).
+         * Signing certificate thumbprint of MockAuthApp (signed with debug broker keystore key).
          * Generated with SHA-512.
          */
         public static final String MOCK_AUTH_APP_SIGNATURE_SHA512 = "QhjKSYYD31K7+C4q4Mpd08crE0LN/3GgnKVVuej4JWckUTc0Wp/i//LWLQnANaWiAjdESJJrjavu0cE6hkQihQ==";
@@ -1037,7 +1037,7 @@ public final class AuthenticationConstants {
         public static final String MOCK_CP_PACKAGE_NAME = "com.microsoft.mockcp";
 
         /**
-         * Signing certificate hash of MockCP (signed with debug broker keystore key).
+         * Signing certificate thumbprint of MockCP (signed with debug broker keystore key).
          * Generated with SHA-512.
          */
         public static final String MOCK_CP_SIGNATURE_SHA512 = "EZ2RCcsmf869Ec41PgHHnFdI0MgmVsADFFy8AtcfEKsjD1YAPtKxCMZVdT+y+K1IWRnPk4Lf2PUAcL5N49OqAA==";
@@ -1048,7 +1048,7 @@ public final class AuthenticationConstants {
         public static final String MOCK_LTW_PACKAGE_NAME = "com.microsoft.mockltw";
 
         /**
-         * Signing certificate hash of MockLTW (signed with debug broker keystore key).
+         * Signing certificate thumbprint of MockLTW (signed with debug broker keystore key).
          * Generated with SHA-512.
          */
         public static final String MOCK_LTW_SIGNATURE_SHA512 = "felxzv/rpqa69dOADXVVKnawk5x8snBW2k/kDxzQLVkbcdzAvrGm8gcBRItzUGIQTupHCTWksN6WBGbn+b0KIA==";
@@ -1069,7 +1069,7 @@ public final class AuthenticationConstants {
         public static final String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
 
         /**
-         * Signing certificate hash of the PROD-signed Intune Company portal app.
+         * Signing certificate thumbprint of the PROD-signed Intune Company portal app.
          * Generated with SHA-1.
          *
          * Deprecated. Used in legacy tests only.
@@ -1078,31 +1078,31 @@ public final class AuthenticationConstants {
         public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE = "1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
 
         /**
-         * Signing certificate hash of the DEBUG-signed Intune Company portal app.
+         * Signing certificate thumbprint of the DEBUG-signed Intune Company portal app.
          * Generated with SHA-512.
          */
         public static final String COMPANY_PORTAL_APP_DEBUG_SIGNATURE_SHA512 = "oIuNoUwMsxC10VneTQXnt/GXN+Pjqd6mpOKEMF/cH3i06K93TZMBWq+fHN/zt4zUe/W6zGj6YLymd1/tGuypNQ==";
 
         /**
-         * Signing certificate hash of the PROD-signed Intune Company portal app.
+         * Signing certificate thumbprint of the PROD-signed Intune Company portal app.
          * Generated with SHA-512.
          */
         public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512 = "jPpMoaNvcxSLMX4yG4C3Gf86rtTqh33SqpuRKg4WOP+MnnpA52zZgvKLW76U4Cqqf68iaBk9W7k/jhciiSAtgQ==";
 
         /**
-         * Signing certificate hash of the PROD-signed Microsoft Authenticator app.
+         * Signing certificate thumbprint of the PROD-signed Microsoft Authenticator app.
          * Generated with SHA-512.
          */
         public static final String AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE_SHA512 = "Gu8CuaYmSV5CHWd6dz3tGPXIE+YTalCVIXi5lEBXpvUgsMKoHbU9Rqou3WNRNU1tsz8pvEADTCCJ5f02fbw9qw==";
 
         /**
-         * Signing certificate hash of the DEBUG-signed Microsoft Authenticator app.
+         * Signing certificate thumbprint of the DEBUG-signed Microsoft Authenticator app.
          * Generated with SHA-512.
          */
         public static final String AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE_SHA512 = "pdAtoxfsEwbpQsIaua5Uobl5AQEjqt40aPXI7UY1lIW0NTmg0G4jHQ5T5mujSjjU06q4mEHs5hb6z/Mr0PNlmQ==";
 
         /**
-         * Signing certificate hash of the Broker Host app.
+         * Signing certificate thumbprint of the Broker Host app.
          * Generated with SHA-512.
          */
         public static final String BROKER_HOST_APP_SIGNATURE_SHA512 = "xxAk8S05zu0Nkce+X2J6IKJ2e7YE4F9ZorZj0YnYUQ2vw8vLc8VGGOqJdTnVySbbcy9VY8UDbOfeOETSErYllw==";
@@ -1113,13 +1113,13 @@ public final class AuthenticationConstants {
         public static final String LTW_APP_PACKAGE_NAME = "com.microsoft.appmanager";
 
         /**
-         * Signing certificate hash of the PROD-signed Link To Windows app.
+         * Signing certificate thumbprint of the PROD-signed Link To Windows app.
          * Generated with SHA-512.
          */
         public static final String LTW_APP_SHA512_RELEASE_SIGNATURE = "WhUdh04ZkQLmNb//lKmohyqDdPMWXHcI0O3AvoLMtgF/smnED4r+Vguvgj6d4QG77Jl3avUKt6LeqF2TJPZVzg==";
 
         /**
-         * Signing certificate hash of the DEBUG-signed Link To Windows app.
+         * Signing certificate thumbprint of the DEBUG-signed Link To Windows app.
          * Generated with SHA-512.
          */
         public static final String LTW_APP_SHA512_DEBUG_SIGNATURE = "x28mHDILP8IZRH6EfjD4zC1bcpgk8euKS91klxoddu8+e34xEgy3Q9XTa3ySY7C7EXX4o/EJpDV8MqmEfIf7LA==";
@@ -1135,7 +1135,7 @@ public final class AuthenticationConstants {
         public static final String IPPHONE_APP_PACKAGE_NAME = "com.microsoft.skype.teams.ipphone";
 
         /**
-         * Signing certificate hash of the PROD-signed Teams IP Phones (Sakurai devices).
+         * Signing certificate thumbprint of the PROD-signed Teams IP Phones (Sakurai devices).
          *
          * Teams IP Phones (Sakurai devices) is supported by Intune, but does not have a back button nor browser.
          * The only supported detection of this phone is the application install state.
@@ -1144,7 +1144,7 @@ public final class AuthenticationConstants {
         public static final String IPPHONE_APP_SIGNATURE = "fcg80qvoM1YMKJZibjBwQcDfOno=";
 
         /**
-         * Signing certificate hash of the DEBUG-signed Teams IP Phones (Sakurai devices)
+         * Signing certificate thumbprint of the DEBUG-signed Teams IP Phones (Sakurai devices)
          * to unblock any teams local debug development.
          */
         public static final String IPPHONE_APP_DEBUG_SIGNATURE = "VCpKgbYCXucoq1mZ4BZPsh5taNE=";
