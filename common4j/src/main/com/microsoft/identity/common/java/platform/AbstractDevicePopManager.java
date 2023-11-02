@@ -983,7 +983,6 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
             );
 
             signedJWT.sign(signer);
-            clearAsymmetricKey();
 
             return signedJWT.serialize();
         } catch (final NoSuchAlgorithmException e) {
