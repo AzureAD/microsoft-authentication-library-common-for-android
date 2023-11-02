@@ -992,7 +992,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
             exception = e;
             errCode = KEYSTORE_NOT_INITIALIZED;
         } catch (final JOSEException e) {
-            if((e != null && isNegativeInternalError(e)) ||
+            if ((e != null && isNegativeInternalError(e)) ||
                     (e.getCause() != null && isNegativeInternalError(e.getCause())) ||
                     (e.getCause().getCause() != null && isNegativeInternalError(e.getCause().getCause()))
             ) {
