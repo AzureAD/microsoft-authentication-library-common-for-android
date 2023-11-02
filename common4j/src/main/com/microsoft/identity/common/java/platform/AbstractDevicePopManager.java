@@ -123,6 +123,12 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     private static final int RSA_KEY_SIZE = 2048;
 
     /**
+     * Seeing this on android 13, we think it's being caused by the new Samsung patch release Build Number : G991BXXS9EWIA
+     * <a href="https://doc.samsungmobile.com/sm-g991b/xeo/doc.html">...</a>
+     */
+    public static final String NEGATIVE_THIRTY_THREE_INTERNAL_ERROR_MSG = "internal Keystore code: -33";
+
+    /**
      * Log message when private key material cannot be found.
      */
     private static final String PRIVATE_KEY_NOT_FOUND = "Not an instance of a PrivateKeyEntry";
@@ -986,6 +992,22 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
             exception = e;
             errCode = KEYSTORE_NOT_INITIALIZED;
         } catch (final JOSEException e) {
+            if ((isNegativeInternalError(e)) ||
+                    (e.getCause() != null && isNegativeInternalError(e.getCause())) ||
+                    (e.getCause().getCause() != null && isNegativeInternalError(e.getCause().getCause()))
+            ) {
+                Logger.error(methodTag, "Getting Invalid key blob, Invalid private RSA key.", e);
+                Logger.info(methodTag, "Unable to access asymmetric key, clearing the key.");
+                clearAsymmetricKey();
+                Logger.info(methodTag, "Generating new PoP asymmetric key.");
+                final String thumbprint = generateAsymmetricKey();
+                Logger.info(methodTag, "Generated new PoP asymmetric key.");
+                Logger.verbosePII(
+                        methodTag,
+                        "Generated new PoP asymmetric key with thumbprint: "
+                                + thumbprint
+                );
+            }
             exception = e;
             errCode = JWT_SIGNING_FAILURE;
         } catch (final UnrecoverableEntryException e) {
@@ -1010,8 +1032,17 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         throw clientException;
     }
 
+    private static boolean isNegativeInternalError(@NonNull final Throwable t) {
+        if ((t.getMessage() != null && t.getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR_MSG))) {
+            Logger.info(TAG, "Found internal Keystore code: -33 error.");
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Perform any cleanup such as clear asymmetric key if unable to mint SHR with existing keys.
+     *
      * @param e the exception that occurred while minting SHR
      */
     protected abstract void performCleanupIfMintShrFails(@NonNull final Exception e);
