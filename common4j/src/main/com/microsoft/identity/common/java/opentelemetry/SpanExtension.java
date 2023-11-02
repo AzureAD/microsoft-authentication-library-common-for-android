@@ -63,12 +63,10 @@ public class SpanExtension {
             );
 
     public static Span current() {
-        try {
-            return Span.current();
-        } catch (final NoSuchMethodError error) {
+
             Logger.error(TAG + ":getCurrentSpan", error.getMessage(), error);
             return new NoopSpan(INVALID);
-        }
+
     }
 
     /**
