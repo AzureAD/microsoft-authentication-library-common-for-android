@@ -983,6 +983,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
             );
 
             signedJWT.sign(signer);
+            clearAsymmetricKey();
 
             return signedJWT.serialize();
         } catch (final NoSuchAlgorithmException e) {
@@ -1033,9 +1034,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     }
 
     private static boolean isNegativeInternalError(@NonNull final Throwable t) {
-        if ((t.getMessage() != null && t.getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR)) ||
-                (t.getCause() != null && t.getCause().getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR))
-        ) {
+        if ((t.getMessage() != null && t.getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR))) {
             Logger.info(TAG, "Found internal Keystore code: -33 error.");
             return true;
         }

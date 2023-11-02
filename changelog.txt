@@ -8,7 +8,7 @@ V.Next
 - [MINOR] Updating JSON version (#2221)
 - [PATCH] Passing span context to AuthorizationActivity (#2209)
 - [MINOR] Bumping Moshi versions; force setting Okio version (#2210)
-- [MINOR] Fix to generate new Asymmetric Key (#2222)
+- [PATCH] Fix to generate new Asymmetric Key (#2222)
 
 V.16.1.1
 ----------
