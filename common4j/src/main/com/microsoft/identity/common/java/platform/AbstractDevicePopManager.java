@@ -126,7 +126,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
      * Seeing this on android 13, we think it's being caused by the new Samsung patch release Build Number : G991BXXS9EWIA
      * <a href="https://doc.samsungmobile.com/sm-g991b/xeo/doc.html">...</a>
      */
-    public static final String NEGATIVE_THIRTY_THREE_INTERNAL_ERROR = "internal Keystore code: -33";
+    public static final String NEGATIVE_THIRTY_THREE_INTERNAL_ERROR_MSG = "internal Keystore code: -33";
 
     /**
      * Log message when private key material cannot be found.
@@ -1034,7 +1034,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     }
 
     private static boolean isNegativeInternalError(@NonNull final Throwable t) {
-        if ((t.getMessage() != null && t.getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR))) {
+        if ((t.getMessage() != null && t.getMessage().contains(NEGATIVE_THIRTY_THREE_INTERNAL_ERROR_MSG))) {
             Logger.info(TAG, "Found internal Keystore code: -33 error.");
             return true;
         }
