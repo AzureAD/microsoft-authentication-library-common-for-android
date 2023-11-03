@@ -153,9 +153,10 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
 
     @Override
     protected void performCleanupIfMintShrFails(@NonNull final Exception e) {
+        final String methodTag = TAG + ":performCleanupIfMintShrFails";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                 && e.getCause() instanceof KeyPermanentlyInvalidatedException) {
-            Logger.warn(TAG, "Unable to access asymmetric key - clearing.");
+            Logger.warn(methodTag, "Unable to access asymmetric key - clearing.");
             clearAsymmetricKey();
         }
     }
