@@ -113,11 +113,13 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     parameters as SignInStartUsingPasswordCommandParameters,
                     mergedScopes)
 
-                return processSignInInitiateApiResult(
+                val result = processSignInInitiateApiResult(
                     initiateApiResult = initiateApiResult,
                     oAuth2Strategy = oAuth2Strategy,
                     parametersWithScopes = parametersWithScopes,
                     usePassword = true)
+                StringUtil.overwriteWithZero(parametersWithScopes.password)
+                return result
             }
             else
             {
@@ -126,7 +128,6 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     initiateApiResult = initiateApiResult,
                     oAuth2Strategy = oAuth2Strategy)
             }
-
         } catch (e: Exception) {
             Logger.error(TAG, "Exception thrown in signInStart", e)
             throw e
@@ -316,13 +317,15 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     mergedScopes
                 )
 
-            return performPasswordTokenCall(
+            val result = performPasswordTokenCall(
                 oAuth2Strategy = oAuth2Strategy,
                 parameters = parametersWithScopes
             ).toSignInSubmitPasswordCommandResult(
                 oAuth2Strategy = oAuth2Strategy,
                 parametersWithScopes = parametersWithScopes
             )
+            StringUtil.overwriteWithZero(parametersWithScopes.password)
+            return result
         } catch (e: Exception) {
             Logger.error(TAG, "Exception thrown in signInSubmitPassword", e)
             throw e
@@ -792,13 +795,16 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                             parametersWithScopes,
                             result.credentialToken
                         )
-                    performPasswordTokenCall(
+                    val result = performPasswordTokenCall(
                         oAuth2Strategy = oAuth2Strategy,
                         parameters = signInSubmitPasswordCommandParameters
                     ).toSignInStartCommandResult(
                         oAuth2Strategy = oAuth2Strategy,
                         parametersWithScopes = parametersWithScopes
                     )
+
+                    StringUtil.overwriteWithZero(signInSubmitPasswordCommandParameters.password)
+                    return result
                 } else {
                     SignInCommandResult.PasswordRequired(
                         credentialToken = result.credentialToken

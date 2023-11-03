@@ -32,7 +32,7 @@ sealed interface ResetPasswordSubmitNewPasswordCommandResult: INativeAuthCommand
 
 /**
  * Reflects the possible results from reset password commands.
- * Conforms to the ICommandResult interface, and is mapped from the respective API result classes returned for each endpoint.
+ * Conforms to the INativeAuthCommandResult interface, and is mapped from the respective API result classes returned for each endpoint.
  * @see com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordStartApiResult
  * @see com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordChallengeApiResult
  * @see com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordContinueApiResult

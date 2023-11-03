@@ -501,4 +501,15 @@ public class StringUtil {
             throw e;
         }
     }
+
+    /**
+     * Helper function to overwrite all characters in an array with zero
+     * @param chars
+     */
+    public static void overwriteWithZero(char[] chars) {
+        int length = chars == null ? 0: chars.length;
+        for (int i =0; i < length; i++) {
+            chars[i] = '\0';
+        }
+    }
 }

@@ -33,7 +33,7 @@ sealed interface SignInSubmitPasswordCommandResult: INativeAuthCommandResult
 
 /**
  * Reflects the possible results from sign in commands.
- * Conforms to the ICommandResult interface, and is mapped from the respective API result classes returned for each endpoint.
+ * Conforms to the INativeAuthCommandResult interface, and is mapped from the respective API result classes returned for each endpoint.
  * @see com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResult
  * @see com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResult
  * @see com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResult

@@ -31,6 +31,7 @@ object ArgUtils {
         argName: String
     ) {
         if (null == o ||
+            o is CharArray && o.isEmpty() ||
             o is CharSequence && o.isBlank() ||
             o is String && o.isBlank() ||
             o is List<*> && o.isEmpty() ||

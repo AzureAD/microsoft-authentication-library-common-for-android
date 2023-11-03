@@ -22,10 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.nativeauth.requests.signin
 
+import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthConstants
 import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAuthRequest
 import com.microsoft.identity.common.java.util.ArgUtils
+import com.microsoft.identity.common.java.util.CharArrayJsonAdapter
 import java.net.URL
 
 /**
@@ -88,7 +90,7 @@ data class SignInTokenRequest private constructor(
          * @see com.microsoft.identity.common.java.exception.ClientException
          */
         fun createPasswordTokenRequest(
-            password: String,
+            password: CharArray,
             credentialToken: String,
             clientId: String,
             scopes: List<String>? = null,
@@ -161,7 +163,7 @@ data class SignInTokenRequest private constructor(
 
     data class NativeAuthRequestSignInTokenParameters(
         val username: String? = null,
-        val password: String? = null,
+        @JsonAdapter(CharArrayJsonAdapter::class) val password: CharArray? = null,
         val oob: String? = null,
         @SerializedName("nca") val nca: Int? = null,  //nca=1 forces Azure AD to lookup the account via the signInNames attribute, rather than the userPrincipalName (default identifier for AAD).
         @SerializedName("client_info") private val clientInfo: Boolean = true,
