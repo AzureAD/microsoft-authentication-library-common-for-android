@@ -70,8 +70,8 @@ ext {
     yubikitPivVersion = "2.3.0"
     powerliftAndroidVersion="1.0.3"
     lifecycleKtxVersion="2.5.1"
-    AndroidCredentialsVersion="1.2.0-rc01"
-    AndroidCredentialsPlayServicesAuthVersion="1.2.0-rc01"
+    AndroidCredentialsVersion="1.2.0"
+    AndroidCredentialsPlayServicesAuthVersion="1.2.0"
 
     // microsoft-diagnostics-uploader app versions
     powerliftVersion = "0.14.7"
