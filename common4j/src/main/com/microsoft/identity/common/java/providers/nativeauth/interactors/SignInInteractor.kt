@@ -37,6 +37,7 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.util.ObjectMapper
+import com.microsoft.identity.common.java.util.StringUtil
 
 /**
  * Acts as a binding layer between the request providers and response handlers for a given request.
@@ -140,7 +141,9 @@ class SignInInteractor(
         val request = nativeAuthRequestProvider.createPasswordTokenRequest(
             parameters = parameters
         )
-        return performGetToken(request)
+        val result = performGetToken(request)
+        StringUtil.overwriteWithZero(request.parameters.password)
+        return result
     }
 
     private fun performGetToken(request: SignInTokenRequest): SignInTokenApiResult {

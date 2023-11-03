@@ -61,7 +61,7 @@ import java.net.URL
 
 class NativeAuthRequestHandlerTest {
     private val username = "user@email.com"
-    private val password = "verySafePassword"
+    private val password = "verySafePassword".toCharArray()
     private val clientId = "1234"
     private val tenant = "samtoso.onmicrosoft.com"
     private val tokenEndpoint = URL("https://contoso.com/1234/token")
@@ -75,6 +75,7 @@ class NativeAuthRequestHandlerTest {
     private val passwordSubmitToken = "123456"
     private val signInSLT = "1234"
     private val emptyString = ""
+    private val emptyPassword = "".toCharArray()
     private val credentialToken = "uY29tL2F1dGhlbnRpY"
     private val grantType = NativeAuthConstants.GrantType.OOB
     private val signupToken = "ifQ"
@@ -120,7 +121,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = SignUpStartUsingPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
-            .password(emptyString)
+            .password(emptyPassword)
             .clientId(clientId)
             .build()
 
@@ -232,7 +233,7 @@ class NativeAuthRequestHandlerTest {
             commandParameters = commandParameters
         )
 
-        assertEquals(password, result.parameters.password)
+        assertEquals(password.toString(), result.parameters.password.toString())
         assertEquals(signupToken, result.parameters.signUpToken)
         assertEquals(passwordGrantType, result.parameters.grantType)
         assertEquals(signUpContinueRequestUrl, result.requestUrl)
@@ -275,7 +276,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = SignUpSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .signupToken(signupToken)
-            .password(emptyString)
+            .password(emptyPassword)
             .clientId(clientId)
             .build()
 
@@ -483,7 +484,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = SignInStartUsingPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
-            .password(emptyString)
+            .password(emptyPassword)
             .build()
 
         nativeAuthRequestProvider.createSignInInitiateRequest(
@@ -560,7 +561,7 @@ class NativeAuthRequestHandlerTest {
     fun testPasswordTokenRequestWithEmptyPasswordShouldThrowException() {
         val commandParameters = SignInSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .password(emptyString)
+            .password(emptyPassword)
             .credentialToken(credentialToken)
             .build()
 
@@ -776,7 +777,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = ResetPasswordSubmitNewPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .passwordSubmitToken(passwordSubmitToken)
-            .newPassword(emptyString)
+            .newPassword(emptyPassword)
             .build()
 
         nativeAuthRequestProvider.createResetPasswordSubmitRequest(

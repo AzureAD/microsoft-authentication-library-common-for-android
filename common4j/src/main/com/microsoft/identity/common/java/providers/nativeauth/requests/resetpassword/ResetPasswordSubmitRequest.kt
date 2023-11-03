@@ -22,9 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.nativeauth.requests.resetpassword
 
+import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAuthRequest
 import com.microsoft.identity.common.java.util.ArgUtils
+import com.microsoft.identity.common.java.util.CharArrayJsonAdapter
 import java.net.URL
 
 /**
@@ -48,7 +50,7 @@ class ResetPasswordSubmitRequest private constructor(
         fun create(
             clientId: String,
             passwordSubmitToken: String,
-            newPassword: String,
+            newPassword: CharArray,
             requestUrl: String,
             headers: Map<String, String?>
         ): ResetPasswordSubmitRequest {
@@ -74,6 +76,6 @@ class ResetPasswordSubmitRequest private constructor(
     data class NativeAuthResetPasswordSubmitRequestBody(
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("password_submit_token") val passwordSubmitToken: String,
-        @SerializedName("new_password") val newPassword: String
+        @JsonAdapter(CharArrayJsonAdapter::class) @SerializedName("new_password") val newPassword: CharArray
     ) : NativeAuthRequestParameters()
 }

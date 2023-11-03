@@ -22,9 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.nativeauth.requests.signup
 
+import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAuthRequest
 import com.microsoft.identity.common.java.util.ArgUtils
+import com.microsoft.identity.common.java.util.CharArrayJsonAdapter
 import java.net.URL
 
 /**
@@ -47,7 +49,7 @@ data class SignUpStartRequest private constructor(
          */
         fun create(
             username: String,
-            password: String? = null,
+            password: CharArray? = null,
             attributes: Map<String, String>? = null,
             clientId: String,
             challengeType: String, // TODO hardcoded for now, but will be made part of SDK config & initialisation ticket
@@ -77,7 +79,7 @@ data class SignUpStartRequest private constructor(
 
     data class NativeAuthRequestSignUpStartParameters(
         val username: String,
-        val password: String?,
+        @JsonAdapter(CharArrayJsonAdapter::class) val password: CharArray?,
         val attributes: String? = null,
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("challenge_type") val challengeType: String

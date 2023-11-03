@@ -41,5 +41,5 @@ public class SignUpSubmitPasswordCommandParameters extends SignUpContinueCommand
      * The new password collected from the user.
      */
     @NonNull
-    public final String password;
+    public final char[] password;
 }

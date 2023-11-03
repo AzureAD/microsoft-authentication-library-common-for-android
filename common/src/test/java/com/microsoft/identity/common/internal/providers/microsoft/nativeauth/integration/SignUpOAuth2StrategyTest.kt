@@ -73,7 +73,7 @@ class SignUpOAuth2StrategyTest {
     private val username = "user@email.com"
     private val invalidUsername = "invalidUsername"
     private val invalidClientId = "d7ce036a-8cc5-4734-b475-5ae4a0d5ab" // missing digits
-    private val password = "verySafePassword"
+    private val password = "verySafePassword".toCharArray()
     private val tenant = "samtoso.onmicrosoft.com"
     private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val challengeTypes = "oob password redirect"

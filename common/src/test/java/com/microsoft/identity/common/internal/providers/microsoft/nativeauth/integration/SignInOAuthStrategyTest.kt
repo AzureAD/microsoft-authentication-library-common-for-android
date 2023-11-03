@@ -74,7 +74,7 @@ import java.util.UUID
 @Config(sdk = [Build.VERSION_CODES.O_MR1])
 class SignInOAuthStrategyTest {
     private val username = "user@email.com"
-    private val password = "verySafePassword"
+    private val password = "verySafePassword".toCharArray()
     private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val tokenEndpoint = URL("https://contoso.com/1234/token")
     private val challengeType = "oob password redirect"

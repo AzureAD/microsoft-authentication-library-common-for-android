@@ -41,7 +41,7 @@ public class SignInSubmitPasswordCommandParameters extends BaseSignInTokenComman
 	 * The password of the user.
 	 */
 	@NonNull
-	public final String password;
+	public final char[] password;
 
 	/**
 	 * The credential token obtained from the challenge endpoint.

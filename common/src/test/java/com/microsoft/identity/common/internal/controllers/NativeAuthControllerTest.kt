@@ -85,7 +85,7 @@ class NativeAuthControllerTest {
     private val code = "12345"
     private val credentialToken = "sk490fj8a83n*@f-1"
     private val username = "user@email.com"
-    private val password = "verySafePassword"
+    private val password = "verySafePassword".toCharArray()
     private val defaultScopes: List<String> = AuthenticationConstants.DEFAULT_SCOPES.toList()
     private val scopes: List<String> = listOf("scope1", "scope2", "scope3")
     private val passwordResetToken = "sk490fj8a83n*@f-2"
@@ -94,7 +94,7 @@ class NativeAuthControllerTest {
     private val invalidRequestError = "invalid_request"
     private val credentialRequiredError = "credential_required"
     private val signInSLT = "1234"
-    private val newPassword = "newPassword"
+    private val newPassword = "newPassword".toCharArray()
     private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val authorityUrl = "https://msidlabciam1.ciamlogin.com/msidlabciam1.onmicrosoft.com"
     private val signUpToken = "ifQ"
@@ -741,7 +741,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.PASSWORD_TOO_WEAK
         )
 
-        val parameters = createSignUpStartWithPasswordCommandParameters(passwordValue = "Test@123")
+        val parameters = createSignUpStartWithPasswordCommandParameters(passwordValue = "Test@123".toCharArray())
         val result = controller.signUpStart(parameters)
         assert(result is SignUpCommandResult.InvalidPassword)
 
@@ -765,7 +765,7 @@ class NativeAuthControllerTest {
         )
 
         val parameters =
-            createSignUpStartWithPasswordCommandParameters(passwordValue = "123")
+            createSignUpStartWithPasswordCommandParameters(passwordValue = "123".toCharArray())
         val result = controller.signUpStart(parameters)
         assert(result is SignUpCommandResult.InvalidPassword)
 
@@ -789,7 +789,7 @@ class NativeAuthControllerTest {
         )
 
         val parameters =
-            createSignUpStartWithPasswordCommandParameters(passwordValue = "Abc@123")
+            createSignUpStartWithPasswordCommandParameters(passwordValue = "Abc@123".toCharArray())
         val result = controller.signUpStart(parameters)
         assert(result is SignUpCommandResult.InvalidPassword)
 
@@ -813,7 +813,7 @@ class NativeAuthControllerTest {
         )
 
         val parameters =
-            createSignUpStartWithPasswordCommandParameters(passwordValue = "079af063-4ea7-4dcd-91ff-2b24f54621ea-079af063-4ea7-4dcd-91ff-2b24f54621ea-079af063-4ea7-4dcd-91ff-2b24f54621ea")
+            createSignUpStartWithPasswordCommandParameters(passwordValue = "079af063-4ea7-4dcd-91ff-2b24f54621ea-079af063-4ea7-4dcd-91ff-2b24f54621ea-079af063-4ea7-4dcd-91ff-2b24f54621ea".toCharArray())
         val result = controller.signUpStart(parameters)
         assert(result is SignUpCommandResult.InvalidPassword)
 
@@ -1271,11 +1271,11 @@ class NativeAuthControllerTest {
         return MsalOAuth2TokenCache.create(platformComponents)
     }
 
-    private fun createSignUpStartWithPasswordCommandParameters(passwordValue: String? = null): SignUpStartUsingPasswordCommandParameters {
+    private fun createSignUpStartWithPasswordCommandParameters(passwordValue: CharArray? = null): SignUpStartUsingPasswordCommandParameters {
         return SignUpStartUsingPasswordCommandParameters.builder()
             .username(username)
             .password(
-                if (passwordValue.isNullOrBlank()) {
+                if (passwordValue == null || passwordValue.isEmpty()) {
                     password
                 } else {
                     passwordValue

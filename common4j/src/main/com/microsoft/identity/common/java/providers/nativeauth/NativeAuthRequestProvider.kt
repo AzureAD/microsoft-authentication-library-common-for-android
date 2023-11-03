@@ -92,7 +92,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     ): SignUpStartRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createSignUpUsingPasswordStartRequest")
 
-        if (commandParameters.password.isBlank())
+        if (commandParameters.password.isEmpty() || commandParameters.password.all { it.isWhitespace() })
         {
             var msg = "password can't be empty or consists solely of whitespace characters"
             throw ClientException("$TAG $msg", msg)

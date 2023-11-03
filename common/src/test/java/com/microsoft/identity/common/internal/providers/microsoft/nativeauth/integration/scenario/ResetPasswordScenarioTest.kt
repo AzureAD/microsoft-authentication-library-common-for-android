@@ -55,7 +55,7 @@ import java.util.UUID
 
 class ResetPasswordScenarioTest {
     private val username = "user@email.com"
-    private val password = "verySafePassword"
+    private val password = "verySafePassword".toCharArray()
     private val tenant = "samtoso.onmicrosoft.com"
     private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val challengeType = "oob redirect"

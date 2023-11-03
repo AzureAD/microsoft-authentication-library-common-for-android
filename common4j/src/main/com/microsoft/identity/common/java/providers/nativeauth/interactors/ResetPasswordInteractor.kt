@@ -40,6 +40,7 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpa
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordStartApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordSubmitApiResult
 import com.microsoft.identity.common.java.util.ObjectMapper
+import com.microsoft.identity.common.java.util.StringUtil
 
 /**
  * Acts as a binding layer between the request providers and response handlers for a given request.
@@ -157,7 +158,10 @@ class ResetPasswordInteractor(
         val request = nativeAuthRequestProvider.createResetPasswordSubmitRequest(
             commandParameters = commandParameters
         )
-        return performResetPasswordSubmit(request)
+        val result = performResetPasswordSubmit(request)
+
+        StringUtil.overwriteWithZero((request.parameters as ResetPasswordSubmitRequest.NativeAuthResetPasswordSubmitRequestBody).newPassword)
+        return result
     }
 
     private fun performResetPasswordSubmit(request: ResetPasswordSubmitRequest): ResetPasswordSubmitApiResult {

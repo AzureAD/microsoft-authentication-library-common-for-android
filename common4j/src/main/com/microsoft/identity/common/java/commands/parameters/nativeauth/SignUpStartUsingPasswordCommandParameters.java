@@ -41,5 +41,5 @@ public class SignUpStartUsingPasswordCommandParameters extends BaseSignUpStartCo
      * The password of the user.
      */
     @NonNull
-    public final String password;
+    public final char[] password;
 }

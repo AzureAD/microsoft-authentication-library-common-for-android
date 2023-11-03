@@ -18,6 +18,7 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpContinueApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpStartApiResult
 import com.microsoft.identity.common.java.util.ObjectMapper
+import com.microsoft.identity.common.java.util.StringUtil
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitPasswordCommandParameters as SignUpSubmitPasswordCommandParameters1
 
 /**
@@ -46,7 +47,9 @@ class SignUpInteractor(
         val request = nativeAuthRequestProvider.createSignUpStartRequest(
             commandParameters = commandParameters
         )
-        return performSignUpStart(request)
+        val result = performSignUpStart(request)
+        StringUtil.overwriteWithZero(request.parameters.password)
+        return result
     }
 
     fun performSignUpStartUsingPassword(
@@ -56,7 +59,9 @@ class SignUpInteractor(
         val request = nativeAuthRequestProvider.createSignUpUsingPasswordStartRequest(
             commandParameters = commandParameters
         )
-        return performSignUpStart(request)
+        val result = performSignUpStart(request)
+        StringUtil.overwriteWithZero(request.parameters.password)
+        return result
     }
 
     private fun performSignUpStart(request: SignUpStartRequest): SignUpStartApiResult {
@@ -123,7 +128,9 @@ class SignUpInteractor(
             commandParameters = commandParameters
         )
 
-        return performSignUpContinue(request)
+        val result = performSignUpContinue(request)
+        StringUtil.overwriteWithZero(request.parameters.password)
+        return result
     }
 
     fun performSignUpSubmitUserAttributes(commandParameters: SignUpSubmitUserAttributesCommandParameters): SignUpContinueApiResult {
