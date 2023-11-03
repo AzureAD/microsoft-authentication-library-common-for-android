@@ -73,6 +73,11 @@ public class ServiceException extends BaseException {
     public static final String SERVICE_NOT_AVAILABLE = "service_not_available";
 
     /**
+     * Represents 429 error codes.
+     */
+    public static final String REQUEST_THROTTLED_AT_ESTS_GATEWAY = "request_throttled_at_ESTS_gateway";
+
+    /**
      * Represents {@link java.net.SocketTimeoutException}.
      */
     public static final String REQUEST_TIMEOUT = "request_timeout";
