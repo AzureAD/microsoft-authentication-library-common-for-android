@@ -158,10 +158,13 @@ class ResetPasswordInteractor(
         val request = nativeAuthRequestProvider.createResetPasswordSubmitRequest(
             commandParameters = commandParameters
         )
-        val result = performResetPasswordSubmit(request)
 
-        StringUtil.overwriteWithZero((request.parameters as ResetPasswordSubmitRequest.NativeAuthResetPasswordSubmitRequestBody).newPassword)
-        return result
+        try {
+            return performResetPasswordSubmit(request)
+        } finally {
+            StringUtil.overwriteWithNull(
+                (request.parameters as ResetPasswordSubmitRequest.NativeAuthResetPasswordSubmitRequestBody).newPassword)
+        }
     }
 
     private fun performResetPasswordSubmit(request: ResetPasswordSubmitRequest): ResetPasswordSubmitApiResult {

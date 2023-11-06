@@ -1,12 +1,9 @@
 package com.microsoft.identity.common.java.providers.nativeauth.interactors
 
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseNativeAuthCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
-import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthRequestProvider
@@ -47,9 +44,11 @@ class SignUpInteractor(
         val request = nativeAuthRequestProvider.createSignUpStartRequest(
             commandParameters = commandParameters
         )
-        val result = performSignUpStart(request)
-        StringUtil.overwriteWithZero(request.parameters.password)
-        return result
+        try {
+            return performSignUpStart(request)
+        } finally {
+            StringUtil.overwriteWithNull(request.parameters.password)
+        }
     }
 
     fun performSignUpStartUsingPassword(
@@ -59,9 +58,11 @@ class SignUpInteractor(
         val request = nativeAuthRequestProvider.createSignUpUsingPasswordStartRequest(
             commandParameters = commandParameters
         )
-        val result = performSignUpStart(request)
-        StringUtil.overwriteWithZero(request.parameters.password)
-        return result
+        try {
+            return performSignUpStart(request)
+        } finally {
+            StringUtil.overwriteWithNull(request.parameters.password)
+        }
     }
 
     private fun performSignUpStart(request: SignUpStartRequest): SignUpStartApiResult {
@@ -128,9 +129,11 @@ class SignUpInteractor(
             commandParameters = commandParameters
         )
 
-        val result = performSignUpContinue(request)
-        StringUtil.overwriteWithZero(request.parameters.password)
-        return result
+        try {
+            return performSignUpContinue(request)
+        } finally {
+            StringUtil.overwriteWithNull(request.parameters.password)
+        }
     }
 
     fun performSignUpSubmitUserAttributes(commandParameters: SignUpSubmitUserAttributesCommandParameters): SignUpContinueApiResult {
