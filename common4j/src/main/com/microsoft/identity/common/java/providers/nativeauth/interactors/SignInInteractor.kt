@@ -141,9 +141,11 @@ class SignInInteractor(
         val request = nativeAuthRequestProvider.createPasswordTokenRequest(
             parameters = parameters
         )
-        val result = performGetToken(request)
-        StringUtil.overwriteWithZero(request.parameters.password)
-        return result
+        try {
+            return performGetToken(request);
+        } finally {
+            StringUtil.overwriteWithNull(request.parameters.password)
+        }
     }
 
     private fun performGetToken(request: SignInTokenRequest): SignInTokenApiResult {
