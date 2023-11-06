@@ -94,6 +94,12 @@ data class BrokerData(val packageName : String,
         )
 
         @JvmStatic
+        val debugCompanyPortal = BrokerData(
+            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
+            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_DEBUG_SIGNATURE_SHA512
+        )
+
+        @JvmStatic
         val prodCompanyPortal = BrokerData(
             AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
             AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512
@@ -153,6 +159,7 @@ data class BrokerData(val packageName : String,
                 init {
                     add(debugMicrosoftAuthenticator)
                     add(debugLTW)
+                    add(debugCompanyPortal)
                     add(debugBrokerHost)
                     add(debugMockCp)
                     add(debugMockAuthApp)
