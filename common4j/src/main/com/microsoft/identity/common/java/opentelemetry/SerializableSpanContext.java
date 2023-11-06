@@ -41,6 +41,9 @@ import lombok.experimental.Accessors;
 @Accessors(prefix = "m")
 public class SerializableSpanContext implements SpanContext, Serializable {
 
+    //Used to pass span context to another activity.
+    public static final String SERIALIZABLE_SPAN_CONTEXT = "serializable_span_context";
+
     public static class SerializedNames {
         public static final String TRACE_ID = "trace_id";
         public static final String SPAN_ID = "span_id";
