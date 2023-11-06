@@ -4,6 +4,11 @@ V.Next
 - [MINOR] Added passkey protocol header (behind a flag) (#2181)
 - [MINOR] Fix crash during onCreate() (#2202)
 - [MINOR] add removeUserLegacy method in MsalTestApp infra (#2212)
+- [PATCH] Always validate calling app's redirect URI (#2211)
+- [MINOR] Updating JSON version (#2221)
+- [PATCH] Passing span context to AuthorizationActivity (#2209)
+- [MINOR] Bumping Moshi versions; force setting Okio version (#2210)
+- [PATCH] Fix to generate new Asymmetric Key (#2222)
 
 V.16.1.1
 ----------

@@ -160,6 +160,12 @@ dependencies {
     implementation "com.yubico.yubikit:android:$rootProject.ext.yubikitAndroidVersion"
     implementation "com.yubico.yubikit:piv:$rootProject.ext.yubikitPivVersion"
 
+    constraints {
+        implementation ("com.squareup.okio:okio:3.4.0") {
+            because "Versions previous to 3.4.0 are associated with a signed to unsigned conversion error vulnerability. See this CVE: https://github.com/advisories/GHSA-w33c-445m-f8w7"
+        }
+    }
+
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.3.0'
 
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
@@ -167,7 +173,7 @@ dependencies {
 
     // Test dependencies
     // Needed to resolve JSONObject inside of non-instrumented tests
-    testImplementation 'org.json:json:20160810'
+    testImplementation "org.json:json:$rootProject.ext.jsonVersion"
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
     testImplementation "org.mockito.kotlin:mockito-kotlin:3.6.28"
