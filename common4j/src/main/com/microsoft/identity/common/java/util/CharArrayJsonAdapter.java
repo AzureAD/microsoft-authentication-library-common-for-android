@@ -31,13 +31,28 @@ import java.io.IOException;
 /**
  * CharArrayJsonAdapter is used with GSON to serialize character array as string and vice-versa.
  * The default implementation in GSON will serialize a character array to array of characters.
+ * GSON API supports strings and not character array, so type conversion is required.
  */
 public class CharArrayJsonAdapter extends TypeAdapter<char[]> {
+
+    /**
+     * Writes one JSON value (an array, object, string, number, boolean or null) for value.
+     * @param out
+     * @param val the Java object to write. May be null.
+     * @throws IOException
+     */
     @Override
     public void write(JsonWriter out, char[] val) throws IOException {
         out.value(new String(val));
     }
 
+    /**
+     * Converts value to a JSON document and writes it to out. Unlike Gson's similar toJson method,
+     * this write is strict. Create a lenient JsonWriter and call write(JsonWriter, Object) for lenient writing.
+     * @param in the Java object to convert. May be null.
+     * @return
+     * @throws IOException
+     */
     @Override
     public char[] read(JsonReader in) throws IOException {
         return in.nextString().toCharArray();
