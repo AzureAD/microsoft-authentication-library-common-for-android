@@ -48,7 +48,9 @@ class NativeAuthOAuth2Strategy(
     //Cache identifier returned by the mock API
     private val CACHE_IDENTIFIER_MOCK = "login.windows.net"
 
-
+    /**
+     * Returns the issuer cache identifier. For mock APIs, a static value of cache identifier is used.
+     */
     override fun getIssuerCacheIdentifierFromTokenEndpoint(): String {
         if (config.useMockApiForNativeAuth) {
             return CACHE_IDENTIFIER_MOCK
@@ -57,10 +59,16 @@ class NativeAuthOAuth2Strategy(
         }
     }
 
+    /**
+     * Returns the authority url
+     */
     fun getAuthority(): String {
         return config.authorityUrl.toString()
     }
 
+    /**
+     * Performs the initial API call to /oauth/v2.0/initiate
+     */
     fun performSignInInitiate(
         parameters: SignInStartCommandParameters
     ): SignInInitiateApiResult {
@@ -68,6 +76,9 @@ class NativeAuthOAuth2Strategy(
         return signInInteractor.performSignInInitiate(parameters)
     }
 
+    /**
+     * Performs API call to /oauth/v2.0/challenge
+     */
     fun performSignInChallenge(
         credentialToken: String,
     ): SignInChallengeApiResult {
@@ -77,6 +88,10 @@ class NativeAuthOAuth2Strategy(
         )
     }
 
+    /**
+     * Performs API call to /oauth/v2.0/token with short lived token. SLT was created in prior call
+     * to signup APIs.
+     */
     fun performSLTTokenRequest(
         parameters: SignInWithSLTCommandParameters
     ): SignInTokenApiResult {
@@ -86,6 +101,9 @@ class NativeAuthOAuth2Strategy(
         )
     }
 
+    /**
+     * Performs API call to /oauth/v2.0/token with out of band code.
+     */
     fun performOOBTokenRequest(
         parameters: SignInSubmitCodeCommandParameters
     ): SignInTokenApiResult {
@@ -95,6 +113,9 @@ class NativeAuthOAuth2Strategy(
         )
     }
 
+    /**
+     * Performs API call to /oauth/v2.0/token with password.
+     */
     fun performPasswordTokenRequest(
         parameters: SignInSubmitPasswordCommandParameters
     ): SignInTokenApiResult {

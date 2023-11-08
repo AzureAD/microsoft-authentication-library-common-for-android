@@ -450,9 +450,10 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     fullCacheRecord
                 )
             } else {
-                val exception = RefreshTokenNotFoundException(
+                val exception = ServiceException(
                     ErrorStrings.NO_TOKENS_FOUND,
-                    "No refresh token was found."
+                    "No refresh token was found.",
+                    null
                 )
                 Telemetry.emit(
                     ApiEndEvent()

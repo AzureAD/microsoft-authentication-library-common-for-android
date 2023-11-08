@@ -24,9 +24,13 @@
 package com.microsoft.identity.common.java.providers.nativeauth
 
 /**
- * Various grant types supported by Native Auth.
+ * NativeAuthConstants holds two classes for constants used by Native Auth
  */
 object NativeAuthConstants {
+
+    /**
+     * GrantType encapsulates various grant types supported by Native Auth
+     */
     object GrantType {
         //password is required for authentication
         const val PASSWORD = "password"
@@ -40,6 +44,9 @@ object NativeAuthConstants {
         const val ATTRIBUTES = "attributes"
     }
 
+    /**
+     * ChallengeType encapsulates various challenge types supported for authentication by Native Auth
+     */
     object ChallengeType {
         //password is required for authentication
         const val PASSWORD = "password"
