@@ -53,7 +53,6 @@ import com.microsoft.identity.common.java.eststelemetry.PublicApiId
 import com.microsoft.identity.common.java.exception.ArgumentException
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.exception.ErrorStrings
-import com.microsoft.identity.common.java.exception.RefreshTokenNotFoundException
 import com.microsoft.identity.common.java.exception.ServiceException
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
@@ -384,7 +383,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         val cacheRecords = tokenCache.loadWithAggregatedAccountData(
             silentTokenCommandParameters.clientId,
             parameters.applicationIdentifier,
-            parameters.mamEnrollmentId,
+            null,
             null,
             targetAccount,
             authScheme
@@ -455,6 +454,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     "No refresh token was found.",
                     null
                 )
+
                 Telemetry.emit(
                     ApiEndEvent()
                         .putException(exception)
