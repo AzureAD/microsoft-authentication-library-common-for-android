@@ -158,7 +158,6 @@ public class CommandUtil {
                 .sdkType(SdkType.MSAL)
                 .sdkVersion(parameters.getSdkVersion())
                 .authority(parameters.authority)
-                .claimsRequestJson(parameters.getClaimsRequestJson())
                 .forceRefresh(parameters.isForceRefresh())
                 .account(parameters.getAccount())
                 .authenticationScheme(parameters.getAuthenticationScheme())
