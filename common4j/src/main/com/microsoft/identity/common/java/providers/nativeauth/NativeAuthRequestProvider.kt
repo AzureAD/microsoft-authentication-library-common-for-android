@@ -27,6 +27,11 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInWithSLTCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.logging.LogSession
@@ -34,6 +39,9 @@ import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.providers.nativeauth.requests.signin.SignInChallengeRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.signin.SignInInitiateRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.signin.SignInTokenRequest
+import com.microsoft.identity.common.java.providers.nativeauth.requests.signup.SignUpChallengeRequest
+import com.microsoft.identity.common.java.providers.nativeauth.requests.signup.SignUpContinueRequest
+import com.microsoft.identity.common.java.providers.nativeauth.requests.signup.SignUpStartRequest
 import java.util.TreeMap
 
 /**
@@ -54,6 +62,61 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     private val resetPasswordContinueEndpoint = config.getResetPasswordContinueEndpoint().toString()
     private val resetPasswordSubmitEndpoint = config.getResetPasswordSubmitEndpoint().toString()
     private val resetPasswordPollCompletionEndpoint = config.getResetPasswordPollCompletionEndpoint().toString()
+
+    //region /signup/start
+    fun createSignUpStartRequest(
+        commandParameters: SignUpStartCommandParameters
+    ): SignUpStartRequest {
+        LogSession.logMethodCall(TAG, "${TAG}.createSignUpStartRequest")
+
+        return SignUpStartRequest.create(
+            username = commandParameters.username,
+            attributes = commandParameters.userAttributes,
+            challengeType = config.challengeType,
+            clientId = config.clientId,
+            requestUrl = signUpStartEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+
+    fun createSignUpUsingPasswordStartRequest(
+        commandParameters: SignUpStartUsingPasswordCommandParameters
+    ): SignUpStartRequest {
+        LogSession.logMethodCall(TAG, "${TAG}.createSignUpUsingPasswordStartRequest")
+
+        if (commandParameters.password.isEmpty() || commandParameters.password.all { it.isWhitespace() })
+        {
+            var msg = "password can't be empty or consists solely of whitespace characters"
+            throw ClientException("$TAG $msg", msg)
+        }
+
+        return SignUpStartRequest.create(
+            username = commandParameters.username,
+            password = commandParameters.password,
+            attributes = commandParameters.userAttributes,
+            challengeType = config.challengeType,
+            clientId = config.clientId,
+            requestUrl = signUpStartEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+    //endregion
+
+    //region /signup/challenge
+    fun createSignUpChallengeRequest(
+        signUpToken: String
+    ): SignUpChallengeRequest {
+        LogSession.logMethodCall(TAG, "${TAG}.createSignUpChallengeRequest")
+
+        return SignUpChallengeRequest.create(
+            signUpToken = signUpToken,
+            clientId = config.clientId,
+            challengeType = config.challengeType,
+            requestUrl = signUpChallengeEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+    //endregion
 
     //region /oauth/v2.0/initiate
     /**
@@ -156,6 +219,54 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         )
     }
     //endregion
+
+    //region /signup/continue
+    fun createSignUpSubmitCodeRequest(
+        commandParameters: SignUpSubmitCodeCommandParameters
+    ): SignUpContinueRequest {
+        LogSession.logMethodCall(TAG, "${TAG}.createSignUpSubmitCodeRequest")
+
+        return SignUpContinueRequest.create(
+            oob = commandParameters.code,
+            clientId = config.clientId,
+            signUpToken = commandParameters.signupToken,
+            grantType = NativeAuthConstants.GrantType.OOB,
+            requestUrl = signUpContinueEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+
+    fun createSignUpSubmitPasswordRequest(
+        commandParameters: SignUpSubmitPasswordCommandParameters
+    ): SignUpContinueRequest {
+        LogSession.logMethodCall(TAG, "${TAG}.createSignUpSubmitPasswordRequest")
+
+        return SignUpContinueRequest.create(
+            password = commandParameters.password,
+            clientId = config.clientId,
+            signUpToken = commandParameters.signupToken,
+            grantType = NativeAuthConstants.GrantType.PASSWORD,
+            requestUrl = signUpContinueEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+
+    fun createSignUpSubmitUserAttributesRequest(
+        commandParameters: SignUpSubmitUserAttributesCommandParameters
+    ): SignUpContinueRequest {
+        LogSession.logMethodCall(TAG, "${TAG}.createSignUpSubmitUserAttributesRequest")
+
+        return SignUpContinueRequest.create(
+            attributes = commandParameters.userAttributes,
+            clientId = config.clientId,
+            signUpToken = commandParameters.signupToken,
+            grantType = NativeAuthConstants.GrantType.ATTRIBUTES,
+            requestUrl = signUpContinueEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+    //endregion
+
 
     //region helpers
     private fun getRequestHeaders(): Map<String, String?> {
