@@ -71,6 +71,10 @@ data class SignUpChallengeRequest private constructor(
         }
     }
 
+    /**
+     * NativeAuthRequestSignUpStartParameters represents the request parameters sent as part of
+     * /signup/challenge API call
+     */
     data class NativeAuthRequestSignUpStartParameters(
         @SerializedName("signup_token") val signUpToken: String,
         @SerializedName("client_id") override val clientId: String,

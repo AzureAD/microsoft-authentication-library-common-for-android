@@ -77,6 +77,10 @@ data class SignUpStartRequest private constructor(
         }
     }
 
+    /**
+     * NativeAuthRequestSignUpStartParameters represents the request parameters sent as part of
+     * /signup/start API call
+     */
     data class NativeAuthRequestSignUpStartParameters(
         val username: String,
         @JsonAdapter(CharArrayJsonAdapter::class) val password: CharArray?,

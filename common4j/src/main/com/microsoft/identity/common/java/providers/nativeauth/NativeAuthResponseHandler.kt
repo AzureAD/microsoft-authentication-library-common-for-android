@@ -51,7 +51,12 @@ class NativeAuthResponseHandler {
 
     private val TAG = NativeAuthResponseHandler::class.java.simpleName
 
-    //region signup/start
+    //region /signup/start
+    /**
+     * Converts the HTTP response for /signup/start API to [SignUpStartApiResponse] object
+     * @param response : HTTP response received from the API
+     * @return SignUpStartApiResponse object
+     */
     @Throws(ClientException::class)
     fun getSignUpStartResultFromHttpResponse(
         response: HttpResponse
@@ -86,6 +91,11 @@ class NativeAuthResponseHandler {
     //endregion
 
     //region signup/challenge
+    /**
+     * Converts the HTTP response for /signup/challenge API to [SignUpChallengeApiResponse] object
+     * @param response : HTTP response received from the API
+     * @return SignUpChallengeApiResponse object
+     */
     @Throws(ClientException::class)
     fun getSignUpChallengeResultFromHttpResponse(
         response: HttpResponse
@@ -121,6 +131,11 @@ class NativeAuthResponseHandler {
     //endregion
 
     //region /signup/continue
+    /**
+     * Converts the HTTP response for /signup/continue API to [SignUpContinueApiResponse] object
+     * @param response : HTTP response received from the API
+     * @return SignUpContinueApiResponse object
+     */
     @Throws(ClientException::class)
     fun getSignUpContinueResultFromHttpResponse(
         response: HttpResponse

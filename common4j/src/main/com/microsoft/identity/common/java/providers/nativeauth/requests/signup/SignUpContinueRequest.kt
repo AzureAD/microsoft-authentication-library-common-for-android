@@ -89,6 +89,10 @@ data class SignUpContinueRequest private constructor(
         }
     }
 
+    /**
+     * NativeAuthRequestSignUpContinueParameters represents the request parameters sent as part of
+     * /signup/continue API call
+     */
     data class NativeAuthRequestSignUpContinueParameters(
         @JsonAdapter(CharArrayJsonAdapter::class) val password: CharArray?,
         val attributes: String? = null,

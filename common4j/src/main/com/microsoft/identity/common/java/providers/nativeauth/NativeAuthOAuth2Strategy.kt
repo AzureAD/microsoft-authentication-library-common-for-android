@@ -76,6 +76,10 @@ class NativeAuthOAuth2Strategy(
         return config.authorityUrl.toString()
     }
 
+    /**
+     * Makes the initial call to the /signup/start.
+     * @param commandParameters: Attributes provided by the user
+     */
     fun performSignUpStart(
         commandParameters: SignUpStartCommandParameters
     ): SignUpStartApiResult {
@@ -83,6 +87,10 @@ class NativeAuthOAuth2Strategy(
         return signUpInteractor.performSignUpStart(commandParameters)
     }
 
+    /**
+     * Makes the initial call to the /signup/start when the parameters includes password.
+     * @param commandParameters: Attributes provided by the user
+     */
     fun performSignUpStartUsingPassword(
         commandParameters: SignUpStartUsingPasswordCommandParameters
     ): SignUpStartApiResult {
@@ -90,6 +98,10 @@ class NativeAuthOAuth2Strategy(
         return signUpInteractor.performSignUpStartUsingPassword(commandParameters)
     }
 
+    /**
+     * Makes the call to the /signup/challenge for Signup operation.
+     * @param signUpToken: Token received from the previous /signup/start call
+     */
     fun performSignUpChallenge(
         signUpToken: String
     ): SignUpChallengeApiResult {
@@ -99,6 +111,10 @@ class NativeAuthOAuth2Strategy(
         )
     }
 
+    /**
+     * Makes the call to the /signup/continue to submit the out of band code.
+     * @param commandParameters: Parameters required for this call including oob code
+     */
     fun performSignUpSubmitCode(
         commandParameters: SignUpSubmitCodeCommandParameters
     ): SignUpContinueApiResult {
@@ -108,6 +124,10 @@ class NativeAuthOAuth2Strategy(
         )
     }
 
+    /**
+     * Makes the call to the /signup/continue to submit the user password.
+     * @param commandParameters: Parameters required for this call including password
+     */
     fun performSignUpSubmitPassword(
         commandParameters: SignUpSubmitPasswordCommandParameters
     ): SignUpContinueApiResult {
@@ -117,6 +137,10 @@ class NativeAuthOAuth2Strategy(
         )
     }
 
+    /**
+     * Makes the call to the /signup/continue to submit the user attributes.
+     * @param commandParameters: Attributes provided by the user
+     */
     fun performSignUpSubmitUserAttributes(
         commandParameters: SignUpSubmitUserAttributesCommandParameters
     ): SignUpContinueApiResult {

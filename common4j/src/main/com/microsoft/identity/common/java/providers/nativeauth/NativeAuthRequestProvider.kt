@@ -64,7 +64,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     private val resetPasswordPollCompletionEndpoint = config.getResetPasswordPollCompletionEndpoint().toString()
 
     //region /signup/start
-    fun createSignUpStartRequest(
+    internal fun createSignUpStartRequest(
         commandParameters: SignUpStartCommandParameters
     ): SignUpStartRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createSignUpStartRequest")
@@ -79,7 +79,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         )
     }
 
-    fun createSignUpUsingPasswordStartRequest(
+    internal fun createSignUpUsingPasswordStartRequest(
         commandParameters: SignUpStartUsingPasswordCommandParameters
     ): SignUpStartRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createSignUpUsingPasswordStartRequest")
@@ -103,7 +103,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //endregion
 
     //region /signup/challenge
-    fun createSignUpChallengeRequest(
+    internal fun createSignUpChallengeRequest(
         signUpToken: String
     ): SignUpChallengeRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createSignUpChallengeRequest")
@@ -143,7 +143,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
      * Creates request object for /oauth/v2.0/challenge API call from credential token
      * @param credentialToken: credential token from a previous signin command
      */
-    fun createSignInChallengeRequest(
+    internal fun createSignInChallengeRequest(
         credentialToken: String
     ): SignInChallengeRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createSignInChallengeRequest")
@@ -221,7 +221,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //endregion
 
     //region /signup/continue
-    fun createSignUpSubmitCodeRequest(
+    internal fun createSignUpSubmitCodeRequest(
         commandParameters: SignUpSubmitCodeCommandParameters
     ): SignUpContinueRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createSignUpSubmitCodeRequest")
@@ -236,7 +236,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         )
     }
 
-    fun createSignUpSubmitPasswordRequest(
+    internal fun createSignUpSubmitPasswordRequest(
         commandParameters: SignUpSubmitPasswordCommandParameters
     ): SignUpContinueRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createSignUpSubmitPasswordRequest")
@@ -251,7 +251,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         )
     }
 
-    fun createSignUpSubmitUserAttributesRequest(
+    internal fun createSignUpSubmitUserAttributesRequest(
         commandParameters: SignUpSubmitUserAttributesCommandParameters
     ): SignUpContinueRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createSignUpSubmitUserAttributesRequest")
