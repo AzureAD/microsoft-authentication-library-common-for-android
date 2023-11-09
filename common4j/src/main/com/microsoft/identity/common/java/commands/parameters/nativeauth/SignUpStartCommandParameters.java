@@ -28,7 +28,7 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 /**
- * a set of Sign Up Start command parameters for sending the start request to trigger the sign up flow but using email otp.
+ * A set of Sign Up Start command parameters for sending the start request to trigger the sign up flow but using email otp.
  * extends from {@link BaseSignUpStartCommandParameters}
  */
 @Getter

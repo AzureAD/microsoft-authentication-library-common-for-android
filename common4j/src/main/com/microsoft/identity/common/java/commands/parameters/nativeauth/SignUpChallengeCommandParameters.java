@@ -27,7 +27,7 @@ import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
 /**
- * a set of Sign Up Challenge command parameters for sending the challenge request to get authentication method.
+ * A set of Sign Up Challenge command parameters for sending the challenge request to get authentication method.
  * extends from {@link BaseNativeAuthCommandParameters}
  */
 @Getter

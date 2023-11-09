@@ -28,7 +28,7 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 /**
- * a set of Sign Up Resend Code command parameters for sending the challenge request again under sign up flow using sign up token.
+ * A set of Sign Up Resend Code command parameters for sending the challenge request again under sign up flow using sign up token.
  * extends from {@link BaseNativeAuthCommandParameters}
  */
 @Getter

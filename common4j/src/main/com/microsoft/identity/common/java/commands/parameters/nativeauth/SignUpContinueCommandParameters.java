@@ -28,7 +28,7 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 /**
- * a set of Sign Up Continue command parameters for sending the continue request to proceed the sign up flow.
+ * A set of Sign Up Continue command parameters for sending the continue request to proceed the sign up flow.
  * extends from {@link BaseNativeAuthCommandParameters}
  */
 @Getter
