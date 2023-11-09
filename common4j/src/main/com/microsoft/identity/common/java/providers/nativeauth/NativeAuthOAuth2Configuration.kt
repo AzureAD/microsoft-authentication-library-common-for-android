@@ -23,6 +23,7 @@
 
 package com.microsoft.identity.common.java.providers.nativeauth
 
+import com.microsoft.identity.common.java.BuildConfig
 import com.microsoft.identity.common.java.BuildValues
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
@@ -47,20 +48,174 @@ class NativeAuthOAuth2Configuration(
 ) : MicrosoftStsOAuth2Configuration() {
 
     private val TAG = NativeAuthOAuth2Configuration::class.java.simpleName
+
     companion object {
         //Base url for the mock API to make Native Auth calls. See the swagger at
         // https://native-ux-mock-api.azurewebsites.net/doc#/ for all possible urls
         private const val MOCK_API_URL_WITH_NATIVE_AUTH_TENANT = "https://native-ux-mock-api.azurewebsites.net/lumonconvergedps.onmicrosoft.com"
-    }
 
+        private const val SIGNUP_START_ENDPOINT_SUFFIX = "/signup/v1.0/start"
+        private const val SIGNUP_CHALLENGE_ENDPOINT_SUFFIX = "/signup/v1.0/challenge"
+        private const val SIGNUP_CONTINUE_ENDPOINT_SUFFIX = "/signup/v1.0/continue"
+        private const val RESET_PASSWORD_START_ENDPOINT_SUFFIX = "/resetpassword/v1.0/start"
+        private const val RESET_PASSWORD_CHALLENGE_ENDPOINT_SUFFIX = "/resetpassword/v1.0/challenge"
+        private const val RESET_PASSWORD_CONTINUE_ENDPOINT_SUFFIX = "/resetpassword/v1.0/continue"
+        private const val RESET_PASSWORD_SUBMIT_ENDPOINT_SUFFIX = "/resetpassword/v1.0/submit"
+        private const val RESET_PASSWORD_COMPLETE_ENDPOINT_SUFFIX = "/resetpassword/v1.0/poll_completion"
+        private const val SIGN_IN_INITIATE_ENDPOINT_SUFFIX = "/oauth2/v2.0/initiate"
+        private const val SIGN_IN_CHALLENGE_ENDPOINT_SUFFIX = "/oauth2/v2.0/challenge"
+        private const val SIGN_IN_TOKEN_ENDPOINT_SUFFIX = "/oauth2/v2.0/token"
+    }
 
     override fun getAuthorityUrl(): URL {
         return if (useMockApiForNativeAuth) {
-            // TODO return real authorityUrl once we move away from using mock APIs
             URL(MOCK_API_URL_WITH_NATIVE_AUTH_TENANT)
         } else {
             authorityUrl
         }
+    }
+
+    /**
+     * Get the endpoint to be used for making a signup/start request.
+     *
+     * @return URL the endpoint
+     */
+    fun getSignUpStartEndpoint(): URL {
+        LogSession.logMethodCall(TAG, "${TAG}.getSignUpStartEndpoint")
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = SIGNUP_START_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a signup/challenge request.
+     *
+     * @return URL the endpoint
+     */
+    fun getSignUpChallengeEndpoint(): URL {
+        LogSession.logMethodCall(TAG, "${TAG}.getSignUpChallengeEndpoint")
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = SIGNUP_CHALLENGE_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a signup/continue request.
+     *
+     * @return URL the endpoint
+     */
+    fun getSignUpContinueEndpoint(): URL {
+        LogSession.logMethodCall(TAG, "${TAG}.getSignUpContinueEndpoint")
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = SIGNUP_CONTINUE_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a self service password reset (start) request.
+     *
+     * @return URL the reset password start endpoint
+     */
+    fun getResetPasswordStartEndpoint(): URL {
+        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordStartEndpoint")
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = RESET_PASSWORD_START_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a self service password reset (challenge) request.
+     *
+     * @return URL the reset password challenge endpoint
+     */
+    fun getResetPasswordChallengeEndpoint(): URL {
+        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordChallengeEndpoint")
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = RESET_PASSWORD_CHALLENGE_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a self service password reset (continue) request.
+     *
+     * @return URL the reset password continue endpoint
+     */
+    fun getResetPasswordContinueEndpoint(): URL {
+        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordContinueEndpoint")
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = RESET_PASSWORD_CONTINUE_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a self service password reset (submit) request.
+     *
+     * @return URL the reset password submit endpoint
+     */
+    fun getResetPasswordSubmitEndpoint(): URL {
+        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordSubmitEndpoint")
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = RESET_PASSWORD_SUBMIT_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a self service password reset (poll completion) request.
+     *
+     * @return URL the reset password poll completion endpoint
+     */
+    fun getResetPasswordPollCompletionEndpoint(): URL {
+        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordPollCompletionEndpoint")
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = RESET_PASSWORD_COMPLETE_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a signin/initiate request.
+     *
+     * @return URL the endpoint
+     */
+    fun getSignInInitiateEndpoint(): URL {
+        LogSession.logMethodCall(TAG, "${TAG}.getSignInInitiateEndpoint")
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = SIGN_IN_INITIATE_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a signin/challenge request.
+     *
+     * @return URL the endpoint
+     */
+    fun getSignInChallengeEndpoint(): URL {
+        LogSession.logMethodCall(TAG, "${TAG}.getSignInChallengeEndpoint")
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = SIGN_IN_CHALLENGE_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a signin/token request.
+     *
+     * @return URL the endpoint
+     */
+    fun getSignInTokenEndpoint(): URL {
+        LogSession.logMethodCall(TAG, "${TAG}.getSignInTokenEndpoint")
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = SIGN_IN_TOKEN_ENDPOINT_SUFFIX
+        )
     }
 
     private fun getEndpointUrlFromRootAndTenantAndSuffix(root: URL, endpointSuffix: String): URL {

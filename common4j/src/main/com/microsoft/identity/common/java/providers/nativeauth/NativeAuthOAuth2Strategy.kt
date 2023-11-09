@@ -23,8 +23,16 @@
 
 package com.microsoft.identity.common.java.providers.nativeauth
 
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInWithSLTCommandParameters
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
+import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignInInteractor
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 
 /**
@@ -32,14 +40,17 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParamet
  */
 class NativeAuthOAuth2Strategy(
     private val strategyParameters: OAuth2StrategyParameters,
-    val config: NativeAuthOAuth2Configuration
+    val config: NativeAuthOAuth2Configuration,
+    private val signInInteractor: SignInInteractor,
 ) :
     MicrosoftStsOAuth2Strategy(config, strategyParameters) {
     private val TAG = NativeAuthOAuth2Strategy::class.java.simpleName
     //Cache identifier returned by the mock API
     private val CACHE_IDENTIFIER_MOCK = "login.windows.net"
 
-
+    /**
+     * Returns the issuer cache identifier. For mock APIs, a static value of cache identifier is used.
+     */
     override fun getIssuerCacheIdentifierFromTokenEndpoint(): String {
         if (config.useMockApiForNativeAuth) {
             return CACHE_IDENTIFIER_MOCK
@@ -48,7 +59,69 @@ class NativeAuthOAuth2Strategy(
         }
     }
 
+    /**
+     * Returns the authority url
+     */
     fun getAuthority(): String {
         return config.authorityUrl.toString()
+    }
+
+    /**
+     * Performs the initial API call to /oauth/v2.0/initiate
+     */
+    fun performSignInInitiate(
+        parameters: SignInStartCommandParameters
+    ): SignInInitiateApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performSignInInitiate")
+        return signInInteractor.performSignInInitiate(parameters)
+    }
+
+    /**
+     * Performs API call to /oauth/v2.0/challenge
+     */
+    fun performSignInChallenge(
+        credentialToken: String,
+    ): SignInChallengeApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performSignInChallenge")
+        return signInInteractor.performSignInChallenge(
+            credentialToken = credentialToken,
+        )
+    }
+
+    /**
+     * Performs API call to /oauth/v2.0/token with short lived token. SLT was created in prior call
+     * to signup APIs.
+     */
+    fun performSLTTokenRequest(
+        parameters: SignInWithSLTCommandParameters
+    ): SignInTokenApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performSLTTokenRequest")
+        return signInInteractor.performSLTTokenRequest(
+            parameters = parameters
+        )
+    }
+
+    /**
+     * Performs API call to /oauth/v2.0/token with out of band code.
+     */
+    fun performOOBTokenRequest(
+        parameters: SignInSubmitCodeCommandParameters
+    ): SignInTokenApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performOOBTokenRequest")
+        return signInInteractor.performOOBTokenRequest(
+            parameters = parameters
+        )
+    }
+
+    /**
+     * Performs API call to /oauth/v2.0/token with password.
+     */
+    fun performPasswordTokenRequest(
+        parameters: SignInSubmitPasswordCommandParameters
+    ): SignInTokenApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performPasswordTokenRequest")
+        return signInInteractor.performPasswordTokenRequest(
+            parameters = parameters
+        )
     }
 }

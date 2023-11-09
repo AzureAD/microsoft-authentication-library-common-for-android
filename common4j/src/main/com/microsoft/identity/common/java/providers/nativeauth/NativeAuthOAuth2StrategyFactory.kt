@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.providers.nativeauth
 
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
+import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignInInteractor
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 
 /**
@@ -38,7 +39,12 @@ class NativeAuthOAuth2StrategyFactory {
         ): NativeAuthOAuth2Strategy {
             return NativeAuthOAuth2Strategy(
                 strategyParameters = strategyParameters,
-                config = config
+                config = config,
+                signInInteractor = SignInInteractor(
+                    httpClient = UrlConnectionHttpClient.getDefaultInstance(),
+                    nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
+                    nativeAuthResponseHandler = NativeAuthResponseHandler()
+                ),
             )
         }
     }

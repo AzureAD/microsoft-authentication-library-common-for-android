@@ -20,17 +20,26 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.providers.nativeauth.responses
+package com.microsoft.identity.common.java.commands.parameters.nativeauth;
 
-import com.microsoft.identity.common.java.logging.DiagnosticContext
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.SuperBuilder;
 
 /**
- * Base class to encapsulate various error response from the Native Auth API.
+ * a set of Sign In Start command parameters for sending the start request to trigger the sign in flow.
+ * extends from {@link BaseSignInTokenCommandParameters}
  */
-open class ApiErrorResult(
-    open val error: String?,
-    open val errorDescription: String?,
-    open val details: List<Map<String, String>>? = null,
-    open val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
-    open val errorCodes: List<Int>? = null
-)
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
+public class SignInStartCommandParameters extends BaseSignInTokenCommandParameters {
+   private static final String TAG = SignInStartCommandParameters.class.getSimpleName();
+
+   /**
+    * The email address of the user.
+    */
+   @NonNull
+   public final String username;
+}

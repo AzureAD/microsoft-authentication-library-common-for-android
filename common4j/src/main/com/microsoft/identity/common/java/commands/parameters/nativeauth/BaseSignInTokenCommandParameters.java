@@ -20,23 +20,31 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.controllers.results
+package com.microsoft.identity.common.java.commands.parameters.nativeauth;
 
-import com.microsoft.identity.common.java.logging.DiagnosticContext
+import com.google.gson.annotations.Expose;
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+
+import java.util.List;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
 /**
- * ICommandResult interface defines the base class for errors used in Native Auth.
+ * BaseSignInTokenCommandParameters is the base class for parameters for all all Native Auth sign in related commands.
  */
-interface ICommandResult {
-    /**
-     * UnknownError is base class to represent various kinds of errors in NativeAuth.
-     */
-    data class UnknownError(
-        val error: String?,
-        val errorDescription: String?,
-        val details: List<Map<String, String>>? = null,
-        val correlationId: String ,//= DiagnosticContext.INSTANCE.threadCorrelationId,
-        val errorCodes: List<Int>? = null,
-        val exception: Exception? = null
-    ) : ICommandResult
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
+public class BaseSignInTokenCommandParameters extends BaseNativeAuthCommandParameters {
+   private static final String TAG = BaseSignInTokenCommandParameters.class.getSimpleName();
+
+   /**
+    * The scopes for the token being fetched.
+    */
+   public final List<String> scopes;
+
+   @Expose()
+   private final AbstractAuthenticationScheme authenticationScheme;
 }

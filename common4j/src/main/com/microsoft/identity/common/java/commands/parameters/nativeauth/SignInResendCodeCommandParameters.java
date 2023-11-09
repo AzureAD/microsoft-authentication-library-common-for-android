@@ -20,17 +20,26 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.providers.nativeauth.responses
+package com.microsoft.identity.common.java.commands.parameters.nativeauth;
 
-import com.microsoft.identity.common.java.logging.DiagnosticContext
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.SuperBuilder;
 
 /**
- * Base class to encapsulate various error response from the Native Auth API.
+ * a set of Sign In Resend Code command parameters for sending the challenge request again under sign in flow using credential token.
+ * extends from {@link BaseNativeAuthCommandParameters}
  */
-open class ApiErrorResult(
-    open val error: String?,
-    open val errorDescription: String?,
-    open val details: List<Map<String, String>>? = null,
-    open val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
-    open val errorCodes: List<Int>? = null
-)
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
+public class SignInResendCodeCommandParameters extends BaseNativeAuthCommandParameters {
+    private static final String TAG = SignInResendCodeCommandParameters.class.getSimpleName();
+
+    /**
+     * The credential token obtained from the initiate endpoint.
+     */
+    @NonNull
+    public final String credentialToken;
+}

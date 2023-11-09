@@ -20,40 +20,34 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.commands.parameters.nativeauth;
+package com.microsoft.identity.common.java.providers.nativeauth.responses.signin
 
-import com.google.gson.annotations.Expose;
-import com.microsoft.identity.common.java.authorities.NativeAuthCIAMAuthority;
-import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
-import com.microsoft.identity.common.java.exception.ArgumentException;
-
-import java.util.List;
-
-import javax.annotation.Nullable;
-
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
+import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
 
 /**
- * BaseNativeAuthCommandParameters is the base class for parameters for all Native Auth commands.
+ * Represents the potential result types returned from the OAuth /challenge endpoint,
+ * including a case for unexpected errors received from the server.
  */
-@Getter
-@EqualsAndHashCode(callSuper = true)
-@SuperBuilder(toBuilder = true)
-public class BaseNativeAuthCommandParameters extends CommandParameters {
-    private static final String TAG = BaseNativeAuthCommandParameters.class.getSimpleName();
+sealed interface SignInChallengeApiResult {
+    object Redirect : SignInChallengeApiResult
+    data class OOBRequired(
+        val credentialToken: String,
+        val challengeTargetLabel: String,
+        val challengeChannel: String,
+        val codeLength: Int
+    ) : SignInChallengeApiResult
 
-    /**
-     * The authority for the token being fetched.
-     */
-    @Expose()
-    public final NativeAuthCIAMAuthority authority;
+    data class PasswordRequired(val credentialToken: String) : SignInChallengeApiResult
 
-    /**
-     * The initial challenge type for the user being authenticated.
-     */
-    @Expose()
-    @Nullable
-    public final List<String> challengeType;
+    data class UnknownError(
+        override val error: String,
+        override val errorDescription: String,
+        override val errorCodes: List<Int>,
+        override val details: List<Map<String, String>>?
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+        errorCodes = errorCodes,
+        details = details
+    ), SignInChallengeApiResult
 }

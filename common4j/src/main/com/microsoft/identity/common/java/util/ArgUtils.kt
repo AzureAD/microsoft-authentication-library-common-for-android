@@ -20,40 +20,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.commands.parameters.nativeauth;
+package com.microsoft.identity.common.java.util
 
-import com.google.gson.annotations.Expose;
-import com.microsoft.identity.common.java.authorities.NativeAuthCIAMAuthority;
-import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
-import com.microsoft.identity.common.java.exception.ArgumentException;
+import com.microsoft.identity.common.java.exception.ClientException
 
-import java.util.List;
-
-import javax.annotation.Nullable;
-
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
-
-/**
- * BaseNativeAuthCommandParameters is the base class for parameters for all Native Auth commands.
- */
-@Getter
-@EqualsAndHashCode(callSuper = true)
-@SuperBuilder(toBuilder = true)
-public class BaseNativeAuthCommandParameters extends CommandParameters {
-    private static final String TAG = BaseNativeAuthCommandParameters.class.getSimpleName();
-
-    /**
-     * The authority for the token being fetched.
-     */
-    @Expose()
-    public final NativeAuthCIAMAuthority authority;
-
-    /**
-     * The initial challenge type for the user being authenticated.
-     */
-    @Expose()
-    @Nullable
-    public final List<String> challengeType;
+object ArgUtils {
+    @Throws(ClientException::class)
+    fun validateNonNullArg(
+        o: Any?,
+        argName: String
+    ) {
+        if (null == o ||
+            o is CharArray && o.isEmpty() ||
+            o is CharSequence && o.isBlank() ||
+            o is String && o.isBlank() ||
+            o is List<*> && o.isEmpty() ||
+            o is Map<*, *> && o.isEmpty()
+        ) {
+            throw ClientException(
+                argName,
+                "$argName cannot be null or empty"
+            )
+        }
+    }
 }

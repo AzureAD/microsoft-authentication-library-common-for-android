@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.java.commands.parameters.nativeauth;
 
 import com.google.gson.annotations.Expose;
-import com.microsoft.identity.common.java.authorities.CIAMAuthority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.exception.ArgumentException;
@@ -35,10 +34,8 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -61,9 +58,6 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
     private final IAccountRecord account;
 
     @Expose()
-    private final Set<String> scopes;
-
-    @Expose()
     @NonNull
     private final AbstractAuthenticationScheme authenticationScheme;
 
@@ -73,6 +67,71 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
     private final String loginHint;
 
     private final List<Map.Entry<String, String>> extraOptions;
+
+    /**
+     * Validates the command parameters in this object are consistent and can be used for
+     * command execution.
+     * @throws ArgumentException
+     */
+    public void validate() throws ArgumentException {
+        final String methodName = ":validate";
+
+        Logger.verbose(
+                TAG + methodName,
+                "Validating operation params..."
+        );
+
+        // AuthenticationScheme is present...
+        if (null == authenticationScheme) {
+            throw new ArgumentException(
+                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME, // TODO update argument name
+                    ArgumentException.AUTHENTICATION_SCHEME_ARGUMENT_NAME,
+                    "authentication scheme is undefined"
+            );
+        }
+
+        if (getAccount() == null) {
+            Logger.warn(TAG, "The account set on silent operation parameters is NULL.");
+            // if the authority is B2C, then we do not need check if matches with the account environment
+            // as B2C only exists in one cloud and can use custom domains
+            // This logic should also apply to CIAM authorities
+        }
+    }
+
+    /**
+     * Note - this method may throw a variety of RuntimeException if we cannot perform cloud
+     * discovery to determine the set of cloud aliases.
+     * @return true if the authority matches the cloud environment that the account is homed in.
+     */
+    private boolean authorityMatchesAccountEnvironment() {
+        final String methodName = ":authorityMatchesAccountEnvironment";
+
+        final Exception cause;
+        final String errorCode;
+
+        try {
+            if (!AzureActiveDirectory.isInitialized()) {
+                performCloudDiscovery();
+            }
+            final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloudFromHostName(getAccount().getEnvironment());
+            return cloud != null && cloud.getPreferredNetworkHostName().equals(getAuthority().getAuthorityURL().getAuthority());
+        } catch (final IOException e) {
+            cause = e;
+            errorCode = ClientException.IO_ERROR;
+        } catch (final URISyntaxException e) {
+            cause = e;
+            errorCode = ClientException.MALFORMED_URL;
+        }
+
+        Logger.error(
+                TAG + methodName,
+                "Unable to perform cloud discovery",
+                cause);
+        throw new TerminalException(
+                "Unable to perform cloud discovery in order to validate request authority",
+                cause,
+                errorCode);
+    }
 
     private static void performCloudDiscovery()
             throws IOException, URISyntaxException {

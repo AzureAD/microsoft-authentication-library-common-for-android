@@ -22,38 +22,32 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.parameters.nativeauth;
 
-import com.google.gson.annotations.Expose;
-import com.microsoft.identity.common.java.authorities.NativeAuthCIAMAuthority;
-import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
-import com.microsoft.identity.common.java.exception.ArgumentException;
-
-import java.util.List;
-
-import javax.annotation.Nullable;
-
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 /**
- * BaseNativeAuthCommandParameters is the base class for parameters for all Native Auth commands.
+ * A set of Sign In Submit Password command parameters for getting token through email password authentication.
+ * extends from {@link BaseSignInTokenCommandParameters}
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
+@SuppressFBWarnings("EI_EXPOSE_REP2")   //Suppresses spotbugs warning on the builder class
 @SuperBuilder(toBuilder = true)
-public class BaseNativeAuthCommandParameters extends CommandParameters {
-    private static final String TAG = BaseNativeAuthCommandParameters.class.getSimpleName();
+public class SignInSubmitPasswordCommandParameters extends BaseSignInTokenCommandParameters {
+	private static final String TAG = SignInSubmitCodeCommandParameters.class.getSimpleName();
 
-    /**
-     * The authority for the token being fetched.
-     */
-    @Expose()
-    public final NativeAuthCIAMAuthority authority;
+	/**
+	 * The password of the user.
+	 */
+	@NonNull
+	public final char[] password;
 
-    /**
-     * The initial challenge type for the user being authenticated.
-     */
-    @Expose()
-    @Nullable
-    public final List<String> challengeType;
+	/**
+	 * The credential token obtained from the challenge endpoint.
+	 */
+	@NonNull
+	public final String credentialToken;
 }
