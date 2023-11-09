@@ -28,7 +28,7 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 /**
- * a set of Reset Password Start command parameters for sending the start request to trigger the self service password reset flow.
+ * A set of Reset Password Start command parameters for sending the start request to trigger the self service password reset flow.
  * extends from {@link BaseNativeAuthCommandParameters}
  */
 @Getter

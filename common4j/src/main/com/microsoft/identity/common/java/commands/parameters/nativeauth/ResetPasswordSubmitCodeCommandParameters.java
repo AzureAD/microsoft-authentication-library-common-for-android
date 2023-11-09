@@ -28,7 +28,7 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 /**
- * a set of Reset Password Submit Code command parameters for submitting the one-time password to the server for authentication.
+ * A set of Reset Password Submit Code command parameters for submitting the one-time password to the server for authentication.
  * extends from {@link BaseNativeAuthCommandParameters
  */
 @Getter

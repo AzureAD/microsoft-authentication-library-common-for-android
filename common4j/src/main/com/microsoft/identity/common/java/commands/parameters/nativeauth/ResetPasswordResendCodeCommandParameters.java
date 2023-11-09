@@ -28,7 +28,7 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 /**
- * a set of Reset Password Resend Code command parameters for sending the challenge request again under self service password reset flow using password reset token.
+ * A set of Reset Password Resend Code command parameters for sending the challenge request again under self service password reset flow using password reset token.
  * extends from {@link BaseNativeAuthCommandParameters}
  */
 @Getter
