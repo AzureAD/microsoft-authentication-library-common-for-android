@@ -49,7 +49,7 @@ import lombok.NonNull;
 @EqualsAndHashCode(callSuper = true)
 public class SilentTokenCommand extends TokenCommand {
 
-    public static final int ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS = 60000;
+    public static final int ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS = 90000;
 
     private static final String TAG = SilentTokenCommand.class.getSimpleName();
 
