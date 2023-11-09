@@ -73,6 +73,10 @@ class ResetPasswordSubmitRequest private constructor(
         }
     }
 
+    /**
+     * NativeAuthResetPasswordSubmitRequestBody represents the request parameters sent as part of
+     * /resetpassword/submit API call
+     */
     data class NativeAuthResetPasswordSubmitRequestBody(
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("password_submit_token") val passwordSubmitToken: String,

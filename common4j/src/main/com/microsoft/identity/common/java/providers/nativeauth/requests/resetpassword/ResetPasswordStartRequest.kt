@@ -71,6 +71,10 @@ data class ResetPasswordStartRequest private constructor(
         }
     }
 
+    /**
+     * NativeAuthRequestResetPasswordStartParameters represents the request parameters sent as part of
+     * /resetpassword/start API call
+     */
     data class NativeAuthRequestResetPasswordStartParameters(
         val username: String,
         @SerializedName("client_id") override val clientId: String,

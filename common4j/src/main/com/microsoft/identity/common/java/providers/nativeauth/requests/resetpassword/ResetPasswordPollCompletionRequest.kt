@@ -68,6 +68,10 @@ class ResetPasswordPollCompletionRequest private constructor(
         }
     }
 
+    /**
+     * NativeAuthResetPasswordPollCompletionRequestBody represents the request parameters sent as part of
+     * /resetpassword/poll_completion API call
+     */
     data class NativeAuthResetPasswordPollCompletionRequestBody(
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("password_reset_token") val passwordResetToken: String

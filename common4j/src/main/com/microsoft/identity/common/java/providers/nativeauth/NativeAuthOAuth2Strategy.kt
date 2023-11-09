@@ -135,6 +135,11 @@ class NativeAuthOAuth2Strategy(
         )
     }
 
+    /**
+     * Performs the initial API call to /resetpassword/start
+     * @param parameters: Parameters required for the call including username
+     * @return result of the API call as [ResetPasswordStartApiResult] object
+     */
     fun performResetPasswordStart(
         parameters: ResetPasswordStartCommandParameters
     ): ResetPasswordStartApiResult {
@@ -144,6 +149,11 @@ class NativeAuthOAuth2Strategy(
         )
     }
 
+    /**
+     * Performs the API call to /resetpassword/challenge
+     * @param passwordResetToken: Token received from previous /resetpassword/start call
+     * @return result of the API call as [ResetPasswordChallengeApiResult] object
+     */
     fun performResetPasswordChallenge(
         passwordResetToken: String
     ): ResetPasswordChallengeApiResult {
@@ -153,6 +163,11 @@ class NativeAuthOAuth2Strategy(
         )
     }
 
+    /**
+     * Performs the API call to /resetpassword/continue to submit out of band code
+     * @param parameters: Parameters required for the call including oob code
+     * @return result of the API call as [ResetPasswordContinueApiResult] object
+     */
     fun performResetPasswordContinue(
         parameters: ResetPasswordSubmitCodeCommandParameters
     ): ResetPasswordContinueApiResult {
@@ -162,6 +177,11 @@ class NativeAuthOAuth2Strategy(
         )
     }
 
+    /**
+     * Performs the API call to /resetpassword/continue to submit new user password
+     * @param parameters: Parameters required for the call including new user password
+     * @return result of the API call as [ResetPasswordSubmitApiResult] object
+     */
     fun performResetPasswordSubmit(
         parameters: ResetPasswordSubmitNewPasswordCommandParameters
     ): ResetPasswordSubmitApiResult {
@@ -171,6 +191,11 @@ class NativeAuthOAuth2Strategy(
         )
     }
 
+    /**
+     * Performs the API call to /resetpassword/poll_completion
+     * @param passwordResetToken: Token received from previous call
+     * @return result of the API call as [ResetPasswordPollCompletionApiResult] object
+     */
     fun performResetPasswordPollCompletion(
         passwordResetToken: String
     ): ResetPasswordPollCompletionApiResult {

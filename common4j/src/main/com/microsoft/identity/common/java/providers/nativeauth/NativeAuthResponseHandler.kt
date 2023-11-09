@@ -189,6 +189,11 @@ class NativeAuthResponseHandler {
     //endregion
 
     //region /resetpassword/start
+    /**
+     * Converts the HTTP response for /resetpassword/start API to [ResetPasswordStartApiResponse] object
+     * @param response : HTTP response received from the API
+     * @return ResetPasswordStartApiResponse object
+     */
     @Throws(ClientException::class)
     fun getResetPasswordStartApiResponseFromHttpResponse(
         response: HttpResponse
@@ -220,6 +225,11 @@ class NativeAuthResponseHandler {
     }
 
     //region /resetpassword/challenge
+    /**
+     * Converts the HTTP response for /resetpassword/challenge API to [ResetPasswordChallengeApiResponse] object
+     * @param response : HTTP response received from the API
+     * @return ResetPasswordChallengeApiResponse object
+     */
     @Throws(ClientException::class)
     fun getResetPasswordChallengeApiResponseFromHttpResponse(
         response: HttpResponse
@@ -256,6 +266,11 @@ class NativeAuthResponseHandler {
     }
 
     //region /resetpassword/continue
+    /**
+     * Converts the HTTP response for /resetpassword/continue API to [ResetPasswordContinueApiResponse] object
+     * @param response : HTTP response received from the API
+     * @return ResetPasswordContinueApiResponse object
+     */
     @Throws(ClientException::class)
     fun getResetPasswordContinueApiResponseFromHttpResponse(
         response: HttpResponse
@@ -288,6 +303,11 @@ class NativeAuthResponseHandler {
     }
 
     //region /resetpassword/submit
+    /**
+     * Converts the HTTP response for /resetpassword/submit API to [ResetPasswordSubmitApiResponse] object
+     * @param response : HTTP response received from the API
+     * @return ResetPasswordSubmitApiResponse object
+     */
     @Throws(ClientException::class)
     fun getResetPasswordSubmitApiResponseFromHttpResponse(
         response: HttpResponse
@@ -319,6 +339,11 @@ class NativeAuthResponseHandler {
     }
 
     //region /resetpassword/poll_completion
+    /**
+     * Converts the HTTP response for /resetpassword/poll_completion API to [ResetPasswordPollCompletionApiResponse] object
+     * @param response : HTTP response received from the API
+     * @return ResetPasswordPollCompletionApiResponse object
+     */
     @Throws(ClientException::class)
     fun getResetPasswordPollCompletionApiResponseFromHttpResponse(
         response: HttpResponse

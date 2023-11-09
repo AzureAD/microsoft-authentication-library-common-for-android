@@ -166,7 +166,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //endregion
 
     //region /resetpassword/start
-    fun createResetPasswordStartRequest(
+    internal fun createResetPasswordStartRequest(
         parameters: ResetPasswordStartCommandParameters
     ): ResetPasswordStartRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordStartRequest")
@@ -182,7 +182,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //endregion
 
     //region /resetpassword/challenge
-    fun createResetPasswordChallengeRequest(
+    internal fun createResetPasswordChallengeRequest(
         passwordResetToken: String
     ): ResetPasswordChallengeRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordChallengeRequest")
@@ -198,7 +198,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //endregion
 
     //region /resetpassword/continue
-    fun createResetPasswordContinueRequest(
+    internal fun createResetPasswordContinueRequest(
         parameters: ResetPasswordSubmitCodeCommandParameters
     ): ResetPasswordContinueRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordContinueRequest")
@@ -214,7 +214,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //endregion
 
     //region /resetpassword/submit
-    fun createResetPasswordSubmitRequest(
+    internal fun createResetPasswordSubmitRequest(
         commandParameters: ResetPasswordSubmitNewPasswordCommandParameters
     ): ResetPasswordSubmitRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordSubmitRequest")
@@ -230,7 +230,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //endregion
 
     //region /resetpassword/pollcompletion
-    fun createResetPasswordPollCompletionRequest(
+    internal fun createResetPasswordPollCompletionRequest(
         passwordResetToken: String
     ): ResetPasswordPollCompletionRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordPollCompletionRequest")

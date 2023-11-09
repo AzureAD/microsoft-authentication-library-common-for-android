@@ -73,6 +73,10 @@ class ResetPasswordContinueRequest private constructor(
         }
     }
 
+    /**
+     * NativeAuthResetPasswordContinueRequestBody represents the request parameters sent as part of
+     * /resetpassword/continue API call
+     */
     data class NativeAuthResetPasswordContinueRequestBody(
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("grant_type") val grantType: String,
