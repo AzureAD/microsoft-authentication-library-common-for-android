@@ -1,3 +1,7 @@
+V.16.1.2
+----------
+- [PATCH] Fix to generate new Asymmetric Key (#2222)
+
 V.16.1.1
 ----------
 - [PATCH] Fix client Discovery (#2213)
