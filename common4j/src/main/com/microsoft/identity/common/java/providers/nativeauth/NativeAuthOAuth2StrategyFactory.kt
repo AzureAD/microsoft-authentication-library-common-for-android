@@ -50,7 +50,7 @@ class NativeAuthOAuth2StrategyFactory {
                     httpClient = UrlConnectionHttpClient.getDefaultInstance(),
                     nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
                     nativeAuthResponseHandler = NativeAuthResponseHandler()
-                ),
+                )
             )
         }
     }

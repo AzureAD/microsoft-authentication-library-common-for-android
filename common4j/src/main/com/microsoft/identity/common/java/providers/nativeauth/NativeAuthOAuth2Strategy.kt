@@ -51,7 +51,7 @@ class NativeAuthOAuth2Strategy(
     private val strategyParameters: OAuth2StrategyParameters,
     val config: NativeAuthOAuth2Configuration,
     private val signInInteractor: SignInInteractor,
-    private val signUpInteractor: SignUpInteractor,
+    private val signUpInteractor: SignUpInteractor
 ) :
     MicrosoftStsOAuth2Strategy(config, strategyParameters) {
     private val TAG = NativeAuthOAuth2Strategy::class.java.simpleName
