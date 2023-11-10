@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.parameters.nativeauth;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -33,6 +34,7 @@ import lombok.experimental.SuperBuilder;
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
+@SuppressFBWarnings("EI_EXPOSE_REP2")   //Suppresses spotbugs warning on the builder class
 @SuperBuilder(toBuilder = true)
 public class SignUpSubmitPasswordCommandParameters extends SignUpContinueCommandParameters {
     private static final String TAG = SignUpSubmitPasswordCommandParameters.class.getSimpleName();
