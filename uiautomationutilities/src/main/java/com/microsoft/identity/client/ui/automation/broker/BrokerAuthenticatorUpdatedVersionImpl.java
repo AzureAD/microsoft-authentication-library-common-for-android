@@ -37,6 +37,8 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * A model for interacting with the Microsoft Authenticator Broker App during UI Test
  * when version number of Authenticator app under test is >= "6.2206.3949"
@@ -78,7 +80,7 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
                 // after device registration, make sure that we see the unregister btn to confirm successful
                 // registration
                 final UiObject unRegisterBtn = UiAutomatorUtils.obtainUiObjectWithExactText(
-                        "UNREGISTER DEVICE"
+                        "UNREGISTER DEVICE", TimeUnit.SECONDS.toMillis(20)
                 );
                 Assert.assertTrue(
                         "Microsoft Authenticator - Unregister Button appears.",

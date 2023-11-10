@@ -65,7 +65,7 @@ data class BrokerData(val packageName : String,
          * Determines if the debug brokers should be trusted or not.
          * This should only be set to true only during testing.
          */
-        private var sShouldTrustDebugBrokers = BuildConfig.DEBUG
+        private var sShouldTrustDebugBrokers = BuildConfig.DEBUG || BuildConfig.trustDebugBrokerFlag
 
         @JvmStatic
         fun setShouldTrustDebugBrokers(value: Boolean) {
@@ -91,6 +91,12 @@ data class BrokerData(val packageName : String,
         val prodMicrosoftAuthenticator = BrokerData(
             AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
             AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE_SHA512
+        )
+
+        @JvmStatic
+        val debugCompanyPortal = BrokerData(
+            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
+            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_DEBUG_SIGNATURE_SHA512
         )
 
         @JvmStatic
@@ -153,6 +159,7 @@ data class BrokerData(val packageName : String,
                 init {
                     add(debugMicrosoftAuthenticator)
                     add(debugLTW)
+                    add(debugCompanyPortal)
                     add(debugBrokerHost)
                     add(debugMockCp)
                     add(debugMockAuthApp)
