@@ -97,54 +97,79 @@ public class SpanExtension {
     }
 
     public static Span capturePerfMeasurement(@NonNull final PerfOperation perfOperation, final long elapsedTime) {
-        return current().addEvent(
-                "PerfMeasurement",
-                Attributes.of(
-                        AttributeKey.stringKey("operation_name"), perfOperation.name(),
-                        AttributeKey.stringKey("operation_type"), perfOperation.getPerfOperationType().name(),
-                        AttributeKey.longKey("elapsed_time"), elapsedTime
-                )
-        );
+        try {
+            return current().addEvent(
+                    "PerfMeasurement",
+                    Attributes.of(
+                            AttributeKey.stringKey("operation_name"), perfOperation.name(),
+                            AttributeKey.stringKey("operation_type"), perfOperation.getPerfOperationType().name(),
+                            AttributeKey.longKey("elapsed_time"), elapsedTime
+                    )
+            );
+        } catch (final Throwable throwable) {
+            // swallow
+            return current();
+        }
     }
 
     public static Span captureBreadcrumbStart(@NonNull final String methodTag) {
-        return current().addEvent(
-                "Breadcrumb",
-                Attributes.of(
-                        AttributeKey.stringKey("name"), methodTag + ":start",
-                        AttributeKey.longKey("timestamp"), new Date().getTime()
-                )
-        );
+        try {
+            return current().addEvent(
+                    "Breadcrumb",
+                    Attributes.of(
+                            AttributeKey.stringKey("name"), methodTag + ":start",
+                            AttributeKey.longKey("timestamp"), new Date().getTime()
+                    )
+            );
+        } catch (final Throwable throwable) {
+           // swallow
+            return current();
+        }
     }
 
     public static Span captureBreadcrumbEnd(@NonNull final String methodTag) {
-        return current().addEvent(
-                "Breadcrumb",
-                Attributes.of(
-                        AttributeKey.stringKey("name"), methodTag+ ":end",
-                        AttributeKey.longKey("timestamp"), new Date().getTime()
-                )
-        );
+        try {
+            return current().addEvent(
+                    "Breadcrumb",
+                    Attributes.of(
+                            AttributeKey.stringKey("name"), methodTag+ ":end",
+                            AttributeKey.longKey("timestamp"), new Date().getTime()
+                    )
+            );
+        } catch (final Throwable throwable) {
+            // swallow
+            return current();
+        }
     }
 
     public static Span captureBreadcrumbStart(@NonNull final String TAG, @NonNull final String methodName) {
-        return current().addEvent(
-                "Breadcrumb",
-                Attributes.of(
-                        AttributeKey.stringKey("name"), TAG + methodName + ":start",
-                        AttributeKey.longKey("timestamp"), new Date().getTime()
-                )
-        );
+        try {
+            return current().addEvent(
+                    "Breadcrumb",
+                    Attributes.of(
+                            AttributeKey.stringKey("name"), TAG + methodName + ":start",
+                            AttributeKey.longKey("timestamp"), new Date().getTime()
+                    )
+            );
+        } catch (final Throwable throwable) {
+            // swallow
+            return current();
+        }
     }
 
     public static Span captureBreadcrumbEnd(@NonNull final String TAG, @NonNull final String methodName) {
-        return current().addEvent(
-                "Breadcrumb",
-                Attributes.of(
-                        AttributeKey.stringKey("name"), TAG + methodName + ":end",
-                        AttributeKey.longKey("timestamp"), new Date().getTime()
-                )
-        );
+        try {
+            return current().addEvent(
+                    "Breadcrumb",
+                    Attributes.of(
+                            AttributeKey.stringKey("name"), TAG + methodName + ":end",
+                            AttributeKey.longKey("timestamp"), new Date().getTime()
+                    )
+            );
+        } catch (final Throwable throwable) {
+            // swallow
+            return current();
+        }
     }
 
     /**
