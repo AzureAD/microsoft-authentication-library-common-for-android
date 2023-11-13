@@ -14,7 +14,7 @@ public class Breadcrumb {
 
     public Breadcrumb(String name, Date timestamp) {
         this.name = name;
-        this.timestamp = timestamp;
+        this.timestamp = new Date(timestamp.getTime());
     }
 
     public String getName() {
@@ -22,6 +22,6 @@ public class Breadcrumb {
     }
 
     public Date getTimestamp() {
-        return timestamp;
+        return new Date(timestamp.getTime());
     }
 }
