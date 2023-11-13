@@ -101,9 +101,6 @@ public class AccountManagerBrokerAccount implements IBrokerAccount {
             Logger.verbose(methodTag, "Creating account.");
             Logger.verbosePII(methodTag, "Creating account with name :" + account.name);
             accountManager.addAccountExplicitly(account, null, null);
-        } else {
-            Logger.verbose(methodTag, "Account found.");
-            Logger.verbosePII(methodTag, ACCOUNT_NAME + ":" + account.name);
         }
 
         // On Android O and above, GET_ACCOUNTS permission is being replaced by accountVisibility.
@@ -134,14 +131,12 @@ public class AccountManagerBrokerAccount implements IBrokerAccount {
         if (accountList != null) {
             for (final Account existingAcct : accountList) {
                 if (existingAcct.name.equalsIgnoreCase(accountName)) {
-                    Logger.verbose(methodTag, "Account found.");
                     return existingAcct;
                 }
             }
-        } else {
-            Logger.verbose(methodTag, "Account list null.");
         }
 
+        Logger.verbose(methodTag, "Account not found.");
         return null;
     }
 }
