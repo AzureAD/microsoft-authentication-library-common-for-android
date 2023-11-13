@@ -50,7 +50,7 @@ class FidoConstants {
         /**
          * Header name for the passkey protocol context that we're relaying back to the server.
          */
-        const val PASSKEY_RESPONSE_CONTEXT_HEADER = "Context"
+        const val PASSKEY_RESPONSE_CONTEXT_HEADER = "x-ms-ctx"
 
         /**
          * Header name for the passkey protocol flow token that we're relaying back to the server.
@@ -108,6 +108,6 @@ class FidoConstants {
         /**
          * Used to disable passkey logic until the feature is ready.
          */
-        const val IS_PASSKEY_SUPPORT_READY = false
+        const val IS_PASSKEY_SUPPORT_READY = true
     }
 }

@@ -26,10 +26,10 @@ package com.microsoft.identity.common.internal.fido
  * Represents FIDO request fields shared among registration and authentication requests.
  */
 enum class FidoRequestField {
-    Challenge,
-    RelyingPartyIdentifier,
-    UserVerificationPolicy,
-    Version,
-    SubmitUrl,
-    Context
+    challenge,
+    relyingPartyIdentifier,
+    userVerificationPolicy,
+    version,
+    submitUrl,
+    context
 }

@@ -26,6 +26,7 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -133,8 +134,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @RequiresApi(Build.VERSION_CODES.N)
     public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
         final Uri requestUrl = request.getUrl();
-        //Hard-coding url below
-        return handleUrl(view, "urn:http-auth:PassKey?Challenge=T1xCsnxM2DNL2KdK5CLa6fMhD7OBqho6syzInk_n-Uo&RelyingPartyIdentifier=login.microsoft.com&Version=1.0&SubmitUrl=https://login.microsoft.com&KeyTypes=passkey&Context=123456");
+        return handleUrl(view, requestUrl.toString());
     }
 
     public void setRequestHeaders(final HashMap<String, String> requestHeaders) {
@@ -481,6 +481,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 + removeQueryParametersOrRedact(url) + "' with original requestHeaders appended.");
 
         view.loadUrl(url, mRequestHeaders);
+    }
+
+    @Override
+    public void onPageStarted(WebView view, String url, Bitmap favicon) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            view.evaluateJavascript("window.PublicKeyCredential = function() {}; window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable = function() { return Promise.resolve(true); };", null);
+        }
+
+        super.onPageStarted(view, url, favicon);
     }
 
     private String removeQueryParametersOrRedact(@NonNull final String url) {

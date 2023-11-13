@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.fido
 
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.util.UrlUtil
+import java.net.URL
 
 /**
  * Instantiates FidoChallenge objects.
@@ -47,33 +48,33 @@ class FidoChallengeFactory {
             //At the moment, only auth FIDO requests will be sent by the server.
             return AuthFidoChallenge(
                 challenge = validateRequiredParameter(
-                    FidoRequestField.Challenge.name,
-                    parameters[FidoRequestField.Challenge.name]
+                    FidoRequestField.challenge.name,
+                    parameters[FidoRequestField.challenge.name]
                 ),
                 relyingPartyIdentifier = validateRequiredParameter(
-                    FidoRequestField.RelyingPartyIdentifier.name,
-                    parameters[FidoRequestField.RelyingPartyIdentifier.name]
+                    FidoRequestField.relyingPartyIdentifier.name,
+                    parameters[FidoRequestField.relyingPartyIdentifier.name]
                 ),
                 userVerificationPolicy = validateParameterOrReturnDefault(
-                    FidoRequestField.UserVerificationPolicy.name,
-                    parameters[FidoRequestField.UserVerificationPolicy.name],
+                    FidoRequestField.userVerificationPolicy.name,
+                    parameters[FidoRequestField.userVerificationPolicy.name],
                     DEFAULT_USER_VERIFICATION_POLICY
                 ),
                 version = validateRequiredParameter(
-                    FidoRequestField.Version.name,
-                    parameters[FidoRequestField.Version.name]
+                    FidoRequestField.version.name,
+                    parameters[FidoRequestField.version.name]
                 ),
                 submitUrl = validateRequiredParameter(
-                    FidoRequestField.SubmitUrl.name,
-                    parameters[FidoRequestField.SubmitUrl.name]
+                    FidoRequestField.submitUrl.name,
+                    parameters[FidoRequestField.submitUrl.name]
                 ),
                 keyTypes = validateOptionalListParameter(
                     AuthFidoRequestField.KeyTypes.name,
                     parameters[AuthFidoRequestField.KeyTypes.name]
                 ),
                 context = validateRequiredParameter(
-                    FidoRequestField.Context.name,
-                    parameters[FidoRequestField.Context.name]
+                    FidoRequestField.context.name,
+                    parameters[FidoRequestField.context.name]
                 ),
                 allowedCredentials = validateOptionalListParameter(
                     AuthFidoRequestField.AllowedCredentials.name,
@@ -95,6 +96,9 @@ class FidoChallengeFactory {
                 throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field not provided")
             } else if (value.isBlank()) {
                 throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field is empty")
+            }
+            if (field == FidoRequestField.relyingPartyIdentifier.name) {
+                return URL(value).host
             }
             return value
         }
