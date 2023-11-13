@@ -34,6 +34,8 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.opentelemetry.perf.PerfOperation;
 import com.microsoft.identity.common.java.providers.IdentityProvider;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.util.ObjectMapper;
@@ -184,6 +186,7 @@ public class AzureActiveDirectory
     public static synchronized void performCloudDiscovery()
             throws IOException, URISyntaxException {
         final String methodName = ":performCloudDiscovery";
+        final long networkStartTime = System.currentTimeMillis();
         final URI instanceDiscoveryRequestUri = new CommonURIBuilder(getDefaultCloudUrl() + AAD_INSTANCE_DISCOVERY_ENDPOINT)
                 .setParameter(API_VERSION, API_VERSION_VALUE)
                 .setParameter(AUTHORIZATION_ENDPOINT, AUTHORIZATION_ENDPOINT_VALUE)
@@ -219,6 +222,10 @@ public class AzureActiveDirectory
 
             sIsInitialized = true;
         }
+
+        final long networkEndTime = System.currentTimeMillis();
+        final long networkTime = networkEndTime - networkStartTime;
+        SpanExtension.capturePerfMeasurement(PerfOperation.perform_cloud_discovery, networkTime);
     }
 
     public static synchronized Set<String> getHosts() {

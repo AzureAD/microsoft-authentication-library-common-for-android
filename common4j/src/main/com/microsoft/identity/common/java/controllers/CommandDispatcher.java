@@ -341,6 +341,7 @@ public class CommandDispatcher {
             commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
+                    SpanExtension.captureBreadcrumbStart(TAG, methodName);
                     codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_EXECUTOR_START : ACQUIRE_TOKEN_SILENT_EXECUTOR_START);
                     try {
                         //initializing again since the request is transferred to a different thread pool
@@ -391,6 +392,7 @@ public class CommandDispatcher {
                             finalFuture.setCleanedUp();
                         }
                         DiagnosticContext.INSTANCE.clear();
+                        SpanExtension.captureBreadcrumbEnd(TAG, methodName);
                     }
                     codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_FUTURE_OBJECT_CREATION_END : ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);
                 }

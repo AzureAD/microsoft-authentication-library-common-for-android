@@ -30,7 +30,7 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
-import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.perf.PerfOperation;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
@@ -81,8 +81,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
         } finally {
             final long endTime = System.currentTimeMillis();
             final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_save.name(),
+            SpanExtension.capturePerfMeasurement(
+                    PerfOperation.cache_save,
                     elapsedTime
             );
         }
@@ -97,8 +97,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
         } finally {
             final long endTime = System.currentTimeMillis();
             final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_save_and_load_aggregated_account_data.name(),
+            SpanExtension.capturePerfMeasurement(
+                    PerfOperation.cache_save_and_load_aggregated_account_data,
                     elapsedTime
             );
         }
@@ -113,8 +113,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
         } finally {
             final long endTime = System.currentTimeMillis();
             final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_save.name(),
+            SpanExtension.capturePerfMeasurement(
+                    PerfOperation.cache_save,
                     elapsedTime
             );
         }
@@ -129,8 +129,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
         } finally {
             final long endTime = System.currentTimeMillis();
             final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_load.name(),
+            SpanExtension.capturePerfMeasurement(
+                    PerfOperation.cache_load,
                     elapsedTime
             );
         }
@@ -145,8 +145,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
         } finally {
             final long endTime = System.currentTimeMillis();
             final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_load_aggregated_account_data.name(),
+            SpanExtension.capturePerfMeasurement(
+                    PerfOperation.cache_load_aggregated_account_data,
                     elapsedTime
             );
         }
@@ -161,8 +161,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
         } finally {
             final long endTime = System.currentTimeMillis();
             final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_remove_credential.name(),
+            SpanExtension.capturePerfMeasurement(
+                    PerfOperation.cache_remove_credential,
                     elapsedTime
             );
         }
@@ -177,8 +177,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
         } finally {
             final long endTime = System.currentTimeMillis();
             final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_get_account.name(),
+            SpanExtension.capturePerfMeasurement(
+                    PerfOperation.cache_get_account,
                     elapsedTime
             );
         }
@@ -193,8 +193,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
         } finally {
             final long endTime = System.currentTimeMillis();
             final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_get_accounts_with_aggregated_account_data.name(),
+            SpanExtension.capturePerfMeasurement(
+                    PerfOperation.cache_get_accounts_with_aggregated_account_data,
                     elapsedTime
             );
         }
@@ -209,8 +209,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
         } finally {
             final long endTime = System.currentTimeMillis();
             final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_get_account_by_local_account_id.name(),
+            SpanExtension.capturePerfMeasurement(
+                    PerfOperation.cache_get_account_by_local_account_id,
                     elapsedTime
             );
         }
@@ -225,8 +225,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
         } finally {
             final long endTime = System.currentTimeMillis();
             final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_get_account_with_aggregated_account_data_by_local_account_id.name(),
+            SpanExtension.capturePerfMeasurement(
+                    PerfOperation.cache_get_account_with_aggregated_account_data_by_local_account_id,
                     elapsedTime
             );
         }
@@ -241,8 +241,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
         } finally {
             final long endTime = System.currentTimeMillis();
             final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_get_accounts.name(),
+            SpanExtension.capturePerfMeasurement(
+                    PerfOperation.cache_get_accounts,
                     elapsedTime
             );
         }
@@ -257,8 +257,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
         } finally {
             final long endTime = System.currentTimeMillis();
             final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_get_all_tenant_accounts_for_account_by_client_id.name(),
+            SpanExtension.capturePerfMeasurement(
+                    PerfOperation.cache_get_all_tenant_accounts_for_account_by_client_id,
                     elapsedTime
             );
         }
@@ -273,8 +273,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
         } finally {
             final long endTime = System.currentTimeMillis();
             final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_get_accounts_with_aggregated_account_data.name(),
+            SpanExtension.capturePerfMeasurement(
+                    PerfOperation.cache_get_accounts_with_aggregated_account_data,
                     elapsedTime
             );
         }
@@ -289,8 +289,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
         } finally {
             final long endTime = System.currentTimeMillis();
             final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_get_id_tokens_for_account_record.name(),
+            SpanExtension.capturePerfMeasurement(
+                    PerfOperation.cache_get_id_tokens_for_account_record,
                     elapsedTime
             );
         }
@@ -305,8 +305,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
         } finally {
             final long endTime = System.currentTimeMillis();
             final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_remove_account.name(),
+            SpanExtension.capturePerfMeasurement(
+                    PerfOperation.cache_remove_account,
                     elapsedTime
             );
         }
@@ -321,8 +321,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
         } finally {
             final long endTime = System.currentTimeMillis();
             final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_remove_account.name(),
+            SpanExtension.capturePerfMeasurement(
+                    PerfOperation.cache_remove_account,
                     elapsedTime
             );
         }
@@ -337,8 +337,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
         } finally {
             final long endTime = System.currentTimeMillis();
             final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_clear_all.name(),
+            SpanExtension.capturePerfMeasurement(
+                    PerfOperation.cache_clear_all,
                     elapsedTime
             );
         }
@@ -353,8 +353,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
         } finally {
             final long endTime = System.currentTimeMillis();
             final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_get_all_client_ids.name(),
+            SpanExtension.capturePerfMeasurement(
+                    PerfOperation.cache_get_all_client_ids,
                     elapsedTime
             );
         }
@@ -369,8 +369,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
         } finally {
             final long endTime = System.currentTimeMillis();
             final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_get_account_by_home_account_id.name(),
+            SpanExtension.capturePerfMeasurement(
+                    PerfOperation.cache_get_account_by_home_account_id,
                     elapsedTime
             );
         }

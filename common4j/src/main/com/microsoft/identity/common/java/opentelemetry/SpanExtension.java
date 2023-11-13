@@ -22,7 +22,13 @@
 package com.microsoft.identity.common.java.opentelemetry;
 
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.perf.PerfOperation;
 
+import java.time.Instant;
+import java.util.Date;
+
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.internal.ImmutableSpanContext;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -88,6 +94,57 @@ public class SpanExtension {
             Logger.error(TAG + ":makeCurrentSpan", exception.getMessage(), exception);
             return NoopScope.INSTANCE;
         }
+    }
+
+    public static Span capturePerfMeasurement(@NonNull final PerfOperation perfOperation, final long elapsedTime) {
+        return current().addEvent(
+                "PerfMeasurement",
+                Attributes.of(
+                        AttributeKey.stringKey("operation_name"), perfOperation.name(),
+                        AttributeKey.stringKey("operation_type"), perfOperation.getPerfOperationType().name(),
+                        AttributeKey.longKey("elapsed_time"), elapsedTime
+                )
+        );
+    }
+
+    public static Span captureBreadcrumbStart(@NonNull final String methodTag) {
+        return current().addEvent(
+                "Breadcrumb",
+                Attributes.of(
+                        AttributeKey.stringKey("name"), methodTag + ":start",
+                        AttributeKey.longKey("timestamp"), new Date().getTime()
+                )
+        );
+    }
+
+    public static Span captureBreadcrumbEnd(@NonNull final String methodTag) {
+        return current().addEvent(
+                "Breadcrumb",
+                Attributes.of(
+                        AttributeKey.stringKey("name"), methodTag+ ":end",
+                        AttributeKey.longKey("timestamp"), new Date().getTime()
+                )
+        );
+    }
+
+    public static Span captureBreadcrumbStart(@NonNull final String TAG, @NonNull final String methodName) {
+        return current().addEvent(
+                "Breadcrumb",
+                Attributes.of(
+                        AttributeKey.stringKey("name"), TAG + methodName + ":start",
+                        AttributeKey.longKey("timestamp"), new Date().getTime()
+                )
+        );
+    }
+
+    public static Span captureBreadcrumbEnd(@NonNull final String TAG, @NonNull final String methodName) {
+        return current().addEvent(
+                "Breadcrumb",
+                Attributes.of(
+                        AttributeKey.stringKey("name"), TAG + methodName + ":end",
+                        AttributeKey.longKey("timestamp"), new Date().getTime()
+                )
+        );
     }
 
     /**

@@ -41,6 +41,8 @@ import com.microsoft.identity.common.java.crypto.key.PredefinedKeyLoader;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.opentelemetry.perf.PerfOperation;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -124,6 +126,8 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             throw new IllegalStateException("KeyLoader list must not be null.");
         }
 
+        final long networkStartTime = System.currentTimeMillis();
+
         try {
             final SecretKey encryptionKey = keyLoader.getKey();
             final SecretKey encryptionHMACKey = KeyUtil.getHMacKey(encryptionKey);
@@ -182,6 +186,10 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
         } catch (final Throwable e) {
             errCode = UNKNOWN_CRYPTO_ERROR;
             exception = e;
+        } finally {
+            final long networkEndTime = System.currentTimeMillis();
+            final long networkTime = networkEndTime - networkStartTime;
+            SpanExtension.capturePerfMeasurement(PerfOperation.encrypt, networkTime);
         }
 
         throw new ClientException(errCode, exception.getMessage(), exception);
@@ -189,44 +197,51 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
 
     @Override
     public byte[] decrypt(final byte[] cipherText) throws ClientException {
-        final String methodName = ":decrypt";
-
-        final byte[] dataBytes;
+        final long networkStartTime = System.currentTimeMillis();
         try {
-            dataBytes = stripEncodeVersionFromCipherText(cipherText);
-        } catch (final ClientException e){
-            Logger.verbose(TAG + methodName,
-                    "Failed to strip encode version from cipherText, string might not be encrypted. Exception: ", e.getMessage());
-            return cipherText;
-        }
+            final String methodName = ":decrypt";
 
-        final List<AbstractSecretKeyLoader> keysForDecryption = getKeyLoaderForDecryption(cipherText);
-        if (keysForDecryption.size() == 0) {
-            throw new IllegalStateException("KeyLoader list must not be null or empty.");
-        }
-
-        final ClientException exceptionToThrowIfAllFails = new ClientException(ErrorStrings.DECRYPTION_FAILED,
-                "Tried all decryption keys and decryption still fails.");
-
-        for (final AbstractSecretKeyLoader keyLoader : keysForDecryption) {
-            if (keyLoader == null){
-                throw new IllegalStateException("KeyLoader must not be null.");
-            }
-            
+            final byte[] dataBytes;
             try {
-                return decryptWithSecretKey(dataBytes, keyLoader);
-            } catch (final Throwable e) {
-                Logger.warn(TAG + methodName, "Failed to decrypt with key:" + keyLoader.getAlias() +
-                        " thumbprint : " + KeyUtil.getKeyThumbPrint(keyLoader));
-                exceptionToThrowIfAllFails.addSuppressedException(e);
+                dataBytes = stripEncodeVersionFromCipherText(cipherText);
+            } catch (final ClientException e){
+                Logger.verbose(TAG + methodName,
+                        "Failed to strip encode version from cipherText, string might not be encrypted. Exception: ", e.getMessage());
+                return cipherText;
             }
+
+            final List<AbstractSecretKeyLoader> keysForDecryption = getKeyLoaderForDecryption(cipherText);
+            if (keysForDecryption.size() == 0) {
+                throw new IllegalStateException("KeyLoader list must not be null or empty.");
+            }
+
+            final ClientException exceptionToThrowIfAllFails = new ClientException(ErrorStrings.DECRYPTION_FAILED,
+                    "Tried all decryption keys and decryption still fails.");
+
+            for (final AbstractSecretKeyLoader keyLoader : keysForDecryption) {
+                if (keyLoader == null){
+                    throw new IllegalStateException("KeyLoader must not be null.");
+                }
+
+                try {
+                    return decryptWithSecretKey(dataBytes, keyLoader);
+                } catch (final Throwable e) {
+                    Logger.warn(TAG + methodName, "Failed to decrypt with key:" + keyLoader.getAlias() +
+                            " thumbprint : " + KeyUtil.getKeyThumbPrint(keyLoader));
+                    exceptionToThrowIfAllFails.addSuppressedException(e);
+                }
+            }
+
+            Logger.warn(
+                    TAG + methodName,
+                    exceptionToThrowIfAllFails.getMessage());
+
+            throw exceptionToThrowIfAllFails;
+        } finally {
+            final long networkEndTime = System.currentTimeMillis();
+            final long networkTime = networkEndTime - networkStartTime;
+            SpanExtension.capturePerfMeasurement(PerfOperation.decrypt, networkTime);
         }
-
-        Logger.warn(
-                TAG + methodName,
-                exceptionToThrowIfAllFails.getMessage());
-
-        throw exceptionToThrowIfAllFails;
     }
 
     @Override
