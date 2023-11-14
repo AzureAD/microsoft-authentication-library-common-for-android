@@ -57,6 +57,7 @@ import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
+import com.sun.tools.sjavac.Log;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -172,6 +173,8 @@ public abstract class OAuth2Strategy
         validateTokenRequest(request);
 
         final HttpResponse response = performTokenRequest(request);
+        Logger.info(TAG, "resp body " + response.getHeaders());
+
         final GenericTokenResult result = getTokenResultFromHttpResponse(response);
         if (result.getTokenResponse() != null) {
             result.getTokenResponse().setAuthority(mTokenEndpoint);
@@ -196,7 +199,7 @@ public abstract class OAuth2Strategy
 
         Logger.verbose(
                 TAG + methodName,
-                "Performing token request..."
+                "Performitoken request..."
         );
 
         final String requestBody = getRequestBody(request);
@@ -231,8 +234,9 @@ public abstract class OAuth2Strategy
                 headers.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
             }
         }
-
-        final URL requestUrl = new URL(getTokenEndpoint());
+        Logger.info(TAG, "just before forcefully editing token endpoint");
+        final URL requestUrl = new URL(getTokenEndpoint()+"?dc=ESTS-PUB-WUS2-AZ1-FD000-TEST1&nativepwbroker=true&stopemitpwbrokerappid=true");
+      //  final URL requestUrl = new URL(getTokenEndpoint());
         final long networkStartTime = System.currentTimeMillis();
         final HttpResponse response = httpClient.post(
                 requestUrl,
@@ -252,7 +256,9 @@ public abstract class OAuth2Strategy
     }
 
     protected String getTokenEndpoint() {
-        return mTokenEndpoint;
+        Logger.info(TAG, "getting token ep "+ mTokenEndpoint);
+       // return mTokenEndpoint;
+       return mTokenEndpoint;
     }
 
     protected String getRequestBody(final GenericTokenRequest request) throws UnsupportedEncodingException, ClientException {

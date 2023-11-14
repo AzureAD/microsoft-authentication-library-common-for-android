@@ -741,12 +741,13 @@ public class MicrosoftStsOAuth2Strategy
                         "Failed to construct token endpoint from getCloudInstanceHostName()", e);
             }
         }
-
         return mTokenEndpoint;
     }
 
     private String getCloudSpecificTokenEndpoint(final MicrosoftAuthorizationResponse response) throws ClientException {
+        Logger.info(TAG, "getting token ep from MSOA");
         if (StringUtil.isNullOrEmpty(response.getCloudInstanceHostName())) {
+            Logger.info(TAG, "getting token ep from MSOA");
             return mTokenEndpoint;
         }
         return buildCloudSpecificTokenEndpoint((MicrosoftStsAuthorizationResponse) response);
