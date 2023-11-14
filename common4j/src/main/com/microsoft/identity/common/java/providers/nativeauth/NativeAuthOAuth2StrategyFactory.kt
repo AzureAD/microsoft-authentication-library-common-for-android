@@ -41,16 +41,16 @@ class NativeAuthOAuth2StrategyFactory {
             return NativeAuthOAuth2Strategy(
                 strategyParameters = strategyParameters,
                 config = config,
+                signInInteractor = SignInInteractor(
+                    httpClient = UrlConnectionHttpClient.getDefaultInstance(),
+                    nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
+                    nativeAuthResponseHandler = NativeAuthResponseHandler()
+                ),
                 signUpInteractor = SignUpInteractor(
                     httpClient = UrlConnectionHttpClient.getDefaultInstance(),
                     nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
                     nativeAuthResponseHandler = NativeAuthResponseHandler()
                 ),
-                signInInteractor = SignInInteractor(
-                    httpClient = UrlConnectionHttpClient.getDefaultInstance(),
-                    nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
-                    nativeAuthResponseHandler = NativeAuthResponseHandler()
-                )
             )
         }
     }

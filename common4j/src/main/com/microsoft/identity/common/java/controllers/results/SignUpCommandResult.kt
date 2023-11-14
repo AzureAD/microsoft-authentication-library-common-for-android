@@ -71,7 +71,7 @@ interface SignUpCommandResult {
         val error: String,
         val errorDescription: String,
         val requiredAttributes: List<UserAttributeApiResult>,
-        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId
+        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId  //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
     ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult,
         SignUpSubmitUserAttributesCommandResult,
         SignUpSubmitCodeCommandResult
@@ -79,31 +79,31 @@ interface SignUpCommandResult {
     data class InvalidEmail(
         val error: String,
         val errorDescription: String,
-        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId
+        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId  //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
     ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult
 
     data class InvalidPassword(
         val error: String,
         val errorDescription: String,
-        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId
+        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId  //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
     ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult
 
     data class InvalidCode(
         val error: String,
         val errorDescription: String,
-        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId
+        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId  //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
     ) : SignUpSubmitCodeCommandResult
 
     data class InvalidAttributes(
         val error: String,
         val errorDescription: String,
         val invalidAttributes: List<String>,
-        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId
+        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId  //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
     ) : SignUpStartCommandResult, SignUpSubmitUserAttributesCommandResult
 
     data class AuthNotSupported(
         val error: String,
         val errorDescription: String,
-        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId
+        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId  //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
     ) : SignUpStartCommandResult
 }

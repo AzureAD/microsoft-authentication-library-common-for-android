@@ -63,61 +63,6 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     private val resetPasswordSubmitEndpoint = config.getResetPasswordSubmitEndpoint().toString()
     private val resetPasswordPollCompletionEndpoint = config.getResetPasswordPollCompletionEndpoint().toString()
 
-    //region /signup/start
-    internal fun createSignUpStartRequest(
-        commandParameters: SignUpStartCommandParameters
-    ): SignUpStartRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createSignUpStartRequest")
-
-        return SignUpStartRequest.create(
-            username = commandParameters.username,
-            attributes = commandParameters.userAttributes,
-            challengeType = config.challengeType,
-            clientId = config.clientId,
-            requestUrl = signUpStartEndpoint,
-            headers = getRequestHeaders()
-        )
-    }
-
-    internal fun createSignUpUsingPasswordStartRequest(
-        commandParameters: SignUpStartUsingPasswordCommandParameters
-    ): SignUpStartRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createSignUpUsingPasswordStartRequest")
-
-        if (commandParameters.password.isEmpty() || commandParameters.password.all { it.isWhitespace() })
-        {
-            var msg = "password can't be empty or consists solely of whitespace characters"
-            throw ClientException("$TAG $msg", msg)
-        }
-
-        return SignUpStartRequest.create(
-            username = commandParameters.username,
-            password = commandParameters.password,
-            attributes = commandParameters.userAttributes,
-            challengeType = config.challengeType,
-            clientId = config.clientId,
-            requestUrl = signUpStartEndpoint,
-            headers = getRequestHeaders()
-        )
-    }
-    //endregion
-
-    //region /signup/challenge
-    internal fun createSignUpChallengeRequest(
-        signUpToken: String
-    ): SignUpChallengeRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createSignUpChallengeRequest")
-
-        return SignUpChallengeRequest.create(
-            signUpToken = signUpToken,
-            clientId = config.clientId,
-            challengeType = config.challengeType,
-            requestUrl = signUpChallengeEndpoint,
-            headers = getRequestHeaders()
-        )
-    }
-    //endregion
-
     //region /oauth/v2.0/initiate
     /**
      * Creates request object for /oauth/v2.0/initiate API call from [SignInStartCommandParameters]
@@ -220,6 +165,45 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     }
     //endregion
 
+    //region /signup/start
+    internal fun createSignUpStartRequest(
+        commandParameters: SignUpStartCommandParameters
+    ): SignUpStartRequest {
+        LogSession.logMethodCall(TAG, "${TAG}.createSignUpStartRequest")
+
+        return SignUpStartRequest.create(
+            username = commandParameters.username,
+            attributes = commandParameters.userAttributes,
+            challengeType = config.challengeType,
+            clientId = config.clientId,
+            requestUrl = signUpStartEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+
+    internal fun createSignUpUsingPasswordStartRequest(
+        commandParameters: SignUpStartUsingPasswordCommandParameters
+    ): SignUpStartRequest {
+        LogSession.logMethodCall(TAG, "${TAG}.createSignUpUsingPasswordStartRequest")
+
+        if (commandParameters.password.isEmpty() || commandParameters.password.all { it.isWhitespace() })
+        {
+            var msg = "password can't be empty or consists solely of whitespace characters"
+            throw ClientException("$TAG $msg", msg)
+        }
+
+        return SignUpStartRequest.create(
+            username = commandParameters.username,
+            password = commandParameters.password,
+            attributes = commandParameters.userAttributes,
+            challengeType = config.challengeType,
+            clientId = config.clientId,
+            requestUrl = signUpStartEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+    //endregion
+
     //region /signup/continue
     internal fun createSignUpSubmitCodeRequest(
         commandParameters: SignUpSubmitCodeCommandParameters
@@ -262,6 +246,22 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             signUpToken = commandParameters.signupToken,
             grantType = NativeAuthConstants.GrantType.ATTRIBUTES,
             requestUrl = signUpContinueEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+    //endregion
+
+    //region /signup/challenge
+    internal fun createSignUpChallengeRequest(
+        signUpToken: String
+    ): SignUpChallengeRequest {
+        LogSession.logMethodCall(TAG, "${TAG}.createSignUpChallengeRequest")
+
+        return SignUpChallengeRequest.create(
+            signUpToken = signUpToken,
+            clientId = config.clientId,
+            challengeType = config.challengeType,
+            requestUrl = signUpChallengeEndpoint,
             headers = getRequestHeaders()
         )
     }

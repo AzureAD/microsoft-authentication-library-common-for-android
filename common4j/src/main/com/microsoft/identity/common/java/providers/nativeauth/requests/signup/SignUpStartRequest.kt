@@ -52,7 +52,7 @@ data class SignUpStartRequest private constructor(
             password: CharArray? = null,
             attributes: Map<String, String>? = null,
             clientId: String,
-            challengeType: String, // TODO hardcoded for now, but will be made part of SDK config & initialisation ticket
+            challengeType: String,
             requestUrl: String,
             headers: Map<String, String?>
         ): SignUpStartRequest {
