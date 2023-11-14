@@ -42,6 +42,7 @@ import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.opentelemetry.perf.PerfOperation;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
@@ -241,8 +242,7 @@ public abstract class OAuth2Strategy
         );
         final long networkEndTime = System.currentTimeMillis();
         final long networkTime = networkEndTime - networkStartTime;
-        SpanExtension.current().setAttribute(AttributeName.elapsed_time_network_acquire_at.name(), networkTime);
-
+        SpanExtension.capturePerfMeasurement(PerfOperation.acquire_at, networkTime);
 
         // Record the clock skew between *this device* and EVO...
         if (null != response.getDate()) {

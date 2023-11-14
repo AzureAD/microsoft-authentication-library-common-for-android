@@ -32,7 +32,9 @@ public enum PerfOperation {
     perform_cloud_discovery(PerfOperationType.network),
     is_authorized_to_share_tokens(PerfOperationType.tsl),
     encrypt(PerfOperationType.key_operation),
-    decrypt(PerfOperationType.key_operation);
+    decrypt(PerfOperationType.key_operation),
+    command_execution(PerfOperationType.other),
+    auth_sdk_operation(PerfOperationType.other);
 
     @NonNull
     private final PerfOperationType mPerfOperationType;
@@ -52,6 +54,7 @@ public enum PerfOperation {
         network,
         key_operation,
         ipc,
-        tsl
+        tsl,
+        other
     }
 }

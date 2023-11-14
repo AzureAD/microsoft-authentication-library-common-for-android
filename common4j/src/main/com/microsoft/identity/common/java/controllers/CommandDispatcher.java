@@ -65,6 +65,7 @@ import com.microsoft.identity.common.java.marker.CodeMarkerManager;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OtelContextExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.opentelemetry.perf.PerfOperation;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
@@ -341,6 +342,7 @@ public class CommandDispatcher {
             commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
+                    final long startTime = System.currentTimeMillis();
                     SpanExtension.captureBreadcrumbStart(TAG, methodName);
                     codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_EXECUTOR_START : ACQUIRE_TOKEN_SILENT_EXECUTOR_START);
                     try {
@@ -393,6 +395,9 @@ public class CommandDispatcher {
                         }
                         DiagnosticContext.INSTANCE.clear();
                         SpanExtension.captureBreadcrumbEnd(TAG, methodName);
+                        final long endTime = System.currentTimeMillis();
+                        final long totalTime = endTime - startTime;
+                        SpanExtension.capturePerfMeasurement(PerfOperation.command_execution, totalTime);
                     }
                     codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_FUTURE_OBJECT_CREATION_END : ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);
                 }
