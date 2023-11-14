@@ -33,12 +33,12 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInW
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.ResetPasswordInteractor
-import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignInInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordChallengeApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordContinueApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordPollCompletionApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordStartApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordSubmitApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignInInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResult

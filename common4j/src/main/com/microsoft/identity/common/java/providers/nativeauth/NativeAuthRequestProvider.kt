@@ -68,7 +68,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
      * Creates request object for /oauth/v2.0/initiate API call from [SignInStartCommandParameters]
      * @param parameters: command parameters object
      */
-    fun createSignInInitiateRequest(
+    internal fun createSignInInitiateRequest(
         parameters: SignInStartCommandParameters
     ): SignInInitiateRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createSignInInitiateRequest")
@@ -88,7 +88,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
      * Creates request object for /oauth/v2.0/challenge API call from credential token
      * @param credentialToken: credential token from a previous signin command
      */
-    fun createSignInChallengeRequest(
+    internal fun createSignInChallengeRequest(
         credentialToken: String
     ): SignInChallengeRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createSignInChallengeRequest")
@@ -108,7 +108,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
      * Creates request object for /oauth/v2.0/token API call from [SignInSubmitCodeCommandParameters]
      * @param parameters: command parameters object
      */
-    fun createOOBTokenRequest(
+    internal fun createOOBTokenRequest(
         parameters: SignInSubmitCodeCommandParameters
     ): SignInTokenRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createOOBTokenRequest")
@@ -128,7 +128,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
      * Creates request object for /oauth/v2.0/token API call from [SignInWithSLTCommandParameters]
      * @param parameters: command parameters object
      */
-    fun createSLTTokenRequest(
+    internal fun createSLTTokenRequest(
         parameters: SignInWithSLTCommandParameters
     ): SignInTokenRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createSLTTokenRequest")
@@ -148,7 +148,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
      * Creates request object for /oauth/v2.0/token API call from [SignInSubmitPasswordCommandParameters]
      * @param parameters: command parameters object
      */
-    fun createPasswordTokenRequest(
+    internal fun createPasswordTokenRequest(
         parameters: SignInSubmitPasswordCommandParameters
     ): SignInTokenRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createPasswordTokenRequest")
