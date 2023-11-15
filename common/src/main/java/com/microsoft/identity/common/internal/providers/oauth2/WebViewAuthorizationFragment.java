@@ -47,6 +47,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
+import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
@@ -126,6 +127,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mAuthorizationRequestUrl = state.getString(REQUEST_URL);
         mRedirectUri = state.getString(REDIRECT_URI);
         mRequestHeaders = getRequestHeaders(state);
+        // In cases of WebView as an auth agent, we want to always add the passkey protocol header.
+        // (Not going to add passkey protocol header until full feature is ready.)
+        if (FidoConstants.IS_PASSKEY_SUPPORT_READY) {
+            if (mRequestHeaders == null) {
+                mRequestHeaders = new HashMap<>();
+            }
+            mRequestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_VALUE);
+        }
         mPostPageLoadedJavascript = state.getString(POST_PAGE_LOADED_URL);
         webViewZoomEnabled = state.getBoolean(WEB_VIEW_ZOOM_ENABLED, true);
         webViewZoomControlsEnabled = state.getBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
