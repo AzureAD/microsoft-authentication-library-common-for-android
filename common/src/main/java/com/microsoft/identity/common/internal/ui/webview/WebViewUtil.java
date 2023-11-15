@@ -36,23 +36,19 @@ import com.microsoft.identity.common.logging.Logger;
 import static com.microsoft.identity.common.internal.ui.webview.ProcessUtil.AuthServiceProcess;
 
 public class WebViewUtil {
-    private static final String TAG = WebViewUtil.class.getSimpleName();
-
     /**
      * Must be invoked before WebView or CookieManager is invoked in the process.
      * See https://developer.android.com/about/versions/pie/android-9.0-changes-28#web-data-dirs for more info.
      */
     @SuppressLint("NewApi")
     public static void setDataDirectorySuffix(@NonNull final Context context) {
-        final String methodTag = TAG + ":setDataDirectorySuffix";
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             try {
                 if (ProcessUtil.isRunningOnAuthService(context)) {
                     WebView.setDataDirectorySuffix(AuthServiceProcess);
                 }
             } catch (final IllegalStateException e) {
-                Logger.warn(methodTag, "WebView is already initialized. IllegalStateException is expected when setDataDirectorySuffix() is invoked");
+                // Do nothing.
             }
         }
     }
