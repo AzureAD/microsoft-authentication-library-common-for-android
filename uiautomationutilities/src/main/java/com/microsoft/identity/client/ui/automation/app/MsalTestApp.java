@@ -147,7 +147,7 @@ public class MsalTestApp extends App {
         authScheme.click();
     }
 
-    // select from Config File dropdown
+    // Select configuration to be used from dropdown.
     public void selectFromConfigFile(@NonNull final String text) throws UiObjectNotFoundException {
         final UiObject configFileSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/configFile");
         configFileSpinner.click();
