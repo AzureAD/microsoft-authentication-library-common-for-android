@@ -196,7 +196,6 @@ public class AndroidKeyStoreUtil {
     public static synchronized KeyPair readKey(@NonNull final String keyAlias)
             throws ClientException {
         final String methodTag = TAG + ":readKeyPair";
-        Logger.verbose(methodTag, "Reading Key from KeyStore");
 
         final Exception exception;
         final String errCode;
@@ -224,7 +223,6 @@ public class AndroidKeyStoreUtil {
                 return null;
             }
 
-            Logger.verbose(methodTag, "Key read from KeyStore");
             return new KeyPair(cert.getPublicKey(), (PrivateKey) privateKey);
         } catch (final RuntimeException e) {
             // There is an issue in android keystore that resets keystore
