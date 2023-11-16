@@ -38,6 +38,8 @@ if (project.hasProperty("distCommon4jVersion") && project.distCommon4jVersion !=
 
 boolean newBrokerDiscoveryEnabledFlag = project.hasProperty("newBrokerDiscoveryEnabledFlag")
 
+boolean trustDebugBrokerFlag = project.hasProperty("trustDebugBrokerFlag")
+
 android {
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
@@ -56,6 +58,7 @@ android {
                 "kk", "ko", "lt", "lv", "ms", "nb", "nl", "pl", "pt-rBR", "pt-rPT", "ro",
                 "ru", "sk", "sl", "sr", "sv", "th", "tr", "uk", "vi", "zh-rCN", "zh-rTW"
         buildConfigField("boolean", "newBrokerDiscoveryEnabledFlag", "$newBrokerDiscoveryEnabledFlag")
+        buildConfigField("boolean", "trustDebugBrokerFlag", "$trustDebugBrokerFlag")
     }
 
     buildTypes {
