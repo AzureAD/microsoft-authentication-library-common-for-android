@@ -32,6 +32,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerAccountManagerOperation;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider.API;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
+import com.microsoft.identity.common.internal.util.BundleUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import lombok.Getter;
@@ -41,6 +42,8 @@ import static com.microsoft.identity.common.exception.BrokerCommunicationExcepti
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT;
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.CONTENT_PROVIDER;
 import static com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater.KEY_REQUEST_ACTIVE_BROKER_DATA;
+
+import java.io.Serializable;
 
 
 public class BrokerOperationBundle {
@@ -97,24 +100,9 @@ public class BrokerOperationBundle {
                                  @Nullable final Bundle bundle) {
         this.operation = operation;
         this.targetBrokerAppPackageName = targetBrokerAppPackageName;
-        this.bundle = deepCopy(bundle);
+        this.bundle = BundleUtil.deepCopy(bundle);
         this.bundle.putBoolean(KEY_REQUEST_ACTIVE_BROKER_DATA, true);
         Logger.info(TAG, "Requested Active Broker Data");
-    }
-
-    // To be replaced by bundle.deepCopy() (requires API 26)
-    @NonNull
-    Bundle deepCopy(@Nullable final Bundle source) {
-        final Bundle bundle = new Bundle();
-        if (source == null){
-            return bundle;
-        }
-
-        for (final String key : source.keySet()) {
-            bundle.putSerializable(key, source.getSerializable(key));
-        }
-
-        return bundle;
     }
 
     /**
