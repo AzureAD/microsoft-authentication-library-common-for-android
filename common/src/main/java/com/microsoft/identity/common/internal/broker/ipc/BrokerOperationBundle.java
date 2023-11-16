@@ -23,6 +23,11 @@
 
 package com.microsoft.identity.common.internal.broker.ipc;
 
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.CONTENT_PROVIDER;
+import static com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater.KEY_REQUEST_ACTIVE_BROKER_DATA;
+
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -36,11 +41,6 @@ import com.microsoft.identity.common.logging.Logger;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
-
-import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE;
-import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT;
-import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.CONTENT_PROVIDER;
-import static com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater.KEY_REQUEST_ACTIVE_BROKER_DATA;
 
 
 public class BrokerOperationBundle {
@@ -97,11 +97,10 @@ public class BrokerOperationBundle {
                                  @Nullable final Bundle bundle) {
         this.operation = operation;
         this.targetBrokerAppPackageName = targetBrokerAppPackageName;
-        this.bundle = bundle != null ? bundle : new Bundle();
+        this.bundle = bundle == null ? new Bundle() : new Bundle(bundle);
         this.bundle.putBoolean(KEY_REQUEST_ACTIVE_BROKER_DATA, true);
         Logger.info(TAG, "Requested Active Broker Data");
     }
-
 
     /**
      * Packs the response bundle with the account manager key.
