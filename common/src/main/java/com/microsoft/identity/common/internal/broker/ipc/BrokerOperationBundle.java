@@ -97,11 +97,25 @@ public class BrokerOperationBundle {
                                  @Nullable final Bundle bundle) {
         this.operation = operation;
         this.targetBrokerAppPackageName = targetBrokerAppPackageName;
-        this.bundle = bundle != null ? bundle : new Bundle();
+        this.bundle = deepCopy(bundle);
         this.bundle.putBoolean(KEY_REQUEST_ACTIVE_BROKER_DATA, true);
         Logger.info(TAG, "Requested Active Broker Data");
     }
 
+    // To be replaced by bundle.deepCopy() (requires API 26)
+    @NonNull
+    Bundle deepCopy(@Nullable final Bundle source) {
+        final Bundle bundle = new Bundle();
+        if (source == null){
+            return bundle;
+        }
+
+        for (final String key : source.keySet()) {
+            bundle.putSerializable(key, source.getSerializable(key));
+        }
+
+        return bundle;
+    }
 
     /**
      * Packs the response bundle with the account manager key.
