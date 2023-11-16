@@ -59,7 +59,7 @@ data class SignUpContinueApiResponse(
     @Expose @SerializedName("unverified_attributes") val unverifiedAttributes: List<Map<String, String>>?,
     @Expose @SerializedName("invalid_attributes") val invalidAttributes: List<Map<String, String>>?,
     @Expose @SerializedName("required_attributes") val requiredAttributes: List<UserAttributeApiResult>?,
-    @Expose @SerializedName("details") val details: List<Map<String, String>>?
+    @SerializedName("details") val details: List<Map<String, String>>?
 ) : IApiResponse(statusCode) {
 
     companion object {

@@ -40,14 +40,14 @@ import java.net.HttpURLConnection
 data class SignUpChallengeApiResponse(
     @Expose override var statusCode: Int,
     @SerializedName("challenge_type") val challengeType: String?,
-    @SerializedName("binding_method") val bindingMethod: String?,
-    @SerializedName("interval") val interval: Int?,
+    @Expose @SerializedName("binding_method") val bindingMethod: String?,
+    @Expose @SerializedName("interval") val interval: Int?,
     @SerializedName("challenge_target_label") val challengeTargetLabel: String?,
     @Expose @SerializedName("challenge_channel") val challengeChannel: String?,
     @SerializedName("signup_token") val signupToken: String?,
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
-    @Expose @SerializedName("details") val details: List<Map<String, String>>?,
+    @SerializedName("details") val details: List<Map<String, String>>?,
     @Expose @SerializedName("code_length") val codeLength: Int?
 ) : IApiResponse(statusCode) {
 

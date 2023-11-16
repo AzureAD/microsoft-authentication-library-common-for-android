@@ -359,14 +359,16 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         try {
             val oAuth2Strategy = createOAuth2Strategy(parameters)
 
-            val usePassword = parameters is SignUpStartUsingPasswordCommandParameters
+            val signUpStartApiResult = if (parameters is SignUpStartUsingPasswordCommandParameters) {
 
-            val signUpStartApiResult = if (usePassword) {
+                Logger.verbose(TAG, "Parameters is of type SignUpStartUsingPasswordCommandParameters");
                 performSignUpStartUsingPasswordRequest(
                     oAuth2Strategy = oAuth2Strategy,
                     parameters = (parameters as SignUpStartUsingPasswordCommandParameters)
                 )
             } else {
+
+                Logger.verbose(TAG, "Parameters is of type SignUpStartCommandParameters");
                 performSignUpStartRequest(
                     oAuth2Strategy = oAuth2Strategy,
                     parameters = (parameters as SignUpStartCommandParameters)
@@ -1084,7 +1086,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             is SignUpContinueApiResult.InvalidAttributes, is SignUpContinueApiResult.UnknownError -> {
                 Logger.warn(
                     TAG,
-                    "Expire token result: $this"
+                    "Error in signup continue result: $this"
                 )
                 this as ApiErrorResult
                 INativeAuthCommandResult.UnknownError(

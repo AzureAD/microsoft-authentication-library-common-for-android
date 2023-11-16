@@ -54,7 +54,7 @@ data class SignUpStartApiResponse(
     @SerializedName("signup_token") val signupToken: String?,
     @Expose @SerializedName("unverified_attributes") val unverifiedAttributes: List<Map<String, String>>?,
     @Expose @SerializedName("invalid_attributes") val invalidAttributes: List<Map<String, String>>?,
-    @Expose @SerializedName("details") val details: List<Map<String, String>>?,
+    @SerializedName("details") val details: List<Map<String, String>>?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
     @Expose @SerializedName("error_codes") val errorCodes: List<Int>?
 ) : IApiResponse(statusCode) {
