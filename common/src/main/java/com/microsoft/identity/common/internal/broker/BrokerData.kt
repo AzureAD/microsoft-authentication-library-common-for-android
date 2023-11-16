@@ -34,9 +34,14 @@ import java.util.Collections
  * @param packageName                   Package name of the app.
  * @param signingCertificateThumbprint  signing certificate thumbprint (SHA-512) of the app.
  *                                      This value is unique per signing key.
+ * @param nickName                      Nickname of this [BrokerData] object.
+ *                                      If set, this will be printed when toString() is invoked.
  */
 data class BrokerData(val packageName : String,
-                      val signingCertificateThumbprint : String) {
+                      val signingCertificateThumbprint : String,
+                      private val nickName: String?) {
+    constructor(packageName: String, signingCertificateThumbprint: String):
+                this(packageName, signingCertificateThumbprint, null)
 
     override fun equals(other: Any?): Boolean {
         if (other !is BrokerData){
@@ -55,6 +60,10 @@ data class BrokerData(val packageName : String,
     }
 
     override fun toString(): String {
+        if (!nickName.isNullOrEmpty()) {
+            return nickName
+        }
+
         return "$packageName::$signingCertificateThumbprint"
     }
 
@@ -65,7 +74,7 @@ data class BrokerData(val packageName : String,
          * Determines if the debug brokers should be trusted or not.
          * This should only be set to true only during testing.
          */
-        private var sShouldTrustDebugBrokers = BuildConfig.DEBUG
+        private var sShouldTrustDebugBrokers = BuildConfig.DEBUG || BuildConfig.trustDebugBrokerFlag
 
         @JvmStatic
         fun setShouldTrustDebugBrokers(value: Boolean) {
@@ -84,55 +93,71 @@ data class BrokerData(val packageName : String,
         @JvmStatic
         val debugMicrosoftAuthenticator = BrokerData(
             AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
-            AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE_SHA512
+            AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE_SHA512,
+            "debugMicrosoftAuthenticator"
         )
 
         @JvmStatic
         val prodMicrosoftAuthenticator = BrokerData(
             AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
-            AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE_SHA512
+            AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE_SHA512,
+            "prodMicrosoftAuthenticator"
+        )
+
+        @JvmStatic
+        val debugCompanyPortal = BrokerData(
+            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
+            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_DEBUG_SIGNATURE_SHA512,
+            "debugCompanyPortal"
         )
 
         @JvmStatic
         val prodCompanyPortal = BrokerData(
             AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
-            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512
+            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512,
+            "prodCompanyPortal"
         )
 
         @JvmStatic
         val debugBrokerHost = BrokerData(
             AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME,
-            AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE_SHA512
+            AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE_SHA512,
+            "debugBrokerHost"
         )
 
         @JvmStatic
         val debugMockCp = BrokerData(
             AuthenticationConstants.Broker.MOCK_CP_PACKAGE_NAME,
-            AuthenticationConstants.Broker.MOCK_CP_SIGNATURE_SHA512
+            AuthenticationConstants.Broker.MOCK_CP_SIGNATURE_SHA512,
+            "debugMockCp"
         )
 
         @JvmStatic
         val debugMockAuthApp = BrokerData(
             AuthenticationConstants.Broker.MOCK_AUTH_APP_PACKAGE_NAME,
-            AuthenticationConstants.Broker.MOCK_AUTH_APP_SIGNATURE_SHA512
+            AuthenticationConstants.Broker.MOCK_AUTH_APP_SIGNATURE_SHA512,
+            "debugMockAuthApp"
         )
 
         @JvmStatic
         val debugMockLtw = BrokerData(
             AuthenticationConstants.Broker.MOCK_LTW_PACKAGE_NAME,
-            AuthenticationConstants.Broker.MOCK_LTW_SIGNATURE_SHA512
+            AuthenticationConstants.Broker.MOCK_LTW_SIGNATURE_SHA512,
+            "debugMockLtw"
         )
 
         @JvmStatic
         val prodLTW = BrokerData(
             AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME,
-            AuthenticationConstants.Broker.LTW_APP_SHA512_RELEASE_SIGNATURE
+            AuthenticationConstants.Broker.LTW_APP_SHA512_RELEASE_SIGNATURE,
+            "prodLTW"
         )
 
         @JvmStatic
         val debugLTW = BrokerData(
             AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME,
-            AuthenticationConstants.Broker.LTW_APP_SHA512_DEBUG_SIGNATURE
+            AuthenticationConstants.Broker.LTW_APP_SHA512_DEBUG_SIGNATURE,
+            "debugLTW"
         )
 
         @JvmStatic
@@ -153,6 +178,7 @@ data class BrokerData(val packageName : String,
                 init {
                     add(debugMicrosoftAuthenticator)
                     add(debugLTW)
+                    add(debugCompanyPortal)
                     add(debugBrokerHost)
                     add(debugMockCp)
                     add(debugMockAuthApp)

@@ -68,7 +68,6 @@ public class HttpCache {
         boolean success = false;
 
         if (HttpResponseCache.getInstalled() != null){
-            Logger.verbose(methodTag, "Cache is already initialized");
             return true;
         }
 

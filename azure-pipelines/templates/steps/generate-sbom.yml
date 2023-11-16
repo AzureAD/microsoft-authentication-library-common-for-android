@@ -24,14 +24,21 @@ steps:
     useDefaultDetectors: false
     detectorsToRun: 'Maven'
     verbosity: 'Verbose'
-    sourceScanPath: $(Build.SourcesDirectory)/${{ parameters.project }}/gradle
+    sourceScanPath: $(Build.SourcesDirectory)/${{ parameters.project }}
     alertWarningLevel: 'High'
 - task: ManifestGeneratorTask@0
   displayName: 'Generate SBOM manifest file'
   inputs:
     BuildDropPath: ${{ parameters.buildDropPath }}
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: '$(Build.SourcesDirectory)/${{ parameters.project }}'
+    Contents: '**/*.lockfile'
+    TargetFolder: '$(Build.SourcesDirectory)/${{ parameters.project }}/dependencies'
+    OverWrite: true
+    flattenFolders: false
 - task: PublishPipelineArtifact@1
   displayName: 'Publish Artifact: dependencies lockfile'
   inputs:
-    targetPath: $(Build.SourcesDirectory)/${{ parameters.project }}/gradle/dependency-locks
+    targetPath: $(Build.SourcesDirectory)/${{ parameters.project }}/dependencies
     ArtifactName: ${{ parameters.artifactName }}
