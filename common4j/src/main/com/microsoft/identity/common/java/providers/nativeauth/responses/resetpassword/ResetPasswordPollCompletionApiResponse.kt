@@ -45,12 +45,12 @@ import java.net.HttpURLConnection
 class ResetPasswordPollCompletionApiResponse(
     @Expose override var statusCode: Int,
     @Expose @SerializedName("status") val status: String?,
-    @Expose @SerializedName("signin_slt") val signinSlt: String?,
+    @SerializedName("signin_slt") val signinSlt: String?,
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
     @Expose @SerializedName("error_uri") val errorUri: String?,
-    @Expose @SerializedName("details") val details: List<Map<String, String>>?,
-    @Expose @SerializedName("inner_errors") val innerErrors: List<InnerError>?
+    @SerializedName("details") val details: List<Map<String, String>>?,
+    @SerializedName("inner_errors") val innerErrors: List<InnerError>?
 ): IApiResponse(statusCode) {
 
     companion object {

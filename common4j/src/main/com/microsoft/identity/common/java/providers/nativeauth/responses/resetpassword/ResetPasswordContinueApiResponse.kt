@@ -38,15 +38,15 @@ import java.net.HttpURLConnection
  */
 class ResetPasswordContinueApiResponse(
     @Expose override var statusCode: Int,
-    @Expose @SerializedName("password_reset_token") val passwordResetToken: String?,
-    @Expose @SerializedName("password_submit_token") val passwordSubmitToken: String?,
-    @Expose @SerializedName("challenge_type") val challengeType: String?,
+    @SerializedName("password_reset_token") val passwordResetToken: String?,
+    @SerializedName("password_submit_token") val passwordSubmitToken: String?,
+    @SerializedName("challenge_type") val challengeType: String?,
     @Expose @SerializedName("expires_in") val expiresIn: Int?,
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
     @Expose @SerializedName("error_uri") val errorUri: String?,
-    @Expose @SerializedName("details") val details: List<Map<String, String>>?,
-    @Expose @SerializedName("inner_errors") val innerErrors: List<InnerError>?
+    @SerializedName("details") val details: List<Map<String, String>>?,
+    @SerializedName("inner_errors") val innerErrors: List<InnerError>?
 ): IApiResponse(statusCode) {
 
     companion object {
