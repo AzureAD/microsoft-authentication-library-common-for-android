@@ -25,11 +25,13 @@ package com.microsoft.identity.common.internal.fido
 import android.webkit.WebView
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler
 import com.microsoft.identity.common.java.constants.FidoConstants
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility
 import com.microsoft.identity.common.java.opentelemetry.SpanName
 import com.microsoft.identity.common.logging.Logger
+import io.opentelemetry.api.trace.SpanContext
 import io.opentelemetry.api.trace.StatusCode
 import kotlinx.coroutines.launch
 
@@ -41,20 +43,23 @@ class PasskeyFidoChallengeHandler
  * Creates a PasskeyFidoChallengeHandler instance.
  * @param fidoManager IFidoManager instance.
  * @param webView Current WebView.
+ * @param spanContext Current spanContext, if present.
  * @param lifecycleOwner instance to get coroutine scope from.
  */(
     private val fidoManager: IFidoManager,
-    webView: WebView,
-    private val lifecycleOwner: LifecycleOwner?,
-) : AbstractFidoChallengeHandler(webView) {
+    private val webView: WebView,
+    private val spanContext : SpanContext?,
+    private val lifecycleOwner: LifecycleOwner?
+) : IChallengeHandler<IFidoChallenge, Void> {
     val TAG = PasskeyFidoChallengeHandler::class.simpleName.toString()
-    val span = OTelUtility.createSpan(SpanName.Fido.name)
+    val span = if (spanContext != null) {
+        OTelUtility.createSpanFromParent(SpanName.Fido.name, spanContext)
+    } else {
+        OTelUtility.createSpan(SpanName.Fido.name)
+    }
 
     override fun processChallenge(fidoChallenge: IFidoChallenge): Void? {
         val methodTag = "$TAG:processChallenge"
-        span.setAttribute(
-            AttributeName.fido_challenge_handler.name,
-            TAG);
         span.setAttribute(
             AttributeName.fido_challenge.name,
             fidoChallenge::class.simpleName.toString());

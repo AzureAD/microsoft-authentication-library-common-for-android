@@ -90,7 +90,7 @@ class FidoChallengeFactory {
          * @throws ClientException if the parameter is null or empty.
          */
         @Throws(ClientException::class)
-        internal fun validateRequiredParameter(field: String, value: String?): String {
+        fun validateRequiredParameter(field: String, value: String?): String {
             if (value == null) {
                 throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field not provided")
             } else if (value.isBlank()) {
@@ -122,7 +122,7 @@ class FidoChallengeFactory {
          * @throws ClientException if the parameter is empty
          */
         @Throws(ClientException::class)
-        internal fun validateOptionalListParameter(field: String, value: String?): List<String>? {
+        fun validateOptionalListParameter(field: String, value: String?): List<String>? {
             val param = validateOptionalParameter(field, value)
             if (param != null) {
                 return param.split(DELIMITER).toList()
@@ -139,7 +139,7 @@ class FidoChallengeFactory {
          * @throws ClientException if the parameter is empty
          */
         @Throws(ClientException::class)
-        internal fun validateParameterOrReturnDefault(field: String, value: String?, defaultValue: String): String {
+        fun validateParameterOrReturnDefault(field: String, value: String?, defaultValue: String): String {
             if (value == null) {
                 return defaultValue
             } else if (value.isBlank()) {
