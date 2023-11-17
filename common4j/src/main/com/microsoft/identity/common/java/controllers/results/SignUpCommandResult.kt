@@ -39,6 +39,10 @@ sealed interface SignUpStartCommandResult: INativeAuthCommandResult
  * @see com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpContinueApiResult
  */
 interface SignUpCommandResult {
+
+    /**
+     * There exists an account for the given username, so signup request cannot proceed.
+     */
     data class UsernameAlreadyExists(
         val error: String,
         val errorDescription: String,
@@ -46,6 +50,9 @@ interface SignUpCommandResult {
     ) : SignUpStartCommandResult, SignUpSubmitCodeCommandResult,
         SignUpSubmitUserAttributesCommandResult, SignUpSubmitPasswordCommandResult
 
+    /**
+     * Denotes completion of Signup operation
+     */
     data class Complete (
         val signInSLT: String?,
         val expiresIn: Int?
@@ -53,6 +60,9 @@ interface SignUpCommandResult {
         SignUpSubmitCodeCommandResult, SignUpSubmitPasswordCommandResult,
         SignUpSubmitUserAttributesCommandResult
 
+    /**
+     * Signup is at a state where the user has to provide an out of band code to progress in the flow.
+     */
     data class CodeRequired(
         val signupToken: String,
         val challengeTargetLabel: String,
@@ -61,11 +71,19 @@ interface SignUpCommandResult {
     ) : SignUpStartCommandResult,
         SignUpResendCodeCommandResult
 
+
+    /**
+     * Signup operation requires user to supply a password to progress in the flow.
+     */
     data class PasswordRequired(
         val signupToken: String
     ) : SignUpStartCommandResult,
         SignUpSubmitCodeCommandResult
 
+    /**
+     * Signup operation requires user to supply attributes to progress in the flow. The parameter
+     * requiredAttributes contains the list of required attributes
+     */
     data class AttributesRequired(
         val signupToken: String,
         val error: String,
@@ -76,24 +94,38 @@ interface SignUpCommandResult {
         SignUpSubmitUserAttributesCommandResult,
         SignUpSubmitCodeCommandResult
 
+    /**
+     * The signup operation cannot progress as the provided email address is invalid.
+     */
     data class InvalidEmail(
         val error: String,
         val errorDescription: String,
         val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId  //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
     ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult
 
+    /**
+     * The signup operation cannot progress as the provided password is not acceptable
+     */
     data class InvalidPassword(
         val error: String,
         val errorDescription: String,
         val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId  //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
     ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult
 
+
+    /**
+     * The signup operation cannot progress as the provided out of band code is invalid.
+     */
     data class InvalidCode(
         val error: String,
         val errorDescription: String,
         val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId  //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
     ) : SignUpSubmitCodeCommandResult
 
+    /**
+     * The signup operation cannot progress as the provided attributes are not valid. Some user
+     * attributes can be validated at the server and if the validation fails then this error is returned.
+     */
     data class InvalidAttributes(
         val error: String,
         val errorDescription: String,
@@ -101,6 +133,9 @@ interface SignUpCommandResult {
         val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId  //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
     ) : SignUpStartCommandResult, SignUpSubmitUserAttributesCommandResult
 
+    /**
+     * Signup operation has failed as the server does not support requested authentication mechanism
+     */
     data class AuthNotSupported(
         val error: String,
         val errorDescription: String,

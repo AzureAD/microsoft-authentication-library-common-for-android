@@ -29,7 +29,9 @@ import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 
 /**
- * Command class to call controllers to resend otp code request in the sign up flow.
+ * Command class to call controllers to resend otp code request in the sign up flow. The resend
+ * code functionality is used when the user has not received the out of band code. In this case,
+ * resend functionality allows them to request the same code instead of starting the flow from beginning.
  * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
  */
 class SignUpResendCodeCommand(

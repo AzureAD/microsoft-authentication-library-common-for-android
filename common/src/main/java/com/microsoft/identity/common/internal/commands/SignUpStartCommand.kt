@@ -29,7 +29,7 @@ import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 
 /**
- * Command class to call controllers to resend otp code request in the sign up flow.
+ * Command class to call controllers to start the sign up flow.
  * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
  */
 class SignUpStartCommand(

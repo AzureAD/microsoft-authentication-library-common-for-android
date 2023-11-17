@@ -26,6 +26,7 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
 import com.microsoft.identity.common.java.util.isAttributeValidationFailed
 import com.microsoft.identity.common.java.util.isAuthNotSupported
 import com.microsoft.identity.common.java.util.isInvalidClient
@@ -95,7 +96,7 @@ data class SignUpStartApiResponse(
                             errorDescription = errorDescription.orEmpty(),
                             invalidAttributes = invalidAttributes?.toAttributeList()
                                 ?: return SignUpStartApiResult.UnknownError(
-                                    error = "invalid_state",
+                                    error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /start did not return a invalid_attributes with validation_failed error",
                                     details = details
                                 )
@@ -118,7 +119,7 @@ data class SignUpStartApiResponse(
                         SignUpStartApiResult.VerificationRequired(
                             signupToken = signupToken
                                 ?: return SignUpStartApiResult.UnknownError(
-                                    error = "invalid_state",
+                                    error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /start did not return a flow token with verification_required error",
                                     details = details
                                 ),
@@ -126,7 +127,7 @@ data class SignUpStartApiResponse(
                             errorDescription = errorDescription.orEmpty(),
                             unverifiedAttributes = unverifiedAttributes
                                 ?: return SignUpStartApiResult.UnknownError(
-                                    error = "invalid_state",
+                                    error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /start did not return a unverified_attributes with verification_required error",
                                     details = details
                                 )

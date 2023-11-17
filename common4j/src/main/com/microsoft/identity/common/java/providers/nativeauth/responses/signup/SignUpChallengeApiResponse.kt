@@ -26,6 +26,7 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
 import com.microsoft.identity.common.java.util.isExpiredToken
 import com.microsoft.identity.common.java.util.isOOB
 import com.microsoft.identity.common.java.util.isPassword
@@ -101,21 +102,21 @@ data class SignUpChallengeApiResponse(
                         return when {
                             challengeTargetLabel.isNullOrBlank() -> {
                                 SignUpChallengeApiResult.UnknownError(
-                                    error = "invalid_state",
+                                    error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /challenge did not return a challenge_target_label with oob challenge type",
                                     details = details
                                 )
                             }
                             challengeChannel.isNullOrBlank() -> {
                                 SignUpChallengeApiResult.UnknownError(
-                                    error = "invalid_state",
+                                    error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /challenge did not return a challenge_channel with oob challenge type",
                                     details = details
                                 )
                             }
                             codeLength == null -> {
                                 SignUpChallengeApiResult.UnknownError(
-                                    error = "invalid_state",
+                                    error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /challenge did not return a code_length with oob challenge type",
                                     details = details
                                 )
@@ -124,7 +125,7 @@ data class SignUpChallengeApiResponse(
                                 SignUpChallengeApiResult.OOBRequired(
                                     signupToken = signupToken
                                         ?: return SignUpChallengeApiResult.UnknownError(
-                                            error = "invalid_state",
+                                            error = ApiErrorResult.INVALID_STATE,
                                             errorDescription = "SignUp /challenge did not return a flow token with oob challenge type",
                                             details = details
                                         ),
@@ -139,7 +140,7 @@ data class SignUpChallengeApiResponse(
                         SignUpChallengeApiResult.PasswordRequired(
                             signupToken = signupToken
                                 ?: return SignUpChallengeApiResult.UnknownError(
-                                    error = "invalid_state",
+                                    error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /challenge did not return a flow token with password challenge type",
                                     details = details
                                 )

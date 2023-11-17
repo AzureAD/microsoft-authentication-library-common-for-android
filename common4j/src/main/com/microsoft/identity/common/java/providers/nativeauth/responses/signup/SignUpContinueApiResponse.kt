@@ -26,6 +26,7 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.UserAttributeApiResult
 import com.microsoft.identity.common.java.util.isAttributeValidationFailed
 import com.microsoft.identity.common.java.util.isAttributesRequired
@@ -93,7 +94,7 @@ data class SignUpContinueApiResponse(
                             errorDescription = errorDescription.orEmpty(),
                             invalidAttributes = invalidAttributes?.toAttributeList()
                                 ?: return SignUpContinueApiResult.UnknownError(
-                                    error = "invalid_state",
+                                    error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /continue did not return a invalid_attributes with validation_failed error",
                                     details = details
                                 )
@@ -105,7 +106,7 @@ data class SignUpContinueApiResponse(
                             errorDescription = errorDescription.orEmpty()
                         )
                     }
-                    (error.isInvalidRequest() and errorCodes?.get(0).isOtpCodeIncorrect()) ->{
+                    (error.isInvalidRequest() and errorCodes?.get(0).isOtpCodeIncorrect()) ->{ //Invalid otp code was sent
                         SignUpContinueApiResult.InvalidOOBValue(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty()
@@ -115,7 +116,7 @@ data class SignUpContinueApiResponse(
                         SignUpContinueApiResult.AttributesRequired(
                             signupToken = signupToken
                                 ?: return SignUpContinueApiResult.UnknownError(
-                                    error = "invalid_state",
+                                    error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /continue did not return a flow token with attributes_required error",
                                     details = details
                                 ),
@@ -123,7 +124,7 @@ data class SignUpContinueApiResponse(
                             errorDescription = errorDescription.orEmpty(),
                             requiredAttributes = requiredAttributes
                                 ?: return SignUpContinueApiResult.UnknownError(
-                                    error = "invalid_state",
+                                    error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /continue did not return required_attributes with attributes_required error",
                                     details = details
                                 )
@@ -133,7 +134,7 @@ data class SignUpContinueApiResponse(
                         SignUpContinueApiResult.CredentialRequired(
                             signupToken = signupToken
                                 ?: return SignUpContinueApiResult.UnknownError(
-                                    error = "invalid_state",
+                                    error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /continue did not return a flow token with credential_required",
                                     details = details
                                 ),

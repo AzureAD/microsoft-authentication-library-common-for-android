@@ -28,7 +28,9 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 /**
- * A set of Sign Up Continue command parameters for sending the continue request to proceed the sign up flow.
+ * A set of Sign Up Continue command parameters for sending the continue request to proceed the
+ * sign up flow. The continue request can be used to either submit password, out of band code or
+ * user attributes.
  * extends from {@link BaseNativeAuthCommandParameters}
  */
 @Getter

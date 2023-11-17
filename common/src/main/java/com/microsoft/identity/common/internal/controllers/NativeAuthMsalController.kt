@@ -442,11 +442,11 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         try {
             val oAuth2Strategy = createOAuth2Strategy(parameters)
 
-            val signUpContinueApiResult = performSignUpSubmitCode(
+            val signUpSubmitCodeResult = performSignUpSubmitCode(
                 oAuth2Strategy = oAuth2Strategy,
                 parameters = parameters
             )
-            return signUpContinueApiResult.toSignUpSubmitCodeCommandResult(oAuth2Strategy)
+            return signUpSubmitCodeResult.toSignUpSubmitCodeCommandResult(oAuth2Strategy)
         } catch (e: Exception) {
             Logger.error(TAG, "Exception thrown in signUpSubmitCode", e)
             throw e
