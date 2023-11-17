@@ -147,6 +147,14 @@ public class MsalTestApp extends App {
         authScheme.click();
     }
 
+    // Select configuration to be used from dropdown.
+    public void selectFromConfigFile(@NonNull final String text) throws UiObjectNotFoundException {
+        final UiObject configFileSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/configFile");
+        configFileSpinner.click();
+        final UiObject configFile = UiAutomatorUtils.obtainUiObjectWithText(text);
+        configFile.click();
+    }
+
     // click on button generateSHR
     public String generateSHR() throws UiObjectNotFoundException {
         final UiObject generateSHRButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_generate_shr");
