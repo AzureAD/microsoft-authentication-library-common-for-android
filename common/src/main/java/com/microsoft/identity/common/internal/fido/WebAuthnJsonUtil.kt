@@ -53,5 +53,14 @@ class WebAuthnJsonUtil {
             )
             return CommonMoshiJsonAdapter().toJson(options)
         }
+
+        /**
+         * Extracts the AuthenticatorAssertionResponse from the overall AuthenticationResponse string received from the authenticator.
+         * @param fullResponseJson AuthenticationResponse Json string.
+         */
+        fun extractAuthenticatorAssertionResponseJson(fullResponseJson : String): String {
+            val authResponse = CommonMoshiJsonAdapter().fromJson(fullResponseJson, AuthenticationResponse::class.java)
+            return authResponse.getResponse()
+        }
     }
 }
