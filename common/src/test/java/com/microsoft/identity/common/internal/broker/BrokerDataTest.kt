@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.broker
 
 import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.debugBrokerHost
+import com.microsoft.identity.common.internal.broker.BrokerData.Companion.debugCompanyPortal
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.debugLTW
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.debugMicrosoftAuthenticator
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.debugMockAuthApp
@@ -55,14 +56,15 @@ class BrokerDataTest {
     fun testGetValidBrokersInDebugMode() {
         setShouldTrustDebugBrokers(true)
         val brokerData: Set<BrokerData> = BrokerData.getKnownBrokerApps()
-        Assert.assertEquals(9, brokerData.size.toLong())
+        Assert.assertEquals(10, brokerData.size.toLong())
         Assert.assertTrue(brokerData.contains(debugBrokerHost))
-        Assert.assertTrue(brokerData.contains(prodCompanyPortal))
         Assert.assertTrue(brokerData.contains(debugMicrosoftAuthenticator))
         Assert.assertTrue(brokerData.contains(prodMicrosoftAuthenticator))
         Assert.assertTrue(brokerData.contains(prodLTW))
         Assert.assertTrue(brokerData.contains(debugLTW))
         Assert.assertTrue(brokerData.contains(debugMockLtw))
+        Assert.assertTrue(brokerData.contains(prodCompanyPortal))
+        Assert.assertTrue(brokerData.contains(debugCompanyPortal))
         Assert.assertTrue(brokerData.contains(debugMockCp))
         Assert.assertTrue(brokerData.contains(debugMockAuthApp))
     }

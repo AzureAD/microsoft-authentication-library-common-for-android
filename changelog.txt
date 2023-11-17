@@ -1,5 +1,6 @@
-V.Next
+V.16.2.0
 ----------
+- [PATCH] always make a copy of bundle before modifying & sending out via ipc (#2239)
 - [PATCH] Use v2.0 url for OpenID Client (#2208)
 - [MINOR] Added passkey protocol header (behind a flag) (#2181)
 - [MINOR] Fix crash during onCreate() (#2202)
