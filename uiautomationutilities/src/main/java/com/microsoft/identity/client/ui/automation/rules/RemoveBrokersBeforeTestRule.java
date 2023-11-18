@@ -25,6 +25,7 @@ package com.microsoft.identity.client.ui.automation.rules;
 import android.util.Log;
 
 import com.microsoft.identity.client.ui.automation.app.App;
+import com.microsoft.identity.client.ui.automation.broker.BrokerLTW;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
@@ -51,7 +52,7 @@ public class RemoveBrokersBeforeTestRule implements TestRule {
                 final List<ITestBroker> testBrokers = CommonUtils.getAllPossibleTestBrokers();
 
                 for (final ITestBroker broker : testBrokers) {
-                    if (broker.isInstalled()) {
+                    if (broker.isInstalled() && !(broker instanceof BrokerLTW)) {
                         Logger.i(TAG, "Detected pre-installed broker: " + ((App) broker).getAppName());
                         Logger.i(TAG, "Uninstalling broker: " + ((App) broker).getAppName());
                         broker.uninstall();

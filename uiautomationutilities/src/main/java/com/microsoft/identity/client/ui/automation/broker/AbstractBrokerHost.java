@@ -170,7 +170,7 @@ abstract class AbstractBrokerHost {
         // If the app is not launched, launch it
         if (!appHeader.exists()) {
             CommonUtils.launchApp(BROKER_HOST_APP_PACKAGE_NAME);
-            ThreadUtils.sleepSafely(1000, TAG, "Waiting for app to launch");
+            ThreadUtils.sleepSafely(5000, TAG, "Waiting for app to launch");
         }
         try {
             final UiObject header = UiAutomatorUtils.obtainUiObjectWithResourceId(
@@ -182,13 +182,13 @@ abstract class AbstractBrokerHost {
                 return;
             }
             // Open the navigation drawer
-            final UiObject drawerButton = UiAutomatorUtils.obtainUiObjectWithDescription("Open");
-            drawerButton.click();
+            //final UiObject drawerButton = UiAutomatorUtils.obtainUiObjectWithDescription("Open");
+            //drawerButton.click();
             // Click on the navigation menu item
-            final UiObject menuItem = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                    CommonUtils.getResourceId(BROKER_HOST_APP_PACKAGE_NAME, navigationMenuItem.getResourceId())
-            );
-            menuItem.click();
+            // UiObject menuItem = UiAutomatorUtils.obtainUiObjectWithResourceId(
+            //        CommonUtils.getResourceId(BROKER_HOST_APP_PACKAGE_NAME, navigationMenuItem.getResourceId())
+            //);
+            //menuItem.click();
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }

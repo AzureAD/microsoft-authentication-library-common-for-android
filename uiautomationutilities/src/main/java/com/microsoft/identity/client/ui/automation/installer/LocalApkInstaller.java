@@ -33,6 +33,8 @@ import java.io.IOException;
 
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
+import android.util.Log;
+
 public class LocalApkInstaller implements IAppInstaller {
 
     // Files would be picked up from here (by Default) so they should be pushed to this folder on the device
@@ -52,6 +54,7 @@ public class LocalApkInstaller implements IAppInstaller {
     public void installApp(@NonNull final String apkFileName) {
         final String fullPath = LOCAL_APK_PATH_PREFIX + apkFileName;
         // using -t flag to also allow installation of test only packages
+        Log.i("Pedro", "installApp: " + fullPath);
         AdbShellUtils.installPackage(fullPath, "-t");
     }
 

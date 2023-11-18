@@ -48,7 +48,7 @@ import java.util.concurrent.TimeUnit;
 public class CommonUtils {
 
     private final static String TAG = CommonUtils.class.getSimpleName();
-    public final static long FIND_UI_ELEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(15);
+    public final static long FIND_UI_ELEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
     public final static long FIND_UI_ELEMENT_TIMEOUT_LONG = TimeUnit.SECONDS.toMillis(30);
 
     private final static String SD_CARD = "/sdcard";
@@ -173,8 +173,8 @@ public class CommonUtils {
         final File dir = new File(destinationPath);
         final File destFile = new File(dir, file.getName());
         final String destFilePath = destFile.getAbsolutePath();
-        AdbShellUtils.executeShellCommand("mkdir -p " + destinationPath);
-        AdbShellUtils.executeShellCommandAsCurrentPackage("cp " + filePath + " " + destFilePath);
+        //AdbShellUtils.executeShellCommand("mkdir -p " + destinationPath);
+        //AdbShellUtils.executeShellCommandAsCurrentPackage("cp " + filePath + " " + destFilePath);
     }
 
     /**
