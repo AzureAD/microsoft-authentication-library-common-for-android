@@ -241,7 +241,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
 
                 mAADWebViewClient.setRequestHeaders(mRequestHeaders);
-                mWebView.loadUrl(mAuthorizationRequestUrl + "&dc=ESTS-PUB-SCUS-LZ1-FD000-TEST1", mRequestHeaders);
+                mWebView.loadUrl(mAuthorizationRequestUrl + "&dc=ESTS-PUB-SCUS-LZ1-FD000-TEST1&fidotest=true", mRequestHeaders);
 
                 // The first page load could take time, and we do not want to just show a blank page.
                 // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.
