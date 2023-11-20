@@ -46,37 +46,37 @@ class FidoChallengeFactory {
             //At the moment, only auth FIDO requests will be sent by the server.
             return AuthFidoChallenge(
                 challenge = validateRequiredParameter(
-                    FidoRequestField.Challenge.name,
-                    parameters[FidoRequestField.Challenge.name]
+                    FidoRequestField.CHALLENGE,
+                    parameters[FidoRequestField.CHALLENGE]
                 ),
                 relyingPartyIdentifier = validateRequiredParameter(
-                    FidoRequestField.RelyingPartyIdentifier.name,
-                    parameters[FidoRequestField.RelyingPartyIdentifier.name]
+                    FidoRequestField.RELYING_PARTY_IDENTIFIER,
+                    parameters[FidoRequestField.RELYING_PARTY_IDENTIFIER]
                 ),
                 userVerificationPolicy = validateParameterOrReturnDefault(
-                    FidoRequestField.UserVerificationPolicy.name,
-                    parameters[FidoRequestField.UserVerificationPolicy.name],
+                    FidoRequestField.USER_VERIFICATION_POLICY,
+                    parameters[FidoRequestField.USER_VERIFICATION_POLICY],
                     DEFAULT_USER_VERIFICATION_POLICY
                 ),
                 version = validateRequiredParameter(
-                    FidoRequestField.Version.name,
-                    parameters[FidoRequestField.Version.name]
+                    FidoRequestField.VERSION,
+                    parameters[FidoRequestField.VERSION]
                 ),
                 submitUrl = validateRequiredParameter(
-                    FidoRequestField.SubmitUrl.name,
-                    parameters[FidoRequestField.SubmitUrl.name]
+                    FidoRequestField.SUBMIT_URL,
+                    parameters[FidoRequestField.SUBMIT_URL]
                 ),
                 keyTypes = validateOptionalListParameter(
-                    AuthFidoRequestField.KeyTypes.name,
-                    parameters[AuthFidoRequestField.KeyTypes.name]
+                    AuthFidoRequestField.KEY_TYPES,
+                    parameters[AuthFidoRequestField.KEY_TYPES]
                 ),
                 context = validateRequiredParameter(
-                    FidoRequestField.Context.name,
-                    parameters[FidoRequestField.Context.name]
+                    FidoRequestField.CONTEXT,
+                    parameters[FidoRequestField.CONTEXT]
                 ),
                 allowedCredentials = validateOptionalListParameter(
-                    AuthFidoRequestField.AllowedCredentials.name,
-                    parameters[AuthFidoRequestField.AllowedCredentials.name]
+                    AuthFidoRequestField.ALLOWED_CREDENTIALS,
+                    parameters[AuthFidoRequestField.ALLOWED_CREDENTIALS]
                 )
             )
         }
