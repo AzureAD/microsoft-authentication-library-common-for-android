@@ -32,7 +32,6 @@ class FidoChallengeFactory {
     companion object {
         const val DELIMITER = ","
         const val DEFAULT_USER_VERIFICATION_POLICY = "required"
-        private const val PASSKEY_PROTOCOL_REQUEST_INVALID = "Passkey protocol request is invalid"
 
         /**
          * Creates a FidoChallenge from a WebView passkey redirect url.
@@ -89,12 +88,13 @@ class FidoChallengeFactory {
          * @return validated parameter value
          * @throws ClientException if the parameter is null or empty.
          */
+        @JvmStatic
         @Throws(ClientException::class)
         fun validateRequiredParameter(field: String, value: String?): String {
             if (value == null) {
-                throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field not provided")
+                throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "$field not provided")
             } else if (value.isBlank()) {
-                throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field is empty")
+                throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "$field is empty")
             }
             return value
         }
@@ -106,10 +106,11 @@ class FidoChallengeFactory {
          * @return validated parameter value, or null if not provided.
          * @throws ClientException if the parameter is empty.
          */
+        @JvmStatic
         @Throws(ClientException::class)
         internal fun validateOptionalParameter(field: String, value: String?): String? {
             if (value != null && value.isBlank()) {
-                throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field is empty")
+                throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "$field is empty")
             }
             return value
         }
@@ -121,6 +122,7 @@ class FidoChallengeFactory {
          * @return validated parameter value, or null if not provided.
          * @throws ClientException if the parameter is empty
          */
+        @JvmStatic
         @Throws(ClientException::class)
         fun validateOptionalListParameter(field: String, value: String?): List<String>? {
             val param = validateOptionalParameter(field, value)
@@ -138,12 +140,13 @@ class FidoChallengeFactory {
          * @return validated parameter value, or default value if initial value is null.
          * @throws ClientException if the parameter is empty
          */
+        @JvmStatic
         @Throws(ClientException::class)
         fun validateParameterOrReturnDefault(field: String, value: String?, defaultValue: String): String {
             if (value == null) {
                 return defaultValue
             } else if (value.isBlank()) {
-                throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field is empty")
+                throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "$field is empty")
             }
             return value
         }

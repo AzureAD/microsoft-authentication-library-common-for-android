@@ -59,8 +59,10 @@ class WebAuthnJsonUtil {
          * @param fullResponseJson AuthenticationResponse Json string.
          */
         fun extractAuthenticatorAssertionResponseJson(fullResponseJson : String): String {
-            val authResponse = CommonMoshiJsonAdapter().fromJson(fullResponseJson, AuthenticationResponse::class.java)
-            return authResponse.getResponse()
+            val moshiAdapter = CommonMoshiJsonAdapter()
+            val authResponse = moshiAdapter.fromJson(fullResponseJson, AuthenticationResponse::class.java)
+            val authAssertionResponse = authResponse.response
+            return moshiAdapter.toJson(authAssertionResponse)
         }
     }
 }

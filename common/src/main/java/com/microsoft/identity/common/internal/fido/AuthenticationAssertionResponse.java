@@ -27,44 +27,41 @@ import androidx.annotation.Nullable;
 
 import com.squareup.moshi.Json;
 
-import lombok.Getter;
-
 /**
- * Representation of WebAuthn's AuthenticationResponseJson.
- * https://w3c.github.io/webauthn/#dictdef-authenticationresponsejson
+ * Representation of WebAuthn's AuthenticatorAssertionResponseJSON.
+ * https://w3c.github.io/webauthn/#dictdef-authenticatorassertionresponsejson
  */
+public class AuthenticationAssertionResponse {
 
-public class AuthenticationResponse {
+    @Json(name = "clientDataJSON")
+    public final String clientDataJSON;
+
+    @Json(name = "authenticatorData")
+    public final String authenticatorData;
+
+    @Json(name = "signature")
+    public final String signature;
+
+    @Json(name = "userHandle")
+    public final String userHandle;
 
     @Json(name = "id")
     public final String id;
 
-    @Json(name = "rawId")
-    public final String rawId;
+    @Json(name = "attestationObject")
+    public final String attestationObject;
 
-    @Json(name = "response")
-    public final AuthenticationAssertionResponse response;
-
-    @Json(name = "authenticatorAttachment")
-    public final String authenticatorAttachment;
-
-    @Json(name = "clientExtensionResults")
-    public final String clientExtensionResults;
-
-    @Json(name = "type")
-    public final String type;
-
-    public AuthenticationResponse(@NonNull final String id,
-                                  @NonNull final String rawId,
-                                  @NonNull final AuthenticationAssertionResponse response,
-                                  @Nullable final String authenticatorAttachment,
-                                  @NonNull final String clientExtensionResults,
-                                  @NonNull final String type) {
+    public AuthenticationAssertionResponse(@NonNull final String clientDataJSON,
+                                           @NonNull final String authenticatorData,
+                                           @NonNull final String signature,
+                                           @NonNull final String userHandle,
+                                           @NonNull final String id,
+                                           @Nullable final String attestationObject) {
+        this.clientDataJSON = clientDataJSON;
+        this.authenticatorData = authenticatorData;
+        this.signature = signature;
+        this.userHandle = userHandle;
         this.id = id;
-        this.rawId = rawId;
-        this.response = response;
-        this.authenticatorAttachment = authenticatorAttachment;
-        this.clientExtensionResults = clientExtensionResults;
-        this.type = type;
+        this.attestationObject = attestationObject;
     }
 }

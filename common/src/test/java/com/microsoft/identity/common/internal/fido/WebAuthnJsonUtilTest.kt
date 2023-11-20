@@ -46,17 +46,24 @@ class WebAuthnJsonUtilTest {
     //Demo values from Google's Credential Manager docs, or made up.
     val id = "KEDetxZcUfinhVi6Za5nZQ"
     val rawId = "KEDetxZcUfinhVi6Za5nZQ"
-    val response = """{
-    "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiVDF4Q3NueE0yRE5MMktkSzVDTGE2Zk1oRDdPQnFobzZzeXpJbmtfbi1VbyIsIm9yaWdpbiI6ImFuZHJvaWQ6YXBrLWtleS1oYXNoOk1MTHpEdll4UTRFS1R3QzZVNlpWVnJGUXRIOEdjVi0xZDQ0NEZLOUh2YUkiLCJhbmRyb2lkUGFja2FnZU5hbWUiOiJjb20uZ29vZ2xlLmNyZWRlbnRpYWxtYW5hZ2VyLnNhbXBsZSJ9",
-    "authenticatorData": "j5r_fLFhV-qdmGEwiukwD5E_5ama9g0hzXgN8thcFGQdAAAAAA",
-    "signature": "MEUCIQCO1Cm4SA2xiG5FdKDHCJorueiS04wCsqHhiRDbbgITYAIgMKMFirgC2SSFmxrh7z9PzUqr0bK1HZ6Zn8vZVhETnyQ",
-    "userHandle": "2HzoHm_hY0CjuEESY9tY6-3SdjmNHOoNqaPDcZGzsr0"
-  }"""
     val authenticatorAttachment = "cross-platform"
     val clientExtensionResults = "{}"
     val type = "public-key"
 
-    val demoAuthenticationResponseJsonAllFieldsFilled = ""
+    //AuthenticationAssertionResponse values
+    val clientDataJSON = "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiVDF4Q3NueE0yRE5MMktkSzVDTGE2Zk1oRDdPQnFobzZzeXpJbmtfbi1VbyIsIm9yaWdpbiI6ImFuZHJvaWQ6YXBrLWtleS1oYXNoOk1MTHpEdll4UTRFS1R3QzZVNlpWVnJGUXRIOEdjVi0xZDQ0NEZLOUh2YUkiLCJhbmRyb2lkUGFja2FnZU5hbWUiOiJjb20uZ29vZ2xlLmNyZWRlbnRpYWxtYW5hZ2VyLnNhbXBsZSJ9"
+    val authenticatorData = "j5r_fLFhV-qdmGEwiukwD5E_5ama9g0hzXgN8thcFGQdAAAAAA"
+    val signature = "MEUCIQCO1Cm4SA2xiG5FdKDHCJorueiS04wCsqHhiRDbbgITYAIgMKMFirgC2SSFmxrh7z9PzUqr0bK1HZ6Zn8vZVhETnyQ"
+    val userHandle = "2HzoHm_hY0CjuEESY9tY6-3SdjmNHOoNqaPDcZGzsr0"
+    val idAssertionResponse = "4efdd417-d6a7-4deb-a999-24bf98df7290"
+    val attestationObject = "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUj5r_fLFhV-qdmGEwiukwD5E_5ama9g0hzXgN8thcFGRdAAAAAAAAAAAAAAAAAAAAAAAAAAAAEChA3rcWXFH4p4VYumWuZ2WlAQIDJiABIVgg4RqZaJyaC24Pf4tT-8ONIZ5_Elddf3dNotGOx81jj3siWCAWXS6Lz70hvC2g8hwoLllOwlsbYatNkO2uYFO-eJID6A"
+    //Note that Moshi will omit serializing fields whose values are null (for example, attestationObject is nullable, and it will be omitted if null)
+    val expectedAuthenticationAssertionResponseJsonAllFieldsFilled = """{"attestationObject":"$attestationObject","authenticatorData":"$authenticatorData","clientDataJSON":"$clientDataJSON","id":"$idAssertionResponse","signature":"$signature","userHandle":"$userHandle"}"""
+    val expectedAuthenticationAssertionResponseOnlyRequiredFields = """{"authenticatorData":"$authenticatorData","clientDataJSON":"$clientDataJSON","id":"$idAssertionResponse","signature":"$signature","userHandle":"$userHandle"}"""
+
+    val demoAuthenticationResponseJsonAllFieldsFilled = """{"authenticatorAttachment":"$authenticatorAttachment","clientExtensionResults":"$clientExtensionResults","id":"KEDetxZcUfinhVi6Za5nZQ","rawId":"KEDetxZcUfinhVi6Za5nZQ","response":{"attestationObject":"$attestationObject","authenticatorData":"$authenticatorData","clientDataJSON":"$clientDataJSON","id":"$idAssertionResponse","signature":"$signature","userHandle":"$userHandle"},"type":"public-key"}"""
+    val demoAuthenticationResponseJsonOnlyRequiredFields = """{"clientExtensionResults":"$clientExtensionResults","id":"KEDetxZcUfinhVi6Za5nZQ","rawId":"KEDetxZcUfinhVi6Za5nZQ","response":{"attestationObject":null,"authenticatorData":"$authenticatorData","clientDataJSON":"$clientDataJSON","id":"$idAssertionResponse","signature":"$signature","userHandle":"$userHandle"},"type":"public-key"}"""
+    val demoAuthenticationResponseJsonMissingRequiredField = """{"clientExtensionResults":"$clientExtensionResults","id":"KEDetxZcUfinhVi6Za5nZQ","rawId":"KEDetxZcUfinhVi6Za5nZQ","response":{"attestationObject":null,"authenticatorData":"$authenticatorData","clientDataJSON":"$clientDataJSON","id":"$idAssertionResponse","userHandle":"$userHandle"},"type":"public-key"}"""
 
     @Test
     fun testCreateJsonAuthRequestFromChallengeObject_AllFieldsFilled() {
@@ -95,24 +102,21 @@ class WebAuthnJsonUtilTest {
 
     @Test
     fun testExtractAuthenticatorAssertionResponseJson_AllFieldsFilled() {
-        val expectedAuthenticationResponse = AuthenticationResponse(
-            id,
-            rawId,
-            response,
-            authenticatorAttachment,
-            clientExtensionResults,
-            type
-        )
-        val result = WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson()
+        val result = WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(demoAuthenticationResponseJsonAllFieldsFilled)
+        assertEquals(expectedAuthenticationAssertionResponseJsonAllFieldsFilled, result)
     }
 
     @Test
     fun testExtractAuthenticatorAssertionResponseJson_OnlyRequiredFields() {
-
+        val result = WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(demoAuthenticationResponseJsonOnlyRequiredFields)
+        assertEquals(expectedAuthenticationAssertionResponseOnlyRequiredFields, result)
     }
 
     @Test
-    fun testExtractAuthenticatorAssertionResponseJson_MissingRequiredFields() {
-
+    fun testExtractAuthenticatorAssertionResponseJson_MissingRequiredField() {
+        val result = WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(demoAuthenticationResponseJsonMissingRequiredField)
+        // This test should pass if an exception is not thrown.
+        // In such a case, we should not close the WebView or crash, but let ESTS determine the issue and respond with an invalid Fido assertion error.
+        // Then we can debug from the correlation id/timestamp, vs clogging up the broker logs.
     }
 }
