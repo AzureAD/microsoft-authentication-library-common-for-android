@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
-import com.squareup.moshi.Moshi
+import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter
 
 /**
  * A utility class to help convert to and from strings in WebAuthn json format.
@@ -45,16 +45,24 @@ class WebAuthnJsonUtil {
                     )
                 }
             }
-            val jsonAdapter = Moshi.Builder()
-                .build()
-                .adapter(PublicKeyCredentialRequestOptions::class.java)
             val options = PublicKeyCredentialRequestOptions(
                 challengeObject.challenge,
                 challengeObject.relyingPartyIdentifier,
                 publicKeyCredentialDescriptorList,
                 challengeObject.userVerificationPolicy
             )
-            return jsonAdapter.toJson(options)
+            return CommonMoshiJsonAdapter().toJson(options)
+        }
+
+        /**
+         * Extracts the AuthenticatorAssertionResponse from the overall AuthenticationResponse string received from the authenticator.
+         * @param fullResponseJson AuthenticationResponse Json string.
+         */
+        fun extractAuthenticatorAssertionResponseJson(fullResponseJson : String): String {
+            val moshiAdapter = CommonMoshiJsonAdapter()
+            val authResponse = moshiAdapter.fromJson(fullResponseJson, AuthenticationResponse::class.java)
+            val authAssertionResponse = authResponse.response
+            return moshiAdapter.toJson(authAssertionResponse)
         }
     }
 }

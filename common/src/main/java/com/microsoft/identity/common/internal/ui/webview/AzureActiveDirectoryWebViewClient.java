@@ -37,15 +37,17 @@ import android.webkit.WebView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.lifecycle.ViewTreeLifecycleOwner;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
-import com.microsoft.identity.common.internal.fido.AbstractFidoChallengeHandler;
+import com.microsoft.identity.common.internal.fido.CredManFidoManager;
 import com.microsoft.identity.common.internal.fido.FidoChallengeFactory;
-import com.microsoft.identity.common.internal.fido.FidoChallengeHandlerFactory;
-import com.microsoft.identity.common.internal.fido.FidoManagerFactory;
+import com.microsoft.identity.common.internal.fido.FidoRequestField;
 import com.microsoft.identity.common.internal.fido.IFidoChallenge;
+import com.microsoft.identity.common.internal.fido.PasskeyFidoChallengeHandler;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
@@ -59,6 +61,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.UrlUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URISyntaxException;
@@ -72,6 +75,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
+
+import io.opentelemetry.api.trace.SpanContext;
 
 /**
  * For web view client, we do not distinguish V1 from V2.
@@ -169,12 +174,34 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
             } else if (isPasskeyUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for passkey protocol.");
-                final IFidoChallenge challenge = FidoChallengeFactory.createFidoChallengeFromRedirect(url);
-                final AbstractFidoChallengeHandler challengeHandler = FidoChallengeHandlerFactory.createFidoChallengeHandler(
-                        FidoManagerFactory.createFidoManager(view.getContext()),
-                        view
-                );
-                challengeHandler.processChallenge(challenge);
+                final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity)getActivity()).getSpanContext() : null;
+                final PasskeyFidoChallengeHandler challengeHandler = new PasskeyFidoChallengeHandler(
+                        new CredManFidoManager(view.getContext()),
+                        view,
+                        spanContext,
+                        ViewTreeLifecycleOwner.get(view));
+                try {
+                    final IFidoChallenge challenge = FidoChallengeFactory.createFidoChallengeFromRedirect(formattedURL);
+                    challengeHandler.processChallenge(challenge);
+                } catch (final ClientException e) {
+                    // Server wants to know if there's an incorrect query string parameter field/name sent by them,
+                    // so we need to validate and get submitUrl and context first in order to send those related exceptions to them.
+                    // If the submitUrl or context field themselves are incorrect... another ClientException will be thrown and the WebView will close.
+                    final Map<String, String> parameters = UrlUtil.getParameters(formattedURL);
+                    final String submitUrl = FidoChallengeFactory.validateRequiredParameter(
+                            FidoRequestField.SUBMIT_URL,
+                            parameters.get(FidoRequestField.SUBMIT_URL)
+                    );
+                    final String context = FidoChallengeFactory.validateRequiredParameter(
+                            FidoRequestField.CONTEXT,
+                            parameters.get(FidoRequestField.CONTEXT)
+                    );
+                    challengeHandler.respondToChallenge(
+                            submitUrl,
+                            e.getMessage(),
+                            context
+                    );
+                }
             } else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
                 processRedirectUrl(view, url);

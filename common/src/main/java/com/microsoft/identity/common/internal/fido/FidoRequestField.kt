@@ -25,11 +25,13 @@ package com.microsoft.identity.common.internal.fido
 /**
  * Represents FIDO request fields shared among registration and authentication requests.
  */
-enum class FidoRequestField {
-    challenge,
-    relyingPartyIdentifier,
-    userVerificationPolicy,
-    version,
-    submitUrl,
-    context
+class FidoRequestField {
+    companion object {
+        const val CHALLENGE = "challenge"
+        const val RELYING_PARTY_IDENTIFIER = "relyingpartyidentifier"
+        const val USER_VERIFICATION_POLICY = "userverificationpolicy"
+        const val VERSION = "version"
+        const val SUBMIT_URL = "submiturl"
+        const val CONTEXT = "context"
+    }
 }

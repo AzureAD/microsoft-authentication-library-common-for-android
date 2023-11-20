@@ -33,7 +33,6 @@ class FidoChallengeFactory {
     companion object {
         const val DELIMITER = ","
         const val DEFAULT_USER_VERIFICATION_POLICY = "required"
-        private const val PASSKEY_PROTOCOL_REQUEST_INVALID = "Passkey protocol request is invalid"
 
         /**
          * Creates a FidoChallenge from a WebView passkey redirect url.
@@ -48,37 +47,37 @@ class FidoChallengeFactory {
             //At the moment, only auth FIDO requests will be sent by the server.
             return AuthFidoChallenge(
                 challenge = validateRequiredParameter(
-                    FidoRequestField.challenge.name,
-                    parameters[FidoRequestField.challenge.name]
+                    FidoRequestField.CHALLENGE,
+                    parameters[FidoRequestField.CHALLENGE]
                 ),
                 relyingPartyIdentifier = validateRequiredParameter(
-                    FidoRequestField.relyingPartyIdentifier.name,
-                    parameters[FidoRequestField.relyingPartyIdentifier.name]
+                    FidoRequestField.RELYING_PARTY_IDENTIFIER,
+                    parameters[FidoRequestField.RELYING_PARTY_IDENTIFIER]
                 ),
                 userVerificationPolicy = validateParameterOrReturnDefault(
-                    FidoRequestField.userVerificationPolicy.name,
-                    parameters[FidoRequestField.userVerificationPolicy.name],
+                    FidoRequestField.USER_VERIFICATION_POLICY,
+                    parameters[FidoRequestField.USER_VERIFICATION_POLICY],
                     DEFAULT_USER_VERIFICATION_POLICY
                 ),
                 version = validateRequiredParameter(
-                    FidoRequestField.version.name,
-                    parameters[FidoRequestField.version.name]
+                    FidoRequestField.VERSION,
+                    parameters[FidoRequestField.VERSION]
                 ),
                 submitUrl = validateRequiredParameter(
-                    FidoRequestField.submitUrl.name,
-                    parameters[FidoRequestField.submitUrl.name]
+                    FidoRequestField.SUBMIT_URL,
+                    parameters[FidoRequestField.SUBMIT_URL]
                 ),
                 keyTypes = validateOptionalListParameter(
-                    AuthFidoRequestField.KeyTypes.name,
-                    parameters[AuthFidoRequestField.KeyTypes.name]
+                    AuthFidoRequestField.KEY_TYPES,
+                    parameters[AuthFidoRequestField.KEY_TYPES]
                 ),
                 context = validateRequiredParameter(
-                    FidoRequestField.context.name,
-                    parameters[FidoRequestField.context.name]
+                    FidoRequestField.CONTEXT,
+                    parameters[FidoRequestField.CONTEXT]
                 ),
                 allowedCredentials = validateOptionalListParameter(
-                    AuthFidoRequestField.AllowedCredentials.name,
-                    parameters[AuthFidoRequestField.AllowedCredentials.name]
+                    AuthFidoRequestField.ALLOWED_CREDENTIALS,
+                    parameters[AuthFidoRequestField.ALLOWED_CREDENTIALS]
                 )
             )
         }
@@ -90,14 +89,15 @@ class FidoChallengeFactory {
          * @return validated parameter value
          * @throws ClientException if the parameter is null or empty.
          */
+        @JvmStatic
         @Throws(ClientException::class)
-        internal fun validateRequiredParameter(field: String, value: String?): String {
+        fun validateRequiredParameter(field: String, value: String?): String {
             if (value == null) {
-                throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field not provided")
+                throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "$field not provided")
             } else if (value.isBlank()) {
-                throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field is empty")
+                throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "$field is empty")
             }
-            if (field == FidoRequestField.relyingPartyIdentifier.name) {
+            if (field == FidoRequestField.RELYING_PARTY_IDENTIFIER) {
                 return URL(value).host
             }
             return value
@@ -110,10 +110,11 @@ class FidoChallengeFactory {
          * @return validated parameter value, or null if not provided.
          * @throws ClientException if the parameter is empty.
          */
+        @JvmStatic
         @Throws(ClientException::class)
         internal fun validateOptionalParameter(field: String, value: String?): String? {
             if (value != null && value.isBlank()) {
-                throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field is empty")
+                throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "$field is empty")
             }
             return value
         }
@@ -125,8 +126,9 @@ class FidoChallengeFactory {
          * @return validated parameter value, or null if not provided.
          * @throws ClientException if the parameter is empty
          */
+        @JvmStatic
         @Throws(ClientException::class)
-        internal fun validateOptionalListParameter(field: String, value: String?): List<String>? {
+        fun validateOptionalListParameter(field: String, value: String?): List<String>? {
             val param = validateOptionalParameter(field, value)
             if (param != null) {
                 return param.split(DELIMITER).toList()
@@ -142,12 +144,13 @@ class FidoChallengeFactory {
          * @return validated parameter value, or default value if initial value is null.
          * @throws ClientException if the parameter is empty
          */
+        @JvmStatic
         @Throws(ClientException::class)
-        internal fun validateParameterOrReturnDefault(field: String, value: String?, defaultValue: String): String {
+        fun validateParameterOrReturnDefault(field: String, value: String?, defaultValue: String): String {
             if (value == null) {
                 return defaultValue
             } else if (value.isBlank()) {
-                throw ClientException(PASSKEY_PROTOCOL_REQUEST_INVALID, "$field is empty")
+                throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "$field is empty")
             }
             return value
         }

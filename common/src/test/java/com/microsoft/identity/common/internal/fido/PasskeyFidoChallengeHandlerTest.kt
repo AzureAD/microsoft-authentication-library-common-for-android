@@ -48,16 +48,15 @@ class PasskeyFidoChallengeHandlerTest {
     val testFidoManager = TestFidoManager()
     val testLifecycleOwner = TestLifecycleOwner()
     lateinit var webView : ExtendedTestWebView
-    lateinit var testFidoTelemetryHelper : TestFidoTelemetryHelper
     lateinit var passkeyFidoChallengeHandler: PasskeyFidoChallengeHandler
 
     @Before
     fun setUp() {
         webView = ExtendedTestWebView()
-        testFidoTelemetryHelper = TestFidoTelemetryHelper()
         passkeyFidoChallengeHandler = PasskeyFidoChallengeHandler(
             fidoManager = testFidoManager,
             webView = webView,
+            spanContext = null,
             lifecycleOwner = testLifecycleOwner
         )
     }
@@ -78,8 +77,6 @@ class PasskeyFidoChallengeHandlerTest {
         ))
         assertTrue(webView.urlLoaded)
         assertTrue(webView.isRegularAssertion())
-        assertTrue(testFidoTelemetryHelper.successFlag)
-        assertFalse(testFidoTelemetryHelper.failureFlag)
     }
 
     //Note that a cancellation by the user also results in an exception thrown by the API.
@@ -99,8 +96,6 @@ class PasskeyFidoChallengeHandlerTest {
             ))
         assertTrue(webView.urlLoaded)
         assertFalse(webView.isRegularAssertion())
-        assertFalse(testFidoTelemetryHelper.successFlag)
-        assertTrue(testFidoTelemetryHelper.failureFlag)
     }
 
     //Passing a null lifecycleOwner will end the operation before any calls can be made from the manager.
@@ -109,6 +104,7 @@ class PasskeyFidoChallengeHandlerTest {
         passkeyFidoChallengeHandler = PasskeyFidoChallengeHandler(
             fidoManager = testFidoManager,
             webView = webView,
+            spanContext = null,
             lifecycleOwner = null
         )
         assertFalse(webView.urlLoaded)
@@ -125,8 +121,6 @@ class PasskeyFidoChallengeHandlerTest {
             ))
         assertTrue(webView.urlLoaded)
         assertFalse(webView.isRegularAssertion())
-        assertFalse(testFidoTelemetryHelper.successFlag)
-        assertTrue(testFidoTelemetryHelper.failureFlag)
     }
 
     @Test
