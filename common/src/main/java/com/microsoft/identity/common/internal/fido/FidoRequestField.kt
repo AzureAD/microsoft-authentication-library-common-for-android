@@ -28,10 +28,10 @@ package com.microsoft.identity.common.internal.fido
 class FidoRequestField {
     companion object {
         const val CHALLENGE = "challenge"
-        const val RELYING_PARTY_IDENTIFIER = "relyingPartyIdentifier"
-        const val USER_VERIFICATION_POLICY = "userVerificationPolicy"
+        const val RELYING_PARTY_IDENTIFIER = "relyingpartyidentifier"
+        const val USER_VERIFICATION_POLICY = "userverificationpolicy"
         const val VERSION = "version"
-        const val SUBMIT_URL = "submitUrl"
+        const val SUBMIT_URL = "submiturl"
         const val CONTEXT = "context"
     }
 }

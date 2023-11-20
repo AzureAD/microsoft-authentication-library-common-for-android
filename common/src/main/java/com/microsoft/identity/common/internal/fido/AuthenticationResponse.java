@@ -27,6 +27,8 @@ import androidx.annotation.Nullable;
 
 import com.squareup.moshi.Json;
 
+import java.util.Map;
+
 import lombok.Getter;
 
 /**
@@ -49,7 +51,7 @@ public class AuthenticationResponse {
     public final String authenticatorAttachment;
 
     @Json(name = "clientExtensionResults")
-    public final String clientExtensionResults;
+    public final Map<String,String> clientExtensionResults;
 
     @Json(name = "type")
     public final String type;
@@ -58,7 +60,7 @@ public class AuthenticationResponse {
                                   @NonNull final String rawId,
                                   @NonNull final AuthenticationAssertionResponse response,
                                   @Nullable final String authenticatorAttachment,
-                                  @NonNull final String clientExtensionResults,
+                                  @NonNull final Map<String,String> clientExtensionResults,
                                   @NonNull final String type) {
         this.id = id;
         this.rawId = rawId;

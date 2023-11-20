@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.fido
 
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.util.UrlUtil
+import java.net.URL
 
 /**
  * Instantiates FidoChallenge objects.
@@ -95,6 +96,9 @@ class FidoChallengeFactory {
                 throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "$field not provided")
             } else if (value.isBlank()) {
                 throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "$field is empty")
+            }
+            if (field == FidoRequestField.RELYING_PARTY_IDENTIFIER) {
+                return URL(value).host
             }
             return value
         }

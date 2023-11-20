@@ -9,6 +9,7 @@ V.Next
 - [PATCH] Passing span context to AuthorizationActivity (#2209)
 - [MINOR] Bumping Moshi versions; force setting Okio version (#2210)
 - [PATCH] Fix to generate new Asymmetric Key (#2222)
+- [MINOR] PasskeyFidoChallengeHandler and other passkey changes (#2146)
 
 V.16.1.1
 ----------
