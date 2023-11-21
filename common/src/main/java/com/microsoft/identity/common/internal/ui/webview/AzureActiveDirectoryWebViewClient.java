@@ -171,7 +171,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url);
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
-            } else if (FidoConstants.IS_PASSKEY_SUPPORT_READY && isPasskeyUrl(url)) {
+            } else if (FidoConstants.IS_PASSKEY_SUPPORT_READY && isPasskeyUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for passkey protocol.");
                 final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity)getActivity()).getSpanContext() : null;
                 final PasskeyFidoChallengeHandler challengeHandler = new PasskeyFidoChallengeHandler(
@@ -186,7 +186,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     // Server wants to know if there's an incorrect query string parameter field/name sent by them,
                     // so we need to validate and get submitUrl and context first in order to send those related exceptions to them.
                     // If the submitUrl or context field themselves are incorrect... another ClientException will be thrown and the WebView will close.
-                    final Map<String, String> parameters = UrlUtil.getParameters(formattedURL);
+                    final Map<String, String> parameters = UrlUtil.getParameters(url);
                     final String submitUrl = FidoChallengeFactory.validateRequiredParameter(
                             FidoRequestField.SUBMIT_URL,
                             parameters.get(FidoRequestField.SUBMIT_URL)
