@@ -127,14 +127,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mAuthorizationRequestUrl = state.getString(REQUEST_URL);
         mRedirectUri = state.getString(REDIRECT_URI);
         mRequestHeaders = getRequestHeaders(state);
-        // In cases of WebView as an auth agent, we want to always add the passkey protocol header.
-        // (Not going to add passkey protocol header until full feature is ready.)
-        if (FidoConstants.IS_PASSKEY_SUPPORT_READY) {
-            if (mRequestHeaders == null) {
-                mRequestHeaders = new HashMap<>();
-            }
-            mRequestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_VALUE);
-        }
         mPostPageLoadedJavascript = state.getString(POST_PAGE_LOADED_URL);
         webViewZoomEnabled = state.getBoolean(WEB_VIEW_ZOOM_ENABLED, true);
         webViewZoomControlsEnabled = state.getBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
@@ -281,7 +273,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             // Suppressing unchecked warnings due to casting of serializable String to HashMap<String, String>
             @SuppressWarnings(WarningType.unchecked_warning)
             HashMap<String, String> requestHeaders = (HashMap<String, String>) state.getSerializable(REQUEST_HEADERS);
-
+            // In cases of WebView as an auth agent, we want to always add the passkey protocol header.
+            // (Not going to add passkey protocol header until full feature is ready.)
+            if (FidoConstants.IS_PASSKEY_SUPPORT_READY) {
+                if (requestHeaders == null) {
+                    requestHeaders = new HashMap<>();
+                }
+                requestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_VALUE);
+            }
             return requestHeaders;
         } catch (Exception e) {
             return null;
