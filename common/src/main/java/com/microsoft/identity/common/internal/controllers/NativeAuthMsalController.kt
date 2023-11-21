@@ -877,6 +877,11 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         return oAuth2Strategy.performSignUpSubmitUserAttributes(commandParameters = parameters)
     }
 
+    /**
+     * When the call to /signup/challenge is made from the function processing the result of
+     * submit attributes call, the result is converted to [SignUpSubmitUserAttributesCommandResult]
+     * object to match the return type of the calling function.
+     */
     private fun SignUpChallengeApiResult.toSignUpSubmitUserAttrsCommandResult(): SignUpSubmitUserAttributesCommandResult {
         return when (this) {
             SignUpChallengeApiResult.Redirect -> {
@@ -899,6 +904,11 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         }
     }
 
+    /**
+     * When the call to /signup/challenge is made from the function processing the result of
+     * signup call, the result is converted to [SignUpStartCommandResult] object to
+     * match the return type of the calling function.
+     */
     private fun SignUpChallengeApiResult.toSignUpStartCommandResult(): SignUpStartCommandResult {
         return when (this) {
             is SignUpChallengeApiResult.OOBRequired -> {
@@ -933,6 +943,10 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         }
     }
 
+    /**
+     * Signup continue API is used to submit the oob code. This method converts the result of the API
+     * to a more concrete object of type SignUpSubmitCodeCommandResult.
+     */
     private fun SignUpContinueApiResult.toSignUpSubmitCodeCommandResult(
         oAuth2Strategy: NativeAuthOAuth2Strategy
     ): SignUpSubmitCodeCommandResult {
