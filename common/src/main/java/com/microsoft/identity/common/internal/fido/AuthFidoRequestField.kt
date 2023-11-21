@@ -27,7 +27,7 @@ package com.microsoft.identity.common.internal.fido
  */
 class AuthFidoRequestField {
     companion object {
-        const val ALLOWED_CREDENTIALS = "allowedcredentials"
-        const val KEY_TYPES = "keytypes"
+        const val ALLOWED_CREDENTIALS = "allowedCredentials"
+        const val KEY_TYPES = "keyTypes"
     }
 }
