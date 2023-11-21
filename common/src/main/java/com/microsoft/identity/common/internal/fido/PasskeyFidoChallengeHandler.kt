@@ -34,6 +34,7 @@ import com.microsoft.identity.common.logging.Logger
 import io.opentelemetry.api.trace.SpanContext
 import io.opentelemetry.api.trace.StatusCode
 import kotlinx.coroutines.launch
+import java.util.*
 
 /**
  * Handles a FidoChallenge by either creating or authenticating with a passkey.
