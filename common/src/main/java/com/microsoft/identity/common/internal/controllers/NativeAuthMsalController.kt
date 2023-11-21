@@ -877,6 +877,28 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         return oAuth2Strategy.performSignUpSubmitUserAttributes(commandParameters = parameters)
     }
 
+    private fun SignUpChallengeApiResult.toSignUpSubmitUserAttrsCommandResult(): SignUpSubmitUserAttributesCommandResult {
+        return when (this) {
+            SignUpChallengeApiResult.Redirect -> {
+                INativeAuthCommandResult.Redirect()
+            }
+            is SignUpChallengeApiResult.ExpiredToken, is SignUpChallengeApiResult.UnsupportedChallengeType,
+            is SignUpChallengeApiResult.OOBRequired, is SignUpChallengeApiResult.PasswordRequired,
+            is SignUpChallengeApiResult.UnknownError -> {
+                Logger.warn(
+                    TAG,
+                    "Unexpected result: $this"
+                )
+                this as ApiErrorResult
+                INativeAuthCommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription,
+                    details = this.details
+                )
+            }
+        }
+    }
+
     private fun SignUpChallengeApiResult.toSignUpStartCommandResult(): SignUpStartCommandResult {
         return when (this) {
             is SignUpChallengeApiResult.OOBRequired -> {
@@ -951,7 +973,6 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     signupToken = this.signupToken
                 ).toSignUpStartCommandResult() as SignUpSubmitCodeCommandResult
             }
-
             is SignUpContinueApiResult.InvalidOOBValue -> {
                 SignUpCommandResult.InvalidCode(
                     error = this.error,
@@ -1014,7 +1035,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 return performSignUpChallengeCall(
                     oAuth2Strategy = oAuth2Strategy,
                     signupToken = this.signupToken
-                ).toSignUpStartCommandResult() as SignUpSubmitUserAttributesCommandResult // TODO can we find something more graceful than a runtime cast?
+                ).toSignUpSubmitUserAttrsCommandResult()
             }
             is SignUpContinueApiResult.Redirect -> {
                 INativeAuthCommandResult.Redirect()
