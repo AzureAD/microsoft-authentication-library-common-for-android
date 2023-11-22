@@ -29,7 +29,16 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErro
  * including a case for unexpected errors received from the server.
  */
 sealed interface SignUpStartApiResult {
+
+    /**
+     * The response from Signup Start is to redirect to a browser based authentication.
+     */
     object Redirect : SignUpStartApiResult
+
+
+    /**
+     * The next step in the Signup process is account verification.
+     */
     data class VerificationRequired(
         val signupToken: String,
         override val error: String,
@@ -40,6 +49,9 @@ sealed interface SignUpStartApiResult {
         errorDescription = errorDescription,
     ), SignUpStartApiResult
 
+    /**
+     * The Sign Up Start request failed as the password failed server side validation.
+     */
     data class InvalidPassword(
         override val error: String,
         override val errorDescription: String
@@ -48,6 +60,10 @@ sealed interface SignUpStartApiResult {
         errorDescription = errorDescription,
     ), SignUpStartApiResult
 
+    /**
+     * The user attributes sent as part of Signup Start request failed
+     * validation on server.
+     */
     data class InvalidAttributes(
         override val error: String,
         override val errorDescription: String,
@@ -57,6 +73,10 @@ sealed interface SignUpStartApiResult {
         errorDescription = errorDescription,
     ), SignUpStartApiResult
 
+
+    /**
+     * The Signup Start API request failed due to an unknown error.
+     */
     data class UnknownError(
         override val error: String,
         override val errorDescription: String,
@@ -66,6 +86,10 @@ sealed interface SignUpStartApiResult {
         errorDescription = errorDescription,
     ), SignUpStartApiResult
 
+    /**
+     * The server does not support the challenge types presented by client as part of
+     * Signup start request.
+     */
     data class UnsupportedChallengeType(
         override val error: String,
         override val errorDescription: String
@@ -74,6 +98,9 @@ sealed interface SignUpStartApiResult {
         errorDescription = errorDescription,
     ), SignUpStartApiResult
 
+    /**
+     * Signup start operation was started for a username that already has an account.
+     */
     data class UsernameAlreadyExists(
         override val error: String,
         override val errorDescription: String
@@ -82,6 +109,9 @@ sealed interface SignUpStartApiResult {
         errorDescription = errorDescription,
     ), SignUpStartApiResult
 
+    /**
+     * Signup start operation was started for a malformed email address.
+     */
     data class InvalidEmail(
         override val error: String,
         override val errorDescription: String
@@ -90,6 +120,9 @@ sealed interface SignUpStartApiResult {
         errorDescription = errorDescription,
     ), SignUpStartApiResult
 
+    /**
+     * Signup start operation has failed as the server does not support requested authentication mechanism
+     */
     data class AuthNotSupported(
         override val error: String,
         override val errorDescription: String,

@@ -30,13 +30,23 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.UserAtt
  * including a case for unexpected errors received from the server.
  */
 sealed interface SignUpContinueApiResult {
+
+    /**
+     * The response from Signup Continue is to redirect to a browser based authentication.
+     */
     object Redirect : SignUpContinueApiResult
 
+    /**
+     * Signup operation has successfully completed.
+     */
     data class Success(
         val signInSLT: String?,
         val expiresIn: Int?
     ) : SignUpContinueApiResult
 
+    /**
+     * Signup operation requires user attributes to continue further.
+     */
     data class AttributesRequired(
         val signupToken: String,
         override val error: String,
@@ -47,6 +57,9 @@ sealed interface SignUpContinueApiResult {
         errorDescription = errorDescription,
     ), SignUpContinueApiResult
 
+    /**
+     * Signup operation requires user credentials to continue further.
+     */
     data class CredentialRequired(
         val signupToken: String,
         override val error: String,
@@ -56,6 +69,9 @@ sealed interface SignUpContinueApiResult {
         errorDescription = errorDescription,
     ), SignUpContinueApiResult
 
+    /**
+     * Signup continue request was issues with an expired token.
+     */
     data class ExpiredToken(
         override val error: String,
         override val errorDescription: String
@@ -64,6 +80,9 @@ sealed interface SignUpContinueApiResult {
         errorDescription = errorDescription,
     ), SignUpContinueApiResult
 
+    /**
+     * Signup operation was started for a username that already has an account.
+     */
     data class UsernameAlreadyExists(
         override val error: String,
         override val errorDescription: String,
@@ -72,6 +91,9 @@ sealed interface SignUpContinueApiResult {
         errorDescription = errorDescription,
     ), SignUpContinueApiResult
 
+    /**
+     * The OOB value sent as part of Signup continue request was incorrect.
+     */
     data class InvalidOOBValue(
         override val error: String,
         override val errorDescription: String,
@@ -80,6 +102,10 @@ sealed interface SignUpContinueApiResult {
         errorDescription = errorDescription,
     ), SignUpContinueApiResult
 
+    /**
+     * The user attributes sent as part of Signup Continue request failed
+     * validation on server.
+     */
     data class InvalidAttributes(
         override val error: String,
         override val errorDescription: String,
@@ -89,6 +115,9 @@ sealed interface SignUpContinueApiResult {
         errorDescription = errorDescription,
     ), SignUpContinueApiResult
 
+    /**
+     * The Signup Continue API request failed due to an unknown error.
+     */
     data class UnknownError(
         override val error: String,
         override val errorDescription: String,
@@ -98,6 +127,9 @@ sealed interface SignUpContinueApiResult {
         errorDescription = errorDescription,
     ), SignUpContinueApiResult
 
+    /**
+     * The Sign Up continue request failed as the password failed server side validation.
+     */
     data class InvalidPassword(
         override val error: String,
         override val errorDescription: String,

@@ -45,8 +45,8 @@ import java.net.HttpURLConnection
 class NativeAuthResponseHandler {
 
     companion object {
-        const val DEFAULT_ERROR = "unknown_error"
-        const val DEFAULT_ERROR_DESCRIPTION = "No error description received"
+        const val EMPTY_RESPONSE_ERROR = "empty_response_error"
+        const val EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION = "API response body is empty"
     }
 
     private val TAG = NativeAuthResponseHandler::class.java.simpleName
@@ -66,8 +66,8 @@ class NativeAuthResponseHandler {
         val result = if (response.body.isNullOrBlank()) {
             SignUpStartApiResponse(
                 response.statusCode,
-                DEFAULT_ERROR,
-                DEFAULT_ERROR_DESCRIPTION,
+                EMPTY_RESPONSE_ERROR,
+                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 null,
                 null,
                 null,
@@ -111,8 +111,8 @@ class NativeAuthResponseHandler {
                 null,
                 null,
                 null,
-                DEFAULT_ERROR,
-                DEFAULT_ERROR_DESCRIPTION,
+                EMPTY_RESPONSE_ERROR,
+                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 null,
                 null
             )
@@ -147,9 +147,9 @@ class NativeAuthResponseHandler {
                 response.statusCode,
                 null,
                 null,
-                DEFAULT_ERROR,
+                EMPTY_RESPONSE_ERROR,
                 null,
-                DEFAULT_ERROR_DESCRIPTION,
+                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 null,
                 null,
                 null,
@@ -185,8 +185,8 @@ class NativeAuthResponseHandler {
                 response.statusCode,
                 null,
                 null,
-                DEFAULT_ERROR,
-                DEFAULT_ERROR_DESCRIPTION,
+                EMPTY_RESPONSE_ERROR,
+                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 null,
                 null,
                 null,
@@ -227,10 +227,10 @@ class NativeAuthResponseHandler {
                 null,
                 null,
                 null,
-                DEFAULT_ERROR,
+                EMPTY_RESPONSE_ERROR,
                 null,
                 null,
-                DEFAULT_ERROR_DESCRIPTION,
+                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 null,
                 null)
 
@@ -272,8 +272,8 @@ class NativeAuthResponseHandler {
                     null,
                     null,
                     null,
-                    DEFAULT_ERROR,
-                    DEFAULT_ERROR_DESCRIPTION,
+                    EMPTY_RESPONSE_ERROR,
+                    EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                     null,
                     null,
                     null,
