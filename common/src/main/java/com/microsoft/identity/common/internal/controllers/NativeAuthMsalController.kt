@@ -752,7 +752,6 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             val startTime = System.currentTimeMillis()
 
             while (pollCompletionApiResult is ResetPasswordPollCompletionApiResult.InProgress) {
-                // TODO: This will use coroutines, most likely shouldn't use thread sleep here
                 ThreadUtils.sleepSafely(
                     pollWaitInterval,
                     methodTag,
