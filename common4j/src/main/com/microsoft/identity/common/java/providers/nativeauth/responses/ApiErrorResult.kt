@@ -34,3 +34,8 @@ open class ApiErrorResult(
     open val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
     open val errorCodes: List<Int>? = null
 )
+{
+    companion object {
+        public val INVALID_STATE = "invalid_state"
+    }
+}

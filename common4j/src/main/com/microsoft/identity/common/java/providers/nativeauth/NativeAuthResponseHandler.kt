@@ -31,6 +31,9 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpChallengeApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpContinueApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpStartApiResponse
 import com.microsoft.identity.common.java.util.ApiResultUtil
 import com.microsoft.identity.common.java.util.ObjectMapper
 import java.net.HttpURLConnection
@@ -42,11 +45,129 @@ import java.net.HttpURLConnection
 class NativeAuthResponseHandler {
 
     companion object {
-        const val DEFAULT_ERROR = "unknown_error"
-        const val DEFAULT_ERROR_DESCRIPTION = "No error description received"
+        const val EMPTY_RESPONSE_ERROR = "empty_response_error"
+        const val EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION = "API response body is empty"
     }
 
     private val TAG = NativeAuthResponseHandler::class.java.simpleName
+
+    //region /signup/start
+    /**
+     * Converts the HTTP response for /signup/start API to [SignUpStartApiResponse] object
+     * @param response : HTTP response received from the API
+     * @return SignUpStartApiResponse object
+     */
+    @Throws(ClientException::class)
+    fun getSignUpStartResultFromHttpResponse(
+        response: HttpResponse
+    ): SignUpStartApiResponse {
+        LogSession.logMethodCall(TAG, "${TAG}.getSignUpStartResultFromHttpResponse")
+
+        val result = if (response.body.isNullOrBlank()) {
+            SignUpStartApiResponse(
+                response.statusCode,
+                EMPTY_RESPONSE_ERROR,
+                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            )
+        }
+        else {
+            ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                SignUpStartApiResponse::class.java
+            )
+        }
+        result.statusCode = response.statusCode
+
+        ApiResultUtil.logResponse(TAG, result)
+
+        return result
+    }
+    //endregion
+
+    //region signup/challenge
+    /**
+     * Converts the HTTP response for /signup/challenge API to [SignUpChallengeApiResponse] object
+     * @param response : HTTP response received from the API
+     * @return SignUpChallengeApiResponse object
+     */
+    @Throws(ClientException::class)
+    fun getSignUpChallengeResultFromHttpResponse(
+        response: HttpResponse
+    ): SignUpChallengeApiResponse {
+        LogSession.logMethodCall(TAG, "${TAG}.getSignUpChallengeResultFromHttpResponse")
+
+        val result = if (response.body.isNullOrBlank()) {
+            SignUpChallengeApiResponse(
+                response.statusCode,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                EMPTY_RESPONSE_ERROR,
+                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                null,
+                null
+            )
+        } else {
+            ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                SignUpChallengeApiResponse::class.java
+            )
+        }
+        result.statusCode = response.statusCode
+
+        ApiResultUtil.logResponse(TAG, result)
+
+        return result
+    }
+    //endregion
+
+    //region /signup/continue
+    /**
+     * Converts the HTTP response for /signup/continue API to [SignUpContinueApiResponse] object
+     * @param response : HTTP response received from the API
+     * @return SignUpContinueApiResponse object
+     */
+    @Throws(ClientException::class)
+    fun getSignUpContinueResultFromHttpResponse(
+        response: HttpResponse
+    ): SignUpContinueApiResponse {
+        LogSession.logMethodCall(TAG, "${TAG}.getSignUpContinueResultFromHttpResponse")
+
+        val result = if (response.body.isNullOrBlank()) {
+            SignUpContinueApiResponse(
+                response.statusCode,
+                null,
+                null,
+                EMPTY_RESPONSE_ERROR,
+                null,
+                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                null,
+                null,
+                null,
+                null,
+                null
+            )
+        } else {
+            ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                SignUpContinueApiResponse::class.java
+            )
+        }
+        result.statusCode = response.statusCode
+
+        ApiResultUtil.logResponse(TAG, result)
+
+        return result
+    }
 
     //region /oauth/v2.0/initiate
     /**
@@ -64,8 +185,8 @@ class NativeAuthResponseHandler {
                 response.statusCode,
                 null,
                 null,
-                DEFAULT_ERROR,
-                DEFAULT_ERROR_DESCRIPTION,
+                EMPTY_RESPONSE_ERROR,
+                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 null,
                 null,
                 null,
@@ -106,10 +227,10 @@ class NativeAuthResponseHandler {
                 null,
                 null,
                 null,
-                DEFAULT_ERROR,
+                EMPTY_RESPONSE_ERROR,
                 null,
                 null,
-                DEFAULT_ERROR_DESCRIPTION,
+                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 null,
                 null)
 
@@ -151,8 +272,8 @@ class NativeAuthResponseHandler {
                     null,
                     null,
                     null,
-                    DEFAULT_ERROR,
-                    DEFAULT_ERROR_DESCRIPTION,
+                    EMPTY_RESPONSE_ERROR,
+                    EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                     null,
                     null,
                     null,
