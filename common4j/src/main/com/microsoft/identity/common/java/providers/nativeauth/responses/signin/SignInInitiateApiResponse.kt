@@ -27,6 +27,7 @@ import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.InnerError
+import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
 import com.microsoft.identity.common.java.util.isInvalidGrant
 import com.microsoft.identity.common.java.util.isRedirect
 import com.microsoft.identity.common.java.util.isUserNotFound
@@ -109,7 +110,7 @@ data class SignInInitiateApiResponse(
                     SignInInitiateApiResult.Success(
                         credentialToken = credentialToken
                             ?: return SignInInitiateApiResult.UnknownError(
-                                error = "invalid_state",
+                                error = ApiErrorResult.INVALID_STATE,
                                 errorDescription = "SignIn /initiate did not return a flow token",
                                 details = details,
                                 errorCodes = errorCodes.orEmpty()

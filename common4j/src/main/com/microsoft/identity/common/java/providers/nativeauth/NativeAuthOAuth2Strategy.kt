@@ -30,6 +30,11 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInWithSLTCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.ResetPasswordInteractor
@@ -39,9 +44,13 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpa
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordStartApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordSubmitApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignInInteractor
+import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignUpInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpChallengeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpContinueApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpStartApiResult
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 
 /**
@@ -51,6 +60,7 @@ class NativeAuthOAuth2Strategy(
     private val strategyParameters: OAuth2StrategyParameters,
     val config: NativeAuthOAuth2Configuration,
     private val signInInteractor: SignInInteractor,
+    private val signUpInteractor: SignUpInteractor,
     private val resetPasswordInteractor: ResetPasswordInteractor
 ) :
     MicrosoftStsOAuth2Strategy(config, strategyParameters) {
@@ -74,6 +84,80 @@ class NativeAuthOAuth2Strategy(
      */
     fun getAuthority(): String {
         return config.authorityUrl.toString()
+    }
+
+    /**
+     * Makes the initial call to the /signup/start.
+     * @param commandParameters: Attributes provided by the user
+     */
+    fun performSignUpStart(
+        commandParameters: SignUpStartCommandParameters
+    ): SignUpStartApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performSignUpStart")
+        return signUpInteractor.performSignUpStart(commandParameters)
+    }
+
+    /**
+     * Makes the initial call to the /signup/start when the parameters includes password.
+     * @param commandParameters: Attributes provided by the user
+     */
+    fun performSignUpStartUsingPassword(
+        commandParameters: SignUpStartUsingPasswordCommandParameters
+    ): SignUpStartApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performSignUpStartUsingPassword")
+        return signUpInteractor.performSignUpStartUsingPassword(commandParameters)
+    }
+
+    /**
+     * Makes the call to the /signup/challenge for Signup operation.
+     * @param signUpToken: Token received from the previous /signup/start call
+     */
+    fun performSignUpChallenge(
+        signUpToken: String
+    ): SignUpChallengeApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performSignUpChallenge")
+        return signUpInteractor.performSignUpChallenge(
+            signUpToken = signUpToken
+        )
+    }
+
+    /**
+     * Makes the call to the /signup/continue to submit the out of band code.
+     * @param commandParameters: Parameters required for this call including oob code
+     */
+    fun performSignUpSubmitCode(
+        commandParameters: SignUpSubmitCodeCommandParameters
+    ): SignUpContinueApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performSignUpSubmitCode")
+        return signUpInteractor.performSignUpSubmitCode(
+            commandParameters = commandParameters
+        )
+    }
+
+    /**
+     * Makes the call to the /signup/continue to submit the user password.
+     * @param commandParameters: Parameters required for this call including password
+     */
+    fun performSignUpSubmitPassword(
+        commandParameters: SignUpSubmitPasswordCommandParameters
+    ): SignUpContinueApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performSignUpSubmitPassword")
+        return signUpInteractor.performSignUpSubmitPassword(
+            commandParameters = commandParameters
+        )
+    }
+
+    /**
+     * Makes the call to the /signup/continue to submit the user attributes.
+     * @param commandParameters: Attributes provided by the user
+     */
+    fun performSignUpSubmitUserAttributes(
+        commandParameters: SignUpSubmitUserAttributesCommandParameters
+    ): SignUpContinueApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performSignUpSubmitUserAttributes")
+        return signUpInteractor.performSignUpSubmitUserAttributes(
+            commandParameters = commandParameters
+        )
     }
 
     /**

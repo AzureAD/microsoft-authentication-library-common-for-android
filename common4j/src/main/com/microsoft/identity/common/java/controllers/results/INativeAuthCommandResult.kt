@@ -32,7 +32,11 @@ interface INativeAuthCommandResult {
     data class Redirect(val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
         SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult,
         SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult,
-        ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult, ResetPasswordResendCodeCommandResult
+        SignUpStartCommandResult, SignUpSubmitCodeCommandResult,
+        SignUpResendCodeCommandResult, SignUpSubmitPasswordCommandResult,
+        SignUpSubmitUserAttributesCommandResult,
+        ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,
+        ResetPasswordResendCodeCommandResult
 
     /**
      * UnknownError is base class to represent various kinds of errors in NativeAuth.
@@ -48,9 +52,11 @@ interface INativeAuthCommandResult {
     ): Error(error, errorDescription, details, correlationId, errorCodes), INativeAuthCommandResult,
         SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult,
         SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult,
+        SignUpStartCommandResult, SignUpSubmitUserAttributesCommandResult,
+        SignUpSubmitCodeCommandResult, SignUpResendCodeCommandResult,
+        SignUpSubmitPasswordCommandResult,
         ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,
         ResetPasswordResendCodeCommandResult, ResetPasswordSubmitNewPasswordCommandResult
-
 
     open class Error(
         open val error: String?,

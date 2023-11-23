@@ -38,12 +38,19 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPa
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitNewPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseSignUpStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInResendCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInWithSLTCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpResendCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration
 import com.microsoft.identity.common.java.controllers.CommandDispatcher
 import com.microsoft.identity.common.java.controllers.results.INativeAuthCommandResult
@@ -58,6 +65,12 @@ import com.microsoft.identity.common.java.controllers.results.SignInStartCommand
 import com.microsoft.identity.common.java.controllers.results.SignInSubmitCodeCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignInSubmitPasswordCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignInWithSLTCommandResult
+import com.microsoft.identity.common.java.controllers.results.SignUpCommandResult
+import com.microsoft.identity.common.java.controllers.results.SignUpResendCodeCommandResult
+import com.microsoft.identity.common.java.controllers.results.SignUpStartCommandResult
+import com.microsoft.identity.common.java.controllers.results.SignUpSubmitCodeCommandResult
+import com.microsoft.identity.common.java.controllers.results.SignUpSubmitPasswordCommandResult
+import com.microsoft.identity.common.java.controllers.results.SignUpSubmitUserAttributesCommandResult
 import com.microsoft.identity.common.java.dto.AccountRecord
 import com.microsoft.identity.common.java.eststelemetry.PublicApiId
 import com.microsoft.identity.common.java.exception.ArgumentException
@@ -78,6 +91,9 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpa
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpChallengeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpContinueApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpStartApiResult
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache
@@ -346,6 +362,167 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             }
         } catch (e: Exception) {
             Logger.error(TAG, "Exception thrown in signInSubmitPassword", e)
+            throw e
+        }
+    }
+
+    /**
+     * Makes a call to the signup/start endpoint, mapping responses returned from the server into a command result.
+     * If the call is successful, additionally calls the signup/challenge endpoint, returning the result.
+     */
+    fun signUpStart(parameters: BaseSignUpStartCommandParameters): SignUpStartCommandResult {
+        LogSession.logMethodCall(TAG, "${TAG}.signUpStart")
+        try {
+            val oAuth2Strategy = createOAuth2Strategy(parameters)
+
+            val signUpStartApiResult = if (parameters is SignUpStartUsingPasswordCommandParameters) {
+
+                Logger.verbose(TAG, "Parameters is of type SignUpStartUsingPasswordCommandParameters");
+                performSignUpStartUsingPasswordRequest(
+                    oAuth2Strategy = oAuth2Strategy,
+                    parameters = (parameters as SignUpStartUsingPasswordCommandParameters)
+                )
+            } else {
+
+                Logger.verbose(TAG, "Parameters is of type SignUpStartCommandParameters");
+                performSignUpStartRequest(
+                    oAuth2Strategy = oAuth2Strategy,
+                    parameters = (parameters as SignUpStartCommandParameters)
+                )
+            }
+            return when (signUpStartApiResult) {
+                is SignUpStartApiResult.VerificationRequired -> {
+                    performSignUpChallengeCall(
+                        oAuth2Strategy = oAuth2Strategy,
+                        signupToken = signUpStartApiResult.signupToken
+                    ).toSignUpStartCommandResult()
+                }
+                is SignUpStartApiResult.InvalidPassword -> {
+                    SignUpCommandResult.InvalidPassword(
+                        error = signUpStartApiResult.error,
+                        errorDescription = signUpStartApiResult.errorDescription
+                    )
+                }
+                is SignUpStartApiResult.InvalidAttributes -> {
+                    SignUpCommandResult.InvalidAttributes(
+                        error = signUpStartApiResult.error,
+                        errorDescription = signUpStartApiResult.errorDescription,
+                        invalidAttributes = signUpStartApiResult.invalidAttributes
+                    )
+                }
+                is SignUpStartApiResult.UsernameAlreadyExists -> {
+                    SignUpCommandResult.UsernameAlreadyExists(
+                        error = signUpStartApiResult.error,
+                        errorDescription = signUpStartApiResult.errorDescription
+                    )
+                }
+                is SignUpStartApiResult.InvalidEmail -> {
+                    SignUpCommandResult.InvalidEmail(
+                        error = signUpStartApiResult.error,
+                        errorDescription = signUpStartApiResult.errorDescription
+                    )
+                }
+                is SignUpStartApiResult.AuthNotSupported -> {
+                    SignUpCommandResult.AuthNotSupported(
+                        error = signUpStartApiResult.error,
+                        errorDescription = signUpStartApiResult.errorDescription
+                    )
+                }
+                is SignUpStartApiResult.Redirect -> {
+                    INativeAuthCommandResult.Redirect()
+                }
+                is SignUpStartApiResult.UnsupportedChallengeType, is SignUpStartApiResult.UnknownError -> {
+                    signUpStartApiResult as ApiErrorResult
+                    Logger.warn(
+                        TAG,
+                        "Unexpected result: $signUpStartApiResult"
+                    )
+                    INativeAuthCommandResult.UnknownError(
+                        error = signUpStartApiResult.error,
+                        errorDescription = signUpStartApiResult.errorDescription
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            Logger.error(TAG, "Exception thrown in signUpStart", e)
+            throw e
+        }
+    }
+
+    /**
+     * Makes a call to the signup/continue endpoint using the provided code, mapping responses returned from the server into a command result.
+     */
+    fun signUpSubmitCode(parameters: SignUpSubmitCodeCommandParameters): SignUpSubmitCodeCommandResult {
+        LogSession.logMethodCall(TAG, "${TAG}.signUpSubmitCode")
+
+        try {
+            val oAuth2Strategy = createOAuth2Strategy(parameters)
+
+            val signUpSubmitCodeResult = performSignUpSubmitCode(
+                oAuth2Strategy = oAuth2Strategy,
+                parameters = parameters
+            )
+            return signUpSubmitCodeResult.toSignUpSubmitCodeCommandResult(oAuth2Strategy)
+        } catch (e: Exception) {
+            Logger.error(TAG, "Exception thrown in signUpSubmitCode", e)
+            throw e
+        }
+    }
+
+    /**
+     * Makes a call to the signup/challenge endpoint to trigger a code to be re-sent.
+     */
+    fun signUpResendCode(parameters: SignUpResendCodeCommandParameters): SignUpResendCodeCommandResult {
+        LogSession.logMethodCall(TAG, "${TAG}.signUpResendCode")
+
+        try {
+            val oAuth2Strategy = createOAuth2Strategy(parameters)
+
+            return performSignUpChallengeCall(
+                oAuth2Strategy = oAuth2Strategy,
+                signupToken = parameters.signupToken
+            ).toSignUpStartCommandResult() as SignUpResendCodeCommandResult
+        } catch (e: Exception) {
+            Logger.error(TAG, "Exception thrown in signUpResendCode", e)
+            throw e
+        }
+    }
+
+    /**
+     * Makes a call to the signup/continue endpoint with the provided user attributes.
+     */
+    fun signUpSubmitUserAttributes(parameters: SignUpSubmitUserAttributesCommandParameters): SignUpSubmitUserAttributesCommandResult {
+        LogSession.logMethodCall(TAG, "${TAG}.signUpSubmitUserAttributes")
+
+        try {
+            val oAuth2Strategy = createOAuth2Strategy(parameters)
+
+            val signUpContinueApiResult = performSignUpSubmitUserAttributes(
+                oAuth2Strategy = oAuth2Strategy,
+                parameters = parameters
+            )
+            return signUpContinueApiResult.toSignUpSubmitUserAttributesCommandResult(oAuth2Strategy)
+        } catch (e: Exception) {
+            Logger.error(TAG, "Exception thrown in signUpSubmitUserAttributes", e)
+            throw e
+        }
+    }
+
+    /**
+     * Makes a call to the signup/continue endpoint with the provided password.
+     */
+    fun signUpSubmitPassword(parameters: SignUpSubmitPasswordCommandParameters): SignUpSubmitPasswordCommandResult {
+        LogSession.logMethodCall(TAG, "${TAG}.signUpSubmitPassword")
+
+        try {
+            val oAuth2Strategy = createOAuth2Strategy(parameters)
+
+            return performSignUpSubmitPassword(
+                oAuth2Strategy = oAuth2Strategy,
+                parameters = parameters
+            ).toSignUpSubmitPasswordCommandResult(oAuth2Strategy)
+        } catch (e: Exception) {
+            Logger.error(TAG, "Exception thrown in signUpSubmitPassword", e)
             throw e
         }
     }
@@ -1060,6 +1237,309 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             strategy,
             cacheRecord
         )
+    }
+
+    @VisibleForTesting
+    fun performSignUpStartRequest(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: SignUpStartCommandParameters
+    ): SignUpStartApiResult {
+        return oAuth2Strategy.performSignUpStart(
+            commandParameters = parameters
+        )
+    }
+
+    @VisibleForTesting
+    fun performSignUpStartUsingPasswordRequest(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: SignUpStartUsingPasswordCommandParameters
+    ): SignUpStartApiResult {
+        return oAuth2Strategy.performSignUpStartUsingPassword(
+            commandParameters = parameters
+        )
+    }
+
+    private fun performSignUpChallengeCall(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        signupToken: String
+    ): SignUpChallengeApiResult {
+        return oAuth2Strategy.performSignUpChallenge(signUpToken = signupToken)
+    }
+
+    private fun performSignUpSubmitCode(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: SignUpSubmitCodeCommandParameters
+    ): SignUpContinueApiResult {
+        return oAuth2Strategy.performSignUpSubmitCode(commandParameters = parameters)
+    }
+    private fun performSignUpSubmitPassword(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: SignUpSubmitPasswordCommandParameters
+    ): SignUpContinueApiResult {
+        return oAuth2Strategy.performSignUpSubmitPassword(commandParameters = parameters)
+    }
+
+    @VisibleForTesting
+    fun performSignUpSubmitUserAttributes(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: SignUpSubmitUserAttributesCommandParameters
+    ): SignUpContinueApiResult {
+        return oAuth2Strategy.performSignUpSubmitUserAttributes(commandParameters = parameters)
+    }
+
+    /**
+     * When the call to /signup/challenge is made from the function processing the result of
+     * submit attributes call, the result is converted to [SignUpSubmitUserAttributesCommandResult]
+     * object to match the return type of the calling function.
+     */
+    private fun SignUpChallengeApiResult.toSignUpSubmitUserAttrsCommandResult(): SignUpSubmitUserAttributesCommandResult {
+        return when (this) {
+            SignUpChallengeApiResult.Redirect -> {
+                INativeAuthCommandResult.Redirect()
+            }
+            is SignUpChallengeApiResult.ExpiredToken, is SignUpChallengeApiResult.UnsupportedChallengeType,
+            is SignUpChallengeApiResult.OOBRequired, is SignUpChallengeApiResult.PasswordRequired,
+            is SignUpChallengeApiResult.UnknownError -> {
+                Logger.warn(
+                    TAG,
+                    "Unexpected result: $this"
+                )
+                this as ApiErrorResult
+                INativeAuthCommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription,
+                    details = this.details
+                )
+            }
+        }
+    }
+
+    /**
+     * When the call to /signup/challenge is made from the function processing the result of
+     * signup call, the result is converted to [SignUpStartCommandResult] object to
+     * match the return type of the calling function.
+     */
+    private fun SignUpChallengeApiResult.toSignUpStartCommandResult(): SignUpStartCommandResult {
+        return when (this) {
+            is SignUpChallengeApiResult.OOBRequired -> {
+                SignUpCommandResult.CodeRequired(
+                    signupToken = this.signupToken,
+                    codeLength = this.codeLength,
+                    challengeTargetLabel = this.challengeTargetLabel,
+                    challengeChannel = this.challengeChannel
+                )
+            }
+            is SignUpChallengeApiResult.PasswordRequired -> {
+                SignUpCommandResult.PasswordRequired(
+                    signupToken = this.signupToken
+                )
+            }
+            SignUpChallengeApiResult.Redirect -> {
+                INativeAuthCommandResult.Redirect()
+            }
+            is SignUpChallengeApiResult.ExpiredToken, is SignUpChallengeApiResult.UnsupportedChallengeType,
+            is SignUpChallengeApiResult.UnknownError -> {
+                Logger.warn(
+                    TAG,
+                    "Unexpected result: $this"
+                )
+                this as ApiErrorResult
+                INativeAuthCommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription,
+                    details = this.details
+                )
+            }
+        }
+    }
+
+    /**
+     * Signup continue API is used to submit the oob code. This method converts the result of the API
+     * to a more concrete object of type SignUpSubmitCodeCommandResult.
+     */
+    private fun SignUpContinueApiResult.toSignUpSubmitCodeCommandResult(
+        oAuth2Strategy: NativeAuthOAuth2Strategy
+    ): SignUpSubmitCodeCommandResult {
+        return when (this) {
+            is SignUpContinueApiResult.Success -> {
+                SignUpCommandResult.Complete(
+                    signInSLT = this.signInSLT,
+                    expiresIn = this.expiresIn
+                )
+            }
+            is SignUpContinueApiResult.ExpiredToken -> {
+                Logger.warn(
+                    TAG,
+                    "Expire token result: $this"
+                )
+                INativeAuthCommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+            is SignUpContinueApiResult.UsernameAlreadyExists -> {
+                SignUpCommandResult.UsernameAlreadyExists(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+            is SignUpContinueApiResult.AttributesRequired -> {
+                SignUpCommandResult.AttributesRequired(
+                    signupToken = this.signupToken,
+                    error = this.error,
+                    errorDescription = this.errorDescription,
+                    requiredAttributes = this.requiredAttributes
+                )
+            }
+            is SignUpContinueApiResult.CredentialRequired -> {
+                return performSignUpChallengeCall(
+                    oAuth2Strategy = oAuth2Strategy,
+                    signupToken = this.signupToken
+                ).toSignUpStartCommandResult() as SignUpSubmitCodeCommandResult
+            }
+            is SignUpContinueApiResult.InvalidOOBValue -> {
+                SignUpCommandResult.InvalidCode(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+            is SignUpContinueApiResult.Redirect -> {
+                INativeAuthCommandResult.Redirect()
+            }
+            is SignUpContinueApiResult.UnknownError -> {
+                Logger.warn(
+                    TAG,
+                    "Unexpected result: $this"
+                )
+                INativeAuthCommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription,
+                    details = this.details
+                )
+            }
+
+            is SignUpContinueApiResult.InvalidAttributes, is SignUpContinueApiResult.InvalidPassword -> {
+                Logger.warn(
+                    TAG,
+                    "Unexpected result: $this"
+                )
+                INativeAuthCommandResult.UnknownError(
+                    error = "unexpected_api_result",
+                    errorDescription = "API returned unexpected result: $this"
+                )
+            }
+        }
+    }
+
+    private fun SignUpContinueApiResult.toSignUpSubmitUserAttributesCommandResult(
+        oAuth2Strategy: NativeAuthOAuth2Strategy
+    ): SignUpSubmitUserAttributesCommandResult {
+        return when (this) {
+            is SignUpContinueApiResult.Success -> {
+                SignUpCommandResult.Complete(
+                    signInSLT = this.signInSLT,
+                    expiresIn = this.expiresIn
+                )
+            }
+            is SignUpContinueApiResult.UsernameAlreadyExists -> {
+                SignUpCommandResult.UsernameAlreadyExists(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+            is SignUpContinueApiResult.AttributesRequired -> {
+                SignUpCommandResult.AttributesRequired(
+                    signupToken = this.signupToken,
+                    error = this.error,
+                    errorDescription = this.errorDescription,
+                    requiredAttributes = this.requiredAttributes
+                )
+            }
+            is SignUpContinueApiResult.CredentialRequired -> {
+                return performSignUpChallengeCall(
+                    oAuth2Strategy = oAuth2Strategy,
+                    signupToken = this.signupToken
+                ).toSignUpSubmitUserAttrsCommandResult()
+            }
+            is SignUpContinueApiResult.Redirect -> {
+                INativeAuthCommandResult.Redirect()
+            }
+            is SignUpContinueApiResult.InvalidAttributes -> {
+                SignUpCommandResult.InvalidAttributes(
+                    error = this.error,
+                    errorDescription = this.errorDescription,
+                    invalidAttributes = this.invalidAttributes
+                )
+            }
+
+            is SignUpContinueApiResult.InvalidOOBValue, is SignUpContinueApiResult.InvalidPassword,
+            is SignUpContinueApiResult.ExpiredToken, is SignUpContinueApiResult.UnknownError -> {
+                Logger.warn(
+                    TAG,
+                    "Expire token result: $this"
+                )
+                this as ApiErrorResult
+                INativeAuthCommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+        }
+    }
+
+    private fun SignUpContinueApiResult.toSignUpSubmitPasswordCommandResult(
+        oAuth2Strategy: NativeAuthOAuth2Strategy
+    ): SignUpSubmitPasswordCommandResult {
+        return when (this) {
+            is SignUpContinueApiResult.Success -> {
+                SignUpCommandResult.Complete(
+                    signInSLT = this.signInSLT,
+                    expiresIn = this.expiresIn
+                )
+            }
+
+            is SignUpContinueApiResult.UsernameAlreadyExists -> {
+                SignUpCommandResult.UsernameAlreadyExists(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+            is SignUpContinueApiResult.AttributesRequired -> {
+                SignUpCommandResult.AttributesRequired(
+                    signupToken = this.signupToken,
+                    error = this.error,
+                    errorDescription = this.errorDescription,
+                    requiredAttributes = this.requiredAttributes
+                )
+            }
+            is SignUpContinueApiResult.CredentialRequired -> {
+                return performSignUpChallengeCall(
+                    oAuth2Strategy = oAuth2Strategy,
+                    signupToken = this.signupToken
+                ).toSignUpStartCommandResult() as SignUpSubmitPasswordCommandResult
+            }
+            is SignUpContinueApiResult.InvalidPassword -> {
+                SignUpCommandResult.InvalidPassword(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+            is SignUpContinueApiResult.Redirect -> {
+                INativeAuthCommandResult.Redirect()
+            }
+            is SignUpContinueApiResult.ExpiredToken, is SignUpContinueApiResult.InvalidOOBValue,
+            is SignUpContinueApiResult.InvalidAttributes, is SignUpContinueApiResult.UnknownError -> {
+                Logger.warn(
+                    TAG,
+                    "Error in signup continue result: $this"
+                )
+                this as ApiErrorResult
+                INativeAuthCommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+        }
     }
 
     private fun SignInTokenApiResult.toSignInStartCommandResult(
