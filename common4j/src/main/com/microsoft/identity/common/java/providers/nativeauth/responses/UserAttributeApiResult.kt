@@ -25,8 +25,8 @@ package com.microsoft.identity.common.java.providers.nativeauth.responses
 import com.google.gson.annotations.SerializedName
 
 /**
- * This data structure represents the information about the required user attribute
- * for sign up API.
+ * This data structure represents the information about the required user
+ * attribute for sign up API.
  */
 data class UserAttributeApiResult(
     @SerializedName("name") val name: String?,
