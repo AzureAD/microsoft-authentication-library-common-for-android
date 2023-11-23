@@ -20,17 +20,27 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.providers.nativeauth.responses
+package com.microsoft.identity.common.java.commands.parameters.nativeauth;
 
-import com.google.gson.annotations.SerializedName
+import java.util.Map;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.SuperBuilder;
 
 /**
- * This data structure represents the information about the required user
- * attribute for sign up API.
+ * A set of Sign Up Submit User Attributes command parameters for submitting the collected user attributes set in the user flow.
+ * extends from {@link SignUpContinueCommandParameters}
  */
-data class UserAttributeApiResult(
-    @SerializedName("name") val name: String?,
-    @SerializedName("type") val type: String?,
-    @SerializedName("required") val required: Boolean?,
-    @SerializedName("options") val options: UserAttributeOptionsApiResult?
-)
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
+public class SignUpSubmitUserAttributesCommandParameters extends SignUpContinueCommandParameters {
+    private static final String TAG = SignUpSubmitUserAttributesCommandParameters.class.getSimpleName();
+
+    /**
+     * The user attributes of the user set in the user flow need to be collected.
+     */
+    @NonNull
+    public final Map<String, String> userAttributes;
+}

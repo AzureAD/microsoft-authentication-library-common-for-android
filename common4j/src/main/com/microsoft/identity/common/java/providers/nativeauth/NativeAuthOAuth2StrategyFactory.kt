@@ -26,6 +26,7 @@ package com.microsoft.identity.common.java.providers.nativeauth
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignInInteractor
+import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignUpInteractor
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 
 /**
@@ -41,6 +42,11 @@ class NativeAuthOAuth2StrategyFactory {
                 strategyParameters = strategyParameters,
                 config = config,
                 signInInteractor = SignInInteractor(
+                    httpClient = UrlConnectionHttpClient.getDefaultInstance(),
+                    nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
+                    nativeAuthResponseHandler = NativeAuthResponseHandler()
+                ),
+                signUpInteractor = SignUpInteractor(
                     httpClient = UrlConnectionHttpClient.getDefaultInstance(),
                     nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
                     nativeAuthResponseHandler = NativeAuthResponseHandler()

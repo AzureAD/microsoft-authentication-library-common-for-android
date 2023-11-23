@@ -20,17 +20,26 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.providers.nativeauth.responses
+package com.microsoft.identity.common.java.commands.parameters.nativeauth;
 
-import com.google.gson.annotations.SerializedName
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.SuperBuilder;
 
 /**
- * This data structure represents the information about the required user
- * attribute for sign up API.
+ * A set of Sign Up Resend Code command parameters for sending the challenge request again under sign up flow using sign up token.
+ * extends from {@link BaseNativeAuthCommandParameters}
  */
-data class UserAttributeApiResult(
-    @SerializedName("name") val name: String?,
-    @SerializedName("type") val type: String?,
-    @SerializedName("required") val required: Boolean?,
-    @SerializedName("options") val options: UserAttributeOptionsApiResult?
-)
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
+public class SignUpResendCodeCommandParameters extends BaseNativeAuthCommandParameters {
+    private static final String TAG = SignUpResendCodeCommandParameters.class.getSimpleName();
+
+    /**
+     * The sign up token obtained from the start endpoint.
+     */
+    @NonNull
+    public final String signupToken;
+}

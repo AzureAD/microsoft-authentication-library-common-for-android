@@ -31,8 +31,10 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext
 interface INativeAuthCommandResult {
     data class Redirect(val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
         SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult,
-        SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult
-
+        SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult,
+        SignUpStartCommandResult, SignUpSubmitCodeCommandResult,
+        SignUpResendCodeCommandResult, SignUpSubmitPasswordCommandResult,
+        SignUpSubmitUserAttributesCommandResult
 
     /**
      * UnknownError is base class to represent various kinds of errors in NativeAuth.
@@ -47,7 +49,10 @@ interface INativeAuthCommandResult {
         val exception: Exception? = null
     ): Error(error, errorDescription, details, correlationId, errorCodes), INativeAuthCommandResult,
         SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult,
-        SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult
+        SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult,
+        SignUpStartCommandResult, SignUpSubmitUserAttributesCommandResult,
+        SignUpSubmitCodeCommandResult, SignUpResendCodeCommandResult,
+        SignUpSubmitPasswordCommandResult
 
     open class Error(
         open val error: String?,
