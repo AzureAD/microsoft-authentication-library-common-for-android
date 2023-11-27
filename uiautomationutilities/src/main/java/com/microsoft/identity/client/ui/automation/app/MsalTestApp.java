@@ -39,6 +39,8 @@ import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerPara
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+import com.microsoft.identity.labapi.utilities.constants.UserType;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -220,5 +222,13 @@ public class MsalTestApp extends App {
     @Override
     public void handleFirstRun() {
         UiAutomatorUtils.handleButtonClick("com.msft.identity.client.sample.local:id/btnStartTask");
+    }
+
+    // Handles first run of the app based on the user account type to be used.
+    public void handleFirstRunBasedOnUserType(UserType userType) throws UiObjectNotFoundException {
+        handleFirstRun();
+        if (userType == UserType.MSA) {
+            selectFromConfigFile("MSA");
+        }
     }
 }
