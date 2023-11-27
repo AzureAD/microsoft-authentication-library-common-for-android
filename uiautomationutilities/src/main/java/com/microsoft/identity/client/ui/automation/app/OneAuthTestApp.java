@@ -85,11 +85,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         // Because switching the App Configuration will decide whether to truly enable the Broker,
         // it's essential to turn on the Broker beforehand.
         handlePreferBrokerSwitchButton();
-        try {
-            selectFromAppConfiguration("com.microsoft.identity.LabsApi.Guest");
-        } catch (UiObjectNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        selectFromAppConfiguration("com.microsoft.OneAuthTestApp");
     }
 
     @Override
@@ -117,7 +113,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
 
     public String acquireTokenSilent() {
         // Click Get Access token button
-        UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/get_access_token_button");
+        UiAutomatorUtils.handleButtonClick("com.msft.oneauth.testapp:id/get_access_token_button");
         try {
             // Add a delay so that UI is updated with the token successfully
             Thread.sleep(5000);
@@ -186,11 +182,16 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         obj.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
     }
 
-    public void selectFromAppConfiguration(@NonNull final String text) throws UiObjectNotFoundException {
+    public void selectFromAppConfiguration(@NonNull final String text)  {
         final UiObject appConfigurationSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/app_configuration_spinner");
-        appConfigurationSpinner.click();
-        final UiObject appConfiguration = UiAutomatorUtils.obtainUiObjectWithText(text);
-        appConfiguration.click();
+        try {
+            appConfigurationSpinner.click();
+            final UiObject appConfiguration = UiAutomatorUtils.obtainUiObjectWithText(text);
+            appConfiguration.click();
+        } catch (UiObjectNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Override
