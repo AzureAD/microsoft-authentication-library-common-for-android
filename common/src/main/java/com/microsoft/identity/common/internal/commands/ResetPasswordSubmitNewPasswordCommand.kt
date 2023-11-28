@@ -44,7 +44,6 @@ class ResetPasswordSubmitNewPasswordCommand(
 
     companion object {
         private val TAG = ResetPasswordSubmitNewPasswordCommand::class.java.simpleName
-        const val DEFAULT_POLL_COMPLETION_INTERVAL_IN_MILISECONDS = 5000
         const val POLL_COMPLETION_TIMEOUT_IN_MILISECONDS = 300000 // 5 minutes
         const val POLL_COMPLETION_TIMEOUT_ERROR_CODE = "timeout"
         const val POLL_COMPLETION_TIMEOUT_ERROR_DESCRIPTION = "Command timed out while polling for password reset result."

@@ -899,15 +899,11 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     private fun resetPasswordPollCompletion(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         passwordResetToken: String,
-        pollIntervalInSeconds: Int?
+        pollIntervalInSeconds: Int
     ): ResetPasswordSubmitNewPasswordCommandResult {
         fun pollCompletionTimedOut(startTime: Long): Boolean {
             val currentTime = System.currentTimeMillis()
             return currentTime - startTime > ResetPasswordSubmitNewPasswordCommand.POLL_COMPLETION_TIMEOUT_IN_MILISECONDS
-        }
-
-        fun pollIntervalIsAppropriate(pollIntervalInSeconds: Int?): Boolean {
-            return pollIntervalInSeconds != null && pollIntervalInSeconds <= 15 && pollIntervalInSeconds >= 1
         }
 
         val methodTag = "$TAG:resetPasswordPollCompletion"
@@ -915,11 +911,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         LogSession.logMethodCall(TAG, "${TAG}.resetPasswordPollCompletion")
 
         try {
-            val pollWaitInterval: Int = if (!pollIntervalIsAppropriate(pollIntervalInSeconds)) {
-                ResetPasswordSubmitNewPasswordCommand.DEFAULT_POLL_COMPLETION_INTERVAL_IN_MILISECONDS
-            } else {
-                pollIntervalInSeconds!! * 1000
-            }
+            val pollWaitInterval: Int = pollIntervalInSeconds * 1000   //Convert seconds into milliseconds
 
             var pollCompletionApiResult = performResetPasswordPollCompletionCall(
                 oAuth2Strategy = oAuth2Strategy,

@@ -47,6 +47,10 @@ class ResetPasswordSubmitApiResponse(
 
     companion object {
         private val TAG = ResetPasswordSubmitApiResponse::class.java.simpleName
+        private const val MINIMUM_POLL_COMPLETION_INTERVAL_IN_SECONDS = 1
+        private const val MAXIMUM_POLL_COMPLETION_INTERVAL_IN_SECONDS = 15
+        private const val DEFAULT_POLL_COMPLETION_INTERVAL_IN_SECONDS = 2
+
     }
 
     /**
@@ -93,7 +97,7 @@ class ResetPasswordSubmitApiResponse(
                             errorDescription = "ResetPassword /submit successful, but did not return a flow token",
                             details = details
                         ),
-                    pollInterval = pollInterval
+                    pollInterval = clampPollInterval(pollInterval)
                 )
             }
 
@@ -106,5 +110,13 @@ class ResetPasswordSubmitApiResponse(
                 )
             }
         }
+    }
+
+    fun clampPollInterval(pollIntervalInSeconds: Int?): Int {
+        if (pollIntervalInSeconds == null || pollIntervalInSeconds < MINIMUM_POLL_COMPLETION_INTERVAL_IN_SECONDS || pollIntervalInSeconds > MAXIMUM_POLL_COMPLETION_INTERVAL_IN_SECONDS)
+        {
+            return DEFAULT_POLL_COMPLETION_INTERVAL_IN_SECONDS
+        }
+        return pollIntervalInSeconds;
     }
 }

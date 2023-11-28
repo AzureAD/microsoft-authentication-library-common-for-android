@@ -31,7 +31,7 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErro
 sealed interface ResetPasswordSubmitApiResult {
     data class SubmitSuccess(
         val passwordResetToken: String,
-        val pollInterval: Int?
+        val pollInterval: Int
     ) : ResetPasswordSubmitApiResult
 
     data class PasswordInvalid(
