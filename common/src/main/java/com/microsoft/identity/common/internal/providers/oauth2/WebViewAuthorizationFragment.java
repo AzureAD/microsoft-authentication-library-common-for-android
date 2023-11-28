@@ -58,6 +58,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
+import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
@@ -415,7 +416,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             // Suppressing unchecked warnings due to casting of serializable String to HashMap<String, String>
             @SuppressWarnings(WarningType.unchecked_warning)
             HashMap<String, String> requestHeaders = (HashMap<String, String>) state.getSerializable(REQUEST_HEADERS);
-
+            // In cases of WebView as an auth agent, we want to always add the passkey protocol header.
+            // (Not going to add passkey protocol header until full feature is ready.)
+            if (FidoConstants.IS_PASSKEY_SUPPORT_READY) {
+                if (requestHeaders == null) {
+                    requestHeaders = new HashMap<>();
+                }
+                requestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_VALUE);
+            }
             return requestHeaders;
         } catch (Exception e) {
             return null;

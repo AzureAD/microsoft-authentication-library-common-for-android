@@ -49,6 +49,7 @@ import com.microsoft.identity.common.java.commands.parameters.RemoveAccountComma
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
+import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
@@ -84,6 +85,7 @@ import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
+import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ResultUtil;
 import com.microsoft.identity.common.java.util.StringUtil;

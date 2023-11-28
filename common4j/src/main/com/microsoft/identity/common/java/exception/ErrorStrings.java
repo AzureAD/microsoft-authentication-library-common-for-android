@@ -61,6 +61,11 @@ public final class ErrorStrings {
     public static final String JSON_PARSE_FAILURE = "json_parse_failure";
 
     /**
+     * Error occurred while deserializing JSON string.
+     */
+    public static final String JSON_DESERIALIZATION_FAILURE = "json_deserialization_failure";
+
+    /**
      * IOException happened, could be the device/network errors.
      */
     public static final String IO_ERROR = "io_error";

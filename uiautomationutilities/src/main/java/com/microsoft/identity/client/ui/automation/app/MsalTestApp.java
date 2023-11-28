@@ -39,6 +39,8 @@ import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerPara
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+import com.microsoft.identity.labapi.utilities.constants.UserType;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -139,6 +141,7 @@ public class MsalTestApp extends App {
         return users;
     }
 
+    // select from Auth Scheme dropdown
     public void selectFromAuthScheme(@NonNull final String text) throws UiObjectNotFoundException {
         final UiObject authSchemeSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/authentication_scheme");
         authSchemeSpinner.click();
@@ -146,6 +149,15 @@ public class MsalTestApp extends App {
         authScheme.click();
     }
 
+    // Select configuration to be used from dropdown.
+    public void selectFromConfigFile(@NonNull final String text) throws UiObjectNotFoundException {
+        final UiObject configFileSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/configFile");
+        configFileSpinner.click();
+        final UiObject configFile = UiAutomatorUtils.obtainUiObjectWithText(text);
+        configFile.click();
+    }
+
+    // click on button generateSHR
     public String generateSHR() throws UiObjectNotFoundException {
         final UiObject generateSHRButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_generate_shr");
         scrollToElement(generateSHRButton);
@@ -154,6 +166,7 @@ public class MsalTestApp extends App {
         return result.getText();
     }
 
+    // click on button removeUser
     public String removeUser() throws UiObjectNotFoundException {
         final UiObject removeUserButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_clearCache");
         scrollToElement(removeUserButton);
@@ -163,6 +176,17 @@ public class MsalTestApp extends App {
         return text;
     }
 
+    // click on button removeUser on Legacy MsalTestApp
+    public String removeUserLegacy() throws UiObjectNotFoundException {
+        final UiObject removeUserButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_clearCache");
+        scrollToElement(removeUserButton);
+        removeUserButton.click();
+        final UiObject textView = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/status");
+        final String text = textView.getText();
+        return text;
+    }
+
+    // click on button getActiveBroker
     public String getActiveBrokerPackageName() throws UiObjectNotFoundException {
         final UiObject getPackageNameButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btnGetActiveBroker");
         scrollToElement(getPackageNameButton);
@@ -172,6 +196,7 @@ public class MsalTestApp extends App {
         return text;
     }
 
+    // check MsalTestApp mode
     public String checkMode() throws UiObjectNotFoundException {
         final UiObject modeText = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/public_application_mode");
         return modeText.getText();
@@ -197,5 +222,13 @@ public class MsalTestApp extends App {
     @Override
     public void handleFirstRun() {
         UiAutomatorUtils.handleButtonClick("com.msft.identity.client.sample.local:id/btnStartTask");
+    }
+
+    // Handles first run of the app based on the user account type to be used.
+    public void handleFirstRunBasedOnUserType(UserType userType) throws UiObjectNotFoundException {
+        handleFirstRun();
+        if (userType == UserType.MSA) {
+            selectFromConfigFile("MSA");
+        }
     }
 }

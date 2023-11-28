@@ -1,8 +1,26 @@
 V.Next
 ----------
+- [PATCH] always make a copy of bundle before modifying & sending out via ipc (#2239)
+- [PATCH] Use v2.0 url for OpenID Client (#2208)
+- [MINOR] Added passkey protocol header (behind a flag) (#2181)
+- [MINOR] Fix crash during onCreate() (#2202)
+- [MINOR] add removeUserLegacy method in MsalTestApp infra (#2212)
+- [PATCH] Always validate calling app's redirect URI (#2211)
+- [MINOR] Updating JSON version (#2221)
+- [PATCH] Passing span context to AuthorizationActivity (#2209)
+- [MINOR] Bumping Moshi versions; force setting Okio version (#2210)
+- [PATCH] Fix to generate new Asymmetric Key (#2222)
+- [MINOR] Move addition of passkey header from BaseController to WebView fragment (#2237)
+
+V.16.1.1
+----------
+- [PATCH] Fix client Discovery (#2213)
+
+V.16.1.0
+----------
 - [MINOR] Handle crypto error gracefully (#2190)
 - [MINOR] Stop logging thread name (#2185)
-- [MINOR] Adding Moshi, and WebAuthnJsonUtil(#2189)
+- [MINOR] Adding Moshi, and WebAuthnJsonUtil (#2189)
 
 V.16.0.1
 ----------
