@@ -23,6 +23,9 @@
 
 package com.microsoft.identity.common.java.providers.nativeauth
 
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
@@ -34,6 +37,12 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
+import com.microsoft.identity.common.java.providers.nativeauth.interactors.ResetPasswordInteractor
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordChallengeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordContinueApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordPollCompletionApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordStartApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordSubmitApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignInInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignUpInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResult
@@ -51,7 +60,8 @@ class NativeAuthOAuth2Strategy(
     private val strategyParameters: OAuth2StrategyParameters,
     val config: NativeAuthOAuth2Configuration,
     private val signInInteractor: SignInInteractor,
-    private val signUpInteractor: SignUpInteractor
+    private val signUpInteractor: SignUpInteractor,
+    private val resetPasswordInteractor: ResetPasswordInteractor
 ) :
     MicrosoftStsOAuth2Strategy(config, strategyParameters) {
     private val TAG = NativeAuthOAuth2Strategy::class.java.simpleName
@@ -206,6 +216,76 @@ class NativeAuthOAuth2Strategy(
         LogSession.logMethodCall(TAG, "${TAG}.performPasswordTokenRequest")
         return signInInteractor.performPasswordTokenRequest(
             parameters = parameters
+        )
+    }
+
+    /**
+     * Performs the initial API call to /resetpassword/start
+     * @param parameters: Parameters required for the call including username
+     * @return result of the API call as [ResetPasswordStartApiResult] object
+     */
+    fun performResetPasswordStart(
+        parameters: ResetPasswordStartCommandParameters
+    ): ResetPasswordStartApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordStart")
+        return resetPasswordInteractor.performResetPasswordStart(
+            parameters = parameters
+        )
+    }
+
+    /**
+     * Performs the API call to /resetpassword/challenge
+     * @param passwordResetToken: Token received from previous /resetpassword/start call
+     * @return result of the API call as [ResetPasswordChallengeApiResult] object
+     */
+    fun performResetPasswordChallenge(
+        passwordResetToken: String
+    ): ResetPasswordChallengeApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordChallenge")
+        return resetPasswordInteractor.performResetPasswordChallenge(
+            passwordResetToken = passwordResetToken
+        )
+    }
+
+    /**
+     * Performs the API call to /resetpassword/continue to submit out of band code
+     * @param parameters: Parameters required for the call including oob code
+     * @return result of the API call as [ResetPasswordContinueApiResult] object
+     */
+    fun performResetPasswordContinue(
+        parameters: ResetPasswordSubmitCodeCommandParameters
+    ): ResetPasswordContinueApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordContinue")
+        return resetPasswordInteractor.performResetPasswordContinue(
+            parameters = parameters
+        )
+    }
+
+    /**
+     * Performs the API call to /resetpassword/continue to submit new user password
+     * @param parameters: Parameters required for the call including new user password
+     * @return result of the API call as [ResetPasswordSubmitApiResult] object
+     */
+    fun performResetPasswordSubmit(
+        parameters: ResetPasswordSubmitNewPasswordCommandParameters
+    ): ResetPasswordSubmitApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordSubmit")
+        return resetPasswordInteractor.performResetPasswordSubmit(
+            commandParameters = parameters
+        )
+    }
+
+    /**
+     * Performs the API call to /resetpassword/poll_completion
+     * @param passwordResetToken: Token received from previous call
+     * @return result of the API call as [ResetPasswordPollCompletionApiResult] object
+     */
+    fun performResetPasswordPollCompletion(
+        passwordResetToken: String
+    ): ResetPasswordPollCompletionApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordPollCompletion")
+        return resetPasswordInteractor.performResetPasswordPollCompletion(
+            passwordResetToken = passwordResetToken
         )
     }
 }

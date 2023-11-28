@@ -27,6 +27,11 @@ import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordChallengeApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordContinueApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordPollCompletionApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordStartApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordSubmitApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResponse
@@ -303,4 +308,189 @@ class NativeAuthResponseHandler {
         }
     }
     //endregion
+
+    //region /resetpassword/start
+    /**
+     * Converts the HTTP response for /resetpassword/start API to [ResetPasswordStartApiResponse] object
+     * @param response : HTTP response received from the API
+     * @return ResetPasswordStartApiResponse object
+     */
+    @Throws(ClientException::class)
+    fun getResetPasswordStartApiResponseFromHttpResponse(
+        response: HttpResponse
+    ): ResetPasswordStartApiResponse {
+        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordStartApiResponseFromHttpResponse")
+
+        val apiResponse = if (response.body.isNullOrBlank()) {
+            ResetPasswordStartApiResponse(
+                response.statusCode,
+                null,
+                null,
+                EMPTY_RESPONSE_ERROR,
+                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                null,
+                null,
+                null
+            )
+        } else {
+            ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                ResetPasswordStartApiResponse::class.java
+            )
+        }
+        apiResponse.statusCode = response.statusCode
+
+        ApiResultUtil.logResponse(TAG, apiResponse)
+
+        return apiResponse
+    }
+
+    //region /resetpassword/challenge
+    /**
+     * Converts the HTTP response for /resetpassword/challenge API to [ResetPasswordChallengeApiResponse] object
+     * @param response : HTTP response received from the API
+     * @return ResetPasswordChallengeApiResponse object
+     */
+    @Throws(ClientException::class)
+    fun getResetPasswordChallengeApiResponseFromHttpResponse(
+        response: HttpResponse
+    ): ResetPasswordChallengeApiResponse {
+        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordChallengeApiResponseFromHttpResponse")
+
+        val apiResponse = if (response.body.isNullOrBlank()) {
+            ResetPasswordChallengeApiResponse(
+                response.statusCode,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                EMPTY_RESPONSE_ERROR,
+                null,
+                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                null,
+                null
+            )
+        } else {
+            ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                ResetPasswordChallengeApiResponse::class.java
+            )
+        }
+        apiResponse.statusCode = response.statusCode
+
+        ApiResultUtil.logResponse(TAG, apiResponse)
+
+        return apiResponse
+    }
+
+    //region /resetpassword/continue
+    /**
+     * Converts the HTTP response for /resetpassword/continue API to [ResetPasswordContinueApiResponse] object
+     * @param response : HTTP response received from the API
+     * @return ResetPasswordContinueApiResponse object
+     */
+    @Throws(ClientException::class)
+    fun getResetPasswordContinueApiResponseFromHttpResponse(
+        response: HttpResponse
+    ): ResetPasswordContinueApiResponse {
+        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordContinueApiResponseFromHttpResponse")
+
+        val apiResponse = if (response.body.isNullOrBlank()) {
+            ResetPasswordContinueApiResponse(
+                response.statusCode,
+                null,
+                null,
+                null,
+                null,
+                EMPTY_RESPONSE_ERROR,
+                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                null,
+                null
+            )
+        } else {
+            ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                ResetPasswordContinueApiResponse::class.java
+            )
+        }
+        apiResponse.statusCode = response.statusCode
+
+        ApiResultUtil.logResponse(TAG, apiResponse)
+        return apiResponse
+    }
+
+    //region /resetpassword/submit
+    /**
+     * Converts the HTTP response for /resetpassword/submit API to [ResetPasswordSubmitApiResponse] object
+     * @param response : HTTP response received from the API
+     * @return ResetPasswordSubmitApiResponse object
+     */
+    @Throws(ClientException::class)
+    fun getResetPasswordSubmitApiResponseFromHttpResponse(
+        response: HttpResponse
+    ): ResetPasswordSubmitApiResponse {
+        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordSubmitApiResponseFromHttpResponse")
+
+        val apiResponse = if (response.body.isNullOrBlank()) {
+            ResetPasswordSubmitApiResponse(
+                response.statusCode,
+                null,
+                null,
+                EMPTY_RESPONSE_ERROR,
+                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                null,
+                null,
+                null
+            )
+        } else {
+            ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                ResetPasswordSubmitApiResponse::class.java
+            )
+        }
+        apiResponse.statusCode = response.statusCode
+
+        ApiResultUtil.logResponse(TAG, apiResponse)
+
+        return apiResponse
+    }
+
+    //region /resetpassword/poll_completion
+    /**
+     * Converts the HTTP response for /resetpassword/poll_completion API to [ResetPasswordPollCompletionApiResponse] object
+     * @param response : HTTP response received from the API
+     * @return ResetPasswordPollCompletionApiResponse object
+     */
+    @Throws(ClientException::class)
+    fun getResetPasswordPollCompletionApiResponseFromHttpResponse(
+        response: HttpResponse
+    ): ResetPasswordPollCompletionApiResponse {
+        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordPollCompletionApiResponseFromHttpResponse")
+
+        val apiResponse = if (response.body.isNullOrBlank()) {
+            ResetPasswordPollCompletionApiResponse(
+                response.statusCode,
+                null,
+                null,
+                EMPTY_RESPONSE_ERROR,
+                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                null,
+                null,
+                null
+            )
+        } else {
+            ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                ResetPasswordPollCompletionApiResponse::class.java
+            )
+        }
+        apiResponse.statusCode = response.statusCode
+
+        ApiResultUtil.logResponse(TAG, apiResponse)
+
+        return apiResponse
+    }
 }

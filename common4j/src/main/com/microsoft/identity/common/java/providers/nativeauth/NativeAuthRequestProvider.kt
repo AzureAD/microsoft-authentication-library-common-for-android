@@ -23,6 +23,9 @@
 package com.microsoft.identity.common.java.providers.nativeauth
 
 import com.microsoft.identity.common.java.AuthenticationConstants
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
@@ -36,6 +39,11 @@ import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.net.HttpConstants
+import com.microsoft.identity.common.java.providers.nativeauth.requests.resetpassword.ResetPasswordChallengeRequest
+import com.microsoft.identity.common.java.providers.nativeauth.requests.resetpassword.ResetPasswordContinueRequest
+import com.microsoft.identity.common.java.providers.nativeauth.requests.resetpassword.ResetPasswordPollCompletionRequest
+import com.microsoft.identity.common.java.providers.nativeauth.requests.resetpassword.ResetPasswordStartRequest
+import com.microsoft.identity.common.java.providers.nativeauth.requests.resetpassword.ResetPasswordSubmitRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.signin.SignInChallengeRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.signin.SignInInitiateRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.signin.SignInTokenRequest
@@ -165,6 +173,54 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     }
     //endregion
 
+    //region /resetpassword/start
+    internal fun createResetPasswordStartRequest(
+        parameters: ResetPasswordStartCommandParameters
+    ): ResetPasswordStartRequest {
+        LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordStartRequest")
+
+        return ResetPasswordStartRequest.create(
+            clientId = config.clientId,
+            username = parameters.username,
+            challengeType = config.challengeType,
+            requestUrl = resetPasswordStartEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+    //endregion
+
+    //region /resetpassword/challenge
+    internal fun createResetPasswordChallengeRequest(
+        passwordResetToken: String
+    ): ResetPasswordChallengeRequest {
+        LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordChallengeRequest")
+
+        return ResetPasswordChallengeRequest.create(
+            clientId = config.clientId,
+            passwordResetToken = passwordResetToken,
+            challengeType = config.challengeType,
+            requestUrl = resetPasswordChallengeEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+    //endregion
+
+    //region /resetpassword/continue
+    internal fun createResetPasswordContinueRequest(
+        parameters: ResetPasswordSubmitCodeCommandParameters
+    ): ResetPasswordContinueRequest {
+        LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordContinueRequest")
+
+        return ResetPasswordContinueRequest.create(
+            clientId = config.clientId,
+            passwordResetToken = parameters.passwordResetToken,
+            oob = parameters.code,
+            requestUrl = resetPasswordContinueEndpoint,
+            headers = getRequestHeaders()
+        )
+    }    
+    //endregion
+
     //region /signup/start
     internal fun createSignUpStartRequest(
         commandParameters: SignUpStartCommandParameters
@@ -204,6 +260,37 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     }
     //endregion
 
+    //region /resetpassword/submit
+    internal fun createResetPasswordSubmitRequest(
+        commandParameters: ResetPasswordSubmitNewPasswordCommandParameters
+    ): ResetPasswordSubmitRequest {
+        LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordSubmitRequest")
+
+        return ResetPasswordSubmitRequest.create(
+            clientId = config.clientId,
+            passwordSubmitToken = commandParameters.passwordSubmitToken,
+            newPassword = commandParameters.newPassword,
+            requestUrl = resetPasswordSubmitEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+    //endregion
+
+    //region /resetpassword/pollcompletion
+    internal fun createResetPasswordPollCompletionRequest(
+        passwordResetToken: String
+    ): ResetPasswordPollCompletionRequest {
+        LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordPollCompletionRequest")
+
+        return ResetPasswordPollCompletionRequest.create(
+            clientId = config.clientId,
+            passwordResetToken = passwordResetToken,
+            requestUrl = resetPasswordPollCompletionEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+    //endregion
+    
     //region /signup/continue
     internal fun createSignUpSubmitCodeRequest(
         commandParameters: SignUpSubmitCodeCommandParameters
