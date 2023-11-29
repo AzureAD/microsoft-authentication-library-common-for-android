@@ -40,6 +40,7 @@ import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadP
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+import com.microsoft.identity.labapi.utilities.constants.UserType;
 
 import org.junit.Assert;
 
@@ -151,6 +152,14 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         assertSuccess();
     }
 
+    // Handles first run of the app based on the user account type to be used.
+    public void handleFirstRunBasedOnUserType(UserType userType) {
+        handleFirstRun();
+        if (userType == UserType.MSA){
+            handleConfigureFlightsButton();
+        }
+    }
+
     public void handleBackButton() {
         UiAutomatorUtils.pressBack();
     }
@@ -163,7 +172,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         UiAutomatorUtils.handleButtonClick("com.msft.oneauth.testapp:id/prefer_broker_switch_button");
     }
 
-    public void handleConfigureFlightsButton() {
+    private void handleConfigureFlightsButton() {
         try {
             final UiObject configureFlightsBtn = UiAutomatorUtils.obtainUiObjectWithText("Configure flights");
             scrollToElement(configureFlightsBtn);
@@ -171,8 +180,8 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         UiAutomatorUtils.handleButtonClick("com.msft.oneauth.testapp:id/android_broker_for_msa");
         final UiObject doneBtn = UiAutomatorUtils.obtainUiObjectWithText("DONE");
         doneBtn.click();
-        } catch (UiObjectNotFoundException e) {
-            throw new RuntimeException(e);
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError("Could not click on android broker for msa toggle");
         }
     }
 
@@ -189,7 +198,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
             final UiObject appConfiguration = UiAutomatorUtils.obtainUiObjectWithText(text);
             appConfiguration.click();
         } catch (UiObjectNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new AssertionError("Could not click on app config spinner");
         }
 
     }
