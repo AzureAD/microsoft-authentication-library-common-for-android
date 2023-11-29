@@ -34,7 +34,9 @@ interface INativeAuthCommandResult {
         SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult,
         SignUpStartCommandResult, SignUpSubmitCodeCommandResult,
         SignUpResendCodeCommandResult, SignUpSubmitPasswordCommandResult,
-        SignUpSubmitUserAttributesCommandResult
+        SignUpSubmitUserAttributesCommandResult,
+        ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,
+        ResetPasswordResendCodeCommandResult
 
     /**
      * UnknownError is base class to represent various kinds of errors in NativeAuth.
@@ -52,7 +54,9 @@ interface INativeAuthCommandResult {
         SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult,
         SignUpStartCommandResult, SignUpSubmitUserAttributesCommandResult,
         SignUpSubmitCodeCommandResult, SignUpResendCodeCommandResult,
-        SignUpSubmitPasswordCommandResult
+        SignUpSubmitPasswordCommandResult,
+        ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,
+        ResetPasswordResendCodeCommandResult, ResetPasswordSubmitNewPasswordCommandResult
 
     open class Error(
         open val error: String?,

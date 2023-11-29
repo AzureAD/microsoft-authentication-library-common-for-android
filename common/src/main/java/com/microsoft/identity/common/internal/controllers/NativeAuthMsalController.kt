@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.controllers
 
 import androidx.annotation.VisibleForTesting
 import com.microsoft.identity.common.internal.commands.RefreshOnCommand
+import com.microsoft.identity.common.internal.commands.ResetPasswordSubmitNewPasswordCommand
 import com.microsoft.identity.common.internal.telemetry.Telemetry
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent
 import com.microsoft.identity.common.internal.util.CommandUtil
@@ -33,6 +34,10 @@ import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommand
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.AcquireTokenNoFixedScopesCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseNativeAuthCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseSignInTokenCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordResendCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseSignUpStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInResendCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
@@ -49,6 +54,11 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpS
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration
 import com.microsoft.identity.common.java.controllers.CommandDispatcher
 import com.microsoft.identity.common.java.controllers.results.INativeAuthCommandResult
+import com.microsoft.identity.common.java.controllers.results.ResetPasswordCommandResult
+import com.microsoft.identity.common.java.controllers.results.ResetPasswordResendCodeCommandResult
+import com.microsoft.identity.common.java.controllers.results.ResetPasswordStartCommandResult
+import com.microsoft.identity.common.java.controllers.results.ResetPasswordSubmitCodeCommandResult
+import com.microsoft.identity.common.java.controllers.results.ResetPasswordSubmitNewPasswordCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignInCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignInResendCodeCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignInStartCommandResult
@@ -73,6 +83,11 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordChallengeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordContinueApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordPollCompletionApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordStartApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordSubmitApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResult
@@ -87,6 +102,7 @@ import com.microsoft.identity.common.java.result.AcquireTokenResult
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings
 import com.microsoft.identity.common.java.util.StringUtil
+import com.microsoft.identity.common.java.util.ThreadUtils
 import lombok.EqualsAndHashCode
 import java.io.IOException
 import java.net.URL
@@ -685,6 +701,294 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         )
     }
 
+    /**
+     * Makes a call to the resetpassword/start endpoint with the provided username.
+     * If successful, makes a call to the resetpassword/challenge endpoint, returning the result of that call.
+     */
+    fun resetPasswordStart(parameters: ResetPasswordStartCommandParameters): ResetPasswordStartCommandResult {
+        LogSession.logMethodCall(TAG, "${TAG}.resetPasswordStart")
+
+        try {
+            val oAuth2Strategy = createOAuth2Strategy(parameters)
+
+            val resetPasswordStartApiResult = performResetPasswordStartCall(
+                oAuth2Strategy = oAuth2Strategy,
+                parameters = parameters
+            )
+
+            return when (resetPasswordStartApiResult) {
+                is ResetPasswordStartApiResult.Success -> {
+                    performResetPasswordChallengeCall(
+                        oAuth2Strategy = oAuth2Strategy,
+                        passwordResetToken = resetPasswordStartApiResult.passwordResetToken
+                    ).toResetPasswordStartCommandResult()
+                }
+                ResetPasswordStartApiResult.Redirect -> {
+                    INativeAuthCommandResult.Redirect()
+                }
+                is ResetPasswordStartApiResult.UserNotFound -> {
+                    ResetPasswordCommandResult.UserNotFound(
+                        error = resetPasswordStartApiResult.error,
+                        errorDescription = resetPasswordStartApiResult.errorDescription
+                    )
+                }
+                is ResetPasswordStartApiResult.UnsupportedChallengeType, is ResetPasswordStartApiResult.UnknownError -> {
+                    Logger.warn(
+                        TAG,
+                        "Unexpected result: $resetPasswordStartApiResult"
+                    )
+                    resetPasswordStartApiResult as ApiErrorResult
+                    INativeAuthCommandResult.UnknownError(
+                        error = resetPasswordStartApiResult.error,
+                        errorDescription = resetPasswordStartApiResult.errorDescription,
+                        details = resetPasswordStartApiResult.details
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            Logger.error(TAG, "Exception thrown in resetPasswordStart", e)
+            throw e
+        }
+    }
+
+    /**
+     * Makes a call to the resetpassword/continue endpoint with the provided code and password reset token.
+     */
+    fun resetPasswordSubmitCode(parameters: ResetPasswordSubmitCodeCommandParameters): ResetPasswordSubmitCodeCommandResult {
+        LogSession.logMethodCall(TAG, "${TAG}.resetPasswordSubmitCode")
+
+        try {
+            val oAuth2Strategy = createOAuth2Strategy(parameters)
+
+            val resetPasswordContinueApiResult = performResetPasswordContinueCall(
+                oAuth2Strategy = oAuth2Strategy,
+                parameters = parameters
+            )
+
+            return when (resetPasswordContinueApiResult) {
+                is ResetPasswordContinueApiResult.PasswordRequired -> {
+                    ResetPasswordCommandResult.PasswordRequired(
+                        passwordSubmitToken = resetPasswordContinueApiResult.passwordSubmitToken
+                    )
+                }
+                is ResetPasswordContinueApiResult.CodeIncorrect -> {
+                    ResetPasswordCommandResult.IncorrectCode(
+                        error = resetPasswordContinueApiResult.error,
+                        errorDescription = resetPasswordContinueApiResult.errorDescription
+                    )
+                }
+                ResetPasswordContinueApiResult.Redirect -> {
+                    INativeAuthCommandResult.Redirect()
+                }
+                is ResetPasswordContinueApiResult.ExpiredToken, is ResetPasswordContinueApiResult.UnknownError -> {
+                    Logger.warn(
+                        TAG,
+                        "Unexpected result: $resetPasswordContinueApiResult"
+                    )
+                    resetPasswordContinueApiResult as ApiErrorResult
+                    INativeAuthCommandResult.UnknownError(
+                        error = resetPasswordContinueApiResult.error,
+                        errorDescription = resetPasswordContinueApiResult.errorDescription,
+                        details = resetPasswordContinueApiResult.details
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            Logger.error(TAG, "Exception thrown in resetPasswordSubmitCode", e)
+            throw e
+        }
+    }
+
+    /**
+     * Makes a call to the resetpassword/challenge endpoint to trigger a code to be re-sent.
+     */
+    fun resetPasswordResendCode(parameters: ResetPasswordResendCodeCommandParameters): ResetPasswordResendCodeCommandResult {
+        LogSession.logMethodCall(TAG, "${TAG}.resetPasswordResendCode")
+
+        try {
+            val oAuth2Strategy = createOAuth2Strategy(parameters)
+
+            val resetPasswordChallengeApiResult = performResetPasswordChallengeCall(
+                oAuth2Strategy = oAuth2Strategy,
+                passwordResetToken = parameters.passwordResetToken
+            )
+
+            return when (resetPasswordChallengeApiResult) {
+                is ResetPasswordChallengeApiResult.CodeRequired -> {
+                    ResetPasswordCommandResult.CodeRequired(
+                        passwordResetToken = resetPasswordChallengeApiResult.passwordResetToken,
+                        codeLength = resetPasswordChallengeApiResult.codeLength,
+                        challengeTargetLabel = resetPasswordChallengeApiResult.challengeTargetLabel,
+                        challengeChannel = resetPasswordChallengeApiResult.challengeChannel
+                    )
+                }
+                ResetPasswordChallengeApiResult.Redirect -> {
+                    INativeAuthCommandResult.Redirect()
+                }
+                is ResetPasswordChallengeApiResult.ExpiredToken,
+                is ResetPasswordChallengeApiResult.UnsupportedChallengeType,
+                is ResetPasswordChallengeApiResult.UnknownError -> {
+                    Logger.warn(
+                        TAG,
+                        "Unexpected result: $resetPasswordChallengeApiResult"
+                    )
+                    resetPasswordChallengeApiResult as ApiErrorResult
+                    INativeAuthCommandResult.UnknownError(
+                        error = resetPasswordChallengeApiResult.error,
+                        errorDescription = resetPasswordChallengeApiResult.errorDescription,
+                        details = resetPasswordChallengeApiResult.details
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            Logger.error(TAG, "Exception thrown in resetPasswordResendCode", e)
+            throw e
+        }
+    }
+
+    /**
+     * Makes a call to the resetpassword/submit endpoint with the provided password.
+     * If successful, calls the resetpassword/poll_completion endpoint, continuing to do so until a success response is returned, or the polling times out.
+     */
+    fun resetPasswordSubmitNewPassword(parameters: ResetPasswordSubmitNewPasswordCommandParameters): ResetPasswordSubmitNewPasswordCommandResult {
+        LogSession.logMethodCall(TAG, "${TAG}.resetPasswordSubmitNewPassword")
+
+        try {
+            val oAuth2Strategy = createOAuth2Strategy(parameters)
+
+            val resetPasswordSubmitApiResult = performResetPasswordSubmitCall(
+                oAuth2Strategy = oAuth2Strategy,
+                parameters = parameters
+            )
+
+            return when (resetPasswordSubmitApiResult) {
+                is ResetPasswordSubmitApiResult.SubmitSuccess -> {
+                    resetPasswordPollCompletion(
+                        oAuth2Strategy = oAuth2Strategy,
+                        passwordResetToken = resetPasswordSubmitApiResult.passwordResetToken,
+                        pollIntervalInSeconds = resetPasswordSubmitApiResult.pollInterval
+                    )
+                }
+                is ResetPasswordSubmitApiResult.PasswordInvalid -> {
+                    ResetPasswordCommandResult.PasswordNotAccepted(
+                        error = resetPasswordSubmitApiResult.error,
+                        errorDescription = resetPasswordSubmitApiResult.errorDescription
+                    )
+                }
+
+                is ResetPasswordSubmitApiResult.ExpiredToken,
+                is ResetPasswordSubmitApiResult.UnknownError -> {
+                    Logger.warn(
+                        TAG,
+                        "Unexpected result: $resetPasswordSubmitApiResult"
+                    )
+                    resetPasswordSubmitApiResult as ApiErrorResult
+                    INativeAuthCommandResult.UnknownError(
+                        error = resetPasswordSubmitApiResult.error,
+                        errorDescription = resetPasswordSubmitApiResult.errorDescription,
+                        details = resetPasswordSubmitApiResult.details
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            Logger.error(TAG, "Exception thrown in resetPasswordSubmitNewPassword", e)
+            throw e
+        }
+    }
+
+    private fun resetPasswordPollCompletion(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        passwordResetToken: String,
+        pollIntervalInSeconds: Int
+    ): ResetPasswordSubmitNewPasswordCommandResult {
+        fun pollCompletionTimedOut(startTime: Long): Boolean {
+            val currentTime = System.currentTimeMillis()
+            return currentTime - startTime > ResetPasswordSubmitNewPasswordCommand.POLL_COMPLETION_TIMEOUT_IN_MILISECONDS
+        }
+
+        val methodTag = "$TAG:resetPasswordPollCompletion"
+
+        LogSession.logMethodCall(TAG, "${TAG}.resetPasswordPollCompletion")
+
+        try {
+            val pollWaitInterval: Int = pollIntervalInSeconds * 1000   //Convert seconds into milliseconds
+
+            var pollCompletionApiResult = performResetPasswordPollCompletionCall(
+                oAuth2Strategy = oAuth2Strategy,
+                passwordResetToken = passwordResetToken
+            )
+
+            val startTime = System.currentTimeMillis()
+
+            while (pollCompletionApiResult is ResetPasswordPollCompletionApiResult.InProgress) {
+                ThreadUtils.sleepSafely(
+                    pollWaitInterval,
+                    methodTag,
+                    "Waiting between reset password polls"
+                )
+
+                if (pollCompletionTimedOut(startTime)) {
+                    Logger.warn(
+                        TAG,
+                        "Reset password completion timed out."
+                    )
+                    return ResetPasswordCommandResult.PasswordResetFailed(
+                        error = ResetPasswordSubmitNewPasswordCommand.POLL_COMPLETION_TIMEOUT_ERROR_CODE,
+                        errorDescription = ResetPasswordSubmitNewPasswordCommand.POLL_COMPLETION_TIMEOUT_ERROR_DESCRIPTION
+                    )
+                }
+
+                pollCompletionApiResult = performResetPasswordPollCompletionCall(
+                    oAuth2Strategy = oAuth2Strategy,
+                    passwordResetToken = passwordResetToken
+                )
+            }
+
+            return when (pollCompletionApiResult) {
+                is ResetPasswordPollCompletionApiResult.PollingFailed -> {
+                    ResetPasswordCommandResult.PasswordResetFailed(
+                        error = pollCompletionApiResult.error,
+                        errorDescription = pollCompletionApiResult.errorDescription
+                    )
+                }
+
+                is ResetPasswordPollCompletionApiResult.PollingSucceeded -> {
+                    ResetPasswordCommandResult.Complete
+                }
+
+                is ResetPasswordPollCompletionApiResult.InProgress -> {
+                    Logger.warn(
+                        TAG,
+                        "in_progress received after polling, illegal state"
+                    )
+                    // This should never be reached, theoretically
+                    INativeAuthCommandResult.UnknownError(
+                        error = "illegal_state",
+                        errorDescription = "in_progress received after polling concluded, illegal state"
+                    )
+                }
+                is ResetPasswordPollCompletionApiResult.ExpiredToken,
+                is ResetPasswordPollCompletionApiResult.UserNotFound,
+                is ResetPasswordPollCompletionApiResult.PasswordInvalid,
+                is ResetPasswordPollCompletionApiResult.UnknownError -> {
+                    Logger.warn(
+                        TAG,
+                        "Unexpected result: $pollCompletionApiResult"
+                    )
+                    pollCompletionApiResult as ApiErrorResult
+                    INativeAuthCommandResult.UnknownError(
+                        error = pollCompletionApiResult.error,
+                        errorDescription = pollCompletionApiResult.errorDescription,
+                        details = pollCompletionApiResult.details
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            Logger.error(TAG, "Exception thrown in resetPasswordPollCompletion",e)
+            throw e
+        }
+    }
+
     @VisibleForTesting
     fun performSLTTokenRequest(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
@@ -733,6 +1037,56 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     ): SignInChallengeApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performSignInChallengeCall")
         return oAuth2Strategy.performSignInChallenge(credentialToken = credentialToken)
+    }
+
+    private fun performResetPasswordStartCall(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: ResetPasswordStartCommandParameters,
+    ): ResetPasswordStartApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordStartCall")
+        return oAuth2Strategy.performResetPasswordStart(
+            parameters = parameters
+        )
+    }
+
+    private fun performResetPasswordChallengeCall(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        passwordResetToken: String
+    ): ResetPasswordChallengeApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordChallengeCall")
+        return oAuth2Strategy.performResetPasswordChallenge(
+            passwordResetToken = passwordResetToken
+        )
+    }
+
+    private fun performResetPasswordContinueCall(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: ResetPasswordSubmitCodeCommandParameters,
+    ): ResetPasswordContinueApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordContinueCall")
+        return oAuth2Strategy.performResetPasswordContinue(
+            parameters = parameters
+        )
+    }
+
+    private fun performResetPasswordSubmitCall(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: ResetPasswordSubmitNewPasswordCommandParameters,
+    ): ResetPasswordSubmitApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordSubmitCall")
+        return oAuth2Strategy.performResetPasswordSubmit(
+            parameters = parameters,
+        )
+    }
+
+    private fun performResetPasswordPollCompletionCall(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        passwordResetToken: String,
+    ): ResetPasswordPollCompletionApiResult {
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordPollCompletionCall")
+        return oAuth2Strategy.performResetPasswordPollCompletion(
+            passwordResetToken = passwordResetToken
+        )
     }
 
     private fun saveAndReturnTokens(
@@ -792,6 +1146,54 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         // sanitize empty and null scopes
         requestScopes.removeAll(listOf("", null))
         return requestScopes.toList()
+    }
+
+    private fun ResetPasswordChallengeApiResult.toResetPasswordStartCommandResult(): ResetPasswordStartCommandResult {
+        LogSession.logMethodCall(TAG, "${TAG}.toResetPasswordStartCommandResult")
+        return when (this) {
+            is ResetPasswordChallengeApiResult.CodeRequired -> {
+                ResetPasswordCommandResult.CodeRequired(
+                    passwordResetToken = this.passwordResetToken,
+                    codeLength = this.codeLength,
+                    challengeTargetLabel = this.challengeTargetLabel,
+                    challengeChannel = this.challengeChannel
+                )
+            }
+            ResetPasswordChallengeApiResult.Redirect -> {
+                INativeAuthCommandResult.Redirect()
+            }
+            is ResetPasswordChallengeApiResult.ExpiredToken -> {
+                Logger.warn(
+                    TAG,
+                    "Expire token result: $this"
+                )
+                INativeAuthCommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+            is ResetPasswordChallengeApiResult.UnsupportedChallengeType -> {
+                Logger.warn(
+                    TAG,
+                    "Unsupported challenge type: $this"
+                )
+                INativeAuthCommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+            is ResetPasswordChallengeApiResult.UnknownError -> {
+                Logger.warn(
+                    TAG,
+                    "Unexpected result: $this"
+                )
+                INativeAuthCommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription,
+                    details = this.details
+                )
+            }
+        }
     }
 
     @Throws(
