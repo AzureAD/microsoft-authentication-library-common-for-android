@@ -35,10 +35,12 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
+import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.net.HttpConstants
+import com.microsoft.identity.common.java.platform.Device
 import com.microsoft.identity.common.java.providers.nativeauth.requests.resetpassword.ResetPasswordChallengeRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.resetpassword.ResetPasswordContinueRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.resetpassword.ResetPasswordPollCompletionRequest
@@ -357,8 +359,11 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //region helpers
     private fun getRequestHeaders(): Map<String, String?> {
         val headers: MutableMap<String, String?> = TreeMap()
-        headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] =
-            DiagnosticContext.INSTANCE.requestContext[DiagnosticContext.CORRELATION_ID]
+        headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = DiagnosticContext.INSTANCE.requestContext[DiagnosticContext.CORRELATION_ID]
+        headers[AuthenticationConstants.SdkPlatformFields.PRODUCT] = DiagnosticContext.INSTANCE.requestContext[AuthenticationConstants.SdkPlatformFields.PRODUCT]
+        headers[AuthenticationConstants.SdkPlatformFields.VERSION] = Device.getProductVersion()
+        headers.putAll(Device.getPlatformIdParameters())
+        headers.putAll(EstsTelemetry.getInstance().telemetryHeaders)
         headers[HttpConstants.HeaderField.CONTENT_TYPE] = "application/x-www-form-urlencoded"
         return headers
     }

@@ -404,9 +404,9 @@ class NativeAuthResponseHandler {
                 null,
                 null,
                 null,
-                null,
                 EMPTY_RESPONSE_ERROR,
                 EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                null,
                 null,
                 null
             )

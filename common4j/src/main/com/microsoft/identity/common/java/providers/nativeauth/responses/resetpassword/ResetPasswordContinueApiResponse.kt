@@ -39,7 +39,7 @@ import java.net.HttpURLConnection
 class ResetPasswordContinueApiResponse(
     @Expose override var statusCode: Int,
     @SerializedName("password_submit_token") val passwordSubmitToken: String?,
-    @SerializedName("challenge_type") val challengeType: String?,
+    @Expose @SerializedName("challenge_type") val challengeType: String?,
     @Expose @SerializedName("expires_in") val expiresIn: Int?,
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
