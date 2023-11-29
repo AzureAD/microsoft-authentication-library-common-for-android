@@ -74,8 +74,6 @@ class AccountManagerBrokerDiscoveryUtil(
             throw ClientException(ClientException.ACCOUNT_MANAGER_FAILED, t.message)
         }
 
-        Logger.info(methodTag, "${authenticators.size} Authenticators registered.")
-
         authenticators.forEach { authenticator ->
             if (authenticator.packageName == null || authenticator.type == null){
                 return@forEach
@@ -83,22 +81,20 @@ class AccountManagerBrokerDiscoveryUtil(
 
             val packageName = authenticator.packageName.trim()
             val accountType = authenticator.type.trim()
-            Logger.info(methodTag, "Authenticator: $packageName type: $accountType")
 
             if (AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE.equals(accountType, ignoreCase = true)) {
-                Logger.info(methodTag, "Verify: $packageName")
-
                 val brokerData = knownBrokerApps.filter {
                     it.packageName.equals(packageName, ignoreCase = true)
                 }.firstOrNull(isSignedByKnownKeys)
 
                 if (brokerData != null) {
+                    Logger.info(methodTag, "$brokerData is the active AccountManager broker.")
                     return brokerData
                 }
             }
         }
 
-        Logger.info(methodTag, "No valid broker is found")
+        Logger.info(methodTag, "No valid AccountManager broker is found")
         return null
     }
 }

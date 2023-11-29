@@ -39,6 +39,8 @@ import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerPara
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+import com.microsoft.identity.labapi.utilities.constants.UserType;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -147,6 +149,14 @@ public class MsalTestApp extends App {
         authScheme.click();
     }
 
+    // Select configuration to be used from dropdown.
+    public void selectFromConfigFile(@NonNull final String text) throws UiObjectNotFoundException {
+        final UiObject configFileSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/configFile");
+        configFileSpinner.click();
+        final UiObject configFile = UiAutomatorUtils.obtainUiObjectWithText(text);
+        configFile.click();
+    }
+
     // click on button generateSHR
     public String generateSHR() throws UiObjectNotFoundException {
         final UiObject generateSHRButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_generate_shr");
@@ -212,5 +222,13 @@ public class MsalTestApp extends App {
     @Override
     public void handleFirstRun() {
         UiAutomatorUtils.handleButtonClick("com.msft.identity.client.sample.local:id/btnStartTask");
+    }
+
+    // Handles first run of the app based on the user account type to be used.
+    public void handleFirstRunBasedOnUserType(UserType userType) throws UiObjectNotFoundException {
+        handleFirstRun();
+        if (userType == UserType.MSA) {
+            selectFromConfigFile("MSA");
+        }
     }
 }
