@@ -43,30 +43,27 @@ class IsQrPinAvailableCommand(
     publicApiId: String
 ) : BaseCommand<Boolean?>(parameters, controllers, callback, publicApiId) {
 
-    @Throws(Exception::class)
+    companion object {
+        private val TAG = IsQrPinAvailableCommand::class.java.simpleName
+    }
+
     override fun execute(): Boolean {
         val methodTag = "$TAG:execute"
-        for (controller in getControllers()) {
+        // Is important that we check the controllers in reverse order, as the first controller in the list is LocalMSALController,
+        // which will return false by default, This operation is only supported on the BrokerMsalController.
+        // see: MSALControllerFactory.getAllControllers()
+        for (controller in controllers.reversed()) {
             try {
-                if (controller.isQrPinAvailable) {
-                    return true
-                }
+                return controller.isQrPinAvailable
             } catch (e: ClientException) {
                 Logger.error(methodTag, "Failed to check if QR code + PIN authorization is available.", e)
-                if (ErrorStrings.BROKER_BIND_SERVICE_FAILED.equals(e.errorCode, ignoreCase = true)) {
-                    Logger.warn(methodTag, "Operation is not supported on the broker, returning false.")
-                    return false
-                }
             }
         }
+        Logger.warn(methodTag, "No controller was able to check if QR code + PIN authorization is available.")
         return false
     }
 
     override fun isEligibleForEstsTelemetry(): Boolean {
         return false
-    }
-
-    companion object {
-        private val TAG = IsQrPinAvailableCommand::class.java.simpleName
     }
 }
