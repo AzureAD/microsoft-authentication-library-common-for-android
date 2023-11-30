@@ -127,6 +127,7 @@ public class MicrosoftAuthorizationRequestTest {
                 .build();
         Assert.assertEquals(String.valueOf(PreferredAuthMethod.QR.code), request.getPreferredAuthMethodCode());
     }
+    
     @Test
     public void testMicrosoftAuthorizationRequestWithNoPreferredAuthMethod(){
         final MockMicrosoftAuthorizationRequest request = new MockMicrosoftAuthorizationRequest.Builder()
