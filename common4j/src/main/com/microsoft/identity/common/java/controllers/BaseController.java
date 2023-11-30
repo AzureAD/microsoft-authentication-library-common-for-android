@@ -358,12 +358,12 @@ public abstract class BaseController {
 
         if (builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
             final MicrosoftStsAuthorizationRequest.Builder msBuilder = (MicrosoftStsAuthorizationRequest.Builder) builder;
-            msBuilder.setLoginHint(
-                    interactiveTokenCommandParameters.getLoginHint()
-            ).setPrompt(
-                    interactiveTokenCommandParameters.getPrompt().toString()
-            );
+            msBuilder
+                    .setLoginHint(interactiveTokenCommandParameters.getLoginHint())
+                    .setPrompt(interactiveTokenCommandParameters.getPrompt().toString())
+                    .setPreferredAuthMethod(interactiveTokenCommandParameters.getPreferredAuthMethod());
 
+                    // check if getPreferredAuthMethod is null if it is null do not add to builder
             final String installedCompanyPortalVersion =
                     parameters.getPlatformComponents().getPlatformUtil().getInstalledCompanyPortalVersion();
 
