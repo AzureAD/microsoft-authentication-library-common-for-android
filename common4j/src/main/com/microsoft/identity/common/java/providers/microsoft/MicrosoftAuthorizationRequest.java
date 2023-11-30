@@ -134,7 +134,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @Expose()
     @Getter
     @Accessors(prefix = "m")
-    @SerializedName("prefcred")
+    @SerializedName("pc")
     private final String mPreferredAuthMethodCode;
 
 
