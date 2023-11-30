@@ -1,4 +1,7 @@
 V.Next
+---------
+
+V.16.2.0
 ----------
 - [PATCH] always make a copy of bundle before modifying & sending out via ipc (#2239)
 - [PATCH] Use v2.0 url for OpenID Client (#2208)
