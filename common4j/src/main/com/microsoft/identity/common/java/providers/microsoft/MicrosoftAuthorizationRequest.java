@@ -135,7 +135,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @Getter
     @Accessors(prefix = "m")
     @SerializedName("prefcred")
-    private final int mPreferredAuthMethod;
+    private final String mPreferredAuthMethodCode;
 
 
     /**
@@ -157,7 +157,9 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mMultipleCloudAware = builder.mMultipleCloudAware;
         mLibraryVersion = builder.mLibraryVersion;
         mLibraryName = builder.mLibraryName;
-        mPreferredAuthMethod = builder.mPreferredAuthMethod;
+        mPreferredAuthMethodCode = builder.mPreferredAuthMethod == null ?
+                null :
+                String.valueOf(builder.mPreferredAuthMethod.code);
 
         mDiagnosticOS = Device.getOsForEsts();
         mDiagnosticDM = Device.getModel();
@@ -181,7 +183,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         private UUID mCorrelationId;
         private String mLoginHint;
         private PkceChallenge mPkceChallenge;
-        private int mPreferredAuthMethod;
+        private PreferredAuthMethod mPreferredAuthMethod;
 
         public Builder() {
             setState(new DefaultStateGenerator().generate());
@@ -218,9 +220,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         }
 
         public B setPreferredAuthMethod(@Nullable final PreferredAuthMethod preferredAuthMethod) {
-            if (preferredAuthMethod != null) {
-                mPreferredAuthMethod = preferredAuthMethod.code;
-            }
+            mPreferredAuthMethod = preferredAuthMethod;
             return self();
         }
         
