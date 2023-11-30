@@ -28,6 +28,7 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.PublicKeyCredential
 import com.microsoft.identity.common.logging.Logger
+import org.json.JSONObject
 
 /**
  * Makes calls to the Android Credential Manager API in order to return an attestation.
@@ -54,6 +55,9 @@ class CredManFidoManager (val context: Context) : IFidoManager {
             request = getCredRequest
         )
         val credential: PublicKeyCredential = result.credential as PublicKeyCredential
-        return WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(credential.authenticationResponseJson)
+        val json = JSONObject(credential.authenticationResponseJson)
+        val json2 = json.getJSONObject("response")
+        json2.put("id", json.get("id"))
+        return json2.toString()//return WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(credential.authenticationResponseJson)
     }
 }

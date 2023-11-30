@@ -62,7 +62,16 @@ class WebAuthnJsonUtil {
             val moshiAdapter = CommonMoshiJsonAdapter()
             val authResponse = moshiAdapter.fromJson(fullResponseJson, AuthenticationResponse::class.java)
             val authAssertionResponse = authResponse.response
-            return moshiAdapter.toJson(authAssertionResponse)
+            val newAuthAssertionResponse = AuthenticationAssertionResponse(
+                authAssertionResponse.clientDataJSON,
+                authAssertionResponse.authenticatorData,
+                authAssertionResponse.signature,
+                authAssertionResponse.userHandle,
+                authResponse.id,
+                authAssertionResponse.attestationObject
+            )
+
+            return moshiAdapter.toJson(newAuthAssertionResponse)
         }
     }
 }
