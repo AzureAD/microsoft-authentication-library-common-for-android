@@ -362,8 +362,6 @@ public abstract class BaseController {
                     .setLoginHint(interactiveTokenCommandParameters.getLoginHint())
                     .setPrompt(interactiveTokenCommandParameters.getPrompt().toString())
                     .setPreferredAuthMethod(interactiveTokenCommandParameters.getPreferredAuthMethod());
-
-                    // check if getPreferredAuthMethod is null if it is null do not add to builder
             final String installedCompanyPortalVersion =
                     parameters.getPlatformComponents().getPlatformUtil().getInstalledCompanyPortalVersion();
 

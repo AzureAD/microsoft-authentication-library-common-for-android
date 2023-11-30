@@ -20,13 +20,8 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.ui;
+package com.microsoft.identity.common.java.ui
 
-public enum PreferredAuthMethod {
-    QR(18);
-    public final int code;
-
-    PreferredAuthMethod(final int code) {
-        this.code = code;
-    }
+enum class PreferredAuthMethod(@JvmField val code: Int) {
+    QR(18)
 }
