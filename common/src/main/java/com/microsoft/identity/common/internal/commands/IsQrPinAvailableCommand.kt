@@ -38,10 +38,10 @@ import lombok.EqualsAndHashCode
 @EqualsAndHashCode(callSuper = true)
 class IsQrPinAvailableCommand(
     parameters: CommandParameters,
-    controllers: List<BaseController?>,
+    controller: BaseController,
     callback: CommandCallback<*, *>,
     publicApiId: String
-) : BaseCommand<Boolean?>(parameters, controllers, callback, publicApiId) {
+) : BaseCommand<Boolean?>(parameters, controller, callback, publicApiId) {
 
     companion object {
         private val TAG = IsQrPinAvailableCommand::class.java.simpleName
@@ -49,18 +49,12 @@ class IsQrPinAvailableCommand(
 
     override fun execute(): Boolean {
         val methodTag = "$TAG:execute"
-        // Is important that we check the controllers in reverse order, as the first controller in the list is LocalMSALController,
-        // which will return false by default, This operation is only supported on the BrokerMsalController.
-        // see: MSALControllerFactory.getAllControllers()
-        for (controller in controllers.reversed()) {
-            try {
-                return controller.isQrPinAvailable
-            } catch (e: ClientException) {
-                Logger.error(methodTag, "Failed to check if QR code + PIN authorization is available.", e)
-            }
+        return try {
+            controller.isQrPinAvailable
+        } catch (e: Throwable) {
+            Logger.error(methodTag, "Failed to check if QR code + PIN authorization is available.", e)
+            false
         }
-        Logger.warn(methodTag, "No controller was able to check if QR code + PIN authorization is available.")
-        return false
     }
 
     override fun isEligibleForEstsTelemetry(): Boolean {

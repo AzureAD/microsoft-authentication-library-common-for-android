@@ -1693,7 +1693,7 @@ public final class AuthenticationConstants {
         public static final String IS_QR_PIN_AVAILABLE_PATH = "/isQrPinAvailable";
 
         /**
-         * Broker api path to check if QR + PIN should de available.
+         * Broker api path to read the restrictions manager.
          */
         public static final String READ_RESTRICTIONS_MANAGER_PATH = "/readRestrictionsManager";
 
