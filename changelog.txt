@@ -1,4 +1,7 @@
 V.Next
+---------
+
+V.16.2.0
 ----------
 
 - [MINOR] Add IsQrPinAvailableCommand, controllers behavior and define constants for the isQrAvailable API (#2219)
