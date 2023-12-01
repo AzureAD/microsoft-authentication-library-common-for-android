@@ -50,7 +50,7 @@ class IsQrPinAvailableCommand(
     override fun execute(): Boolean {
         val methodTag = "$TAG:execute"
         return try {
-            controller.isQrPinAvailable
+            defaultController.isQrPinAvailable
         } catch (e: Throwable) {
             Logger.error(methodTag, "Failed to check if QR code + PIN authorization is available.", e)
             false
