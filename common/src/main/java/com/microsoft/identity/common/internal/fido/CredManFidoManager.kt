@@ -57,7 +57,7 @@ class CredManFidoManager (val context: Context) : IFidoManager {
         val credential: PublicKeyCredential = result.credential as PublicKeyCredential
         val json = JSONObject(credential.authenticationResponseJson)
         val json2 = json.getJSONObject("response")
-        json2.put("id", json.get("id"))
-        return json2.toString()//return WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(credential.authenticationResponseJson)
+        //json2.put("id", json.get("id"))
+        return json2.toString()
     }
 }
