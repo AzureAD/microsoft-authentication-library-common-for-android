@@ -182,6 +182,7 @@ dependencies {
     // Test dependencies
     // Needed to resolve JSONObject inside of non-instrumented tests
     testImplementation "org.json:json:$rootProject.ext.jsonVersion"
+    testImplementation "org.skyscreamer:jsonassert:1.5.1"
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
     testImplementation "org.powermock:powermock-module-junit4:$rootProject.ext.powerMockVersion"

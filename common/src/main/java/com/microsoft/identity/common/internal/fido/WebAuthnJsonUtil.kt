@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.internal.fido
 
 import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter
+import com.microsoft.identity.common.java.constants.FidoConstants
+import org.json.JSONObject
 
 /**
  * A utility class to help convert to and from strings in WebAuthn json format.
@@ -59,19 +61,9 @@ class WebAuthnJsonUtil {
          * @param fullResponseJson AuthenticationResponse Json string.
          */
         fun extractAuthenticatorAssertionResponseJson(fullResponseJson : String): String {
-            val moshiAdapter = CommonMoshiJsonAdapter()
-            val authResponse = moshiAdapter.fromJson(fullResponseJson, AuthenticationResponse::class.java)
-            val authAssertionResponse = authResponse.response
-            val newAuthAssertionResponse = AuthenticationAssertionResponse(
-                authAssertionResponse.clientDataJSON,
-                authAssertionResponse.authenticatorData,
-                authAssertionResponse.signature,
-                authAssertionResponse.userHandle,
-                authResponse.id,
-                authAssertionResponse.attestationObject
-            )
-
-            return moshiAdapter.toJson(newAuthAssertionResponse)
+            return JSONObject(fullResponseJson)
+                .getJSONObject(FidoConstants.WEBAUTHN_AUTHENTICATION_ASSERTION_RESPONSE_JSON_KEY)
+                .toString()
         }
     }
 }
