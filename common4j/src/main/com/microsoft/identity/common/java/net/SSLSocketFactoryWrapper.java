@@ -36,11 +36,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
-import lombok.Synchronized;
 import lombok.experimental.Accessors;
 
 /**
@@ -55,7 +51,8 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
      * SSL Protocols that our library supports.
      */
     public static final List<String> SUPPORTED_SSL_PROTOCOLS =
-            Collections.unmodifiableList(Arrays.asList("SSLv2Hello", "SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"));
+            Collections.unmodifiableList(Arrays.asList("SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"));
+
 
     // Gets TLS version of the latest-established socket connection. For testing only.
     @Accessors(prefix = "s")

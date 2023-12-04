@@ -24,19 +24,22 @@
 package com.microsoft.identity.common.java.controllers.results
 
 import com.microsoft.identity.common.java.logging.DiagnosticContext
+import java.lang.Error
 
 /**
  * INativeAuthCommandResult interface defines the base class for errors used in Native Auth.
  */
 interface INativeAuthCommandResult {
-    data class Redirect(val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
-        SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult,
-        SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult,
-        SignUpStartCommandResult, SignUpSubmitCodeCommandResult,
+    data class Redirect(
+        override val error: String = "browser_required",
+        override val errorDescription: String = "The client's authentication capabilities are insufficient. Please redirect to the browser to complete authentication",
+        override val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
+    ) : Error(error = error, errorDescription = errorDescription, correlationId = correlationId),
+        SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult, SignInResendCodeCommandResult,
+        SignInSubmitPasswordCommandResult, SignUpStartCommandResult, SignUpSubmitCodeCommandResult,
         SignUpResendCodeCommandResult, SignUpSubmitPasswordCommandResult,
         SignUpSubmitUserAttributesCommandResult,
-        ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,
-        ResetPasswordResendCodeCommandResult
+        ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult, ResetPasswordResendCodeCommandResult
 
     /**
      * UnknownError is base class to represent various kinds of errors in NativeAuth.
@@ -45,14 +48,13 @@ interface INativeAuthCommandResult {
         override val error: String?,
         override val errorDescription: String?,
         override val details: List<Map<String, String>>? = null,
-        //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
         override val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
         override val errorCodes: List<Int>? = null,
         val exception: Exception? = null
     ): Error(error, errorDescription, details, correlationId, errorCodes), INativeAuthCommandResult,
-        SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult,
-        SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult,
-        SignUpStartCommandResult, SignUpSubmitUserAttributesCommandResult,
+        SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult, SignInResendCodeCommandResult,
+        SignInSubmitPasswordCommandResult, SignUpStartCommandResult,
+        SignUpSubmitUserAttributesCommandResult,
         SignUpSubmitCodeCommandResult, SignUpResendCodeCommandResult,
         SignUpSubmitPasswordCommandResult,
         ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,

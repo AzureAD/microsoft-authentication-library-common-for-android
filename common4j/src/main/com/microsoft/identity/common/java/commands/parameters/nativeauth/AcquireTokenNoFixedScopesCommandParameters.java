@@ -62,11 +62,21 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
     private final AbstractAuthenticationScheme authenticationScheme;
 
     @Expose()
+    private final String claimsRequestJson;
+
+    @Expose()
+    private final String mamEnrollmentId;
+
+    @Expose()
     private final boolean forceRefresh;
 
     private final String loginHint;
 
     private final List<Map.Entry<String, String>> extraOptions;
+
+    public String getMamEnrollmentId(){
+        return mamEnrollmentId;
+    }
 
     /**
      * Validates the command parameters in this object are consistent and can be used for
