@@ -84,7 +84,7 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
         // AuthenticationScheme is present...
         if (null == authenticationScheme) {
             throw new ArgumentException(
-                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME, // TODO update argument name
+                    ArgumentException.ACQUIRE_TOKEN_NO_FIXED_SCOPE_OPERATION_NAME,
                     ArgumentException.AUTHENTICATION_SCHEME_ARGUMENT_NAME,
                     "authentication scheme is undefined"
             );
