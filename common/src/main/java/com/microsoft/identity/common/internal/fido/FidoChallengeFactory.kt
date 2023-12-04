@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.fido
 
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.util.UrlUtil
-import java.net.URL
 
 /**
  * Instantiates FidoChallenge objects.
