@@ -116,6 +116,24 @@ public class AccountManagerBrokerAccount implements IBrokerAccount {
                     COMPANY_PORTAL_APP_PACKAGE_NAME,
                     AccountManager.VISIBILITY_VISIBLE
             );
+
+            if (BrokerData.getShouldTrustDebugBrokers()){
+                accountManager.setAccountVisibility(
+                        account,
+                        BrokerData.getDebugMockCp().getPackageName(),
+                        AccountManager.VISIBILITY_VISIBLE
+                );
+                accountManager.setAccountVisibility(
+                        account,
+                        BrokerData.getDebugMockAuthApp().getPackageName(),
+                        AccountManager.VISIBILITY_VISIBLE
+                );
+                accountManager.setAccountVisibility(
+                        account,
+                        BrokerData.getDebugBrokerHost().getPackageName(),
+                        AccountManager.VISIBILITY_VISIBLE
+                );
+            }
         }
 
         return adapt(account);
