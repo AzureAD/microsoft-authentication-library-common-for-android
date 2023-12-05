@@ -227,13 +227,13 @@ dependencies {
     testAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
-    testImplementation "io.mockk:mockk:$rootProject.ext.mockkVersion"    
+    testImplementation "io.mockk:mockk:1.11.0"    
     testImplementation "org.mockito:mockito-inline:$rootProject.ext.mockitoCoreVersion"
-    testImplementation "org.mockito.kotlin:mockito-kotlin:$rootProject.ext.mockitoKotlinVersion"
+    testImplementation "org.mockito.kotlin:mockito-kotlin:4.1.0"
 
     testFixturesCompileOnly "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     testFixturesCompileOnly "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
-    testFixturesCompileOnly "org.mockito.kotlin:mockito-kotlin:$rootProject.ext.mockitoKotlinVersion"
+    testFixturesCompileOnly "org.mockito.kotlin:mockito-kotlin:4.1.0"
     testFixturesCompileOnly "org.powermock:powermock-module-junit4:$rootProject.ext.powerMockVersion"
     testFixturesCompileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
     testFixturesCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
