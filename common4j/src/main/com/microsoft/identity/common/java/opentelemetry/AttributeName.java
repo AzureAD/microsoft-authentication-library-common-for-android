@@ -261,5 +261,10 @@ public enum AttributeName {
     /**
      * Fido challenge handler type.
      */
-    fido_challenge_handler
+    fido_challenge_handler,
+
+    /**
+     * Indicates the request sequence used by cached credential service (if used) on server side
+     */
+    ccs_request_sequence
 }

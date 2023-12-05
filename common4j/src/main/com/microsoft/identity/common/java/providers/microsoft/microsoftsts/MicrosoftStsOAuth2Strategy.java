@@ -29,6 +29,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2S
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_ID;
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_SEQUENCE;
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
 import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
 
@@ -643,6 +644,24 @@ public class MicrosoftStsOAuth2Strategy
                 }
                 SpanExtension.current().setAttribute(
                         AttributeName.ccs_request_id.name(), ccsRequestId);
+            }
+
+            final String ccsRequestSequence = response.getHeaderValue(XMS_CCS_REQUEST_SEQUENCE, 0);
+            if (null != ccsRequestSequence){
+                if (CommonFlightManager.isFlightEnabled(CommonFlight.EXPOSE_CCS_REQUEST_SEQUENCE_IN_TOKENRESPONSE)){
+                    if (null != tokenResponse){
+                        final Map<String, String> mapWithAdditionalEntry = new HashMap<String, String>();
+                        mapWithAdditionalEntry.put(XMS_CCS_REQUEST_SEQUENCE, ccsRequestSequence);
+                        if (null != tokenResponse.getExtraParameters()){
+                            for (final Map.Entry<String, String> entry : tokenResponse.getExtraParameters()){
+                                mapWithAdditionalEntry.put(entry.getKey(), entry.getValue());
+                            }
+                        }
+                        tokenResponse.setExtraParameters(mapWithAdditionalEntry.entrySet());
+                    }
+                }
+                SpanExtension.current().setAttribute(
+                        AttributeName.ccs_request_sequence.name(), ccsRequestSequence);
             }
         }
 
