@@ -179,7 +179,7 @@ dependencies {
     testImplementation "org.json:json:$rootProject.ext.jsonVersion"
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
-    testImplementation "org.mockito.kotlin:mockito-kotlin:3.6.28"
+    testImplementation "org.mockito.kotlin:mockito-kotlin:$rootProject.ext.mockitoKotlinVersion"
     testImplementation "org.powermock:powermock-module-junit4:$rootProject.ext.powerMockVersion"
     testImplementation "org.powermock:powermock-module-junit4-rule:$rootProject.ext.powerMockVersion"
     testImplementation "org.powermock:powermock-api-mockito2:$rootProject.ext.powerMockVersion"
@@ -188,7 +188,7 @@ dependencies {
     testImplementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
     testImplementation project(":LabApiUtilities")
     testImplementation project(":testutils")
-
+    
     testImplementation(testFixtures(project(":common4j")))
 
     testCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
