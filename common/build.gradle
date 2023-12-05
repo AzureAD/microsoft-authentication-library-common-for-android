@@ -37,8 +37,8 @@ if (project.hasProperty("distCommon4jVersion") && project.distCommon4jVersion !=
 }
 
 boolean newBrokerDiscoveryEnabledFlag = project.hasProperty("newBrokerDiscoveryEnabledFlag")
-
 boolean trustDebugBrokerFlag = project.hasProperty("trustDebugBrokerFlag")
+boolean bypassRedirectUriCheck = project.hasProperty("bypassRedirectUriCheck")
 
 android {
     compileSdk rootProject.ext.compileSdkVersion
@@ -59,6 +59,7 @@ android {
                 "ru", "sk", "sl", "sr", "sv", "th", "tr", "uk", "vi", "zh-rCN", "zh-rTW"
         buildConfigField("boolean", "newBrokerDiscoveryEnabledFlag", "$newBrokerDiscoveryEnabledFlag")
         buildConfigField("boolean", "trustDebugBrokerFlag", "$trustDebugBrokerFlag")
+        buildConfigField("boolean", "bypassRedirectUriCheck", "$bypassRedirectUriCheck")
     }
 
     buildTypes {
