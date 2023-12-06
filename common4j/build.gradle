@@ -155,6 +155,7 @@ publishing {
 
 def sliceParameter = "" // will be blank unless specified by developer
 def dcParameter = "" // will be blank unless specified by developer
+def useMockApiForNativeAuthParameter = false // will be false unless specified by developer
 def disableAcquireTokenSilentTimeoutParameter = false // will be false unless specified by developer
 
 if (project.hasProperty("slice")) {
@@ -163,6 +164,12 @@ if (project.hasProperty("slice")) {
 
 if (project.hasProperty("dc")) {
     dcParameter = dc
+}
+
+// This flag is set to false to allow running tests against our mock APIs
+// as our mock API is not a 'real' tenant.
+if (project.hasProperty("useMockApiForNativeAuth")) {
+    useMockApiForNativeAuthParameter = useMockApiForNativeAuth
 }
 
 // By adding -PdisableAcquireTokenSilentTimeout in your dev environment, you will no longer subject to the ATS timeout,
@@ -176,6 +183,7 @@ sourceSets {
         java.srcDirs = ['src/main', "$project.buildDir/generated/source/buildConfig/main"]
         buildConfigField("String", "SLICE", "\"$sliceParameter\"")
         buildConfigField("String", "DC", "\"$dcParameter\"")
+        buildConfigField("boolean", "USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY", "${useMockApiForNativeAuthParameter}")
         buildConfigField("boolean", "DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT", "${disableAcquireTokenSilentTimeoutParameter}")
     }
     test {
@@ -219,7 +227,14 @@ dependencies {
     testAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
+    testImplementation "io.mockk:mockk:1.11.0"    
+    testImplementation "org.mockito:mockito-inline:$rootProject.ext.mockitoCoreVersion"
+    testImplementation "org.mockito.kotlin:mockito-kotlin:4.1.0"
 
+    testFixturesCompileOnly "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
+    testFixturesCompileOnly "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
+    testFixturesCompileOnly "org.mockito.kotlin:mockito-kotlin:4.1.0"
+    testFixturesCompileOnly "org.powermock:powermock-module-junit4:$rootProject.ext.powerMockVersion"
     testFixturesCompileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
     testFixturesCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     testFixturesAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
