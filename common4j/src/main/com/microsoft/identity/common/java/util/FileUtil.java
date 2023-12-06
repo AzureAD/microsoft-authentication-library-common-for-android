@@ -57,8 +57,6 @@ public class FileUtil {
                                        @NonNull final File file) throws ClientException {
         final String methodName = ":writeKeyData";
 
-        Logger.verbose(TAG + methodName, "Writing data to a file");
-
         try {
             final OutputStream out = new FileOutputStream(file);
             try {
@@ -100,7 +98,6 @@ public class FileUtil {
         }
 
         try {
-            Logger.verbose(TAG + methodName, "Reading data from a file");
             final InputStream in = new FileInputStream(file);
 
             try {

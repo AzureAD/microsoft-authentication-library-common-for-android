@@ -172,11 +172,11 @@ public class MicrosoftStsOAuth2Strategy
         // If the host has a hardcoded trust, we can just use the hostname.
         if (null != cloudEnv) {
             final String preferredCacheHostName = cloudEnv.getPreferredCacheHostName();
-            Logger.info(
+            Logger.verbose(
                     TAG + methodName,
                     "Using preferred cache host name..."
             );
-            Logger.infoPII(
+            Logger.verbose(
                     TAG + methodName,
                     "Preferred cache hostname: [" + preferredCacheHostName + "]"
             );

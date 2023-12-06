@@ -312,8 +312,6 @@ public class StringUtil {
      */
     @NonNull
     public static Date RFC3339StringToDate(@NonNull String dateStr) throws ParseException {
-        final String methodName = "RFC3339StringToDate";
-        Logger.verbose(TAG + methodName, "RFC3339StringToDate is called.");
         final SimpleDateFormat RFC3339DateFormat = new SimpleDateFormat(RFC3339_DATE_FORMAT, Locale.US);
         RFC3339DateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         return RFC3339DateFormat.parse(dateStr);

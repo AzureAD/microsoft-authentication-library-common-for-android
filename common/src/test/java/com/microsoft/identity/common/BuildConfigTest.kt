@@ -20,48 +20,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.jwt;
+package com.microsoft.identity.common
 
-import com.google.gson.annotations.SerializedName;
-
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.Accessors;
+import org.junit.Test
 
 /**
- * Represents header in a JWT. These JWTs can be used in token requests
- */
-@Getter
-@Setter
-@Accessors(prefix = "m")
-public final class JwtRequestHeader extends AbstractJwtRequest {
+ * Tests for making sure compile time flags aren't turned on in PROD build.
+ **/
+class BuildConfigTest {
 
-    private static final String JWT_VALUE = "JWT";
+    @Test
+    fun failIfBypassRedirecUriCheckEnabled(){
+        assert(!BuildConfig.bypassRedirectUriCheck)
+    }
 
-    // HMAC using SHA256 - symmetric key signing algorithm
-    public static final String ALG_VALUE_HS256 = "HS256";
-
-    // RSA using SHA256 - asymmetric key signing algorithm
-    public static final String ALG_VALUE_RS256 = "RS256";
-
-    @Setter(AccessLevel.NONE)
-    @SerializedName(ClaimNames.TYPE)
-    private String mType;
-
-    @SerializedName(ClaimNames.CTX)
-    private String mCtx;
-
-    @SerializedName(ClaimNames.ALG)
-    private String mAlg;
-
-    @SerializedName(ClaimNames.KID)
-    private String mKId;
-
-    @SerializedName(ClaimNames.KDF_VER)
-    private int mKdfVersion = 1;
-
-    public void setType() {
-        mType = JWT_VALUE;
+    @Test
+    fun failIfTrustDebugBrokerFlagEnabled(){
+        assert(!BuildConfig.trustDebugBrokerFlag)
     }
 }

@@ -136,6 +136,12 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     @Override
     public boolean isValidCallingApp(@NonNull String redirectUri, @NonNull String packageName) {
         final String methodTag = TAG + ":isValidCallingApp";
+
+        if (BuildConfig.bypassRedirectUriCheck) {
+            Logger.warn(methodTag, "Bypassing RedirectUri Check. This should not be enabled in PROD.");
+            return true;
+        }
+
         final String expectedBrokerRedirectUri = PackageHelper.getBrokerRedirectUri(mContext, packageName);
         boolean isValidBrokerRedirect = StringUtil.equalsIgnoreCase(redirectUri, expectedBrokerRedirectUri);
         if (packageName.equals(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)) {

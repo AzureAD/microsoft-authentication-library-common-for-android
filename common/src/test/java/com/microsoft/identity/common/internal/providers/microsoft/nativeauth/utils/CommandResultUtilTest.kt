@@ -52,6 +52,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
+import org.mockito.kotlin.mock
 
 private const val SIGNUP_TOKEN = "1234"
 private const val CREDENTIAL_TOKEN = "ABCD"
