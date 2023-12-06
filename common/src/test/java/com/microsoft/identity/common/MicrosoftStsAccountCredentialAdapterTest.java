@@ -71,8 +71,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@PowerMockIgnore("javax.crypto.*")
-@RunWith(PowerMockRunner.class)
 public class MicrosoftStsAccountCredentialAdapterTest {
 
     public static final String MOCK_ID_TOKEN_WITH_CLAIMS;
