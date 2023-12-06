@@ -229,10 +229,13 @@ dependencies {
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
     testImplementation "io.mockk:mockk:1.11.0"
     testImplementation "org.mockito:mockito-inline:$rootProject.ext.mockitoCoreVersion"
+    testImplementation "org.mockito:mockito-inline:$rootProject.ext.mockitoCoreVersion"
     testImplementation "org.mockito.kotlin:mockito-kotlin:4.1.0"
     testFixturesCompileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
     testFixturesCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    testFixturesCompileOnly "org.mockito:mockito-inline:$rootProject.ext.mockitoCoreVersion"
     testFixturesAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    
     resolvableTestFixturesImplementation "org.robolectric:junit:$rootProject.ext.robolectricVersion"
 
     implementation platform("io.opentelemetry:opentelemetry-bom:1.18.0")
