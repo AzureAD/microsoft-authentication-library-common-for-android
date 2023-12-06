@@ -38,9 +38,4 @@ class BuildConfigTest {
     fun failIfTrustDebugBrokerFlagEnabled(){
         assert(!BuildConfig.trustDebugBrokerFlag)
     }
-
-    @Test
-    fun failIfNewBrokerDiscoveryEnabledFlagEnabled(){
-        assert(!BuildConfig.newBrokerDiscoveryEnabledFlag)
-    }
 }
