@@ -22,21 +22,31 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.PermissionRequest;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ProgressBar;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
@@ -96,6 +106,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private boolean webViewZoomControlsEnabled;
 
     private boolean webViewZoomEnabled;
+
+    private PermissionRequest mCameraPermissionRequest;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -227,7 +239,155 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setBuiltInZoomControls(webViewZoomControlsEnabled);
         mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
         mWebView.setVisibility(View.INVISIBLE);
+        mWebView.getSettings().setPluginState(WebSettings.PluginState.ON);
         mWebView.setWebViewClient(webViewClient);
+        mWebView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onPermissionRequest(final PermissionRequest request) {
+                // We can only grant or deny permissions for video capture/camera.
+                // To avoid unintentionally granting requests for not defined permissions.
+                if (iSPermissionRequestForCamera(request)) {
+                    mCameraPermissionRequest = request;
+                    if (isCameraPermissionGranted()) {
+                        acceptCameraRequest();
+                    } else if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+                        showCameraRationale();
+                    } else {
+                        requestCameraPermission();
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Call this method to grant the permission to access the camera resource.
+     * The granted permission is only valid for the current WebView.
+     */
+    private void acceptCameraRequest() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            final String[] cameraPermission = new String[] {
+                    PermissionRequest.RESOURCE_VIDEO_CAPTURE
+            };
+            if (mCameraPermissionRequest != null) {
+                mCameraPermissionRequest.grant(cameraPermission);
+            }
+        }
+    }
+
+    /**
+     * Call this method to deny the permission to access the camera resource.
+     */
+    private void denyCameraRequest() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (mCameraPermissionRequest != null) {
+                mCameraPermissionRequest.deny();
+            }
+        }
+    }
+
+    /**
+     * Determines whatever if the camera permission has been granted.
+     *
+     * @return true if the camera permission has been granted, false otherwise.
+     */
+    private boolean isCameraPermissionGranted() {
+        return ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /**
+     * Determines whatever if the given permission request is for the camera resource.
+     *
+     * @param request The permission request.
+     * @return true if the given permission request is for camera, false otherwise.
+     */
+    private boolean iSPermissionRequestForCamera(final PermissionRequest request) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            return request.getResources().length == 1 &&
+                    PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(request.getResources()[0]);
+        }
+        return false;
+    }
+
+    private final ActivityResultLauncher<Intent> settingsActivity = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_CANCELED) {
+                    if (isCameraPermissionGranted()) {
+                        acceptCameraRequest();
+                    } else {
+                        denyCameraRequest();
+                    }
+                }
+            });
+
+    /**
+     * Launches the screen of details about the particular application.
+     */
+    private void launchSettingsActivity() {
+        final Intent intent = new Intent(
+                android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.fromParts("package", requireContext().getPackageName(), null)
+        );
+        settingsActivity.launch(intent);
+    }
+
+    private final ActivityResultLauncher<String> cameraRequestActivity = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(),
+            permissionGranted   -> {
+                if (permissionGranted) {
+                    acceptCameraRequest();
+                }
+                else if (!shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+                    // User has permanently denied the permission for the camera.
+                    // The best we can do in this point, is redirect the user to the settings page
+                    // so the user can change the camera permission.
+                    ShowCameraSettingsRationale();
+                } else {
+                    denyCameraRequest();
+                }
+            }
+    );
+
+    /**
+     * Launches the camera permission request for the app.
+     */
+    private void requestCameraPermission() {
+        cameraRequestActivity.launch(Manifest.permission.CAMERA);
+    }
+
+    /**
+     * Shows a dialog to the user explaining why the camera permission is required.
+     * If the user accepts the dialog, the camera permission request will be launched.
+     * If the user denies the dialog, the camera permission request will be denied.
+     */
+    private void showCameraRationale() {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setMessage("The app requires the camera permission to scan the QR Code, " +
+                        "denying the permission will block this feature. " +
+                        "Please allow the camera access in order to continue.")
+                .setTitle("Camera permission required")
+                .setCancelable(false)
+                .setPositiveButton("OK", (dialog, id) -> requestCameraPermission())
+                .setNegativeButton("Cancel", (dialog, id) -> denyCameraRequest());
+        builder.show();
+    }
+
+    /**
+     * Shows a dialog to the user explaining why the camera permission is required.
+     * If the user accepts the dialog, the app settings activity will be launched.
+     * If the user denies the dialog, the camera permission request will be denied.
+     */
+    private void ShowCameraSettingsRationale() {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setMessage("The app requires the camera permission to scan the QR Code. " +
+                        "Please enable the camera permission in order to continue.")
+                .setTitle("Camera permission required")
+                .setCancelable(false)
+                .setPositiveButton("OK", (dialog, id) -> launchSettingsActivity())
+                .setNegativeButton("Cancel", (dialog, id) -> denyCameraRequest());
+        builder.show();
     }
 
     /**
@@ -242,7 +402,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
 
                 mAADWebViewClient.setRequestHeaders(mRequestHeaders);
-                mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
+                mWebView.loadUrl("https://riversun.github.io/webcam.js/example/00_overview/");
+                //mWebView.loadUrl("https://gentle-pebble-09da6fb1e.3.azurestaticapps.net/");
+                //mWebView.loadUrl(mAuthorizationRequestUrl);
 
                 // The first page load could take time, and we do not want to just show a blank page.
                 // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.
