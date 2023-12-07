@@ -29,10 +29,13 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext
  * INativeAuthCommandResult interface defines the base class for errors used in Native Auth.
  */
 interface INativeAuthCommandResult {
-    data class Redirect(val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
-        SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult,
-        SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult,
-        SignUpStartCommandResult, SignUpSubmitCodeCommandResult,
+    data class Redirect(
+        override val error: String = "browser_required",
+        override val errorDescription: String = "The client's authentication capabilities are insufficient. Please redirect to the browser to complete authentication",
+        override val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
+    ) : Error(error = error, errorDescription = errorDescription, correlationId = correlationId),
+        SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult, SignInResendCodeCommandResult,
+        SignInSubmitPasswordCommandResult, SignUpStartCommandResult, SignUpSubmitCodeCommandResult,
         SignUpResendCodeCommandResult, SignUpSubmitPasswordCommandResult,
         SignUpSubmitUserAttributesCommandResult,
         ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,
