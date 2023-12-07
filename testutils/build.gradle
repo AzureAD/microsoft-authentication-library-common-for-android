@@ -1,6 +1,5 @@
 plugins {
     id 'com.android.library'
-    id 'kotlin-android'
     id 'maven-publish'
 }
 
@@ -200,10 +199,6 @@ dependencies {
 
     implementation project(":LabApiUtilities")
 
-    implementation "org.mockito.kotlin:mockito-kotlin:4.1.0"
-    
-    implementation "org.powermock:powermock-module-junit4:$rootProject.ext.powerMockVersion"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
     implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
