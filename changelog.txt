@@ -2,6 +2,7 @@ V.Next
 ---------
 
 - [PATCH] Add JWT header field for KDF version (#2220)
+- [PATCH] Pass through ESTS x-ms-srs header field
 
 V.16.2.0
 ----------
