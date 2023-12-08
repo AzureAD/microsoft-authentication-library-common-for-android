@@ -13,6 +13,10 @@
 # @AzureAD/NativeAuthTeam owns any files related to CIAM native authentication.
 /common/src/main/java/com/microsoft/identity/common/internal/controllers/BaseNativeAuthController.kt @AzureAD/NativeAuthTeam
 /common/src/main/java/com/microsoft/identity/common/internal/controllers/NativeAuthMsalController.kt @AzureAD/NativeAuthTeam
+/common/src/test/java/com/microsoft/identity/common/internal/controllers/NativeAuthControllerTest.kt @AzureAD/NativeAuthTeam
+/common/src/test/java/com/microsoft/identity/common/internal/providers/microsoft/nativeauth/ @AzureAD/NativeAuthTeam
+/common/src/test/java/com/microsoft/identity/common/java/providers/nativeauth/ @AzureAD/NativeAuthTeam
+
 /common4j/src/main/com/microsoft/identity/common/java/authorities/NativeAuthCIAMAuthority.kt @AzureAD/NativeAuthTeam
 /common4j/src/main/com/microsoft/identity/common/java/commands/parameters/nativeauth/ @AzureAD/NativeAuthTeam
 /common4j/src/main/com/microsoft/identity/common/java/controllers/results/INativeAuthCommandResult.kt @AzureAD/NativeAuthTeam
@@ -25,6 +29,7 @@
 /common4j/src/main/com/microsoft/identity/common/java/util/ArgUtils.kt @AzureAD/NativeAuthTeam
 /common4j/src/main/com/microsoft/identity/common/java/util/CommandResultUtil.kt @AzureAD/NativeAuthTeam
 /common4j/src/testFixtures/java/com/microsoft/identity/internal/ @AzureAD/NativeAuthTeam
+
 
 # If you are interested in reviewing or getting notified of changes in a particular area
 # Please add your alias against that specific path below
