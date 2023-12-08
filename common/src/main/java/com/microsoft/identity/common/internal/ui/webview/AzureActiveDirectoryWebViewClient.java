@@ -299,8 +299,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
 
             // Otherwise, launch in Browser.
-            openLinkInBrowser(url);
-            returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
+            //openLinkInBrowser(url);
+//            final Intent intent = getActivity().getPackageManager().getLaunchIntentForPackage("com.microsoft.aad.adal.userappwithbroker");
+//            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("aea://com.amazon"));
+//            intent.addFlags(Intent.FLAG);
+            getActivity().startActivity(intent);
+            //returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
             return;
         }
 

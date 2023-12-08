@@ -22,9 +22,29 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.content.Intent;
+import android.os.Bundle;
+
+import androidx.annotation.Nullable;
+
 /**
  * Declares as a separate class so that we can specify attributes exclusively to :auth process
  * in AndroidManifest without overriding MSAL's (In case where MSAL and broker is shipped together).
  */
 public class BrokerAuthorizationActivity extends AuthorizationActivity {
+
+    @Override
+    public void onCreate(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+    }
 }
