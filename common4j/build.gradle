@@ -213,38 +213,38 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
     testImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
 
-    compileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
+    compileOnly "com.github.spotbugs:spotbugs-annotations:$rootProject.ext.spotBugsAnnotationVersion"
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "org.json:json:$rootProject.ext.jsonVersion"
-    implementation 'com.github.stephenc.jcip:jcip-annotations:1.0-1'
+    implementation "com.github.stephenc.jcip:jcip-annotations:$rootProject.ext.jcipAnnotationVersion"
     implementation "cz.msebera.android:httpclient:$rootProject.ext.mseberaApacheHttpClientVersion"
 
-    testCompileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
+    testCompileOnly "com.github.spotbugs:spotbugs-annotations:$rootProject.ext.spotBugsAnnotationVersion"
     testCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     testAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
-    testImplementation "io.mockk:mockk:1.11.0"    
+    testImplementation "io.mockk:mockk:$rootProject.ext.mockkVersion"
     testImplementation "org.mockito:mockito-inline:$rootProject.ext.mockitoCoreVersion"
-    testImplementation "org.mockito.kotlin:mockito-kotlin:4.1.0"
+    testImplementation "org.mockito.kotlin:mockito-kotlin:$rootProject.ext.mockitoKotlinVersion"
 
     testFixturesCompileOnly "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     testFixturesCompileOnly "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
-    testFixturesCompileOnly "org.mockito.kotlin:mockito-kotlin:4.1.0"
+    testFixturesCompileOnly "org.mockito.kotlin:mockito-kotlin:$rootProject.ext.mockitoKotlinVersion"
     testFixturesCompileOnly "org.powermock:powermock-module-junit4:$rootProject.ext.powerMockVersion"
 
-    testFixturesCompileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
+    testFixturesCompileOnly "com.github.spotbugs:spotbugs-annotations:$rootProject.ext.spotBugsAnnotationVersion"
     testFixturesCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     testFixturesCompileOnly "org.mockito:mockito-inline:$rootProject.ext.mockitoCoreVersion"
     testFixturesAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     
     resolvableTestFixturesImplementation "org.robolectric:junit:$rootProject.ext.robolectricVersion"
 
-    implementation platform("io.opentelemetry:opentelemetry-bom:1.18.0")
-    implementation('io.opentelemetry:opentelemetry-api:1.18.0')
+    implementation platform("io.opentelemetry:opentelemetry-bom:$rootProject.ext.openTelemetryVersion")
+    implementation("io.opentelemetry:opentelemetry-api:$rootProject.ext.openTelemetryVersion")
 }
 
 sourceCompatibility = "1.8"
