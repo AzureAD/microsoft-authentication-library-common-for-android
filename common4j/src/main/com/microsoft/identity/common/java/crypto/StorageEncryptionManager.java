@@ -270,7 +270,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
                                         @NonNull final AbstractSecretKeyLoader keyLoader)
             throws ClientException {
         final String errCode;
-        final Exception exception;
+        final Throwable exception;
         try {
             final SecretKey secretKey = keyLoader.getKey();
             final SecretKey hmacKey = KeyUtil.getHMacKey(secretKey);
@@ -332,6 +332,9 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             exception = e;
         } catch (final IllegalArgumentException e) {
             errCode = DATA_MALFORMED;
+            exception = e;
+        } catch (final Throwable e) {
+            errCode = UNKNOWN_CRYPTO_ERROR;
             exception = e;
         }
 
