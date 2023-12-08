@@ -30,16 +30,19 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext
  */
 interface INativeAuthCommandResult {
     data class Redirect(
-        override val error: String = "browser_required",
-        override val errorDescription: String = "The client's authentication capabilities are insufficient. Please redirect to the browser to complete authentication",
         override val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
-    ) : Error(error = error, errorDescription = errorDescription, correlationId = correlationId),
+    ) : Error(error = BROWSER_REQUIRED_ERROR, errorDescription = BROWSER_REQUIRED_ERROR_DESCRIPTION, correlationId = correlationId),
         SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult, SignInResendCodeCommandResult,
         SignInSubmitPasswordCommandResult, SignUpStartCommandResult, SignUpSubmitCodeCommandResult,
         SignUpResendCodeCommandResult, SignUpSubmitPasswordCommandResult,
         SignUpSubmitUserAttributesCommandResult,
         ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,
-        ResetPasswordResendCodeCommandResult
+        ResetPasswordResendCodeCommandResult {
+            companion object {
+                private const val BROWSER_REQUIRED_ERROR: String = "browser_required"
+                private const val BROWSER_REQUIRED_ERROR_DESCRIPTION: String = "The client's authentication capabilities are insufficient. Please redirect to the browser to complete authentication"
+            }
+        }
 
     /**
      * UnknownError is base class to represent various kinds of errors in NativeAuth.
