@@ -26,8 +26,6 @@ import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCo
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.java.exception.BaseException;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 
 import lombok.NonNull;
 
@@ -45,14 +43,5 @@ public interface IAcquireMicrosoftStsTokenStrategy<T extends TokenCommandParamet
      */
     @NonNull
     MicrosoftStsTokenRequest createTokenRequest(@NonNull final T parameters) throws BaseException;
-
-    /**
-     * Acquire token given the request
-     * @param tokenRequest Token request
-     * @return Token result
-     * @throws ClientException
-     */
-    @NonNull
-    TokenResult acquireToken(@NonNull final MicrosoftStsTokenRequest tokenRequest) throws ClientException;
 }
 
