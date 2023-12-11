@@ -21,7 +21,7 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils
+package com.microsoft.identity.common.nativeauth
 
 /**
  * Enumerates all of the different types of responses received by Mock API for Native Auth.

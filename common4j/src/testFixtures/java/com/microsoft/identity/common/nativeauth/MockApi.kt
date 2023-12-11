@@ -21,7 +21,7 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils
+package com.microsoft.identity.common.nativeauth
 
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.net.HttpConstants
