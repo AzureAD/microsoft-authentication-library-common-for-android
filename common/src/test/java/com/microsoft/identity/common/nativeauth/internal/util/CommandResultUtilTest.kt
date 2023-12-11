@@ -24,7 +24,7 @@ package com.microsoft.identity.common.nativeauth.internal.util
 
 import com.microsoft.identity.common.java.commands.ICommandResult.ResultStatus
 import com.microsoft.identity.common.java.controllers.CommandResult
-import com.microsoft.identity.common.nativeauth.controllers.results.*
+import com.microsoft.identity.common.nativeauth.java.controllers.results.*
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 import com.microsoft.identity.common.nativeauth.util.checkAndWrapCommandResultType

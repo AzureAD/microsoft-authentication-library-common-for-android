@@ -23,8 +23,8 @@
 package com.microsoft.identity.common.nativeauth.internal.commands
 
 import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
-import com.microsoft.identity.common.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
-import com.microsoft.identity.common.nativeauth.controllers.results.ResetPasswordSubmitNewPasswordCommandResult
+import com.microsoft.identity.common.nativeauth.java.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
+import com.microsoft.identity.common.nativeauth.java.controllers.results.ResetPasswordSubmitNewPasswordCommandResult
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 

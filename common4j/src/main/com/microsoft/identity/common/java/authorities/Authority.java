@@ -33,7 +33,7 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.nativeauth.authorities.NativeAuthCIAMAuthority;
+import com.microsoft.identity.common.nativeauth.java.authorities.NativeAuthCIAMAuthority;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
