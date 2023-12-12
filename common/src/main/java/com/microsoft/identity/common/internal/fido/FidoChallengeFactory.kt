@@ -24,6 +24,8 @@ package com.microsoft.identity.common.internal.fido
 
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.util.UrlUtil
+import java.net.MalformedURLException
+import java.net.URL
 
 /**
  * Instantiates FidoChallenge objects.
@@ -46,37 +48,34 @@ class FidoChallengeFactory {
             //At the moment, only auth FIDO requests will be sent by the server.
             return AuthFidoChallenge(
                 challenge = validateRequiredParameter(
-                    FidoRequestField.CHALLENGE,
-                    parameters[FidoRequestField.CHALLENGE]
+                    FidoRequestField.CHALLENGE.fieldName,
+                    parameters[FidoRequestField.CHALLENGE.fieldName]
                 ),
                 relyingPartyIdentifier = validateRequiredParameter(
-                    FidoRequestField.RELYING_PARTY_IDENTIFIER,
-                    parameters[FidoRequestField.RELYING_PARTY_IDENTIFIER]
+                    FidoRequestField.RELYING_PARTY_IDENTIFIER.fieldName,
+                    parameters[FidoRequestField.RELYING_PARTY_IDENTIFIER.fieldName]
                 ),
                 userVerificationPolicy = validateParameterOrReturnDefault(
-                    FidoRequestField.USER_VERIFICATION_POLICY,
-                    parameters[FidoRequestField.USER_VERIFICATION_POLICY],
+                    FidoRequestField.USER_VERIFICATION_POLICY.fieldName,
+                    parameters[FidoRequestField.USER_VERIFICATION_POLICY.fieldName],
                     DEFAULT_USER_VERIFICATION_POLICY
                 ),
                 version = validateRequiredParameter(
-                    FidoRequestField.VERSION,
-                    parameters[FidoRequestField.VERSION]
+                    FidoRequestField.VERSION.fieldName,
+                    parameters[FidoRequestField.VERSION.fieldName]
                 ),
-                submitUrl = validateRequiredParameter(
-                    FidoRequestField.SUBMIT_URL,
-                    parameters[FidoRequestField.SUBMIT_URL]
-                ),
+                submitUrl = validateSubmitUrl(parameters[FidoRequestField.SUBMIT_URL.fieldName]),
                 keyTypes = validateOptionalListParameter(
-                    AuthFidoRequestField.KEY_TYPES,
-                    parameters[AuthFidoRequestField.KEY_TYPES]
+                    AuthFidoRequestField.KEY_TYPES.fieldName,
+                    parameters[AuthFidoRequestField.KEY_TYPES.fieldName]
                 ),
                 context = validateRequiredParameter(
-                    FidoRequestField.CONTEXT,
-                    parameters[FidoRequestField.CONTEXT]
+                    FidoRequestField.CONTEXT.fieldName,
+                    parameters[FidoRequestField.CONTEXT.fieldName]
                 ),
                 allowedCredentials = validateOptionalListParameter(
-                    AuthFidoRequestField.ALLOWED_CREDENTIALS,
-                    parameters[AuthFidoRequestField.ALLOWED_CREDENTIALS]
+                    AuthFidoRequestField.ALLOWED_CREDENTIALS.fieldName,
+                    parameters[AuthFidoRequestField.ALLOWED_CREDENTIALS.fieldName]
                 )
             )
         }
@@ -97,6 +96,24 @@ class FidoChallengeFactory {
                 throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "$field is empty")
             }
             return value
+        }
+
+        /**
+         * Validates that the submitUrl parameter is not null, empty, or malformed.
+         * @param value value for the submitUrl passkey protocol parameter.
+         * @return validated parameter value
+         * @throws ClientException if the parameter is null, empty, or malformed.
+         */
+        @JvmStatic
+        @Throws(ClientException::class)
+        fun validateSubmitUrl(value: String?): String {
+            val submitUrl = validateRequiredParameter(FidoRequestField.SUBMIT_URL.fieldName, value)
+            try {
+                URL(submitUrl)
+            } catch (e : MalformedURLException) {
+                throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "${FidoRequestField.SUBMIT_URL.fieldName} value is malformed.")
+            }
+            return submitUrl
         }
 
         /**

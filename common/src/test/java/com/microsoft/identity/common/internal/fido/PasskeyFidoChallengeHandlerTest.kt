@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.fido
 
 import androidx.lifecycle.testing.TestLifecycleOwner
+import com.microsoft.identity.common.java.exception.ClientException
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -37,12 +38,15 @@ class PasskeyFidoChallengeHandlerTest {
     val relyingPartyIdentifier = "login.microsoft.com"
     val userVerificationPolicy = "required"
     val version = "1.0"
-    val submitUrl = "submiturl"
+    val submitUrl = "https://submiturl"
     val context = "contextValue flowToken"
 
     //Challenge auth parameters
     val allowCredentialsOneUser = listOf("user")
     val keyTypes = listOf("passkey")
+
+    //Test Exception
+    val testException = ClientException("A message")
 
     //Handler parameters
     val testFidoManager = TestFidoManager()
@@ -157,5 +161,56 @@ class PasskeyFidoChallengeHandlerTest {
         assertTrue(webView.urlLoaded)
         assertFalse(webView.hasContext())
         assertFalse(webView.hasFlowToken())
+    }
+
+    @Test
+    fun testRespondToChallengeWithError_RegularContext() {
+        passkeyFidoChallengeHandler.respondToChallengeWithError(
+            submitUrl,
+            context,
+            testException.message.toString(),
+            testException
+        )
+        assertTrue(webView.urlLoaded)
+        assertTrue(webView.hasContext())
+        assertTrue(webView.hasFlowToken())
+    }
+
+    @Test
+    fun testRespondToChallengeWithError_NoFlowTokenInContext() {
+        passkeyFidoChallengeHandler.respondToChallengeWithError(
+            submitUrl,
+            "contextValue",
+            testException.message.toString(),
+            testException
+        )
+        assertTrue(webView.urlLoaded)
+        assertTrue(webView.hasContext())
+        assertFalse(webView.hasFlowToken())
+    }
+
+    @Test
+    fun testRespondToChallengeWithError_EmptyContext() {
+        passkeyFidoChallengeHandler.respondToChallengeWithError(
+            submitUrl,
+            "",
+            testException.message.toString(),
+            testException
+        )
+        assertTrue(webView.urlLoaded)
+        assertFalse(webView.hasContext())
+        assertFalse(webView.hasFlowToken())
+    }
+
+    @Test
+    fun testRespondToChallengeWithError_NoException() {
+        passkeyFidoChallengeHandler.respondToChallengeWithError(
+            submitUrl,
+            context,
+            testException.message.toString(),
+        )
+        assertTrue(webView.urlLoaded)
+        assertTrue(webView.hasContext())
+        assertTrue(webView.hasFlowToken())
     }
 }

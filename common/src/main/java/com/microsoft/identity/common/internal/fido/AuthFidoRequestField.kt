@@ -25,9 +25,7 @@ package com.microsoft.identity.common.internal.fido
 /**
  * Request fields specific to an Auth FIDO request.
  */
-class AuthFidoRequestField {
-    companion object {
-        const val ALLOWED_CREDENTIALS = "allowedCredentials"
-        const val KEY_TYPES = "keyTypes"
-    }
+enum class AuthFidoRequestField(val fieldName: String) {
+    ALLOWED_CREDENTIALS("allowedCredentials"),
+    KEY_TYPES("keyTypes")
 }

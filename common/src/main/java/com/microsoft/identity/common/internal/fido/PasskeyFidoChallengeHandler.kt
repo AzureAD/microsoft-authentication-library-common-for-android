@@ -63,32 +63,45 @@ class PasskeyFidoChallengeHandler
         span.setAttribute(
             AttributeName.fido_challenge.name,
             fidoChallenge::class.simpleName.toString());
-        var assertion: String
-        if (lifecycleOwner != null
-            && fidoChallenge is AuthFidoChallenge) {
-            lifecycleOwner.lifecycleScope.launch {
-                try {
-                    assertion = fidoManager.authenticate(fidoChallenge)
-                    span.setStatus(StatusCode.OK)
-                } catch (e: Exception) {
-                    assertion = e.message.toString()
-                    Logger.error(methodTag, assertion, e)
-                    span.setStatus(StatusCode.ERROR)
-                }
-                respondToChallenge(fidoChallenge.submitUrl, assertion, fidoChallenge.context)
-            }
+        if (lifecycleOwner == null) {
+            val errorMessage = "Cannot get lifecycle owner needed for FIDO API calls."
+            respondToChallengeWithError(
+                submitUrl = fidoChallenge.submitUrl,
+                context = fidoChallenge.context,
+                errorMessage = errorMessage,
+                methodTag = methodTag
+            )
             return null
         }
-        var errorMessage = "Failed based on parameter values."
-        if (lifecycleOwner == null) {
-            errorMessage += " Cannot get lifecycle owner needed for FIDO API calls."
-        }
         if (fidoChallenge !is AuthFidoChallenge) {
-            errorMessage += " FidoChallenge object is of type " + fidoChallenge::class.simpleName.toString() + ", which is unexpected and not supported."
+            val errorMessage = "FidoChallenge object is of type " + fidoChallenge::class.simpleName.toString() + ", which is unexpected and not supported."
+            respondToChallengeWithError(
+                submitUrl = fidoChallenge.submitUrl,
+                context = fidoChallenge.context,
+                errorMessage = errorMessage,
+                methodTag = methodTag
+            )
+            return null
         }
-        Logger.error(methodTag, errorMessage, null)
-        span.setStatus(StatusCode.ERROR)
-        respondToChallenge(fidoChallenge.submitUrl, errorMessage, fidoChallenge.context)
+        lifecycleOwner.lifecycleScope.launch {
+            try {
+                val assertion = fidoManager.authenticate(fidoChallenge)
+                span.setStatus(StatusCode.OK)
+                respondToChallenge(
+                    submitUrl = fidoChallenge.submitUrl,
+                    assertion = assertion,
+                    context = fidoChallenge.context
+                )
+            } catch (e: Exception) {
+                respondToChallengeWithError(
+                    submitUrl = fidoChallenge.submitUrl,
+                    context = fidoChallenge.context,
+                    errorMessage = e.message.toString(),
+                    exception = e,
+                    methodTag = methodTag
+                )
+            }
+        }
         return null
     }
 
@@ -125,5 +138,29 @@ class PasskeyFidoChallengeHandler
             Logger.info(methodTag, "Responding to Fido challenge.")
             webView.loadUrl(submitUrl, header)
         }
+    }
+
+    /**
+     * Helper method to respond to the server with an error.
+     * @param submitUrl The url to which the client submits the response to the server's challenge.
+     * @param context Server state that needs to be maintained between challenge and response.
+     * @param errorMessage Error message string.
+     * @param exception Exception associated with error. Default null.
+     * @param assertion String representing response with signed challenge.
+     */
+    fun respondToChallengeWithError(submitUrl: String,
+                                    context: String,
+                                    errorMessage: String,
+                                    exception: Exception? = null,
+                                    methodTag: String? = "$TAG:respondToChallengeWithError"
+    ) {
+        Logger.error(methodTag, errorMessage, exception)
+        if (exception != null) {
+            span.recordException(exception)
+            span.setStatus(StatusCode.ERROR)
+        } else {
+            span.setStatus(StatusCode.ERROR, errorMessage)
+        }
+        respondToChallenge(submitUrl, errorMessage, context)
     }
 }
