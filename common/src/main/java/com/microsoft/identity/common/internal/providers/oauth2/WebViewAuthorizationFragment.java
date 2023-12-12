@@ -28,7 +28,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -322,29 +321,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 }
             });
 
-    /**
-     * Launches the screen of details about the particular application.
-     */
-    private void launchSettingsActivity() {
-        final Intent intent = new Intent(
-                android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                Uri.fromParts("package", requireContext().getPackageName(), null)
-        );
-        settingsActivity.launch(intent);
-    }
-
     private final ActivityResultLauncher<String> cameraRequestActivity = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(),
             permissionGranted   -> {
                 if (permissionGranted) {
                     acceptCameraRequest();
                 }
-                else if (!shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
-                    // User has permanently denied the permission for the camera.
-                    // The best we can do in this point, is redirect the user to the settings page
-                    // so the user can change the camera permission.
-                    ShowCameraSettingsRationale();
-                } else {
+                else {
                     denyCameraRequest();
                 }
             }
@@ -374,21 +357,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         builder.show();
     }
 
-    /**
-     * Shows a dialog to the user explaining why the camera permission is required.
-     * If the user accepts the dialog, the app settings activity will be launched.
-     * If the user denies the dialog, the camera permission request will be denied.
-     */
-    private void ShowCameraSettingsRationale() {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setMessage("The app requires the camera permission to scan the QR Code. " +
-                        "Please enable the camera permission in order to continue.")
-                .setTitle("Camera permission required")
-                .setCancelable(false)
-                .setPositiveButton("OK", (dialog, id) -> launchSettingsActivity())
-                .setNegativeButton("Cancel", (dialog, id) -> denyCameraRequest());
-        builder.show();
-    }
 
     /**
      * Loads starting authorization request url into WebView.
