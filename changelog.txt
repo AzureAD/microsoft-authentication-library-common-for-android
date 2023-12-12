@@ -1,6 +1,8 @@
 V.Next
 ---------
 
+- [PATCH] Add JWT header field for KDF version (#2220)
+
 V.16.2.0
 ----------
 
