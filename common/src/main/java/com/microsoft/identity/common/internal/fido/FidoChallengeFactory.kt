@@ -95,7 +95,7 @@ class FidoChallengeFactory {
             } else if (value.isBlank()) {
                 throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "$field is empty")
             }
-            if (field == FidoRequestField.RELYING_PARTY_IDENTIFIER) {
+            if (field == FidoRequestField.RELYING_PARTY_IDENTIFIER.fieldName) {
                 return value.removePrefix("https://")
             }
             return value
