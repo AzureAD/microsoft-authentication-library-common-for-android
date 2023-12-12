@@ -25,7 +25,7 @@ package com.microsoft.identity.common.nativeauth.internal.commands
 import com.microsoft.identity.common.nativeauth.internal.controllers.BaseNativeAuthController
 import com.microsoft.identity.common.java.commands.BaseCommand
 import com.microsoft.identity.common.java.commands.CommandCallback
-import com.microsoft.identity.common.nativeauth.java.commands.parameters.BaseNativeAuthCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseNativeAuthCommandParameters
 import com.microsoft.identity.common.java.exception.BaseException
 import com.microsoft.identity.common.java.exception.ClientException
 import lombok.EqualsAndHashCode

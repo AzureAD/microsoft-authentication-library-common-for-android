@@ -23,11 +23,11 @@
 package com.microsoft.identity.common.nativeauth.internal.util;
 
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
-import com.microsoft.identity.common.nativeauth.java.commands.parameters.AcquireTokenNoFixedScopesCommandParameters;
-import com.microsoft.identity.common.nativeauth.java.commands.parameters.SignInStartUsingPasswordCommandParameters;
-import com.microsoft.identity.common.nativeauth.java.commands.parameters.SignInSubmitCodeCommandParameters;
-import com.microsoft.identity.common.nativeauth.java.commands.parameters.SignInSubmitPasswordCommandParameters;
-import com.microsoft.identity.common.nativeauth.java.commands.parameters.SignInWithSLTCommandParameters;
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.AcquireTokenNoFixedScopesCommandParameters;
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartUsingPasswordCommandParameters;
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters;
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters;
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithSLTCommandParameters;
 import com.microsoft.identity.common.java.request.SdkType;
 
 import java.util.List;

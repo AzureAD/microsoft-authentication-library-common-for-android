@@ -23,8 +23,8 @@
 package com.microsoft.identity.common.nativeauth.internal.commands
 
 import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
-import com.microsoft.identity.common.nativeauth.java.commands.parameters.SignUpSubmitCodeCommandParameters
-import com.microsoft.identity.common.nativeauth.java.controllers.results.SignUpSubmitCodeCommandResult
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpSubmitCodeCommandResult
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 

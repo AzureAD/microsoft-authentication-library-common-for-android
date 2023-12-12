@@ -20,14 +20,14 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.nativeauth.java.util
+package com.microsoft.identity.common.java.nativeauth.util
 
 import com.microsoft.identity.common.java.commands.ICommandResult.ResultStatus
 import com.microsoft.identity.common.java.controllers.CommandResult
-import com.microsoft.identity.common.nativeauth.java.controllers.results.*
+import com.microsoft.identity.common.java.nativeauth.controllers.results.*
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
-import com.microsoft.identity.common.nativeauth.java.util.checkAndWrapCommandResultType
+import com.microsoft.identity.common.java.nativeauth.util.checkAndWrapCommandResultType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
