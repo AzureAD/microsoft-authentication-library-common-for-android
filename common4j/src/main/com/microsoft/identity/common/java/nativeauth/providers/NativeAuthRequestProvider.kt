@@ -51,6 +51,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.S
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpChallengeRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpContinueRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpStartRequest
+import com.microsoft.identity.common.java.platform.Device
 import java.util.TreeMap
 
 /**
