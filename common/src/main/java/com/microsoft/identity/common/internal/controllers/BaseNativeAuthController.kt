@@ -246,4 +246,13 @@ abstract class BaseNativeAuthController : BaseController() {
     override fun getCachedAccountRecordFromAllCaches(parameters: SilentTokenCommandParameters): AccountRecord? {
         throw ClientException("getCachedAccountRecordFromAllCaches() not supported in NativeAuthController")
     }
+
+    @Throws(ClientException::class)
+    @Deprecated(
+        level = DeprecationLevel.HIDDEN,
+        message = "isQrPinAvailable() not supported in NativeAuthController"
+    )
+    override fun isQrPinAvailable(): Boolean {
+        throw ClientException("isQrPinAvailable() not supported in NativeAuthController")
+    }
 }
