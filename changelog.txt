@@ -1,6 +1,8 @@
 V.Next
 ---------
 
+- [PATCH] Add JWT header field for KDF version (#2220)
+
 V.16.2.0
 ----------
 - [PATCH] always make a copy of bundle before modifying & sending out via ipc (#2239)

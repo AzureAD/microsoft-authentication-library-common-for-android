@@ -53,6 +53,51 @@ public class JwtRequestTests {
     }
 
     @Test
+    public void testJwtHeader_serialize() {
+        final JwtRequestHeader header = new JwtRequestHeader();
+        header.setType();
+        header.setAlg(JwtRequestHeader.ALG_VALUE_HS256);
+        header.setKId("session");
+        header.setCtx("context");
+        header.setKdfVersion(2);
+        final String expectedHeaderJson = "{\"typ\":\"JWT\",\"ctx\":\"context\",\"alg\":\"HS256\",\"kid\":\"session\",\"kdf_ver\":2}";
+        final String headerJson = ObjectMapper.serializeObjectToJsonString(header);
+        Assert.assertEquals(expectedHeaderJson, headerJson);
+    }
+    @Test
+    public void testJwtHeader_serialize_defaultKdf() {
+        final JwtRequestHeader header = new JwtRequestHeader();
+        header.setType();
+        header.setAlg(JwtRequestHeader.ALG_VALUE_HS256);
+        header.setKId("session");
+        header.setCtx("context");
+        final String expectedHeaderJson = "{\"typ\":\"JWT\",\"ctx\":\"context\",\"alg\":\"HS256\",\"kid\":\"session\",\"kdf_ver\":1}";
+        final String headerJson = ObjectMapper.serializeObjectToJsonString(header);
+        Assert.assertEquals(expectedHeaderJson, headerJson);
+    }
+
+    @Test
+    public void testJwtHeader_deserialize() {
+        final String headerJson = "{\"typ\" : \"JWT\", \"ctx\": \"testCtx\", \"kdf_ver\": 2, \"alg\" : \"RS256\", \"kid\" : \"testKid\"}";
+        final JwtRequestHeader header = ObjectMapper.deserializeJsonStringToObject(headerJson, JwtRequestHeader.class);
+        Assert.assertEquals("JWT", header.getType());
+        Assert.assertEquals("testCtx", header.getCtx());
+        Assert.assertEquals("RS256", header.getAlg());
+        Assert.assertEquals("testKid", header.getKId());
+        Assert.assertEquals(2, header.getKdfVersion());
+    }
+
+    @Test
+    public void testJwtHeader_deserialize_no_Kdf() {
+        final String headerJson = "{\"typ\" : \"JWT\", \"ctx\": \"testCtx\", \"alg\" : \"RS256\"}";
+        final JwtRequestHeader header = ObjectMapper.deserializeJsonStringToObject(headerJson, JwtRequestHeader.class);
+        Assert.assertEquals("JWT", header.getType());
+        Assert.assertEquals("testCtx", header.getCtx());
+        Assert.assertEquals("RS256", header.getAlg());
+        Assert.assertEquals(1, header.getKdfVersion());
+    }
+
+    @Test
     public void testJwtBody() {
         final JwtRequestBody body = new JwtRequestBody();
         body.setJwtScope("scope");

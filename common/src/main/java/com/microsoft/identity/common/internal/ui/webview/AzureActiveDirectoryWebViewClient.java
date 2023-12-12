@@ -189,17 +189,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     // If the submitUrl or context field themselves are incorrect... another ClientException will be thrown and the WebView will close.
                     final Map<String, String> parameters = UrlUtil.getParameters(url);
                     final String submitUrl = FidoChallengeFactory.validateRequiredParameter(
-                            FidoRequestField.SUBMIT_URL,
-                            parameters.get(FidoRequestField.SUBMIT_URL)
+                            FidoRequestField.SUBMIT_URL.getFieldName(),
+                            parameters.get(FidoRequestField.SUBMIT_URL.getFieldName())
                     );
                     final String context = FidoChallengeFactory.validateRequiredParameter(
-                            FidoRequestField.CONTEXT,
-                            parameters.get(FidoRequestField.CONTEXT)
+                            FidoRequestField.CONTEXT.getFieldName(),
+                            parameters.get(FidoRequestField.CONTEXT.getFieldName())
                     );
-                    challengeHandler.respondToChallenge(
+                    challengeHandler.respondToChallengeWithError(
                             submitUrl,
+                            context,
                             e.getMessage(),
-                            context
+                            e,
+                            methodTag
                     );
                 }
             } else if (isRedirectUrl(formattedURL)) {
