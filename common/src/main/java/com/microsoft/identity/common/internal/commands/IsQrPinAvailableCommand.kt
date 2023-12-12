@@ -26,9 +26,6 @@ import com.microsoft.identity.common.java.commands.BaseCommand
 import com.microsoft.identity.common.java.commands.CommandCallback
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters
 import com.microsoft.identity.common.java.controllers.BaseController
-import com.microsoft.identity.common.java.exception.ClientException
-import com.microsoft.identity.common.java.exception.ErrorStrings
-import com.microsoft.identity.common.logging.Logger
 import lombok.EqualsAndHashCode
 
 /**
@@ -43,18 +40,8 @@ class IsQrPinAvailableCommand(
     publicApiId: String
 ) : BaseCommand<Boolean?>(parameters, controller, callback, publicApiId) {
 
-    companion object {
-        private val TAG = IsQrPinAvailableCommand::class.java.simpleName
-    }
-
     override fun execute(): Boolean {
-        val methodTag = "$TAG:execute"
-        return try {
-            defaultController.isQrPinAvailable
-        } catch (e: Throwable) {
-            Logger.error(methodTag, "Failed to check if QR code + PIN authorization is available.", e)
-            false
-        }
+        return defaultController.isQrPinAvailable
     }
 
     override fun isEligibleForEstsTelemetry(): Boolean {

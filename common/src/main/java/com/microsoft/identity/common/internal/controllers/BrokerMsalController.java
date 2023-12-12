@@ -825,17 +825,17 @@ public class BrokerMsalController extends BaseController {
                             final String errorMessage = strategy + " is not supported for isQrPinAvailable operation";
                             Logger.warn(methodTag,  errorMessage);
                             throw new BrokerCommunicationException(
-                                    BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
+                                    BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE,
                                     strategy.getType(),
                                     errorMessage,
-                                    new ClientException(ErrorStrings.BROKER_BIND_SERVICE_FAILED, errorMessage)
+                                    null
                             );
                         }
                     }
 
                     @Override
-                    public @NonNull
-                    BrokerOperationBundle getBundle() {
+                    @NonNull
+                    public BrokerOperationBundle getBundle() {
                         return new BrokerOperationBundle(
                                 MSAL_IS_QR_PIN_AVAILABLE,
                                 mActiveBrokerPackageName,
@@ -844,23 +844,20 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull
-                    Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
-                        if (resultBundle == null) {
-                            throw mResultAdapter.getExceptionForEmptyResultBundle();
-                        }
+                    @NonNull
+                    public Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
                         return mResultAdapter.getIfQrPinIsAvailableFromResultBundle(resultBundle);
                     }
 
                     @Override
-                    public @NonNull
-                    String getMethodName() {
+                    @NonNull
+                    public String getMethodName() {
                         return ":isQrPinAvailable";
                     }
 
                     @Override
-                    public @NonNull
-                    String getTelemetryApiId() {
+                    @NonNull
+                    public String getTelemetryApiId() {
                         return TelemetryEventStrings.Api.IS_QR_PIN_AVAILABLE;
                     }
 

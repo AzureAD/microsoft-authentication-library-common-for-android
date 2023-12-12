@@ -1556,7 +1556,6 @@ public final class AuthenticationConstants {
             BROKER_DISCOVERY_FROM_SDK(BROKER_DISCOVERY_FROM_SDK_PATH, null, null),
             BROKER_DISCOVERY_SET_ACTIVE_BROKER(BROKER_DISCOVERY_SET_ACTIVE_BROKER_PATH, null, null),
             PASSTHROUGH(PASSTHROUGH_PATH, null, null),
-
             READ_RESTRICTIONS_MANAGER(READ_RESTRICTIONS_MANAGER_PATH, null, null),
             IS_QR_PIN_AVAILABLE(IS_QR_PIN_AVAILABLE_PATH, null, null);
 
@@ -1688,12 +1687,12 @@ public final class AuthenticationConstants {
         public static final String GET_SSO_TOKEN_PATH = "/ssoToken";
 
         /**
-         * Broker api path to check if QR + PIN should de available.
+         * ContentProvider path to check if QR + PIN should de available.
          */
         public static final String IS_QR_PIN_AVAILABLE_PATH = "/isQrPinAvailable";
 
         /**
-         * Broker api path to read the restrictions manager.
+         * ContentProvider path to read the restrictions manager.
          */
         public static final String READ_RESTRICTIONS_MANAGER_PATH = "/readRestrictionsManager";
 

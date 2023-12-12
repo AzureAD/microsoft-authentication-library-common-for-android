@@ -27,10 +27,12 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
+import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.controllers.CommandDispatcher;
 import com.microsoft.identity.common.java.eststelemetry.PublicApiId;
 import com.microsoft.identity.common.java.exception.ArgumentException;
+import com.microsoft.identity.common.java.exception.BrokerRequiredException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
@@ -517,10 +519,14 @@ public class LocalMSALController extends BaseController {
      * @return true false
      */
     @Override
-    public boolean isQrPinAvailable() {
+    public boolean isQrPinAvailable() throws BrokerRequiredException {
         final String methodTag = TAG + ":isQrPinAvailable";
-        Logger.warn(methodTag, "LocalMSALController is not eligible to use the broker.");
-        return false;
+        final BrokerRequiredException exception = new BrokerRequiredException(
+                BrokerData.getProdMicrosoftAuthenticator().getPackageName(),
+                null
+        );
+        Logger.error(methodTag, "QR + PIN not available. Requires broker.", exception);
+        throw exception;
     }
 
     @Override
