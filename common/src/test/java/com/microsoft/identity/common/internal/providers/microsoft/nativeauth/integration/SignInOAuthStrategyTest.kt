@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration
 
 import android.os.Build
-import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants
+import com.microsoft.identity.common.nativeauth.ApiConstants
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters

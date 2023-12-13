@@ -22,17 +22,17 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers
 
-import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.signInChallengeRequestUrl
-import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.signInInitiateRequestUrl
-import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.signInTokenRequestUrl
-import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.signUpChallengeRequestUrl
-import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.signUpContinueRequestUrl
-import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.signUpStartRequestUrl
-import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.ssprChallengeRequestUrl
-import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.ssprContinueRequestUrl
-import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.ssprPollCompletionRequestUrl
-import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.ssprStartRequestUrl
-import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.ssprSubmitRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signInChallengeRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signInInitiateRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signInTokenRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signUpChallengeRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signUpContinueRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signUpStartRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprChallengeRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprContinueRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprPollCompletionRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprStartRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprSubmitRequestUrl
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
