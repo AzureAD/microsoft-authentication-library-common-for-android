@@ -22,8 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
+import android.net.Uri
 import androidx.lifecycle.testing.TestLifecycleOwner
 import com.microsoft.identity.common.java.exception.ClientException
+import org.junit.Assert
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -40,10 +42,14 @@ class PasskeyFidoChallengeHandlerTest {
     val version = "1.0"
     val submitUrl = "https://submiturl"
     val context = "contextValue flowToken"
+    val authority = "urn:http-auth:PassKey"
 
     //Challenge auth parameters
+    val allowCredentialsOneUserString = "user"
     val allowCredentialsOneUser = listOf("user")
-    val keyTypes = listOf("passkey")
+    val allowCredentialsTwoUsers = listOf("user1","user2")
+    val keyTypesString = "passkey"
+    val keyTypes = listOf(keyTypesString)
 
     //Test Exception
     val testException = ClientException("A message")
@@ -68,17 +74,16 @@ class PasskeyFidoChallengeHandlerTest {
     @Test
     fun testProcessChallenge_AuthSuccess() {
         assertFalse(webView.urlLoaded)
-        passkeyFidoChallengeHandler.processChallenge(
-            AuthFidoChallenge(
-                challenge = challengeStr,
-                relyingPartyIdentifier = relyingPartyIdentifier,
-                userVerificationPolicy = userVerificationPolicy,
-                version = version,
-                submitUrl = submitUrl,
-                context = context,
-                keyTypes = keyTypes,
-                allowedCredentials = allowCredentialsOneUser
-        ))
+        val fullUrl = Uri.Builder().authority(authority)
+            .appendQueryParameter(FidoRequestField.CHALLENGE.fieldName, challengeStr)
+            .appendQueryParameter(AuthFidoRequestField.ALLOWED_CREDENTIALS.fieldName, allowCredentialsOneUserString)
+            .appendQueryParameter(FidoRequestField.RELYING_PARTY_IDENTIFIER.fieldName, relyingPartyIdentifier)
+            .appendQueryParameter(FidoRequestField.VERSION.fieldName, version)
+            .appendQueryParameter(FidoRequestField.SUBMIT_URL.fieldName, submitUrl)
+            .appendQueryParameter(AuthFidoRequestField.KEY_TYPES.fieldName, keyTypesString)
+            .appendQueryParameter(FidoRequestField.CONTEXT.fieldName, context)
+            .build().toString()
+        passkeyFidoChallengeHandler.processChallenge(FidoChallenge(fullUrl))
         assertTrue(webView.urlLoaded)
         assertTrue(webView.isRegularAssertion())
     }
@@ -87,17 +92,16 @@ class PasskeyFidoChallengeHandlerTest {
     @Test
     fun testProcessChallenge_AuthExceptionInManager() {
         assertFalse(webView.urlLoaded)
-        passkeyFidoChallengeHandler.processChallenge(
-            AuthFidoChallenge(
-                challenge = TestFidoManager.EXCEPTION_CHALLENGE,
-                relyingPartyIdentifier = relyingPartyIdentifier,
-                userVerificationPolicy = userVerificationPolicy,
-                version = version,
-                submitUrl = submitUrl,
-                context = context,
-                keyTypes = keyTypes,
-                allowedCredentials = allowCredentialsOneUser
-            ))
+        val fullUrl = Uri.Builder().authority(authority)
+            .appendQueryParameter(FidoRequestField.CHALLENGE.fieldName, TestFidoManager.EXCEPTION_CHALLENGE)
+            .appendQueryParameter(AuthFidoRequestField.ALLOWED_CREDENTIALS.fieldName, allowCredentialsOneUserString)
+            .appendQueryParameter(FidoRequestField.RELYING_PARTY_IDENTIFIER.fieldName, relyingPartyIdentifier)
+            .appendQueryParameter(FidoRequestField.VERSION.fieldName, version)
+            .appendQueryParameter(FidoRequestField.SUBMIT_URL.fieldName, submitUrl)
+            .appendQueryParameter(AuthFidoRequestField.KEY_TYPES.fieldName, keyTypesString)
+            .appendQueryParameter(FidoRequestField.CONTEXT.fieldName, context)
+            .build().toString()
+        passkeyFidoChallengeHandler.processChallenge(FidoChallenge(fullUrl))
         assertTrue(webView.urlLoaded)
         assertFalse(webView.isRegularAssertion())
     }
@@ -112,17 +116,16 @@ class PasskeyFidoChallengeHandlerTest {
             lifecycleOwner = null
         )
         assertFalse(webView.urlLoaded)
-        passkeyFidoChallengeHandler.processChallenge(
-            AuthFidoChallenge(
-                challenge = challengeStr,
-                relyingPartyIdentifier = relyingPartyIdentifier,
-                userVerificationPolicy = userVerificationPolicy,
-                version = version,
-                submitUrl = submitUrl,
-                context = context,
-                keyTypes = keyTypes,
-                allowedCredentials = allowCredentialsOneUser
-            ))
+        val fullUrl = Uri.Builder().authority(authority)
+            .appendQueryParameter(FidoRequestField.CHALLENGE.fieldName, challengeStr)
+            .appendQueryParameter(AuthFidoRequestField.ALLOWED_CREDENTIALS.fieldName, allowCredentialsOneUserString)
+            .appendQueryParameter(FidoRequestField.RELYING_PARTY_IDENTIFIER.fieldName, relyingPartyIdentifier)
+            .appendQueryParameter(FidoRequestField.VERSION.fieldName, version)
+            .appendQueryParameter(FidoRequestField.SUBMIT_URL.fieldName, submitUrl)
+            .appendQueryParameter(AuthFidoRequestField.KEY_TYPES.fieldName, keyTypesString)
+            .appendQueryParameter(FidoRequestField.CONTEXT.fieldName, context)
+            .build().toString()
+        passkeyFidoChallengeHandler.processChallenge(FidoChallenge(fullUrl))
         assertTrue(webView.urlLoaded)
         assertFalse(webView.isRegularAssertion())
     }
@@ -212,5 +215,72 @@ class PasskeyFidoChallengeHandlerTest {
         assertTrue(webView.urlLoaded)
         assertTrue(webView.hasContext())
         assertTrue(webView.hasFlowToken())
+    }
+
+    @Test
+    fun testValidateRequiredParameter_ExpectedFieldAndValue() {
+        Assert.assertEquals(
+            challengeStr,
+            passkeyFidoChallengeHandler.validateRequiredParameter(
+                FidoRequestField.CHALLENGE.fieldName,
+                challengeStr
+            )
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateRequiredParameter_MissingField() {
+        passkeyFidoChallengeHandler.validateRequiredParameter(FidoRequestField.CHALLENGE.fieldName, null)
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateRequiredParameter_EmptyValue() {
+        passkeyFidoChallengeHandler.validateRequiredParameter(FidoRequestField.CHALLENGE.fieldName, "")
+    }
+
+    @Test
+    fun testValidateSubmitUrl_ExpectedFieldAndValue() {
+        passkeyFidoChallengeHandler.validateSubmitUrl(submitUrl)
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSubmitUrl_MissingField() {
+        passkeyFidoChallengeHandler.validateSubmitUrl(null)
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSubmitUrl_EmptyValue() {
+        passkeyFidoChallengeHandler.validateSubmitUrl("")
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSubmitUrl_MalformedUrl() {
+        passkeyFidoChallengeHandler.validateSubmitUrl("url")
+    }
+
+    @Test
+    fun testValidateOptionalListParameter_ExpectedFieldAndValue() {
+        Assert.assertEquals(
+            allowCredentialsTwoUsers,
+            passkeyFidoChallengeHandler.validateOptionalListParameter(
+                AuthFidoRequestField.ALLOWED_CREDENTIALS.fieldName,
+                allowCredentialsTwoUsers
+            )
+        )
+    }
+
+    @Test
+    fun testValidateOptionalListParameter_MissingField() {
+        Assert.assertNull(
+            passkeyFidoChallengeHandler.validateOptionalListParameter(
+                AuthFidoRequestField.ALLOWED_CREDENTIALS.fieldName,
+                null
+            )
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateOptionalListParameter_EmptyValue() {
+        passkeyFidoChallengeHandler.validateOptionalListParameter(AuthFidoRequestField.ALLOWED_CREDENTIALS.fieldName, emptyList())
     }
 }

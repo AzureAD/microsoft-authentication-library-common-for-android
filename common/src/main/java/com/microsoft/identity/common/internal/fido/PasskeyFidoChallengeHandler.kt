@@ -27,6 +27,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler
 import com.microsoft.identity.common.java.constants.FidoConstants
+import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility
 import com.microsoft.identity.common.java.opentelemetry.SpanName
@@ -35,6 +36,8 @@ import io.opentelemetry.api.trace.SpanContext
 import io.opentelemetry.api.trace.StatusCode
 import kotlinx.coroutines.launch
 import java.util.*
+import java.net.MalformedURLException
+import java.net.URL
 
 /**
  * Handles a FidoChallenge by either creating or authenticating with a passkey.
@@ -51,7 +54,7 @@ class PasskeyFidoChallengeHandler
     private val webView: WebView,
     private val spanContext : SpanContext?,
     private val lifecycleOwner: LifecycleOwner?
-) : IChallengeHandler<IFidoChallenge, Void> {
+) : IChallengeHandler<FidoChallenge, Void> {
     val TAG = PasskeyFidoChallengeHandler::class.simpleName.toString()
     val span = if (spanContext != null) {
         OTelUtility.createSpanFromParent(SpanName.Fido.name, spanContext)
@@ -59,27 +62,36 @@ class PasskeyFidoChallengeHandler
         OTelUtility.createSpan(SpanName.Fido.name)
     }
 
-    override fun processChallenge(fidoChallenge: IFidoChallenge): Void? {
+    override fun processChallenge(fidoChallenge: FidoChallenge): Void? {
         val methodTag = "$TAG:processChallenge"
         span.setAttribute(
             AttributeName.fido_challenge.name,
-            fidoChallenge::class.simpleName.toString());
-        if (lifecycleOwner == null) {
-            val errorMessage = "Cannot get lifecycle owner needed for FIDO API calls."
+            fidoChallenge::class.simpleName.toString()
+        );
+        // First verify submitUrl and context. Without these two, we can't respond back to the server.
+        // If either one of these are missing or malformed, throw an exception and let the main WebViewClient handle it.
+        val submitUrl = validateSubmitUrl(fidoChallenge.submitUrl)
+        val context = validateRequiredParameter(
+            FidoRequestField.CONTEXT.fieldName,
+            fidoChallenge.context
+        )
+        try {
+            validateChallengeFields(fidoChallenge)
+        } catch (e : Exception) {
             respondToChallengeWithError(
-                submitUrl = fidoChallenge.submitUrl,
-                context = fidoChallenge.context,
-                errorMessage = errorMessage,
+                submitUrl = submitUrl,
+                context = context,
+                errorMessage = e.message.toString(),
+                exception = e,
                 methodTag = methodTag
             )
-            return null
         }
-        if (fidoChallenge !is AuthFidoChallenge) {
-            val errorMessage = "FidoChallenge object is of type " + fidoChallenge::class.simpleName.toString() + ", which is unexpected and not supported."
+
+        if (lifecycleOwner == null) {
             respondToChallengeWithError(
-                submitUrl = fidoChallenge.submitUrl,
-                context = fidoChallenge.context,
-                errorMessage = errorMessage,
+                submitUrl = submitUrl,
+                context = context,
+                errorMessage = "Cannot get lifecycle owner needed for FIDO API calls.",
                 methodTag = methodTag
             )
             return null
@@ -89,14 +101,14 @@ class PasskeyFidoChallengeHandler
                 val assertion = fidoManager.authenticate(fidoChallenge)
                 span.setStatus(StatusCode.OK)
                 respondToChallenge(
-                    submitUrl = fidoChallenge.submitUrl,
+                    submitUrl = submitUrl,
                     assertion = assertion,
-                    context = fidoChallenge.context
+                    context = context
                 )
-            } catch (e: Exception) {
+            } catch (e : Exception) {
                 respondToChallengeWithError(
-                    submitUrl = fidoChallenge.submitUrl,
-                    context = fidoChallenge.context,
+                    submitUrl = submitUrl,
+                    context = context,
                     errorMessage = e.message.toString(),
                     exception = e,
                     methodTag = methodTag
@@ -104,6 +116,91 @@ class PasskeyFidoChallengeHandler
             }
         }
         return null
+    }
+
+    /**
+     * Validates
+     */
+    @Throws(ClientException::class)
+    fun validateChallengeFields(fidoChallenge: FidoChallenge) {
+        validateRequiredParameter(
+            FidoRequestField.CHALLENGE.fieldName,
+            fidoChallenge.challenge
+        )
+        validateRequiredParameter(
+            FidoRequestField.RELYING_PARTY_IDENTIFIER.fieldName,
+            fidoChallenge.relyingPartyIdentifier
+        )
+        validateRequiredParameter(
+            FidoRequestField.USER_VERIFICATION_POLICY.fieldName,
+            fidoChallenge.userVerificationPolicy
+        )
+        validateRequiredParameter(
+            FidoRequestField.VERSION.fieldName,
+            fidoChallenge.version
+        )
+        validateSubmitUrl(fidoChallenge.submitUrl)
+        validateOptionalListParameter(
+            AuthFidoRequestField.KEY_TYPES.fieldName,
+            fidoChallenge.keyTypes
+        )
+        validateRequiredParameter(
+            FidoRequestField.CONTEXT.fieldName,
+            fidoChallenge.context
+        )
+        validateOptionalListParameter(
+            AuthFidoRequestField.ALLOWED_CREDENTIALS.fieldName,
+            fidoChallenge.allowedCredentials
+        )
+    }
+
+    /**
+     * Validates that the given required parameter is not null or empty.
+     * @param field passkey protocol field
+     * @param value value for a passkey protocol parameter
+     * @return validated parameter value
+     * @throws ClientException if the parameter is null or empty.
+     */
+    @Throws(ClientException::class)
+    fun validateRequiredParameter(field: String, value: String?): String {
+        if (value == null) {
+            throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "$field not provided")
+        } else if (value.isBlank()) {
+            throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "$field is empty")
+        }
+        return value
+    }
+
+    /**
+     * Validates that the submitUrl parameter is not null, empty, or malformed.
+     * @param value value for the submitUrl passkey protocol parameter.
+     * @return validated parameter value
+     * @throws ClientException if the parameter is null, empty, or malformed.
+     */
+    @Throws(ClientException::class)
+    fun validateSubmitUrl(value: String?): String {
+        val submitUrl = validateRequiredParameter(FidoRequestField.SUBMIT_URL.fieldName, value)
+        try {
+            URL(submitUrl)
+        } catch (e : MalformedURLException) {
+            throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "${FidoRequestField.SUBMIT_URL.fieldName} value is malformed.")
+        }
+        return submitUrl
+    }
+
+    /**
+     * Validates that the given optional parameter is not empty and turns into a list.
+     * @param value value for a passkey protocol parameter
+     * @param field passkey protocol field
+     * @return validated parameter value, or null if not provided.
+     * @throws ClientException if the parameter is empty
+     */
+    @Throws(ClientException::class)
+    fun validateOptionalListParameter(field: String, value: List<String>?): List<String>? {
+        if (value != null && value.isEmpty()) {
+            throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "$field is empty")
+        }
+        return value
     }
 
     /**

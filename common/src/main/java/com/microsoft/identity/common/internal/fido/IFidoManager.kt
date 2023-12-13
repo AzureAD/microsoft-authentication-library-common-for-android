@@ -32,5 +32,5 @@ interface IFidoManager {
      * @return assertion
      * @throws Exception
      */
-    suspend fun authenticate(challenge: AuthFidoChallenge): String
+    suspend fun authenticate(challenge: FidoChallenge): String
 }

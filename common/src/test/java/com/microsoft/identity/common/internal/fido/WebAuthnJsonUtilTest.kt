@@ -68,33 +68,23 @@ class WebAuthnJsonUtilTest {
 
     @Test
     fun testCreateJsonAuthRequestFromChallengeObject_AllFieldsFilled() {
-        val authChallenge = AuthFidoChallenge(
+        val result = WebAuthnJsonUtil.createJsonAuthRequest(
             challenge = challengeStr,
             relyingPartyIdentifier = relyingPartyIdentifier,
-            userVerificationPolicy = userVerificationPolicy,
-            version = version,
-            submitUrl = submitUrl,
-            keyTypes = listOf(keyTypes),
-            context = context,
-            allowedCredentials = listOf(allowCredentials1, allowCredentials2)
+            allowedCredentials = listOf(allowCredentials1, allowCredentials2),
+            userVerificationPolicy = userVerificationPolicy
         )
-        val result = WebAuthnJsonUtil.createJsonAuthRequestFromChallengeObject(authChallenge)
         JSONAssert.assertEquals(expectedJsonAllFieldsFilled, result, JSONCompareMode.LENIENT)
     }
 
     @Test
     fun testCreateJsonAuthRequestFromChallengeObject_OnlyRequiredFields() {
-        val authChallenge = AuthFidoChallenge(
+        val result = WebAuthnJsonUtil.createJsonAuthRequest(
             challenge = challengeStr,
             relyingPartyIdentifier = relyingPartyIdentifier,
-            userVerificationPolicy = userVerificationPolicy,
-            version = version,
-            submitUrl = submitUrl,
-            keyTypes = null,
-            context = context,
-            allowedCredentials = null
+            allowedCredentials = null,
+            userVerificationPolicy = userVerificationPolicy
         )
-        val result = WebAuthnJsonUtil.createJsonAuthRequestFromChallengeObject(authChallenge)
         JSONAssert.assertEquals(expectedJsonOnlyRequiredFields, result, JSONCompareMode.LENIENT)
     }
 
