@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.nativeauth.providers
 
 import com.microsoft.identity.common.java.AuthenticationConstants
+import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
@@ -50,6 +51,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.S
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpChallengeRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpContinueRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpStartRequest
+import com.microsoft.identity.common.java.platform.Device
 import java.util.TreeMap
 
 /**
@@ -357,8 +359,11 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //region helpers
     private fun getRequestHeaders(): Map<String, String?> {
         val headers: MutableMap<String, String?> = TreeMap()
-        headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] =
-            DiagnosticContext.INSTANCE.requestContext[DiagnosticContext.CORRELATION_ID]
+        headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = DiagnosticContext.INSTANCE.requestContext[DiagnosticContext.CORRELATION_ID]
+        headers[AuthenticationConstants.SdkPlatformFields.PRODUCT] = DiagnosticContext.INSTANCE.requestContext[AuthenticationConstants.SdkPlatformFields.PRODUCT]
+        headers[AuthenticationConstants.SdkPlatformFields.VERSION] = Device.getProductVersion()
+        headers.putAll(Device.getPlatformIdParameters())
+        headers.putAll(EstsTelemetry.getInstance().telemetryHeaders)
         headers[HttpConstants.HeaderField.CONTENT_TYPE] = "application/x-www-form-urlencoded"
         return headers
     }
