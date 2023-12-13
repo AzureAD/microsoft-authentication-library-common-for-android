@@ -40,9 +40,9 @@ class ResetPasswordStartApiResponse(
     @Expose override var statusCode: Int,
     @SerializedName("password_reset_token") val passwordResetToken: String?,
     @SerializedName("challenge_type") val challengeType: String?,
-    @Expose @SerializedName("error") val error: String?,
-    @Expose @SerializedName("error_description") val errorDescription: String?,
-    @Expose @SerializedName("error_uri") val errorUri: String?,
+    @SerializedName("error") val error: String?,
+    @SerializedName("error_description") val errorDescription: String?,
+    @SerializedName("error_uri") val errorUri: String?,
     @SerializedName("details") val details: List<Map<String, String>>?,
     @SerializedName("inner_errors") val innerErrors: List<InnerError>?
 ): IApiResponse(statusCode) {
