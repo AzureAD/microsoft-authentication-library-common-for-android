@@ -39,7 +39,7 @@ class TestFidoManager () : IFidoManager {
         const val EXCEPTION_CHALLENGE = "Throw exception in manager"
         const val EXCEPTION_MESSAGE = "Throwing an exception"
     }
-    override suspend fun authenticate(challenge: AuthFidoChallenge): String {
+    override suspend fun authenticate(challenge: FidoChallenge): String {
         if (challenge.challenge == EXCEPTION_CHALLENGE) {
             throw Exception(EXCEPTION_MESSAGE)
         }

@@ -34,7 +34,7 @@ class CredManFidoManager (val context: Context) : IFidoManager {
      * @param challenge AuthFidoChallenge received from the server.
      * @return assertion
      */
-    override suspend fun authenticate(challenge: AuthFidoChallenge): String {
+    override suspend fun authenticate(challenge: FidoChallenge): String {
         // Implementation will include Credential Manager calls; we aren't able to add the dependency yet,
         // so this method will only be filled once we can finish up the passkey work.
         return WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson("")

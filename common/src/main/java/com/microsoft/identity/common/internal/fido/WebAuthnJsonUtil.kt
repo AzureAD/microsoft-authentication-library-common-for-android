@@ -32,15 +32,21 @@ import org.json.JSONObject
 class WebAuthnJsonUtil {
     companion object {
         /**
-         * Takes applicable parameters from an AuthFidoChallenge object and creates a string
-         * representation of PublicKeyCredentialRequestOptionsJSON (https://w3c.github.io/webauthn/#dictdef-publickeycredentialrequestoptionsjson)
-         * @param challengeObject AuthFidoChallenge
+         * Takes applicable parameters and creates a string representation of
+         *  PublicKeyCredentialRequestOptionsJSON (https://w3c.github.io/webauthn/#dictdef-publickeycredentialrequestoptionsjson)
+         * @param challenge challenge string
+         * @param relyingPartyIdentifier rpId string
+         * @param allowedCredentials allowedCredentials string
+         * @param userVerificationPolicy yserVerificationPolicy string
          * @return a string representation of PublicKeyCredentialRequestOptionsJSON.
          */
-        fun createJsonAuthRequestFromChallengeObject(challengeObject: AuthFidoChallenge): String? {
+        fun createJsonAuthRequest(challenge: String,
+                                  relyingPartyIdentifier: String,
+                                  allowedCredentials: List<String>?,
+                                  userVerificationPolicy: String): String? {
             //Create classes
             val publicKeyCredentialDescriptorList = ArrayList<PublicKeyCredentialDescriptor>()
-            challengeObject.allowedCredentials?.let { allowedCredentials ->
+            allowedCredentials?.let {
                 for (id in allowedCredentials) {
                     publicKeyCredentialDescriptorList.add(
                         PublicKeyCredentialDescriptor("public-key", id)
@@ -48,10 +54,10 @@ class WebAuthnJsonUtil {
                 }
             }
             val options = PublicKeyCredentialRequestOptions(
-                challengeObject.challenge,
-                challengeObject.relyingPartyIdentifier,
+                challenge,
+                relyingPartyIdentifier,
                 publicKeyCredentialDescriptorList,
-                challengeObject.userVerificationPolicy
+                userVerificationPolicy
             )
             return CommonMoshiJsonAdapter().toJson(options)
         }
