@@ -20,7 +20,7 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.providers.nativeauth
+package com.microsoft.identity.common.java.nativeauth.providers
 
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.signInChallengeRequestUrl
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.signInInitiateRequestUrl
@@ -48,9 +48,6 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
-import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthConstants
-import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
-import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.requests.NativeAuthRequest.Companion.toJsonString
 import io.mockk.every
 import io.mockk.mockk

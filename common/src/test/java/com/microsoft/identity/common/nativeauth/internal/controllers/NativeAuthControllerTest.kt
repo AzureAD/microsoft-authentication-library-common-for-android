@@ -20,11 +20,12 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers
+package com.microsoft.identity.common.nativeauth.internal.controllers
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory
+import com.microsoft.identity.common.internal.controllers.LocalMSALController
 import com.microsoft.identity.common.internal.util.capture
 import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority
@@ -79,7 +80,7 @@ import org.robolectric.RobolectricTestRunner
 import java.util.UUID
 
 /**
- * Tests for [com.microsoft.identity.common.internal.controllers.NativeAuthMsalController].
+ * Tests for [NativeAuthMsalController].
  */
 @RunWith(RobolectricTestRunner::class)
 class NativeAuthControllerTest {
