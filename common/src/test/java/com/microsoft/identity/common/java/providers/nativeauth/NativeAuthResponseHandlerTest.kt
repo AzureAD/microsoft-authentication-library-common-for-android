@@ -62,7 +62,7 @@ import java.net.URL
 
 class NativeAuthResponseHandlerTest {
     private val clientId = "1234"
-    private val requestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/start")
+    private val requestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/start") // TODO: Update the mock api url
     private val challengeType = "oob password redirect"
     private val oobChallengeType = "oob"
     private val passwordChallengeType = "password"
@@ -159,7 +159,7 @@ class NativeAuthResponseHandlerTest {
     private val tokenType = "Bearer"
     private val scope = "openid profile"
     private val refreshToken = "5678"
-    private val signInSLT = "12345"
+    private val continuationToken = "12345"
     private val expiresIn = 500
     private val idToken = "9012"
     private val accessToken = "1234"
@@ -723,7 +723,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = null,
             errorCodes = null,
-            signInSLT = signInSLT,
+            continuationToken = continuationToken,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -733,7 +733,7 @@ class NativeAuthResponseHandlerTest {
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.Success)
-        assertEquals((apiResult as SignUpContinueApiResult.Success).signInSLT, signInSLT)
+        assertEquals((apiResult as SignUpContinueApiResult.Success).continuationToken, continuationToken)
     }
 
     @Test
@@ -743,7 +743,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = null,
             errorCodes = null,
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -753,7 +753,7 @@ class NativeAuthResponseHandlerTest {
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.Success)
-        assertEquals((apiResult as SignUpContinueApiResult.Success).signInSLT, null)
+        assertEquals((apiResult as SignUpContinueApiResult.Success).continuationToken, null)
     }
 
     @Test
@@ -763,7 +763,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = null,
             errorCodes = null,
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -782,7 +782,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = signupToken,
             error = nullString,
             errorCodes = null,
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = nullString,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -801,7 +801,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = passwordTooWeakError,
             errorCodes = null,
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -820,7 +820,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = passwordTooLongError,
             errorCodes = null,
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -839,7 +839,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = passwordTooShortError,
             errorCodes = null,
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -858,7 +858,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = passwordBannedError,
             errorCodes = null,
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -877,7 +877,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = passwordRecentlyUsedError,
             errorCodes = null,
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -896,7 +896,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = userAlreadyExistsError,
             errorCodes = null,
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -915,7 +915,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = invalidRequestError,
             errorCodes = listOf(incorrectOOBErrorCode1),
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -934,7 +934,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = invalidRequestError,
             errorCodes = listOf(incorrectOOBErrorCode2),
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -953,7 +953,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = invalidRequestError,
             errorCodes = listOf(incorrectOOBErrorCode3),
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -972,7 +972,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = invalidRequestError,
             errorCodes = null,
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -991,7 +991,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = invalidRequestError,
             errorCodes = listOf(invalidErrorCode),
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -1010,7 +1010,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = expiredTokenError,
             errorCodes = null,
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -1029,7 +1029,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = attributeValidationFailedErrorCode,
             errorCodes = null,
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = userAttributes,
@@ -1048,7 +1048,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = attributeValidationFailedErrorCode,
             errorCodes = null,
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -1067,7 +1067,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = signupToken,
             error = attributesRequiredError,
             errorCodes = null,
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = userAttributesRequiredErrorDescription,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -1087,7 +1087,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = signupToken,
             error = attributeValidationFailed,
             errorCodes = null,
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = invalidAttributesErrorDescription,
             unverifiedAttributes = null,
             invalidAttributes = invalidAttributes,
@@ -1107,7 +1107,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = attributeValidationFailed,
             errorCodes = null,
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = userAttributesRequiredErrorDescription,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -1126,7 +1126,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = signupToken,
             error = attributesRequiredError,
             errorCodes = null,
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = userAttributesRequiredErrorDescription,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -1145,7 +1145,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = signupToken,
             error = credentialRequiredError,
             errorCodes = null,
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = credentialRequiredErrorDescription,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -1165,7 +1165,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = null,
             errorCodes = null,
-            signInSLT = null,
+            continuationToken = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -1975,7 +1975,8 @@ class NativeAuthResponseHandlerTest {
         val resetPasswordPollCompletionApiResponse = ResetPasswordPollCompletionApiResponse(
             statusCode = successStatusCode,
             status = succeededStatus,
-            signinSlt = null,
+            continuationToken = null,
+            expiresIn = null,
             error = null,
             errorDescription = null,
             errorUri = null,
@@ -1992,7 +1993,8 @@ class NativeAuthResponseHandlerTest {
         val resetPasswordPollCompletionApiResponse = ResetPasswordPollCompletionApiResponse(
             statusCode = successStatusCode,
             status = inProgressStatus,
-            signinSlt = null,
+            continuationToken = null,
+            expiresIn = null,
             error = null,
             errorDescription = null,
             errorUri = null,
@@ -2009,7 +2011,8 @@ class NativeAuthResponseHandlerTest {
         val resetPasswordPollCompletionApiResponse = ResetPasswordPollCompletionApiResponse(
             statusCode = successStatusCode,
             status = failedStatus,
-            signinSlt = null,
+            continuationToken = null,
+            expiresIn = null,
             error = null,
             errorDescription = null,
             errorUri = null,
@@ -2031,7 +2034,8 @@ class NativeAuthResponseHandlerTest {
             innerErrors = null,
             details = null,
             status = null,
-            signinSlt = null
+            continuationToken = null,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2048,7 +2052,8 @@ class NativeAuthResponseHandlerTest {
             innerErrors = null,
             details = null,
             status = null,
-            signinSlt = null
+            continuationToken = null,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2065,7 +2070,8 @@ class NativeAuthResponseHandlerTest {
             innerErrors = null,
             details = null,
             status = null,
-            signinSlt = null
+            continuationToken = null,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2082,7 +2088,8 @@ class NativeAuthResponseHandlerTest {
             innerErrors = null,
             details = null,
             status = null,
-            signinSlt = null
+            continuationToken = null,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2099,7 +2106,8 @@ class NativeAuthResponseHandlerTest {
             innerErrors = null,
             details = null,
             status = null,
-            signinSlt = null
+            continuationToken = null,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2116,7 +2124,8 @@ class NativeAuthResponseHandlerTest {
             innerErrors = null,
             details = null,
             status = null,
-            signinSlt = null
+            continuationToken = null,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2133,7 +2142,8 @@ class NativeAuthResponseHandlerTest {
             innerErrors = null,
             details = null,
             status = null,
-            signinSlt = null
+            continuationToken = null,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2145,7 +2155,8 @@ class NativeAuthResponseHandlerTest {
         val resetPasswordPollCompletionApiResponse = ResetPasswordPollCompletionApiResponse(
             statusCode = successStatusCode,
             status = null,
-            signinSlt = null,
+            continuationToken = null,
+            expiresIn = null,
             error = null,
             errorDescription = null,
             errorUri = null,
@@ -2162,7 +2173,8 @@ class NativeAuthResponseHandlerTest {
         val resetPasswordPollCompletionApiResponse = ResetPasswordPollCompletionApiResponse(
             statusCode = uncommonErrorStatusCode,
             status = null,
-            signinSlt = null,
+            continuationToken = null,
+            expiresIn = null,
             error = null,
             errorDescription = null,
             errorUri = null,
@@ -3117,7 +3129,7 @@ class NativeAuthResponseHandlerTest {
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.details)
-        Assert.assertNull(response.signInSLT)
+        Assert.assertNull(response.continuationToken)
         Assert.assertNull(response.invalidAttributes)
         Assert.assertNull(response.details)
         Assert.assertNull(response.expiresIn)
@@ -3134,7 +3146,7 @@ class NativeAuthResponseHandlerTest {
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.details)
-        Assert.assertNull(response.signInSLT)
+        Assert.assertNull(response.continuationToken)
         Assert.assertNull(response.invalidAttributes)
         Assert.assertNull(response.details)
         Assert.assertNull(response.expiresIn)

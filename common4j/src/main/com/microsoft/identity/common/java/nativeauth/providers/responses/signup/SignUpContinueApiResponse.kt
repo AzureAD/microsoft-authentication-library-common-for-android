@@ -51,7 +51,7 @@ import java.net.HttpURLConnection
  */
 data class SignUpContinueApiResponse(
     @Expose override var statusCode: Int,
-    @SerializedName("signin_slt") val signInSLT: String?,
+    @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("expires_in") val expiresIn: Int?,
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
@@ -162,7 +162,7 @@ data class SignUpContinueApiResponse(
             // Handle success
             HttpURLConnection.HTTP_OK -> {
                 SignUpContinueApiResult.Success(
-                    signInSLT = signInSLT,
+                    continuationToken = continuationToken,
                     expiresIn = expiresIn
                 )
             }

@@ -45,7 +45,8 @@ import java.net.HttpURLConnection
 class ResetPasswordPollCompletionApiResponse(
     @Expose override var statusCode: Int,
     @Expose @SerializedName("status") val status: String?,
-    @SerializedName("signin_slt") val signinSlt: String?,
+    @SerializedName("continuation_token") val continuationToken: String?,
+    @Expose @SerializedName("expires_in") val expiresIn: Int?,
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
     @Expose @SerializedName("error_uri") val errorUri: String?,

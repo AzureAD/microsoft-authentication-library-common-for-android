@@ -29,7 +29,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPa
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithSLTCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
@@ -183,14 +183,14 @@ class NativeAuthOAuth2Strategy(
     }
 
     /**
-     * Performs API call to /oauth/v2.0/token with short lived token. SLT was created in prior call
+     * Performs API call to /oauth/v2.0/token with continuation token. Continuation token was created in prior call
      * to signup APIs.
      */
-    fun performSLTTokenRequest(
-        parameters: SignInWithSLTCommandParameters
+    fun performContinuationTokenTokenRequest(
+        parameters: SignInWithContinuationTokenCommandParameters
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSLTTokenRequest")
-        return signInInteractor.performSLTTokenRequest(
+        LogSession.logMethodCall(TAG, "${TAG}.performContinuationTokenRequest")
+        return signInInteractor.performContinuationTokenTokenRequest(
             parameters = parameters
         )
     }

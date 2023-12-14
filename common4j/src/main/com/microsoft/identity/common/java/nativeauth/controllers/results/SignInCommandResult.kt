@@ -26,7 +26,7 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 
 sealed interface SignInStartCommandResult: INativeAuthCommandResult
-sealed interface SignInWithSLTCommandResult: INativeAuthCommandResult
+sealed interface SignInWithContinuationTokenCommandResult: INativeAuthCommandResult
 sealed interface SignInSubmitCodeCommandResult: INativeAuthCommandResult
 sealed interface SignInResendCodeCommandResult: INativeAuthCommandResult
 sealed interface SignInSubmitPasswordCommandResult: INativeAuthCommandResult
@@ -40,11 +40,11 @@ sealed interface SignInSubmitPasswordCommandResult: INativeAuthCommandResult
  */
 interface SignInCommandResult {
     data class Complete(val authenticationResult: ILocalAuthenticationResult) :
-        SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult,
+        SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInSubmitCodeCommandResult,
         SignInSubmitPasswordCommandResult
 
     data class PasswordRequired(val credentialToken: String) :
-        SignInStartCommandResult, SignInWithSLTCommandResult
+        SignInStartCommandResult, SignInWithContinuationTokenCommandResult
 
     data class CodeRequired(
         val credentialToken: String,
@@ -52,7 +52,7 @@ interface SignInCommandResult {
         val challengeChannel: String,
         val codeLength: Int
     ) :
-        SignInStartCommandResult, SignInWithSLTCommandResult, SignInResendCodeCommandResult
+        SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInResendCodeCommandResult
 
     data class UserNotFound(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId, val errorCodes: List<Int>) :
         SignInStartCommandResult

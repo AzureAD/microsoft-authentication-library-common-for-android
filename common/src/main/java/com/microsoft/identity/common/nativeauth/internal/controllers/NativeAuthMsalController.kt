@@ -44,7 +44,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithSLTCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpResendCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartUsingPasswordCommandParameters
@@ -64,7 +64,7 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.SignInR
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignInStartCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignInSubmitCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignInSubmitPasswordCommandResult
-import com.microsoft.identity.common.java.nativeauth.controllers.results.SignInWithSLTCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.SignInWithContinuationTokenCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpResendCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpStartCommandResult
@@ -167,22 +167,22 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     }
 
     /**
-     * Makes a call to the /token endpoint with the provided Short Lived Token (SLT), and caches the returned token
+     * Makes a call to the /token endpoint with the provided Continuation Token, and caches the returned token
      * if successful. In case of error [INativeAuthCommandResult.UnknownError] is returned.
      */
-    fun signInWithSLT(parameters: SignInWithSLTCommandParameters): SignInWithSLTCommandResult {
-        LogSession.logMethodCall(TAG, "${TAG}.signInWithSLT")
+    fun signInWithContinuationToken(parameters: SignInWithContinuationTokenCommandParameters): SignInWithContinuationTokenCommandResult {
+        LogSession.logMethodCall(TAG, "${TAG}.signInWithContinuationToken")
 
         try {
             val oAuth2Strategy = createOAuth2Strategy(parameters)
 
             val mergedScopes = addDefaultScopes(parameters.scopes)
-            val parametersWithScopes = CommandUtil.createSignInWithSLTCommandParametersWithScopes(
+            val parametersWithScopes = CommandUtil.createSignInWithContinuationTokenCommandParametersWithScopes(
                 parameters,
                 mergedScopes
             )
 
-            val tokenApiResult = performSLTTokenRequest(
+            val tokenApiResult = performContinuationTokenTokenRequest(
                 oAuth2Strategy = oAuth2Strategy,
                 parameters = parametersWithScopes
             )
@@ -213,7 +213,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 }
             }
         } catch (e: Exception) {
-            Logger.error(TAG, "Exception thrown in signInWithSLT", e)
+            Logger.error(TAG, "Exception thrown in signInWithContinuationToken", e)
             throw e
         }
     }
@@ -990,12 +990,12 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     }
 
     @VisibleForTesting
-    fun performSLTTokenRequest(
+    fun performContinuationTokenTokenRequest(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
-        parameters: SignInWithSLTCommandParameters
+        parameters: SignInWithContinuationTokenCommandParameters
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSLTTokenRequest")
-        return oAuth2Strategy.performSLTTokenRequest(
+        LogSession.logMethodCall(TAG, "${TAG}.performContinuationTokenTokenRequest")
+        return oAuth2Strategy.performContinuationTokenTokenRequest(
             parameters = parameters
         )
     }
@@ -1355,7 +1355,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         return when (this) {
             is SignUpContinueApiResult.Success -> {
                 SignUpCommandResult.Complete(
-                    signInSLT = this.signInSLT,
+                    continuationToken = this.continuationToken,
                     expiresIn = this.expiresIn
                 )
             }
@@ -1429,7 +1429,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         return when (this) {
             is SignUpContinueApiResult.Success -> {
                 SignUpCommandResult.Complete(
-                    signInSLT = this.signInSLT,
+                    continuationToken = this.continuationToken,
                     expiresIn = this.expiresIn
                 )
             }
@@ -1485,7 +1485,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         return when (this) {
             is SignUpContinueApiResult.Success -> {
                 SignUpCommandResult.Complete(
-                    signInSLT = this.signInSLT,
+                    continuationToken = this.continuationToken,
                     expiresIn = this.expiresIn
                 )
             }

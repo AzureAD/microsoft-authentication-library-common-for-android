@@ -27,7 +27,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.Acquire
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartUsingPasswordCommandParameters;
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters;
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters;
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithSLTCommandParameters;
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters;
 import com.microsoft.identity.common.java.request.SdkType;
 
 import java.util.List;
@@ -55,14 +55,14 @@ public class CommandUtil {
     }
 
     /**
-     * Adds scopes to [SignInWithSLTCommandParameters] object and returns a new
-     * [SignInWithSLTCommandParameters] object.
+     * Adds scopes to [SignInWithContinuationTokenCommandParameters] object and returns a new
+     * [SignInWithContinuationTokenCommandParameters] object.
      * @param parameters input command parameter
      * @param defaultScopes scopes to be added
-     * @return [SignInWithSLTCommandParameters] object with scopes
+     * @return [SignInWithContinuationTokenCommandParameters] object with scopes
      */
-    public static SignInWithSLTCommandParameters createSignInWithSLTCommandParametersWithScopes(
-            SignInWithSLTCommandParameters parameters,
+    public static SignInWithContinuationTokenCommandParameters createSignInWithContinuationTokenCommandParametersWithScopes(
+            SignInWithContinuationTokenCommandParameters parameters,
             List<String> defaultScopes
     ) {
         return parameters.toBuilder()

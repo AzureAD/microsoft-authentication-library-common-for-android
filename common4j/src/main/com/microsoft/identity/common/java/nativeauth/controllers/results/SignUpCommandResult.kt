@@ -54,7 +54,7 @@ interface SignUpCommandResult {
      * Denotes completion of Signup operation
      */
     data class Complete (
-        val signInSLT: String?,
+        val continuationToken: String?,
         val expiresIn: Int?
     ) : SignUpStartCommandResult,
         SignUpSubmitCodeCommandResult, SignUpSubmitPasswordCommandResult,

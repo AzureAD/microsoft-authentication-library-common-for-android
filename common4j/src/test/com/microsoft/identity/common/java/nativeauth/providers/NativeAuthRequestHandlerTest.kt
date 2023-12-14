@@ -40,7 +40,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithSLTCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
@@ -70,7 +70,7 @@ class NativeAuthRequestHandlerTest {
     private val oobCode = "123456"
     private val passwordResetToken = "123456"
     private val passwordSubmitToken = "123456"
-    private val signInSLT = "1234"
+    private val continuationToken = "1234"
     private val emptyString = ""
     private val emptyPassword = "".toCharArray()
     private val credentialToken = "uY29tL2F1dGhlbnRpY"
@@ -490,40 +490,40 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testSignInTokenWithSLTSuccess() {
-        val commandParameters = SignInWithSLTCommandParameters.builder()
+    fun testSignInTokenWithContinuationTokenSuccess() {
+        val commandParameters = SignInWithContinuationTokenCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .signInSLT(signInSLT)
+            .continuationToken(continuationToken)
             .username(username)
             .build()
 
-        nativeAuthRequestProvider.createSLTTokenRequest(
+        nativeAuthRequestProvider.createContinuationTokenTokenRequest(
             parameters = commandParameters
         )
     }
 
     @Test(expected = ClientException::class)
-    fun testSignInTokenWithEmptySLTShouldThrowException() {
-        val commandParameters = SignInWithSLTCommandParameters.builder()
+    fun testSignInTokenWithEmptyContinuationTokenShouldThrowException() {
+        val commandParameters = SignInWithContinuationTokenCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .signInSLT(emptyString)
+            .continuationToken(emptyString)
             .username(username)
             .build()
 
-        nativeAuthRequestProvider.createSLTTokenRequest(
+        nativeAuthRequestProvider.createContinuationTokenTokenRequest(
             parameters = commandParameters
         )
     }
 
     @Test(expected = ClientException::class)
     fun testSignInTokenWithEmptyUsernameShouldThrowException() {
-        val commandParameters = SignInWithSLTCommandParameters.builder()
+        val commandParameters = SignInWithContinuationTokenCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .signInSLT(signInSLT)
+            .continuationToken(continuationToken)
             .username(emptyString)
             .build()
 
-        nativeAuthRequestProvider.createSLTTokenRequest(
+        nativeAuthRequestProvider.createContinuationTokenTokenRequest(
             parameters = commandParameters
         )
     }

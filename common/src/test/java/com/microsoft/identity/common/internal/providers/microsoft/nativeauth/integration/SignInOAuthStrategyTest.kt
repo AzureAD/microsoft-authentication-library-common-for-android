@@ -28,7 +28,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithSLTCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
@@ -64,7 +64,7 @@ import java.util.UUID
 /**
  * These are integration tests using real API responses instead of mocked API responses. This class
  * covers all sign up endpoints.
- * These tests run on the mock API, see: https://native-ux-mock-api.azurewebsites.net/
+ * These tests run on the mock API, see: https://native-ux-mock-api.azurewebsites.net/ TODO: Update mock api url
  */
 @RunWith(
     RobolectricTestRunner::class
@@ -82,7 +82,7 @@ class SignInOAuthStrategyTest {
     private val credentialToken = "uY29tL2F1dGhlbnRpY"
     private val grantType = "oob"
     private val oob = "1234"
-    private val signInSLT = "12345"
+    private val continuationToken = "12345"
 
     private val mockConfig = mock<NativeAuthOAuth2Configuration>()
     private val mockStrategyParams = mock<OAuth2StrategyParameters>()
@@ -367,7 +367,7 @@ class SignInOAuthStrategyTest {
     }
 
     @Test
-    fun testPerformSLTTokenRequest() {
+    fun testPerformContinuationTokenTokenRequest() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SignInToken,
@@ -375,13 +375,13 @@ class SignInOAuthStrategyTest {
             responseType = MockApiResponseType.TOKEN_SUCCESS
         )
 
-        val parameters = SignInWithSLTCommandParameters.builder()
+        val parameters = SignInWithContinuationTokenCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .signInSLT(signInSLT)
+            .continuationToken(continuationToken)
             .username(username)
             .build()
 
-        val result = nativeAuthOAuth2Strategy.performSLTTokenRequest(
+        val result = nativeAuthOAuth2Strategy.performContinuationTokenTokenRequest(
             parameters = parameters
         )
         Assert.assertTrue(result is SignInTokenApiResult.Success)
@@ -396,20 +396,20 @@ class SignInOAuthStrategyTest {
             responseType = MockApiResponseType.MFA_REQUIRED
         )
 
-        val parameters = SignInWithSLTCommandParameters.builder()
+        val parameters = SignInWithContinuationTokenCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .signInSLT(signInSLT)
+            .continuationToken(ContinuationToken)
             .username(username)
             .build()
 
-        val result = nativeAuthOAuth2Strategy.performSLTTokenRequest(
+        val result = nativeAuthOAuth2Strategy.performContinuationTokenTokenRequest(
             parameters = parameters
         )
         Assert.assertTrue(result is SignInTokenApiResult.MFARequired)
     }
 
     @Test
-    fun testPerformSLTTokenRequestUserNotFound() {
+    fun testPerformContinuationTokenTokenRequestUserNotFound() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SignInToken,
@@ -417,13 +417,13 @@ class SignInOAuthStrategyTest {
             responseType = MockApiResponseType.USER_NOT_FOUND
         )
 
-        val parameters = SignInWithSLTCommandParameters.builder()
+        val parameters = SignInWithContinuationTokenCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .signInSLT(signInSLT)
+            .continuationToken(continuationToken)
             .username(username)
             .build()
 
-        val result = nativeAuthOAuth2Strategy.performSLTTokenRequest(
+        val result = nativeAuthOAuth2Strategy.performContinuationTokenTokenRequest(
             parameters = parameters
         )
         Assert.assertTrue(result is SignInTokenApiResult.UserNotFound)

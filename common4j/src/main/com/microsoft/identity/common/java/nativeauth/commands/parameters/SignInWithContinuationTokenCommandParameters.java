@@ -30,14 +30,14 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
-public class SignInWithSLTCommandParameters extends BaseSignInTokenCommandParameters {
-    private static final String TAG = SignInWithSLTCommandParameters.class.getSimpleName();
+public class SignInWithContinuationTokenCommandParameters extends BaseSignInTokenCommandParameters {
+    private static final String TAG = SignInWithContinuationTokenCommandParameters.class.getSimpleName();
 
     /**
      * A short-lived token for sign in in the user from sign up or self-service-password-reset flow.
      */
     @NonNull
-    public final String signInSLT;
+    public final String continuationToken;
 
     /**
      * The email address of the user.

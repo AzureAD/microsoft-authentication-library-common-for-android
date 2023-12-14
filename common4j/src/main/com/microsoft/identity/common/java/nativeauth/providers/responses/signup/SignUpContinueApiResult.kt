@@ -40,7 +40,7 @@ sealed interface SignUpContinueApiResult {
      * Signup operation has successfully completed.
      */
     data class Success(
-        val signInSLT: String?,
+        val continuationToken: String?,
         val expiresIn: Int?
     ) : SignUpContinueApiResult
 

@@ -30,7 +30,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPa
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithSLTCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
@@ -135,16 +135,16 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     }
 
     /**
-     * Creates request object for /oauth/v2.0/token API call from [SignInWithSLTCommandParameters]
+     * Creates request object for /oauth/v2.0/token API call from [SignInWithContinuationTokenCommandParameters]
      * @param parameters: command parameters object
      */
-    internal fun createSLTTokenRequest(
-        parameters: SignInWithSLTCommandParameters
+    internal fun createContinuationTokenTokenRequest(
+        parameters: SignInWithContinuationTokenCommandParameters
     ): SignInTokenRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createSLTTokenRequest")
+        LogSession.logMethodCall(TAG, "${TAG}.createContinuationTokenRequest")
 
-        return SignInTokenRequest.createSltTokenRequest(
-            signInSlt = parameters.signInSLT,
+        return SignInTokenRequest.createContinuationTokenRequest(
+            continuationToken = parameters.continuationToken,
             scopes = parameters.scopes,
             clientId = config.clientId,
             username = parameters.username,

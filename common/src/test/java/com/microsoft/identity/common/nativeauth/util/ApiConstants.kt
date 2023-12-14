@@ -29,6 +29,7 @@ import java.net.URL
  */
 interface ApiConstants {
     companion object {
+        // TODO: Update mock api url
         val signUpStartRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/v1.0/start")
         val signUpChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/v1.0/challenge")
         val signUpContinueRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/v1.0/continue")
