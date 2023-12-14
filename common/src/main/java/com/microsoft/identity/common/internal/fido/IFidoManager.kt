@@ -28,9 +28,15 @@ package com.microsoft.identity.common.internal.fido
 interface IFidoManager {
     /**
      * Interacts with the FIDO credential provider and returns an assertion.
-     * @param challenge AuthFidoChallenge received from the server.
+     * @param challenge
+     * @param relyingPartyIdentifier
+     * @param allowedCredentials
+     * @param userVerificationPolicy
      * @return assertion
      * @throws Exception
      */
-    suspend fun authenticate(challenge: FidoChallenge): String
+    suspend fun authenticate(challenge: String,
+                             relyingPartyIdentifier: String,
+                             allowedCredentials: List<String>?,
+                             userVerificationPolicy: String): String
 }

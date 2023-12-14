@@ -43,7 +43,7 @@ class WebAuthnJsonUtil {
         fun createJsonAuthRequest(challenge: String,
                                   relyingPartyIdentifier: String,
                                   allowedCredentials: List<String>?,
-                                  userVerificationPolicy: String): String? {
+                                  userVerificationPolicy: String): String {
             //Create classes
             val publicKeyCredentialDescriptorList = ArrayList<PublicKeyCredentialDescriptor>()
             allowedCredentials?.let {
