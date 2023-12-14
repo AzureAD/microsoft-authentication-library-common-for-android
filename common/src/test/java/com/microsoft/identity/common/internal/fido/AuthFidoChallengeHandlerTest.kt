@@ -34,7 +34,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class PasskeyFidoChallengeHandlerTest {
+class AuthFidoChallengeHandlerTest {
     //Challenge parameters
     val challengeStr = "T1xCsnxM2DNL2KdK5CLa6fMhD7OBqho6syzInk_n-Uo"
     val relyingPartyIdentifier = "login.microsoft.com"
@@ -58,12 +58,12 @@ class PasskeyFidoChallengeHandlerTest {
     val testFidoManager = TestFidoManager()
     val testLifecycleOwner = TestLifecycleOwner()
     lateinit var webView : ExtendedTestWebView
-    lateinit var passkeyFidoChallengeHandler: PasskeyFidoChallengeHandler
+    lateinit var authFidoChallengeHandler: AuthFidoChallengeHandler
 
     @Before
     fun setUp() {
         webView = ExtendedTestWebView()
-        passkeyFidoChallengeHandler = PasskeyFidoChallengeHandler(
+        authFidoChallengeHandler = AuthFidoChallengeHandler(
             fidoManager = testFidoManager,
             webView = webView,
             spanContext = null,
@@ -83,17 +83,31 @@ class PasskeyFidoChallengeHandlerTest {
             .appendQueryParameter(AuthFidoRequestField.KEY_TYPES.fieldName, keyTypesString)
             .appendQueryParameter(FidoRequestField.CONTEXT.fieldName, context)
             .build().toString()
-        passkeyFidoChallengeHandler.processChallenge(FidoChallenge(fullUrl))
+        authFidoChallengeHandler.processChallenge(FidoChallenge(fullUrl))
         assertTrue(webView.urlLoaded)
         assertTrue(webView.isRegularAssertion())
     }
 
-    //Note that a cancellation by the user also results in an exception thrown by the API.
-    @Test
-    fun testProcessChallenge_AuthExceptionInManager() {
+    @Test(expected = ClientException::class)
+    fun testProcessChallenge_AuthSubmitUrlValidationError() {
         assertFalse(webView.urlLoaded)
         val fullUrl = Uri.Builder().authority(authority)
-            .appendQueryParameter(FidoRequestField.CHALLENGE.fieldName, TestFidoManager.EXCEPTION_CHALLENGE)
+            .appendQueryParameter(FidoRequestField.CHALLENGE.fieldName, challengeStr)
+            .appendQueryParameter(AuthFidoRequestField.ALLOWED_CREDENTIALS.fieldName, allowCredentialsOneUserString)
+            .appendQueryParameter(FidoRequestField.RELYING_PARTY_IDENTIFIER.fieldName, relyingPartyIdentifier)
+            .appendQueryParameter(FidoRequestField.VERSION.fieldName, version)
+            .appendQueryParameter(FidoRequestField.SUBMIT_URL.fieldName, "someUnexpectedUrl")
+            .appendQueryParameter(AuthFidoRequestField.KEY_TYPES.fieldName, keyTypesString)
+            .appendQueryParameter(FidoRequestField.CONTEXT.fieldName, context)
+            .build().toString()
+        authFidoChallengeHandler.processChallenge(FidoChallenge(fullUrl))
+    }
+
+    @Test
+    fun testProcessChallenge_AuthGeneralValidationError() {
+        assertFalse(webView.urlLoaded)
+        val fullUrl = Uri.Builder().authority(authority)
+            .appendQueryParameter(FidoRequestField.CHALLENGE.fieldName, "")
             .appendQueryParameter(AuthFidoRequestField.ALLOWED_CREDENTIALS.fieldName, allowCredentialsOneUserString)
             .appendQueryParameter(FidoRequestField.RELYING_PARTY_IDENTIFIER.fieldName, relyingPartyIdentifier)
             .appendQueryParameter(FidoRequestField.VERSION.fieldName, version)
@@ -101,15 +115,15 @@ class PasskeyFidoChallengeHandlerTest {
             .appendQueryParameter(AuthFidoRequestField.KEY_TYPES.fieldName, keyTypesString)
             .appendQueryParameter(FidoRequestField.CONTEXT.fieldName, context)
             .build().toString()
-        passkeyFidoChallengeHandler.processChallenge(FidoChallenge(fullUrl))
+        authFidoChallengeHandler.processChallenge(FidoChallenge(fullUrl))
         assertTrue(webView.urlLoaded)
         assertFalse(webView.isRegularAssertion())
     }
 
     //Passing a null lifecycleOwner will end the operation before any calls can be made from the manager.
     @Test
-    fun testProcessChallenge_AuthErrorInHandler() {
-        passkeyFidoChallengeHandler = PasskeyFidoChallengeHandler(
+    fun testProcessChallenge_AuthNoLifecycleOwner() {
+        authFidoChallengeHandler = AuthFidoChallengeHandler(
             fidoManager = testFidoManager,
             webView = webView,
             spanContext = null,
@@ -125,14 +139,32 @@ class PasskeyFidoChallengeHandlerTest {
             .appendQueryParameter(AuthFidoRequestField.KEY_TYPES.fieldName, keyTypesString)
             .appendQueryParameter(FidoRequestField.CONTEXT.fieldName, context)
             .build().toString()
-        passkeyFidoChallengeHandler.processChallenge(FidoChallenge(fullUrl))
+        authFidoChallengeHandler.processChallenge(FidoChallenge(fullUrl))
+        assertTrue(webView.urlLoaded)
+        assertFalse(webView.isRegularAssertion())
+    }
+
+    //Note that a cancellation by the user also results in an exception thrown by the API.
+    @Test
+    fun testProcessChallenge_AuthExceptionInManager() {
+        assertFalse(webView.urlLoaded)
+        val fullUrl = Uri.Builder().authority(authority)
+            .appendQueryParameter(FidoRequestField.CHALLENGE.fieldName, TestFidoManager.EXCEPTION_CHALLENGE)
+            .appendQueryParameter(AuthFidoRequestField.ALLOWED_CREDENTIALS.fieldName, allowCredentialsOneUserString)
+            .appendQueryParameter(FidoRequestField.RELYING_PARTY_IDENTIFIER.fieldName, relyingPartyIdentifier)
+            .appendQueryParameter(FidoRequestField.VERSION.fieldName, version)
+            .appendQueryParameter(FidoRequestField.SUBMIT_URL.fieldName, submitUrl)
+            .appendQueryParameter(AuthFidoRequestField.KEY_TYPES.fieldName, keyTypesString)
+            .appendQueryParameter(FidoRequestField.CONTEXT.fieldName, context)
+            .build().toString()
+        authFidoChallengeHandler.processChallenge(FidoChallenge(fullUrl))
         assertTrue(webView.urlLoaded)
         assertFalse(webView.isRegularAssertion())
     }
 
     @Test
     fun testRespondToChallenge_RegularContext() {
-        passkeyFidoChallengeHandler.respondToChallenge(
+        authFidoChallengeHandler.respondToChallenge(
             submitUrl,
             TestFidoManager.SAMPLE_ASSERTION,
             context
@@ -144,7 +176,7 @@ class PasskeyFidoChallengeHandlerTest {
 
     @Test
     fun testRespondToChallenge_NoFlowTokenInContext() {
-        passkeyFidoChallengeHandler.respondToChallenge(
+        authFidoChallengeHandler.respondToChallenge(
             submitUrl,
             TestFidoManager.SAMPLE_ASSERTION,
             "contextValue"
@@ -156,7 +188,7 @@ class PasskeyFidoChallengeHandlerTest {
 
     @Test
     fun testRespondToChallenge_EmptyContext() {
-        passkeyFidoChallengeHandler.respondToChallenge(
+        authFidoChallengeHandler.respondToChallenge(
             submitUrl,
             TestFidoManager.SAMPLE_ASSERTION,
             ""
@@ -168,7 +200,7 @@ class PasskeyFidoChallengeHandlerTest {
 
     @Test
     fun testRespondToChallengeWithError_RegularContext() {
-        passkeyFidoChallengeHandler.respondToChallengeWithError(
+        authFidoChallengeHandler.respondToChallengeWithError(
             submitUrl,
             context,
             testException.message.toString(),
@@ -181,7 +213,7 @@ class PasskeyFidoChallengeHandlerTest {
 
     @Test
     fun testRespondToChallengeWithError_NoFlowTokenInContext() {
-        passkeyFidoChallengeHandler.respondToChallengeWithError(
+        authFidoChallengeHandler.respondToChallengeWithError(
             submitUrl,
             "contextValue",
             testException.message.toString(),
@@ -194,7 +226,7 @@ class PasskeyFidoChallengeHandlerTest {
 
     @Test
     fun testRespondToChallengeWithError_EmptyContext() {
-        passkeyFidoChallengeHandler.respondToChallengeWithError(
+        authFidoChallengeHandler.respondToChallengeWithError(
             submitUrl,
             "",
             testException.message.toString(),
@@ -207,7 +239,7 @@ class PasskeyFidoChallengeHandlerTest {
 
     @Test
     fun testRespondToChallengeWithError_NoException() {
-        passkeyFidoChallengeHandler.respondToChallengeWithError(
+        authFidoChallengeHandler.respondToChallengeWithError(
             submitUrl,
             context,
             testException.message.toString(),
@@ -221,7 +253,7 @@ class PasskeyFidoChallengeHandlerTest {
     fun testValidateRequiredParameter_ExpectedFieldAndValue() {
         Assert.assertEquals(
             challengeStr,
-            passkeyFidoChallengeHandler.validateRequiredParameter(
+            authFidoChallengeHandler.validateRequiredParameter(
                 FidoRequestField.CHALLENGE.fieldName,
                 challengeStr
             )
@@ -230,39 +262,59 @@ class PasskeyFidoChallengeHandlerTest {
 
     @Test(expected = ClientException::class)
     fun testValidateRequiredParameter_MissingField() {
-        passkeyFidoChallengeHandler.validateRequiredParameter(FidoRequestField.CHALLENGE.fieldName, null)
+        authFidoChallengeHandler.validateRequiredParameter(FidoRequestField.CHALLENGE.fieldName, null)
     }
 
     @Test(expected = ClientException::class)
     fun testValidateRequiredParameter_EmptyValue() {
-        passkeyFidoChallengeHandler.validateRequiredParameter(FidoRequestField.CHALLENGE.fieldName, "")
+        authFidoChallengeHandler.validateRequiredParameter(FidoRequestField.CHALLENGE.fieldName, "")
     }
 
     @Test
     fun testValidateSubmitUrl_ExpectedFieldAndValue() {
-        passkeyFidoChallengeHandler.validateSubmitUrl(submitUrl)
+        authFidoChallengeHandler.validateSubmitUrl(submitUrl)
     }
 
     @Test(expected = ClientException::class)
     fun testValidateSubmitUrl_MissingField() {
-        passkeyFidoChallengeHandler.validateSubmitUrl(null)
+        authFidoChallengeHandler.validateSubmitUrl(null)
     }
 
     @Test(expected = ClientException::class)
     fun testValidateSubmitUrl_EmptyValue() {
-        passkeyFidoChallengeHandler.validateSubmitUrl("")
+        authFidoChallengeHandler.validateSubmitUrl("")
     }
 
     @Test(expected = ClientException::class)
     fun testValidateSubmitUrl_MalformedUrl() {
-        passkeyFidoChallengeHandler.validateSubmitUrl("url")
+        authFidoChallengeHandler.validateSubmitUrl("url")
+    }
+
+    @Test
+    fun testValidateProtocolVersion_ExpectedFieldAndValue() {
+        authFidoChallengeHandler.validateProtocolVersion(version)
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateProtocolVersion_MissingField() {
+        authFidoChallengeHandler.validateProtocolVersion(null)
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateProtocolVersion_EmptyValue() {
+        authFidoChallengeHandler.validateProtocolVersion("")
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateProtocolVersion_UnsupportedVersion() {
+        authFidoChallengeHandler.validateProtocolVersion("2.0")
     }
 
     @Test
     fun testValidateOptionalListParameter_ExpectedFieldAndValue() {
         Assert.assertEquals(
             allowCredentialsTwoUsers,
-            passkeyFidoChallengeHandler.validateOptionalListParameter(
+            authFidoChallengeHandler.validateOptionalListParameter(
                 AuthFidoRequestField.ALLOWED_CREDENTIALS.fieldName,
                 allowCredentialsTwoUsers
             )
@@ -272,7 +324,7 @@ class PasskeyFidoChallengeHandlerTest {
     @Test
     fun testValidateOptionalListParameter_MissingField() {
         Assert.assertNull(
-            passkeyFidoChallengeHandler.validateOptionalListParameter(
+            authFidoChallengeHandler.validateOptionalListParameter(
                 AuthFidoRequestField.ALLOWED_CREDENTIALS.fieldName,
                 null
             )
@@ -281,6 +333,6 @@ class PasskeyFidoChallengeHandlerTest {
 
     @Test(expected = ClientException::class)
     fun testValidateOptionalListParameter_EmptyValue() {
-        passkeyFidoChallengeHandler.validateOptionalListParameter(AuthFidoRequestField.ALLOWED_CREDENTIALS.fieldName, emptyList())
+        authFidoChallengeHandler.validateOptionalListParameter(AuthFidoRequestField.ALLOWED_CREDENTIALS.fieldName, emptyList())
     }
 }

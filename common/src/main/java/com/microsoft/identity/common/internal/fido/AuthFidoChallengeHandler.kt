@@ -42,9 +42,9 @@ import java.net.URL
 /**
  * Handles a FidoChallenge by either creating or authenticating with a passkey.
  */
-class PasskeyFidoChallengeHandler
+class AuthFidoChallengeHandler
 /**
- * Creates a PasskeyFidoChallengeHandler instance.
+ * Creates an AuthFidoChallengeHandler instance.
  * @param fidoManager IFidoManager instance.
  * @param webView Current WebView.
  * @param spanContext Current spanContext, if present.
@@ -55,7 +55,7 @@ class PasskeyFidoChallengeHandler
     private val spanContext : SpanContext?,
     private val lifecycleOwner: LifecycleOwner?
 ) : IChallengeHandler<FidoChallenge, Void> {
-    val TAG = PasskeyFidoChallengeHandler::class.simpleName.toString()
+    val TAG = AuthFidoChallengeHandler::class.simpleName.toString()
     val span = if (spanContext != null) {
         OTelUtility.createSpanFromParent(SpanName.Fido.name, spanContext)
     } else {
@@ -75,8 +75,33 @@ class PasskeyFidoChallengeHandler
             FidoRequestField.CONTEXT.fieldName,
             fidoChallenge.context
         )
+        val authChallenge: String
+        val relyingPartyIdentifier: String
+        val userVerificationPolicy: String
+        val allowedCredentials: List<String>?
         try {
-            validateChallengeFields(fidoChallenge)
+            authChallenge = validateRequiredParameter(
+                FidoRequestField.CHALLENGE.fieldName,
+                fidoChallenge.challenge
+            )
+            relyingPartyIdentifier = validateRequiredParameter(
+                FidoRequestField.RELYING_PARTY_IDENTIFIER.fieldName,
+                fidoChallenge.relyingPartyIdentifier
+            )
+            userVerificationPolicy = validateRequiredParameter(
+                FidoRequestField.USER_VERIFICATION_POLICY.fieldName,
+                fidoChallenge.userVerificationPolicy
+            )
+            allowedCredentials = validateOptionalListParameter(
+                AuthFidoRequestField.ALLOWED_CREDENTIALS.fieldName,
+                fidoChallenge.allowedCredentials
+            )
+            validateProtocolVersion(fidoChallenge.version)
+            //Not currently using keyTypes, but should validate in case we use it in the future.
+            validateOptionalListParameter(
+                AuthFidoRequestField.KEY_TYPES.fieldName,
+                fidoChallenge.keyTypes
+            )
         } catch (e : Exception) {
             respondToChallengeWithError(
                 submitUrl = submitUrl,
@@ -85,8 +110,8 @@ class PasskeyFidoChallengeHandler
                 exception = e,
                 methodTag = methodTag
             )
+            return null
         }
-
         if (lifecycleOwner == null) {
             respondToChallengeWithError(
                 submitUrl = submitUrl,
@@ -98,7 +123,12 @@ class PasskeyFidoChallengeHandler
         }
         lifecycleOwner.lifecycleScope.launch {
             try {
-                val assertion = fidoManager.authenticate(fidoChallenge)
+                val assertion = fidoManager.authenticate(
+                    challenge = authChallenge,
+                    relyingPartyIdentifier = relyingPartyIdentifier,
+                    allowedCredentials = allowedCredentials,
+                    userVerificationPolicy = userVerificationPolicy
+                )
                 span.setStatus(StatusCode.OK)
                 respondToChallenge(
                     submitUrl = submitUrl,
@@ -116,42 +146,6 @@ class PasskeyFidoChallengeHandler
             }
         }
         return null
-    }
-
-    /**
-     * Validates
-     */
-    @Throws(ClientException::class)
-    fun validateChallengeFields(fidoChallenge: FidoChallenge) {
-        validateRequiredParameter(
-            FidoRequestField.CHALLENGE.fieldName,
-            fidoChallenge.challenge
-        )
-        validateRequiredParameter(
-            FidoRequestField.RELYING_PARTY_IDENTIFIER.fieldName,
-            fidoChallenge.relyingPartyIdentifier
-        )
-        validateRequiredParameter(
-            FidoRequestField.USER_VERIFICATION_POLICY.fieldName,
-            fidoChallenge.userVerificationPolicy
-        )
-        validateRequiredParameter(
-            FidoRequestField.VERSION.fieldName,
-            fidoChallenge.version
-        )
-        validateSubmitUrl(fidoChallenge.submitUrl)
-        validateOptionalListParameter(
-            AuthFidoRequestField.KEY_TYPES.fieldName,
-            fidoChallenge.keyTypes
-        )
-        validateRequiredParameter(
-            FidoRequestField.CONTEXT.fieldName,
-            fidoChallenge.context
-        )
-        validateOptionalListParameter(
-            AuthFidoRequestField.ALLOWED_CREDENTIALS.fieldName,
-            fidoChallenge.allowedCredentials
-        )
     }
 
     /**
@@ -186,6 +180,21 @@ class PasskeyFidoChallengeHandler
             throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "${FidoRequestField.SUBMIT_URL.fieldName} value is malformed.")
         }
         return submitUrl
+    }
+
+    /**
+     * Validates that the protocol version is not null or empty, and is a version that we currently support.
+     * @param value value for the version passkey protocol parameter.
+     * @return validated parameter value
+     * @throws ClientException if the parameter is null, empty, or an unsupported version.
+     */
+    @Throws(ClientException::class)
+    fun validateProtocolVersion(value: String?): String {
+        val version = validateRequiredParameter(FidoRequestField.VERSION.fieldName, value)
+        if (version == FidoConstants.PASSKEY_PROTOCOL_VERSION) {
+            return version
+        }
+        throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "Provided protocol version is not currently supported.")
     }
 
     /**

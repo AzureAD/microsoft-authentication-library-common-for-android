@@ -40,8 +40,16 @@ class CredManFidoManager (val context: Context) : IFidoManager {
      * @param challenge AuthFidoChallenge received from the server.
      * @return assertion
      */
-    override suspend fun authenticate(challenge: FidoChallenge): String {
-        val requestJson = WebAuthnJsonUtil.createJsonAuthRequest(challenge.challenge!!, challenge.relyingPartyIdentifier!!, challenge.allowedCredentials, challenge.userVerificationPolicy!!)
+    override suspend fun authenticate(challenge: String,
+                                      relyingPartyIdentifier: String,
+                                      allowedCredentials: List<String>?,
+                                      userVerificationPolicy: String): String {
+        val requestJson = WebAuthnJsonUtil.createJsonAuthRequest(
+            challenge,
+            relyingPartyIdentifier,
+            allowedCredentials,
+            userVerificationPolicy
+        )
         val publicKeyCredentialOption = GetPublicKeyCredentialOption(
             requestJson = requestJson
         )
