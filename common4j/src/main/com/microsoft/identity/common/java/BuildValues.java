@@ -50,7 +50,7 @@ public class BuildValues {
         return USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY;
     }
 
-    public static void setUseRealAuthority(Boolean ura) {
-        USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY = ura;
+    public static void setUseMockApiForNativeAuth(Boolean useMockApi) {
+        USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY = useMockApi;
     }
 }
