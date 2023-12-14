@@ -119,7 +119,6 @@ class NativeAuthResponseHandler {
                 EMPTY_RESPONSE_ERROR,
                 EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 null,
-                null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -159,7 +158,6 @@ class NativeAuthResponseHandler {
                 null,
                 null,
                 null,
-                null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -195,7 +193,6 @@ class NativeAuthResponseHandler {
                 null,
                 null,
                 null,
-                null
             )
         }  else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -237,7 +234,7 @@ class NativeAuthResponseHandler {
                 null,
                 EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 null,
-                null)
+                )
 
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -284,7 +281,6 @@ class NativeAuthResponseHandler {
                     null,
                     null,
                     null,
-                    null
                 )
             } else {
                 ObjectMapper.deserializeJsonStringToObject(
@@ -329,8 +325,6 @@ class NativeAuthResponseHandler {
                 EMPTY_RESPONSE_ERROR,
                 EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 null,
-                null,
-                null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -368,9 +362,7 @@ class NativeAuthResponseHandler {
                 null,
                 null,
                 EMPTY_RESPONSE_ERROR,
-                null,
                 EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
-                null,
                 null
             )
         } else {
@@ -407,7 +399,6 @@ class NativeAuthResponseHandler {
                 EMPTY_RESPONSE_ERROR,
                 EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 null,
-                null,
                 null
             )
         } else {
@@ -443,7 +434,6 @@ class NativeAuthResponseHandler {
                 EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 null,
                 null,
-                null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -478,7 +468,6 @@ class NativeAuthResponseHandler {
                 null,
                 EMPTY_RESPONSE_ERROR,
                 EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
-                null,
                 null,
                 null
             )

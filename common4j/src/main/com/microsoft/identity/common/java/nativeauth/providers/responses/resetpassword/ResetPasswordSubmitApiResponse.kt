@@ -36,13 +36,12 @@ import java.net.HttpURLConnection
  */
 class ResetPasswordSubmitApiResponse(
     @Expose override var statusCode: Int,
-    @Expose @SerializedName("password_reset_token") val passwordResetToken: String?,
+    @Expose @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("poll_interval") val pollInterval: Int?,
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
     @Expose @SerializedName("error_uri") val errorUri: String?,
-    @Expose @SerializedName("details") val details: List<Map<String, String>>?,
-    @Expose @SerializedName("inner_errors") val innerErrors: List<InnerError>?
+    @Expose @SerializedName("suberror") val subError: String?
 ): IApiResponse(statusCode) {
 
     companion object {
@@ -65,11 +64,12 @@ class ResetPasswordSubmitApiResponse(
             // Handle 400 errors
             HttpURLConnection.HTTP_BAD_REQUEST -> {
                 return when {
-                    error.isPasswordBanned() || error.isPasswordTooShort() || error.isPasswordTooLong() || error.isPasswordRecentlyUsed() ||
-                            error.isPasswordTooWeak() -> {
+                    subError.isPasswordBanned() || subError.isPasswordTooShort() || subError.isPasswordTooLong() || subError.isPasswordRecentlyUsed() ||
+                            subError.isPasswordTooWeak() || subError.isPasswordInvalid() -> {
                         ResetPasswordSubmitApiResult.PasswordInvalid(
                             error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
+                            errorDescription = errorDescription.orEmpty(),
+                            subError = subError.orEmpty()
                         )
                     }
                     error.isExpiredToken() -> {
@@ -82,7 +82,6 @@ class ResetPasswordSubmitApiResponse(
                         ResetPasswordSubmitApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            details = details
                         )
                     }
                 }
@@ -91,11 +90,10 @@ class ResetPasswordSubmitApiResponse(
             // Handle success and redirect
             HttpURLConnection.HTTP_OK -> {
                 ResetPasswordSubmitApiResult.SubmitSuccess(
-                    passwordResetToken = passwordResetToken
+                    continuationToken = continuationToken
                         ?: return ResetPasswordSubmitApiResult.UnknownError(
                             error = "invalid_state",
                             errorDescription = "ResetPassword /submit successful, but did not return a flow token",
-                            details = details
                         ),
                     pollInterval = clampPollInterval(pollInterval)
                 )
@@ -106,7 +104,6 @@ class ResetPasswordSubmitApiResponse(
                 ResetPasswordSubmitApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
-                    details = details
                 )
             }
         }

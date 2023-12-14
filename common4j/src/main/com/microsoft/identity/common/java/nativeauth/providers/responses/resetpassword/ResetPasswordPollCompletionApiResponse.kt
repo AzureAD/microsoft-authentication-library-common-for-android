@@ -26,16 +26,17 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
-import com.microsoft.identity.common.java.nativeauth.providers.interactors.InnerError
 import com.microsoft.identity.common.java.nativeauth.util.isExpiredToken
-import com.microsoft.identity.common.java.nativeauth.util.isExplicitUserNotFound
+import com.microsoft.identity.common.java.nativeauth.util.isInvalidGrant
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordBanned
+import com.microsoft.identity.common.java.nativeauth.util.isPasswordInvalid
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordRecentlyUsed
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordTooLong
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordTooShort
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordTooWeak
 import com.microsoft.identity.common.java.nativeauth.util.isPollInProgress
 import com.microsoft.identity.common.java.nativeauth.util.isPollSucceeded
+import com.microsoft.identity.common.java.nativeauth.util.isUserNotFound
 import java.net.HttpURLConnection
 
 /**
@@ -50,8 +51,7 @@ class ResetPasswordPollCompletionApiResponse(
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
     @Expose @SerializedName("error_uri") val errorUri: String?,
-    @SerializedName("details") val details: List<Map<String, String>>?,
-    @SerializedName("inner_errors") val innerErrors: List<InnerError>?
+    @Expose @SerializedName("suberror") val subError: String?
 ): IApiResponse(statusCode) {
 
     companion object {
@@ -70,12 +70,23 @@ class ResetPasswordPollCompletionApiResponse(
             // Handle 400 errors
             HttpURLConnection.HTTP_BAD_REQUEST -> {
                 return when {
-                    error.isPasswordBanned() || error.isPasswordTooShort() || error.isPasswordTooLong() || error.isPasswordRecentlyUsed() ||
-                        error.isPasswordTooWeak() -> {
-                        ResetPasswordPollCompletionApiResult.PasswordInvalid(
-                            error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
-                        )
+                    error.isInvalidGrant() -> {
+                        return when {
+                            subError.isPasswordBanned() || subError.isPasswordTooShort() || subError.isPasswordTooLong() || subError.isPasswordRecentlyUsed() ||
+                                    subError.isPasswordTooWeak() || subError.isPasswordInvalid() -> {
+                                ResetPasswordPollCompletionApiResult.PasswordInvalid(
+                                    error = error.orEmpty(),
+                                    errorDescription = errorDescription.orEmpty(),
+                                    subError = subError.orEmpty()
+                                )
+                            }
+                            else -> {
+                                ResetPasswordPollCompletionApiResult.UnknownError(
+                                    error = error.orEmpty(),
+                                    errorDescription = errorDescription.orEmpty()
+                                )
+                            }
+                        }
                     }
                     error.isExpiredToken() -> {
                         ResetPasswordPollCompletionApiResult.ExpiredToken(
@@ -83,7 +94,7 @@ class ResetPasswordPollCompletionApiResponse(
                             errorDescription = errorDescription.orEmpty()
                         )
                     }
-                    error.isExplicitUserNotFound() -> {
+                    error.isUserNotFound() -> {
                         ResetPasswordPollCompletionApiResult.UserNotFound(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty()
@@ -93,7 +104,6 @@ class ResetPasswordPollCompletionApiResponse(
                         ResetPasswordPollCompletionApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            details = details
                         )
                     }
                 }
@@ -122,7 +132,6 @@ class ResetPasswordPollCompletionApiResponse(
                 ResetPasswordPollCompletionApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
-                    details = details
                 )
             }
         }

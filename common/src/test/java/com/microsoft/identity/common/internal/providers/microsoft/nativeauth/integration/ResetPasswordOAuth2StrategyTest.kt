@@ -92,6 +92,16 @@ class ResetPasswordOAuth2StrategyTest {
     private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val challengeType = "oob redirect"
     private val oobCode = "123456"
+    private val continuationToken = "1234"
+    private val invalidGrantError = "invalid_grant"
+    private val invalidClientError = "invalid_client"
+    private val unsupportedChallengeTypeError = "unsupported_challenge_type"
+    private val expiredTokenError = "expired_token"
+    private val passwordTooLongError = "password_too_long"
+    private val passwordTooShortError = "password_too_short"
+    private val passwordTooWeakError = "password_too_weak"
+    private val passwordRecentlyUsedError = "password_recently_used"
+    private val passwordBannedError = "password_banned"
 
     private val mockConfig = mock<NativeAuthOAuth2Configuration>()
     private val mockStrategyParams = mock<OAuth2StrategyParameters>()
@@ -171,7 +181,7 @@ class ResetPasswordOAuth2StrategyTest {
             mockResetPasswordStartCommandParameters
         )
         assertTrue(ssprStartResult is ResetPasswordStartApiResult.UnknownError)
-        assertEquals((ssprStartResult as ResetPasswordStartApiResult.UnknownError).error, "invalid_client")
+        assertEquals((ssprStartResult as ResetPasswordStartApiResult.UnknownError).error, invalidClientError)
     }
 
     @Test
@@ -189,7 +199,7 @@ class ResetPasswordOAuth2StrategyTest {
             mockResetPasswordStartCommandParameters
         )
         assertTrue(ssprStartResult is ResetPasswordStartApiResult.UnsupportedChallengeType)
-        assertEquals((ssprStartResult as ResetPasswordStartApiResult.UnsupportedChallengeType).error, "unsupported_challenge_type")
+        assertEquals((ssprStartResult as ResetPasswordStartApiResult.UnsupportedChallengeType).error, unsupportedChallengeTypeError)
     }
 
     @Test
@@ -219,7 +229,7 @@ class ResetPasswordOAuth2StrategyTest {
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRStart,
             correlationId = UUID.randomUUID().toString(),
-            responseType = MockApiResponseType.EXPLICIT_USER_NOT_FOUND
+            responseType = MockApiResponseType.USER_NOT_FOUND
         )
 
         val mockResetPasswordStartCommandParameters = mockk<ResetPasswordStartCommandParameters>()
@@ -243,7 +253,7 @@ class ResetPasswordOAuth2StrategyTest {
         )
 
         val ssprChallengeResult = nativeAuthOAuth2Strategy.performResetPasswordChallenge(
-            passwordResetToken = "1234"
+            continuationToken = continuationToken
         )
         assertTrue(ssprChallengeResult is ResetPasswordChallengeApiResult.CodeRequired)
     }
@@ -257,11 +267,11 @@ class ResetPasswordOAuth2StrategyTest {
         )
 
         val ssprChallengeResult = nativeAuthOAuth2Strategy.performResetPasswordChallenge(
-            passwordResetToken = "1234"
+            continuationToken = continuationToken
         )
 
         assertTrue(ssprChallengeResult is ResetPasswordChallengeApiResult.ExpiredToken)
-        assertEquals((ssprChallengeResult as ResetPasswordChallengeApiResult.ExpiredToken).error, "expired_token")
+        assertEquals((ssprChallengeResult as ResetPasswordChallengeApiResult.ExpiredToken).error, expiredTokenError)
     }
 
     @Test
@@ -273,7 +283,7 @@ class ResetPasswordOAuth2StrategyTest {
         )
 
         val mockResetPasswordSubmitCodeCommandParameters = mockk<ResetPasswordSubmitCodeCommandParameters>()
-        every { mockResetPasswordSubmitCodeCommandParameters.getPasswordResetToken() } returns "1234"
+        every { mockResetPasswordSubmitCodeCommandParameters.getContinuationToken() } returns continuationToken
         every { mockResetPasswordSubmitCodeCommandParameters.getCode() } returns oobCode
 
         val ssprContinueApiResult = nativeAuthOAuth2Strategy.performResetPasswordContinue(
@@ -286,7 +296,7 @@ class ResetPasswordOAuth2StrategyTest {
     @Test
     fun testPerformResetPasswordSubmitSuccess() {
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()
-        every { mockResetPasswordSubmitCommandParameters.getPasswordSubmitToken() } returns "1234"
+        every { mockResetPasswordSubmitCommandParameters.getContinuationToken() } returns continuationToken
         every { mockResetPasswordSubmitCommandParameters.getNewPassword() } returns password
 
         val ssprSubmitResult = nativeAuthOAuth2Strategy.performResetPasswordSubmit(
@@ -304,14 +314,14 @@ class ResetPasswordOAuth2StrategyTest {
         )
 
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()
-        every { mockResetPasswordSubmitCommandParameters.getPasswordSubmitToken() } returns "1234"
+        every { mockResetPasswordSubmitCommandParameters.getContinuationToken() } returns continuationToken
         every { mockResetPasswordSubmitCommandParameters.getNewPassword() } returns password
 
         val ssprSubmitResult = nativeAuthOAuth2Strategy.performResetPasswordSubmit(
             mockResetPasswordSubmitCommandParameters
         )
-        assertTrue(ssprSubmitResult is ResetPasswordSubmitApiResult.PasswordInvalid)
-        assertEquals((ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).error, "password_too_weak")
+        assertEquals((ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).error, invalidGrantError)
+        assertEquals((ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).subError, passwordTooWeakError)
     }
 
     @Test
@@ -323,14 +333,14 @@ class ResetPasswordOAuth2StrategyTest {
         )
 
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()
-        every { mockResetPasswordSubmitCommandParameters.getPasswordSubmitToken() } returns "1234"
+        every { mockResetPasswordSubmitCommandParameters.getContinuationToken() } returns continuationToken
         every { mockResetPasswordSubmitCommandParameters.getNewPassword() } returns password
 
         val ssprSubmitResult = nativeAuthOAuth2Strategy.performResetPasswordSubmit(
             mockResetPasswordSubmitCommandParameters
         )
-        assertTrue(ssprSubmitResult is ResetPasswordSubmitApiResult.PasswordInvalid)
-        assertEquals((ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).error, "password_too_short")
+        assertEquals((ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).error, invalidGrantError)
+        assertEquals((ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).subError, passwordTooShortError)
     }
 
     @Test
@@ -342,14 +352,14 @@ class ResetPasswordOAuth2StrategyTest {
         )
 
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()
-        every { mockResetPasswordSubmitCommandParameters.getPasswordSubmitToken() } returns "1234"
+        every { mockResetPasswordSubmitCommandParameters.getContinuationToken() } returns continuationToken
         every { mockResetPasswordSubmitCommandParameters.getNewPassword() } returns password
 
         val ssprSubmitResult = nativeAuthOAuth2Strategy.performResetPasswordSubmit(
             mockResetPasswordSubmitCommandParameters
         )
-        assertTrue(ssprSubmitResult is ResetPasswordSubmitApiResult.PasswordInvalid)
-        assertEquals((ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).error, "password_too_long")
+        assertEquals((ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).error, invalidGrantError)
+        assertEquals((ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).subError,passwordTooLongError)
     }
 
     @Test
@@ -361,14 +371,14 @@ class ResetPasswordOAuth2StrategyTest {
         )
 
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()
-        every { mockResetPasswordSubmitCommandParameters.getPasswordSubmitToken() } returns "1234"
+        every { mockResetPasswordSubmitCommandParameters.getContinuationToken() } returns continuationToken
         every { mockResetPasswordSubmitCommandParameters.getNewPassword() } returns password
 
         val ssprSubmitResult = nativeAuthOAuth2Strategy.performResetPasswordSubmit(
             mockResetPasswordSubmitCommandParameters
         )
-        assertTrue(ssprSubmitResult is ResetPasswordSubmitApiResult.PasswordInvalid)
-        assertEquals((ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).error, "password_recently_used")
+        assertEquals((ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).error, invalidGrantError)
+        assertEquals((ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).subError, passwordRecentlyUsedError)
     }
 
     @Test
@@ -380,20 +390,20 @@ class ResetPasswordOAuth2StrategyTest {
         )
 
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()
-        every { mockResetPasswordSubmitCommandParameters.getPasswordSubmitToken() } returns "1234"
+        every { mockResetPasswordSubmitCommandParameters.getContinuationToken() } returns continuationToken
         every { mockResetPasswordSubmitCommandParameters.getNewPassword() } returns password
 
         val ssprSubmitResult = nativeAuthOAuth2Strategy.performResetPasswordSubmit(
             mockResetPasswordSubmitCommandParameters
         )
-        assertTrue(ssprSubmitResult is ResetPasswordSubmitApiResult.PasswordInvalid)
-        assertEquals((ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).error, "password_banned")
+        assertEquals((ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).error, invalidGrantError)
+        assertEquals((ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).subError, passwordBannedError)
     }
 
     @Test
     fun testPerformResetPasswordPollCompletionSuccess() {
         val ssprPollCompletionResult = nativeAuthOAuth2Strategy.performResetPasswordPollCompletion(
-            passwordResetToken = "1234"
+            continuationToken = continuationToken
         )
         assertTrue(ssprPollCompletionResult is ResetPasswordPollCompletionApiResult.PollingSucceeded)
     }

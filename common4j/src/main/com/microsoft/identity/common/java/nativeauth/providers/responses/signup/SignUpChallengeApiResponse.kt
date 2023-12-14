@@ -45,10 +45,9 @@ data class SignUpChallengeApiResponse(
     @Expose @SerializedName("interval") val interval: Int?,
     @SerializedName("challenge_target_label") val challengeTargetLabel: String?,
     @Expose @SerializedName("challenge_channel") val challengeChannel: String?,
-    @SerializedName("signup_token") val signupToken: String?,
+    @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
-    @SerializedName("details") val details: List<Map<String, String>>?,
     @Expose @SerializedName("code_length") val codeLength: Int?
 ) : IApiResponse(statusCode) {
 
@@ -72,21 +71,18 @@ data class SignUpChallengeApiResponse(
                         SignUpChallengeApiResult.UnsupportedChallengeType(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            details = details,
                         )
                     }
                     error.isExpiredToken() -> {
                         SignUpChallengeApiResult.ExpiredToken(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            details = details,
                         )
                     }
                     else -> {
                         SignUpChallengeApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            details = details,
                         )
                     }
                 }
@@ -104,30 +100,26 @@ data class SignUpChallengeApiResponse(
                                 SignUpChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /challenge did not return a challenge_target_label with oob challenge type",
-                                    details = details
                                 )
                             }
                             challengeChannel.isNullOrBlank() -> {
                                 SignUpChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /challenge did not return a challenge_channel with oob challenge type",
-                                    details = details
                                 )
                             }
                             codeLength == null -> {
                                 SignUpChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /challenge did not return a code_length with oob challenge type",
-                                    details = details
                                 )
                             }
                             else -> {
                                 SignUpChallengeApiResult.OOBRequired(
-                                    signupToken = signupToken
+                                    continuationToken = continuationToken
                                         ?: return SignUpChallengeApiResult.UnknownError(
                                             error = ApiErrorResult.INVALID_STATE,
-                                            errorDescription = "SignUp /challenge did not return a flow token with oob challenge type",
-                                            details = details
+                                            errorDescription = "SignUp /challenge did not return a continuation token with oob challenge type",
                                         ),
                                     challengeTargetLabel = challengeTargetLabel,
                                     challengeChannel = challengeChannel,
@@ -138,11 +130,10 @@ data class SignUpChallengeApiResponse(
                     }
                     challengeType.isPassword() -> {
                         SignUpChallengeApiResult.PasswordRequired(
-                            signupToken = signupToken
+                            continuationToken = continuationToken
                                 ?: return SignUpChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
-                                    errorDescription = "SignUp /challenge did not return a flow token with password challenge type",
-                                    details = details
+                                    errorDescription = "SignUp /challenge did not return a continuation token with password challenge type",
                                 )
                         )
                     }
@@ -150,7 +141,6 @@ data class SignUpChallengeApiResponse(
                         SignUpChallengeApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            details = details,
                         )
                     }
                 }
@@ -161,7 +151,6 @@ data class SignUpChallengeApiResponse(
                 SignUpChallengeApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
-                    details = details
                 )
             }
         }

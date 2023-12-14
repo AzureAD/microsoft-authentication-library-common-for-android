@@ -34,7 +34,7 @@ public class SignInWithContinuationTokenCommandParameters extends BaseSignInToke
     private static final String TAG = SignInWithContinuationTokenCommandParameters.class.getSimpleName();
 
     /**
-     * A short-lived token for sign in in the user from sign up or self-service-password-reset flow.
+     * A continuation token for sign in in the user from sign up or self-service-password-reset flow.
      */
     @NonNull
     public final String continuationToken;

@@ -51,7 +51,7 @@ data class SignInTokenRequest private constructor(
     companion object {
         fun createOOBTokenRequest(
             oob: String,
-            credentialToken: String,
+            continuationToken: String,
             clientId: String,
             scopes: List<String>? = null,
             challengeType: String? = null,
@@ -60,7 +60,7 @@ data class SignInTokenRequest private constructor(
         ): SignInTokenRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(oob, "oob")
-            ArgUtils.validateNonNullArg(credentialToken, "credentialToken")
+            ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             ArgUtils.validateNonNullArg(clientId, "clientId")
             ArgUtils.validateNonNullArg(challengeType, "challengeType")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
@@ -70,7 +70,7 @@ data class SignInTokenRequest private constructor(
             return SignInTokenRequest(
                 parameters = NativeAuthRequestSignInTokenParameters(
                     oob = oob,
-                    credentialToken = credentialToken,
+                    continuationToken = continuationToken,
                     clientId = clientId,
                     grantType = NativeAuthConstants.GrantType.OOB,
                     challengeType = challengeType,
@@ -91,7 +91,7 @@ data class SignInTokenRequest private constructor(
          */
         fun createPasswordTokenRequest(
             password: CharArray,
-            credentialToken: String,
+            continuationToken: String,
             clientId: String,
             scopes: List<String>? = null,
             challengeType: String? = null,
@@ -100,7 +100,7 @@ data class SignInTokenRequest private constructor(
         ): SignInTokenRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(password, "password")
-            ArgUtils.validateNonNullArg(credentialToken, "credentialToken")
+            ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             ArgUtils.validateNonNullArg(clientId, "clientId")
             ArgUtils.validateNonNullArg(challengeType, "challengeType")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
@@ -110,7 +110,7 @@ data class SignInTokenRequest private constructor(
             return SignInTokenRequest(
                 parameters = NativeAuthRequestSignInTokenParameters(
                     password = password,
-                    credentialToken = credentialToken,
+                    continuationToken = continuationToken,
                     clientId = clientId,
                     grantType = NativeAuthConstants.GrantType.PASSWORD,
                     challengeType = challengeType,
@@ -169,7 +169,6 @@ data class SignInTokenRequest private constructor(
         @SerializedName("client_info") private val clientInfo: Boolean = true,
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("grant_type") val grantType: String,
-        @SerializedName("credential_token") val credentialToken: String? = null,
         @SerializedName("continuation_token") val continuationToken: String? = null,
         @SerializedName("scope") val scope: String?,
         @SerializedName("challenge_type") val challengeType: String?

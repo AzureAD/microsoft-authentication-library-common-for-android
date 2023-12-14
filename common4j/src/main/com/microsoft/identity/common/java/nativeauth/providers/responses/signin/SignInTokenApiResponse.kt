@@ -32,7 +32,7 @@ import com.microsoft.identity.common.java.nativeauth.util.isInvalidCredentials
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidGrant
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidRequest
 import com.microsoft.identity.common.java.nativeauth.util.isMFARequired
-import com.microsoft.identity.common.java.nativeauth.util.isOtpCodeIncorrect
+import com.microsoft.identity.common.java.nativeauth.util.isInvalidOOBValue
 import com.microsoft.identity.common.java.nativeauth.util.isUserNotFound
 
 /**
@@ -53,11 +53,10 @@ data class SignInTokenApiResponse(
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
     @Expose @SerializedName("error_uri") val errorUri: String?,
-    @Expose @SerializedName("details") val details: List<Map<String, String>>?,
     @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
-    @Expose @SerializedName("inner_errors") val innerErrors: List<InnerError>?,
-    @Expose @SerializedName("credential_token") val credentialToken: String?,
+    @Expose @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("client_info") val clientInfo: String?,
+    @Expose @SerializedName("suberror") val subError: String?,
 ): IApiResponse(statusCode) {
 
     companion object {
@@ -77,22 +76,13 @@ data class SignInTokenApiResponse(
                     SignInTokenApiResult.UnknownError(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
-                        details = details,
                         errorCodes = errorCodes.orEmpty()
-                    )
-                }
-                errorCodes[0].isOtpCodeIncorrect() -> {
-                    SignInTokenApiResult.CodeIncorrect(
-                        error = error.orEmpty(),
-                        errorDescription = errorDescription.orEmpty(),
-                        errorCodes = errorCodes
                     )
                 }
                 else -> {
                     SignInTokenApiResult.UnknownError(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
-                        details = details,
                         errorCodes = errorCodes
                     )
                 }
@@ -105,15 +95,7 @@ data class SignInTokenApiResponse(
                     SignInTokenApiResult.UnknownError(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
-                        details = details,
                         errorCodes = errorCodes.orEmpty()
-                    )
-                }
-                errorCodes[0].isUserNotFound() -> {
-                    SignInTokenApiResult.UserNotFound(
-                        error = error.orEmpty(),
-                        errorDescription = errorDescription.orEmpty(),
-                        errorCodes = errorCodes
                     )
                 }
                 errorCodes[0].isInvalidCredentials() -> {
@@ -130,11 +112,12 @@ data class SignInTokenApiResponse(
                         errorCodes = errorCodes
                     )
                 }
-                errorCodes[0].isOtpCodeIncorrect() -> {
+                subError.isInvalidOOBValue() -> {
                     SignInTokenApiResult.CodeIncorrect(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
-                        errorCodes = errorCodes
+                        errorCodes = errorCodes,
+                        subError = subError.orEmpty()
                     )
                 }
                 errorCodes[0].isInvalidAuthenticationType() -> {
@@ -148,17 +131,22 @@ data class SignInTokenApiResponse(
                     SignInTokenApiResult.UnknownError(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
-                        details = details,
                         errorCodes = errorCodes
                     )
                 }
             }
         }
+        else if (error.isUserNotFound()) {
+            SignInTokenApiResult.UserNotFound(
+                error = error.orEmpty(),
+                errorDescription = errorDescription.orEmpty(),
+                errorCodes = errorCodes.orEmpty()
+            )
+        }
         else {
             SignInTokenApiResult.UnknownError(
                 error = error.orEmpty(),
                 errorDescription = errorDescription.orEmpty(),
-                details = details,
                 errorCodes = errorCodes.orEmpty()
             )
         }

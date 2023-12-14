@@ -79,10 +79,9 @@ class SignInOAuthStrategyTest {
     private val tokenEndpoint = URL("https://contoso.com/1234/token")
     private val challengeType = "oob password redirect"
     private val userAttributes = mapOf(Pair("city", "Dublin"))
-    private val credentialToken = "uY29tL2F1dGhlbnRpY"
-    private val grantType = "oob"
-    private val oob = "1234"
     private val continuationToken = "12345"
+
+    private val oob = "1234"
 
     private val mockConfig = mock<NativeAuthOAuth2Configuration>()
     private val mockStrategyParams = mock<OAuth2StrategyParameters>()
@@ -160,7 +159,7 @@ class SignInOAuthStrategyTest {
         )
 
         val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
-            credentialToken = "1234"
+            continuationToken = "1234"
         )
 
         Assert.assertTrue(signInChallengeResult is SignInChallengeApiResult.Redirect)
@@ -197,7 +196,7 @@ class SignInOAuthStrategyTest {
 
         val parameters = mockk<SignInSubmitCodeCommandParameters>()
         every { parameters.getCode() } returns oob
-        every { parameters.getCredentialToken() } returns credentialToken
+        every { parameters.getContinuationToken() } returns continuationToken
 
         val signInChallengeResult = nativeAuthOAuth2Strategy.performOOBTokenRequest(
             parameters = parameters
@@ -217,7 +216,7 @@ class SignInOAuthStrategyTest {
 
         val parameters = mockk<SignInSubmitCodeCommandParameters>()
         every { parameters.getCode() } returns oob
-        every { parameters.getCredentialToken() } returns credentialToken
+        every { parameters.getContinuationToken() } returns continuationToken
 
         val signInChallengeResult = nativeAuthOAuth2Strategy.performOOBTokenRequest(
             parameters = parameters
@@ -253,7 +252,7 @@ class SignInOAuthStrategyTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
         val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
-            credentialToken = credentialToken
+            continuationToken = continuationToken
         )
 
         Assert.assertTrue(signInChallengeResult is SignInChallengeApiResult.OOBRequired)
@@ -267,7 +266,7 @@ class SignInOAuthStrategyTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
         )
         val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
-            credentialToken = credentialToken
+            continuationToken = continuationToken
         )
 
         Assert.assertTrue(signInChallengeResult is SignInChallengeApiResult.PasswordRequired)
@@ -281,7 +280,7 @@ class SignInOAuthStrategyTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
         val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
-            credentialToken = credentialToken
+            continuationToken = continuationToken
         )
         Assert.assertEquals(SignInChallengeApiResult.Redirect, signInChallengeResult)
     }
@@ -297,7 +296,7 @@ class SignInOAuthStrategyTest {
         val parameters = SignInSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .password(password)
-            .credentialToken(credentialToken)
+            .continuationToken(continuationToken)
             .build()
 
         val result = nativeAuthOAuth2Strategy.performPasswordTokenRequest(
@@ -317,7 +316,7 @@ class SignInOAuthStrategyTest {
         val parameters = SignInSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .password(password)
-            .credentialToken(credentialToken)
+            .continuationToken(continuationToken)
             .build()
 
         val result = nativeAuthOAuth2Strategy.performPasswordTokenRequest(
@@ -337,7 +336,7 @@ class SignInOAuthStrategyTest {
         val parameters = SignInSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .password(password)
-            .credentialToken(credentialToken)
+            .continuationToken(continuationToken)
             .build()
 
         val result = nativeAuthOAuth2Strategy.performPasswordTokenRequest(
@@ -357,7 +356,7 @@ class SignInOAuthStrategyTest {
         val parameters = SignInSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .password(password)
-            .credentialToken(credentialToken)
+            .continuationToken(continuationToken)
             .build()
 
         val result = nativeAuthOAuth2Strategy.performPasswordTokenRequest(
@@ -398,7 +397,7 @@ class SignInOAuthStrategyTest {
 
         val parameters = SignInWithContinuationTokenCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .continuationToken(ContinuationToken)
+            .continuationToken(continuationToken)
             .username(username)
             .build()
 

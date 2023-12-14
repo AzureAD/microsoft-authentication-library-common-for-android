@@ -79,7 +79,7 @@ class SignUpOAuth2StrategyTest {
     private val challengeTypes = "oob password redirect"
     private val userAttributes = mapOf("city" to "Dublin")
     private val oobCode = "123456"
-    private val signUpToken = "iFQ"
+    private val continuationToken = "iFQ"
 
     private val mockConfig = mock<NativeAuthOAuth2Configuration>()
     private val mockStrategyParams = mock<OAuth2StrategyParameters>()
@@ -131,11 +131,11 @@ class SignUpOAuth2StrategyTest {
     }
 
     @Test
-    fun testPerformSignUpStartSuccessWithVerificationRequired() {
+    fun testPerformSignUpStartSuccessWithSuccess() {
         configureMockApi(
             endpointType = MockApiEndpoint.SignUpStart,
             correlationId = UUID.randomUUID().toString(),
-            responseType = MockApiResponseType.VERIFICATION_REQUIRED
+            responseType = MockApiResponseType.SIGNUP_START_SUCCESS
         )
 
         val signUpStartCommandParameters = SignUpStartCommandParameters.builder()
@@ -147,7 +147,7 @@ class SignUpOAuth2StrategyTest {
         val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
             signUpStartCommandParameters
         )
-        assertTrue(signupResult is SignUpStartApiResult.VerificationRequired)
+        assertTrue(signupResult is SignUpStartApiResult.Success)
     }
 
     @Test
@@ -231,15 +231,9 @@ class SignUpOAuth2StrategyTest {
     }
 
     @Test
-    fun testPerformSignUpStartSuccessWithUnsupportedChallengeType() {
+    fun testPerformSignUpStartWithUnsupportedChallengeType() {
         configureMockApi(
             endpointType = MockApiEndpoint.SignUpStart,
-            correlationId = UUID.randomUUID().toString(),
-            responseType = MockApiResponseType.VERIFICATION_REQUIRED
-        )
-
-        configureMockApi(
-            endpointType = MockApiEndpoint.SignUpChallenge,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.UNSUPPORTED_CHALLENGE_TYPE
         )
@@ -253,7 +247,7 @@ class SignUpOAuth2StrategyTest {
         val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
             signUpStartCommandParameters
         )
-        assertTrue(signupResult is SignUpStartApiResult.UnknownError)
+        assertTrue(signupResult is SignUpStartApiResult.UnsupportedChallengeType)
     }
 
     @Test
@@ -267,7 +261,7 @@ class SignUpOAuth2StrategyTest {
         val signUpSubmitPasswordCommandParameters = SignUpSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .password(password)
-            .signupToken(signUpToken)
+            .continuationToken(continuationToken)
             .build()
 
         val signupResult = nativeAuthOAuth2Strategy.performSignUpSubmitPassword(
@@ -287,7 +281,7 @@ class SignUpOAuth2StrategyTest {
         val signUpSubmitCodeCommandParameters = SignUpSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .code(oobCode)
-            .signupToken(signUpToken)
+            .continuationToken(continuationToken)
             .build()
 
         val signupResult = nativeAuthOAuth2Strategy.performSignUpSubmitCode(
@@ -308,7 +302,7 @@ class SignUpOAuth2StrategyTest {
             SignUpSubmitUserAttributesCommandParameters.builder()
                 .platformComponents(mock<PlatformComponents>())
                 .userAttributes(userAttributes)
-                .signupToken(signUpToken)
+                .continuationToken(continuationToken)
                 .build()
 
         val signupResult = nativeAuthOAuth2Strategy.performSignUpSubmitUserAttributes(
@@ -328,7 +322,7 @@ class SignUpOAuth2StrategyTest {
         val signUpSubmitPasswordCommandParameters = SignUpSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .password(password)
-            .signupToken(signUpToken)
+            .continuationToken(continuationToken)
             .build()
 
         val signupResult = nativeAuthOAuth2Strategy.performSignUpSubmitPassword(
@@ -346,7 +340,7 @@ class SignUpOAuth2StrategyTest {
         )
 
         val signupResult = nativeAuthOAuth2Strategy.performSignUpChallenge(
-            signUpToken = signUpToken,
+            continuationToken = continuationToken,
         )
         assertTrue(signupResult is SignUpChallengeApiResult.OOBRequired)
     }
@@ -360,7 +354,7 @@ class SignUpOAuth2StrategyTest {
         )
 
         val signupResult = nativeAuthOAuth2Strategy.performSignUpChallenge(
-            signUpToken = signUpToken,
+            continuationToken = continuationToken,
         )
         assertTrue(signupResult is SignUpChallengeApiResult.PasswordRequired)
     }
@@ -376,7 +370,7 @@ class SignUpOAuth2StrategyTest {
         val signUpSubmitCodeCommandParameters = SignUpSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .code(oobCode)
-            .signupToken(signUpToken)
+            .continuationToken(continuationToken)
             .build()
 
         val signupResult = nativeAuthOAuth2Strategy.performSignUpSubmitCode(
@@ -396,7 +390,7 @@ class SignUpOAuth2StrategyTest {
         val signUpSubmitPasswordCommandParameters = SignUpSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .password(password)
-            .signupToken(signUpToken)
+            .continuationToken(continuationToken)
             .build()
 
         val signupResult = nativeAuthOAuth2Strategy.performSignUpSubmitPassword(
@@ -417,7 +411,7 @@ class SignUpOAuth2StrategyTest {
             SignUpSubmitUserAttributesCommandParameters.builder()
                 .platformComponents(mock<PlatformComponents>())
                 .userAttributes(userAttributes)
-                .signupToken(signUpToken)
+                .continuationToken(continuationToken)
                 .build()
 
         val signupResult = nativeAuthOAuth2Strategy.performSignUpSubmitUserAttributes(

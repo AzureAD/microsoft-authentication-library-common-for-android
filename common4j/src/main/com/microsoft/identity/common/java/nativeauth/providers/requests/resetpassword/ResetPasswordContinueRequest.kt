@@ -41,21 +41,21 @@ class ResetPasswordContinueRequest private constructor(
         /**
          * Returns a request object using the provided parameters.
          * The request URL and headers passed will be set directly.
-         * The clientId, password reset token, oob, and grantType will be mapped to the NativeAuthResetPasswordContinueRequestBody object.
+         * The clientId, continuation token, oob, and grantType will be mapped to the NativeAuthResetPasswordContinueRequestBody object.
          *
          * Parameters that are null or empty will throw a ClientException.
          * @see com.microsoft.identity.common.java.exception.ClientException
          */
         fun create(
             clientId: String,
-            passwordResetToken: String,
+            continuationToken: String,
             oob: String,
             requestUrl: String,
             headers: Map<String, String?>
         ): ResetPasswordContinueRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(clientId, "clientId")
-            ArgUtils.validateNonNullArg(passwordResetToken, "passwordResetToken")
+            ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             ArgUtils.validateNonNullArg(oob, "oob")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
@@ -66,7 +66,7 @@ class ResetPasswordContinueRequest private constructor(
                 parameters = NativeAuthResetPasswordContinueRequestBody(
                     clientId = clientId,
                     grantType = NativeAuthConstants.GrantType.OOB,
-                    passwordResetToken = passwordResetToken,
+                    continuationToken = continuationToken,
                     oob = oob
                 )
             )
@@ -80,7 +80,7 @@ class ResetPasswordContinueRequest private constructor(
     data class NativeAuthResetPasswordContinueRequestBody(
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("grant_type") val grantType: String,
-        @SerializedName("password_reset_token") val passwordResetToken: String,
+        @SerializedName("continuation_token") val continuationToken: String,
         @SerializedName("oob") val oob: String
     ) : NativeAuthRequestParameters()
 }

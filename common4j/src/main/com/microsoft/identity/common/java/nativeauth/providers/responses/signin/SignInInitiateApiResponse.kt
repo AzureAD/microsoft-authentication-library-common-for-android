@@ -39,14 +39,13 @@ import java.net.HttpURLConnection
  */
 data class SignInInitiateApiResponse(
     @Expose override var statusCode: Int,
-    @Expose @SerializedName("credential_token") val credentialToken: String?,
+    @Expose @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
     @Expose @SerializedName("error_uri") val errorUri: String?,
     @Expose @SerializedName("details") val details: List<Map<String, String>>?,
     @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
-    @Expose @SerializedName("inner_errors") val innerErrors: List<InnerError>?,
 ): IApiResponse(statusCode) {
 
     companion object {
@@ -70,32 +69,29 @@ data class SignInInitiateApiResponse(
                             SignInInitiateApiResult.UnknownError(
                                 error = error.orEmpty(),
                                 errorDescription = errorDescription.orEmpty(),
-                                details = details,
                                 errorCodes = errorCodes.orEmpty()
-                            )
-                        }
-                        errorCodes[0].isUserNotFound() -> {
-                            SignInInitiateApiResult.UserNotFound(
-                                error = error.orEmpty(),
-                                errorDescription = errorDescription.orEmpty(),
-                                errorCodes = errorCodes
                             )
                         }
                         else -> {
                             SignInInitiateApiResult.UnknownError(
                                 error = error.orEmpty(),
                                 errorDescription = errorDescription.orEmpty(),
-                                details = details,
                                 errorCodes = errorCodes
                             )
                         }
                     }
                 }
+                else if (error.isUserNotFound()) {
+                    SignInInitiateApiResult.UserNotFound(
+                        error = error.orEmpty(),
+                        errorDescription = errorDescription.orEmpty(),
+                        errorCodes = errorCodes.orEmpty()
+                    )
+                }
                 else {
                     SignInInitiateApiResult.UnknownError(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
-                        details = details,
                         errorCodes = errorCodes.orEmpty()
                     )
                 }
@@ -108,11 +104,10 @@ data class SignInInitiateApiResponse(
                 }
                 else {
                     SignInInitiateApiResult.Success(
-                        credentialToken = credentialToken
+                        continuationToken = continuationToken
                             ?: return SignInInitiateApiResult.UnknownError(
                                 error = ApiErrorResult.INVALID_STATE,
                                 errorDescription = "SignIn /initiate did not return a flow token",
-                                details = details,
                                 errorCodes = errorCodes.orEmpty()
                             )
                     )
@@ -124,7 +119,6 @@ data class SignInInitiateApiResponse(
                 SignInInitiateApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
-                    details = details,
                     errorCodes = errorCodes.orEmpty()
                 )
             }

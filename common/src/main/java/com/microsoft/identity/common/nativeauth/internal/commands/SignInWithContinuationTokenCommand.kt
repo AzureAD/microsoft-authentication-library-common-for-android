@@ -29,7 +29,7 @@ import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 
 /**
- * Command class to call controllers to use short live token generated from sign in/self-service-password-reset flow to get the user authenticated.
+ * Command class to call controllers to use continuation token generated from sign in/self-service-password-reset flow to get the user authenticated.
  * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
  */
 class SignInWithContinuationTokenCommand(

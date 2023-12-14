@@ -44,8 +44,8 @@ public class SignInSubmitCodeCommandParameters extends BaseSignInTokenCommandPar
     public final String code;
 
     /**
-     * The credential token obtained from the challenge endpoint.
+     * The continuation token obtained from the challenge endpoint.
      */
     @NonNull
-    public final String credentialToken;
+    public final String continuationToken;
 }

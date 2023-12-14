@@ -43,11 +43,11 @@ interface SignInCommandResult {
         SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInSubmitCodeCommandResult,
         SignInSubmitPasswordCommandResult
 
-    data class PasswordRequired(val credentialToken: String) :
+    data class PasswordRequired(val continuationToken: String) :
         SignInStartCommandResult, SignInWithContinuationTokenCommandResult
 
     data class CodeRequired(
-        val credentialToken: String,
+        val continuationToken: String,
         val challengeTargetLabel: String,
         val challengeChannel: String,
         val codeLength: Int
@@ -60,6 +60,6 @@ interface SignInCommandResult {
     data class InvalidCredentials(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId, val errorCodes: List<Int>) :
         SignInStartCommandResult, SignInSubmitPasswordCommandResult
 
-    data class IncorrectCode(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId, val errorCodes: List<Int>) :
+    data class IncorrectCode(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId, val errorCodes: List<Int>, val subError: String) :
         SignInSubmitCodeCommandResult
 }

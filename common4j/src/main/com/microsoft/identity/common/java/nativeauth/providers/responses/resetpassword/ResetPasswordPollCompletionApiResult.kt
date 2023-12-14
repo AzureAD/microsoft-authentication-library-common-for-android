@@ -41,7 +41,8 @@ sealed interface ResetPasswordPollCompletionApiResult {
 
     data class PasswordInvalid(
         override val error: String,
-        override val errorDescription: String
+        override val errorDescription: String,
+        val subError: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -68,10 +69,8 @@ sealed interface ResetPasswordPollCompletionApiResult {
     data class UnknownError(
         override val error: String,
         override val errorDescription: String,
-        override val details: List<Map<String, String>>?
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
-        details = details
     ), ResetPasswordPollCompletionApiResult
 }

@@ -48,7 +48,7 @@ sealed interface SignUpContinueApiResult {
      * Signup operation requires user attributes to continue further.
      */
     data class AttributesRequired(
-        val signupToken: String,
+        val continuationToken: String,
         override val error: String,
         override val errorDescription: String,
         val requiredAttributes: List<UserAttributeApiResult>
@@ -61,7 +61,7 @@ sealed interface SignUpContinueApiResult {
      * Signup operation requires user credentials to continue further.
      */
     data class CredentialRequired(
-        val signupToken: String,
+        val continuationToken: String,
         override val error: String,
         override val errorDescription: String
     ): ApiErrorResult(
@@ -97,6 +97,7 @@ sealed interface SignUpContinueApiResult {
     data class InvalidOOBValue(
         override val error: String,
         override val errorDescription: String,
+        val subError: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -109,7 +110,8 @@ sealed interface SignUpContinueApiResult {
     data class InvalidAttributes(
         override val error: String,
         override val errorDescription: String,
-        val invalidAttributes: List<String>
+        val invalidAttributes: List<String>,
+        val subError: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -121,7 +123,6 @@ sealed interface SignUpContinueApiResult {
     data class UnknownError(
         override val error: String,
         override val errorDescription: String,
-        override val details: List<Map<String, String>>?
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -133,6 +134,7 @@ sealed interface SignUpContinueApiResult {
     data class InvalidPassword(
         override val error: String,
         override val errorDescription: String,
+        val subError: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,

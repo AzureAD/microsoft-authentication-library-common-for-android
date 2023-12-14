@@ -103,15 +103,15 @@ public class CommandUtil {
     }
 
     /**
-     * Adds credential token to [SignInStartUsingPasswordCommandParameters] object and returns a new
+     * Adds continuation token to [SignInStartUsingPasswordCommandParameters] object and returns a new
      * [SignInSubmitPasswordCommandParameters] object.
      * @param parameters input command parameter
-     * @param credentialToken credential token to be added
-     * @return [SignInStartUsingPasswordCommandParameters] object with credential token
+     * @param continuationToken continuation token to be added
+     * @return [SignInStartUsingPasswordCommandParameters] object with continuation token
      */
     public static SignInSubmitPasswordCommandParameters createSignInSubmitPasswordCommandParameters(
             SignInStartUsingPasswordCommandParameters parameters,
-            String credentialToken
+            String continuationToken
     ) {
         final SignInSubmitPasswordCommandParameters commandParameters =
                 SignInSubmitPasswordCommandParameters.builder()
@@ -127,7 +127,7 @@ public class CommandUtil {
                         .sdkVersion(parameters.getSdkVersion())
                         .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
                         .authority(parameters.getAuthority())
-                        .credentialToken(credentialToken)
+                        .continuationToken(continuationToken)
                         .password(parameters.getPassword())
                         .scopes(parameters.getScopes())
                         .challengeType(parameters.getChallengeType())

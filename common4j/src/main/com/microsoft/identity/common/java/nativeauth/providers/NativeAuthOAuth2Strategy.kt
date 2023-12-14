@@ -113,11 +113,11 @@ class NativeAuthOAuth2Strategy(
      * @param signUpToken: Token received from the previous /signup/start call
      */
     fun performSignUpChallenge(
-        signUpToken: String
+        continuationToken: String
     ): SignUpChallengeApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performSignUpChallenge")
         return signUpInteractor.performSignUpChallenge(
-            signUpToken = signUpToken
+            continuationToken = continuationToken
         )
     }
 
@@ -174,11 +174,11 @@ class NativeAuthOAuth2Strategy(
      * Performs API call to /oauth/v2.0/challenge
      */
     fun performSignInChallenge(
-        credentialToken: String,
+        continuationToken: String,
     ): SignInChallengeApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performSignInChallenge")
         return signInInteractor.performSignInChallenge(
-            credentialToken = credentialToken,
+            continuationToken = continuationToken,
         )
     }
 
@@ -239,11 +239,11 @@ class NativeAuthOAuth2Strategy(
      * @return result of the API call as [ResetPasswordChallengeApiResult] object
      */
     fun performResetPasswordChallenge(
-        passwordResetToken: String
+        continuationToken: String
     ): ResetPasswordChallengeApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordChallenge")
         return resetPasswordInteractor.performResetPasswordChallenge(
-            passwordResetToken = passwordResetToken
+            continuationToken = continuationToken
         )
     }
 
@@ -281,11 +281,11 @@ class NativeAuthOAuth2Strategy(
      * @return result of the API call as [ResetPasswordPollCompletionApiResult] object
      */
     fun performResetPasswordPollCompletion(
-        passwordResetToken: String
+        continuationToken: String
     ): ResetPasswordPollCompletionApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordPollCompletion")
         return resetPasswordInteractor.performResetPasswordPollCompletion(
-            passwordResetToken = passwordResetToken
+            continuationToken = continuationToken
         )
     }
 }

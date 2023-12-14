@@ -33,6 +33,7 @@ import com.microsoft.identity.common.java.nativeauth.util.isInvalidClient
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidEmail
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidParameter
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordBanned
+import com.microsoft.identity.common.java.nativeauth.util.isPasswordInvalid
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordRecentlyUsed
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordTooLong
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordTooShort
@@ -52,12 +53,12 @@ data class SignUpStartApiResponse(
     @Expose override var statusCode: Int,
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
-    @SerializedName("signup_token") val signupToken: String?,
+    @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("unverified_attributes") val unverifiedAttributes: List<Map<String, String>>?,
     @Expose @SerializedName("invalid_attributes") val invalidAttributes: List<Map<String, String>>?,
-    @SerializedName("details") val details: List<Map<String, String>>?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
-    @Expose @SerializedName("error_codes") val errorCodes: List<Int>?
+    @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
+    @Expose @SerializedName("suberror") val subError: String?
 ) : IApiResponse(statusCode) {
 
     companion object {
@@ -90,7 +91,7 @@ data class SignUpStartApiResponse(
                             errorDescription = errorDescription.orEmpty()
                         )
                     }
-                    error.isAttributeValidationFailed() -> {
+                    subError.isAttributeValidationFailed() -> {
                         SignUpStartApiResult.InvalidAttributes(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
@@ -98,8 +99,8 @@ data class SignUpStartApiResponse(
                                 ?: return SignUpStartApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /start did not return a invalid_attributes with validation_failed error",
-                                    details = details
-                                )
+                                ),
+                            subError = subError.orEmpty()
                         )
                     }
                     error.isUnsupportedChallengeType() -> {
@@ -108,36 +109,18 @@ data class SignUpStartApiResponse(
                             errorDescription = errorDescription.orEmpty()
                         )
                     }
-                    error.isPasswordTooWeak() || error.isPasswordTooLong() || error.isPasswordTooShort()
-                            || error.isPasswordBanned() || error.isPasswordRecentlyUsed() -> {
+                    subError.isPasswordTooWeak() || subError.isPasswordTooLong() || subError.isPasswordTooShort()
+                            || subError.isPasswordBanned() || subError.isPasswordRecentlyUsed() || subError.isPasswordInvalid() -> {
                         SignUpStartApiResult.InvalidPassword(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                        )
-                    }
-                    error.isVerificationRequired() -> {
-                        SignUpStartApiResult.VerificationRequired(
-                            signupToken = signupToken
-                                ?: return SignUpStartApiResult.UnknownError(
-                                    error = ApiErrorResult.INVALID_STATE,
-                                    errorDescription = "SignUp /start did not return a flow token with verification_required error",
-                                    details = details
-                                ),
-                            error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty(),
-                            unverifiedAttributes = unverifiedAttributes
-                                ?: return SignUpStartApiResult.UnknownError(
-                                    error = ApiErrorResult.INVALID_STATE,
-                                    errorDescription = "SignUp /start did not return a unverified_attributes with verification_required error",
-                                    details = details
-                                )
+                            subError = subError.orEmpty()
                         )
                     }
                     else -> {
                         SignUpStartApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            details = details
                         )
                     }
                 }
@@ -149,10 +132,12 @@ data class SignUpStartApiResponse(
                     SignUpStartApiResult.Redirect
                 }
                 else {
-                    SignUpStartApiResult.UnknownError(
-                        error = error.orEmpty(),
-                        errorDescription = errorDescription.orEmpty(),
-                        details = details
+                    SignUpStartApiResult.Success(
+                        continuationToken = continuationToken
+                            ?: return SignUpStartApiResult.UnknownError(
+                                error = "invalid_state",
+                                errorDescription = "Sign up /start did not return a continuation token",
+                            )
                     )
                 }
             }
@@ -162,7 +147,6 @@ data class SignUpStartApiResponse(
                 SignUpStartApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
-                    details = details
                 )
             }
         }

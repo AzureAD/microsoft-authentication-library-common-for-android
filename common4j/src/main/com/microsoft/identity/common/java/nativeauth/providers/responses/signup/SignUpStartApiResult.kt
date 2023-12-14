@@ -39,22 +39,15 @@ sealed interface SignUpStartApiResult {
     /**
      * The next step in the Signup process is account verification.
      */
-    data class VerificationRequired(
-        val signupToken: String,
-        override val error: String,
-        override val errorDescription: String,
-        val unverifiedAttributes: List<Map<String, String>>
-    ): ApiErrorResult(
-        error = error,
-        errorDescription = errorDescription,
-    ), SignUpStartApiResult
+    data class Success(val continuationToken: String) : SignUpStartApiResult
 
     /**
      * The Sign Up Start request failed as the password failed server side validation.
      */
     data class InvalidPassword(
         override val error: String,
-        override val errorDescription: String
+        override val errorDescription: String,
+        val subError: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -67,7 +60,8 @@ sealed interface SignUpStartApiResult {
     data class InvalidAttributes(
         override val error: String,
         override val errorDescription: String,
-        val invalidAttributes: List<String>
+        val invalidAttributes: List<String>,
+        val subError: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -80,7 +74,6 @@ sealed interface SignUpStartApiResult {
     data class UnknownError(
         override val error: String,
         override val errorDescription: String,
-        override val details: List<Map<String, String>>?
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,

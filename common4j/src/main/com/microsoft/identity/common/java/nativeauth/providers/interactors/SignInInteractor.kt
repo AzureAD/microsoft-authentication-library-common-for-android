@@ -86,11 +86,11 @@ class SignInInteractor(
 
     //region /oauth/v2.0/challenge
     fun performSignInChallenge(
-        credentialToken: String,
+        continuationToken: String,
     ): SignInChallengeApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignInChallenge(credentialToken: String)")
+        LogSession.logMethodCall(TAG, "${TAG}.performSignInChallenge(continuationToken: String)")
         val request = nativeAuthRequestProvider.createSignInChallengeRequest(
-            credentialToken = credentialToken
+            continuationToken = continuationToken
         )
         return performSignInChallenge(request)
     }
