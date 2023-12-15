@@ -23,8 +23,7 @@
 
 package com.microsoft.identity.common.java.nativeauth.providers
 
-import com.microsoft.identity.common.java.BuildConfig
-import com.microsoft.identity.common.java.BuildValues
+import com.microsoft.identity.common.java.nativeauth.BuildValues
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration

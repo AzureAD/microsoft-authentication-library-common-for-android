@@ -183,6 +183,9 @@ dependencies {
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
     testImplementation "org.mockito.kotlin:mockito-kotlin:$rootProject.ext.mockitoKotlinVersion"
+    testImplementation "org.mockito:mockito-inline:$rootProject.ext.mockitoCoreVersion"
+    testImplementation "io.mockk:mockk:1.11.0"
+
     testImplementation "org.powermock:powermock-module-junit4:$rootProject.ext.powerMockVersion"
     testImplementation "org.powermock:powermock-module-junit4-rule:$rootProject.ext.powerMockVersion"
     testImplementation "org.powermock:powermock-api-mockito2:$rootProject.ext.powerMockVersion"
@@ -190,6 +193,7 @@ dependencies {
     testImplementation "org.robolectric:robolectric:$rootProject.ext.robolectricVersion"
     testImplementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
     testImplementation project(":LabApiUtilities")
+
     testImplementation(testFixtures(project(":common4j")))
     testImplementation "androidx.lifecycle:lifecycle-runtime-testing:$rootProject.ext.lifecycleKtxVersion"
 

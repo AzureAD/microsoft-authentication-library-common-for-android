@@ -64,8 +64,7 @@ abstract class BaseNativeAuthCommand<T>(
         return false
     }
 
-    // TODO update this once telemetry is done
     override fun isEligibleForEstsTelemetry(): Boolean {
-        return false
+        return true
     }
 }
