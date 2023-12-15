@@ -179,6 +179,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (isAuthAppMFAUrl(formattedURL)) {
                 Logger.info(methodTag,"Request to link account with Authenticator.");
                 processAuthAppMFAUrl(url);
+            } else if (isAmazonAppRedirect(url)) {
+                Logger.info(methodTag, "It is an Amazon app request");
+                processAmazonAppUri(url);
             } else if (isInvalidRedirectUri(url)) {
                 Logger.info(methodTag,"Check for Redirect Uri.");
                 processInvalidRedirectUri(view, url);
@@ -189,9 +192,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processSSLProtectionCheck(view, url);
             } else if (isHeaderForwardingRequiredUri(url)) {
                 processHeaderForwardingRequiredUri(view, url);
-            } else if (isAmazonAppRedirect(url)) {
-                Logger.info(methodTag,"It is an Amazon app request");
-                processAmazonAppUri(url);
             } else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
                 processInvalidUrl(url);
