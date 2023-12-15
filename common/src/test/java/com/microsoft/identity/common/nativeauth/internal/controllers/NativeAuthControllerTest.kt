@@ -28,6 +28,7 @@ import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory
 import com.microsoft.identity.common.internal.controllers.LocalMSALController
 import com.microsoft.identity.common.internal.util.capture
 import com.microsoft.identity.common.java.AuthenticationConstants
+import com.microsoft.identity.common.java.BuildValues
 import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache
@@ -62,10 +63,13 @@ import com.microsoft.identity.common.nativeauth.MockApiEndpoint
 import com.microsoft.identity.common.nativeauth.MockApiResponseType
 import com.microsoft.identity.common.nativeauth.MockApiUtils
 import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
+import org.junit.After
+import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -129,6 +133,20 @@ class NativeAuthControllerTest {
 
     @get:Rule
     var rule: MockitoRule = MockitoJUnit.rule()
+
+    companion object {
+        @BeforeClass
+        @JvmStatic
+        fun setupClass() {
+            BuildValues.setUseRealAuthority(true)
+        }
+
+        @AfterClass
+        @JvmStatic
+        fun tearDownClass() {
+            BuildValues.setUseRealAuthority(false)
+        }
+    }
 
     @Before
     fun setup() {
