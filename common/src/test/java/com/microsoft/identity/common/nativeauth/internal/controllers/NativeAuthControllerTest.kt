@@ -55,6 +55,7 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.SignInC
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpCommandResult
 import com.microsoft.identity.common.java.dto.AccountRecord
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
+import com.microsoft.identity.common.java.nativeauth.BuildValues
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResult
 import com.microsoft.identity.common.java.request.SdkType
@@ -138,13 +139,13 @@ class NativeAuthControllerTest {
         @BeforeClass
         @JvmStatic
         fun setupClass() {
-            BuildValues.setUseRealAuthority(true)
+            BuildValues.setUseMockApiForNativeAuth(true)
         }
 
         @AfterClass
         @JvmStatic
         fun tearDownClass() {
-            BuildValues.setUseRealAuthority(false)
+            BuildValues.setUseMockApiForNativeAuth(false)
         }
     }
 
