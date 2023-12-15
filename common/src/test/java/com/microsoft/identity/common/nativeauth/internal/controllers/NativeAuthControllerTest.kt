@@ -28,7 +28,6 @@ import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory
 import com.microsoft.identity.common.internal.controllers.LocalMSALController
 import com.microsoft.identity.common.internal.util.capture
 import com.microsoft.identity.common.java.AuthenticationConstants
-import com.microsoft.identity.common.java.BuildValues
 import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache
