@@ -46,7 +46,7 @@ class CredManFidoManager (val context: Context) : IFidoManager {
                                       userVerificationPolicy: String): String {
         val requestJson = WebAuthnJsonUtil.createJsonAuthRequest(
             challenge,
-            relyingPartyIdentifier,
+            relyingPartyIdentifier.removePrefix("https://"),
             allowedCredentials,
             userVerificationPolicy
         )
