@@ -32,6 +32,7 @@ import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility
 import com.microsoft.identity.common.java.opentelemetry.SpanName
 import com.microsoft.identity.common.logging.Logger
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanContext
 import io.opentelemetry.api.trace.StatusCode
 import kotlinx.coroutines.launch
@@ -40,71 +41,52 @@ import java.net.URL
 
 /**
  * Handles a FidoChallenge by either creating or authenticating with a passkey.
+ *
+ * @param fidoManager       IFidoManager instance.
+ * @param webView           Current WebView.
+ * @param spanContext       Current spanContext, if present.
+ * @param lifecycleOwner    instance to get coroutine scope from.
  */
-class AuthFidoChallengeHandler
-/**
- * Creates an AuthFidoChallengeHandler instance.
- * @param fidoManager IFidoManager instance.
- * @param webView Current WebView.
- * @param spanContext Current spanContext, if present.
- * @param lifecycleOwner instance to get coroutine scope from.
- */(
+class AuthFidoChallengeHandler (
     private val fidoManager: IFidoManager,
     private val webView: WebView,
     private val spanContext : SpanContext?,
     private val lifecycleOwner: LifecycleOwner?
 ) : IChallengeHandler<FidoChallenge, Void> {
     val TAG = AuthFidoChallengeHandler::class.simpleName.toString()
-    val span = if (spanContext != null) {
-        OTelUtility.createSpanFromParent(SpanName.Fido.name, spanContext)
-    } else {
-        OTelUtility.createSpan(SpanName.Fido.name)
-    }
 
     override fun processChallenge(fidoChallenge: FidoChallenge): Void? {
         val methodTag = "$TAG:processChallenge"
+        val span = if (spanContext != null) {
+            OTelUtility.createSpanFromParent(SpanName.Fido.name, spanContext)
+        } else {
+            OTelUtility.createSpan(SpanName.Fido.name)
+        }
         span.setAttribute(
             AttributeName.fido_challenge.name,
             fidoChallenge::class.simpleName.toString()
         );
         // First verify submitUrl and context. Without these two, we can't respond back to the server.
         // If either one of these are missing or malformed, throw an exception and let the main WebViewClient handle it.
-        val submitUrl = validateSubmitUrl(fidoChallenge.submitUrl)
-        val context = validateRequiredParameter(
-            FidoRequestField.CONTEXT.fieldName,
-            fidoChallenge.context
-        )
+        val submitUrl = fidoChallenge.submitUrl.getOrThrow()
+        val context = fidoChallenge.submitUrl.getOrThrow()
         val authChallenge: String
         val relyingPartyIdentifier: String
         val userVerificationPolicy: String
         val allowedCredentials: List<String>?
         try {
-            authChallenge = validateRequiredParameter(
-                FidoRequestField.CHALLENGE.fieldName,
-                fidoChallenge.challenge
-            )
-            relyingPartyIdentifier = validateRequiredParameter(
-                FidoRequestField.RELYING_PARTY_IDENTIFIER.fieldName,
-                fidoChallenge.relyingPartyIdentifier
-            )
-            userVerificationPolicy = validateRequiredParameter(
-                FidoRequestField.USER_VERIFICATION_POLICY.fieldName,
-                fidoChallenge.userVerificationPolicy
-            )
-            allowedCredentials = validateOptionalListParameter(
-                AuthFidoRequestField.ALLOWED_CREDENTIALS.fieldName,
-                fidoChallenge.allowedCredentials
-            )
-            validateProtocolVersion(fidoChallenge.version)
+            authChallenge = fidoChallenge.challenge.getOrThrow()
+            relyingPartyIdentifier = fidoChallenge.relyingPartyIdentifier.getOrThrow()
+            userVerificationPolicy = fidoChallenge.userVerificationPolicy.getOrThrow()
+            allowedCredentials = fidoChallenge.allowedCredentials.getOrThrow()
+            fidoChallenge.version.getOrThrow()
             //Not currently using keyTypes, but should validate in case we use it in the future.
-            validateOptionalListParameter(
-                AuthFidoRequestField.KEY_TYPES.fieldName,
-                fidoChallenge.keyTypes
-            )
+            fidoChallenge.keyTypes.getOrThrow()
         } catch (e : Exception) {
             respondToChallengeWithError(
                 submitUrl = submitUrl,
                 context = context,
+                span = span,
                 errorMessage = e.message.toString(),
                 exception = e,
                 methodTag = methodTag
@@ -115,6 +97,7 @@ class AuthFidoChallengeHandler
             respondToChallengeWithError(
                 submitUrl = submitUrl,
                 context = context,
+                span = span,
                 errorMessage = "Cannot get lifecycle owner needed for FIDO API calls.",
                 methodTag = methodTag
             )
@@ -132,12 +115,14 @@ class AuthFidoChallengeHandler
                 respondToChallenge(
                     submitUrl = submitUrl,
                     assertion = assertion,
-                    context = context
+                    context = context,
+                    span
                 )
             } catch (e : Exception) {
                 respondToChallengeWithError(
                     submitUrl = submitUrl,
                     context = context,
+                    span = span,
                     errorMessage = e.message.toString(),
                     exception = e,
                     methodTag = methodTag
@@ -148,78 +133,18 @@ class AuthFidoChallengeHandler
     }
 
     /**
-     * Validates that the given required parameter is not null or empty.
-     * @param field passkey protocol field
-     * @param value value for a passkey protocol parameter
-     * @return validated parameter value
-     * @throws ClientException if the parameter is null or empty.
-     */
-    @Throws(ClientException::class)
-    fun validateRequiredParameter(field: String, value: String?): String {
-        if (value == null) {
-            throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "$field not provided")
-        } else if (value.isBlank()) {
-            throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "$field is empty")
-        }
-        return value
-    }
-
-    /**
-     * Validates that the submitUrl parameter is not null, empty, or malformed.
-     * @param value value for the submitUrl passkey protocol parameter.
-     * @return validated parameter value
-     * @throws ClientException if the parameter is null, empty, or malformed.
-     */
-    @Throws(ClientException::class)
-    fun validateSubmitUrl(value: String?): String {
-        val submitUrl = validateRequiredParameter(FidoRequestField.SUBMIT_URL.fieldName, value)
-        try {
-            URL(submitUrl)
-        } catch (e : MalformedURLException) {
-            throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "${FidoRequestField.SUBMIT_URL.fieldName} value is malformed.")
-        }
-        return submitUrl
-    }
-
-    /**
-     * Validates that the protocol version is not null or empty, and is a version that we currently support.
-     * @param value value for the version passkey protocol parameter.
-     * @return validated parameter value
-     * @throws ClientException if the parameter is null, empty, or an unsupported version.
-     */
-    @Throws(ClientException::class)
-    fun validateProtocolVersion(value: String?): String {
-        val version = validateRequiredParameter(FidoRequestField.VERSION.fieldName, value)
-        if (version == FidoConstants.PASSKEY_PROTOCOL_VERSION) {
-            return version
-        }
-        throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "Provided protocol version is not currently supported.")
-    }
-
-    /**
-     * Validates that the given optional parameter is not empty and turns into a list.
-     * @param value value for a passkey protocol parameter
-     * @param field passkey protocol field
-     * @return validated parameter value, or null if not provided.
-     * @throws ClientException if the parameter is empty
-     */
-    @Throws(ClientException::class)
-    fun validateOptionalListParameter(field: String, value: List<String>?): List<String>? {
-        if (value != null && value.isEmpty()) {
-            throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "$field is empty")
-        }
-        return value
-    }
-
-    /**
      * Makes a post request in the WebView with the submitUrl and headers.
+     *
      * @param submitUrl The url to which the client submits the response to the server's challenge.
-     * @param context Server state that needs to be maintained between challenge and response.
      * @param assertion string representing response with signed challenge.
+     * @param context   Server state that needs to be maintained between challenge and response.
+     * @param span      Current OTel span.
      */
     fun respondToChallenge(submitUrl: String,
                            assertion: String,
-                           context: String) {
+                           context: String,
+                           span: Span
+    ) {
         val methodTag = "$TAG:respondToChallenge"
         span.end()
         //We're splitting the context value here because ESTS is expected to also send the flow token in the same string.
@@ -248,14 +173,17 @@ class AuthFidoChallengeHandler
 
     /**
      * Helper method to respond to the server with an error.
-     * @param submitUrl The url to which the client submits the response to the server's challenge.
-     * @param context Server state that needs to be maintained between challenge and response.
-     * @param errorMessage Error message string.
-     * @param exception Exception associated with error. Default null.
-     * @param assertion String representing response with signed challenge.
+     *
+     * @param submitUrl     The url to which the client submits the response to the server's challenge.
+     * @param context       Server state that needs to be maintained between challenge and response.
+     * @param span          current OTel Span.
+     * @param errorMessage  Error message string.
+     * @param exception     Exception associated with error. Default null.
+     * @param assertion     String representing response with signed challenge.
      */
     fun respondToChallengeWithError(submitUrl: String,
                                     context: String,
+                                    span: Span,
                                     errorMessage: String,
                                     exception: Exception? = null,
                                     methodTag: String? = "$TAG:respondToChallengeWithError"
@@ -267,6 +195,6 @@ class AuthFidoChallengeHandler
         } else {
             span.setStatus(StatusCode.ERROR, errorMessage)
         }
-        respondToChallenge(submitUrl, errorMessage, context)
+        respondToChallenge(submitUrl, errorMessage, context, span)
     }
 }
