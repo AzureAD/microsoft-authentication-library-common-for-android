@@ -56,6 +56,7 @@ data class FidoChallenge(
         const val DELIMITER = ","
         const val DEFAULT_USER_VERIFICATION_POLICY = "required"
 
+        @JvmStatic
         operator fun invoke(redirectUri: String): FidoChallenge {
             val parameters = UrlUtil.getParameters(redirectUri)
             return FidoChallenge(

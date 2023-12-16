@@ -69,7 +69,7 @@ class AuthFidoChallengeHandler (
         // First verify submitUrl and context. Without these two, we can't respond back to the server.
         // If either one of these are missing or malformed, throw an exception and let the main WebViewClient handle it.
         val submitUrl = fidoChallenge.submitUrl.getOrThrow()
-        val context = fidoChallenge.submitUrl.getOrThrow()
+        val context = fidoChallenge.context.getOrThrow()
         val authChallenge: String
         val relyingPartyIdentifier: String
         val userVerificationPolicy: String
