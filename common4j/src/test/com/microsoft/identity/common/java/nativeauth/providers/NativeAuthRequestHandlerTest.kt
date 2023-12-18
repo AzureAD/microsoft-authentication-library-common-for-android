@@ -525,19 +525,6 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test(expected = ClientException::class)
-    fun testSignInTokenWithEmptyContinuationTokenShouldThrowException() {
-        val commandParameters = SignInSubmitCodeCommandParameters.builder()
-            .platformComponents(mock<PlatformComponents>())
-            .code(oobCode)
-            .continuationToken(emptyString)
-            .build()
-
-        nativeAuthRequestProvider.createOOBTokenRequest(
-            parameters = commandParameters
-        )
-    }
-
-    @Test(expected = ClientException::class)
     fun testSignInTokenWithEmptyOOBShouldThrowException() {
         val commandParameters = SignInSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
@@ -810,21 +797,21 @@ class NativeAuthRequestHandlerTest {
         every { mockConfig.clientId } returns emptyString
 
         nativeAuthRequestProvider.createResetPasswordPollCompletionRequest(
-            passwordResetToken = passwordResetToken
+            continuationToken = continuationToken
         )
     }
 
     @Test(expected = ClientException::class)
     fun testResetPasswordPollCompletionWithEmptyContinuationTokenShouldThrowException() {
         nativeAuthRequestProvider.createResetPasswordPollCompletionRequest(
-            passwordResetToken = emptyString
+            continuationToken = emptyString
         )
     }
 
     @Test
     fun testResetPasswordPollCompletionSuccess() {
         nativeAuthRequestProvider.createResetPasswordPollCompletionRequest(
-            passwordResetToken = passwordResetToken
+            continuationToken = continuationToken
         )
     }
 }

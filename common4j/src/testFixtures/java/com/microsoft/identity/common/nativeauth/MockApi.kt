@@ -48,7 +48,7 @@ class MockApi private constructor(
         // Base url for the config endpoint. The config endpoint for the mock API provides the
         // ability to clients to add a response to the queue, see existing responses and
         // delete all responses in the queue
-        private const val CONFIG_BASE_URL = ""
+        private const val CONFIG_BASE_URL = "https://native-ux-mock-api.azurewebsites.net/config"
 
         // This endpoint allows a client to add a response to the response queue. When the client
         // makes a request with the matching correlation-id, the mock API will return that response
