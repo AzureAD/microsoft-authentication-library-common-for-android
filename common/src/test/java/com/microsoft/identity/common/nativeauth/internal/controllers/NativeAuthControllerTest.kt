@@ -54,6 +54,7 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.SignInC
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpCommandResult
 import com.microsoft.identity.common.java.dto.AccountRecord
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
+import com.microsoft.identity.common.java.nativeauth.BuildValues
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResult
 import com.microsoft.identity.common.java.request.SdkType
@@ -62,10 +63,13 @@ import com.microsoft.identity.common.nativeauth.MockApiEndpoint
 import com.microsoft.identity.common.nativeauth.MockApiResponseType
 import com.microsoft.identity.common.nativeauth.MockApiUtils
 import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
+import org.junit.After
+import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -125,6 +129,20 @@ class NativeAuthControllerTest {
 
     @get:Rule
     var rule: MockitoRule = MockitoJUnit.rule()
+
+    companion object {
+        @BeforeClass
+        @JvmStatic
+        fun setupClass() {
+            BuildValues.setUseMockApiForNativeAuth(true)
+        }
+
+        @AfterClass
+        @JvmStatic
+        fun tearDownClass() {
+            BuildValues.setUseMockApiForNativeAuth(false)
+        }
+    }
 
     @Before
     fun setup() {
