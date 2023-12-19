@@ -156,6 +156,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         mockAccount = Mockito.mock(MicrosoftStsAccount.class);
         mockParameters = Mockito.mock(TokenCommandParameters.class);
         mockAccountRecord = Mockito.mock(AccountRecord.class);
+        Authority authorityFromUrl = Authority.getAuthorityFromAuthorityUrl(MOCK_AUTHORITY);
         when(mockStrategy.createAccount(any(MicrosoftStsTokenResponse.class))).thenReturn(mockAccount);
         when(mockStrategy.getIssuerCacheIdentifier(mockRequest)).thenReturn(MOCK_ENVIRONMENT);
         when(mockStrategy.getIssuerCacheIdentifierFromTokenEndpoint()).thenReturn(MOCK_ENVIRONMENT);
@@ -182,7 +183,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         when(mockResponse.getFamilyId()).thenReturn(MOCK_FAMILY_ID);
         when(mockResponse.getAuthority()).thenReturn(MOCK_AUTHORITY);
         when(mockResponse.getRefreshToken()).thenReturn(MOCK_REFRESH_TOKEN);
-        when(mockParameters.getAuthority()).thenReturn(Authority.getAuthorityFromAuthorityUrl(MOCK_AUTHORITY));
+        when(mockParameters.getAuthority()).thenReturn(authorityFromUrl);
         when(mockParameters.getClientId()).thenReturn(MOCK_CLIENT_ID);
         when(mockAccountRecord.getHomeAccountId()).thenReturn(MOCK_UID + "." + MOCK_UTID);
         when(mockAccountRecord.getRealm()).thenReturn(MOCK_TID);
