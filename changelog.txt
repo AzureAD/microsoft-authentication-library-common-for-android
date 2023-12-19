@@ -1,12 +1,10 @@
 V.Next
 ---------
-
+- [MINOR] Add IsQrPinAvailableCommand, controllers behavior and define constants for the isQrAvailable API (#2219)
 - [PATCH] Add JWT header field for KDF version (#2220)
 
 V.16.2.0
 ----------
-
-- [MINOR] Add IsQrPinAvailableCommand, controllers behavior and define constants for the isQrAvailable API (#2219)
 - [PATCH] always make a copy of bundle before modifying & sending out via ipc (#2239)
 - [PATCH] Use v2.0 url for OpenID Client (#2208)
 - [MINOR] Added passkey protocol header (behind a flag) (#2181)
