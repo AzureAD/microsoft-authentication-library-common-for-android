@@ -54,3 +54,5 @@
 -keepclassmembers,allowobfuscation class * {
   @com.google.gson.annotations.SerializedName <fields>;
 }
+
+-keep class !com.microsoft.identity.common.java.nativeauth.**, !com.microsoft.identity.common.nativeauth.**, com.microsoft.identity.** { *; }
