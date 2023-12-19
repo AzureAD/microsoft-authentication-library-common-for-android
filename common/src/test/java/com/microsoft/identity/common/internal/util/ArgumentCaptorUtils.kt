@@ -20,37 +20,11 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java;
+package com.microsoft.identity.common.internal.util
 
-import javax.annotation.Nonnull;
+import org.mockito.ArgumentCaptor
 
-//Used as a wrapper for setting and accessing values through either the generated BuildConfig.java class,
-//or from parameters set via the NativeAuthPublicClientApplicationConfiguration.kt file.
-public class BuildValues {
-    //Appended to the URL constructed in NativeAuthOAuth2Configuration,
-    // used for making calls to tenants on test slices
-    @Nonnull
-    private static String DC = BuildConfig.DC;
-
-    public static String getDC()
-    {
-        return DC;
-    }
-
-    public static void setDC(String dc) {
-        DC = dc;
-    }
-
-    //The mock API authority used for testing will be rejected by validation logic run on instantiation. This flag is used to bypass those checks in various points in the application
-    @Nonnull
-    private static Boolean USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY = BuildConfig.USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY;
-
-    public static Boolean shouldUseMockApiForNativeAuth()
-    {
-        return USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY;
-    }
-
-    public static void setUseRealAuthority(Boolean ura) {
-        USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY = ura;
-    }
-}
+/**
+ * Calls the capture method method on the supplied argument.
+ */
+fun <T> capture(argumentCaptor: ArgumentCaptor<T>): T = argumentCaptor.capture()
