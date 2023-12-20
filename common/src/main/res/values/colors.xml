@@ -11,4 +11,6 @@
     <color name="dialogProgress">#616161</color>
     <color name="certIssuerTitle">#212121</color>
     <color name="dialogErrorText">#D92C2C</color>
+    <!-- colors for Ntlm Dialogs -->
+    <color name="NltmPrimaryColor">#212121</color>
 </resources>
