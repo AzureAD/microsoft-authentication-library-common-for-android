@@ -48,4 +48,11 @@
         <item name="android:windowTitleSize">20sp</item>
     </style>
 
+    <!-- Ntlm dialog -->
+    <style name="NtlmDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <!-- everything -->
+        <item name="android:textColor">@color/NtlmDialogTextColor</item>
+        <item name="android:textColorPrimary">@color/NtlmDialogTextColor</item>
+        <item name="android:windowBackground">@color/NtlmDialogBackgroundColor</item>
+    </style>
 </resources>
