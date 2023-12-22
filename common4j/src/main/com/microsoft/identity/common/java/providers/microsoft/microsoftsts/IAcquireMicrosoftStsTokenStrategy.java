@@ -26,6 +26,7 @@ import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCo
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 import lombok.NonNull;
 
@@ -43,5 +44,15 @@ public interface IAcquireMicrosoftStsTokenStrategy<T extends TokenCommandParamet
      */
     @NonNull
     MicrosoftStsTokenRequest createTokenRequest(@NonNull final T parameters) throws BaseException;
+
+    /**
+     * Processes and decrypts (if encrypted) the response body returned from server to
+     * {@link com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse}
+     * JSON response format string.
+     *
+     * @return response in MicrosoftTokenResponse JSON response format string.
+     */
+    @NonNull
+    String processResponseBody(@NonNull final String responseBody) throws ClientException;
 }
 
