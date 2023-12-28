@@ -69,6 +69,7 @@ class WebAuthnJsonUtil {
         fun extractAuthenticatorAssertionResponseJson(fullResponseJson : String): String {
             return JSONObject(fullResponseJson)
                 .getJSONObject(FidoConstants.WEBAUTHN_AUTHENTICATION_ASSERTION_RESPONSE_JSON_KEY)
+                .put("id", JSONObject(fullResponseJson).get("id"))
                 .toString()
         }
     }
