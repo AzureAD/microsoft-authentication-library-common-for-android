@@ -68,12 +68,12 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
     private void showHttpAuthDialog(final NtlmChallenge ntlmChallenge) {
         final String methodTag = TAG + ":showHttpAuthDialog";
 
-        final LayoutInflater factory = LayoutInflater.from(mActivity);
+        final AlertDialog.Builder httpAuthDialog = new AlertDialog.Builder(mActivity, R.style.NtlmDialogTheme);
+        final LayoutInflater factory = LayoutInflater.from(httpAuthDialog.getContext());
         final View v = factory.inflate(mActivity.getResources().getLayout(R.layout.http_auth_dialog), null);
         final EditText usernameView = (EditText) v.findViewById(R.id.editUserName);
         final EditText passwordView = (EditText) v.findViewById(R.id.editPassword);
         final String title = mActivity.getText(R.string.http_auth_dialog_title).toString();
-        final AlertDialog.Builder httpAuthDialog = new AlertDialog.Builder(mActivity);
         httpAuthDialog.setTitle(title)
                 .setView(v)
                 .setPositiveButton(R.string.http_auth_dialog_login,

@@ -2,6 +2,7 @@ V.Next
 ---------
 
 - [PATCH] Add JWT header field for KDF version (#2220)
+- [PATCH] Setting theme for Ntlm dialog (#2266)
 
 V.16.2.0
 ----------
