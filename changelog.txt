@@ -1,5 +1,6 @@
 V.Next
 ---------
+
 - [PATCH] Add JWT header field for KDF version (#2220)
 - [MINOR] Changes to launch AEA app from Broker's WebView (#2264)
 
