@@ -271,7 +271,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
                                         @NonNull final AbstractSecretKeyLoader keyLoader)
             throws ClientException {
         final String errCode;
-        final Throwable exception;
+        final Exception exception;
         try {
             final SecretKey secretKey = keyLoader.getKey();
             final SecretKey hmacKey = KeyUtil.getHMacKey(secretKey);
