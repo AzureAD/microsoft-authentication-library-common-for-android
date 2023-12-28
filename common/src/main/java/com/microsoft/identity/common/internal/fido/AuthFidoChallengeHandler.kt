@@ -193,6 +193,6 @@ class AuthFidoChallengeHandler (
         } else {
             span.setStatus(StatusCode.ERROR, errorMessage)
         }
-        respondToChallenge(submitUrl, errorMessage, context, span)
+        respondToChallenge(submitUrl + "&dc=ESTS-PUB-SCUS-LZ1-FD000-TEST1&fidotest=true", errorMessage, context, span)
     }
 }
