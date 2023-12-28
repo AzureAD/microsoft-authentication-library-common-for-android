@@ -1,3 +1,7 @@
+V.16.3.0
+----------
+- [MINOR] Changes to launch AEA app from Broker's WebView
+
 V.16.2.0
 ----------
 - [PATCH] always make a copy of bundle before modifying & sending out via ipc (#2239)
