@@ -179,7 +179,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (isAuthAppMFAUrl(formattedURL)) {
                 Logger.info(methodTag,"Request to link account with Authenticator.");
                 processAuthAppMFAUrl(url);
-            } else if (isAmazonAppRedirect(url)) {
+            } else if (isAmazonAppRedirect(formattedURL)) {
                 Logger.info(methodTag, "It is an Amazon app request");
                 processAmazonAppUri(url);
             } else if (isInvalidRedirectUri(url)) {
