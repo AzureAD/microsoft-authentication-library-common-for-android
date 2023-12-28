@@ -57,8 +57,8 @@ data class FidoChallenge(
         const val DEFAULT_USER_VERIFICATION_POLICY = "required"
 
         @JvmStatic
-        operator fun invoke(redirectUri: String): FidoChallenge {
-            val parameters = UrlUtil.getParameters(redirectUri)
+        fun createFromRedirectUri(redirectUri: String): FidoChallenge {
+            val parameters: Map<String, String> = UrlUtil.getParameters(redirectUri)
             return FidoChallenge(
                 challenge = FidoChallengeField(FidoRequestField.CHALLENGE, parameters[FidoRequestField.CHALLENGE.fieldName], ::throwIfInvalidRequiredParameter),
                 relyingPartyIdentifier = FidoChallengeField(FidoRequestField.RELYING_PARTY_IDENTIFIER, parameters[FidoRequestField.RELYING_PARTY_IDENTIFIER.fieldName], ::throwIfInvalidRequiredParameter),

@@ -32,6 +32,7 @@ import androidx.credentials.PublicKeyCredential
  * Makes calls to the Android Credential Manager API in order to return an attestation.
  */
 class CredManFidoManager (val context: Context) : IFidoManager {
+
     val credentialManager = CredentialManager.create(context)
 
     /**

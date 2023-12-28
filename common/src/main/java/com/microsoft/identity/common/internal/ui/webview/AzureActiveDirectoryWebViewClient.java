@@ -171,7 +171,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
             } else if (FidoConstants.IS_PASSKEY_SUPPORT_READY && isPasskeyUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for passkey protocol.");
-                final FidoChallenge challenge = FidoChallenge.invoke(url);
+                final FidoChallenge challenge = FidoChallenge.createFromRedirectUri(url);
                 final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity)getActivity()).getSpanContext() : null;
                 final AuthFidoChallengeHandler challengeHandler = new AuthFidoChallengeHandler(
                         new CredManFidoManager(view.getContext()),
