@@ -45,7 +45,4 @@ public final class ChallengeFactory {
                                                  final String realm) {
         return new NtlmChallenge(view, handler, host, realm);
     }
-    public static NtlmChallenge getNtlmChallenge() {
-        return new NtlmChallenge();
-    }
 }

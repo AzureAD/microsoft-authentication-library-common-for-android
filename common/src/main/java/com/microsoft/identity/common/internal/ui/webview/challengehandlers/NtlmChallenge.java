@@ -41,10 +41,6 @@ public class NtlmChallenge {
         mRealm = realm;
     }
 
-    NtlmChallenge() {
-
-    };
-
     HttpAuthHandler getHandler() {
         return mHandler;
     }

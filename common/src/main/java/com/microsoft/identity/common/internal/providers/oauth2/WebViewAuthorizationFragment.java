@@ -30,7 +30,6 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.HttpAuthHandler;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ProgressBar;
@@ -42,9 +41,6 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ChallengeFactory;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmChallenge;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmChallengeHandler;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -252,19 +248,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.
                 // After that, progress bar will be displayed by MSA/AAD.
                 mProgressBar.setVisibility(View.VISIBLE);
-                NtlmChallenge challenge = ChallengeFactory.getNtlmChallenge();
-                NtlmChallengeHandler handler = new NtlmChallengeHandler(getActivity(), new IAuthorizationCompletionCallback() {
-                    @Override
-                    public void onChallengeResponseReceived(@NonNull RawAuthorizationResult response) {
-
-                    }
-
-                    @Override
-                    public void setPKeyAuthStatus(boolean status) {
-
-                    }
-                });
-                handler.processChallenge(challenge);
             }
         });
     }
