@@ -81,7 +81,7 @@ class AuthFidoChallengeHandlerTest {
             .appendQueryParameter(FidoRequestField.KEY_TYPES.fieldName, keyTypesString)
             .appendQueryParameter(FidoRequestField.CONTEXT.fieldName, context)
             .build().toString()
-        authFidoChallengeHandler.processChallenge(FidoChallenge(fullUrl))
+        authFidoChallengeHandler.processChallenge(FidoChallenge.createFromRedirectUri(fullUrl))
         assertTrue(webView.urlLoaded)
         assertTrue(webView.isRegularAssertion())
     }
@@ -98,7 +98,7 @@ class AuthFidoChallengeHandlerTest {
             .appendQueryParameter(FidoRequestField.KEY_TYPES.fieldName, keyTypesString)
             .appendQueryParameter(FidoRequestField.CONTEXT.fieldName, context)
             .build().toString()
-        authFidoChallengeHandler.processChallenge(FidoChallenge(fullUrl))
+        authFidoChallengeHandler.processChallenge(FidoChallenge.createFromRedirectUri(fullUrl))
     }
 
     @Test
@@ -113,7 +113,7 @@ class AuthFidoChallengeHandlerTest {
             .appendQueryParameter(FidoRequestField.KEY_TYPES.fieldName, keyTypesString)
             .appendQueryParameter(FidoRequestField.CONTEXT.fieldName, context)
             .build().toString()
-        authFidoChallengeHandler.processChallenge(FidoChallenge(fullUrl))
+        authFidoChallengeHandler.processChallenge(FidoChallenge.createFromRedirectUri(fullUrl))
         assertTrue(webView.urlLoaded)
         assertFalse(webView.isRegularAssertion())
     }
@@ -137,7 +137,7 @@ class AuthFidoChallengeHandlerTest {
             .appendQueryParameter(FidoRequestField.KEY_TYPES.fieldName, keyTypesString)
             .appendQueryParameter(FidoRequestField.CONTEXT.fieldName, context)
             .build().toString()
-        authFidoChallengeHandler.processChallenge(FidoChallenge(fullUrl))
+        authFidoChallengeHandler.processChallenge(FidoChallenge.createFromRedirectUri(fullUrl))
         assertTrue(webView.urlLoaded)
         assertFalse(webView.isRegularAssertion())
     }
@@ -155,7 +155,7 @@ class AuthFidoChallengeHandlerTest {
             .appendQueryParameter(FidoRequestField.KEY_TYPES.fieldName, keyTypesString)
             .appendQueryParameter(FidoRequestField.CONTEXT.fieldName, context)
             .build().toString()
-        authFidoChallengeHandler.processChallenge(FidoChallenge(fullUrl))
+        authFidoChallengeHandler.processChallenge(FidoChallenge.createFromRedirectUri(fullUrl))
         assertTrue(webView.urlLoaded)
         assertFalse(webView.isRegularAssertion())
     }
