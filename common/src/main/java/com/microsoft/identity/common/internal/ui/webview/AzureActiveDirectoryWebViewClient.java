@@ -26,7 +26,6 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -485,15 +484,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 + removeQueryParametersOrRedact(url) + "' with original requestHeaders appended.");
 
         view.loadUrl(url, mRequestHeaders);
-    }
-
-    @Override
-    public void onPageStarted(WebView view, String url, Bitmap favicon) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            view.evaluateJavascript("window.PublicKeyCredential = function() {}; window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable = function() { return Promise.resolve(true); };", null);
-        }
-
-        super.onPageStarted(view, url, favicon);
     }
 
     private String removeQueryParametersOrRedact(@NonNull final String url) {

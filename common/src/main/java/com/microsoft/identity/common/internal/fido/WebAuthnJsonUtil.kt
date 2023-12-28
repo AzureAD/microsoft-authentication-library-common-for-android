@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.fido
 
 import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter
 import com.microsoft.identity.common.java.constants.FidoConstants
+import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_RESPONSE_ID_JSON_KEY
 import org.json.JSONObject
 
 /**
@@ -67,10 +68,13 @@ class WebAuthnJsonUtil {
          * @param fullResponseJson AuthenticationResponse Json string.
          */
         fun extractAuthenticatorAssertionResponseJson(fullResponseJson : String): String {
-            return JSONObject(fullResponseJson)
+            val fullResponseJsonObject = JSONObject(fullResponseJson);
+            val authResponseJsonObject = fullResponseJsonObject
                 .getJSONObject(FidoConstants.WEBAUTHN_AUTHENTICATION_ASSERTION_RESPONSE_JSON_KEY)
-                .put("id", JSONObject(fullResponseJson).get("id"))
-                .toString()
+                // Making sure that Id is here because ESTS expects it.
+                // I've noticed that GPM will sometimes not include the id in the response object.
+                .put(WEBAUTHN_RESPONSE_ID_JSON_KEY, fullResponseJsonObject.get(WEBAUTHN_RESPONSE_ID_JSON_KEY))
+            return authResponseJsonObject.toString()
         }
     }
 }

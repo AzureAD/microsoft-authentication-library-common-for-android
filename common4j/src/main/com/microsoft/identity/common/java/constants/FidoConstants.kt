@@ -111,6 +111,11 @@ class FidoConstants {
         const val WEBAUTHN_AUTHENTICATION_ASSERTION_RESPONSE_JSON_KEY = "response"
 
         /**
+         * JSON key value of id in response of Webauthn JSON object.
+         */
+        const val WEBAUTHN_RESPONSE_ID_JSON_KEY = "id"
+
+        /**
          * Used to disable passkey logic until the feature is ready.
          */
         const val IS_PASSKEY_SUPPORT_READY = true
