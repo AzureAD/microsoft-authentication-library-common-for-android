@@ -22,7 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
-import com.squareup.moshi.Moshi
+import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter
+import com.microsoft.identity.common.java.constants.FidoConstants
+import org.json.JSONObject
 
 /**
  * A utility class to help convert to and from strings in WebAuthn json format.
@@ -30,31 +32,44 @@ import com.squareup.moshi.Moshi
 class WebAuthnJsonUtil {
     companion object {
         /**
-         * Takes applicable parameters from an AuthFidoChallenge object and creates a string
-         * representation of PublicKeyCredentialRequestOptionsJSON (https://w3c.github.io/webauthn/#dictdef-publickeycredentialrequestoptionsjson)
-         * @param challengeObject AuthFidoChallenge
+         * Takes applicable parameters and creates a string representation of
+         *  PublicKeyCredentialRequestOptionsJSON (https://w3c.github.io/webauthn/#dictdef-publickeycredentialrequestoptionsjson)
+         * @param challenge challenge string
+         * @param relyingPartyIdentifier rpId string
+         * @param allowedCredentials allowedCredentials string
+         * @param userVerificationPolicy yserVerificationPolicy string
          * @return a string representation of PublicKeyCredentialRequestOptionsJSON.
          */
-        fun createJsonAuthRequestFromChallengeObject(challengeObject: AuthFidoChallenge): String? {
+        fun createJsonAuthRequest(challenge: String,
+                                  relyingPartyIdentifier: String,
+                                  allowedCredentials: List<String>?,
+                                  userVerificationPolicy: String): String {
             //Create classes
             val publicKeyCredentialDescriptorList = ArrayList<PublicKeyCredentialDescriptor>()
-            challengeObject.allowedCredentials?.let { allowedCredentials ->
+            allowedCredentials?.let {
                 for (id in allowedCredentials) {
                     publicKeyCredentialDescriptorList.add(
                         PublicKeyCredentialDescriptor("public-key", id)
                     )
                 }
             }
-            val jsonAdapter = Moshi.Builder()
-                .build()
-                .adapter(PublicKeyCredentialRequestOptions::class.java)
             val options = PublicKeyCredentialRequestOptions(
-                challengeObject.challenge,
-                challengeObject.relyingPartyIdentifier,
+                challenge,
+                relyingPartyIdentifier,
                 publicKeyCredentialDescriptorList,
-                challengeObject.userVerificationPolicy
+                userVerificationPolicy
             )
-            return jsonAdapter.toJson(options)
+            return CommonMoshiJsonAdapter().toJson(options)
+        }
+
+        /**
+         * Extracts the AuthenticatorAssertionResponse from the overall AuthenticationResponse string received from the authenticator.
+         * @param fullResponseJson AuthenticationResponse Json string.
+         */
+        fun extractAuthenticatorAssertionResponseJson(fullResponseJson : String): String {
+            return JSONObject(fullResponseJson)
+                .getJSONObject(FidoConstants.WEBAUTHN_AUTHENTICATION_ASSERTION_RESPONSE_JSON_KEY)
+                .toString()
         }
     }
 }

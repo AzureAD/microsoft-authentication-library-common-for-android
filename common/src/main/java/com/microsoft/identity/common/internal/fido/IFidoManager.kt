@@ -22,16 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
-import android.webkit.WebView
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler
-
 /**
- * Abstract class that handles a FidoChallenge.
+ * Representation of a manager that handles interactions with a passkey provider (usually through an API).
  */
-abstract class AbstractFidoChallengeHandler
-/**
- * Constructs an AbstractFidoChallengeHandler.
- * @param webView current WebView.
- */ (
-    val webView: WebView
-) : IChallengeHandler<IFidoChallenge, Void>
+interface IFidoManager {
+    /**
+     * Interacts with the FIDO credential provider and returns an assertion.
+     * @param challenge
+     * @param relyingPartyIdentifier
+     * @param allowedCredentials
+     * @param userVerificationPolicy
+     * @return assertion
+     * @throws Exception
+     */
+    suspend fun authenticate(challenge: String,
+                             relyingPartyIdentifier: String,
+                             allowedCredentials: List<String>?,
+                             userVerificationPolicy: String): String
+}
