@@ -20,18 +20,39 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.fido
+package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
-import android.webkit.WebView
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler
+import com.google.gson.annotations.Expose;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority;
+
+import java.util.List;
+
+import javax.annotation.Nullable;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
 /**
- * Abstract class that handles a FidoChallenge.
+ * BaseNativeAuthCommandParameters is the base class for parameters for all Native Auth commands.
  */
-abstract class AbstractFidoChallengeHandler
-/**
- * Constructs an AbstractFidoChallengeHandler.
- * @param webView current WebView.
- */ (
-    val webView: WebView
-) : IChallengeHandler<IFidoChallenge, Void>
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
+public class BaseNativeAuthCommandParameters extends CommandParameters {
+    private static final String TAG = BaseNativeAuthCommandParameters.class.getSimpleName();
+
+    /**
+     * The authority for the token being fetched.
+     */
+    @Expose()
+    public final NativeAuthCIAMAuthority authority;
+
+    /**
+     * The initial challenge type for the user being authenticated.
+     */
+    @Expose()
+    @Nullable
+    public final List<String> challengeType;
+}

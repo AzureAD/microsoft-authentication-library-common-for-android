@@ -20,26 +20,34 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.fido
+package com.microsoft.identity.common.java.nativeauth.providers.responses.signin
+
+import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 
 /**
- * An object representing an auth FIDO challenge request.
+ * Represents the potential result types returned from the OAuth /challenge endpoint,
+ * including a case for unexpected errors received from the server.
  */
-data class AuthFidoChallenge(
-    override val challenge: String,
-    override val relyingPartyIdentifier: String,
-    override val userVerificationPolicy: String,
-    override val version: String,
-    override val submitUrl: String,
-    override val context: String,
-    /**
-     * Array of allowed key types.
-     * This parameter is optional.
-     */
-    val keyTypes: List<String>?,
-    /**
-     * List of credential IDs the client will use for filtering.
-     * This parameter is optional.
-     */
-    val allowedCredentials: List<String>?
-) : IFidoChallenge
+sealed interface SignInChallengeApiResult {
+    object Redirect : SignInChallengeApiResult
+    data class OOBRequired(
+        val credentialToken: String,
+        val challengeTargetLabel: String,
+        val challengeChannel: String,
+        val codeLength: Int
+    ) : SignInChallengeApiResult
+
+    data class PasswordRequired(val credentialToken: String) : SignInChallengeApiResult
+
+    data class UnknownError(
+        override val error: String,
+        override val errorDescription: String,
+        override val errorCodes: List<Int>,
+        override val details: List<Map<String, String>>?
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+        errorCodes = errorCodes,
+        details = details
+    ), SignInChallengeApiResult
+}
