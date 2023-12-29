@@ -426,6 +426,11 @@ public class ClientException extends BaseException {
     public static final String ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE = "ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE";
 
     /**
+     * An error was encountered while parsing query parameters related to the passkey protocol.
+     */
+    public static final String PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR = "passkey_protocol_request_parsing_error";
+
+    /**
      * Constructor of ClientException.
      *
      * @param errorCode String
