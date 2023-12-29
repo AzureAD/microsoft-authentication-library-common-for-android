@@ -1190,6 +1190,11 @@ public final class AuthenticationConstants {
         public static final String BROWSER_EXT_WEB_CP = "companyportal://";
 
         /**
+         * The URI for the Amazon app.
+         */
+        public static final String AMAZON_APP_REDIRECT_PREFIX = "aea://";
+
+        /**
          * Prefix for the Authenticator MFA linking.
          */
         public static final String AUTHENTICATOR_MFA_LINKING_PREFIX = "microsoft-authenticator://activatemfa";
