@@ -64,7 +64,9 @@ class WebAuthnJsonUtilTest {
 
     val demoAuthenticationResponseJsonAllFieldsFilled = """{"authenticatorAttachment":"$authenticatorAttachment","clientExtensionResults":{},"id":"KEDetxZcUfinhVi6Za5nZQ","rawId":"KEDetxZcUfinhVi6Za5nZQ","response":{"attestationObject":"$attestationObject","authenticatorData":"$authenticatorData","clientDataJSON":"$clientDataJSON","id":"$idAssertionResponse","signature":"$signature","userHandle":"$userHandle"},"type":"public-key"}"""
     val demoAuthenticationResponseJsonOnlyRequiredFields = """{"clientExtensionResults":{},"id":"KEDetxZcUfinhVi6Za5nZQ","rawId":"KEDetxZcUfinhVi6Za5nZQ","response":{"attestationObject":null,"authenticatorData":"$authenticatorData","clientDataJSON":"$clientDataJSON","id":"$idAssertionResponse","signature":"$signature","userHandle":"$userHandle"},"type":"public-key"}"""
-    val demoAuthenticationResponseJsonMissingRequiredField = """{"clientExtensionResults":{},"id":"KEDetxZcUfinhVi6Za5nZQ","rawId":"KEDetxZcUfinhVi6Za5nZQ","response":{"attestationObject":null,"authenticatorData":"$authenticatorData","clientDataJSON":"$clientDataJSON","id":"$idAssertionResponse","userHandle":"$userHandle"},"type":"public-key"}"""
+    val demoAuthenticationResponseJsonMissingSignature = """{"clientExtensionResults":{},"id":"KEDetxZcUfinhVi6Za5nZQ","rawId":"KEDetxZcUfinhVi6Za5nZQ","response":{"attestationObject":null,"authenticatorData":"$authenticatorData","clientDataJSON":"$clientDataJSON","id":"$idAssertionResponse","userHandle":"$userHandle"},"type":"public-key"}"""
+    val demoAuthenticationResponseJsonMissingIdInAuthenticatorAssertionResponse = """{"clientExtensionResults":{},"id":"$idAssertionResponse","rawId":"KEDetxZcUfinhVi6Za5nZQ","response":{"attestationObject":null,"authenticatorData":"$authenticatorData","clientDataJSON":"$clientDataJSON","signature":"$signature","userHandle":"$userHandle"},"type":"public-key"}"""
+
 
     @Test
     fun testCreateJsonAuthRequestFromChallengeObject_AllFieldsFilled() {
@@ -104,10 +106,17 @@ class WebAuthnJsonUtilTest {
     }
 
     @Test
-    fun testExtractAuthenticatorAssertionResponseJson_MissingRequiredField() {
-        val result = WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(demoAuthenticationResponseJsonMissingRequiredField)
+    fun testExtractAuthenticatorAssertionResponseJson_MissingSignature() {
+        val result = WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(demoAuthenticationResponseJsonMissingSignature)
         // This test should pass if an exception is not thrown.
         // In such a case, we should not close the WebView or crash, but let ESTS determine the issue and respond with an invalid Fido assertion error.
         // Then we can debug from the correlation id/timestamp, vs clogging up the broker logs.
+    }
+
+    @Test
+    fun testExtractAuthenticatorAssertionResponseJson_MissingIdInAuthenticatorAssertionResponse() {
+        val result = WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(demoAuthenticationResponseJsonMissingIdInAuthenticatorAssertionResponse)
+        // Should include id.
+        JSONAssert.assertEquals(expectedAuthenticationAssertionResponseOnlyRequiredFields, result, JSONCompareMode.LENIENT)
     }
 }
