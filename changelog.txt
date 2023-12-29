@@ -2,6 +2,7 @@ V.Next
 ---------
 
 - [PATCH] Add JWT header field for KDF version (#2220)
+- [MINOR] Add progaurd rules to remove native auth code by default (#2269)
 
 V.16.2.0
 ----------
