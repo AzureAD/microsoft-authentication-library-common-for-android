@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.fido
 
 import com.microsoft.identity.common.internal.fido.FidoChallengeField.Companion.throwIfInvalidOptionalListParameter
 import com.microsoft.identity.common.internal.fido.FidoChallengeField.Companion.throwIfInvalidProtocolVersion
+import com.microsoft.identity.common.internal.fido.FidoChallengeField.Companion.throwIfInvalidRelyingPartyIdentifier
 import com.microsoft.identity.common.internal.fido.FidoChallengeField.Companion.throwIfInvalidRequiredParameter
 import com.microsoft.identity.common.internal.fido.FidoChallengeField.Companion.throwIfInvalidSubmitUrl
 import com.microsoft.identity.common.java.util.UrlUtil
@@ -61,7 +62,7 @@ data class FidoChallenge(
             val parameters: Map<String, String> = UrlUtil.getParameters(redirectUri)
             return FidoChallenge(
                 challenge = FidoChallengeField(FidoRequestField.CHALLENGE, parameters[FidoRequestField.CHALLENGE.fieldName], ::throwIfInvalidRequiredParameter),
-                relyingPartyIdentifier = FidoChallengeField(FidoRequestField.RELYING_PARTY_IDENTIFIER, parameters[FidoRequestField.RELYING_PARTY_IDENTIFIER.fieldName], ::throwIfInvalidRequiredParameter),
+                relyingPartyIdentifier = FidoChallengeField(FidoRequestField.RELYING_PARTY_IDENTIFIER, parameters[FidoRequestField.RELYING_PARTY_IDENTIFIER.fieldName], ::throwIfInvalidRelyingPartyIdentifier),
                 userVerificationPolicy = FidoChallengeField(FidoRequestField.USER_VERIFICATION_POLICY, parameters[FidoRequestField.USER_VERIFICATION_POLICY.fieldName] ?: DEFAULT_USER_VERIFICATION_POLICY, ::throwIfInvalidRequiredParameter),
                 version = FidoChallengeField(FidoRequestField.VERSION, parameters[FidoRequestField.VERSION.fieldName], ::throwIfInvalidProtocolVersion),
                 submitUrl = FidoChallengeField(FidoRequestField.SUBMIT_URL, parameters[FidoRequestField.SUBMIT_URL.fieldName], ::throwIfInvalidSubmitUrl),

@@ -87,6 +87,21 @@ data class FidoChallengeField<K>(private val field: FidoRequestField,
         }
 
         /**
+         * Validates that the relyingPartyIdentifier parameter is not null or empty.
+         *
+         * @param value value for the relyingPartyIdentifier passkey protocol parameter.
+         * @return validated parameter value
+         * @throws ClientException if the parameter is null or empty.
+         */
+        @JvmStatic
+        @Throws(ClientException::class)
+        fun throwIfInvalidRelyingPartyIdentifier(field: FidoRequestField, value: String?): String {
+            val rpId = throwIfInvalidRequiredParameter(field, value)
+            // Server team is making a change to not include scheme, but until that change is in prod, we'll need to remove it ourselves.
+            return rpId.removePrefix("https://")
+        }
+
+        /**
          * Validates that the protocol version is not null or empty, and is a version that we currently support.
          *
          * @param value value for the version passkey protocol parameter.
