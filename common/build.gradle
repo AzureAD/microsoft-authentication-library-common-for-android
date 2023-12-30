@@ -167,7 +167,7 @@ dependencies {
     //For passkeys
     implementation "androidx.credentials:credentials:$rootProject.ext.AndroidCredentialsVersion"
     //needed for credentials support from play services, for devices running
-    implementation "androidx.credentials:credentials-play-services-auth:$rootProject.ext.AndroidCredentialsPlayServicesAuthVersion"
+    implementation "androidx.credentials:credentials-play-services-auth:$rootProject.ext.AndroidCredentialsVersion"
 
     constraints {
         implementation ("com.squareup.okio:okio:3.4.0") {
