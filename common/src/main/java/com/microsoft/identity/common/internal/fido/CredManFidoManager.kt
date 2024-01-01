@@ -23,11 +23,18 @@
 package com.microsoft.identity.common.internal.fido
 
 import android.content.Context
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetPublicKeyCredentialOption
+import androidx.credentials.PublicKeyCredential
 
 /**
  * Makes calls to the Android Credential Manager API in order to return an attestation.
  */
 class CredManFidoManager (val context: Context) : IFidoManager {
+
+    val credentialManager = CredentialManager.create(context)
+
     /**
      * Interacts with the FIDO credential provider and returns an assertion.
      *
@@ -38,15 +45,23 @@ class CredManFidoManager (val context: Context) : IFidoManager {
                                       relyingPartyIdentifier: String,
                                       allowedCredentials: List<String>?,
                                       userVerificationPolicy: String): String {
-        WebAuthnJsonUtil.createJsonAuthRequest(
+        val requestJson = WebAuthnJsonUtil.createJsonAuthRequest(
             challenge,
             relyingPartyIdentifier,
             allowedCredentials,
             userVerificationPolicy
         )
-        // TODO: Implementation will include Credential Manager calls; we aren't able to add the dependency yet,
-        //  so this method will only be filled once we can finish up the passkey work.
-        //  ADO Item: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2630696
-        return WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson("")
+        val publicKeyCredentialOption = GetPublicKeyCredentialOption(
+            requestJson = requestJson
+        )
+        val getCredRequest = GetCredentialRequest(
+            listOf(publicKeyCredentialOption)
+        )
+        val result = credentialManager.getCredential(
+            context = context,
+            request = getCredRequest
+        )
+        val credential: PublicKeyCredential = result.credential as PublicKeyCredential
+        return WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(credential.authenticationResponseJson)
     }
 }

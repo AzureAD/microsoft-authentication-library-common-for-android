@@ -65,7 +65,7 @@ class AuthFidoChallengeHandlerTest {
             fidoManager = testFidoManager,
             webView = webView,
             spanContext = null,
-            lifecycleOwner = testLifecycleOwner,
+            lifecycleOwner = testLifecycleOwner
         )
     }
 
