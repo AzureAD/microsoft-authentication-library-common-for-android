@@ -235,9 +235,12 @@ dependencies {
     testFixturesCompileOnly "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
     testFixturesCompileOnly "org.mockito.kotlin:mockito-kotlin:$rootProject.ext.mockitoKotlinVersion"
     testFixturesCompileOnly "org.powermock:powermock-module-junit4:$rootProject.ext.powerMockVersion"
+
     testFixturesCompileOnly "com.github.spotbugs:spotbugs-annotations:$rootProject.ext.spotBugsAnnotationVersion"
     testFixturesCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    testFixturesCompileOnly "org.mockito:mockito-inline:$rootProject.ext.mockitoCoreVersion"
     testFixturesAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    
     resolvableTestFixturesImplementation "org.robolectric:junit:$rootProject.ext.robolectricVersion"
 
     implementation platform("io.opentelemetry:opentelemetry-bom:$rootProject.ext.openTelemetryVersion")
