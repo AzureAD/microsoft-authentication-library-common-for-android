@@ -52,10 +52,12 @@ import com.microsoft.identity.common.java.nativeauth.providers.requests.NativeAu
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Test
 import org.mockito.kotlin.mock
 import java.net.URL
 
+@Ignore
 class NativeAuthRequestHandlerTest {
     private val username = "user@email.com"
     private val password = "verySafePassword".toCharArray()

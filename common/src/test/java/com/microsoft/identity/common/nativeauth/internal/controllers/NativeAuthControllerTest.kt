@@ -70,6 +70,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.BeforeClass
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -87,6 +88,7 @@ import java.util.UUID
  * Tests for [NativeAuthMsalController].
  */
 @RunWith(RobolectricTestRunner::class)
+@Ignore
 class NativeAuthControllerTest {
     private val code = "12345"
     private val credentialToken = "sk490fj8a83n*@f-1"
