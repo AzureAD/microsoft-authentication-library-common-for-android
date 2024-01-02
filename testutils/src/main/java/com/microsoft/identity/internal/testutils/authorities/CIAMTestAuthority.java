@@ -22,21 +22,32 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.authorities;
 
+import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.authorities.CIAMAuthority;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.util.JsonUtil;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.internal.testutils.strategies.ResourceOwnerPasswordCredentialsTestStrategy;
 
+import org.json.JSONException;
+
+import java.util.Map;
+
 public class CIAMTestAuthority extends CIAMAuthority {
+
+    private static final String TAG = CIAMTestAuthority.class.getSimpleName();
 
     public CIAMTestAuthority(String authorityUrl) {
         super(authorityUrl);
     }
 
     private MicrosoftStsOAuth2Configuration createOAuth2Configuration() {
+        final String methodName = ":createOAuth2Configuration";
         final MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
         config.setAuthorityUrl(this.getAuthorityURL());
         config.setMultipleCloudsSupported(false);
@@ -46,6 +57,28 @@ public class CIAMTestAuthority extends CIAMAuthority {
             slice.setSlice(mSlice.getSlice());
             slice.setDataCenter(mSlice.getDataCenter());
             config.setSlice(slice);
+        }
+
+        if (!StringUtil.isNullOrEmpty(BuildConfig.SLICE) || !StringUtil.isNullOrEmpty(BuildConfig.DC)) {
+            final AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
+            slice.setSlice(BuildConfig.SLICE);
+            slice.setDataCenter(BuildConfig.DC);
+            mSlice = slice;
+        }
+
+        final String localFlightsFromBuild = BuildConfig.LOCAL_FLIGHTS;
+        if (!StringUtil.isNullOrEmpty(localFlightsFromBuild)) {
+            try {
+                Map<String, String> localFlights = JsonUtil.extractJsonObjectIntoMap(localFlightsFromBuild);
+                for (Map.Entry<String, String> entry : localFlights.entrySet()) {
+                    config.getFlightParameters().put(entry.getKey(), entry.getValue());
+                }
+            } catch (JSONException e) {
+                Logger.error(
+                        TAG + methodName,
+                        "Unable to set flight parameters",
+                        e);
+            }
         }
 
         return config;
