@@ -274,16 +274,26 @@ public abstract class OAuth2Strategy
                     (MicrosoftStsOAuth2Configuration) mConfig;
 
             final AzureActiveDirectorySlice slice = oauth2Config.getSlice();
+            final Map<String, String> flightParameters = oauth2Config.getFlightParameters();
 
-            if (slice != null) {
+            if (slice != null || (flightParameters != null && !flightParameters.isEmpty())) {
                 try {
                     final CommonURIBuilder commonUriBuilder = new CommonURIBuilder(mTokenEndpoint);
-                    if (!StringUtil.isNullOrEmpty(slice.getSlice())) {
-                        commonUriBuilder.setParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, slice.getSlice());
+                    if (slice != null) {
+                        if (!StringUtil.isNullOrEmpty(slice.getSlice())) {
+                            commonUriBuilder.setParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, slice.getSlice());
+                        }
+                        if (!StringUtil.isNullOrEmpty(slice.getDataCenter())) {
+                            commonUriBuilder.setParameter(AzureActiveDirectorySlice.DC_PARAMETER, slice.getDataCenter());
+                        }
                     }
-                    if (!StringUtil.isNullOrEmpty(slice.getDataCenter())) {
-                        commonUriBuilder.setParameter(AzureActiveDirectorySlice.DC_PARAMETER, slice.getDataCenter());
+
+                    if (flightParameters != null && !flightParameters.isEmpty()) {
+                        for (Map.Entry<String, String> entry : flightParameters.entrySet()) {
+                            commonUriBuilder.setParameter(entry.getKey(), entry.getValue());
+                        }
                     }
+
                     mTokenEndpoint = commonUriBuilder.build().toString();
                 } catch (final URISyntaxException e) {
                     throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
