@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.util.LruCache;
 
 import androidx.annotation.GuardedBy;
@@ -40,6 +41,7 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.security.ProviderException;
 import java.util.AbstractMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -335,7 +337,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
             result = encrypt
                     ? mEncryptionManager.encrypt(inputText)
                     : mEncryptionManager.decrypt(inputText);
-        } catch (ClientException e) {
+        } catch (ClientException e ) {
             Logger.error(
                     methodTag,
                     "Failed to " + (encrypt ? "encrypt" : "decrypt") + " value",
@@ -345,6 +347,18 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
             );
 
             // TODO determine if an Exception should be thrown here...
+            result = null;
+        } catch (final ProviderException e) {
+            if ((Build.VERSION.SDK_INT == Build.VERSION_CODES.Q || Build.VERSION.SDK_INT == Build.VERSION_CODES.R)) {
+                // Catch the exception only on Android OS 10 & 11 as we are seeing some unknown crypto errors on these versions
+                Logger.error(
+                        methodTag,
+                        "Keystore error - Failed to " + (encrypt ? "encrypt" : "decrypt") + " value",
+                        encrypt
+                                ? null // If we failed to encrypt, don't log the error as it may contain a token
+                                : e // If we failed to decrypt, we couldn't see that secret value so log the error
+                );
+            }
             result = null;
         }
 
