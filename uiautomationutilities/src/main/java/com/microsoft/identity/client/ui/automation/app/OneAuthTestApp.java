@@ -160,7 +160,13 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     }
 
     public void handlePreferBrokerSwitchButton() {
-        UiAutomatorUtils.handleButtonClick("com.msft.oneauth.testapp:id/prefer_broker_switch_button");
+        final UiObject brokerSwitch = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/prefer_broker_switch_button");
+        try {
+            scrollToElement(brokerSwitch);
+            brokerSwitch.click();
+        } catch (UiObjectNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void handleConfigureFlightsButton() {
@@ -185,6 +191,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     public void selectFromAppConfiguration(@NonNull final String text)  {
         final UiObject appConfigurationSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/app_configuration_spinner");
         try {
+            scrollToElement(appConfigurationSpinner);
             appConfigurationSpinner.click();
             final UiObject appConfiguration = UiAutomatorUtils.obtainUiObjectWithText(text);
             appConfiguration.click();
@@ -204,6 +211,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         // Make sure we are seeing the output text view
         final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/txtGeneralInfo");
         try {
+            resultUIObject.waitForExists(30000);
             Assert.assertTrue(resultUIObject.getText().contains("Result: Success"));
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError("Could not click on object with txt general info text");
