@@ -2,6 +2,7 @@ V.Next
 ---------
 - [PATCH] Add JWT header field for KDF version (#2220)
 - [MINOR] Catch unknown Keystore errors during decryption (#2255)
+- [MINOR] Fixed issue with fragment displaying when 'AcquireTokenParameters.Builder().withFragment()' is used (#2274)
 
 V.16.3.0
 ----------

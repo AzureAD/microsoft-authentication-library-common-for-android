@@ -78,7 +78,7 @@ public abstract class AndroidAuthorizationStrategy<
         final Fragment fragment = mReferencedFragment.get();
 
         if (fragment != null) {
-            final Fragment authFragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
+            final Fragment authFragment = getAuthorizationFragment(intent);
 
             final FragmentManager fragmentManager = fragment.getFragmentManager();
             if (fragmentManager == null) {
@@ -97,5 +97,16 @@ public abstract class AndroidAuthorizationStrategy<
             throw new ClientException(ClientException.UNKNOWN_ERROR, "Referenced activity is null");
         }
         activity.startActivity(intent);
+    }
+
+    private static Fragment getAuthorizationFragment(@NonNull Intent intent) {
+        if (intent.getExtras() != null) {
+            return AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntentWithState(
+                    intent,
+                    intent.getExtras()
+            );
+        }
+
+        return AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
     }
 }
