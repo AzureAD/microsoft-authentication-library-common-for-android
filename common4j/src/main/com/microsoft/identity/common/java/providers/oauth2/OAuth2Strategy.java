@@ -71,6 +71,7 @@ import java.util.concurrent.Future;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
@@ -274,30 +275,41 @@ public abstract class OAuth2Strategy
                     (MicrosoftStsOAuth2Configuration) mConfig;
 
             final AzureActiveDirectorySlice slice = oauth2Config.getSlice();
-            final Map<String, String> flightParameters = oauth2Config.getFlightParameters();
 
-            if (slice != null || (flightParameters != null && !flightParameters.isEmpty())) {
+            if (slice != null) {
                 try {
                     final CommonURIBuilder commonUriBuilder = new CommonURIBuilder(mTokenEndpoint);
-                    if (slice != null) {
-                        if (!StringUtil.isNullOrEmpty(slice.getSlice())) {
-                            commonUriBuilder.setParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, slice.getSlice());
-                        }
-                        if (!StringUtil.isNullOrEmpty(slice.getDataCenter())) {
-                            commonUriBuilder.setParameter(AzureActiveDirectorySlice.DC_PARAMETER, slice.getDataCenter());
-                        }
+                    if (!StringUtil.isNullOrEmpty(slice.getSlice())) {
+                        commonUriBuilder.setParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, slice.getSlice());
                     }
-
-                    if (flightParameters != null && !flightParameters.isEmpty()) {
-                        for (Map.Entry<String, String> entry : flightParameters.entrySet()) {
-                            commonUriBuilder.setParameter(entry.getKey(), entry.getValue());
-                        }
+                    if (!StringUtil.isNullOrEmpty(slice.getDataCenter())) {
+                        commonUriBuilder.setParameter(AzureActiveDirectorySlice.DC_PARAMETER, slice.getDataCenter());
                     }
-
                     mTokenEndpoint = commonUriBuilder.build().toString();
                 } catch (final URISyntaxException e) {
                     throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
                 }
+            }
+        }
+    }
+
+    protected final void updateTokenEndpoint(@Nullable String dc, @Nullable Map<String, String> flightParameters) throws ClientException {
+        if (dc != null || (flightParameters != null && !flightParameters.isEmpty())) {
+            try {
+                final CommonURIBuilder commonUriBuilder = new CommonURIBuilder(mTokenEndpoint);
+                if (!StringUtil.isNullOrEmpty(dc)) {
+                    commonUriBuilder.setParameter(AzureActiveDirectorySlice.DC_PARAMETER, dc);
+                }
+
+                if (flightParameters != null && !flightParameters.isEmpty()) {
+                    for (Map.Entry<String, String> entry : flightParameters.entrySet()) {
+                        commonUriBuilder.setParameter(entry.getKey(), entry.getValue());
+                    }
+                }
+
+                mTokenEndpoint = commonUriBuilder.build().toString();
+            } catch (final URISyntaxException e) {
+                throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
             }
         }
     }

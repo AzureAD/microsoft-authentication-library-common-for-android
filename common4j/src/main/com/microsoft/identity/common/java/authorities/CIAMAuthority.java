@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.authorities;
 
+import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
@@ -30,6 +31,12 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration;
+import com.microsoft.identity.common.java.util.JsonUtil;
+import com.microsoft.identity.common.java.util.StringUtil;
+
+import org.json.JSONException;
+
+import java.util.Map;
 
 import lombok.NonNull;
 
@@ -72,6 +79,28 @@ public class CIAMAuthority extends Authority {
             slice.setSlice(mSlice.getSlice());
             slice.setDataCenter(mSlice.getDataCenter());
             config.setSlice(slice);
+        }
+
+        if (!StringUtil.isNullOrEmpty(BuildConfig.SLICE) || !StringUtil.isNullOrEmpty(BuildConfig.DC)) {
+            final AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
+            slice.setSlice(BuildConfig.SLICE);
+            slice.setDataCenter(BuildConfig.DC);
+            mSlice = slice;
+        }
+
+        final String localFlightsFromBuild = BuildConfig.LOCAL_FLIGHTS;
+        if (!StringUtil.isNullOrEmpty(localFlightsFromBuild)) {
+            try {
+                Map<String, String> localFlights = JsonUtil.extractJsonObjectIntoMap(localFlightsFromBuild);
+                for (Map.Entry<String, String> entry : localFlights.entrySet()) {
+                    config.getFlightParameters().put(entry.getKey(), entry.getValue());
+                }
+            } catch (JSONException e) {
+                Logger.error(
+                        TAG + methodName,
+                        "Unable to set flight parameters",
+                        e);
+            }
         }
 
         return config;

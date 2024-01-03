@@ -32,6 +32,7 @@ import com.microsoft.identity.common.java.providers.oauth2.PkceChallenge;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.net.URL;
+import java.util.Map;
 import java.util.UUID;
 
 import cz.msebera.android.httpclient.extras.Base64;
@@ -89,6 +90,14 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @Accessors(prefix = "m")
     private transient final String mPkceCodeVerifier;
 
+    @Getter
+    @Accessors(prefix = "m")
+    private final String mDc;
+
+    @Getter
+    @Accessors(prefix = "m")
+    private final Map<String, String> mFlightParameters;
+
     /**
      * The version of the calling library.
      */
@@ -144,6 +153,9 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mPkceCodeChallenge = challenge.getCodeChallenge();
         mPkceCodeVerifier = challenge.getCodeVerifier();
 
+        mDc = builder.mDc;
+        mFlightParameters = builder.mFlightParameters;
+
         mMultipleCloudAware = builder.mMultipleCloudAware;
         mLibraryVersion = builder.mLibraryVersion;
         mLibraryName = builder.mLibraryName;
@@ -170,6 +182,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         private UUID mCorrelationId;
         private String mLoginHint;
         private PkceChallenge mPkceChallenge;
+        private String mDc;
+        private Map<String, String> mFlightParameters;
 
         public Builder() {
             setState(new DefaultStateGenerator().generate());
@@ -210,6 +224,16 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
          */
         public B setPkceChallenge(@NonNull final PkceChallenge pkceChallenge) {
             mPkceChallenge = pkceChallenge;
+            return self();
+        }
+
+        public B setDc(String dc) {
+            mDc = dc;
+            return self();
+        }
+
+        public B setFlightParameters(Map<String, String> flightParameters) {
+            mFlightParameters = flightParameters;
             return self();
         }
 
