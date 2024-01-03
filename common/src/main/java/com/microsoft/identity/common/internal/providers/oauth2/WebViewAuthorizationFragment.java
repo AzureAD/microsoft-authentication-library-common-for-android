@@ -277,10 +277,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      * Call this method to deny the permission to access the camera resource.
      */
     private void denyCameraRequest() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if (mCameraPermissionRequest != null) {
-                mCameraPermissionRequest.deny();
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &&
+                mCameraPermissionRequest != null) {
+            mCameraPermissionRequest.deny();
         }
     }
 
