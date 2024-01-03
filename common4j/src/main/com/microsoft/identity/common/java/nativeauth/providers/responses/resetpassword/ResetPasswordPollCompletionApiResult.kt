@@ -48,7 +48,10 @@ sealed interface ResetPasswordPollCompletionApiResult {
         errorDescription = errorDescription,
     ), ResetPasswordPollCompletionApiResult
 
-    object PollingSucceeded : ResetPasswordPollCompletionApiResult
+    data class PollingSucceeded(
+        val continuationToken: String?,
+        val expiresIn: Int?
+    ) : ResetPasswordPollCompletionApiResult
 
     data class UserNotFound(
         override val error: String,

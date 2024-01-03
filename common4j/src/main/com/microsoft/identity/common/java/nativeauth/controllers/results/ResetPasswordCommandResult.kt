@@ -67,5 +67,8 @@ interface ResetPasswordCommandResult {
     data class PasswordResetFailed(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
         ResetPasswordSubmitNewPasswordCommandResult
 
-    object Complete : ResetPasswordSubmitNewPasswordCommandResult
+    data class Complete (
+        val continuationToken: String?,
+        val expiresIn: Int?
+    ) : ResetPasswordSubmitNewPasswordCommandResult
 }

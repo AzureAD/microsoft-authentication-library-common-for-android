@@ -116,7 +116,10 @@ class ResetPasswordPollCompletionApiResponse(
                         ResetPasswordPollCompletionApiResult.InProgress
                     }
                     status.isPollSucceeded() -> {
-                        ResetPasswordPollCompletionApiResult.PollingSucceeded
+                        ResetPasswordPollCompletionApiResult.PollingSucceeded(
+                            continuationToken = continuationToken,
+                            expiresIn = expiresIn
+                        )
                     }
                     else -> {
                         ResetPasswordPollCompletionApiResult.PollingFailed(

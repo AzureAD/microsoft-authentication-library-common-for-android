@@ -951,7 +951,10 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 }
 
                 is ResetPasswordPollCompletionApiResult.PollingSucceeded -> {
-                    ResetPasswordCommandResult.Complete
+                    ResetPasswordCommandResult.Complete(
+                        continuationToken = pollCompletionApiResult.continuationToken,
+                        expiresIn = pollCompletionApiResult.expiresIn
+                    )
                 }
 
                 is ResetPasswordPollCompletionApiResult.InProgress -> {
