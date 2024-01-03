@@ -370,9 +370,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
 
                 mAADWebViewClient.setRequestHeaders(mRequestHeaders);
-                mWebView.loadUrl("https://riversun.github.io/webcam.js/example/00_overview/");
-                //mWebView.loadUrl("https://gentle-pebble-09da6fb1e.3.azurestaticapps.net/");
-                //mWebView.loadUrl(mAuthorizationRequestUrl);
+                mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
 
                 // The first page load could take time, and we do not want to just show a blank page.
                 // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.
