@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -308,18 +307,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         }
         return false;
     }
-
-    private final ActivityResultLauncher<Intent> settingsActivity = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == Activity.RESULT_CANCELED) {
-                    if (isCameraPermissionGranted()) {
-                        acceptCameraRequest();
-                    } else {
-                        denyCameraRequest();
-                    }
-                }
-            });
 
     private final ActivityResultLauncher<String> cameraRequestActivity = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(),
