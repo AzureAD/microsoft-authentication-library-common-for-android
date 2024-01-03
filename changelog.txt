@@ -8,6 +8,7 @@ V.16.3.0
 - [MINOR] Changes to launch AEA app from Broker's WebView (#2264)
 - [MINOR] AuthFidoChallengeHandler and other passkey changes (#2146)
 - [MAJOR] Addition of Credential Manager and associated passkey logic (#2267)
+- [PATCH] Pass through ESTS x-ms-srs header field (#2256)
 
 V.16.2.0
 ----------
