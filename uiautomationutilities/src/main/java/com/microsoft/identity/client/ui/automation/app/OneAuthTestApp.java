@@ -169,7 +169,13 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     }
 
     public void handlePreferBrokerSwitchButton() {
-        UiAutomatorUtils.handleButtonClick("com.msft.oneauth.testapp:id/prefer_broker_switch_button");
+        final UiObject preferBrokerSwitchBtn = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/prefer_broker_switch_button");
+        try {
+            scrollToElement(preferBrokerSwitchBtn);
+            preferBrokerSwitchBtn.click();
+        } catch (UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
     }
 
     private void handleConfigureFlightsButton() {
@@ -194,6 +200,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     public void selectFromAppConfiguration(@NonNull final String text)  {
         final UiObject appConfigurationSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/app_configuration_spinner");
         try {
+            scrollToElement(appConfigurationSpinner);
             appConfigurationSpinner.click();
             final UiObject appConfiguration = UiAutomatorUtils.obtainUiObjectWithText(text);
             appConfiguration.click();
