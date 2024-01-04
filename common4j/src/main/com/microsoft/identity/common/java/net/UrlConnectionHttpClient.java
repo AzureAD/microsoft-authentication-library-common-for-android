@@ -66,6 +66,7 @@ import lombok.NonNull;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.CONTENT_TYPE;
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_ID;
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_SEQUENCE;
 
 /**
  * A client object for handling HTTP requests and responses.  This class accepts a RetryPolicy that
@@ -375,6 +376,11 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 span.setAttribute(
                         com.microsoft.identity.common.java.opentelemetry.AttributeName.ccs_request_id.name(),
                         response.getHeaderValue(XMS_CCS_REQUEST_ID, 0)
+                );
+
+                span.setAttribute(
+                        com.microsoft.identity.common.java.opentelemetry.AttributeName.ccs_request_sequence.name(),
+                        response.getHeaderValue(XMS_CCS_REQUEST_SEQUENCE, 0)
                 );
             }
 
