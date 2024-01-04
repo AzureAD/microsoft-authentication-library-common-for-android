@@ -94,10 +94,6 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @Accessors(prefix = "m")
     private final String mDc;
 
-    @Getter
-    @Accessors(prefix = "m")
-    private final Map<String, String> mFlightParameters;
-
     /**
      * The version of the calling library.
      */
@@ -154,7 +150,6 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mPkceCodeVerifier = challenge.getCodeVerifier();
 
         mDc = builder.mDc;
-        mFlightParameters = builder.mFlightParameters;
 
         mMultipleCloudAware = builder.mMultipleCloudAware;
         mLibraryVersion = builder.mLibraryVersion;
@@ -183,7 +178,6 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         private String mLoginHint;
         private PkceChallenge mPkceChallenge;
         private String mDc;
-        private Map<String, String> mFlightParameters;
 
         public Builder() {
             setState(new DefaultStateGenerator().generate());
@@ -229,11 +223,6 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
         public B setDc(String dc) {
             mDc = dc;
-            return self();
-        }
-
-        public B setFlightParameters(Map<String, String> flightParameters) {
-            mFlightParameters = flightParameters;
             return self();
         }
 

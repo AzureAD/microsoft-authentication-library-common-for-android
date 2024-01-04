@@ -120,6 +120,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     protected transient AzureActiveDirectorySlice mSlice;
 
     @SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
+    @Getter
+    @Accessors(prefix = "m")
     protected transient Map<String, String> mFlightParameters;
 
     // TODO private transient InstanceDiscoveryMetadata mInstanceDiscoveryMetadata;
