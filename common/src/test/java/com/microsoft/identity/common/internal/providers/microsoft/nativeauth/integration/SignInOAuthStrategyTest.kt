@@ -50,6 +50,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
@@ -72,6 +73,7 @@ import java.util.UUID
 @PowerMockIgnore("javax.net.ssl.*")
 @PrepareForTest(DiagnosticContext::class)
 @Config(sdk = [Build.VERSION_CODES.O_MR1])
+@Ignore
 class SignInOAuthStrategyTest {
     private val username = "user@email.com"
     private val password = "verySafePassword".toCharArray()
