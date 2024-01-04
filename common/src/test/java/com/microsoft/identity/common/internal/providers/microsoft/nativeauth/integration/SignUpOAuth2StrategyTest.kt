@@ -61,7 +61,7 @@ import java.util.UUID
 /**
  * These are integration tests using real API responses instead of mocked API responses. This class
  * covers all sign up endpoints.
- * These tests run on the mock API, see: https://native-ux-mock-api.azurewebsites.net/
+ * These tests run on the mock API, see: https://native-auth-mock-api-private-preview.azurewebsites.net/
  */
 
 @RunWith(
@@ -70,7 +70,6 @@ import java.util.UUID
 @PowerMockIgnore("javax.net.ssl.*")
 @PrepareForTest(DiagnosticContext::class)
 @Config(sdk = [Build.VERSION_CODES.O_MR1])
-@Ignore
 class SignUpOAuth2StrategyTest {
     private val username = "user@email.com"
     private val invalidUsername = "invalidUsername"
