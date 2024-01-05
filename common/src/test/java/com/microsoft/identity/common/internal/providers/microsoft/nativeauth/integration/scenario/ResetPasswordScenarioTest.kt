@@ -54,7 +54,6 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import java.util.UUID
 
-@Ignore
 class ResetPasswordScenarioTest {
     private val username = "user@email.com"
     private val password = "verySafePassword".toCharArray()

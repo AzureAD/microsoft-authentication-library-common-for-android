@@ -41,21 +41,21 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpa
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordStartApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResult
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
+import com.microsoft.identity.common.nativeauth.ApiConstants
 import com.microsoft.identity.common.nativeauth.MockApiEndpoint
 import com.microsoft.identity.common.nativeauth.MockApiResponseType
 import com.microsoft.identity.common.nativeauth.MockApiUtils.Companion.configureMockApi
-import com.microsoft.identity.common.nativeauth.utils.ApiConstants
-import com.microsoft.identity.common.nativeauth.utils.ApiConstants.Companion.signInChallengeRequestUrl
-import com.microsoft.identity.common.nativeauth.utils.ApiConstants.Companion.signInInitiateRequestUrl
-import com.microsoft.identity.common.nativeauth.utils.ApiConstants.Companion.signInTokenRequestUrl
-import com.microsoft.identity.common.nativeauth.utils.ApiConstants.Companion.signUpChallengeRequestUrl
-import com.microsoft.identity.common.nativeauth.utils.ApiConstants.Companion.signUpContinueRequestUrl
-import com.microsoft.identity.common.nativeauth.utils.ApiConstants.Companion.signUpStartRequestUrl
-import com.microsoft.identity.common.nativeauth.utils.ApiConstants.Companion.ssprChallengeRequestUrl
-import com.microsoft.identity.common.nativeauth.utils.ApiConstants.Companion.ssprContinueRequestUrl
-import com.microsoft.identity.common.nativeauth.utils.ApiConstants.Companion.ssprStartRequestUrl
-import com.microsoft.identity.common.nativeauth.utils.ApiConstants.Companion.ssprSubmitRequestUrl
-import com.microsoft.identity.common.nativeauth.utils.ApiConstants.Companion.ssprPollCompletionRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signInChallengeRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signInInitiateRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signInTokenRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signUpChallengeRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signUpContinueRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signUpStartRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprChallengeRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprContinueRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprStartRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprSubmitRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprPollCompletionRequestUrl
 
 import io.mockk.every
 import io.mockk.mockk
@@ -76,7 +76,7 @@ import java.util.UUID
 /**
  * These are integration tests using real API responses instead of mocked API responses. This class
  * covers all sign up endpoints.
- * These tests run on the mock API, see: https://native-ux-mock-api.azurewebsites.net/
+ * These tests run on the mock API, see: https://native-auth-mock-api-private-preview.azurewebsites.net/
  */
 
 
@@ -86,7 +86,6 @@ import java.util.UUID
 @PowerMockIgnore("javax.net.ssl.*")
 @PrepareForTest(DiagnosticContext::class)
 @Config(sdk = [Build.VERSION_CODES.O_MR1])
-@Ignore
 class ResetPasswordOAuth2StrategyTest {
     private val username = "user@email.com"
     private val password = "verySafePassword".toCharArray()
