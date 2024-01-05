@@ -137,8 +137,8 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     public boolean isValidCallingApp(@NonNull String redirectUri, @NonNull String packageName) {
         final String methodTag = TAG + ":isValidCallingApp";
 
-        if (BuildConfig.bypassRedirectUriCheck) {
-            Logger.warn(methodTag, "Bypassing RedirectUri Check. This should not be enabled in PROD.");
+        if (BuildConfig.bypassRedirectUriCheck || isValidHubRedirectURIForNAATests(redirectUri)) {
+            Logger.warn(methodTag, "Bypassing RedirectUri Check. This should not be enabled in PROD. "+ redirectUri);
             return true;
         }
 
@@ -266,5 +266,13 @@ public class AndroidPlatformUtil implements IPlatformUtil {
             //Normally all tasks have an affinity unless configured explicitly for multi-window support to not have one
             return true;
         }
+    }
+
+    private boolean isValidHubRedirectURIForNAATests(String redirectUri) {
+        // The only allow-listed hub app on ESTS is Teams app. We cannot use our test app's clientId/redirecrURI for testing NAA scenarios
+        // Below redirectURI is being used in our automation tests and also by OneAuth tests for NAA
+        return BuildConfig.DEBUG && (redirectUri.equals("msauth://com.microsoft.teams/VCpKgbYCXucoq1mZ4BZPsh5taNE=")
+                || redirectUri.equals("msauth://com.microsoft.teams/fcg80qvoM1YMKJZibjBwQcDfOno=")
+                || redirectUri.equals("https://login.microsoftonline.com/common/oauth2/nativeclient"));
     }
 }
