@@ -49,6 +49,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpContinueApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResult
+import com.microsoft.identity.common.nativeauth.ApiConstants
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert
@@ -62,7 +63,7 @@ import java.net.URL
 
 class NativeAuthResponseHandlerTest {
     private val clientId = "1234"
-    private val requestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/start")
+    private val requestUrl =  ApiConstants.signUpStartRequestUrl
     private val challengeType = "oob password redirect"
     private val oobChallengeType = "oob"
     private val passwordChallengeType = "password"

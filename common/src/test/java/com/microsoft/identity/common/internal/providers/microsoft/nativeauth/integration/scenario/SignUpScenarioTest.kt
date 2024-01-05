@@ -51,7 +51,6 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import java.util.UUID
 
-@Ignore
 class SignUpScenarioTest {
     private val username = "user@email.com"
     private val email = "user@email.com"
