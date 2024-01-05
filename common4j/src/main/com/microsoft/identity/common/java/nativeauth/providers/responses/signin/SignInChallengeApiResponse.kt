@@ -39,19 +39,19 @@ import java.net.HttpURLConnection
  */
 data class SignInChallengeApiResponse(
     @Expose override var statusCode: Int,
-    @Expose @SerializedName("credential_token") val credentialToken: String?,
+    @SerializedName("credential_token") val credentialToken: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
     @Expose @SerializedName("binding_method") val bindingMethod: String?,
     @SerializedName("challenge_target_label") val challengeTargetLabel: String?,
     @Expose @SerializedName("challenge_channel") val challengeChannel: String?,
     @Expose @SerializedName("code_length") val codeLength: Int?,
     @Expose @SerializedName("interval") val interval: Int?,
-    @Expose @SerializedName("error") val error: String?,
-    @Expose @SerializedName("details") val details: List<Map<String, String>>?,
-    @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
-    @Expose @SerializedName("error_description") val errorDescription: String?,
-    @Expose @SerializedName("error_uri") val errorUri: String?,
-    @Expose @SerializedName("inner_errors") val innerErrors: List<InnerError>?,
+    @SerializedName("error") val error: String?,
+    @SerializedName("details") val details: List<Map<String, String>>?,
+    @SerializedName("error_codes") val errorCodes: List<Int>?,
+    @SerializedName("error_description") val errorDescription: String?,
+    @SerializedName("error_uri") val errorUri: String?,
+    @SerializedName("inner_errors") val innerErrors: List<InnerError>?,
 ): IApiResponse(statusCode) {
 
     companion object {
