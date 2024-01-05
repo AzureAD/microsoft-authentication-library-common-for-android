@@ -61,8 +61,8 @@ class AuthFidoChallengeHandler (
             OTelUtility.createSpan(SpanName.Fido.name)
         }
         span.setAttribute(
-            AttributeName.fido_challenge.name,
-            fidoChallenge::class.simpleName.toString()
+            AttributeName.fido_challenge_handler.name,
+            TAG
         );
         // First verify submitUrl and context. Without these two, we can't respond back to the server.
         // If either one of these are missing or malformed, throw an exception and let the main WebViewClient handle it.

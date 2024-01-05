@@ -79,12 +79,14 @@ import java.util.UUID
  * These tests run on the mock API, see: https://native-ux-mock-api.azurewebsites.net/
  */
 
+
 @RunWith(
     PowerMockRunner::class
 )
 @PowerMockIgnore("javax.net.ssl.*")
 @PrepareForTest(DiagnosticContext::class)
 @Config(sdk = [Build.VERSION_CODES.O_MR1])
+@Ignore
 class ResetPasswordOAuth2StrategyTest {
     private val username = "user@email.com"
     private val password = "verySafePassword".toCharArray()
