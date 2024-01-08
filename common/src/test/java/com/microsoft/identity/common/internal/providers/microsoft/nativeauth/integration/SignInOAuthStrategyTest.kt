@@ -50,6 +50,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
@@ -64,7 +65,7 @@ import java.util.UUID
 /**
  * These are integration tests using real API responses instead of mocked API responses. This class
  * covers all sign up endpoints.
- * These tests run on the mock API, see: https://native-ux-mock-api.azurewebsites.net/
+ * These tests run on the mock API, see: https://native-auth-mock-api-private-preview.azurewebsites.net/
  */
 @RunWith(
     RobolectricTestRunner::class

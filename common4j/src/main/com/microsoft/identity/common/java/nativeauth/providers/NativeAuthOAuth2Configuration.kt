@@ -50,8 +50,8 @@ class NativeAuthOAuth2Configuration(
 
     companion object {
         //Base url for the mock API to make Native Auth calls. See the swagger at
-        // https://native-ux-mock-api.azurewebsites.net/doc#/ for all possible urls
-        private const val MOCK_API_URL_WITH_NATIVE_AUTH_TENANT = "https://native-ux-mock-api.azurewebsites.net/lumonconvergedps.onmicrosoft.com"
+        // https://native-auth-mock-api-private-preview.azurewebsites.net/doc#/ for all possible urls
+        private const val MOCK_API_URL_WITH_NATIVE_AUTH_TENANT = "https://native-auth-mock-api-private-preview.azurewebsites.net/lumonconvergedps.onmicrosoft.com"
 
         private const val SIGNUP_START_ENDPOINT_SUFFIX = "/signup/v1.0/start"
         private const val SIGNUP_CHALLENGE_ENDPOINT_SUFFIX = "/signup/v1.0/challenge"
