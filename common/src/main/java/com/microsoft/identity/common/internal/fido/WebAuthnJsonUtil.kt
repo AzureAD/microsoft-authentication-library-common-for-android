@@ -22,10 +22,13 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
+import android.util.Base64
 import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter
 import com.microsoft.identity.common.java.constants.FidoConstants
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_RESPONSE_ID_JSON_KEY
 import org.json.JSONObject
+import java.net.URLEncoder
+
 
 /**
  * A utility class to help convert to and from strings in WebAuthn json format.
@@ -76,7 +79,30 @@ class WebAuthnJsonUtil {
             if (!authResponseJsonObject.has(WEBAUTHN_RESPONSE_ID_JSON_KEY)) {
                 authResponseJsonObject = authResponseJsonObject.put(WEBAUTHN_RESPONSE_ID_JSON_KEY, fullResponseJsonObject.get(WEBAUTHN_RESPONSE_ID_JSON_KEY))
             }
+/*            result.put(WEBAUTHN_RESPONSE_ID_JSON_KEY, fullResponseJsonObject.get(WEBAUTHN_RESPONSE_ID_JSON_KEY))
+            authResponseJsonObject.get("clientDataJSON").let {
+                result.put("clientDataJSON", convertToBase64UrlString(it as String))
+            }
+            authResponseJsonObject.get("authenticatorData").let {
+                result.put("authenticatorData", convertToBase64UrlString(it as String))
+            }
+            authResponseJsonObject.get("signature").let {
+                result.put("signature", convertToBase64UrlString(it as String))
+            }
+            authResponseJsonObject.get("userHandle").let {
+                result.put("userHandle", convertToBase64UrlString(it as String))
+            }*/
             return authResponseJsonObject.toString()
         }
     }
+
+    /*
+            fun convertToBase64UrlString(str : String) : String {
+            //val data: ByteArray = str.toByteArray(Charsets.UTF_8)
+            //val base64: String = Base64.encodeToString(data, (Base64.URL_SAFE or Base64.NO_WRAP))
+            //return base64.replace("=", "")
+            val base64 = str
+            return base64.replace("=", "").replace("+", "-").replace("/", "_")
+        }
+     */
 }
