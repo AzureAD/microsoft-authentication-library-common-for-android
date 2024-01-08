@@ -39,14 +39,14 @@ import java.net.HttpURLConnection
  */
 data class SignInInitiateApiResponse(
     @Expose override var statusCode: Int,
-    @Expose @SerializedName("credential_token") val credentialToken: String?,
+    @SerializedName("credential_token") val credentialToken: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
-    @Expose @SerializedName("error") val error: String?,
-    @Expose @SerializedName("error_description") val errorDescription: String?,
-    @Expose @SerializedName("error_uri") val errorUri: String?,
-    @Expose @SerializedName("details") val details: List<Map<String, String>>?,
-    @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
-    @Expose @SerializedName("inner_errors") val innerErrors: List<InnerError>?,
+    @SerializedName("error") val error: String?,
+    @SerializedName("error_description") val errorDescription: String?,
+    @SerializedName("error_uri") val errorUri: String?,
+    @SerializedName("details") val details: List<Map<String, String>>?,
+    @SerializedName("error_codes") val errorCodes: List<Int>?,
+    @SerializedName("inner_errors") val innerErrors: List<InnerError>?,
 ): IApiResponse(statusCode) {
 
     companion object {
