@@ -39,7 +39,7 @@ import java.net.HttpURLConnection
  */
 data class SignInChallengeApiResponse(
     @Expose override var statusCode: Int,
-    @Expose @SerializedName("continuation_token") val continuationToken: String?,
+    @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
     @Expose @SerializedName("binding_method") val bindingMethod: String?,
     @SerializedName("challenge_target_label") val challengeTargetLabel: String?,

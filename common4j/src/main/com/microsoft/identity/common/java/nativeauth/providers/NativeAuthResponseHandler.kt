@@ -234,8 +234,7 @@ class NativeAuthResponseHandler {
                 null,
                 EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 null,
-                )
-
+            )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
                 response.body,
