@@ -49,7 +49,6 @@ data class SignUpChallengeApiResponse(
     @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
-    @Expose @SerializedName("code_length") val codeLength: Int?
 ) : IApiResponse(statusCode) {
 
     companion object {

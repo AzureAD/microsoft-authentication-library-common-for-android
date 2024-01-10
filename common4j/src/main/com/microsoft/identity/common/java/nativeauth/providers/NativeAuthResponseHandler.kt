@@ -74,11 +74,11 @@ class NativeAuthResponseHandler {
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 errorCodes = null,
-                details = null,
-                signupToken = null,
+                continuationToken = null,
                 unverifiedAttributes = null,
                 invalidAttributes = null,
-                challengeType = null
+                challengeType = null,
+                subError = null
             )
         }
         else {
@@ -112,8 +112,7 @@ class NativeAuthResponseHandler {
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
-                details = null,
-                signupToken = null,
+                continuationToken = null,
                 challengeType = null,
                 challengeTargetLabel = null,
                 codeLength = null,
@@ -153,13 +152,12 @@ class NativeAuthResponseHandler {
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 errorCodes = null,
-                details = null,
-                signInSLT = null,
-                signupToken = null,
+                continuationToken = null,
                 invalidAttributes = null,
                 unverifiedAttributes = null,
                 requiredAttributes = null,
-                expiresIn = null
+                expiresIn = null,
+                subError = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -193,8 +191,7 @@ class NativeAuthResponseHandler {
                 errorUri = null,
                 details = null,
                 errorCodes = null,
-                innerErrors = null,
-                credentialToken = null,
+                continuationToken = null,
                 challengeType = null,
             )
         }  else {
@@ -230,8 +227,7 @@ class NativeAuthResponseHandler {
                 details = null,
                 errorCodes = null,
                 errorUri = null,
-                innerErrors = null,
-                credentialToken = null,
+                continuationToken = null,
                 challengeType = null,
                 bindingMethod = null,
                 challengeTargetLabel = null,
@@ -274,9 +270,10 @@ class NativeAuthResponseHandler {
                     error = null,
                     errorDescription = null,
                     errorUri = null,
-                    details = null,
                     errorCodes = null,
-                    innerErrors = null
+                    subError = null,
+                    clientInfo = null,
+                    continuationToken = null
                 )
             } else {
                 ObjectMapper.deserializeJsonStringToObject(
@@ -319,9 +316,7 @@ class NativeAuthResponseHandler {
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 errorUri = null,
-                details = null,
-                innerErrors = null,
-                passwordResetToken = null,
+                continuationToken = null,
                 challengeType = null,
             )
         } else {
@@ -354,10 +349,8 @@ class NativeAuthResponseHandler {
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
-                details = null,
                 errorUri = null,
-                innerErrors = null,
-                passwordResetToken = null,
+                continuationToken = null,
                 challengeType = null,
                 bindingMethod = null,
                 challengeTargetLabel = null,
@@ -396,11 +389,10 @@ class NativeAuthResponseHandler {
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription =  EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 errorUri = null,
-                details = null,
-                innerErrors = null,
-                passwordSubmitToken = null,
+                continuationToken = null,
                 challengeType = null,
                 expiresIn = null,
+                subError = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -432,10 +424,9 @@ class NativeAuthResponseHandler {
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 errorUri = null,
-                details = null,
-                innerErrors = null,
-                passwordResetToken = null,
+                continuationToken = null,
                 pollInterval = null,
+                subError = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -468,10 +459,9 @@ class NativeAuthResponseHandler {
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 errorUri = null,
-                details = null,
-                innerErrors = null,
                 status = null,
-                signinSlt = null,
+                continuationToken = null,
+                subError = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(

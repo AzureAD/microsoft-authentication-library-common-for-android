@@ -1875,7 +1875,6 @@ class NativeAuthResponseHandlerTest {
             statusCode = successStatusCode,
             status = succeededStatus,
             continuationToken = null,
-            expiresIn = null,
             error = null,
             errorDescription = null,
             errorUri = null,
@@ -1892,7 +1891,6 @@ class NativeAuthResponseHandlerTest {
             statusCode = successStatusCode,
             status = inProgressStatus,
             continuationToken = null,
-            expiresIn = null,
             error = null,
             errorDescription = null,
             errorUri = null,
@@ -1909,7 +1907,6 @@ class NativeAuthResponseHandlerTest {
             statusCode = successStatusCode,
             status = failedStatus,
             continuationToken = null,
-            expiresIn = null,
             error = null,
             errorDescription = null,
             errorUri = null,
@@ -1930,7 +1927,6 @@ class NativeAuthResponseHandlerTest {
             subError = passwordBannedError,
             status = null,
             continuationToken = null,
-            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1947,7 +1943,6 @@ class NativeAuthResponseHandlerTest {
             subError = passwordTooShortError,
             status = null,
             continuationToken = null,
-            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1964,7 +1959,6 @@ class NativeAuthResponseHandlerTest {
             subError = passwordTooLongError,
             status = null,
             continuationToken = null,
-            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1981,7 +1975,6 @@ class NativeAuthResponseHandlerTest {
             subError = passwordRecentlyUsedError,
             status = null,
             continuationToken = null,
-            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1998,7 +1991,6 @@ class NativeAuthResponseHandlerTest {
             subError = passwordTooWeakError,
             status = null,
             continuationToken = null,
-            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2015,7 +2007,6 @@ class NativeAuthResponseHandlerTest {
             subError = null,
             status = null,
             continuationToken = null,
-            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2032,7 +2023,6 @@ class NativeAuthResponseHandlerTest {
             subError = null,
             status = null,
             continuationToken = null,
-            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2045,7 +2035,6 @@ class NativeAuthResponseHandlerTest {
             statusCode = successStatusCode,
             status = null,
             continuationToken = null,
-            expiresIn = null,
             error = null,
             errorDescription = null,
             errorUri = null,
@@ -2062,7 +2051,6 @@ class NativeAuthResponseHandlerTest {
             statusCode = uncommonErrorStatusCode,
             status = null,
             continuationToken = null,
-            expiresIn = null,
             error = null,
             errorDescription = null,
             errorUri = null,
@@ -2473,14 +2461,7 @@ class NativeAuthResponseHandlerTest {
             errorCodes = null,
             errorDescription = tenantMisconfiguration,
             errorUri = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
             clientInfo = null,
-            idToken = null,
             subError = null
         )
 
@@ -2499,13 +2480,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
             subError = null,
             clientInfo = null
         )
@@ -2523,13 +2497,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
             subError = null,
             clientInfo = null
         )
@@ -2547,13 +2514,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(userNotFoundErrorCode),
             errorDescription = userDoesNotExistErrorDescription,
             errorUri = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
             subError = null,
             clientInfo = null
         )
@@ -2573,13 +2533,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(incorrectPasswordErrorCode),
             errorDescription = incorrectPasswordDescription,
             errorUri = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
             clientInfo = null,
             subError = null
         )
@@ -2599,13 +2552,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(incorrectOOBErrorCode1),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
             clientInfo = null,
             subError = invalidOOBValueError
         )
@@ -2626,13 +2572,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(incorrectOOBErrorCode2),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
             clientInfo = null,
             subError = invalidOOBValueError
         )
@@ -2653,13 +2592,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(incorrectOOBErrorCode3),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
             clientInfo = null,
             subError = invalidOOBValueError
         )
@@ -2680,13 +2612,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(invalidAuthenticationTypeErrorCode),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
             subError = null,
             clientInfo = null
         )
@@ -2706,13 +2631,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(randomErrorCode, incorrectOOBErrorCode1, incorrectOOBErrorCode2, incorrectOOBErrorCode2),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
             clientInfo = null,
             subError = null
         )
@@ -2745,13 +2663,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(unknownErrorCode),
             errorDescription = unknownErrorDescription,
             errorUri = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
             clientInfo = null,
             subError = null
         )
@@ -2771,13 +2682,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = null,
             errorDescription = unknownErrorDescription,
             errorUri = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
             subError = null,
             clientInfo = null
         )
@@ -2795,13 +2699,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(mfaRequiredErrorCode),
             errorDescription = mfaRequiredTokenErrorDescription,
             errorUri = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
             subError = null,
             clientInfo = null
         )
@@ -2822,13 +2719,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
             clientInfo = null,
             subError = null
         )
