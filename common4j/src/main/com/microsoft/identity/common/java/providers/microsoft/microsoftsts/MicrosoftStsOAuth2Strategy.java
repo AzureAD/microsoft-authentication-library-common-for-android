@@ -597,10 +597,7 @@ public class MicrosoftStsOAuth2Strategy
             }
             tokenErrorResponse.setResponseBody(response.getBody());
         } else {
-            tokenResponse = ObjectMapper.deserializeJsonStringToObject(
-                    getBodyFromSuccessfulResponse(response.getBody()),
-                    MicrosoftStsTokenResponse.class
-            );
+            tokenResponse = parseTokenResponse(response.getBody());
         }
 
         final TokenResult result = new TokenResult(tokenResponse, tokenErrorResponse);
@@ -663,8 +660,17 @@ public class MicrosoftStsOAuth2Strategy
         return result;
     }
 
-    protected String getBodyFromSuccessfulResponse(@NonNull final String responseBody) throws ClientException {
-        return responseBody;
+    /**
+     * Parses raw response body string from successful server response.
+     * @param responseBody Raw response body from successful server response for Token Request.
+     *
+     * @return {link @MicrosoftTokenResponse} object.
+     */
+    protected MicrosoftStsTokenResponse parseTokenResponse(@NonNull final String responseBody) throws ClientException {
+        return ObjectMapper.deserializeJsonStringToObject(
+                responseBody,
+                MicrosoftStsTokenResponse.class
+        );
     }
 
     protected String getBodyFromUnsuccessfulResponse(@NonNull final String responseBody) throws ClientException {

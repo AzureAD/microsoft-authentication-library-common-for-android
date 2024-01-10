@@ -46,13 +46,12 @@ public interface IAcquireMicrosoftStsTokenStrategy<T extends TokenCommandParamet
     MicrosoftStsTokenRequest createTokenRequest(@NonNull final T parameters) throws BaseException;
 
     /**
-     * Processes and decrypts (if encrypted) the response body returned from server to
-     * {@link com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse}
-     * JSON response format string.
+     * Processes the response body string and returns {@link MicrosoftStsTokenResponse} object
+     * @param responseBody Raw response body from successful server response for Token Request.
      *
-     * @return response in MicrosoftTokenResponse JSON response format string.
+     * @return {link @MicrosoftTokenResponse} object.
      */
     @NonNull
-    String processResponseBody(@NonNull final String responseBody) throws ClientException;
+    MicrosoftStsTokenResponse parseTokenResponse(@NonNull final String responseBody) throws ClientException;
 }
 
