@@ -101,6 +101,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl) {
         super(activity, completionCallback, pageLoadedCallback);
+        Logger.info(TAG, "in constructor of AzureActiveDirectoryWebViewClient "+ redirectUrl);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
     }
@@ -117,6 +118,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @SuppressWarnings(WarningType.deprecation_warning)
     @Override
     public boolean shouldOverrideUrlLoading(final WebView view, final String url) {
+        Logger.info(TAG, "in shouldOverrideUrlLoading method "+ url);
         if (StringUtil.isNullOrEmpty(url)) {
             throw new IllegalArgumentException("Redirect to empty url in web view.");
         }
@@ -136,6 +138,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @RequiresApi(Build.VERSION_CODES.N)
     public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
         final Uri requestUrl = request.getUrl();
+        Logger.info(TAG, "in shouldOverrideUrlLoading method "+ requestUrl.toString());
+        if (requestUrl.getPath() != null)
+            Logger.info(TAG, "in shouldOverrideUrlLoading method path " +  requestUrl.getPath());
         return handleUrl(view, requestUrl.toString());
     }
 
@@ -161,7 +166,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean handleUrl(final WebView view, final String url) {
         final String methodTag = TAG + ":handleUrl";
         final String formattedURL = url.toLowerCase(Locale.US);
-
+        Logger.info(methodTag, "in handleUrl method "+ formattedURL);
         try {
             if (isPkeyAuthUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for pkeyauth challenge.");
@@ -217,6 +222,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 return false;
             }
         } catch (final ClientException exception) {
+            Logger.info(methodTag, "something is up with loadurl" + exception.getMessage());
             Logger.error(methodTag,exception.getErrorCode(), null);
             Logger.errorPII(methodTag,exception.getMessage(), exception);
             returnError(exception.getErrorCode(), exception.getMessage());

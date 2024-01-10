@@ -164,6 +164,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         if (!mAuthResultSent && !StringExtensions.isNullOrBlank(javascriptToExecute[0])) {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                                 mWebView.evaluateJavascript(javascriptToExecute[0], null);
+                                Logger.info(methodTag, "on page loaded");
                             } else {
                                 // On earlier versions of Android, javascript has to be loaded with a custom scheme.
                                 // In these cases, Android will helpfully unescape any octects it finds. Unfortunately,
@@ -239,7 +240,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             @Override
             public void run() {
                 Logger.info(methodTag, "Launching embedded WebView for acquiring auth code.");
-                Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
+                Logger.info(methodTag, "The start url is " + mAuthorizationRequestUrl);
 
                 mAADWebViewClient.setRequestHeaders(mRequestHeaders);
                 mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
@@ -263,6 +264,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         } else {
             Logger.error(methodTag, "Fragment destroyed, but smartcard usb discovery was unable to be stopped.", null);
         }
+        Logger.info(methodTag, "OnDestroy method called!");
     }
 
     /**
