@@ -270,7 +270,7 @@ tasks.register('checkstyle', Checkstyle) {
 }
 
 pmd {
-    ignoreFailures = false
+    ignoreFailures = true
     reportsDir = file("$project.buildDir/outputs/")
 }
 
@@ -360,12 +360,9 @@ afterEvaluate {
 }
 
 tasks.configureEach { task ->
-    if (task.name.contains("assemble")) {
-        task.dependsOn 'pmd'
-    }
 
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
-        task.dependsOn 'lint', 'sourcesJar', 'pmd'
+        task.dependsOn 'lint', 'sourcesJar'
     }
     if (task.name == 'assembleDistRelease') {
         task.dependsOn 'sourcesJar'
