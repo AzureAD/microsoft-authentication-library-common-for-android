@@ -109,7 +109,7 @@ interface SignUpCommandResult {
     data class InvalidPassword(
         val error: String,
         val errorDescription: String,
-        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
+        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId, //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
         val subError: String
     ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult
 
@@ -120,7 +120,7 @@ interface SignUpCommandResult {
     data class InvalidCode(
         val error: String,
         val errorDescription: String,
-        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
+        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId, //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
         val subError: String
     ) : SignUpSubmitCodeCommandResult
 
