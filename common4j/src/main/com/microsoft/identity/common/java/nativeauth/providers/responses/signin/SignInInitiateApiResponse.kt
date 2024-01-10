@@ -63,25 +63,7 @@ data class SignInInitiateApiResponse(
 
             // Handle 400 errors
             HttpURLConnection.HTTP_BAD_REQUEST -> {
-                if (error.isInvalidGrant()) {
-                    return when {
-                        errorCodes.isNullOrEmpty() -> {
-                            SignInInitiateApiResult.UnknownError(
-                                error = error.orEmpty(),
-                                errorDescription = errorDescription.orEmpty(),
-                                errorCodes = errorCodes.orEmpty()
-                            )
-                        }
-                        else -> {
-                            SignInInitiateApiResult.UnknownError(
-                                error = error.orEmpty(),
-                                errorDescription = errorDescription.orEmpty(),
-                                errorCodes = errorCodes
-                            )
-                        }
-                    }
-                }
-                else if (error.isUserNotFound()) {
+                if (error.isUserNotFound()) {
                     SignInInitiateApiResult.UserNotFound(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
