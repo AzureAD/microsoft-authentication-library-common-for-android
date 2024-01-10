@@ -49,6 +49,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpContinueApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResult
+import com.microsoft.identity.common.nativeauth.ApiConstants
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert
@@ -62,7 +63,7 @@ import java.net.URL
 
 class NativeAuthResponseHandlerTest {
     private val clientId = "1234"
-    private val requestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/start")
+    private val requestUrl =  ApiConstants.signUpStartRequestUrl
     private val challengeType = "oob password redirect"
     private val oobChallengeType = "oob"
     private val passwordChallengeType = "password"
@@ -2588,20 +2589,11 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseInvalidGrantMissingErrorCodes() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
-            credentialToken = null,
             error = invalidGrantError,
             errorCodes = null,
             errorDescription = tenantMisconfiguration,
             errorUri = null,
             innerErrors = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            clientInfo = null,
-            idToken = null,
             details = null
         )
 
@@ -2615,21 +2607,12 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseUnknownErrorWithUnauthorizedClientError() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
-            credentialToken = null,
             error = unauthorizedClientError,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
             innerErrors = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
             details = null,
-            clientInfo = null
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2640,21 +2623,12 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseUnknownErrorWithInvalidClientError() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
-            credentialToken = null,
             error = invalidClientError,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
             innerErrors = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
             details = null,
-            clientInfo = null
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2665,21 +2639,12 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseUserNotFound() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
-            credentialToken = null,
             error = invalidGrantError,
             errorCodes = listOf(userNotFoundErrorCode),
             errorDescription = userDoesNotExistErrorDescription,
             errorUri = null,
             innerErrors = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
             details = null,
-            clientInfo = null
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2692,20 +2657,11 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseInvalidCredentials() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
-            credentialToken = null,
             error = invalidGrantError,
             errorCodes = listOf(incorrectPasswordErrorCode),
             errorDescription = incorrectPasswordDescription,
             errorUri = null,
             innerErrors = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
-            clientInfo = null,
             details = null
         )
 
@@ -2719,20 +2675,11 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseOtpCodeIncorrectWithInvalidGrantErrorCode1() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
-            credentialToken = null,
             error = invalidGrantError,
             errorCodes = listOf(incorrectOOBErrorCode1),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
             innerErrors = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
-            clientInfo = null,
             details = null
         )
 
@@ -2746,20 +2693,11 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseOtpCodeIncorrectWithInvalidRequestErrorCode1() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
-            credentialToken = null,
             error = invalidRequestError,
             errorCodes = listOf(incorrectOOBErrorCode1),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
             innerErrors = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
-            clientInfo = null,
             details = null
         )
 
@@ -2773,20 +2711,11 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseOtpCodeIncorrectWithInvalidGrantErrorCode2() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
-            credentialToken = null,
             error = invalidGrantError,
             errorCodes = listOf(incorrectOOBErrorCode2),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
             innerErrors = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
-            clientInfo = null,
             details = null
         )
 
@@ -2800,20 +2729,11 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseOtpCodeIncorrectWithInvalidRequestErrorCode2() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
-            credentialToken = null,
             error = invalidRequestError,
             errorCodes = listOf(incorrectOOBErrorCode2),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
             innerErrors = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
-            clientInfo = null,
             details = null
         )
 
@@ -2827,20 +2747,11 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseOtpCodeIncorrectWithInvalidGrantErrorCode3() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
-            credentialToken = null,
             error = invalidGrantError,
             errorCodes = listOf(incorrectOOBErrorCode3),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
             innerErrors = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
-            clientInfo = null,
             details = null
         )
 
@@ -2854,20 +2765,11 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseOtpCodeIncorrectWithInvalidRequestErrorCode3() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
-            credentialToken = null,
             error = invalidRequestError,
             errorCodes = listOf(incorrectOOBErrorCode3),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
             innerErrors = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
-            clientInfo = null,
             details = null
         )
 
@@ -2881,21 +2783,12 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseInvalidAuthenticationType() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
-            credentialToken = null,
             error = invalidGrantError,
             errorCodes = listOf(invalidAuthenticationTypeErrorCode),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
             innerErrors = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
             details = null,
-            clientInfo = null
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2908,20 +2801,11 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseMultipleErrorCodes() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
-            credentialToken = null,
             error = invalidGrantError,
             errorCodes = listOf(randomErrorCode, incorrectOOBErrorCode1, incorrectOOBErrorCode2, incorrectOOBErrorCode2),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
             innerErrors = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
-            clientInfo = null,
             details = null
         )
 
@@ -2948,20 +2832,11 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseWithUnknownError() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
-            credentialToken = null,
             error = unknownError,
             errorCodes = listOf(unknownErrorCode),
             errorDescription = unknownErrorDescription,
             errorUri = null,
             innerErrors = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
-            clientInfo = null,
             details = null
         )
 
@@ -2975,21 +2850,12 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseCredentialRequiredExplicitError() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = uncommonErrorStatusCode,
-            credentialToken = null,
             error = credentialRequiredError,
             errorCodes = null,
             errorDescription = unknownErrorDescription,
             errorUri = null,
             innerErrors = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
             details = null,
-            clientInfo = null
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -3000,21 +2866,12 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseMFARequired() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
-            credentialToken = null,
             error = invalidGrantError,
             errorCodes = listOf(mfaRequiredErrorCode),
             errorDescription = mfaRequiredTokenErrorDescription,
             errorUri = null,
             innerErrors = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
             details = null,
-            clientInfo = null
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -3028,20 +2885,11 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseUnknownError() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = uncommonErrorStatusCode,
-            credentialToken = null,
             error = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
             innerErrors = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null,
-            clientInfo = null,
             details = null
         )
 

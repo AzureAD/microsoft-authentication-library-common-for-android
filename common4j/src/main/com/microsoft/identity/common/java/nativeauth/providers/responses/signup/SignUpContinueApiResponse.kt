@@ -52,14 +52,14 @@ import java.net.HttpURLConnection
 data class SignUpContinueApiResponse(
     @Expose override var statusCode: Int,
     @SerializedName("signin_slt") val signInSLT: String?,
-    @Expose @SerializedName("expires_in") val expiresIn: Int?,
-    @Expose @SerializedName("error") val error: String?,
-    @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
-    @Expose @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("signup_token") val signupToken: String?,
     @Expose @SerializedName("unverified_attributes") val unverifiedAttributes: List<Map<String, String>>?,
-    @Expose @SerializedName("invalid_attributes") val invalidAttributes: List<Map<String, String>>?,
+    @SerializedName("invalid_attributes") val invalidAttributes: List<Map<String, String>>?,
     @Expose @SerializedName("required_attributes") val requiredAttributes: List<UserAttributeApiResult>?,
+    @SerializedName("expires_in") val expiresIn: Int?,
+    @SerializedName("error") val error: String?,
+    @SerializedName("error_codes") val errorCodes: List<Int>?,
+    @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("details") val details: List<Map<String, String>>?
 ) : IApiResponse(statusCode) {
 

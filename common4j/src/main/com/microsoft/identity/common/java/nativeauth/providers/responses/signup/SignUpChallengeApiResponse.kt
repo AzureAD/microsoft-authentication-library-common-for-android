@@ -40,16 +40,16 @@ import java.net.HttpURLConnection
  */
 data class SignUpChallengeApiResponse(
     @Expose override var statusCode: Int,
+    @SerializedName("signup_token") val signupToken: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
+    @SerializedName("challenge_target_label") val challengeTargetLabel: String?,
+    @Expose @SerializedName("code_length") val codeLength: Int?,
     @Expose @SerializedName("binding_method") val bindingMethod: String?,
     @Expose @SerializedName("interval") val interval: Int?,
-    @SerializedName("challenge_target_label") val challengeTargetLabel: String?,
     @Expose @SerializedName("challenge_channel") val challengeChannel: String?,
-    @SerializedName("signup_token") val signupToken: String?,
-    @Expose @SerializedName("error") val error: String?,
-    @Expose @SerializedName("error_description") val errorDescription: String?,
+    @SerializedName("error") val error: String?,
+    @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("details") val details: List<Map<String, String>>?,
-    @Expose @SerializedName("code_length") val codeLength: Int?
 ) : IApiResponse(statusCode) {
 
     companion object {
