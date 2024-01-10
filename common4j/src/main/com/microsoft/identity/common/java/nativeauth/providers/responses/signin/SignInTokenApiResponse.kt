@@ -43,13 +43,6 @@ import com.microsoft.identity.common.java.nativeauth.util.isUserNotFound
  */
 data class SignInTokenApiResponse(
     @Expose override var statusCode: Int,
-    @Expose @SerializedName("token_type") val tokenType: String?,
-    @Expose @SerializedName("scope") val scope: String?,
-    @Expose @SerializedName("expires_in") val expiresIn: Long?,
-    @Expose @SerializedName("ext_expires_in") val extExpiresIn: Long?,
-    @SerializedName("access_token") val accessToken: String?,
-    @SerializedName("refresh_token") val refreshToken: String?,
-    @SerializedName("id_token") val idToken: String?,
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
     @Expose @SerializedName("error_uri") val errorUri: String?,

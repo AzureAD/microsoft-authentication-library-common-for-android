@@ -47,6 +47,7 @@ import com.microsoft.identity.common.nativeauth.MockApiResponseType
 import com.microsoft.identity.common.nativeauth.MockApiUtils.Companion.configureMockApi
 import junit.framework.TestCase.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
@@ -60,7 +61,7 @@ import java.util.UUID
 /**
  * These are integration tests using real API responses instead of mocked API responses. This class
  * covers all sign up endpoints.
- * These tests run on the mock API, see: https://native-ux-mock-api.azurewebsites.net/ TODO: update mock api url
+ * These tests run on the mock API, see: https://native-auth-mock-api-private-preview.azurewebsites.net/
  */
 
 @RunWith(

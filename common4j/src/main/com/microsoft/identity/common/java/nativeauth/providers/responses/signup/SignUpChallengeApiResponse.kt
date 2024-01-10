@@ -41,9 +41,10 @@ import java.net.HttpURLConnection
 data class SignUpChallengeApiResponse(
     @Expose override var statusCode: Int,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
+    @SerializedName("challenge_target_label") val challengeTargetLabel: String?,
+    @Expose @SerializedName("code_length") val codeLength: Int?,
     @Expose @SerializedName("binding_method") val bindingMethod: String?,
     @Expose @SerializedName("interval") val interval: Int?,
-    @SerializedName("challenge_target_label") val challengeTargetLabel: String?,
     @Expose @SerializedName("challenge_channel") val challengeChannel: String?,
     @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("error") val error: String?,

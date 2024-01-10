@@ -51,14 +51,14 @@ import java.net.HttpURLConnection
  */
 data class SignUpStartApiResponse(
     @Expose override var statusCode: Int,
-    @Expose @SerializedName("error") val error: String?,
-    @Expose @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("unverified_attributes") val unverifiedAttributes: List<Map<String, String>>?,
-    @Expose @SerializedName("invalid_attributes") val invalidAttributes: List<Map<String, String>>?,
+    @SerializedName("invalid_attributes") val invalidAttributes: List<Map<String, String>>?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
-    @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
-    @Expose @SerializedName("suberror") val subError: String?
+    @SerializedName("error") val error: String?,
+    @SerializedName("error_codes") val errorCodes: List<Int>?,
+    @SerializedName("error_description") val errorDescription: String?,
+    @SerializedName("suberror") val subError: String?
 ) : IApiResponse(statusCode) {
 
     companion object {
