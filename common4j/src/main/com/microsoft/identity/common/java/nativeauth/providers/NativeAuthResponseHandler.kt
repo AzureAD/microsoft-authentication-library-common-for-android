@@ -189,7 +189,6 @@ class NativeAuthResponseHandler {
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 errorUri = null,
-                details = null,
                 errorCodes = null,
                 continuationToken = null,
                 challengeType = null,
@@ -224,7 +223,6 @@ class NativeAuthResponseHandler {
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
-                details = null,
                 errorCodes = null,
                 errorUri = null,
                 continuationToken = null,
@@ -272,7 +270,6 @@ class NativeAuthResponseHandler {
                     errorUri = null,
                     errorCodes = null,
                     subError = null,
-                    clientInfo = null,
                     continuationToken = null
                 )
             } else {

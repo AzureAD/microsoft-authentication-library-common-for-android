@@ -47,8 +47,8 @@ data class SignUpChallengeApiResponse(
     @Expose @SerializedName("interval") val interval: Int?,
     @Expose @SerializedName("challenge_channel") val challengeChannel: String?,
     @SerializedName("continuation_token") val continuationToken: String?,
-    @Expose @SerializedName("error") val error: String?,
-    @Expose @SerializedName("error_description") val errorDescription: String?,
+    @SerializedName("error") val error: String?,
+    @SerializedName("error_description") val errorDescription: String?,
 ) : IApiResponse(statusCode) {
 
     companion object {

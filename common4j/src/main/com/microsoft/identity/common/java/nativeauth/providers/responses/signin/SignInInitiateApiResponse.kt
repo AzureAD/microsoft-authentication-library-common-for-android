@@ -41,11 +41,10 @@ data class SignInInitiateApiResponse(
     @Expose override var statusCode: Int,
     @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
-    @Expose @SerializedName("error") val error: String?,
-    @Expose @SerializedName("error_description") val errorDescription: String?,
-    @Expose @SerializedName("error_uri") val errorUri: String?,
-    @Expose @SerializedName("details") val details: List<Map<String, String>>?,
-    @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
+    @SerializedName("error") val error: String?,
+    @SerializedName("error_description") val errorDescription: String?,
+    @SerializedName("error_uri") val errorUri: String?,
+    @SerializedName("error_codes") val errorCodes: List<Int>?,
 ): IApiResponse(statusCode) {
 
     companion object {

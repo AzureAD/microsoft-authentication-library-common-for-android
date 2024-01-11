@@ -46,11 +46,10 @@ data class SignInChallengeApiResponse(
     @Expose @SerializedName("challenge_channel") val challengeChannel: String?,
     @Expose @SerializedName("code_length") val codeLength: Int?,
     @Expose @SerializedName("interval") val interval: Int?,
-    @Expose @SerializedName("error") val error: String?,
-    @Expose @SerializedName("details") val details: List<Map<String, String>>?,
-    @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
-    @Expose @SerializedName("error_description") val errorDescription: String?,
-    @Expose @SerializedName("error_uri") val errorUri: String?,
+    @SerializedName("error") val error: String?,
+    @SerializedName("error_codes") val errorCodes: List<Int>?,
+    @SerializedName("error_description") val errorDescription: String?,
+    @SerializedName("error_uri") val errorUri: String?,
 ): IApiResponse(statusCode) {
 
     companion object {

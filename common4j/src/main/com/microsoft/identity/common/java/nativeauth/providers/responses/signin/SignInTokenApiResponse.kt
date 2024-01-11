@@ -43,13 +43,12 @@ import com.microsoft.identity.common.java.nativeauth.util.isUserNotFound
  */
 data class SignInTokenApiResponse(
     @Expose override var statusCode: Int,
-    @Expose @SerializedName("error") val error: String?,
-    @Expose @SerializedName("error_description") val errorDescription: String?,
-    @Expose @SerializedName("error_uri") val errorUri: String?,
-    @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
+    @SerializedName("error") val error: String?,
+    @SerializedName("error_description") val errorDescription: String?,
+    @SerializedName("error_uri") val errorUri: String?,
+    @SerializedName("error_codes") val errorCodes: List<Int>?,
+    @SerializedName("suberror") val subError: String?,
     @SerializedName("continuation_token") val continuationToken: String?,
-    @Expose @SerializedName("client_info") val clientInfo: String?,
-    @Expose @SerializedName("suberror") val subError: String?,
 ): IApiResponse(statusCode) {
 
     companion object {

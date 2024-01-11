@@ -53,13 +53,13 @@ data class SignUpContinueApiResponse(
     @Expose override var statusCode: Int,
     @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("expires_in") val expiresIn: Int?,
-    @Expose @SerializedName("error") val error: String?,
-    @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
-    @Expose @SerializedName("error_description") val errorDescription: String?,
     @Expose @SerializedName("unverified_attributes") val unverifiedAttributes: List<Map<String, String>>?,
     @SerializedName("invalid_attributes") val invalidAttributes: List<Map<String, String>>?,
     @Expose @SerializedName("required_attributes") val requiredAttributes: List<UserAttributeApiResult>?,
-    @Expose @SerializedName("suberror") val subError: String?
+    @SerializedName("error") val error: String?,
+    @SerializedName("error_codes") val errorCodes: List<Int>?,
+    @SerializedName("error_description") val errorDescription: String?,
+    @SerializedName("suberror") val subError: String?
 ) : IApiResponse(statusCode) {
 
     companion object {

@@ -2073,7 +2073,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2090,7 +2089,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2108,7 +2106,6 @@ class NativeAuthResponseHandlerTest {
             errorDescription = null,
             errorUri = null,
             errorCodes = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2125,7 +2122,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(),
             errorDescription = null,
             errorUri = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2142,7 +2138,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(),
             errorDescription = userNotFoundError,
             errorUri = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2159,7 +2154,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(userNotFoundErrorCode),
             errorDescription = userNotFoundError,
             errorUri = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2178,7 +2172,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(randomErrorCode),
             errorDescription = userNotFoundError,
             errorUri = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2195,7 +2188,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(unknownErrorCode),
             errorDescription = unknownErrorDescription,
             errorUri = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2214,7 +2206,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2238,7 +2229,6 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = null,
             codeLength = null,
             interval = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2262,7 +2252,6 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = emailChallengeChannel,
             codeLength = codeLength,
             interval = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2286,7 +2275,6 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = emailChallengeChannel,
             codeLength = null,
             interval = null,
-            details = null
         )
 
         val apiResult = signInChallengeApiResponse.toResult()
@@ -2308,7 +2296,6 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = null,
             codeLength = codeLength,
             interval = null,
-            details = null
         )
 
         val apiResult = signInChallengeApiResponse.toResult()
@@ -2330,7 +2317,6 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = emailChallengeChannel,
             codeLength = codeLength,
             interval = null,
-            details = null
         )
 
         val apiResult = signInChallengeApiResponse.toResult()
@@ -2352,7 +2338,6 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = null,
             codeLength = null,
             interval = null,
-            details = null
         )
 
         val apiResult = signInChallengeApiResponse.toResult()
@@ -2374,7 +2359,6 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = null,
             codeLength = null,
             interval = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2397,7 +2381,6 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = null,
             codeLength = null,
             interval = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2419,7 +2402,6 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = null,
             codeLength = null,
             interval = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2438,7 +2420,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            details = null,
             challengeTargetLabel = null,
             challengeChannel = null,
             codeLength = null,
@@ -2461,7 +2442,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = null,
             errorDescription = tenantMisconfiguration,
             errorUri = null,
-            clientInfo = null,
             subError = null
         )
 
@@ -2481,7 +2461,6 @@ class NativeAuthResponseHandlerTest {
             errorDescription = null,
             errorUri = null,
             subError = null,
-            clientInfo = null
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2498,7 +2477,6 @@ class NativeAuthResponseHandlerTest {
             errorDescription = null,
             errorUri = null,
             subError = null,
-            clientInfo = null
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2515,7 +2493,6 @@ class NativeAuthResponseHandlerTest {
             errorDescription = userDoesNotExistErrorDescription,
             errorUri = null,
             subError = null,
-            clientInfo = null
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2533,7 +2510,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(incorrectPasswordErrorCode),
             errorDescription = incorrectPasswordDescription,
             errorUri = null,
-            clientInfo = null,
             subError = null
         )
 
@@ -2552,7 +2528,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(incorrectOOBErrorCode1),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
-            clientInfo = null,
             subError = invalidOOBValueError
         )
 
@@ -2572,7 +2547,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(incorrectOOBErrorCode2),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
-            clientInfo = null,
             subError = invalidOOBValueError
         )
 
@@ -2592,7 +2566,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(incorrectOOBErrorCode3),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
-            clientInfo = null,
             subError = invalidOOBValueError
         )
 
@@ -2613,7 +2586,6 @@ class NativeAuthResponseHandlerTest {
             errorDescription = incorrectOtpDescription,
             errorUri = null,
             subError = null,
-            clientInfo = null
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2631,7 +2603,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(randomErrorCode, incorrectOOBErrorCode1, incorrectOOBErrorCode2, incorrectOOBErrorCode2),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
-            clientInfo = null,
             subError = null
         )
 
@@ -2663,7 +2634,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = listOf(unknownErrorCode),
             errorDescription = unknownErrorDescription,
             errorUri = null,
-            clientInfo = null,
             subError = null
         )
 
@@ -2683,7 +2653,6 @@ class NativeAuthResponseHandlerTest {
             errorDescription = unknownErrorDescription,
             errorUri = null,
             subError = null,
-            clientInfo = null
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2700,7 +2669,6 @@ class NativeAuthResponseHandlerTest {
             errorDescription = mfaRequiredTokenErrorDescription,
             errorUri = null,
             subError = null,
-            clientInfo = null
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2719,7 +2687,6 @@ class NativeAuthResponseHandlerTest {
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            clientInfo = null,
             subError = null
         )
 
@@ -2824,10 +2791,8 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getSignInInitiateResultFromHttpResponse(nullHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.challengeType)
         Assert.assertNull(response.continuationToken)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.errorUri)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
@@ -2838,10 +2803,8 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getSignInInitiateResultFromHttpResponse(emptyHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.challengeType)
         Assert.assertNull(response.continuationToken)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.errorUri)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
@@ -2852,10 +2815,8 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getSignInChallengeResultFromHttpResponse(nullHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.challengeType)
         Assert.assertNull(response.continuationToken)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.errorUri)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
@@ -2869,10 +2830,8 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getSignInChallengeResultFromHttpResponse(emptyHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.challengeType)
         Assert.assertNull(response.continuationToken)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.errorUri)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)

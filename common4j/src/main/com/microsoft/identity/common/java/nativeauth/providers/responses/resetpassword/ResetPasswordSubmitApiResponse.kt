@@ -38,10 +38,10 @@ class ResetPasswordSubmitApiResponse(
     @Expose override var statusCode: Int,
     @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("poll_interval") val pollInterval: Int?,
-    @Expose @SerializedName("error") val error: String?,
-    @Expose @SerializedName("error_description") val errorDescription: String?,
-    @Expose @SerializedName("error_uri") val errorUri: String?,
-    @Expose @SerializedName("suberror") val subError: String?
+    @SerializedName("error") val error: String?,
+    @SerializedName("error_description") val errorDescription: String?,
+    @SerializedName("error_uri") val errorUri: String?,
+    @SerializedName("suberror") val subError: String?
 ): IApiResponse(statusCode) {
 
     companion object {
