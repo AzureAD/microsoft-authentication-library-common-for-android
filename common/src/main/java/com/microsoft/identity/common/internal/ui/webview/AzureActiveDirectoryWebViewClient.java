@@ -138,7 +138,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @RequiresApi(Build.VERSION_CODES.N)
     public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
         final Uri requestUrl = request.getUrl();
-        Logger.info(TAG, "in shouldOverrideUrlLoading method "+ requestUrl.toString());
+        Logger.info(TAG, "in shouldOverrideUrlLoading method "+ requestUrl.toString() + " with query param names " + requestUrl.getQueryParameterNames());
         if (requestUrl.getPath() != null)
             Logger.info(TAG, "in shouldOverrideUrlLoading method path " +  requestUrl.getPath());
         return handleUrl(view, requestUrl.toString());
@@ -214,6 +214,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag,"Check for SSL protection");
                 processSSLProtectionCheck(view, url);
             } else if (isHeaderForwardingRequiredUri(url)) {
+                Logger.info(methodTag,"header forwarding required uri");
                 processHeaderForwardingRequiredUri(view, url);
             } else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
@@ -502,7 +503,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processHeaderForwardingRequiredUri(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processHeaderForwardingRequiredUri";
 
-        Logger.infoPII(methodTag,"We are loading this new URL: '"
+        Logger.info(methodTag,"We are loading this new URL: '"
                 + removeQueryParametersOrRedact(url) + "' with original requestHeaders appended.");
 
         view.loadUrl(url, mRequestHeaders);
