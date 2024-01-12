@@ -1,15 +1,17 @@
 V.Next
 ---------
+
+V.17.0.0
+---------
 - [PATCH] Add JWT header field for KDF version (#2220)
 - [MINOR] Catch unknown Keystore errors during decryption (#2255)
-- [MINOR] Implement updates of the native auth web API (#2261)
+- [MINOR] AuthFidoChallengeHandler and other passkey changes (#2146)
+- [MAJOR] Addition of Credential Manager and associated passkey logic (#2267)
+- [PATCH] Pass through ESTS x-ms-srs header field (#2256)
 
 V.16.3.0
 ----------
 - [MINOR] Changes to launch AEA app from Broker's WebView (#2264)
-- [MINOR] AuthFidoChallengeHandler and other passkey changes (#2146)
-- [MAJOR] Addition of Credential Manager and associated passkey logic (#2267)
-- [PATCH] Pass through ESTS x-ms-srs header field (#2256)
 
 V.16.2.0
 ----------
