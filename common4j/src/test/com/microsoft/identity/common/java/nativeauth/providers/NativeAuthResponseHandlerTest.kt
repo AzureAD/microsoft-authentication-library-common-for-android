@@ -92,10 +92,7 @@ class NativeAuthResponseHandlerTest {
                 null
             )
         )
-    private val credentialToken = "uY29tL2F1dGhlbnRpY"
-    private val signupToken = "token123"
-    private val passwordResetToken = "1234"
-    private val passwordSubmitToken = "1234"
+    private val continuationToken = "uY29tL2F1dGhlbnRpY"
     private val invalidGrantError = "invalid_grant"
     private val invalidOOBValueError = "invalid_oob_value"
     private val invalidRequestError = "invalid_request"
@@ -160,7 +157,6 @@ class NativeAuthResponseHandlerTest {
     private val tokenType = "Bearer"
     private val scope = "openid profile"
     private val refreshToken = "5678"
-    private val signInSLT = "12345"
     private val expiresIn = 500
     private val idToken = "9012"
     private val accessToken = "1234"
@@ -180,22 +176,22 @@ class NativeAuthResponseHandlerTest {
     @Test
     fun testSignUpStartApiResponseVerificationRequired() {
         val signUpStartApiResponse = SignUpStartApiResponse(
-            statusCode = errorStatusCode,
+            statusCode = successStatusCode,
             challengeType = null,
-            signupToken = signupToken,
-            error = verificationRequiredErrorCode,
+            continuationToken = continuationToken,
+            error = null,
             errorCodes = null,
             errorDescription = null,
-            unverifiedAttributes = userAttributes,
+            unverifiedAttributes = null,
             invalidAttributes = null,
-            details = null
+            subError = null
         )
 
         val apiResult = signUpStartApiResponse.toResult()
-        assertTrue(apiResult is SignUpStartApiResult.VerificationRequired)
+        assertTrue(apiResult is SignUpStartApiResult.Success)
         assertEquals(
-            signupToken,
-            (apiResult as SignUpStartApiResult.VerificationRequired).signupToken
+            continuationToken,
+            (apiResult as SignUpStartApiResult.Success).continuationToken
         )
     }
 
@@ -204,13 +200,13 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            signupToken = null,
+            continuationToken = null,
             error = unauthorizedClientError,
             errorCodes = null,
             errorDescription = null,
             unverifiedAttributes = userAttributes,
             invalidAttributes = null,
-            details = null
+            subError = null
         )
 
         val apiResult = signUpStartApiResponse.toResult()
@@ -222,13 +218,13 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            signupToken = null,
+            continuationToken = null,
             error = null,
             errorCodes = null,
             errorDescription = null,
             unverifiedAttributes = userAttributes,
             invalidAttributes = null,
-            details = null
+            subError = null
         )
 
         val apiResult = signUpStartApiResponse.toResult()
@@ -240,13 +236,13 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            signupToken = signupToken,
+            continuationToken = continuationToken,
             error = null,
             errorCodes = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
-            details = null
+            subError = null
         )
 
         val apiResult = signUpStartApiResponse.toResult()
@@ -258,13 +254,13 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            signupToken = null,
+            continuationToken = null,
             error = userAlreadyExistsError,
             errorCodes = null,
             errorDescription = passwordBasedAuthNotSupported,
             unverifiedAttributes = null,
             invalidAttributes = null,
-            details = null
+            subError = null
         )
         val apiResult = signUpStartApiResponse.toResult()
         assertTrue(apiResult is SignUpStartApiResult.UsernameAlreadyExists)
@@ -275,13 +271,13 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            signupToken = null,
+            continuationToken = null,
             error = null,
             errorCodes = listOf(invalidParameterErrorCode),
             errorDescription = "username parameter is empty or not valid.",
             unverifiedAttributes = null,
             invalidAttributes = null,
-            details = null
+            subError = null
         )
         val apiResult = signUpStartApiResponse.toResult()
         assertTrue(apiResult is SignUpStartApiResult.InvalidEmail)
@@ -292,13 +288,13 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            signupToken = null,
+            continuationToken = null,
             error = null,
             errorCodes = listOf(invalidParameterErrorCode),
             errorDescription = "client_id parameter is empty or not valid.",
             unverifiedAttributes = null,
             invalidAttributes = null,
-            details = null
+            subError = null
         )
         val apiResult = signUpStartApiResponse.toResult()
         assertTrue(apiResult is SignUpStartApiResult.UnknownError)
@@ -309,13 +305,13 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            signupToken = null,
+            continuationToken = null,
             error = unsupportedChallengeTypeError,
             errorCodes = null,
             errorDescription = passwordBasedAuthNotSupported,
             unverifiedAttributes = null,
             invalidAttributes = null,
-            details = null
+            subError = null
         )
         val apiResult = signUpStartApiResponse.toResult()
         assertTrue(apiResult is SignUpStartApiResult.UnsupportedChallengeType)
@@ -326,13 +322,13 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            signupToken = null,
-            error = passwordTooWeakError,
+            continuationToken = null,
+            error = invalidGrantError,
             errorCodes = null,
             errorDescription = passwordBasedAuthNotSupported,
             unverifiedAttributes = null,
             invalidAttributes = null,
-            details = null
+            subError = passwordTooWeakError
         )
         val apiResult = signUpStartApiResponse.toResult()
         assertTrue(apiResult is SignUpStartApiResult.InvalidPassword)
@@ -343,13 +339,13 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            signupToken = null,
-            error = passwordTooLongError,
+            continuationToken = null,
+            error = invalidGrantError,
             errorCodes = null,
             errorDescription = passwordBasedAuthNotSupported,
             unverifiedAttributes = null,
             invalidAttributes = null,
-            details = null
+            subError = passwordTooLongError
         )
         val apiResult = signUpStartApiResponse.toResult()
         assertTrue(apiResult is SignUpStartApiResult.InvalidPassword)
@@ -360,13 +356,13 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            signupToken = null,
-            error = passwordTooShortError,
+            continuationToken = null,
+            error = invalidGrantError,
             errorCodes = null,
             errorDescription = passwordBasedAuthNotSupported,
             unverifiedAttributes = null,
             invalidAttributes = null,
-            details = null
+            subError = passwordTooShortError
         )
         val apiResult = signUpStartApiResponse.toResult()
         assertTrue(apiResult is SignUpStartApiResult.InvalidPassword)
@@ -377,13 +373,13 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            signupToken = null,
-            error = passwordBannedError,
+            continuationToken = null,
+            error = invalidGrantError,
             errorCodes = null,
             errorDescription = passwordBasedAuthNotSupported,
             unverifiedAttributes = null,
             invalidAttributes = null,
-            details = null
+            subError = passwordBannedError
         )
         val apiResult = signUpStartApiResponse.toResult()
         assertTrue(apiResult is SignUpStartApiResult.InvalidPassword)
@@ -394,13 +390,13 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            signupToken = null,
-            error = passwordRecentlyUsedError,
+            continuationToken = null,
+            error = invalidGrantError,
             errorCodes = null,
             errorDescription = passwordBasedAuthNotSupported,
             unverifiedAttributes = null,
             invalidAttributes = null,
-            details = null
+            subError = passwordRecentlyUsedError
         )
         val apiResult = signUpStartApiResponse.toResult()
         assertTrue(apiResult is SignUpStartApiResult.InvalidPassword)
@@ -411,13 +407,13 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = successStatusCode,
             challengeType = redirect,
-            signupToken = null,
+            continuationToken = null,
             error = null,
             errorCodes = null,
             errorDescription = null,
             unverifiedAttributes = invalidAttributes,
             invalidAttributes = null,
-            details = null
+            subError = null
         )
 
         val apiResult = signUpStartApiResponse.toResult()
@@ -429,13 +425,13 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            signupToken = null,
+            continuationToken = null,
             error = authNotSupportedErrorCode,
             errorCodes = null,
             errorDescription = passwordBasedAuthNotSupported,
             unverifiedAttributes = null,
             invalidAttributes = null,
-            details = null
+            subError = null
         )
         val apiResult = signUpStartApiResponse.toResult()
         assertTrue(apiResult is SignUpStartApiResult.AuthNotSupported)
@@ -446,13 +442,13 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            signupToken = null,
-            error = attributeValidationFailedErrorCode,
+            continuationToken = null,
+            error = invalidGrantError,
             errorCodes = null,
             errorDescription = attributesValidationFailed,
             unverifiedAttributes = null,
             invalidAttributes = invalidAttributes,
-            details = null
+            subError = attributeValidationFailedErrorCode
         )
         val apiResult = signUpStartApiResponse.toResult()
         assertTrue(apiResult is SignUpStartApiResult.InvalidAttributes)
@@ -463,13 +459,13 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = uncommonErrorStatusCode,
             challengeType = null,
-            signupToken = null,
+            continuationToken = null,
             error = null,
             errorCodes = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
-            details = null
+            subError = null
         )
 
         val apiResult = signUpStartApiResponse.toResult()
@@ -483,7 +479,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            signupToken = null,
+            continuationToken = null,
             error = unsupportedChallengeTypeError,
             errorDescription = null,
             codeLength = null,
@@ -491,7 +487,6 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = null,
             bindingMethod = null,
             interval = null,
-            details = null
         )
         val apiResult = signUpChallengeApiResponse.toResult()
         assertTrue(apiResult is SignUpChallengeApiResult.UnsupportedChallengeType)
@@ -502,7 +497,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            signupToken = null,
+            continuationToken = null,
             error = expiredTokenError,
             errorDescription = null,
             codeLength = null,
@@ -510,7 +505,6 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = null,
             bindingMethod = null,
             interval = null,
-            details = null
         )
         val apiResult = signUpChallengeApiResponse.toResult()
         assertTrue(apiResult is SignUpChallengeApiResult.ExpiredToken)
@@ -521,7 +515,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
-            signupToken = signupToken,
+            continuationToken = continuationToken,
             error = null,
             errorDescription = null,
             codeLength = codeLength,
@@ -529,13 +523,12 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = emailChallengeChannel,
             bindingMethod = bindingMethod,
             interval = interval,
-            details = null
         )
         val apiResult = signUpChallengeApiResponse.toResult()
         assertTrue(apiResult is SignUpChallengeApiResult.OOBRequired)
         assertEquals(
-            signupToken,
-            (apiResult as SignUpChallengeApiResult.OOBRequired).signupToken
+            continuationToken,
+            (apiResult as SignUpChallengeApiResult.OOBRequired).continuationToken
         )
     }
 
@@ -544,7 +537,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
-            signupToken = signupToken,
+            continuationToken = continuationToken,
             error = null,
             errorDescription = null,
             codeLength = null,
@@ -552,7 +545,6 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = emailChallengeChannel,
             bindingMethod = bindingMethod,
             interval = interval,
-            details = null
         )
 
         val apiResult = signUpChallengeApiResponse.toResult()
@@ -564,7 +556,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
-            signupToken = signupToken,
+            continuationToken = continuationToken,
             error = null,
             errorDescription = null,
             codeLength = null,
@@ -572,7 +564,6 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = emailChallengeChannel,
             bindingMethod = bindingMethod,
             interval = interval,
-            details = null
         )
         val apiResult = signUpChallengeApiResponse.toResult()
         assertTrue(apiResult is SignUpChallengeApiResult.UnknownError)
@@ -583,7 +574,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
-            signupToken = signupToken,
+            continuationToken = continuationToken,
             error = null,
             errorDescription = null,
             codeLength = null,
@@ -591,7 +582,6 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = null,
             bindingMethod = bindingMethod,
             interval = interval,
-            details = null
         )
         val apiResult = signUpChallengeApiResponse.toResult()
         assertTrue(apiResult is SignUpChallengeApiResult.UnknownError)
@@ -602,7 +592,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = passwordChallengeType,
-            signupToken = signupToken,
+            continuationToken = continuationToken,
             error = null,
             errorDescription = null,
             codeLength = null,
@@ -610,13 +600,12 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = null,
             bindingMethod = null,
             interval = null,
-            details = null
         )
         val apiResult = signUpChallengeApiResponse.toResult()
         assertTrue(apiResult is SignUpChallengeApiResult.PasswordRequired)
         assertEquals(
-            signupToken,
-            (apiResult as SignUpChallengeApiResult.PasswordRequired).signupToken
+            continuationToken,
+            (apiResult as SignUpChallengeApiResult.PasswordRequired).continuationToken
         )
     }
 
@@ -625,7 +614,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = redirect,
-            signupToken = signupToken,
+            continuationToken = continuationToken,
             error = null,
             errorDescription = null,
             codeLength = null,
@@ -633,7 +622,6 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = null,
             bindingMethod = null,
             interval = null,
-            details = null
         )
         val apiResult = signUpChallengeApiResponse.toResult()
         assertTrue(apiResult is SignUpChallengeApiResult.Redirect)
@@ -644,7 +632,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = invalidChallengeType,
-            signupToken = signupToken,
+            continuationToken = continuationToken,
             error = null,
             errorDescription = null,
             codeLength = null,
@@ -652,18 +640,17 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = null,
             bindingMethod = null,
             interval = null,
-            details = null
         )
         val apiResult = signUpChallengeApiResponse.toResult()
         assertTrue(apiResult is SignUpChallengeApiResult.UnknownError)
     }
 
     @Test
-    fun testSignUpChallengeApiResponseWithNoSignupToken() {
+    fun testSignUpChallengeApiResponseWithNoSContinuationToken() {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
-            signupToken = null,
+            continuationToken = null,
             error = null,
             errorDescription = null,
             codeLength = null,
@@ -671,18 +658,17 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = null,
             bindingMethod = null,
             interval = null,
-            details = null
         )
         val apiResult = signUpChallengeApiResponse.toResult()
         assertTrue(apiResult is SignUpChallengeApiResult.UnknownError)
     }
 
     @Test
-    fun testSignUpChallengeApiResponsePasswordWithNoSignupToken() {
+    fun testSignUpChallengeApiResponsePasswordWithNoContinuationToken() {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = passwordChallengeType,
-            signupToken = null,
+            continuationToken = null,
             error = null,
             errorDescription = null,
             codeLength = null,
@@ -690,7 +676,6 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = null,
             bindingMethod = null,
             interval = null,
-            details = null
         )
         val apiResult = signUpChallengeApiResponse.toResult()
         assertTrue(apiResult is SignUpChallengeApiResult.UnknownError)
@@ -701,7 +686,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = uncommonErrorStatusCode,
             challengeType = null,
-            signupToken = null,
+            continuationToken = null,
             error = null,
             errorDescription = null,
             codeLength = null,
@@ -709,7 +694,6 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = null,
             bindingMethod = null,
             interval = null,
-            details = null
         )
         val apiResult = signUpChallengeApiResponse.toResult()
         assertTrue(apiResult is SignUpChallengeApiResult.UnknownError)
@@ -721,56 +705,53 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiResponse() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = successStatusCode,
-            signupToken = null,
+            continuationToken = continuationToken,
             error = null,
             errorCodes = null,
-            signInSLT = signInSLT,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = expiresIn,
             requiredAttributes = null,
-            details = null
+            subError = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.Success)
-        assertEquals((apiResult as SignUpContinueApiResult.Success).signInSLT, signInSLT)
+        assertEquals((apiResult as SignUpContinueApiResult.Success).continuationToken, continuationToken)
     }
 
     @Test
     fun testSignUpContinueApiResponseNoSLT() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = successStatusCode,
-            signupToken = null,
+            continuationToken = null,
             error = null,
             errorCodes = null,
-            signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.Success)
-        assertEquals((apiResult as SignUpContinueApiResult.Success).signInSLT, null)
+        assertEquals((apiResult as SignUpContinueApiResult.Success).continuationToken, null)
     }
 
     @Test
-    fun testSignUpContinueApiResponseErrorWithNoSignupToken() {
+    fun testSignUpContinueApiResponseErrorWithNoContinuationToken() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = null,
+            continuationToken = null,
             error = null,
             errorCodes = null,
-            signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.UnknownError)
@@ -780,16 +761,15 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiResponseWithUnknownError() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = signupToken,
+            continuationToken = continuationToken,
             error = nullString,
             errorCodes = null,
-            signInSLT = null,
             errorDescription = nullString,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.UnknownError)
@@ -799,16 +779,15 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiPasswordTooWeak() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = null,
-            error = passwordTooWeakError,
+            continuationToken = null,
+            error = invalidGrantError,
             errorCodes = null,
-            signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = passwordTooWeakError
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidPassword)
@@ -818,16 +797,15 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiPasswordTooLong() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = null,
-            error = passwordTooLongError,
+            continuationToken = null,
+            error = invalidGrantError,
             errorCodes = null,
-            signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = passwordTooLongError
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidPassword)
@@ -837,16 +815,15 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiPasswordTooShort() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = null,
-            error = passwordTooShortError,
+            continuationToken = null,
+            error = invalidGrantError,
             errorCodes = null,
-            signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = passwordTooShortError
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidPassword)
@@ -856,16 +833,15 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiPasswordBanned() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = null,
-            error = passwordBannedError,
+            continuationToken = null,
+            error = invalidGrantError,
             errorCodes = null,
-            signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = passwordBannedError
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidPassword)
@@ -875,16 +851,15 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiPasswordRecentlyUsed() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = null,
-            error = passwordRecentlyUsedError,
+            continuationToken = null,
+            error = invalidGrantError,
             errorCodes = null,
-            signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = passwordRecentlyUsedError
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidPassword)
@@ -894,16 +869,15 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiUserAlreadyExists() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = null,
+            continuationToken = null,
             error = userAlreadyExistsError,
             errorCodes = null,
-            signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.UsernameAlreadyExists)
@@ -913,16 +887,15 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiInvalidOOBWithErrorCode1() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = null,
-            error = invalidRequestError,
+            continuationToken = null,
+            error = invalidGrantError,
             errorCodes = listOf(incorrectOOBErrorCode1),
-            signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = invalidOOBValueError
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidOOBValue)
@@ -932,16 +905,15 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiInvalidOOBWithErrorCode2() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = null,
-            error = invalidRequestError,
+            continuationToken = null,
+            error = invalidGrantError,
             errorCodes = listOf(incorrectOOBErrorCode2),
-            signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = invalidOOBValueError
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidOOBValue)
@@ -951,16 +923,15 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiInvalidOOBWithErrorCode3() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = null,
-            error = invalidRequestError,
+            continuationToken = null,
+            error = invalidGrantError,
             errorCodes = listOf(incorrectOOBErrorCode3),
-            signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = invalidOOBValueError
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidOOBValue)
@@ -970,16 +941,15 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiInvalidRequestNullErrorCode() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = null,
+            continuationToken = null,
             error = invalidRequestError,
             errorCodes = null,
-            signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.UnknownError)
@@ -989,16 +959,15 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiInvalidRequestInvalidErrorCode() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = null,
+            continuationToken = null,
             error = invalidRequestError,
             errorCodes = listOf(invalidErrorCode),
-            signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.UnknownError)
@@ -1008,16 +977,15 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiExpiredToken() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = null,
+            continuationToken = null,
             error = expiredTokenError,
             errorCodes = null,
-            signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.ExpiredToken)
@@ -1027,16 +995,15 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiAttributeValidationFailed() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = null,
-            error = attributeValidationFailedErrorCode,
+            continuationToken = null,
+            error = invalidGrantError,
             errorCodes = null,
-            signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = userAttributes,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = attributeValidationFailedErrorCode
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidAttributes)
@@ -1046,16 +1013,15 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiAttributeValidationFailedMissingInvalidAttributes() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = null,
-            error = attributeValidationFailedErrorCode,
+            continuationToken = null,
+            error = invalidGrantError,
             errorCodes = null,
-            signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = attributeValidationFailedErrorCode
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.UnknownError)
@@ -1065,36 +1031,34 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiUserAttributesRequiredResponse() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = signupToken,
+            continuationToken = continuationToken,
             error = attributesRequiredError,
             errorCodes = null,
-            signInSLT = null,
             errorDescription = userAttributesRequiredErrorDescription,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = requiredAttributes,
-            details = null
+            subError = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.AttributesRequired)
-        assertEquals(signupToken, (apiResult as SignUpContinueApiResult.AttributesRequired).signupToken)
+        assertEquals(continuationToken, (apiResult as SignUpContinueApiResult.AttributesRequired).continuationToken)
     }
 
     @Test
     fun testSignUpContinueApiUserInvalidAttributesResponse() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = signupToken,
-            error = attributeValidationFailed,
+            continuationToken = continuationToken,
+            error = invalidGrantError,
             errorCodes = null,
-            signInSLT = null,
             errorDescription = invalidAttributesErrorDescription,
             unverifiedAttributes = null,
             invalidAttributes = invalidAttributes,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = attributeValidationFailed
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidAttributes)
@@ -1105,16 +1069,15 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiUserAttributesRequiredResponseNoFlowToken() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = null,
+            continuationToken = null,
             error = attributeValidationFailed,
             errorCodes = null,
-            signInSLT = null,
             errorDescription = userAttributesRequiredErrorDescription,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = requiredAttributes,
-            details = null
+            subError = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.UnknownError)
@@ -1124,16 +1087,15 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiUserAttributesRequiredResponseNoRequiredAttributes() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = signupToken,
+            continuationToken = continuationToken,
             error = attributesRequiredError,
             errorCodes = null,
-            signInSLT = null,
             errorDescription = userAttributesRequiredErrorDescription,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.UnknownError)
@@ -1143,36 +1105,34 @@ class NativeAuthResponseHandlerTest {
     fun testSignUpContinueApiAuthenticationRequiredResponse() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
-            signupToken = signupToken,
+            continuationToken = continuationToken,
             error = credentialRequiredError,
             errorCodes = null,
-            signInSLT = null,
             errorDescription = credentialRequiredErrorDescription,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.CredentialRequired)
-        assertEquals(signupToken, (apiResult as SignUpContinueApiResult.CredentialRequired).signupToken)
+        assertEquals(continuationToken, (apiResult as SignUpContinueApiResult.CredentialRequired).continuationToken)
     }
 
     @Test
     fun testSignUpContinueApiUncommonStatusCode() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = uncommonErrorStatusCode,
-            signupToken = null,
+            continuationToken = null,
             error = null,
             errorCodes = null,
-            signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
             expiresIn = null,
             requiredAttributes = null,
-            details = null
+            subError = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.UnknownError)
@@ -1184,13 +1144,11 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprStartResultWithSuccessReturnChallengeType() {
         val resetPasswordStartApiResponse = ResetPasswordStartApiResponse(
             statusCode = successStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             challengeType = redirect,
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordStartApiResponse.toResult()
@@ -1198,34 +1156,30 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
-    fun testValidateSsprStartResultWithSuccessReturnPasswordResetToken() {
+    fun testValidateSsprStartResultWithSuccessReturnContinuationToken() {
         val resetPasswordStartApiResponse = ResetPasswordStartApiResponse(
             statusCode = successStatusCode,
-            passwordResetToken = passwordResetToken,
+            continuationToken = continuationToken,
             challengeType = null,
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordStartApiResponse.toResult()
         assertTrue(apiResult is ResetPasswordStartApiResult.Success)
-        assertNotNull((apiResult as ResetPasswordStartApiResult.Success).passwordResetToken)
+        assertNotNull((apiResult as ResetPasswordStartApiResult.Success).continuationToken)
     }
 
     @Test
     fun testSsprStartResultUnknownErrorWithUnauthorizedClientError() {
         val resetPasswordStartApiResponse = ResetPasswordStartApiResponse(
             statusCode = errorStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             challengeType = null,
             error = unauthorizedClientError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordStartApiResponse.toResult()
@@ -1237,13 +1191,11 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprStartResultWithSuccessNoRedirectButMissingToken() {
         val resetPasswordStartApiResponse = ResetPasswordStartApiResponse(
             statusCode = successStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             challengeType = null,
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordStartApiResponse.toResult()
@@ -1254,13 +1206,11 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprStartResultUserNotFound() {
         val resetPasswordStartApiResponse = ResetPasswordStartApiResponse(
             statusCode = errorStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             challengeType = null,
             error = userNotFoundError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordStartApiResponse.toResult()
@@ -1271,13 +1221,11 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprStartResultInvalidGrant() {
         val resetPasswordStartApiResponse = ResetPasswordStartApiResponse(
             statusCode = errorStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             challengeType = null,
             error = invalidGrantError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordStartApiResponse.toResult()
@@ -1288,13 +1236,11 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprStartResultUnsupportedChallengeType() {
         val resetPasswordStartApiResponse = ResetPasswordStartApiResponse(
             statusCode = errorStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             challengeType = null,
             error = unsupportedChallengeTypeError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordStartApiResponse.toResult()
@@ -1305,13 +1251,11 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprStartResultUnknownError() {
         val resetPasswordStartApiResponse = ResetPasswordStartApiResponse(
             statusCode = errorStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             challengeType = null,
             error = null,
             errorDescription = unknownError,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordStartApiResponse.toResult()
@@ -1323,13 +1267,11 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprStartResultUncommonStatusCode() {
         val resetPasswordStartApiResponse = ResetPasswordStartApiResponse(
             statusCode = uncommonErrorStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             challengeType = null,
             error = null,
             errorDescription = unknownError,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordStartApiResponse.toResult()
@@ -1343,7 +1285,7 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprChallengeResultSuccessWithOobChallenge() {
         val resetPasswordChallengeApiResponse = ResetPasswordChallengeApiResponse(
             statusCode = successStatusCode,
-            passwordResetToken = passwordResetToken,
+            continuationToken = continuationToken,
             challengeType = oobChallengeType,
             bindingMethod = null,
             challengeTargetLabel = challengeTargetLabel,
@@ -1353,13 +1295,11 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordChallengeApiResponse.toResult()
         assertTrue(apiResult is ResetPasswordChallengeApiResult.CodeRequired)
-        assertNotNull((apiResult as ResetPasswordChallengeApiResult.CodeRequired).passwordResetToken)
+        assertNotNull((apiResult as ResetPasswordChallengeApiResult.CodeRequired).continuationToken)
         assertNotNull(apiResult.challengeTargetLabel)
         assertNotNull(apiResult.codeLength)
     }
@@ -1368,7 +1308,7 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprChallengeResultSuccessWithRedirectChallenge() {
         val resetPasswordChallengeApiResponse = ResetPasswordChallengeApiResponse(
             statusCode = successStatusCode,
-            passwordResetToken = passwordResetToken,
+            continuationToken = continuationToken,
             challengeType = redirect,
             bindingMethod = null,
             challengeTargetLabel = challengeTargetLabel,
@@ -1378,8 +1318,6 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordChallengeApiResponse.toResult()
@@ -1390,7 +1328,7 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprChallengeResultSuccessWithPasswordChallenge() {
         val resetPasswordChallengeApiResponse = ResetPasswordChallengeApiResponse(
             statusCode = 200,
-            passwordResetToken = "1234",
+            continuationToken = "1234",
             challengeType = "password",
             bindingMethod = null,
             challengeTargetLabel = "label",
@@ -1400,8 +1338,6 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordChallengeApiResponse.toResult()
@@ -1409,10 +1345,10 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
-    fun testValidateSsprChallengeResultSuccessAndMissingPasswordResetToken() {
+    fun testValidateSsprChallengeResultSuccessAndMissingContinuationToken() {
         val resetPasswordChallengeApiResponse = ResetPasswordChallengeApiResponse(
             statusCode = successStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             challengeType = oobChallengeType,
             bindingMethod = null,
             challengeTargetLabel = challengeTargetLabel,
@@ -1422,8 +1358,6 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordChallengeApiResponse.toResult()
@@ -1434,7 +1368,7 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprChallengeResultSuccessAndMissingChallengeTargetLabel() {
         val resetPasswordChallengeApiResponse = ResetPasswordChallengeApiResponse(
             statusCode = successStatusCode,
-            passwordResetToken = passwordResetToken,
+            continuationToken = continuationToken,
             challengeType = oobChallengeType,
             bindingMethod = null,
             challengeTargetLabel = null,
@@ -1444,8 +1378,6 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordChallengeApiResponse.toResult()
@@ -1456,7 +1388,7 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprChallengeResultSuccessAndMissingChallengeChannel() {
         val resetPasswordChallengeApiResponse = ResetPasswordChallengeApiResponse(
             statusCode = successStatusCode,
-            passwordResetToken = passwordResetToken,
+            continuationToken = continuationToken,
             challengeType = oobChallengeType,
             bindingMethod = null,
             challengeTargetLabel = challengeTargetLabel,
@@ -1466,8 +1398,6 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordChallengeApiResponse.toResult()
@@ -1478,7 +1408,7 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprChallengeResultSuccessAndMissingChallengeType() {
         val resetPasswordChallengeApiResponse = ResetPasswordChallengeApiResponse(
             statusCode = successStatusCode,
-            passwordResetToken = passwordResetToken,
+            continuationToken = continuationToken,
             challengeType = null,
             bindingMethod = null,
             challengeTargetLabel = challengeTargetLabel,
@@ -1488,8 +1418,6 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordChallengeApiResponse.toResult()
@@ -1500,7 +1428,7 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprChallengeResultSuccessAndMissingCodeLength() {
         val resetPasswordChallengeApiResponse = ResetPasswordChallengeApiResponse(
             statusCode = successStatusCode,
-            passwordResetToken = passwordResetToken,
+            continuationToken = continuationToken,
             challengeType = oobChallengeType,
             bindingMethod = null,
             challengeTargetLabel = challengeTargetLabel,
@@ -1510,8 +1438,6 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordChallengeApiResponse.toResult()
@@ -1522,7 +1448,7 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprChallengeResultExpiredToken() {
         val resetPasswordChallengeApiResponse = ResetPasswordChallengeApiResponse(
             statusCode = errorStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             challengeType = null,
             bindingMethod = null,
             challengeTargetLabel = null,
@@ -1532,8 +1458,6 @@ class NativeAuthResponseHandlerTest {
             error = expiredTokenError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordChallengeApiResponse.toResult()
@@ -1544,7 +1468,7 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprChallengeResultUnsupportedChallengeType() {
         val resetPasswordChallengeApiResponse = ResetPasswordChallengeApiResponse(
             statusCode = errorStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             challengeType = null,
             bindingMethod = null,
             challengeTargetLabel = null,
@@ -1554,8 +1478,6 @@ class NativeAuthResponseHandlerTest {
             error = unsupportedChallengeTypeError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordChallengeApiResponse.toResult()
@@ -1566,7 +1488,7 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprChallengeResultInvalidGrant() {
         val resetPasswordChallengeApiResponse = ResetPasswordChallengeApiResponse(
             statusCode = errorStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             challengeType = null,
             bindingMethod = null,
             challengeTargetLabel = null,
@@ -1576,8 +1498,6 @@ class NativeAuthResponseHandlerTest {
             error = invalidGrantError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordChallengeApiResponse.toResult()
@@ -1588,7 +1508,7 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprChallengeResultUncommonStatusCode() {
         val resetPasswordChallengeApiResponse = ResetPasswordChallengeApiResponse(
             statusCode = uncommonErrorStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             challengeType = null,
             bindingMethod = null,
             challengeTargetLabel = null,
@@ -1598,8 +1518,6 @@ class NativeAuthResponseHandlerTest {
             error = invalidGrantError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = resetPasswordChallengeApiResponse.toResult()
@@ -1612,19 +1530,18 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprContinueResultWithSuccessWithSubmitToken() {
         val resetPasswordContinueApiResponse = ResetPasswordContinueApiResponse(
             statusCode = successStatusCode,
-            passwordSubmitToken = passwordSubmitToken,
+            continuationToken = continuationToken,
             challengeType = null,
             expiresIn = expiresIn400,
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = resetPasswordContinueApiResponse.toResult()
         assertTrue(apiResult is ResetPasswordContinueApiResult.PasswordRequired)
-        assertNotNull((apiResult as ResetPasswordContinueApiResult.PasswordRequired).passwordSubmitToken)
+        assertNotNull((apiResult as ResetPasswordContinueApiResult.PasswordRequired).continuationToken)
         assertNotNull(apiResult.expiresIn)
     }
 
@@ -1632,33 +1549,31 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprContinueResultSuccessNullExpiresIn() {
         val resetPasswordContinueApiResponse = ResetPasswordContinueApiResponse(
             statusCode = successStatusCode,
-            passwordSubmitToken = passwordSubmitToken,
+            continuationToken = continuationToken,
             challengeType = null,
             expiresIn = null,
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = resetPasswordContinueApiResponse.toResult()
         assertTrue(apiResult is ResetPasswordContinueApiResult.PasswordRequired)
-        assertNotNull((apiResult as ResetPasswordContinueApiResult.PasswordRequired).passwordSubmitToken)
+        assertNotNull((apiResult as ResetPasswordContinueApiResult.PasswordRequired).continuationToken)
     }
 
     @Test
     fun testValidateSsprContinueResultSuccessNullSubmitToken() {
         val resetPasswordContinueApiResponse = ResetPasswordContinueApiResponse(
             statusCode = successStatusCode,
-            passwordSubmitToken = null,
+            continuationToken = null,
             challengeType = null,
             expiresIn = expiresIn400,
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = resetPasswordContinueApiResponse.toResult()
@@ -1669,14 +1584,13 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprContinueResultSuccessRedirect() {
         val resetPasswordContinueApiResponse = ResetPasswordContinueApiResponse(
             statusCode = successStatusCode,
-            passwordSubmitToken = null,
+            continuationToken = null,
             challengeType = redirect,
             expiresIn = null,
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = resetPasswordContinueApiResponse.toResult()
@@ -1687,14 +1601,13 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprContinueResultOOBIncorrect() {
         val resetPasswordContinueApiResponse = ResetPasswordContinueApiResponse(
             statusCode = errorStatusCode,
-            passwordSubmitToken = null,
+            continuationToken = null,
             challengeType = null,
             expiresIn = null,
-            error = invalidOOBValueError,
+            error = invalidGrantError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = invalidOOBValueError
         )
 
         val apiResult = resetPasswordContinueApiResponse.toResult()
@@ -1705,14 +1618,13 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprContinueResultNoErrorCodes() {
         val resetPasswordContinueApiResponse = ResetPasswordContinueApiResponse(
             statusCode = errorStatusCode,
-            passwordSubmitToken = null,
+            continuationToken = null,
             challengeType = null,
             expiresIn = null,
             error = invalidGrantError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = resetPasswordContinueApiResponse.toResult()
@@ -1723,14 +1635,13 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprContinueResultExpiredToken() {
         val resetPasswordContinueApiResponse = ResetPasswordContinueApiResponse(
             statusCode = errorStatusCode,
-            passwordSubmitToken = null,
+            continuationToken = null,
             challengeType = null,
             expiresIn = null,
             error = expiredTokenError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = resetPasswordContinueApiResponse.toResult()
@@ -1741,14 +1652,13 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprContinueResultNoErrorName() {
         val resetPasswordContinueApiResponse = ResetPasswordContinueApiResponse(
             statusCode = errorStatusCode,
-            passwordSubmitToken = null,
+            continuationToken = null,
             challengeType = null,
             expiresIn = null,
             error = null,
             errorDescription = unknownError,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = resetPasswordContinueApiResponse.toResult()
@@ -1759,14 +1669,13 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprContinueResultUncommonStatusCode() {
         val resetPasswordContinueApiResponse = ResetPasswordContinueApiResponse(
             statusCode = uncommonErrorStatusCode,
-            passwordSubmitToken = null,
+            continuationToken = null,
             challengeType = null,
             expiresIn = null,
             error = null,
             errorDescription = unknownError,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = resetPasswordContinueApiResponse.toResult()
@@ -1779,32 +1688,30 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprSubmitResultSuccessStartPolling() {
         val resetPasswordSubmitApiResponse = ResetPasswordSubmitApiResponse(
             statusCode = successStatusCode,
-            passwordResetToken = passwordResetToken,
+            continuationToken = continuationToken,
             pollInterval = pollInterval,
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
         assertTrue(apiResult is ResetPasswordSubmitApiResult.SubmitSuccess)
-        assertNotNull((apiResult as ResetPasswordSubmitApiResult.SubmitSuccess).passwordResetToken)
+        assertNotNull((apiResult as ResetPasswordSubmitApiResult.SubmitSuccess).continuationToken)
         assertNotNull(apiResult.pollInterval)
     }
 
     @Test
-    fun testValidateSsprSubmitResultWithSuccessAndMissingPasswordResetToken() {
+    fun testValidateSsprSubmitResultWithSuccessAndMissingContinuationToken() {
         val resetPasswordSubmitApiResponse = ResetPasswordSubmitApiResponse(
             statusCode = successStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             pollInterval = pollInterval,
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1815,31 +1722,29 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprSubmitResultWithSuccessAndMissingPollInterval() {
         val resetPasswordSubmitApiResponse = ResetPasswordSubmitApiResponse(
             statusCode = successStatusCode,
-            passwordResetToken = passwordResetToken,
+            continuationToken = continuationToken,
             pollInterval = null,
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
         assertTrue(apiResult is ResetPasswordSubmitApiResult.SubmitSuccess)
-        assertNotNull((apiResult as ResetPasswordSubmitApiResult.SubmitSuccess).passwordResetToken)
+        assertNotNull((apiResult as ResetPasswordSubmitApiResult.SubmitSuccess).continuationToken)
     }
 
     @Test
     fun testValidateSsprSubmitResultExpiredToken() {
         val resetPasswordSubmitApiResponse = ResetPasswordSubmitApiResponse(
             statusCode = errorStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             pollInterval = null,
             error = expiredTokenError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1850,13 +1755,12 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprSubmitResultPasswordTooWeak() {
         val resetPasswordSubmitApiResponse = ResetPasswordSubmitApiResponse(
             statusCode = errorStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             pollInterval = null,
-            error = passwordTooWeakError,
+            error = invalidGrantError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = passwordTooWeakError
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1867,13 +1771,12 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprSubmitResultPasswordTooLong() {
         val resetPasswordSubmitApiResponse = ResetPasswordSubmitApiResponse(
             statusCode = errorStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             pollInterval = null,
-            error = passwordTooLongError,
+            error = invalidGrantError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = passwordTooLongError
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1884,13 +1787,12 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprSubmitResultPasswordTooShort() {
         val resetPasswordSubmitApiResponse = ResetPasswordSubmitApiResponse(
             statusCode = errorStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             pollInterval = null,
-            error = passwordTooShortError,
+            error = invalidGrantError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = passwordTooShortError
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1901,13 +1803,12 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprSubmitResultPasswordBanned() {
         val resetPasswordSubmitApiResponse = ResetPasswordSubmitApiResponse(
             statusCode = errorStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             pollInterval = null,
-            error = passwordBannedError,
+            error = invalidGrantError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = passwordBannedError
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1918,13 +1819,12 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprSubmitResultPasswordRecentlyUsed() {
         val resetPasswordSubmitApiResponse = ResetPasswordSubmitApiResponse(
             statusCode = errorStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             pollInterval = null,
-            error = passwordRecentlyUsedError,
+            error = invalidGrantError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = passwordRecentlyUsedError
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1935,13 +1835,12 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprSubmitResultUnknownError() {
         val resetPasswordSubmitApiResponse = ResetPasswordSubmitApiResponse(
             statusCode = errorStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             pollInterval = null,
             error = invalidGrantError,
             errorDescription = unknownError,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1954,13 +1853,12 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprSubmitResultUncommonStatusCode() {
         val resetPasswordSubmitApiResponse = ResetPasswordSubmitApiResponse(
             statusCode = uncommonErrorStatusCode,
-            passwordResetToken = null,
+            continuationToken = null,
             pollInterval = null,
             error = invalidGrantError,
             errorDescription = unknownError,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1976,12 +1874,11 @@ class NativeAuthResponseHandlerTest {
         val resetPasswordPollCompletionApiResponse = ResetPasswordPollCompletionApiResponse(
             statusCode = successStatusCode,
             status = succeededStatus,
-            signinSlt = null,
+            continuationToken = null,
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = resetPasswordPollCompletionApiResponse.toResult()
@@ -1993,12 +1890,11 @@ class NativeAuthResponseHandlerTest {
         val resetPasswordPollCompletionApiResponse = ResetPasswordPollCompletionApiResponse(
             statusCode = successStatusCode,
             status = inProgressStatus,
-            signinSlt = null,
+            continuationToken = null,
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = resetPasswordPollCompletionApiResponse.toResult()
@@ -2010,12 +1906,11 @@ class NativeAuthResponseHandlerTest {
         val resetPasswordPollCompletionApiResponse = ResetPasswordPollCompletionApiResponse(
             statusCode = successStatusCode,
             status = failedStatus,
-            signinSlt = null,
+            continuationToken = null,
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = resetPasswordPollCompletionApiResponse.toResult()
@@ -2026,13 +1921,12 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprPollCompletionResultPasswordBanned() {
         val resetPasswordSubmitApiResponse = ResetPasswordPollCompletionApiResponse(
             statusCode = errorStatusCode,
-            error = passwordBannedError,
+            error = invalidGrantError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null,
+            subError = passwordBannedError,
             status = null,
-            signinSlt = null
+            continuationToken = null,
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2043,13 +1937,12 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprPollCompletionResultPasswordTooShort() {
         val resetPasswordSubmitApiResponse = ResetPasswordPollCompletionApiResponse(
             statusCode = errorStatusCode,
-            error = passwordTooShortError,
+            error = invalidGrantError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null,
+            subError = passwordTooShortError,
             status = null,
-            signinSlt = null
+            continuationToken = null,
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2060,13 +1953,12 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprPollCompletionResultPasswordTooLong() {
         val resetPasswordSubmitApiResponse = ResetPasswordPollCompletionApiResponse(
             statusCode = errorStatusCode,
-            error = passwordTooLongError,
+            error = invalidGrantError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null,
+            subError = passwordTooLongError,
             status = null,
-            signinSlt = null
+            continuationToken = null,
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2077,13 +1969,12 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprPollCompletionResultPasswordRecentlyUsed() {
         val resetPasswordSubmitApiResponse = ResetPasswordPollCompletionApiResponse(
             statusCode = errorStatusCode,
-            error = passwordRecentlyUsedError,
+            error = invalidGrantError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null,
+            subError = passwordRecentlyUsedError,
             status = null,
-            signinSlt = null
+            continuationToken = null,
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2094,13 +1985,12 @@ class NativeAuthResponseHandlerTest {
     fun testValidateSsprPollCompletionResultPasswordTooWeak() {
         val resetPasswordSubmitApiResponse = ResetPasswordPollCompletionApiResponse(
             statusCode = errorStatusCode,
-            error = passwordTooWeakError,
+            error = invalidGrantError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null,
+            subError = passwordTooWeakError,
             status = null,
-            signinSlt = null
+            continuationToken = null,
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2114,10 +2004,9 @@ class NativeAuthResponseHandlerTest {
             error = expiredTokenError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null,
+            subError = null,
             status = null,
-            signinSlt = null
+            continuationToken = null,
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2131,10 +2020,9 @@ class NativeAuthResponseHandlerTest {
             error = userNotFoundError,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null,
+            subError = null,
             status = null,
-            signinSlt = null
+            continuationToken = null,
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2146,12 +2034,11 @@ class NativeAuthResponseHandlerTest {
         val resetPasswordPollCompletionApiResponse = ResetPasswordPollCompletionApiResponse(
             statusCode = successStatusCode,
             status = null,
-            signinSlt = null,
+            continuationToken = null,
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = resetPasswordPollCompletionApiResponse.toResult()
@@ -2163,12 +2050,11 @@ class NativeAuthResponseHandlerTest {
         val resetPasswordPollCompletionApiResponse = ResetPasswordPollCompletionApiResponse(
             statusCode = uncommonErrorStatusCode,
             status = null,
-            signinSlt = null,
+            continuationToken = null,
             error = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = resetPasswordPollCompletionApiResponse.toResult()
@@ -2182,13 +2068,11 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = successStatusCode,
             challengeType = redirect,
-            credentialToken = null,
+            continuationToken = null,
             error = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2200,32 +2084,28 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = successStatusCode,
             challengeType = null,
-            credentialToken = credentialToken,
+            continuationToken = continuationToken,
             error = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
         assertTrue(apiResult is SignInInitiateApiResult.Success)
-        assertEquals(credentialToken, (apiResult as SignInInitiateApiResult.Success).credentialToken)
+        assertEquals(continuationToken, (apiResult as SignInInitiateApiResult.Success).continuationToken)
     }
 
     @Test
-    fun testSignInInitiateApiResponseWithMissingCredentialToken() {
+    fun testSignInInitiateApiResponseWithMissingContinuationToken() {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = successStatusCode,
             challengeType = null,
-            credentialToken = null,
+            continuationToken = null,
             error = null,
             errorDescription = null,
             errorUri = null,
             errorCodes = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2237,13 +2117,11 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            credentialToken = null,
+            continuationToken = null,
             error = unauthorizedClientError,
             errorCodes = listOf(),
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2255,13 +2133,11 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            credentialToken = null,
+            continuationToken = null,
             error = invalidGrantError,
             errorCodes = listOf(),
             errorDescription = userNotFoundError,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2273,18 +2149,16 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            credentialToken = null,
-            error = invalidGrantError,
+            continuationToken = null,
+            error = userNotFoundError,
             errorCodes = listOf(userNotFoundErrorCode),
             errorDescription = userNotFoundError,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
         assertTrue(apiResult is SignInInitiateApiResult.UserNotFound)
-        assertEquals(invalidGrantError, (apiResult as SignInInitiateApiResult.UserNotFound).error)
+        assertEquals(userNotFoundError, (apiResult as SignInInitiateApiResult.UserNotFound).error)
         assertEquals(userNotFoundError, apiResult.errorDescription)
     }
 
@@ -2293,13 +2167,11 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            credentialToken = null,
+            continuationToken = null,
             error = invalidGrantError,
             errorCodes = listOf(randomErrorCode),
             errorDescription = userNotFoundError,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2311,13 +2183,11 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            credentialToken = null,
+            continuationToken = null,
             error = signInUnknownError,
             errorCodes = listOf(unknownErrorCode),
             errorDescription = unknownErrorDescription,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2331,13 +2201,11 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = uncommonErrorStatusCode,
             challengeType = null,
-            credentialToken = null,
+            continuationToken = null,
             error = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2351,18 +2219,16 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInChallengeApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            credentialToken = null,
+            continuationToken = null,
             error = invalidGrantError,
             errorCodes = null,
             errorDescription = tenantMisconfiguration,
             errorUri = null,
-            innerErrors = null,
             bindingMethod = bindingMethod,
             challengeTargetLabel = null,
             challengeChannel = null,
             codeLength = null,
             interval = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2376,23 +2242,21 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
-            credentialToken = credentialToken,
+            continuationToken = continuationToken,
             error = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
             bindingMethod = bindingMethod,
             challengeTargetLabel = challengeTargetLabel,
             challengeChannel = emailChallengeChannel,
             codeLength = codeLength,
             interval = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
         assertTrue(apiResult is SignInChallengeApiResult.OOBRequired)
-        assertEquals(credentialToken, (apiResult as SignInChallengeApiResult.OOBRequired).credentialToken)
+        assertEquals(continuationToken, (apiResult as SignInChallengeApiResult.OOBRequired).continuationToken)
         assertEquals(challengeTargetLabel, apiResult.challengeTargetLabel)
     }
 
@@ -2401,18 +2265,16 @@ class NativeAuthResponseHandlerTest {
         val signInChallengeApiResponse = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
-            credentialToken = credentialToken,
+            continuationToken = continuationToken,
             error = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
             bindingMethod = bindingMethod,
             challengeTargetLabel = null,
             challengeChannel = emailChallengeChannel,
             codeLength = null,
             interval = null,
-            details = null
         )
 
         val apiResult = signInChallengeApiResponse.toResult()
@@ -2424,18 +2286,16 @@ class NativeAuthResponseHandlerTest {
         val signInChallengeApiResponse = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
-            credentialToken = credentialToken,
+            continuationToken = continuationToken,
             error = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
             bindingMethod = bindingMethod,
             challengeTargetLabel = null,
             challengeChannel = null,
             codeLength = codeLength,
             interval = null,
-            details = null
         )
 
         val apiResult = signInChallengeApiResponse.toResult()
@@ -2447,18 +2307,16 @@ class NativeAuthResponseHandlerTest {
         val signInChallengeApiResponse = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
-            credentialToken = credentialToken,
+            continuationToken = continuationToken,
             error = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
             bindingMethod = bindingMethod,
             challengeTargetLabel = null,
             challengeChannel = emailChallengeChannel,
             codeLength = codeLength,
             interval = null,
-            details = null
         )
 
         val apiResult = signInChallengeApiResponse.toResult()
@@ -2466,22 +2324,20 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
-    fun testSignInChallengeApiResponseChallengeTypePasswordWithMissingCredentialToken() {
+    fun testSignInChallengeApiResponseChallengeTypePasswordWithMissingContinuationToken() {
         val signInChallengeApiResponse = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = passwordChallengeType,
-            credentialToken = null,
+            continuationToken = null,
             error = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
             bindingMethod = null,
             challengeTargetLabel = null,
             challengeChannel = null,
             codeLength = null,
             interval = null,
-            details = null
         )
 
         val apiResult = signInChallengeApiResponse.toResult()
@@ -2493,23 +2349,21 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = passwordChallengeType,
-            credentialToken = credentialToken,
+            continuationToken = continuationToken,
             error = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
             bindingMethod = null,
             challengeTargetLabel = null,
             challengeChannel = null,
             codeLength = null,
             interval = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
         assertTrue(apiResult is SignInChallengeApiResult.PasswordRequired)
-        assertEquals(credentialToken, (apiResult as SignInChallengeApiResult.PasswordRequired).credentialToken)
+        assertEquals(continuationToken, (apiResult as SignInChallengeApiResult.PasswordRequired).continuationToken)
     }
 
     @Test
@@ -2517,18 +2371,16 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = passwordChallengeType,
-            credentialToken = null,
+            continuationToken = null,
             error = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
             bindingMethod = null,
             challengeTargetLabel = null,
             challengeChannel = null,
             codeLength = null,
             interval = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2540,18 +2392,16 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInChallengeApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
-            credentialToken = null,
+            continuationToken = null,
             error = signInUnknownError,
             errorCodes = listOf(unknownErrorCode),
             errorDescription = unknownErrorDescription,
             errorUri = null,
-            innerErrors = null,
             bindingMethod = null,
             challengeTargetLabel = null,
             challengeChannel = null,
             codeLength = null,
             interval = null,
-            details = null
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2565,13 +2415,11 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInChallengeApiResponse(
             statusCode = uncommonErrorStatusCode,
             challengeType = null,
-            credentialToken = null,
+            continuationToken = null,
             error = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null,
             challengeTargetLabel = null,
             challengeChannel = null,
             codeLength = null,
@@ -2589,12 +2437,12 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseInvalidGrantMissingErrorCodes() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
+            continuationToken = null,
             error = invalidGrantError,
             errorCodes = null,
             errorDescription = tenantMisconfiguration,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2607,12 +2455,12 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseUnknownErrorWithUnauthorizedClientError() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
+            continuationToken = null,
             error = unauthorizedClientError,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null,
+            subError = null,
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2623,12 +2471,12 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseUnknownErrorWithInvalidClientError() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
+            continuationToken = null,
             error = invalidClientError,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null,
+            subError = null,
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2639,17 +2487,17 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseUserNotFound() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
-            error = invalidGrantError,
+            continuationToken = null,
+            error = userNotFoundError,
             errorCodes = listOf(userNotFoundErrorCode),
             errorDescription = userDoesNotExistErrorDescription,
             errorUri = null,
-            innerErrors = null,
-            details = null,
+            subError = null,
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
         assertTrue(apiResult is SignInTokenApiResult.UserNotFound)
-        assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.UserNotFound).error)
+        assertEquals(userNotFoundError, (apiResult as SignInTokenApiResult.UserNotFound).error)
         assertEquals(userDoesNotExistErrorDescription, apiResult.errorDescription)
     }
 
@@ -2657,12 +2505,12 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseInvalidCredentials() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
+            continuationToken = null,
             error = invalidGrantError,
             errorCodes = listOf(incorrectPasswordErrorCode),
             errorDescription = incorrectPasswordDescription,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2675,120 +2523,69 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseOtpCodeIncorrectWithInvalidGrantErrorCode1() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
+            continuationToken = null,
             error = invalidGrantError,
             errorCodes = listOf(incorrectOOBErrorCode1),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = invalidOOBValueError
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
         assertTrue(apiResult is SignInTokenApiResult.CodeIncorrect)
         assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.CodeIncorrect).error)
         assertEquals(incorrectOtpDescription, apiResult.errorDescription)
-    }
-
-    @Test
-    fun testSignInTokenApiResponseOtpCodeIncorrectWithInvalidRequestErrorCode1() {
-        val signInTokenApiResponse = SignInTokenApiResponse(
-            statusCode = errorStatusCode,
-            error = invalidRequestError,
-            errorCodes = listOf(incorrectOOBErrorCode1),
-            errorDescription = incorrectOtpDescription,
-            errorUri = null,
-            innerErrors = null,
-            details = null
-        )
-
-        val apiResult = signInTokenApiResponse.toErrorResult()
-        assertTrue(apiResult is SignInTokenApiResult.CodeIncorrect)
-        assertEquals(invalidRequestError, (apiResult as SignInTokenApiResult.CodeIncorrect).error)
-        assertEquals(incorrectOtpDescription, apiResult.errorDescription)
+        assertEquals(invalidOOBValueError, apiResult.subError)
     }
 
     @Test
     fun testSignInTokenApiResponseOtpCodeIncorrectWithInvalidGrantErrorCode2() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
+            continuationToken = null,
             error = invalidGrantError,
             errorCodes = listOf(incorrectOOBErrorCode2),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = invalidOOBValueError
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
         assertTrue(apiResult is SignInTokenApiResult.CodeIncorrect)
         assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.CodeIncorrect).error)
         assertEquals(incorrectOtpDescription, apiResult.errorDescription)
-    }
-
-    @Test
-    fun testSignInTokenApiResponseOtpCodeIncorrectWithInvalidRequestErrorCode2() {
-        val signInTokenApiResponse = SignInTokenApiResponse(
-            statusCode = errorStatusCode,
-            error = invalidRequestError,
-            errorCodes = listOf(incorrectOOBErrorCode2),
-            errorDescription = incorrectOtpDescription,
-            errorUri = null,
-            innerErrors = null,
-            details = null
-        )
-
-        val apiResult = signInTokenApiResponse.toErrorResult()
-        assertTrue(apiResult is SignInTokenApiResult.CodeIncorrect)
-        assertEquals(invalidRequestError, (apiResult as SignInTokenApiResult.CodeIncorrect).error)
-        assertEquals(incorrectOtpDescription, apiResult.errorDescription)
+        assertEquals(invalidOOBValueError, apiResult.subError)
     }
 
     @Test
     fun testSignInTokenApiResponseOtpCodeIncorrectWithInvalidGrantErrorCode3() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
+            continuationToken = null,
             error = invalidGrantError,
             errorCodes = listOf(incorrectOOBErrorCode3),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = invalidOOBValueError
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
         assertTrue(apiResult is SignInTokenApiResult.CodeIncorrect)
         assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.CodeIncorrect).error)
         assertEquals(incorrectOtpDescription, apiResult.errorDescription)
-    }
-
-    @Test
-    fun testSignInTokenApiResponseOtpCodeIncorrectWithInvalidRequestErrorCode3() {
-        val signInTokenApiResponse = SignInTokenApiResponse(
-            statusCode = errorStatusCode,
-            error = invalidRequestError,
-            errorCodes = listOf(incorrectOOBErrorCode3),
-            errorDescription = incorrectOtpDescription,
-            errorUri = null,
-            innerErrors = null,
-            details = null
-        )
-
-        val apiResult = signInTokenApiResponse.toErrorResult()
-        assertTrue(apiResult is SignInTokenApiResult.CodeIncorrect)
-        assertEquals(invalidRequestError, (apiResult as SignInTokenApiResult.CodeIncorrect).error)
-        assertEquals(incorrectOtpDescription, apiResult.errorDescription)
+        assertEquals(invalidOOBValueError, apiResult.subError)
     }
 
     @Test
     fun testSignInTokenApiResponseInvalidAuthenticationType() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
+            continuationToken = null,
             error = invalidGrantError,
             errorCodes = listOf(invalidAuthenticationTypeErrorCode),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
-            innerErrors = null,
-            details = null,
+            subError = null,
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2801,12 +2598,12 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseMultipleErrorCodes() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
+            continuationToken = null,
             error = invalidGrantError,
             errorCodes = listOf(randomErrorCode, incorrectOOBErrorCode1, incorrectOOBErrorCode2, incorrectOOBErrorCode2),
             errorDescription = incorrectOtpDescription,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2832,12 +2629,12 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseWithUnknownError() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
+            continuationToken = null,
             error = unknownError,
             errorCodes = listOf(unknownErrorCode),
             errorDescription = unknownErrorDescription,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2850,12 +2647,12 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseCredentialRequiredExplicitError() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = uncommonErrorStatusCode,
+            continuationToken = null,
             error = credentialRequiredError,
             errorCodes = null,
             errorDescription = unknownErrorDescription,
             errorUri = null,
-            innerErrors = null,
-            details = null,
+            subError = null,
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2866,12 +2663,12 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseMFARequired() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
+            continuationToken = null,
             error = invalidGrantError,
             errorCodes = listOf(mfaRequiredErrorCode),
             errorDescription = mfaRequiredTokenErrorDescription,
             errorUri = null,
-            innerErrors = null,
-            details = null,
+            subError = null,
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2885,12 +2682,12 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseUnknownError() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = uncommonErrorStatusCode,
+            continuationToken = null,
             error = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            innerErrors = null,
-            details = null
+            subError = null
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
@@ -2903,8 +2700,8 @@ class NativeAuthResponseHandlerTest {
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.challengeType)
-        Assert.assertNull(response.details)
-        Assert.assertNull(response.signupToken)
+        Assert.assertNull(response.subError)
+        Assert.assertNull(response.continuationToken)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
         Assert.assertNull(response.invalidAttributes)
@@ -2917,8 +2714,8 @@ class NativeAuthResponseHandlerTest {
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.challengeType)
-        Assert.assertNull(response.details)
-        Assert.assertNull(response.signupToken)
+        Assert.assertNull(response.subError)
+        Assert.assertNull(response.continuationToken)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
         Assert.assertNull(response.invalidAttributes)
@@ -2932,14 +2729,13 @@ class NativeAuthResponseHandlerTest {
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.challengeType)
         Assert.assertNull(response.challengeChannel)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.challengeTargetLabel)
         Assert.assertNull(response.bindingMethod)
         Assert.assertNull(response.codeLength)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
         Assert.assertNull(response.interval)
-        Assert.assertNull(response.signupToken)
+        Assert.assertNull(response.continuationToken)
     }
 
     @Test
@@ -2949,14 +2745,13 @@ class NativeAuthResponseHandlerTest {
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.challengeType)
         Assert.assertNull(response.challengeChannel)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.challengeTargetLabel)
         Assert.assertNull(response.bindingMethod)
         Assert.assertNull(response.codeLength)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
         Assert.assertNull(response.interval)
-        Assert.assertNull(response.signupToken)
+        Assert.assertNull(response.continuationToken)
     }
 
     @Test
@@ -2964,15 +2759,14 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getSignUpContinueResultFromHttpResponse(nullHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
-        Assert.assertNull(response.signInSLT)
+        Assert.assertNull(response.subError)
+        Assert.assertNull(response.continuationToken)
         Assert.assertNull(response.invalidAttributes)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.expiresIn)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
         Assert.assertNull(response.requiredAttributes)
-        Assert.assertNull(response.signupToken)
+        Assert.assertNull(response.continuationToken)
         Assert.assertNull(response.unverifiedAttributes)
     }
 
@@ -2981,15 +2775,14 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getSignUpContinueResultFromHttpResponse(emptyHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
-        Assert.assertNull(response.signInSLT)
+        Assert.assertNull(response.subError)
+        Assert.assertNull(response.continuationToken)
         Assert.assertNull(response.invalidAttributes)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.expiresIn)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
         Assert.assertNull(response.requiredAttributes)
-        Assert.assertNull(response.signupToken)
+        Assert.assertNull(response.continuationToken)
         Assert.assertNull(response.unverifiedAttributes)
     }
 
@@ -2998,14 +2791,11 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getSignInInitiateResultFromHttpResponse(nullHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.challengeType)
-        Assert.assertNull(response.credentialToken)
-        Assert.assertNull(response.details)
+        Assert.assertNull(response.continuationToken)
         Assert.assertNull(response.errorUri)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
-        Assert.assertNull(response.innerErrors)
     }
 
     @Test
@@ -3013,14 +2803,11 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getSignInInitiateResultFromHttpResponse(emptyHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.challengeType)
-        Assert.assertNull(response.credentialToken)
-        Assert.assertNull(response.details)
+        Assert.assertNull(response.continuationToken)
         Assert.assertNull(response.errorUri)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
-        Assert.assertNull(response.innerErrors)
     }
 
     @Test
@@ -3028,14 +2815,11 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getSignInChallengeResultFromHttpResponse(nullHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.challengeType)
-        Assert.assertNull(response.credentialToken)
-        Assert.assertNull(response.details)
+        Assert.assertNull(response.continuationToken)
         Assert.assertNull(response.errorUri)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
-        Assert.assertNull(response.innerErrors)
         Assert.assertNull(response.challengeChannel)
         Assert.assertNull(response.challengeTargetLabel)
         Assert.assertNull(response.interval)
@@ -3046,14 +2830,11 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getSignInChallengeResultFromHttpResponse(emptyHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.challengeType)
-        Assert.assertNull(response.credentialToken)
-        Assert.assertNull(response.details)
+        Assert.assertNull(response.continuationToken)
         Assert.assertNull(response.errorUri)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
-        Assert.assertNull(response.innerErrors)
         Assert.assertNull(response.challengeChannel)
         Assert.assertNull(response.challengeTargetLabel)
         Assert.assertNull(response.interval)
@@ -3078,16 +2859,13 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getResetPasswordChallengeApiResponseFromHttpResponse(nullHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.challengeType)
         Assert.assertNull(response.challengeChannel)
         Assert.assertNull(response.challengeTargetLabel)
-        Assert.assertNull(response.passwordResetToken)
-        Assert.assertNull(response.details)
+        Assert.assertNull(response.continuationToken)
         Assert.assertNull(response.errorUri)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
-        Assert.assertNull(response.innerErrors)
         Assert.assertNull(response.bindingMethod)
         Assert.assertNull(response.interval)
     }
@@ -3097,16 +2875,13 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getResetPasswordChallengeApiResponseFromHttpResponse(emptyHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.challengeType)
         Assert.assertNull(response.challengeChannel)
         Assert.assertNull(response.challengeTargetLabel)
-        Assert.assertNull(response.passwordResetToken)
-        Assert.assertNull(response.details)
+        Assert.assertNull(response.continuationToken)
         Assert.assertNull(response.errorUri)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
-        Assert.assertNull(response.innerErrors)
         Assert.assertNull(response.bindingMethod)
         Assert.assertNull(response.interval)
     }
@@ -3116,14 +2891,11 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getResetPasswordStartApiResponseFromHttpResponse(nullHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.challengeType)
-        Assert.assertNull(response.passwordResetToken)
-        Assert.assertNull(response.details)
+        Assert.assertNull(response.continuationToken)
         Assert.assertNull(response.errorUri)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
-        Assert.assertNull(response.innerErrors)
     }
 
     @Test
@@ -3131,14 +2903,11 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getResetPasswordStartApiResponseFromHttpResponse(emptyHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.challengeType)
-        Assert.assertNull(response.passwordResetToken)
-        Assert.assertNull(response.details)
+        Assert.assertNull(response.continuationToken)
         Assert.assertNull(response.errorUri)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
-        Assert.assertNull(response.innerErrors)
     }
 
     @Test
@@ -3146,14 +2915,11 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getResetPasswordContinueApiResponseFromHttpResponse(nullHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
         Assert.assertNull(response.challengeType)
-        Assert.assertNull(response.passwordSubmitToken)
-        Assert.assertNull(response.details)
+        Assert.assertNull(response.continuationToken)
         Assert.assertNull(response.errorUri)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
-        Assert.assertNull(response.innerErrors)
         Assert.assertNull(response.expiresIn)
     }
 
@@ -3162,14 +2928,12 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getResetPasswordContinueApiResponseFromHttpResponse(emptyHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
+        Assert.assertNull(response.subError)
         Assert.assertNull(response.challengeType)
-        Assert.assertNull(response.passwordSubmitToken)
-        Assert.assertNull(response.details)
+        Assert.assertNull(response.continuationToken)
         Assert.assertNull(response.errorUri)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
-        Assert.assertNull(response.innerErrors)
         Assert.assertNull(response.expiresIn)
     }
 
@@ -3178,13 +2942,11 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getResetPasswordSubmitApiResponseFromHttpResponse(nullHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
-        Assert.assertNull(response.passwordResetToken)
-        Assert.assertNull(response.details)
+        Assert.assertNull(response.subError)
+        Assert.assertNull(response.continuationToken)
         Assert.assertNull(response.errorUri)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
-        Assert.assertNull(response.innerErrors)
     }
 
     @Test
@@ -3192,13 +2954,11 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getResetPasswordSubmitApiResponseFromHttpResponse(emptyHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
-        Assert.assertNull(response.passwordResetToken)
-        Assert.assertNull(response.details)
+        Assert.assertNull(response.subError)
+        Assert.assertNull(response.continuationToken)
         Assert.assertNull(response.errorUri)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
-        Assert.assertNull(response.innerErrors)
     }
 
     @Test
@@ -3206,12 +2966,10 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getResetPasswordPollCompletionApiResponseFromHttpResponse(nullHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
-        Assert.assertNull(response.details)
+        Assert.assertNull(response.subError)
         Assert.assertNull(response.errorUri)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
-        Assert.assertNull(response.innerErrors)
     }
 
     @Test
@@ -3219,12 +2977,10 @@ class NativeAuthResponseHandlerTest {
         val response = handler.getResetPasswordPollCompletionApiResponseFromHttpResponse(emptyHttpResponse)
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
-        Assert.assertNull(response.details)
-        Assert.assertNull(response.details)
+        Assert.assertNull(response.subError)
         Assert.assertNull(response.errorUri)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
-        Assert.assertNull(response.innerErrors)
     }
     // endregion
 }

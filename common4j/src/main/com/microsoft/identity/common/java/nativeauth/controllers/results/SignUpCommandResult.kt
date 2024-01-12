@@ -54,7 +54,7 @@ interface SignUpCommandResult {
      * Denotes completion of Signup operation
      */
     data class Complete (
-        val signInSLT: String?,
+        val continuationToken: String?,
         val expiresIn: Int?
     ) : SignUpStartCommandResult,
         SignUpSubmitCodeCommandResult, SignUpSubmitPasswordCommandResult,
@@ -64,7 +64,7 @@ interface SignUpCommandResult {
      * Signup is at a state where the user has to provide an out of band code to progress in the flow.
      */
     data class CodeRequired(
-        val signupToken: String,
+        val continuationToken: String,
         val challengeTargetLabel: String,
         val challengeChannel: String,
         val codeLength: Int
@@ -76,7 +76,7 @@ interface SignUpCommandResult {
      * Signup operation requires user to supply a password to progress in the flow.
      */
     data class PasswordRequired(
-        val signupToken: String
+        val continuationToken: String
     ) : SignUpStartCommandResult,
         SignUpSubmitCodeCommandResult
 
@@ -85,7 +85,7 @@ interface SignUpCommandResult {
      * requiredAttributes contains the list of required attributes
      */
     data class AttributesRequired(
-        val signupToken: String,
+        val continuationToken: String,
         val error: String,
         val errorDescription: String,
         val requiredAttributes: List<UserAttributeApiResult>,
@@ -109,7 +109,8 @@ interface SignUpCommandResult {
     data class InvalidPassword(
         val error: String,
         val errorDescription: String,
-        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId  //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
+        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId, //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
+        val subError: String
     ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult
 
 
@@ -119,7 +120,8 @@ interface SignUpCommandResult {
     data class InvalidCode(
         val error: String,
         val errorDescription: String,
-        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId  //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
+        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId, //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
+        val subError: String
     ) : SignUpSubmitCodeCommandResult
 
     /**

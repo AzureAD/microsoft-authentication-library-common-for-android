@@ -25,7 +25,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.interactors
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithSLTCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
@@ -86,11 +86,11 @@ class SignInInteractor(
 
     //region /oauth/v2.0/challenge
     fun performSignInChallenge(
-        credentialToken: String,
+        continuationToken: String,
     ): SignInChallengeApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignInChallenge(credentialToken: String)")
+        LogSession.logMethodCall(TAG, "${TAG}.performSignInChallenge(continuationToken: String)")
         val request = nativeAuthRequestProvider.createSignInChallengeRequest(
-            credentialToken = credentialToken
+            continuationToken = continuationToken
         )
         return performSignInChallenge(request)
     }
@@ -124,11 +124,11 @@ class SignInInteractor(
         return performGetToken(request)
     }
 
-    fun performSLTTokenRequest(
-        parameters: SignInWithSLTCommandParameters
+    fun performContinuationTokenTokenRequest(
+        parameters: SignInWithContinuationTokenCommandParameters
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSLTTokenRequest")
-        val request = nativeAuthRequestProvider.createSLTTokenRequest(
+        LogSession.logMethodCall(TAG, "${TAG}.performContinuationTokenTokenRequest")
+        val request = nativeAuthRequestProvider.createContinuationTokenTokenRequest(
             parameters = parameters
         )
         return performGetToken(request)

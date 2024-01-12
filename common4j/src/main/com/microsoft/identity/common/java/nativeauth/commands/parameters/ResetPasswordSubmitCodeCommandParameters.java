@@ -43,8 +43,8 @@ public class ResetPasswordSubmitCodeCommandParameters extends BaseNativeAuthComm
     public final String code;
 
     /**
-     * The password reset token obtained from the challenge endpoint.
+     * The continuation token obtained from the challenge endpoint.
      */
     @NonNull
-    public final String passwordResetToken;
+    public final String continuationToken;
 }

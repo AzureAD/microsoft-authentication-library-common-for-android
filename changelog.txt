@@ -1,6 +1,7 @@
 V.Next
 ---------
 - [PATCH] Fix MSAL Issue 1864 (#2280)
+- [MINOR] Implement updates of the native auth web API (#2261)
 
 V.17.0.0
 ---------

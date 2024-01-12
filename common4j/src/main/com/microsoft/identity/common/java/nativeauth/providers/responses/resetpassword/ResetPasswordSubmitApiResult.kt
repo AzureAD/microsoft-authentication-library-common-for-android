@@ -30,13 +30,14 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErro
  */
 sealed interface ResetPasswordSubmitApiResult {
     data class SubmitSuccess(
-        val passwordResetToken: String,
+        val continuationToken: String,
         val pollInterval: Int
     ) : ResetPasswordSubmitApiResult
 
     data class PasswordInvalid(
         override val error: String,
-        override val errorDescription: String
+        override val errorDescription: String,
+        val subError: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -53,10 +54,8 @@ sealed interface ResetPasswordSubmitApiResult {
     data class UnknownError(
         override val error: String,
         override val errorDescription: String,
-        override val details: List<Map<String, String>>?
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
-        details = details
     ), ResetPasswordSubmitApiResult
 }
