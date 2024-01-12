@@ -89,12 +89,12 @@ class ResetPasswordInteractor(
 
     //region /resetpassword/challenge
     fun performResetPasswordChallenge(
-        passwordResetToken: String
+        continuationToken: String
     ): ResetPasswordChallengeApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordChallenge(passwordResetToken: String)")
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordChallenge(continuationToken: String)")
 
         val request = nativeAuthRequestProvider.createResetPasswordChallengeRequest(
-            passwordResetToken = passwordResetToken
+            continuationToken = continuationToken
         )
         return performResetPasswordChallenge(request)
     }
@@ -188,12 +188,12 @@ class ResetPasswordInteractor(
 
     //region /resetpassword/poll_completion
     fun performResetPasswordPollCompletion(
-        passwordResetToken: String
+        continuationToken: String
     ): ResetPasswordPollCompletionApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordPollCompletion(passwordResetToken: String)")
+        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordPollCompletion(continuationToken: String)")
 
         val request = nativeAuthRequestProvider.createResetPasswordPollCompletionRequest(
-            passwordResetToken = passwordResetToken
+            continuationToken = continuationToken
         )
         return performResetPasswordPollCompletion(request)
     }

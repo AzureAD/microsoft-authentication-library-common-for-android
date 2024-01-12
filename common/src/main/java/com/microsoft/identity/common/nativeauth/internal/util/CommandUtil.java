@@ -27,7 +27,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.Acquire
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartUsingPasswordCommandParameters;
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters;
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters;
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithSLTCommandParameters;
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters;
 import com.microsoft.identity.common.java.request.SdkType;
 
 import java.util.List;
@@ -55,14 +55,14 @@ public class CommandUtil {
     }
 
     /**
-     * Adds scopes to [SignInWithSLTCommandParameters] object and returns a new
-     * [SignInWithSLTCommandParameters] object.
+     * Adds scopes to [SignInWithContinuationTokenCommandParameters] object and returns a new
+     * [SignInWithContinuationTokenCommandParameters] object.
      * @param parameters input command parameter
      * @param defaultScopes scopes to be added
-     * @return [SignInWithSLTCommandParameters] object with scopes
+     * @return [SignInWithContinuationTokenCommandParameters] object with scopes
      */
-    public static SignInWithSLTCommandParameters createSignInWithSLTCommandParametersWithScopes(
-            SignInWithSLTCommandParameters parameters,
+    public static SignInWithContinuationTokenCommandParameters createSignInWithContinuationTokenCommandParametersWithScopes(
+            SignInWithContinuationTokenCommandParameters parameters,
             List<String> defaultScopes
     ) {
         return parameters.toBuilder()
@@ -103,15 +103,15 @@ public class CommandUtil {
     }
 
     /**
-     * Adds credential token to [SignInStartUsingPasswordCommandParameters] object and returns a new
+     * Adds continuation token to [SignInStartUsingPasswordCommandParameters] object and returns a new
      * [SignInSubmitPasswordCommandParameters] object.
      * @param parameters input command parameter
-     * @param credentialToken credential token to be added
-     * @return [SignInStartUsingPasswordCommandParameters] object with credential token
+     * @param continuationToken continuation token to be added
+     * @return [SignInStartUsingPasswordCommandParameters] object with continuation token
      */
     public static SignInSubmitPasswordCommandParameters createSignInSubmitPasswordCommandParameters(
             SignInStartUsingPasswordCommandParameters parameters,
-            String credentialToken
+            String continuationToken
     ) {
         final SignInSubmitPasswordCommandParameters commandParameters =
                 SignInSubmitPasswordCommandParameters.builder()
@@ -127,7 +127,7 @@ public class CommandUtil {
                         .sdkVersion(parameters.getSdkVersion())
                         .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
                         .authority(parameters.getAuthority())
-                        .credentialToken(credentialToken)
+                        .continuationToken(continuationToken)
                         .password(parameters.getPassword())
                         .scopes(parameters.getScopes())
                         .challengeType(parameters.getChallengeType())

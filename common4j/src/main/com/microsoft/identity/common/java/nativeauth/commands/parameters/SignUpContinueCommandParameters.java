@@ -40,8 +40,8 @@ public class SignUpContinueCommandParameters extends BaseNativeAuthCommandParame
 	private static final String TAG = SignUpContinueCommandParameters.class.getSimpleName();
 
 	/**
-	 * The sign up token obtained from the challenge endpoint.
+	 * The continuation token obtained from the challenge endpoint.
 	 */
 	@NonNull
-	public final String signupToken;
+	public final String continuationToken;
 }

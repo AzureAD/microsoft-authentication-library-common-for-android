@@ -39,7 +39,7 @@ import java.net.HttpURLConnection
  */
 class ResetPasswordChallengeApiResponse(
     @Expose override var statusCode: Int,
-    @SerializedName("password_reset_token") val passwordResetToken: String?,
+    @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
     @Expose @SerializedName("binding_method") val bindingMethod: String?,
     @SerializedName("challenge_target_label") val challengeTargetLabel: String?,
@@ -47,10 +47,8 @@ class ResetPasswordChallengeApiResponse(
     @Expose @SerializedName("code_length") val codeLength: Int?,
     @Expose @SerializedName("interval") val interval: Int?,
     @SerializedName("error") val error: String?,
-    @SerializedName("details") val details: List<Map<String, String>>?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
-    @SerializedName("inner_errors") val innerErrors: List<InnerError>?
 ): IApiResponse(statusCode) {
 
     companion object {
@@ -85,7 +83,6 @@ class ResetPasswordChallengeApiResponse(
                         ResetPasswordChallengeApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            details = details
                         )
                     }
                 }
@@ -103,30 +100,26 @@ class ResetPasswordChallengeApiResponse(
                                 ResetPasswordChallengeApiResult.UnknownError(
                                     error = "invalid_state",
                                     errorDescription = "ResetPassword /challenge did not return a challenge_target_label with oob challenge type",
-                                    details = details
                                 )
                             }
                             challengeChannel.isNullOrBlank() -> {
                                 ResetPasswordChallengeApiResult.UnknownError(
                                     error = "invalid_state",
                                     errorDescription = "ResetPassword /challenge did not return a challenge_channel with oob challenge type",
-                                    details = details
                                 )
                             }
                             codeLength == null -> {
                                 ResetPasswordChallengeApiResult.UnknownError(
                                     error = "invalid_state",
                                     errorDescription = "ResetPassword /challenge did not return a code_length with oob challenge type",
-                                    details = details
                                 )
                             }
                             else -> {
                                 ResetPasswordChallengeApiResult.CodeRequired(
-                                    passwordResetToken = passwordResetToken
+                                    continuationToken = continuationToken
                                         ?: return ResetPasswordChallengeApiResult.UnknownError(
                                             error = "invalid_state",
-                                            errorDescription = "ResetPassword /challenge successful, but did not return a flow token",
-                                            details = details
+                                            errorDescription = "ResetPassword /challenge successful, but did not return a continuation token",
                                         ),
                                     challengeTargetLabel = challengeTargetLabel,
                                     codeLength = codeLength,
@@ -139,7 +132,6 @@ class ResetPasswordChallengeApiResponse(
                         ResetPasswordChallengeApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            details = details
                         )
                     }
                 }
@@ -150,7 +142,6 @@ class ResetPasswordChallengeApiResponse(
                 ResetPasswordChallengeApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
-                    details = details
                 )
             }
         }

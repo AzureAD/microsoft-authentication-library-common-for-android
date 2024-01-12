@@ -46,8 +46,8 @@ public class ResetPasswordSubmitNewPasswordCommandParameters extends BaseNativeA
     public final char[] newPassword;
 
     /**
-     * The password submit token obtained from the continue endpoint.
+     * The continuation token obtained from the continue endpoint.
      */
     @NonNull
-    public final String passwordSubmitToken;
+    public final String continuationToken;
 }

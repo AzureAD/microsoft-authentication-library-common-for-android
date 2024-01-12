@@ -53,14 +53,14 @@ data class SignUpContinueRequest private constructor(
             attributes: Map<String, String>? = null,
             oob: String? = null,
             clientId: String,
-            signUpToken: String,
+            continuationToken: String,
             grantType: String,
             requestUrl: String,
             headers: Map<String, String?>
         ): SignUpContinueRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(clientId, "clientId")
-            ArgUtils.validateNonNullArg(signUpToken, "signUpToken")
+            ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             ArgUtils.validateNonNullArg(grantType, "grantType")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
@@ -80,7 +80,7 @@ data class SignUpContinueRequest private constructor(
                     attributes = attributes?.toJsonString(attributes),
                     oob = oob,
                     clientId = clientId,
-                    signUpToken = signUpToken,
+                    continuationToken = continuationToken,
                     grantType = grantType
                 ),
                 requestUrl = URL(requestUrl),
@@ -98,7 +98,7 @@ data class SignUpContinueRequest private constructor(
         val attributes: String? = null,
         val oob: String?,
         @SerializedName("client_id") override val clientId: String,
-        @SerializedName("signup_token") val signUpToken: String,
+        @SerializedName("continuation_token") val continuationToken: String,
         @SerializedName("grant_type") val grantType: String
     ) : NativeAuthRequestParameters()
 }

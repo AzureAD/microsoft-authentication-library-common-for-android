@@ -40,7 +40,7 @@ data class ResetPasswordStartRequest private constructor(
         /**
          * Returns a request object using the provided parameters.
          * The request URL and headers passed will be set directly.
-         * The clientId, password reset token, and challengeType will be mapped to the NativeAuthRequestResetPasswordStartParameters object.
+         * The clientId, continuation token, and challengeType will be mapped to the NativeAuthRequestResetPasswordStartParameters object.
          *
          * Parameters that are null or empty will throw a ClientException.
          * @see com.microsoft.identity.common.java.exception.ClientException

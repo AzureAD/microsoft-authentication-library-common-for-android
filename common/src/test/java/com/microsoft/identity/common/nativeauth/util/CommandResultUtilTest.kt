@@ -37,15 +37,15 @@ import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 import org.mockito.kotlin.mock
 
-private const val SIGNUP_TOKEN = "1234"
-private const val CREDENTIAL_TOKEN = "ABCD"
-private const val PASSWORD_RESET_TOKEN = "klsdjf"
-private const val PASSWORD_SUBMIT_TOKEN = "ioamf43"
+private const val CONTINUATION_TOKEN = "1234"
 private const val ERROR = "error_code"
 private const val ERROR_DESCRIPTION = "error description"
 private const val CHALLENGE_TARGET_LABEL = "user@contoso.com"
 private const val CHALLENGE_TYPE = "email"
 private const val CODE_LENGTH = 6
+private const val EXPIRES_IN = 1000
+private const val SUBERROR_INVALID_OOB = "invalid_oob_value"
+private const val SUBERROR_INVALID_PASSWORD = "password_is_invalid"
 
 /**
  * Split into multiple tests, as JUnit4 doesn't have support for @MethodSource like JUnit5 does.
@@ -53,7 +53,7 @@ private const val CODE_LENGTH = 6
 
 //region sign-up
 private val signUpAttributesRequiredCommandResult = SignUpCommandResult.AttributesRequired(
-    signupToken = SIGNUP_TOKEN,
+    continuationToken = CONTINUATION_TOKEN,
     error = ERROR,
     errorDescription = ERROR_DESCRIPTION,
     requiredAttributes = emptyList()
@@ -65,14 +65,14 @@ private val signUpAuthNotSupportedCommandResult = SignUpCommandResult.AuthNotSup
 )
 
 private val signUpCodeRequiredCommandResult = SignUpCommandResult.CodeRequired(
-    signupToken = SIGNUP_TOKEN,
+    continuationToken = CONTINUATION_TOKEN,
     challengeChannel = CHALLENGE_TYPE,
     challengeTargetLabel = CHALLENGE_TARGET_LABEL,
     codeLength = CODE_LENGTH
 )
 
 private val signUpCompleteCommandResult = SignUpCommandResult.Complete(
-    signInSLT = null,
+    continuationToken = null,
     expiresIn = null
 )
 
@@ -85,15 +85,17 @@ private val signUpInvalidAttributesCommandResult = SignUpCommandResult.InvalidAt
 private val signUpInvalidCodeCommandResult = SignUpCommandResult.InvalidCode(
     error = ERROR,
     errorDescription = ERROR_DESCRIPTION,
+    subError = SUBERROR_INVALID_OOB
 )
 
 private val signUpInvalidPasswordCommandResult = SignUpCommandResult.InvalidPassword(
     error = ERROR,
     errorDescription = ERROR_DESCRIPTION,
+    subError = SUBERROR_INVALID_PASSWORD
 )
 
 private val signUpPasswordRequiredCommandResult = SignUpCommandResult.PasswordRequired(
-    signupToken = SIGNUP_TOKEN,
+    continuationToken = CONTINUATION_TOKEN,
 )
 
 private val signUpUsernameAlreadyExistsCommandResult = SignUpCommandResult.UsernameAlreadyExists(
@@ -462,7 +464,7 @@ class CommandResultUtilTestSignUpResendCodeCommandResult(private val resultValue
 
 //region sign-in
 private val signInCodeRequiredCommandResult = SignInCommandResult.CodeRequired(
-    credentialToken = CREDENTIAL_TOKEN,
+    continuationToken = CONTINUATION_TOKEN,
     challengeChannel = CHALLENGE_TYPE,
     challengeTargetLabel = CHALLENGE_TARGET_LABEL,
     codeLength = CODE_LENGTH
@@ -481,12 +483,13 @@ private val signInInvalidCredentialsCommandResult = SignInCommandResult.InvalidC
 private val signInIncorrectCodeCommandResult = SignInCommandResult.IncorrectCode(
     error = ERROR,
     errorDescription = ERROR_DESCRIPTION,
-    errorCodes = emptyList()
+    errorCodes = emptyList(),
+    subError = SUBERROR_INVALID_OOB
 )
 
 private val signInPasswordRequiredCommandResult = SignInCommandResult.PasswordRequired(
-    credentialToken = CREDENTIAL_TOKEN
-)
+    continuationToken = CONTINUATION_TOKEN,
+    )
 
 private val signInUserNotFoundCommandResult = SignInCommandResult.UserNotFound(
     error = ERROR,
@@ -567,12 +570,12 @@ class CommandResultUtilTestSignInStartCommandResult(private val resultValue: Any
 
 // SignUpStartCommandResult
 @RunWith(Parameterized::class)
-class CommandResultUtilTestSignInWithSLTCommandResult(private val resultValue: Any) {
+class CommandResultUtilTestSignInWithContinuationTokenCommandResult(private val resultValue: Any) {
 
     companion object {
         @JvmStatic
         @Parameters
-        fun getSignInWithSLTCommandResults() = listOf(
+        fun getSignInWithContinuationTokenCommandResults() = listOf(
             signInCodeRequiredCommandResult,
             signInCompleteCommandResult,
             signInPasswordRequiredCommandResult,
@@ -582,14 +585,14 @@ class CommandResultUtilTestSignInWithSLTCommandResult(private val resultValue: A
     }
 
     @Test
-    fun checkAndWrapCommandResultTypeSignInWithSLTCommandResultSuccess() {
+    fun checkAndWrapCommandResultTypeSignInWithContinuationTokenCommandResultSuccess() {
         val commandResult = CommandResult<Any>(
             ResultStatus.COMPLETED,
             resultValue,
             null
         )
 
-        val result = commandResult.checkAndWrapCommandResultType<SignInWithSLTCommandResult>()
+        val result = commandResult.checkAndWrapCommandResultType<SignInWithContinuationTokenCommandResult>()
         assertEquals(resultValue.javaClass, result.javaClass)
     }
 
@@ -601,7 +604,7 @@ class CommandResultUtilTestSignInWithSLTCommandResult(private val resultValue: A
             null
         )
 
-        val result = commandResult.checkAndWrapCommandResultType<SignInWithSLTCommandResult>()
+        val result = commandResult.checkAndWrapCommandResultType<SignInWithContinuationTokenCommandResult>()
         assertTrue(result is INativeAuthCommandResult.UnknownError)
     }
 
@@ -615,7 +618,7 @@ class CommandResultUtilTestSignInWithSLTCommandResult(private val resultValue: A
             null
         )
 
-        val result = commandResult.checkAndWrapCommandResultType<SignInWithSLTCommandResult>()
+        val result = commandResult.checkAndWrapCommandResultType<SignInWithContinuationTokenCommandResult>()
         assertTrue(result is INativeAuthCommandResult.UnknownError)
     }
 
@@ -629,7 +632,7 @@ class CommandResultUtilTestSignInWithSLTCommandResult(private val resultValue: A
             null
         )
 
-        val result = commandResult.checkAndWrapCommandResultType<SignInWithSLTCommandResult>()
+        val result = commandResult.checkAndWrapCommandResultType<SignInWithContinuationTokenCommandResult>()
         assertTrue(result is INativeAuthCommandResult.UnknownError)
     }
 }
@@ -840,7 +843,7 @@ class CommandResultUtilTestSignInSubmitPasswordCommandResult(private val resultV
 
 //region reset password
 private val resetPasswordCodeRequiredCommandResult = ResetPasswordCommandResult.CodeRequired(
-    passwordResetToken = PASSWORD_RESET_TOKEN,
+    continuationToken = CONTINUATION_TOKEN,
     challengeChannel = CHALLENGE_TYPE,
     challengeTargetLabel = CHALLENGE_TARGET_LABEL,
     codeLength = CODE_LENGTH
@@ -855,12 +858,14 @@ private val resetPasswordEmailNotVerifiedCommandResult = ResetPasswordCommandRes
 
 private val resetPasswordIncorrectCodeCommandResult = ResetPasswordCommandResult.IncorrectCode(
     error = ERROR,
-    errorDescription = ERROR_DESCRIPTION
+    errorDescription = ERROR_DESCRIPTION,
+    subError = SUBERROR_INVALID_OOB
 )
 
 private val resetPasswordPasswordNotAcceptedCommandResult = ResetPasswordCommandResult.PasswordNotAccepted(
     error = ERROR,
-    errorDescription = ERROR_DESCRIPTION
+    errorDescription = ERROR_DESCRIPTION,
+    subError = SUBERROR_INVALID_OOB
 )
 
 private val resetPasswordPasswordNotSetCommandResult = ResetPasswordCommandResult.PasswordNotSet(
@@ -874,7 +879,7 @@ private val resetPasswordPasswordResetFailedCommandResult = ResetPasswordCommand
 )
 
 private val resetPasswordPasswordRequiredCommandResult = ResetPasswordCommandResult.PasswordRequired(
-    passwordSubmitToken = PASSWORD_SUBMIT_TOKEN
+    continuationToken = CONTINUATION_TOKEN
 )
 
 private val resetPasswordUserNotFoundCommandResult = ResetPasswordCommandResult.UserNotFound(
@@ -915,7 +920,7 @@ class CommandResultUtilTestResetPasswordStartCommandResult(private val resultVal
     fun testCheckAndWrapCommandResultTypeCompletedStatusWrongType() {
         val commandResult = CommandResult<Any>(
             ResultStatus.COMPLETED,
-            SignUpCommandResult.Complete(signInSLT = null, expiresIn = null),
+            SignUpCommandResult.Complete(continuationToken = null, expiresIn = null),
             null
         )
 
@@ -983,7 +988,7 @@ class CommandResultUtilTestResetPasswordSubmitCodeCommandResult(private val resu
     fun testCheckAndWrapCommandResultTypeCompletedStatusWrongType() {
         val commandResult = CommandResult<Any>(
             ResultStatus.COMPLETED,
-            SignUpCommandResult.Complete(signInSLT = null, expiresIn = null),
+            SignUpCommandResult.Complete(continuationToken = null, expiresIn = null),
             null
         )
 
@@ -1050,7 +1055,7 @@ class CommandResultUtilTestResetPasswordResendCodeCommandResult(private val resu
     fun testCheckAndWrapCommandResultTypeCompletedStatusWrongType() {
         val commandResult = CommandResult<Any>(
             ResultStatus.COMPLETED,
-            SignUpCommandResult.Complete(signInSLT = null, expiresIn = null),
+            SignUpCommandResult.Complete(continuationToken = null, expiresIn = null),
             null
         )
 
@@ -1119,7 +1124,7 @@ class CommandResultUtilTestResetPasswordSubmitNewPasswordCommandResult(private v
     fun testCheckAndWrapCommandResultTypeCompletedStatusWrongType() {
         val commandResult = CommandResult<Any>(
             ResultStatus.COMPLETED,
-            SignUpCommandResult.Complete(signInSLT = null, expiresIn = null),
+            SignUpCommandResult.Complete(continuationToken = null, expiresIn = null),
             null
         )
 

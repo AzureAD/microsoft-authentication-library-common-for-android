@@ -42,21 +42,21 @@ class ResetPasswordSubmitRequest private constructor(
         /**
          * Returns a request object using the provided parameters.
          * The request URL and headers passed will be set directly.
-         * The clientId, password reset token, and challengeType will be mapped to the NativeAuthResetPasswordSubmitRequestBody object.
+         * The clientId, continuation token, and challengeType will be mapped to the NativeAuthResetPasswordSubmitRequestBody object.
          *
          * Parameters that are null or empty will throw a ClientException.
          * @see com.microsoft.identity.common.java.exception.ClientException
          */
         fun create(
             clientId: String,
-            passwordSubmitToken: String,
+            continuationToken: String,
             newPassword: CharArray,
             requestUrl: String,
             headers: Map<String, String?>
         ): ResetPasswordSubmitRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(clientId, "clientId")
-            ArgUtils.validateNonNullArg(passwordSubmitToken, "passwordSubmitToken")
+            ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             ArgUtils.validateNonNullArg(newPassword, "newPassword")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
@@ -66,7 +66,7 @@ class ResetPasswordSubmitRequest private constructor(
                 headers = headers,
                 parameters = NativeAuthResetPasswordSubmitRequestBody(
                     clientId = clientId,
-                    passwordSubmitToken = passwordSubmitToken,
+                    continuationToken = continuationToken,
                     newPassword = newPassword
                 )
             )
@@ -79,7 +79,7 @@ class ResetPasswordSubmitRequest private constructor(
      */
     data class NativeAuthResetPasswordSubmitRequestBody(
         @SerializedName("client_id") override val clientId: String,
-        @SerializedName("password_submit_token") val passwordSubmitToken: String,
+        @SerializedName("continuation_token") val continuationToken: String,
         @JsonAdapter(CharArrayJsonAdapter::class) @SerializedName("new_password") val newPassword: CharArray
     ) : NativeAuthRequestParameters()
 }
