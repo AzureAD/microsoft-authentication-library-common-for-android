@@ -101,7 +101,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl) {
         super(activity, completionCallback, pageLoadedCallback);
-        Logger.info(TAG, "in constructor of AzureActiveDirectoryWebViewClient "+ redirectUrl);
+        Logger.info(TAG, "in constructor of AzureActiveDirectoryWebViewClient "+ redirectUrl.substring(0,4));
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
     }
@@ -166,7 +166,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean handleUrl(final WebView view, final String url) {
         final String methodTag = TAG + ":handleUrl";
         final String formattedURL = url.toLowerCase(Locale.US);
-        Logger.info(methodTag, "in handleUrl method "+ formattedURL);
+        Logger.info(methodTag, "in handleUrl method "+ formattedURL.substring(0,4));
+        if (formattedURL.contains("http")) {
+            Logger.info(methodTag, "brk redirect "+ formattedURL.substring(0,4));
+            if(isRedirectUrl(formattedURL))
+            {
+                Logger.info(methodTag, "brk redirect "+ formattedURL.substring(1,7));
+            }
+        }
         try {
             if (isPkeyAuthUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for pkeyauth challenge.");

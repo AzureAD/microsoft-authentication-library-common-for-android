@@ -298,6 +298,7 @@ public class TokenRequest implements IHasExtraParameters {
     public static class GrantTypes {
         public static final String AUTHORIZATION_CODE = "authorization_code";
         public static final String REFRESH_TOKEN = "refresh_token";
+        public static final String TRANSFER_TOKEN = "refresh_token";
         public static final String PASSWORD = "password";
         public static final String DEVICE_CODE = "urn:ietf:params:oauth:grant-type:device_code";
         public final static String CLIENT_CREDENTIALS = "client_credentials";

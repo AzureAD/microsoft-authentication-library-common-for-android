@@ -93,11 +93,16 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
     // Suppressing unchecked warnings during casting to HashMap<String,String> due to no generic type with mAuthorizationRequest
     @SuppressWarnings(WarningType.unchecked_warning)
     private Intent buildAuthorizationActivityStartIntent(URI requestUrl) {
+        Logger.info(TAG, "buildAuthorizationActivityStartIntent "+ mAuthorizationRequest.getBrkRedirectUri());
+        if (mAuthorizationRequest.getBrkRedirectUri()!=null) {
+            Logger.info(TAG, "buildAuthorizationActivityStartIntent "+ mAuthorizationRequest.getBrkRedirectUri().substring(0,4));
+        }
+        final String redirectUri = mAuthorizationRequest.getBrkRedirectUri() != null ? mAuthorizationRequest.getBrkRedirectUri() : mAuthorizationRequest.getRedirectUri();
         return AuthorizationActivityFactory.getAuthorizationActivityIntent(
                     getApplicationContext(),
                     null,
                     requestUrl.toString(),
-                    mAuthorizationRequest.getRedirectUri(),
+                    redirectUri,
                     mAuthorizationRequest.getRequestHeaders(),
                     AuthorizationAgent.WEBVIEW,
                     mAuthorizationRequest.isWebViewZoomEnabled(),

@@ -38,6 +38,7 @@ public abstract class AbstractJwtRequest {
     public static class ClaimNames {
         public static final String CTX = "ctx";
         public static final String REFRESH_TOKEN = "refresh_token";
+        public static final String TRANSFER_TOKEN = "refresh_token";
         public static final String X5C = "x5c";
         public static final String CLIENT_ID = "client_id";
         public static final String BRK_CLIENT_ID = "brk_client_id";
