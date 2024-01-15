@@ -1878,7 +1878,8 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            subError = null
+            subError = null,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordPollCompletionApiResponse.toResult()
@@ -1894,7 +1895,8 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            subError = null
+            subError = null,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordPollCompletionApiResponse.toResult()
@@ -1910,7 +1912,8 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            subError = null
+            subError = null,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordPollCompletionApiResponse.toResult()
@@ -1927,6 +1930,7 @@ class NativeAuthResponseHandlerTest {
             subError = passwordBannedError,
             status = null,
             continuationToken = null,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1943,6 +1947,7 @@ class NativeAuthResponseHandlerTest {
             subError = passwordTooShortError,
             status = null,
             continuationToken = null,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1959,6 +1964,7 @@ class NativeAuthResponseHandlerTest {
             subError = passwordTooLongError,
             status = null,
             continuationToken = null,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1975,6 +1981,7 @@ class NativeAuthResponseHandlerTest {
             subError = passwordRecentlyUsedError,
             status = null,
             continuationToken = null,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1991,6 +1998,7 @@ class NativeAuthResponseHandlerTest {
             subError = passwordTooWeakError,
             status = null,
             continuationToken = null,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2007,6 +2015,7 @@ class NativeAuthResponseHandlerTest {
             subError = null,
             status = null,
             continuationToken = null,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2023,6 +2032,7 @@ class NativeAuthResponseHandlerTest {
             subError = null,
             status = null,
             continuationToken = null,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2038,7 +2048,8 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            subError = null
+            subError = null,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordPollCompletionApiResponse.toResult()
@@ -2054,7 +2065,8 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            subError = null
+            subError = null,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordPollCompletionApiResponse.toResult()
