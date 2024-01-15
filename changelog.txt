@@ -1,6 +1,7 @@
 V.Next
 ---------
 - [MINOR] Implement updates of the native auth web API (#2261)
+- [MINOR] Implement update of the native auth web password reset API response (#2281)
 
 V.17.0.0
 ---------
