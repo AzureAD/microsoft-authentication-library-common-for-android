@@ -37,8 +37,8 @@ if (project.hasProperty("distCommon4jVersion") && project.distCommon4jVersion !=
 }
 
 boolean newBrokerDiscoveryEnabledFlag = project.hasProperty("newBrokerDiscoveryEnabledFlag")
-
 boolean trustDebugBrokerFlag = project.hasProperty("trustDebugBrokerFlag")
+boolean bypassRedirectUriCheck = project.hasProperty("bypassRedirectUriCheck")
 
 android {
     compileSdk rootProject.ext.compileSdkVersion
@@ -59,6 +59,7 @@ android {
                 "ru", "sk", "sl", "sr", "sv", "th", "tr", "uk", "vi", "zh-rCN", "zh-rTW"
         buildConfigField("boolean", "newBrokerDiscoveryEnabledFlag", "$newBrokerDiscoveryEnabledFlag")
         buildConfigField("boolean", "trustDebugBrokerFlag", "$trustDebugBrokerFlag")
+        buildConfigField("boolean", "bypassRedirectUriCheck", "$bypassRedirectUriCheck")
     }
 
     buildTypes {
@@ -143,12 +144,13 @@ dependencies {
         transitive = false
     }
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
-    testImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
-    androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$rootProject.ext.kotlinVersion"
+    testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$rootProject.ext.kotlinVersion"
+    androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:$rootProject.ext.kotlinVersion"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$rootProject.ext.kotlinXCoroutinesVersion"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$rootProject.ext.lifecycleKtxVersion"
 
-    implementation "androidx.datastore:datastore-preferences:1.0.0"
+    implementation "androidx.datastore:datastore-preferences:$rootProject.ext.jetpackDataStoreVersion"
 
     implementation(group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
@@ -162,6 +164,10 @@ dependencies {
     //For Executive Order work
     implementation "com.yubico.yubikit:android:$rootProject.ext.yubikitAndroidVersion"
     implementation "com.yubico.yubikit:piv:$rootProject.ext.yubikitPivVersion"
+    //For passkeys
+    implementation "androidx.credentials:credentials:$rootProject.ext.AndroidCredentialsVersion"
+    //needed for credentials support from play services, for devices running
+    implementation "androidx.credentials:credentials-play-services-auth:$rootProject.ext.AndroidCredentialsVersion"
 
     constraints {
         implementation ("com.squareup.okio:okio:3.4.0") {
@@ -169,7 +175,7 @@ dependencies {
         }
     }
 
-    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.3.0'
+    compileOnly "com.github.spotbugs:spotbugs-annotations:$rootProject.ext.spotBugsAnnotationVersion"
 
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
@@ -177,8 +183,13 @@ dependencies {
     // Test dependencies
     // Needed to resolve JSONObject inside of non-instrumented tests
     testImplementation "org.json:json:$rootProject.ext.jsonVersion"
+    testImplementation "org.skyscreamer:jsonassert:$rootProject.ext.jsonAssertVersion"
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
+    testImplementation "org.mockito.kotlin:mockito-kotlin:$rootProject.ext.mockitoKotlinVersion"
+    testImplementation "org.mockito:mockito-inline:$rootProject.ext.mockitoCoreVersion"
+    testImplementation "io.mockk:mockk:1.11.0"
+
     testImplementation "org.powermock:powermock-module-junit4:$rootProject.ext.powerMockVersion"
     testImplementation "org.powermock:powermock-module-junit4-rule:$rootProject.ext.powerMockVersion"
     testImplementation "org.powermock:powermock-api-mockito2:$rootProject.ext.powerMockVersion"
@@ -188,6 +199,7 @@ dependencies {
     testImplementation project(":LabApiUtilities")
 
     testImplementation(testFixtures(project(":common4j")))
+    testImplementation "androidx.lifecycle:lifecycle-runtime-testing:$rootProject.ext.lifecycleKtxVersion"
 
     testCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     testAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
@@ -199,9 +211,9 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 
-    implementation platform("io.opentelemetry:opentelemetry-bom:1.18.0")
-    implementation('io.opentelemetry:opentelemetry-api:1.18.0')
-    implementation ("androidx.fragment:fragment:1.3.2")
+    implementation platform("io.opentelemetry:opentelemetry-bom:$rootProject.ext.openTelemetryVersion")
+    implementation "io.opentelemetry:opentelemetry-api:$rootProject.ext.openTelemetryVersion"
+    implementation "androidx.fragment:fragment:1.3.2"
 }
 
 // Create tasks to generate javadoc
@@ -365,7 +377,7 @@ tasks.withType(GenerateMavenPom).all {
     destination = layout.buildDirectory.file("poms/${project.name}-${project.version}.pom").get().asFile
 }
 
-def dependenciesSizeInMb = project.hasProperty("dependenciesSizeMb") ? project.dependenciesSizeMb : "11"
+def dependenciesSizeInMb = project.hasProperty("dependenciesSizeMb") ? project.dependenciesSizeMb : "14"
 String configToCheck = project.hasProperty("dependenciesSizeCheckConfig") ? project.dependenciesSizeCheckConfig : "distReleaseRuntimeClasspath"
 tasks.register("dependenciesSizeCheck") {
     doLast() {
@@ -380,7 +392,7 @@ tasks.register("dependenciesSizeCheck") {
                     out << "${String.format(formatStr, (it.length() / 1024))} kb\n"
                 }
         println(out)
-        if (size > dependenciesSizeInMb.toDouble() ) {
+        if (size > dependenciesSizeInMb.toDouble()) {
             throw new GradleException("Total dependencies size is $size Mb. " +
                     "It should be less than ${dependenciesSizeInMb} Mb")
         }

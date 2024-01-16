@@ -20,12 +20,34 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.fido
+package com.microsoft.identity.common.java.nativeauth.commands.parameters;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.SuperBuilder;
 
 /**
- * Request fields specific to an Auth FIDO request.
+ * A set of Sign In Submit Password command parameters for getting token through email password authentication.
+ * extends from {@link BaseSignInTokenCommandParameters}
  */
-enum class AuthFidoRequestField {
-    AllowedCredentials,
-    KeyTypes
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@SuppressFBWarnings("EI_EXPOSE_REP2")   //Suppresses spotbugs warning on the builder class
+@SuperBuilder(toBuilder = true)
+public class SignInSubmitPasswordCommandParameters extends BaseSignInTokenCommandParameters {
+	private static final String TAG = SignInSubmitCodeCommandParameters.class.getSimpleName();
+
+	/**
+	 * The password of the user.
+	 */
+	@NonNull
+	public final char[] password;
+
+	/**
+	 * The continuation token obtained from the challenge endpoint.
+	 */
+	@NonNull
+	public final String continuationToken;
 }

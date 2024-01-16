@@ -36,13 +36,19 @@ import android.webkit.WebView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.lifecycle.ViewTreeLifecycleOwner;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
+import com.microsoft.identity.common.internal.fido.CredManFidoManager;
+import com.microsoft.identity.common.internal.fido.FidoChallenge;
+import com.microsoft.identity.common.internal.fido.AuthFidoChallengeHandler;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
+import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -60,11 +66,14 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AMAZON_APP_REDIRECT_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
+
+import io.opentelemetry.api.trace.SpanContext;
 
 /**
  * For web view client, we do not distinguish V1 from V2.
@@ -160,6 +169,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url);
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
+            } else if (FidoConstants.IS_PASSKEY_SUPPORT_READY && isPasskeyUrl(formattedURL)) {
+                Logger.info(methodTag,"WebView detected request for passkey protocol.");
+                final FidoChallenge challenge = FidoChallenge.createFromRedirectUri(url);
+                final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity)getActivity()).getSpanContext() : null;
+                final AuthFidoChallengeHandler challengeHandler = new AuthFidoChallengeHandler(
+                        new CredManFidoManager(view.getContext()),
+                        view,
+                        spanContext,
+                        ViewTreeLifecycleOwner.get(view));
+                challengeHandler.processChallenge(challenge);
             } else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
                 processRedirectUrl(view, url);
@@ -178,6 +197,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (isAuthAppMFAUrl(formattedURL)) {
                 Logger.info(methodTag,"Request to link account with Authenticator.");
                 processAuthAppMFAUrl(url);
+            } else if (isAmazonAppRedirect(formattedURL)) {
+                Logger.info(methodTag, "It is an Amazon app request");
+                processAmazonAppUri(url);
             } else if (isInvalidRedirectUri(url)) {
                 Logger.info(methodTag,"Check for Redirect Uri.");
                 processInvalidRedirectUri(view, url);
@@ -228,6 +250,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return url.startsWith(AuthenticationConstants.Broker.PKEYAUTH_REDIRECT.toLowerCase(Locale.ROOT));
     }
 
+    private boolean isPasskeyUrl(@NonNull final String url) {
+        return url.startsWith(FidoConstants.PASSKEY_PROTOCOL_REDIRECT.toLowerCase(Locale.ROOT));
+    }
+
     private boolean isRedirectUrl(@NonNull final String url) {
         return url.startsWith(mRedirectUrl.toLowerCase(Locale.US));
     }
@@ -249,6 +275,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isWebCpUrl(@NonNull final String url) {
         return url.startsWith(AuthenticationConstants.Broker.BROWSER_EXT_WEB_CP);
+    }
+
+    private boolean isAmazonAppRedirect(@NonNull final String url) {
+        return url.startsWith(AMAZON_APP_REDIRECT_PREFIX);
     }
 
     private boolean isHeaderForwardingRequiredUri(@NonNull final String url) {
@@ -357,6 +387,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         getActivity().startActivity(intent);
 
         returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
+    }
+
+    private void processAmazonAppUri(@NonNull final String url) {
+        final String methodTag = TAG + ":processAmazonAppUri";
+
+        final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        getActivity().startActivity(intent);
+        Logger.info(methodTag, "Sent Intent to launch Amazon app");
     }
 
     private void openLinkInBrowser(final String url) {

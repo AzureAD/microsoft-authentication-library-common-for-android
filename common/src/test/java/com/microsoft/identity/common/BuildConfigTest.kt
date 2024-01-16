@@ -20,18 +20,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.fido
+package com.microsoft.identity.common
 
-import android.webkit.WebView
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler
+import org.junit.Test
 
 /**
- * Abstract class that handles a FidoChallenge.
- */
-abstract class AbstractFidoChallengeHandler
-/**
- * Constructs an AbstractFidoChallengeHandler.
- * @param webView current WebView.
- */ (
-    val webView: WebView
-) : IChallengeHandler<IFidoChallenge, Void>
+ * Tests for making sure compile time flags aren't turned on in PROD build.
+ **/
+class BuildConfigTest {
+
+    @Test
+    fun failIfBypassRedirecUriCheckEnabled(){
+        assert(!BuildConfig.bypassRedirectUriCheck)
+    }
+
+    @Test
+    fun failIfTrustDebugBrokerFlagEnabled(){
+        assert(!BuildConfig.trustDebugBrokerFlag)
+    }
+}

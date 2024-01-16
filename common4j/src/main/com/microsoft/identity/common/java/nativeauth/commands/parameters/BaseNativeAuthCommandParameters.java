@@ -20,26 +20,39 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.fido
+package com.microsoft.identity.common.java.nativeauth.commands.parameters;
+
+import com.google.gson.annotations.Expose;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority;
+
+import java.util.List;
+
+import javax.annotation.Nullable;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
 /**
- * An object representing an auth FIDO challenge request.
+ * BaseNativeAuthCommandParameters is the base class for parameters for all Native Auth commands.
  */
-data class AuthFidoChallenge(
-    override val challenge: String,
-    override val relyingPartyIdentifier: String,
-    override val userVerificationPolicy: String,
-    override val version: String,
-    override val submitUrl: String,
-    override val context: String,
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
+public class BaseNativeAuthCommandParameters extends CommandParameters {
+    private static final String TAG = BaseNativeAuthCommandParameters.class.getSimpleName();
+
     /**
-     * Array of allowed key types.
-     * This parameter is optional.
+     * The authority for the token being fetched.
      */
-    val keyTypes: List<String>?,
+    @Expose()
+    public final NativeAuthCIAMAuthority authority;
+
     /**
-     * List of credential IDs the client will use for filtering.
-     * This parameter is optional.
+     * The initial challenge type for the user being authenticated.
      */
-    val allowedCredentials: List<String>?
-) : IFidoChallenge
+    @Expose()
+    @Nullable
+    public final List<String> challengeType;
+}
