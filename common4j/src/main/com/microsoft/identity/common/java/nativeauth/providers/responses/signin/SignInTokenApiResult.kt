@@ -65,7 +65,8 @@ sealed interface SignInTokenApiResult {
     data class CodeIncorrect(
         override val error: String,
         override val errorDescription: String,
-        override val errorCodes: List<Int>
+        override val errorCodes: List<Int>,
+        val subError: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -86,7 +87,6 @@ sealed interface SignInTokenApiResult {
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
-        override val details: List<Map<String, String>>?
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,

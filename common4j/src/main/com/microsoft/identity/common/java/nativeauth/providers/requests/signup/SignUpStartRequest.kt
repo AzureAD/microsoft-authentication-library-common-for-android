@@ -42,7 +42,7 @@ data class SignUpStartRequest private constructor(
         /**
          * Returns a request object using the provided parameters.
          * The request URL and headers passed will be set directly.
-         * The clientId, sign up token, and challengeType will be mapped to the NativeAuthRequestSignUpStartParameters object.
+         * The clientId, continuation token, and challengeType will be mapped to the NativeAuthRequestSignUpStartParameters object.
          *
          * Parameters outside of password and attributes that are null or empty will throw a ClientException.
          * @see com.microsoft.identity.common.java.exception.ClientException

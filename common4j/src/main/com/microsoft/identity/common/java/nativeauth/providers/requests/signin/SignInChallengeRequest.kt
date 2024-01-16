@@ -39,7 +39,7 @@ data class SignInChallengeRequest private constructor(
     /**
      * Returns a request object using the provided parameters.
      * The request URL and headers passed will be set directly.
-     * The clientId, credential token, and challengeType will be mapped to the NativeAuthRequestSignInChallengeParameters object.
+     * The clientId, continuation token, and challengeType will be mapped to the NativeAuthRequestSignInChallengeParameters object.
      *
      * Parameters that are null or empty will throw a ClientException.
      * @see com.microsoft.identity.common.java.exception.ClientException
@@ -47,14 +47,14 @@ data class SignInChallengeRequest private constructor(
     companion object {
         fun create(
             clientId: String,
-            credentialToken: String,
+            continuationToken: String,
             challengeType: String,
             requestUrl: String,
             headers: Map<String, String?>
         ): SignInChallengeRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(clientId, "clientId")
-            ArgUtils.validateNonNullArg(credentialToken, "credentialToken")
+            ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(challengeType, "challengeType")
             ArgUtils.validateNonNullArg(headers, "headers")
@@ -62,7 +62,7 @@ data class SignInChallengeRequest private constructor(
             return SignInChallengeRequest(
                 parameters = NativeAuthRequestSignInChallengeParameters(
                     clientId = clientId,
-                    credentialToken = credentialToken,
+                    continuationToken = continuationToken,
                     challengeType = challengeType
                 ),
                 requestUrl = URL(requestUrl),
@@ -73,7 +73,7 @@ data class SignInChallengeRequest private constructor(
 
     data class NativeAuthRequestSignInChallengeParameters(
         @SerializedName("client_id") override val clientId: String,
-        @SerializedName("credential_token") val credentialToken: String,
+        @SerializedName("continuation_token") val continuationToken: String,
         @SerializedName("challenge_type") val challengeType: String?
     ) : NativeAuthRequestParameters()
 }

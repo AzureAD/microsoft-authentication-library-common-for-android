@@ -31,7 +31,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErro
 sealed interface ResetPasswordStartApiResult {
     object Redirect : ResetPasswordStartApiResult
 
-    data class Success(val passwordResetToken: String) : ResetPasswordStartApiResult
+    data class Success(val continuationToken: String) : ResetPasswordStartApiResult
 
     data class UserNotFound(
         override val error: String,
@@ -52,10 +52,8 @@ sealed interface ResetPasswordStartApiResult {
     data class UnknownError(
         override val error: String,
         override val errorDescription: String,
-        override val details: List<Map<String, String>>?
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
-        details = details
     ), ResetPasswordStartApiResult
 }

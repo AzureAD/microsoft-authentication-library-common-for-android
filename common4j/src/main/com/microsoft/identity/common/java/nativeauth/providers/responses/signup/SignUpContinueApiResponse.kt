@@ -32,10 +32,10 @@ import com.microsoft.identity.common.java.nativeauth.util.isAttributeValidationF
 import com.microsoft.identity.common.java.nativeauth.util.isAttributesRequired
 import com.microsoft.identity.common.java.nativeauth.util.isCredentialRequired
 import com.microsoft.identity.common.java.nativeauth.util.isExpiredToken
+import com.microsoft.identity.common.java.nativeauth.util.isInvalidGrant
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidOOBValue
-import com.microsoft.identity.common.java.nativeauth.util.isInvalidRequest
-import com.microsoft.identity.common.java.nativeauth.util.isOtpCodeIncorrect
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordBanned
+import com.microsoft.identity.common.java.nativeauth.util.isPasswordInvalid
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordRecentlyUsed
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordTooLong
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordTooShort
@@ -51,16 +51,15 @@ import java.net.HttpURLConnection
  */
 data class SignUpContinueApiResponse(
     @Expose override var statusCode: Int,
-    @SerializedName("signin_slt") val signInSLT: String?,
-    @SerializedName("signup_token") val signupToken: String?,
+    @SerializedName("continuation_token") val continuationToken: String?,
+    @Expose @SerializedName("expires_in") val expiresIn: Int?,
     @Expose @SerializedName("unverified_attributes") val unverifiedAttributes: List<Map<String, String>>?,
-    @SerializedName("invalid_attributes") val invalidAttributes: List<Map<String, String>>?,
+    @Expose @SerializedName("invalid_attributes") val invalidAttributes: List<Map<String, String>>?,
     @Expose @SerializedName("required_attributes") val requiredAttributes: List<UserAttributeApiResult>?,
-    @SerializedName("expires_in") val expiresIn: Int?,
     @SerializedName("error") val error: String?,
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     @SerializedName("error_description") val errorDescription: String?,
-    @SerializedName("details") val details: List<Map<String, String>>?
+    @SerializedName("suberror") val subError: String?
 ) : IApiResponse(statusCode) {
 
     companion object {
@@ -75,29 +74,47 @@ data class SignUpContinueApiResponse(
             // Handle 400 errors
             HttpURLConnection.HTTP_BAD_REQUEST -> {
                 return when {
-                    error.isPasswordTooWeak() || error.isPasswordTooLong() || error.isPasswordTooShort() || error.isPasswordBanned() ||
-                            error.isPasswordRecentlyUsed() -> {
-                        SignUpContinueApiResult.InvalidPassword(
-                            error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
-                        )
+                    error.isInvalidGrant() -> {
+                        return when {
+                            subError.isPasswordTooWeak() || subError.isPasswordTooLong() || subError.isPasswordTooShort() || subError.isPasswordBanned() ||
+                                    subError.isPasswordRecentlyUsed() || subError.isPasswordInvalid() -> {
+                                SignUpContinueApiResult.InvalidPassword(
+                                    error = error.orEmpty(),
+                                    errorDescription = errorDescription.orEmpty(),
+                                    subError = subError.orEmpty()
+                                )
+                            }
+                            subError.isAttributeValidationFailed() -> {
+                                SignUpContinueApiResult.InvalidAttributes(
+                                    error = error.orEmpty(),
+                                    errorDescription = errorDescription.orEmpty(),
+                                    invalidAttributes = invalidAttributes?.toAttributeList()
+                                        ?: return SignUpContinueApiResult.UnknownError(
+                                            error = "invalid_state",
+                                            errorDescription = "SignUp /continue did not return a invalid_attributes with validation_failed error",
+                                        ),
+                                    subError = subError.orEmpty()
+                                )
+                            }
+                            subError.isInvalidOOBValue() ->{
+                                SignUpContinueApiResult.InvalidOOBValue(
+                                    error = error.orEmpty(),
+                                    errorDescription = errorDescription.orEmpty(),
+                                    subError = subError.orEmpty()
+                                )
+                            }
+                            else -> {
+                                SignUpContinueApiResult.UnknownError(
+                                    error = error.orEmpty(),
+                                    errorDescription = errorDescription.orEmpty(),
+                                )
+                            }
+                        }
                     }
                     error.isUserAlreadyExists() -> {
                         SignUpContinueApiResult.UsernameAlreadyExists(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty()
-                        )
-                    }
-                    error.isAttributeValidationFailed() -> {
-                        SignUpContinueApiResult.InvalidAttributes(
-                            error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty(),
-                            invalidAttributes = invalidAttributes?.toAttributeList()
-                                ?: return SignUpContinueApiResult.UnknownError(
-                                    error = ApiErrorResult.INVALID_STATE,
-                                    errorDescription = "SignUp /continue did not return a invalid_attributes with validation_failed error",
-                                    details = details
-                                )
                         )
                     }
                     error.isExpiredToken() -> {
@@ -106,19 +123,12 @@ data class SignUpContinueApiResponse(
                             errorDescription = errorDescription.orEmpty()
                         )
                     }
-                    (error.isInvalidRequest() and errorCodes?.get(0).isOtpCodeIncorrect()) ->{ //Invalid otp code was sent
-                        SignUpContinueApiResult.InvalidOOBValue(
-                            error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
-                        )
-                    }
                     error.isAttributesRequired() -> {
                         SignUpContinueApiResult.AttributesRequired(
-                            signupToken = signupToken
+                            continuationToken = continuationToken
                                 ?: return SignUpContinueApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
-                                    errorDescription = "SignUp /continue did not return a flow token with attributes_required error",
-                                    details = details
+                                    errorDescription = "SignUp /continue did not return a continuation token with attributes_required error",
                                 ),
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
@@ -126,17 +136,15 @@ data class SignUpContinueApiResponse(
                                 ?: return SignUpContinueApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /continue did not return required_attributes with attributes_required error",
-                                    details = details
                                 )
                         )
                     }
                     error.isCredentialRequired() -> {
                         SignUpContinueApiResult.CredentialRequired(
-                            signupToken = signupToken
+                            continuationToken = continuationToken
                                 ?: return SignUpContinueApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
-                                    errorDescription = "SignUp /continue did not return a flow token with credential_required",
-                                    details = details
+                                    errorDescription = "SignUp /continue did not return a continuation token with credential_required",
                                 ),
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty()
@@ -146,14 +154,12 @@ data class SignUpContinueApiResponse(
                         SignUpContinueApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            details = details
                         )
                     }
                     else -> {
                         SignUpContinueApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            details = details
                         )
                     }
                 }
@@ -162,7 +168,7 @@ data class SignUpContinueApiResponse(
             // Handle success
             HttpURLConnection.HTTP_OK -> {
                 SignUpContinueApiResult.Success(
-                    signInSLT = signInSLT,
+                    continuationToken = continuationToken,
                     expiresIn = expiresIn
                 )
             }
@@ -172,7 +178,6 @@ data class SignUpContinueApiResponse(
                 SignUpContinueApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
-                    details = details
                 )
             }
         }

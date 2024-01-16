@@ -23,37 +23,37 @@
 package com.microsoft.identity.common.nativeauth.internal.commands
 
 import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithSLTCommandParameters
-import com.microsoft.identity.common.java.nativeauth.controllers.results.SignInWithSLTCommandResult
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
+import com.microsoft.identity.common.java.nativeauth.controllers.results.SignInWithContinuationTokenCommandResult
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 
 /**
- * Command class to call controllers to use short live token generated from sign in/self-service-password-reset flow to get the user authenticated.
+ * Command class to call controllers to use continuation token generated from sign in/self-service-password-reset flow to get the user authenticated.
  * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
  */
-class SignInWithSLTCommand(
-    private val parameters: SignInWithSLTCommandParameters,
+class SignInWithContinuationTokenCommand(
+    private val parameters: SignInWithContinuationTokenCommandParameters,
     private val controller: NativeAuthMsalController,
     publicApiId: String
-) : BaseNativeAuthCommand<SignInWithSLTCommandResult>(
+) : BaseNativeAuthCommand<SignInWithContinuationTokenCommandResult>(
     parameters,
     controller,
     publicApiId
 ) {
 
     companion object {
-        private val TAG = SignInWithSLTCommand::class.java.simpleName
+        private val TAG = SignInWithContinuationTokenCommand::class.java.simpleName
     }
 
     /**
      * The execution part of the command, to be run on the background thread.
-     * It calls the signInWithSLT method of the native auth MSAL controller with the given parameters.
+     * It calls the signInWithContinuationToken method of the native auth MSAL controller with the given parameters.
      */
-    override fun execute(): SignInWithSLTCommandResult {
+    override fun execute(): SignInWithContinuationTokenCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.execute")
 
-        val result = controller.signInWithSLT(
+        val result = controller.signInWithContinuationToken(
             parameters = parameters
         )
 
