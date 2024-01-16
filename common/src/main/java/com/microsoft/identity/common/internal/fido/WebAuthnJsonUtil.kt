@@ -86,26 +86,27 @@ class WebAuthnJsonUtil {
                 WEBAUTHN_RESPONSE_ID_JSON_KEY,
                 fullResponseJsonObject.get(WEBAUTHN_RESPONSE_ID_JSON_KEY)
             )
-            authResponseJsonObject.get("clientDataJSON").let {
-                result.put("clientDataJSON", convertToBase64UrlString(it as String))
+/*            authResponseJsonObject.get("clientDataJSON").let {
+                result.put("clientDataJSON", it as String)
             }
             authResponseJsonObject.get("authenticatorData").let {
-                result.put("authenticatorData", convertToBase64UrlString(it as String))
+                result.put("authenticatorData", it as String)
             }
             authResponseJsonObject.get("signature").let {
-                result.put("signature", convertToBase64UrlString(it as String))
+                result.put("signature", it as String)
             }
             authResponseJsonObject.get("userHandle").let {
-                result.put("userHandle", convertToBase64UrlString(it as String))
+                result.put("userHandle", it as String)
             }
+            return result.toString()*/
             return authResponseJsonObject.toString()
         }
 
         fun convertToBase64UrlString(str: String): String {
-            //val data: ByteArray = str.toByteArray(Charsets.UTF_8)
-            //val base64: String = Base64.encodeToString(data, (Base64.URL_SAFE or Base64.NO_WRAP))
+            val data: ByteArray = str.toByteArray(Charsets.UTF_8)
+            val base64: String = Base64.encodeToString(data, (Base64.URL_SAFE or Base64.NO_WRAP))
             //return base64.replace("=", "")
-            val base64 = str
+            //val base64 = str
             return base64.replace("=", "").replace("+", "-").replace("/", "_")
         }
     }
