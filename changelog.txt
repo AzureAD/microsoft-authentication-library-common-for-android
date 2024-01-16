@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [MINOR] Add PreferredAuthMethod to interactive token flow (#2245)
 - [MINOR] Implement updates of the native auth web API (#2261)
 
 V.17.0.0
