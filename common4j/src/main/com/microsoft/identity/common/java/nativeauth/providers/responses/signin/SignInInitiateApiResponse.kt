@@ -40,6 +40,7 @@ import java.net.HttpURLConnection
 data class SignInInitiateApiResponse(
     @Expose override var statusCode: Int,
     @SerializedName("continuation_token") val continuationToken: String?,
+    @Expose @SerializedName("correlation_id") val correlationId: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
     @SerializedName("error") val error: String?,
     @SerializedName("error_description") val errorDescription: String?,
@@ -66,14 +67,16 @@ data class SignInInitiateApiResponse(
                     SignInInitiateApiResult.UserNotFound(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
-                        errorCodes = errorCodes.orEmpty()
+                        errorCodes = errorCodes.orEmpty(),
+                        correlationId = correlationId
                     )
                 }
                 else {
                     SignInInitiateApiResult.UnknownError(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
-                        errorCodes = errorCodes.orEmpty()
+                        errorCodes = errorCodes.orEmpty(),
+                        correlationId = correlationId
                     )
                 }
             }
@@ -81,7 +84,9 @@ data class SignInInitiateApiResponse(
             // Handle success and redirect
             HttpURLConnection.HTTP_OK -> {
                 if (challengeType.isRedirect()) {
-                    SignInInitiateApiResult.Redirect
+                    SignInInitiateApiResult.Redirect(
+                        correlationId = correlationId
+                    )
                 }
                 else {
                     SignInInitiateApiResult.Success(
@@ -89,8 +94,10 @@ data class SignInInitiateApiResponse(
                             ?: return SignInInitiateApiResult.UnknownError(
                                 error = ApiErrorResult.INVALID_STATE,
                                 errorDescription = "SignIn /initiate did not return a flow token",
-                                errorCodes = errorCodes.orEmpty()
-                            )
+                                errorCodes = errorCodes.orEmpty(),
+                                correlationId = correlationId
+                            ),
+                        correlationId = correlationId
                     )
                 }
             }
@@ -100,7 +107,8 @@ data class SignInInitiateApiResponse(
                 SignInInitiateApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
-                    errorCodes = errorCodes.orEmpty()
+                    errorCodes = errorCodes.orEmpty(),
+                    correlationId = correlationId
                 )
             }
         }

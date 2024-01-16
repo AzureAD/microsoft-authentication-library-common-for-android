@@ -52,6 +52,7 @@ import java.net.HttpURLConnection
 data class SignUpContinueApiResponse(
     @Expose override var statusCode: Int,
     @SerializedName("continuation_token") val continuationToken: String?,
+    @Expose @SerializedName("correlation_id") val correlationId: String?,
     @Expose @SerializedName("expires_in") val expiresIn: Int?,
     @Expose @SerializedName("unverified_attributes") val unverifiedAttributes: List<Map<String, String>>?,
     @Expose @SerializedName("invalid_attributes") val invalidAttributes: List<Map<String, String>>?,
@@ -81,7 +82,8 @@ data class SignUpContinueApiResponse(
                                 SignUpContinueApiResult.InvalidPassword(
                                     error = error.orEmpty(),
                                     errorDescription = errorDescription.orEmpty(),
-                                    subError = subError.orEmpty()
+                                    subError = subError.orEmpty(),
+                                    correlationId = correlationId
                                 )
                             }
                             subError.isAttributeValidationFailed() -> {
@@ -92,21 +94,25 @@ data class SignUpContinueApiResponse(
                                         ?: return SignUpContinueApiResult.UnknownError(
                                             error = "invalid_state",
                                             errorDescription = "SignUp /continue did not return a invalid_attributes with validation_failed error",
+                                            correlationId = correlationId
                                         ),
-                                    subError = subError.orEmpty()
+                                    subError = subError.orEmpty(),
+                                    correlationId = correlationId
                                 )
                             }
                             subError.isInvalidOOBValue() ->{
                                 SignUpContinueApiResult.InvalidOOBValue(
                                     error = error.orEmpty(),
                                     errorDescription = errorDescription.orEmpty(),
-                                    subError = subError.orEmpty()
+                                    subError = subError.orEmpty(),
+                                    correlationId = correlationId
                                 )
                             }
                             else -> {
                                 SignUpContinueApiResult.UnknownError(
                                     error = error.orEmpty(),
                                     errorDescription = errorDescription.orEmpty(),
+                                    correlationId = correlationId
                                 )
                             }
                         }
@@ -114,13 +120,15 @@ data class SignUpContinueApiResponse(
                     error.isUserAlreadyExists() -> {
                         SignUpContinueApiResult.UsernameAlreadyExists(
                             error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
+                            errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     error.isExpiredToken() -> {
                         SignUpContinueApiResult.ExpiredToken(
                             error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
+                            errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     error.isAttributesRequired() -> {
@@ -129,6 +137,7 @@ data class SignUpContinueApiResponse(
                                 ?: return SignUpContinueApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /continue did not return a continuation token with attributes_required error",
+                                    correlationId = correlationId
                                 ),
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
@@ -136,7 +145,9 @@ data class SignUpContinueApiResponse(
                                 ?: return SignUpContinueApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /continue did not return required_attributes with attributes_required error",
-                                )
+                                    correlationId = correlationId
+                                ),
+                            correlationId = correlationId
                         )
                     }
                     error.isCredentialRequired() -> {
@@ -145,21 +156,25 @@ data class SignUpContinueApiResponse(
                                 ?: return SignUpContinueApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /continue did not return a continuation token with credential_required",
+                                    correlationId = correlationId
                                 ),
                             error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
+                            errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     error.isVerificationRequired() -> {
                         SignUpContinueApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     else -> {
                         SignUpContinueApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                 }
@@ -169,7 +184,8 @@ data class SignUpContinueApiResponse(
             HttpURLConnection.HTTP_OK -> {
                 SignUpContinueApiResult.Success(
                     continuationToken = continuationToken,
-                    expiresIn = expiresIn
+                    expiresIn = expiresIn,
+                    correlationId = correlationId
                 )
             }
 
@@ -178,6 +194,7 @@ data class SignUpContinueApiResponse(
                 SignUpContinueApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
+                    correlationId = correlationId
                 )
             }
         }

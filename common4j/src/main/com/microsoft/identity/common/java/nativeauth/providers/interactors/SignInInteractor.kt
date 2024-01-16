@@ -61,7 +61,7 @@ class SignInInteractor(
     ): SignInInitiateApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performSignInInitiate(parameters: SignInStartCommandParameters)")
         val request = nativeAuthRequestProvider.createSignInInitiateRequest(
-            parameters = parameters
+            commandParameters = parameters
         )
         return performSignInInitiate(request)
     }
@@ -87,10 +87,12 @@ class SignInInteractor(
     //region /oauth/v2.0/challenge
     fun performSignInChallenge(
         continuationToken: String,
+        correlationId: String?
     ): SignInChallengeApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performSignInChallenge(continuationToken: String)")
         val request = nativeAuthRequestProvider.createSignInChallengeRequest(
-            continuationToken = continuationToken
+            continuationToken = continuationToken,
+            correlationId = correlationId
         )
         return performSignInChallenge(request)
     }
@@ -119,7 +121,7 @@ class SignInInteractor(
     ): SignInTokenApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performOOBTokenRequest")
         val request = nativeAuthRequestProvider.createOOBTokenRequest(
-            parameters = parameters
+            commandParameters = parameters
         )
         return performGetToken(request)
     }
@@ -129,7 +131,7 @@ class SignInInteractor(
     ): SignInTokenApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performContinuationTokenTokenRequest")
         val request = nativeAuthRequestProvider.createContinuationTokenTokenRequest(
-            parameters = parameters
+            commandParameters = parameters
         )
         return performGetToken(request)
     }
@@ -139,7 +141,7 @@ class SignInInteractor(
     ): SignInTokenApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performPasswordTokenRequest")
         val request = nativeAuthRequestProvider.createPasswordTokenRequest(
-            parameters = parameters
+            commandParameters = parameters
         )
         try {
             return performGetToken(request);

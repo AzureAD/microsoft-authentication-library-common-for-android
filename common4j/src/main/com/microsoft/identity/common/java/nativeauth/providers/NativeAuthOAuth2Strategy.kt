@@ -113,11 +113,13 @@ class NativeAuthOAuth2Strategy(
      * @param signUpToken: Token received from the previous /signup/start call
      */
     fun performSignUpChallenge(
-        continuationToken: String
+        continuationToken: String,
+        correlationId: String?
     ): SignUpChallengeApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performSignUpChallenge")
         return signUpInteractor.performSignUpChallenge(
-            continuationToken = continuationToken
+            continuationToken = continuationToken,
+            correlationId = correlationId
         )
     }
 
@@ -175,10 +177,12 @@ class NativeAuthOAuth2Strategy(
      */
     fun performSignInChallenge(
         continuationToken: String,
+        correlationId: String?
     ): SignInChallengeApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performSignInChallenge")
         return signInInteractor.performSignInChallenge(
             continuationToken = continuationToken,
+            correlationId = correlationId
         )
     }
 
@@ -239,11 +243,13 @@ class NativeAuthOAuth2Strategy(
      * @return result of the API call as [ResetPasswordChallengeApiResult] object
      */
     fun performResetPasswordChallenge(
-        continuationToken: String
+        continuationToken: String,
+        correlationId: String?
     ): ResetPasswordChallengeApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordChallenge")
         return resetPasswordInteractor.performResetPasswordChallenge(
-            continuationToken = continuationToken
+            continuationToken = continuationToken,
+            correlationId = correlationId
         )
     }
 
@@ -281,11 +287,13 @@ class NativeAuthOAuth2Strategy(
      * @return result of the API call as [ResetPasswordPollCompletionApiResult] object
      */
     fun performResetPasswordPollCompletion(
-        continuationToken: String
+        continuationToken: String,
+        correlationId: String?
     ): ResetPasswordPollCompletionApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordPollCompletion")
         return resetPasswordInteractor.performResetPasswordPollCompletion(
-            continuationToken = continuationToken
+            continuationToken = continuationToken,
+            correlationId = correlationId
         )
     }
 }

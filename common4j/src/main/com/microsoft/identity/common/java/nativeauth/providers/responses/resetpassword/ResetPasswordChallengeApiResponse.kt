@@ -40,6 +40,7 @@ import java.net.HttpURLConnection
 class ResetPasswordChallengeApiResponse(
     @Expose override var statusCode: Int,
     @SerializedName("continuation_token") val continuationToken: String?,
+    @Expose @SerializedName("correlation_id") val correlationId: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
     @Expose @SerializedName("binding_method") val bindingMethod: String?,
     @SerializedName("challenge_target_label") val challengeTargetLabel: String?,
@@ -70,19 +71,22 @@ class ResetPasswordChallengeApiResponse(
                     error.isExpiredToken() -> {
                         ResetPasswordChallengeApiResult.ExpiredToken(
                             error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
+                            errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     error.isUnsupportedChallengeType() -> {
                         ResetPasswordChallengeApiResult.UnsupportedChallengeType(
                             error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
+                            errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     else -> {
                         ResetPasswordChallengeApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                 }
@@ -92,7 +96,9 @@ class ResetPasswordChallengeApiResponse(
             HttpURLConnection.HTTP_OK -> {
                 return when {
                     challengeType.isRedirect() -> {
-                        ResetPasswordChallengeApiResult.Redirect
+                        ResetPasswordChallengeApiResult.Redirect(
+                            correlationId = correlationId
+                        )
                     }
                     challengeType.isOOB() -> {
                         return when {
@@ -100,18 +106,21 @@ class ResetPasswordChallengeApiResponse(
                                 ResetPasswordChallengeApiResult.UnknownError(
                                     error = "invalid_state",
                                     errorDescription = "ResetPassword /challenge did not return a challenge_target_label with oob challenge type",
+                                    correlationId = correlationId
                                 )
                             }
                             challengeChannel.isNullOrBlank() -> {
                                 ResetPasswordChallengeApiResult.UnknownError(
                                     error = "invalid_state",
                                     errorDescription = "ResetPassword /challenge did not return a challenge_channel with oob challenge type",
+                                    correlationId = correlationId
                                 )
                             }
                             codeLength == null -> {
                                 ResetPasswordChallengeApiResult.UnknownError(
                                     error = "invalid_state",
                                     errorDescription = "ResetPassword /challenge did not return a code_length with oob challenge type",
+                                    correlationId = correlationId
                                 )
                             }
                             else -> {
@@ -120,10 +129,12 @@ class ResetPasswordChallengeApiResponse(
                                         ?: return ResetPasswordChallengeApiResult.UnknownError(
                                             error = "invalid_state",
                                             errorDescription = "ResetPassword /challenge successful, but did not return a continuation token",
+                                            correlationId = correlationId
                                         ),
                                     challengeTargetLabel = challengeTargetLabel,
                                     codeLength = codeLength,
-                                    challengeChannel = challengeChannel
+                                    challengeChannel = challengeChannel,
+                                    correlationId = correlationId
                                 )
                             }
                         }
@@ -132,6 +143,7 @@ class ResetPasswordChallengeApiResponse(
                         ResetPasswordChallengeApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                 }
@@ -142,6 +154,7 @@ class ResetPasswordChallengeApiResponse(
                 ResetPasswordChallengeApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
+                    correlationId = correlationId
                 )
             }
         }

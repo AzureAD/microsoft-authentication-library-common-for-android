@@ -23,54 +23,69 @@
 package com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword
 
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResult
 
 /**
  * Represents the potential result types returned from the Reset Password /poll_completion endpoint,
  * including a case for unexpected errors received from the server.
  */
-sealed interface ResetPasswordPollCompletionApiResult {
-    object InProgress : ResetPasswordPollCompletionApiResult
+sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
+    data class InProgress(
+        override val correlationId: String?,
+    ) : ResetPasswordPollCompletionApiResult
 
     data class PollingFailed(
         override val error: String,
-        override val errorDescription: String
+        override val errorDescription: String,
+        override val correlationId: String?,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), ResetPasswordPollCompletionApiResult
 
     data class PasswordInvalid(
+        override val correlationId: String?,
         override val error: String,
         override val errorDescription: String,
         val subError: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), ResetPasswordPollCompletionApiResult
 
-    object PollingSucceeded : ResetPasswordPollCompletionApiResult
+    data class PollingSucceeded(
+        override val correlationId: String?,
+    ) : ResetPasswordPollCompletionApiResult
 
     data class UserNotFound(
+        override val correlationId: String?,
         override val error: String,
         override val errorDescription: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), ResetPasswordPollCompletionApiResult
 
     data class ExpiredToken(
+        override val correlationId: String?,
         override val error: String,
         override val errorDescription: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), ResetPasswordPollCompletionApiResult
 
     data class UnknownError(
+        override val correlationId: String?,
         override val error: String,
         override val errorDescription: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), ResetPasswordPollCompletionApiResult
 }

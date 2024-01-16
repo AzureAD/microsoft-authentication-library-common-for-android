@@ -106,6 +106,7 @@ import com.microsoft.identity.common.java.util.ThreadUtils
 import lombok.EqualsAndHashCode
 import java.io.IOException
 import java.net.URL
+import kotlin.coroutines.coroutineContext
 
 /**
  * The implementation of MSAL Controller for Native Authentication.
@@ -208,7 +209,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     return INativeAuthCommandResult.UnknownError(
                         error = tokenApiResult.error,
                         errorDescription = "API returned unexpected result: $tokenApiResult",
-                        errorCodes = tokenApiResult.errorCodes
+                        errorCodes = tokenApiResult.errorCodes,
+                        correlationId = tokenApiResult.correlationId
                     )
                 }
             }
@@ -254,7 +256,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         error = tokenApiResult.error,
                         errorDescription = tokenApiResult.errorDescription,
                         errorCodes = tokenApiResult.errorCodes,
-                        subError = tokenApiResult.subError
+                        subError = tokenApiResult.subError,
+                        correlationId = tokenApiResult.correlationId
                     )
                 }
 
@@ -269,7 +272,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     INativeAuthCommandResult.UnknownError(
                         error = tokenApiResult.error,
                         errorDescription = tokenApiResult.errorDescription,
-                        errorCodes = tokenApiResult.errorCodes
+                        errorCodes = tokenApiResult.errorCodes,
+                        correlationId = tokenApiResult.correlationId
                     )
                 }
             }
@@ -290,7 +294,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
             val result = performSignInChallengeCall(
                 oAuth2Strategy = oAuth2Strategy,
-                continuationToken = parameters.continuationToken
+                continuationToken = parameters.continuationToken,
+                correlationId = parameters.correlationId
             )
             return when (result) {
                 is SignInChallengeApiResult.OOBRequired -> {
@@ -299,6 +304,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         codeLength = result.codeLength,
                         challengeTargetLabel = result.challengeTargetLabel,
                         challengeChannel = result.challengeChannel,
+                        correlationId = result.correlationId
                     )
                 }
                 is SignInChallengeApiResult.PasswordRequired -> {
@@ -308,11 +314,14 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     )
                     INativeAuthCommandResult.UnknownError(
                         error = "unexpected_api_result",
-                        errorDescription = "API returned unexpected result: $result"
+                        errorDescription = "API returned unexpected result: $result",
+                        correlationId = result.correlationId
                     )
                 }
-                SignInChallengeApiResult.Redirect -> {
-                    INativeAuthCommandResult.Redirect()
+                is SignInChallengeApiResult.Redirect -> {
+                    INativeAuthCommandResult.Redirect(
+                        correlationId = result.correlationId
+                    )
                 }
                 is SignInChallengeApiResult.UnknownError -> {
                     Logger.warn(
@@ -322,7 +331,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     INativeAuthCommandResult.UnknownError(
                         error = result.error,
                         errorDescription = result.errorDescription,
-                        errorCodes = result.errorCodes
+                        errorCodes = result.errorCodes,
+                        correlationId = result.correlationId
                     )
                 }
             }
@@ -393,43 +403,51 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 is SignUpStartApiResult.Success -> {
                     performSignUpChallengeCall(
                         oAuth2Strategy = oAuth2Strategy,
-                        continuationToken = signUpStartApiResult.continuationToken
+                        continuationToken = signUpStartApiResult.continuationToken,
+                        correlationId = signUpStartApiResult.correlationId
                     ).toSignUpStartCommandResult()
                 }
                 is SignUpStartApiResult.InvalidPassword -> {
                     SignUpCommandResult.InvalidPassword(
                         error = signUpStartApiResult.error,
                         errorDescription = signUpStartApiResult.errorDescription,
-                        subError = signUpStartApiResult.subError
+                        subError = signUpStartApiResult.subError,
+                        correlationId = signUpStartApiResult.correlationId
                     )
                 }
                 is SignUpStartApiResult.InvalidAttributes -> {
                     SignUpCommandResult.InvalidAttributes(
                         error = signUpStartApiResult.error,
                         errorDescription = signUpStartApiResult.errorDescription,
-                        invalidAttributes = signUpStartApiResult.invalidAttributes
+                        invalidAttributes = signUpStartApiResult.invalidAttributes,
+                        correlationId = signUpStartApiResult.correlationId
                     )
                 }
                 is SignUpStartApiResult.UsernameAlreadyExists -> {
                     SignUpCommandResult.UsernameAlreadyExists(
                         error = signUpStartApiResult.error,
-                        errorDescription = signUpStartApiResult.errorDescription
+                        errorDescription = signUpStartApiResult.errorDescription,
+                        correlationId = signUpStartApiResult.correlationId
                     )
                 }
                 is SignUpStartApiResult.InvalidEmail -> {
                     SignUpCommandResult.InvalidEmail(
                         error = signUpStartApiResult.error,
-                        errorDescription = signUpStartApiResult.errorDescription
+                        errorDescription = signUpStartApiResult.errorDescription,
+                        correlationId = signUpStartApiResult.correlationId
                     )
                 }
                 is SignUpStartApiResult.AuthNotSupported -> {
                     SignUpCommandResult.AuthNotSupported(
                         error = signUpStartApiResult.error,
-                        errorDescription = signUpStartApiResult.errorDescription
+                        errorDescription = signUpStartApiResult.errorDescription,
+                        correlationId = signUpStartApiResult.correlationId
                     )
                 }
                 is SignUpStartApiResult.Redirect -> {
-                    INativeAuthCommandResult.Redirect()
+                    INativeAuthCommandResult.Redirect(
+                        correlationId = signUpStartApiResult.correlationId
+                    )
                 }
                 is SignUpStartApiResult.UnsupportedChallengeType, is SignUpStartApiResult.UnknownError -> {
                     signUpStartApiResult as ApiErrorResult
@@ -439,7 +457,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     )
                     INativeAuthCommandResult.UnknownError(
                         error = signUpStartApiResult.error,
-                        errorDescription = signUpStartApiResult.errorDescription
+                        errorDescription = signUpStartApiResult.errorDescription,
+                        correlationId = signUpStartApiResult.correlationId
                     )
                 }
             }
@@ -480,7 +499,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
             return performSignUpChallengeCall(
                 oAuth2Strategy = oAuth2Strategy,
-                continuationToken = parameters.continuationToken
+                continuationToken = parameters.continuationToken,
+                correlationId = parameters.correlationId
             ).toSignUpStartCommandResult() as SignUpResendCodeCommandResult
         } catch (e: Exception) {
             Logger.error(TAG, "Exception thrown in signUpResendCode", e)
@@ -720,16 +740,20 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 is ResetPasswordStartApiResult.Success -> {
                     performResetPasswordChallengeCall(
                         oAuth2Strategy = oAuth2Strategy,
-                        continuationToken = resetPasswordStartApiResult.continuationToken
+                        continuationToken = resetPasswordStartApiResult.continuationToken,
+                        correlationId = resetPasswordStartApiResult.correlationId
                     ).toResetPasswordStartCommandResult()
                 }
-                ResetPasswordStartApiResult.Redirect -> {
-                    INativeAuthCommandResult.Redirect()
+                is ResetPasswordStartApiResult.Redirect -> {
+                    INativeAuthCommandResult.Redirect(
+                        correlationId = resetPasswordStartApiResult.correlationId
+                    )
                 }
                 is ResetPasswordStartApiResult.UserNotFound -> {
                     ResetPasswordCommandResult.UserNotFound(
                         error = resetPasswordStartApiResult.error,
-                        errorDescription = resetPasswordStartApiResult.errorDescription
+                        errorDescription = resetPasswordStartApiResult.errorDescription,
+                        correlationId = resetPasswordStartApiResult.correlationId
                     )
                 }
                 is ResetPasswordStartApiResult.UnsupportedChallengeType, is ResetPasswordStartApiResult.UnknownError -> {
@@ -741,6 +765,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     INativeAuthCommandResult.UnknownError(
                         error = resetPasswordStartApiResult.error,
                         errorDescription = resetPasswordStartApiResult.errorDescription,
+                        correlationId = resetPasswordStartApiResult.correlationId
                     )
                 }
             }
@@ -767,18 +792,22 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             return when (resetPasswordContinueApiResult) {
                 is ResetPasswordContinueApiResult.PasswordRequired -> {
                     ResetPasswordCommandResult.PasswordRequired(
-                        continuationToken = resetPasswordContinueApiResult.continuationToken
+                        continuationToken = resetPasswordContinueApiResult.continuationToken,
+                        correlationId = resetPasswordContinueApiResult.correlationId
                     )
                 }
                 is ResetPasswordContinueApiResult.CodeIncorrect -> {
                     ResetPasswordCommandResult.IncorrectCode(
                         error = resetPasswordContinueApiResult.error,
                         errorDescription = resetPasswordContinueApiResult.errorDescription,
-                        subError = resetPasswordContinueApiResult.subError
+                        subError = resetPasswordContinueApiResult.subError,
+                        correlationId = resetPasswordContinueApiResult.correlationId
                     )
                 }
-                ResetPasswordContinueApiResult.Redirect -> {
-                    INativeAuthCommandResult.Redirect()
+                is ResetPasswordContinueApiResult.Redirect -> {
+                    INativeAuthCommandResult.Redirect(
+                        correlationId = resetPasswordContinueApiResult.correlationId
+                    )
                 }
                 is ResetPasswordContinueApiResult.ExpiredToken, is ResetPasswordContinueApiResult.UnknownError -> {
                     Logger.warn(
@@ -789,6 +818,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     INativeAuthCommandResult.UnknownError(
                         error = resetPasswordContinueApiResult.error,
                         errorDescription = resetPasswordContinueApiResult.errorDescription,
+                        correlationId = resetPasswordContinueApiResult.correlationId
                     )
                 }
             }
@@ -809,7 +839,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
             val resetPasswordChallengeApiResult = performResetPasswordChallengeCall(
                 oAuth2Strategy = oAuth2Strategy,
-                continuationToken = parameters.continuationToken
+                continuationToken = parameters.continuationToken,
+                correlationId = parameters.correlationId
             )
 
             return when (resetPasswordChallengeApiResult) {
@@ -818,11 +849,14 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         continuationToken = resetPasswordChallengeApiResult.continuationToken,
                         codeLength = resetPasswordChallengeApiResult.codeLength,
                         challengeTargetLabel = resetPasswordChallengeApiResult.challengeTargetLabel,
-                        challengeChannel = resetPasswordChallengeApiResult.challengeChannel
+                        challengeChannel = resetPasswordChallengeApiResult.challengeChannel,
+                        correlationId = resetPasswordChallengeApiResult.correlationId
                     )
                 }
-                ResetPasswordChallengeApiResult.Redirect -> {
-                    INativeAuthCommandResult.Redirect()
+                is ResetPasswordChallengeApiResult.Redirect -> {
+                    INativeAuthCommandResult.Redirect(
+                        correlationId = resetPasswordChallengeApiResult.correlationId
+                    )
                 }
                 is ResetPasswordChallengeApiResult.ExpiredToken,
                 is ResetPasswordChallengeApiResult.UnsupportedChallengeType,
@@ -835,6 +869,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     INativeAuthCommandResult.UnknownError(
                         error = resetPasswordChallengeApiResult.error,
                         errorDescription = resetPasswordChallengeApiResult.errorDescription,
+                        correlationId = resetPasswordChallengeApiResult.correlationId
                     )
                 }
             }
@@ -864,14 +899,16 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     resetPasswordPollCompletion(
                         oAuth2Strategy = oAuth2Strategy,
                         continuationToken = resetPasswordSubmitApiResult.continuationToken,
-                        pollIntervalInSeconds = resetPasswordSubmitApiResult.pollInterval
+                        pollIntervalInSeconds = resetPasswordSubmitApiResult.pollInterval,
+                        correlationId = resetPasswordSubmitApiResult.correlationId
                     )
                 }
                 is ResetPasswordSubmitApiResult.PasswordInvalid -> {
                     ResetPasswordCommandResult.PasswordNotAccepted(
                         error = resetPasswordSubmitApiResult.error,
                         errorDescription = resetPasswordSubmitApiResult.errorDescription,
-                        subError = resetPasswordSubmitApiResult.subError
+                        subError = resetPasswordSubmitApiResult.subError,
+                        correlationId = resetPasswordSubmitApiResult.correlationId
                     )
                 }
 
@@ -885,6 +922,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     INativeAuthCommandResult.UnknownError(
                         error = resetPasswordSubmitApiResult.error,
                         errorDescription = resetPasswordSubmitApiResult.errorDescription,
+                        correlationId = resetPasswordSubmitApiResult.correlationId
                     )
                 }
             }
@@ -897,6 +935,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     private fun resetPasswordPollCompletion(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         continuationToken: String,
+        correlationId: String?,
         pollIntervalInSeconds: Int
     ): ResetPasswordSubmitNewPasswordCommandResult {
         fun pollCompletionTimedOut(startTime: Long): Boolean {
@@ -913,7 +952,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
             var pollCompletionApiResult = performResetPasswordPollCompletionCall(
                 oAuth2Strategy = oAuth2Strategy,
-                continuationToken = continuationToken
+                continuationToken = continuationToken,
+                correlationId = correlationId
             )
 
             val startTime = System.currentTimeMillis()
@@ -932,13 +972,15 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     )
                     return ResetPasswordCommandResult.PasswordResetFailed(
                         error = ResetPasswordSubmitNewPasswordCommand.POLL_COMPLETION_TIMEOUT_ERROR_CODE,
-                        errorDescription = ResetPasswordSubmitNewPasswordCommand.POLL_COMPLETION_TIMEOUT_ERROR_DESCRIPTION
+                        errorDescription = ResetPasswordSubmitNewPasswordCommand.POLL_COMPLETION_TIMEOUT_ERROR_DESCRIPTION,
+                        correlationId = pollCompletionApiResult.correlationId
                     )
                 }
 
                 pollCompletionApiResult = performResetPasswordPollCompletionCall(
                     oAuth2Strategy = oAuth2Strategy,
-                    continuationToken = continuationToken
+                    continuationToken = continuationToken,
+                    correlationId = correlationId
                 )
             }
 
@@ -946,12 +988,15 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 is ResetPasswordPollCompletionApiResult.PollingFailed -> {
                     ResetPasswordCommandResult.PasswordResetFailed(
                         error = pollCompletionApiResult.error,
-                        errorDescription = pollCompletionApiResult.errorDescription
+                        errorDescription = pollCompletionApiResult.errorDescription,
+                        correlationId = pollCompletionApiResult.correlationId
                     )
                 }
 
                 is ResetPasswordPollCompletionApiResult.PollingSucceeded -> {
-                    ResetPasswordCommandResult.Complete
+                    ResetPasswordCommandResult.Complete(
+                        correlationId = pollCompletionApiResult.correlationId
+                    )
                 }
 
                 is ResetPasswordPollCompletionApiResult.InProgress -> {
@@ -962,7 +1007,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     // This should never be reached, theoretically
                     INativeAuthCommandResult.UnknownError(
                         error = "illegal_state",
-                        errorDescription = "in_progress received after polling concluded, illegal state"
+                        errorDescription = "in_progress received after polling concluded, illegal state",
+                        correlationId = pollCompletionApiResult.correlationId
                     )
                 }
                 is ResetPasswordPollCompletionApiResult.ExpiredToken,
@@ -977,6 +1023,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     INativeAuthCommandResult.UnknownError(
                         error = pollCompletionApiResult.error,
                         errorDescription = pollCompletionApiResult.errorDescription,
+                        correlationId = pollCompletionApiResult.correlationId
                     )
                 }
             }
@@ -1030,10 +1077,14 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
     private fun performSignInChallengeCall(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
-        continuationToken: String
+        continuationToken: String,
+        correlationId: String?
     ): SignInChallengeApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performSignInChallengeCall")
-        return oAuth2Strategy.performSignInChallenge(continuationToken = continuationToken)
+        return oAuth2Strategy.performSignInChallenge(
+            continuationToken = continuationToken,
+            correlationId = correlationId
+        )
     }
 
     private fun performResetPasswordStartCall(
@@ -1048,11 +1099,13 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
     private fun performResetPasswordChallengeCall(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
-        continuationToken: String
+        continuationToken: String,
+        correlationId: String?
     ): ResetPasswordChallengeApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordChallengeCall")
         return oAuth2Strategy.performResetPasswordChallenge(
-            continuationToken = continuationToken
+            continuationToken = continuationToken,
+            correlationId = correlationId
         )
     }
 
@@ -1079,10 +1132,12 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     private fun performResetPasswordPollCompletionCall(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         continuationToken: String,
+        correlationId: String?
     ): ResetPasswordPollCompletionApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordPollCompletionCall")
         return oAuth2Strategy.performResetPasswordPollCompletion(
-            continuationToken = continuationToken
+            continuationToken = continuationToken,
+            correlationId = correlationId
         )
     }
 
@@ -1153,11 +1208,14 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     continuationToken = this.continuationToken,
                     codeLength = this.codeLength,
                     challengeTargetLabel = this.challengeTargetLabel,
-                    challengeChannel = this.challengeChannel
+                    challengeChannel = this.challengeChannel,
+                    correlationId = this.correlationId
                 )
             }
-            ResetPasswordChallengeApiResult.Redirect -> {
-                INativeAuthCommandResult.Redirect()
+            is ResetPasswordChallengeApiResult.Redirect -> {
+                INativeAuthCommandResult.Redirect(
+                    correlationId = this.correlationId
+                )
             }
             is ResetPasswordChallengeApiResult.ExpiredToken -> {
                 Logger.warn(
@@ -1166,7 +1224,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 )
                 INativeAuthCommandResult.UnknownError(
                     error = this.error,
-                    errorDescription = this.errorDescription
+                    errorDescription = this.errorDescription,
+                    correlationId = this.correlationId
                 )
             }
             is ResetPasswordChallengeApiResult.UnsupportedChallengeType -> {
@@ -1176,7 +1235,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 )
                 INativeAuthCommandResult.UnknownError(
                     error = this.error,
-                    errorDescription = this.errorDescription
+                    errorDescription = this.errorDescription,
+                    correlationId = this.correlationId
                 )
             }
             is ResetPasswordChallengeApiResult.UnknownError -> {
@@ -1187,6 +1247,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 INativeAuthCommandResult.UnknownError(
                     error = this.error,
                     errorDescription = this.errorDescription,
+                    correlationId = this.correlationId
                 )
             }
         }
@@ -1249,9 +1310,13 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
     private fun performSignUpChallengeCall(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
-        continuationToken: String
+        continuationToken: String,
+        correlationId: String?
     ): SignUpChallengeApiResult {
-        return oAuth2Strategy.performSignUpChallenge(continuationToken = continuationToken)
+        return oAuth2Strategy.performSignUpChallenge(
+            continuationToken = continuationToken,
+            correlationId = correlationId
+        )
     }
 
     private fun performSignUpSubmitCode(
@@ -1282,8 +1347,10 @@ class NativeAuthMsalController : BaseNativeAuthController() {
      */
     private fun SignUpChallengeApiResult.toSignUpSubmitUserAttrsCommandResult(): SignUpSubmitUserAttributesCommandResult {
         return when (this) {
-            SignUpChallengeApiResult.Redirect -> {
-                INativeAuthCommandResult.Redirect()
+            is SignUpChallengeApiResult.Redirect -> {
+                INativeAuthCommandResult.Redirect(
+                    correlationId = this.correlationId
+                )
             }
             is SignUpChallengeApiResult.ExpiredToken, is SignUpChallengeApiResult.UnsupportedChallengeType,
             is SignUpChallengeApiResult.OOBRequired, is SignUpChallengeApiResult.PasswordRequired,
@@ -1296,6 +1363,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 INativeAuthCommandResult.UnknownError(
                     error = this.error,
                     errorDescription = this.errorDescription,
+                    correlationId = this.correlationId
                 )
             }
         }
@@ -1313,16 +1381,20 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     continuationToken = this.continuationToken,
                     codeLength = this.codeLength,
                     challengeTargetLabel = this.challengeTargetLabel,
-                    challengeChannel = this.challengeChannel
+                    challengeChannel = this.challengeChannel,
+                    correlationId = this.correlationId
                 )
             }
             is SignUpChallengeApiResult.PasswordRequired -> {
                 SignUpCommandResult.PasswordRequired(
-                    continuationToken = this.continuationToken
+                    continuationToken = this.continuationToken,
+                    correlationId = this.correlationId
                 )
             }
-            SignUpChallengeApiResult.Redirect -> {
-                INativeAuthCommandResult.Redirect()
+            is SignUpChallengeApiResult.Redirect -> {
+                INativeAuthCommandResult.Redirect(
+                    correlationId = this.correlationId
+                )
             }
             is SignUpChallengeApiResult.ExpiredToken, is SignUpChallengeApiResult.UnsupportedChallengeType,
             is SignUpChallengeApiResult.UnknownError -> {
@@ -1334,6 +1406,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 INativeAuthCommandResult.UnknownError(
                     error = this.error,
                     errorDescription = this.errorDescription,
+                    correlationId = this.correlationId
                 )
             }
         }
@@ -1350,7 +1423,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             is SignUpContinueApiResult.Success -> {
                 SignUpCommandResult.Complete(
                     continuationToken = this.continuationToken,
-                    expiresIn = this.expiresIn
+                    expiresIn = this.expiresIn,
+                    correlationId = this.correlationId
                 )
             }
             is SignUpContinueApiResult.ExpiredToken -> {
@@ -1360,13 +1434,15 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 )
                 INativeAuthCommandResult.UnknownError(
                     error = this.error,
-                    errorDescription = this.errorDescription
+                    errorDescription = this.errorDescription,
+                    correlationId = this.correlationId
                 )
             }
             is SignUpContinueApiResult.UsernameAlreadyExists -> {
                 SignUpCommandResult.UsernameAlreadyExists(
                     error = this.error,
-                    errorDescription = this.errorDescription
+                    errorDescription = this.errorDescription,
+                    correlationId = this.correlationId
                 )
             }
             is SignUpContinueApiResult.AttributesRequired -> {
@@ -1374,24 +1450,29 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     continuationToken = this.continuationToken,
                     error = this.error,
                     errorDescription = this.errorDescription,
-                    requiredAttributes = this.requiredAttributes
+                    requiredAttributes = this.requiredAttributes,
+                    correlationId = this.correlationId
                 )
             }
             is SignUpContinueApiResult.CredentialRequired -> {
                 return performSignUpChallengeCall(
                     oAuth2Strategy = oAuth2Strategy,
-                    continuationToken = this.continuationToken
+                    continuationToken = this.continuationToken,
+                    correlationId = this.correlationId
                 ).toSignUpStartCommandResult() as SignUpSubmitCodeCommandResult
             }
             is SignUpContinueApiResult.InvalidOOBValue -> {
                 SignUpCommandResult.InvalidCode(
                     error = this.error,
                     errorDescription = this.errorDescription,
-                    subError = this.subError
+                    subError = this.subError,
+                    correlationId = this.correlationId
                 )
             }
             is SignUpContinueApiResult.Redirect -> {
-                INativeAuthCommandResult.Redirect()
+                INativeAuthCommandResult.Redirect(
+                    correlationId = this.correlationId
+                )
             }
             is SignUpContinueApiResult.UnknownError -> {
                 Logger.warn(
@@ -1401,6 +1482,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 INativeAuthCommandResult.UnknownError(
                     error = this.error,
                     errorDescription = this.errorDescription,
+                    correlationId = this.correlationId
                 )
             }
 
@@ -1411,7 +1493,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 )
                 INativeAuthCommandResult.UnknownError(
                     error = "unexpected_api_result",
-                    errorDescription = "API returned unexpected result: $this"
+                    errorDescription = "API returned unexpected result: $this",
+                    correlationId = this.correlationId
                 )
             }
         }
@@ -1424,13 +1507,15 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             is SignUpContinueApiResult.Success -> {
                 SignUpCommandResult.Complete(
                     continuationToken = this.continuationToken,
-                    expiresIn = this.expiresIn
+                    expiresIn = this.expiresIn,
+                    correlationId = this.correlationId
                 )
             }
             is SignUpContinueApiResult.UsernameAlreadyExists -> {
                 SignUpCommandResult.UsernameAlreadyExists(
                     error = this.error,
-                    errorDescription = this.errorDescription
+                    errorDescription = this.errorDescription,
+                    correlationId = this.correlationId
                 )
             }
             is SignUpContinueApiResult.AttributesRequired -> {
@@ -1438,23 +1523,28 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     continuationToken = this.continuationToken,
                     error = this.error,
                     errorDescription = this.errorDescription,
-                    requiredAttributes = this.requiredAttributes
+                    requiredAttributes = this.requiredAttributes,
+                    correlationId = this.correlationId
                 )
             }
             is SignUpContinueApiResult.CredentialRequired -> {
                 return performSignUpChallengeCall(
                     oAuth2Strategy = oAuth2Strategy,
-                    continuationToken = this.continuationToken
+                    continuationToken = this.continuationToken,
+                    correlationId = this.correlationId
                 ).toSignUpSubmitUserAttrsCommandResult()
             }
             is SignUpContinueApiResult.Redirect -> {
-                INativeAuthCommandResult.Redirect()
+                INativeAuthCommandResult.Redirect(
+                    correlationId = this.correlationId
+                )
             }
             is SignUpContinueApiResult.InvalidAttributes -> {
                 SignUpCommandResult.InvalidAttributes(
                     error = this.error,
                     errorDescription = this.errorDescription,
-                    invalidAttributes = this.invalidAttributes
+                    invalidAttributes = this.invalidAttributes,
+                    correlationId = this.correlationId
                 )
             }
 
@@ -1467,7 +1557,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 this as ApiErrorResult
                 INativeAuthCommandResult.UnknownError(
                     error = this.error,
-                    errorDescription = this.errorDescription
+                    errorDescription = this.errorDescription,
+                    correlationId = this.correlationId
                 )
             }
         }
@@ -1480,14 +1571,16 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             is SignUpContinueApiResult.Success -> {
                 SignUpCommandResult.Complete(
                     continuationToken = this.continuationToken,
-                    expiresIn = this.expiresIn
+                    expiresIn = this.expiresIn,
+                    correlationId = this.correlationId
                 )
             }
 
             is SignUpContinueApiResult.UsernameAlreadyExists -> {
                 SignUpCommandResult.UsernameAlreadyExists(
                     error = this.error,
-                    errorDescription = this.errorDescription
+                    errorDescription = this.errorDescription,
+                    correlationId = this.correlationId
                 )
             }
             is SignUpContinueApiResult.AttributesRequired -> {
@@ -1495,24 +1588,29 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     continuationToken = this.continuationToken,
                     error = this.error,
                     errorDescription = this.errorDescription,
-                    requiredAttributes = this.requiredAttributes
+                    requiredAttributes = this.requiredAttributes,
+                    correlationId = this.correlationId
                 )
             }
             is SignUpContinueApiResult.CredentialRequired -> {
                 return performSignUpChallengeCall(
                     oAuth2Strategy = oAuth2Strategy,
-                    continuationToken = this.continuationToken
+                    continuationToken = this.continuationToken,
+                    correlationId = this.correlationId
                 ).toSignUpStartCommandResult() as SignUpSubmitPasswordCommandResult
             }
             is SignUpContinueApiResult.InvalidPassword -> {
                 SignUpCommandResult.InvalidPassword(
                     error = this.error,
                     errorDescription = this.errorDescription,
-                    subError = this.subError
+                    subError = this.subError,
+                    correlationId = this.correlationId
                 )
             }
             is SignUpContinueApiResult.Redirect -> {
-                INativeAuthCommandResult.Redirect()
+                INativeAuthCommandResult.Redirect(
+                    correlationId = this.correlationId
+                )
             }
             is SignUpContinueApiResult.ExpiredToken, is SignUpContinueApiResult.InvalidOOBValue,
             is SignUpContinueApiResult.InvalidAttributes, is SignUpContinueApiResult.UnknownError -> {
@@ -1523,7 +1621,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 this as ApiErrorResult
                 INativeAuthCommandResult.UnknownError(
                     error = this.error,
-                    errorDescription = this.errorDescription
+                    errorDescription = this.errorDescription,
+                    correlationId = this.correlationId
                 )
             }
         }
@@ -1539,7 +1638,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 SignInCommandResult.InvalidCredentials(
                     error = this.error,
                     errorDescription = this.errorDescription,
-                    errorCodes = this.errorCodes
+                    errorCodes = this.errorCodes,
+                    correlationId = this.correlationId
                 )
             }
             is SignInTokenApiResult.Success -> {
@@ -1560,7 +1660,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 INativeAuthCommandResult.UnknownError(
                     error = "unexpected_api_result",
                     errorDescription = "API returned unexpected result: $this",
-                    errorCodes = this.errorCodes
+                    errorCodes = this.errorCodes,
+                    correlationId = this.correlationId
                 )
             }
         }
@@ -1577,7 +1678,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 SignInCommandResult.InvalidCredentials(
                     error = this.error,
                     errorDescription = this.errorDescription,
-                    errorCodes = this.errorCodes
+                    errorCodes = this.errorCodes,
+                    correlationId = this.correlationId
                 )
             }
             is SignInTokenApiResult.Success -> {
@@ -1598,7 +1700,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 INativeAuthCommandResult.UnknownError(
                     error = "unexpected_api_result",
                     errorDescription = "API returned unexpected result: $this",
-                    errorCodes = this.errorCodes
+                    errorCodes = this.errorCodes,
+                    correlationId = this.correlationId
                 )
             }
         }
@@ -1612,13 +1715,16 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         usePassword: Boolean = false
     ): SignInStartCommandResult {
         return when (initiateApiResult) {
-            SignInInitiateApiResult.Redirect -> {
-                INativeAuthCommandResult.Redirect()
+            is SignInInitiateApiResult.Redirect -> {
+                INativeAuthCommandResult.Redirect(
+                    correlationId = initiateApiResult.correlationId
+                )
             }
             is SignInInitiateApiResult.Success -> {
                 val signInChallengeResult = performSignInChallengeCall(
                     oAuth2Strategy = oAuth2Strategy,
-                    continuationToken = initiateApiResult.continuationToken
+                    continuationToken = initiateApiResult.continuationToken,
+                    correlationId = initiateApiResult.correlationId
                 )
                 return processSignInChallengeCall(
                     result = signInChallengeResult,
@@ -1631,7 +1737,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 SignInCommandResult.UserNotFound(
                     error = initiateApiResult.error,
                     errorDescription = initiateApiResult.errorDescription,
-                    errorCodes = initiateApiResult.errorCodes
+                    errorCodes = initiateApiResult.errorCodes,
+                    correlationId = initiateApiResult.correlationId
                 )
             }
             is SignInInitiateApiResult.UnknownError -> {
@@ -1642,7 +1749,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 INativeAuthCommandResult.UnknownError(
                     error = initiateApiResult.error,
                     errorDescription = initiateApiResult.errorDescription,
-                    errorCodes = initiateApiResult.errorCodes
+                    errorCodes = initiateApiResult.errorCodes,
+                    correlationId = initiateApiResult.correlationId
                 )
             }
         }
@@ -1660,7 +1768,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     continuationToken = result.continuationToken,
                     codeLength = result.codeLength,
                     challengeTargetLabel = result.challengeTargetLabel,
-                    challengeChannel = result.challengeChannel
+                    challengeChannel = result.challengeChannel,
+                    correlationId = result.correlationId
                 )
             }
             is SignInChallengeApiResult.PasswordRequired -> {
@@ -1689,12 +1798,15 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     }
                 } else {
                     SignInCommandResult.PasswordRequired(
-                        continuationToken = result.continuationToken
+                        continuationToken = result.continuationToken,
+                        correlationId = result.correlationId
                     )
                 }
             }
-            SignInChallengeApiResult.Redirect -> {
-                INativeAuthCommandResult.Redirect()
+            is SignInChallengeApiResult.Redirect -> {
+                INativeAuthCommandResult.Redirect(
+                    correlationId = result.correlationId
+                )
             }
 
             is SignInChallengeApiResult.UnknownError -> {
@@ -1705,7 +1817,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 INativeAuthCommandResult.UnknownError(
                     error = result.error,
                     errorDescription = result.errorDescription,
-                    errorCodes = result.errorCodes
+                    errorCodes = result.errorCodes,
+                    correlationId = result.correlationId
                 )
             }
         }

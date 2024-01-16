@@ -64,7 +64,7 @@ class ResetPasswordInteractor(
     ): ResetPasswordStartApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordStart(parameters: ResetPasswordStartCommandParameters)")
 
-        val request = nativeAuthRequestProvider.createResetPasswordStartRequest(parameters = parameters)
+        val request = nativeAuthRequestProvider.createResetPasswordStartRequest(commandParameters = parameters)
         return performResetPasswordStart(request)
     }
 
@@ -89,12 +89,14 @@ class ResetPasswordInteractor(
 
     //region /resetpassword/challenge
     fun performResetPasswordChallenge(
-        continuationToken: String
+        continuationToken: String,
+        correlationId: String?
     ): ResetPasswordChallengeApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordChallenge(continuationToken: String)")
 
         val request = nativeAuthRequestProvider.createResetPasswordChallengeRequest(
-            continuationToken = continuationToken
+            continuationToken = continuationToken,
+            correlationId = correlationId
         )
         return performResetPasswordChallenge(request)
     }
@@ -125,7 +127,7 @@ class ResetPasswordInteractor(
         LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordContinue(parameters: ResetPasswordSubmitCodeCommandParameters)")
 
         val request = nativeAuthRequestProvider.createResetPasswordContinueRequest(
-            parameters = parameters
+            commandParameters = parameters
         )
         return performResetPasswordContinue(request)
     }
@@ -188,12 +190,14 @@ class ResetPasswordInteractor(
 
     //region /resetpassword/poll_completion
     fun performResetPasswordPollCompletion(
-        continuationToken: String
+        continuationToken: String,
+        correlationId: String?
     ): ResetPasswordPollCompletionApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordPollCompletion(continuationToken: String)")
 
         val request = nativeAuthRequestProvider.createResetPasswordPollCompletionRequest(
-            continuationToken = continuationToken
+            continuationToken = continuationToken,
+            correlationId = correlationId
         )
         return performResetPasswordPollCompletion(request)
     }

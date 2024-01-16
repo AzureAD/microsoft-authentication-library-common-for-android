@@ -40,6 +40,7 @@ import java.net.HttpURLConnection
 class ResetPasswordContinueApiResponse(
     @Expose override var statusCode: Int,
     @SerializedName("continuation_token") val continuationToken: String?,
+    @Expose @SerializedName("correlation_id") val correlationId: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
     @Expose @SerializedName("expires_in") val expiresIn: Int?,
     @SerializedName("error") val error: String?,
@@ -70,13 +71,15 @@ class ResetPasswordContinueApiResponse(
                                 ResetPasswordContinueApiResult.CodeIncorrect(
                                     error = error.orEmpty(),
                                     errorDescription = errorDescription.orEmpty(),
-                                    subError.orEmpty()
+                                    subError = subError.orEmpty(),
+                                    correlationId = correlationId
                                 )
                             }
                             else -> {
                                 ResetPasswordContinueApiResult.UnknownError(
                                     error = error.orEmpty(),
-                                    errorDescription = errorDescription.orEmpty()
+                                    errorDescription = errorDescription.orEmpty(),
+                                    correlationId = correlationId
                                 )
                             }
                         }
@@ -84,13 +87,15 @@ class ResetPasswordContinueApiResponse(
                     error.isExpiredToken() -> {
                         ResetPasswordContinueApiResult.ExpiredToken(
                             error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
+                            errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     else -> {
                         ResetPasswordContinueApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                 }
@@ -99,7 +104,9 @@ class ResetPasswordContinueApiResponse(
             // Handle success and redirect
             HttpURLConnection.HTTP_OK -> {
                 if (challengeType.isRedirect()) {
-                    ResetPasswordContinueApiResult.Redirect
+                    ResetPasswordContinueApiResult.Redirect(
+                        correlationId = correlationId
+                    )
                 }
                 else {
                     ResetPasswordContinueApiResult.PasswordRequired(
@@ -107,8 +114,10 @@ class ResetPasswordContinueApiResponse(
                             ?: return ResetPasswordContinueApiResult.UnknownError(
                                 error = "invalid_state",
                                 errorDescription = "ResetPassword /continue successful, but did not return a continuation token",
+                                correlationId = correlationId
                             ),
-                        expiresIn = expiresIn
+                        expiresIn = expiresIn,
+                        correlationId = correlationId
                     )
                 }
             }
@@ -118,6 +127,7 @@ class ResetPasswordContinueApiResponse(
                 ResetPasswordContinueApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
+                    correlationId = correlationId
                 )
             }
         }

@@ -23,23 +23,29 @@
 package com.microsoft.identity.common.java.nativeauth.providers.responses.signup
 
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResult
 
 /**
  * Represents the potential result types returned from the Sign Up /start endpoint,
  * including a case for unexpected errors received from the server.
  */
-sealed interface SignUpStartApiResult {
+sealed interface SignUpStartApiResult: ApiResult {
 
     /**
      * The response from Signup Start is to redirect to a browser based authentication.
      */
-    object Redirect : SignUpStartApiResult
+    data class Redirect(
+        override val correlationId: String?
+    ) : SignUpStartApiResult
 
 
     /**
      * The next step in the Signup process is account verification.
      */
-    data class Success(val continuationToken: String) : SignUpStartApiResult
+    data class Success(
+        val continuationToken: String,
+        override val correlationId: String?
+    ) : SignUpStartApiResult
 
     /**
      * The Sign Up Start request failed as the password failed server side validation.
@@ -47,10 +53,12 @@ sealed interface SignUpStartApiResult {
     data class InvalidPassword(
         override val error: String,
         override val errorDescription: String,
-        val subError: String
+        val subError: String,
+        override val correlationId: String?
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), SignUpStartApiResult
 
     /**
@@ -61,10 +69,12 @@ sealed interface SignUpStartApiResult {
         override val error: String,
         override val errorDescription: String,
         val invalidAttributes: List<String>,
-        val subError: String
+        val subError: String,
+        override val correlationId: String?
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), SignUpStartApiResult
 
 
@@ -74,9 +84,11 @@ sealed interface SignUpStartApiResult {
     data class UnknownError(
         override val error: String,
         override val errorDescription: String,
+        override val correlationId: String?
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), SignUpStartApiResult
 
     /**
@@ -85,10 +97,12 @@ sealed interface SignUpStartApiResult {
      */
     data class UnsupportedChallengeType(
         override val error: String,
-        override val errorDescription: String
+        override val errorDescription: String,
+        override val correlationId: String?
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), SignUpStartApiResult
 
     /**
@@ -96,10 +110,12 @@ sealed interface SignUpStartApiResult {
      */
     data class UsernameAlreadyExists(
         override val error: String,
-        override val errorDescription: String
+        override val errorDescription: String,
+        override val correlationId: String?
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), SignUpStartApiResult
 
     /**
@@ -107,10 +123,12 @@ sealed interface SignUpStartApiResult {
      */
     data class InvalidEmail(
         override val error: String,
-        override val errorDescription: String
+        override val errorDescription: String,
+        override val correlationId: String?
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), SignUpStartApiResult
 
     /**
@@ -119,8 +137,10 @@ sealed interface SignUpStartApiResult {
     data class AuthNotSupported(
         override val error: String,
         override val errorDescription: String,
+        override val correlationId: String?
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), SignUpStartApiResult
 }

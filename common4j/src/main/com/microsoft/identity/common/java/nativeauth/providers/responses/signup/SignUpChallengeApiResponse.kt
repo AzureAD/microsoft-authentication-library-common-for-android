@@ -47,6 +47,7 @@ data class SignUpChallengeApiResponse(
     @Expose @SerializedName("interval") val interval: Int?,
     @Expose @SerializedName("challenge_channel") val challengeChannel: String?,
     @SerializedName("continuation_token") val continuationToken: String?,
+    @Expose @SerializedName("correlation_id") val correlationId: String?,
     @SerializedName("error") val error: String?,
     @SerializedName("error_description") val errorDescription: String?,
 ) : IApiResponse(statusCode) {
@@ -71,18 +72,21 @@ data class SignUpChallengeApiResponse(
                         SignUpChallengeApiResult.UnsupportedChallengeType(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     error.isExpiredToken() -> {
                         SignUpChallengeApiResult.ExpiredToken(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     else -> {
                         SignUpChallengeApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                 }
@@ -92,7 +96,9 @@ data class SignUpChallengeApiResponse(
             HttpURLConnection.HTTP_OK -> {
                 return when {
                     challengeType.isRedirect() -> {
-                        SignUpChallengeApiResult.Redirect
+                        SignUpChallengeApiResult.Redirect(
+                            correlationId = correlationId
+                        )
                     }
                     challengeType.isOOB() -> {
                         return when {
@@ -100,18 +106,21 @@ data class SignUpChallengeApiResponse(
                                 SignUpChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /challenge did not return a challenge_target_label with oob challenge type",
+                                    correlationId = correlationId
                                 )
                             }
                             challengeChannel.isNullOrBlank() -> {
                                 SignUpChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /challenge did not return a challenge_channel with oob challenge type",
+                                    correlationId = correlationId
                                 )
                             }
                             codeLength == null -> {
                                 SignUpChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /challenge did not return a code_length with oob challenge type",
+                                    correlationId = correlationId
                                 )
                             }
                             else -> {
@@ -120,10 +129,12 @@ data class SignUpChallengeApiResponse(
                                         ?: return SignUpChallengeApiResult.UnknownError(
                                             error = ApiErrorResult.INVALID_STATE,
                                             errorDescription = "SignUp /challenge did not return a continuation token with oob challenge type",
+                                            correlationId = correlationId
                                         ),
                                     challengeTargetLabel = challengeTargetLabel,
                                     challengeChannel = challengeChannel,
-                                    codeLength = codeLength
+                                    codeLength = codeLength,
+                                    correlationId = correlationId
                                 )
                             }
                         }
@@ -134,13 +145,16 @@ data class SignUpChallengeApiResponse(
                                 ?: return SignUpChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /challenge did not return a continuation token with password challenge type",
-                                )
+                                    correlationId = correlationId
+                                ),
+                            correlationId = correlationId
                         )
                     }
                     else -> {
                         SignUpChallengeApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                 }
@@ -151,6 +165,7 @@ data class SignUpChallengeApiResponse(
                 SignUpChallengeApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
+                    correlationId = correlationId
                 )
             }
         }

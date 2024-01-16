@@ -78,7 +78,8 @@ class NativeAuthResponseHandler {
                 unverifiedAttributes = null,
                 invalidAttributes = null,
                 challengeType = null,
-                subError = null
+                subError = null,
+                correlationId = null
             )
         }
         else {
@@ -118,7 +119,8 @@ class NativeAuthResponseHandler {
                 codeLength = null,
                 bindingMethod = null,
                 interval = null,
-                challengeChannel = null
+                challengeChannel = null,
+                correlationId = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -157,7 +159,8 @@ class NativeAuthResponseHandler {
                 unverifiedAttributes = null,
                 requiredAttributes = null,
                 expiresIn = null,
-                subError = null
+                subError = null,
+                correlationId = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -192,6 +195,7 @@ class NativeAuthResponseHandler {
                 errorCodes = null,
                 continuationToken = null,
                 challengeType = null,
+                correlationId = null
             )
         }  else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -232,6 +236,7 @@ class NativeAuthResponseHandler {
                 challengeChannel = null,
                 codeLength = null,
                 interval = null,
+                correlationId = null
             )
 
         } else {
@@ -270,7 +275,8 @@ class NativeAuthResponseHandler {
                     errorUri = null,
                     errorCodes = null,
                     subError = null,
-                    continuationToken = null
+                    continuationToken = null,
+                    correlationId = null
                 )
             } else {
                 ObjectMapper.deserializeJsonStringToObject(
@@ -315,6 +321,7 @@ class NativeAuthResponseHandler {
                 errorUri = null,
                 continuationToken = null,
                 challengeType = null,
+                correlationId = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -354,6 +361,7 @@ class NativeAuthResponseHandler {
                 challengeChannel = null,
                 codeLength = null,
                 interval = null,
+                correlationId = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -389,7 +397,8 @@ class NativeAuthResponseHandler {
                 continuationToken = null,
                 challengeType = null,
                 expiresIn = null,
-                subError = null
+                subError = null,
+                correlationId = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -423,7 +432,8 @@ class NativeAuthResponseHandler {
                 errorUri = null,
                 continuationToken = null,
                 pollInterval = null,
-                subError = null
+                subError = null,
+                correlationId = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -458,7 +468,8 @@ class NativeAuthResponseHandler {
                 errorUri = null,
                 status = null,
                 continuationToken = null,
-                subError = null
+                subError = null,
+                correlationId = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(

@@ -37,6 +37,7 @@ import java.net.HttpURLConnection
 class ResetPasswordSubmitApiResponse(
     @Expose override var statusCode: Int,
     @SerializedName("continuation_token") val continuationToken: String?,
+    @Expose @SerializedName("correlation_id") val correlationId: String?,
     @Expose @SerializedName("poll_interval") val pollInterval: Int?,
     @SerializedName("error") val error: String?,
     @SerializedName("error_description") val errorDescription: String?,
@@ -69,19 +70,22 @@ class ResetPasswordSubmitApiResponse(
                         ResetPasswordSubmitApiResult.PasswordInvalid(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            subError = subError.orEmpty()
+                            subError = subError.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     error.isExpiredToken() -> {
                         ResetPasswordSubmitApiResult.ExpiredToken(
                             error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
+                            errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     else -> {
                         ResetPasswordSubmitApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                 }
@@ -94,8 +98,10 @@ class ResetPasswordSubmitApiResponse(
                         ?: return ResetPasswordSubmitApiResult.UnknownError(
                             error = "invalid_state",
                             errorDescription = "ResetPassword /submit successful, but did not return a flow token",
+                            correlationId = correlationId
                         ),
-                    pollInterval = clampPollInterval(pollInterval)
+                    pollInterval = clampPollInterval(pollInterval),
+                    correlationId = correlationId
                 )
             }
 
@@ -104,12 +110,13 @@ class ResetPasswordSubmitApiResponse(
                 ResetPasswordSubmitApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
+                    correlationId = correlationId
                 )
             }
         }
     }
 
-    fun clampPollInterval(pollIntervalInSeconds: Int?): Int {
+    private fun clampPollInterval(pollIntervalInSeconds: Int?): Int {
         if (pollIntervalInSeconds == null || pollIntervalInSeconds < MINIMUM_POLL_COMPLETION_INTERVAL_IN_SECONDS || pollIntervalInSeconds > MAXIMUM_POLL_COMPLETION_INTERVAL_IN_SECONDS)
         {
             return DEFAULT_POLL_COMPLETION_INTERVAL_IN_SECONDS

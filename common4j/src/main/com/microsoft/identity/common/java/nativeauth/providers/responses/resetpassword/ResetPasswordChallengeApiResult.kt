@@ -23,41 +23,51 @@
 package com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword
 
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResult
 
 /**
  * Represents the potential result types returned from the Reset Password /challenge endpoint,
  * including a case for unexpected errors received from the server.
  */
-sealed interface ResetPasswordChallengeApiResult {
-    object Redirect : ResetPasswordChallengeApiResult
+sealed interface ResetPasswordChallengeApiResult: ApiResult {
+    data class Redirect(
+        override val correlationId: String?
+    ) : ResetPasswordChallengeApiResult
 
     data class CodeRequired(
+        override val correlationId: String?,
         val continuationToken: String,
         val challengeTargetLabel: String,
         val challengeChannel: String,
         val codeLength: Int) : ResetPasswordChallengeApiResult
 
     data class UnsupportedChallengeType(
+        override val correlationId: String?,
         override val error: String,
         override val errorDescription: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), ResetPasswordChallengeApiResult
 
     data class ExpiredToken(
+        override val correlationId: String?,
         override val error: String,
         override val errorDescription: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), ResetPasswordChallengeApiResult
 
     data class UnknownError(
+        override val correlationId: String?,
         override val error: String,
         override val errorDescription: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), ResetPasswordChallengeApiResult
 }

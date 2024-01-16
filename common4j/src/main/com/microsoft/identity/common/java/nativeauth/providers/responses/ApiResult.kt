@@ -22,19 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.responses
 
-import com.microsoft.identity.common.java.logging.DiagnosticContext
-
 /**
- * Base class to encapsulate various error response from the Native Auth API.
+ * Base class to encapsulate Native Auth API responses
  */
-open class ApiErrorResult(
-    open val error: String?,
-    open val errorDescription: String?,
-    open val errorCodes: List<Int>? = null,
-    override val correlationId: String?
-): ApiResult
-{
-    companion object {
-        public val INVALID_STATE = "invalid_state"
-    }
+interface ApiResult {
+    val correlationId: String?
 }

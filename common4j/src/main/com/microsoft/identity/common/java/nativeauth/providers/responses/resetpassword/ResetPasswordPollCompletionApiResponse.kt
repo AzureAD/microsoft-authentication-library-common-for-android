@@ -47,6 +47,7 @@ class ResetPasswordPollCompletionApiResponse(
     @Expose override var statusCode: Int,
     @Expose @SerializedName("status") val status: String?,
     @SerializedName("continuation_token") val continuationToken: String?,
+    @Expose @SerializedName("correlation_id") val correlationId: String?,
     @SerializedName("error") val error: String?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
@@ -76,13 +77,15 @@ class ResetPasswordPollCompletionApiResponse(
                                 ResetPasswordPollCompletionApiResult.PasswordInvalid(
                                     error = error.orEmpty(),
                                     errorDescription = errorDescription.orEmpty(),
-                                    subError = subError.orEmpty()
+                                    subError = subError.orEmpty(),
+                                    correlationId = correlationId
                                 )
                             }
                             else -> {
                                 ResetPasswordPollCompletionApiResult.UnknownError(
                                     error = error.orEmpty(),
-                                    errorDescription = errorDescription.orEmpty()
+                                    errorDescription = errorDescription.orEmpty(),
+                                    correlationId = correlationId
                                 )
                             }
                         }
@@ -90,19 +93,22 @@ class ResetPasswordPollCompletionApiResponse(
                     error.isExpiredToken() -> {
                         ResetPasswordPollCompletionApiResult.ExpiredToken(
                             error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
+                            errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     error.isUserNotFound() -> {
                         ResetPasswordPollCompletionApiResult.UserNotFound(
                             error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
+                            errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     else -> {
                         ResetPasswordPollCompletionApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                 }
@@ -112,15 +118,20 @@ class ResetPasswordPollCompletionApiResponse(
             HttpURLConnection.HTTP_OK -> {
                 return when {
                     status.isPollInProgress() -> {
-                        ResetPasswordPollCompletionApiResult.InProgress
+                        ResetPasswordPollCompletionApiResult.InProgress(
+                            correlationId = correlationId
+                        )
                     }
                     status.isPollSucceeded() -> {
-                        ResetPasswordPollCompletionApiResult.PollingSucceeded
+                        ResetPasswordPollCompletionApiResult.PollingSucceeded(
+                            correlationId = correlationId
+                        )
                     }
                     else -> {
                         ResetPasswordPollCompletionApiResult.PollingFailed(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                 }
@@ -131,6 +142,7 @@ class ResetPasswordPollCompletionApiResponse(
                 ResetPasswordPollCompletionApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
+                    correlationId = correlationId
                 )
             }
         }

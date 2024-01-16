@@ -39,6 +39,7 @@ import java.net.HttpURLConnection
 class ResetPasswordStartApiResponse(
     @Expose override var statusCode: Int,
     @SerializedName("continuation_token") val continuationToken: String?,
+    @Expose @SerializedName("correlation_id") val correlationId: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
     @SerializedName("error") val error: String?,
     @SerializedName("error_description") val errorDescription: String?,
@@ -64,19 +65,22 @@ class ResetPasswordStartApiResponse(
                     error.isUserNotFound() -> {
                         ResetPasswordStartApiResult.UserNotFound(
                             error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
+                            errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     error.isUnsupportedChallengeType() -> {
                         ResetPasswordStartApiResult.UnsupportedChallengeType(
                             error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
+                            errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     else -> {
                         ResetPasswordStartApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                 }
@@ -85,7 +89,9 @@ class ResetPasswordStartApiResponse(
             // Handle success and redirect
             HttpURLConnection.HTTP_OK -> {
                 if (challengeType.isRedirect()) {
-                    ResetPasswordStartApiResult.Redirect
+                    ResetPasswordStartApiResult.Redirect(
+                        correlationId = correlationId
+                    )
                 }
                 else {
                     ResetPasswordStartApiResult.Success(
@@ -93,7 +99,9 @@ class ResetPasswordStartApiResponse(
                             ?: return ResetPasswordStartApiResult.UnknownError(
                                 error = "invalid_state",
                                 errorDescription = "ResetPassword /start returned redirect challenge, but did not return a flow token",
-                            )
+                                correlationId = correlationId
+                            ),
+                        correlationId = correlationId
                     )
                 }
             }
@@ -103,6 +111,7 @@ class ResetPasswordStartApiResponse(
                 ResetPasswordStartApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
+                    correlationId = correlationId
                 )
             }
         }

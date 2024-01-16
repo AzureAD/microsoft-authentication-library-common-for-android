@@ -49,7 +49,8 @@ data class SignInTokenApiResponse(
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     @SerializedName("suberror") val subError: String?,
     @SerializedName("continuation_token") val continuationToken: String?,
-): IApiResponse(statusCode) {
+    @Expose @SerializedName("correlation_id") val correlationId: String?,
+    ): IApiResponse(statusCode) {
 
     companion object {
         private val TAG = SignInTokenApiResponse::class.java.simpleName
@@ -68,14 +69,16 @@ data class SignInTokenApiResponse(
                     SignInTokenApiResult.UnknownError(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
-                        errorCodes = errorCodes.orEmpty()
+                        errorCodes = errorCodes.orEmpty(),
+                        correlationId = correlationId
                     )
                 }
                 else -> {
                     SignInTokenApiResult.UnknownError(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
-                        errorCodes = errorCodes
+                        errorCodes = errorCodes,
+                        correlationId = correlationId
                     )
                 }
             }
@@ -87,21 +90,24 @@ data class SignInTokenApiResponse(
                     SignInTokenApiResult.UnknownError(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
-                        errorCodes = errorCodes.orEmpty()
+                        errorCodes = errorCodes.orEmpty(),
+                        correlationId = correlationId
                     )
                 }
                 errorCodes[0].isInvalidCredentials() -> {
                     SignInTokenApiResult.InvalidCredentials(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
-                        errorCodes = errorCodes
+                        errorCodes = errorCodes,
+                        correlationId = correlationId
                     )
                 }
                 errorCodes[0].isMFARequired() -> {
                     SignInTokenApiResult.MFARequired(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
-                        errorCodes = errorCodes
+                        errorCodes = errorCodes,
+                        correlationId = correlationId
                     )
                 }
                 subError.isInvalidOOBValue() -> {
@@ -109,21 +115,24 @@ data class SignInTokenApiResponse(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
                         errorCodes = errorCodes,
-                        subError = subError.orEmpty()
+                        subError = subError.orEmpty(),
+                        correlationId = correlationId
                     )
                 }
                 errorCodes[0].isInvalidAuthenticationType() -> {
                     SignInTokenApiResult.InvalidAuthenticationType(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
-                        errorCodes = errorCodes
+                        errorCodes = errorCodes,
+                        correlationId = correlationId
                     )
                 }
                 else -> {
                     SignInTokenApiResult.UnknownError(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
-                        errorCodes = errorCodes
+                        errorCodes = errorCodes,
+                        correlationId = correlationId
                     )
                 }
             }
@@ -132,14 +141,16 @@ data class SignInTokenApiResponse(
             SignInTokenApiResult.UserNotFound(
                 error = error.orEmpty(),
                 errorDescription = errorDescription.orEmpty(),
-                errorCodes = errorCodes.orEmpty()
+                errorCodes = errorCodes.orEmpty(),
+                correlationId = correlationId
             )
         }
         else {
             SignInTokenApiResult.UnknownError(
                 error = error.orEmpty(),
                 errorDescription = errorDescription.orEmpty(),
-                errorCodes = errorCodes.orEmpty()
+                errorCodes = errorCodes.orEmpty(),
+                correlationId = correlationId
             )
         }
     }

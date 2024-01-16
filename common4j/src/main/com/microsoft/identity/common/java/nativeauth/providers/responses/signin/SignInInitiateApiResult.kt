@@ -23,33 +23,43 @@
 package com.microsoft.identity.common.java.nativeauth.providers.responses.signin
 
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResult
 
 /**
  * Represents the potential result types returned from the OAuth /initiate endpoint,
  * including a case for unexpected errors received from the server.
  */
-sealed interface SignInInitiateApiResult {
-    object Redirect : SignInInitiateApiResult
+sealed interface SignInInitiateApiResult: ApiResult {
+    data class Redirect(
+        override val correlationId: String?
+    ) : SignInInitiateApiResult
 
-    data class Success(val continuationToken: String) : SignInInitiateApiResult
+    data class Success(
+        override val correlationId: String?,
+        val continuationToken: String
+    ) : SignInInitiateApiResult
 
     data class UserNotFound(
         override val error: String,
         override val errorDescription: String,
-        override val errorCodes: List<Int>
+        override val errorCodes: List<Int>,
+        override val correlationId: String?
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
-        errorCodes = errorCodes
+        errorCodes = errorCodes,
+        correlationId = correlationId
     ), SignInInitiateApiResult
 
     data class UnknownError(
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
+        override val correlationId: String?
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
-        errorCodes = errorCodes
+        errorCodes = errorCodes,
+        correlationId = correlationId
     ), SignInInitiateApiResult
 }
