@@ -108,6 +108,11 @@ public class Logger {
          * Undefined. Should be used in test only.
          */
         UNDEFINED,
+
+        /**
+         * No logs should be emitted
+         */
+        NO_LOG
     }
 
     // Visible for testing
