@@ -1562,8 +1562,8 @@ public final class AuthenticationConstants {
             BROKER_DISCOVERY_SET_ACTIVE_BROKER(BROKER_DISCOVERY_SET_ACTIVE_BROKER_PATH, null, null),
             PASSTHROUGH(PASSTHROUGH_PATH, null, null),
             READ_RESTRICTIONS_MANAGER(READ_RESTRICTIONS_MANAGER_PATH, null, null),
-            IS_QR_PIN_AVAILABLE(IS_QR_PIN_AVAILABLE_PATH, null, null);
-            BROKER_INDIVIDUAL_LOGS_UPLOAD(BROKER_INDIVIDUAL_LOGS_UPLOAD_PATH, null, null),;
+            IS_QR_PIN_AVAILABLE(IS_QR_PIN_AVAILABLE_PATH, null, null),
+            BROKER_INDIVIDUAL_LOGS_UPLOAD(BROKER_INDIVIDUAL_LOGS_UPLOAD_PATH, null, null);
 
             /**
              * The content provider path that the API exists behind.
