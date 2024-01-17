@@ -26,6 +26,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.platform.MockDeviceMetadata;
 import com.microsoft.identity.common.java.providers.oauth2.MockAuthorizationRequest;
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import org.junit.After;
@@ -117,5 +118,20 @@ public class MicrosoftAuthorizationRequestTest {
         Assert.assertEquals(MockDeviceMetadata.TEST_OS_ESTS, request.getDiagnosticOS());
         Assert.assertEquals(MockDeviceMetadata.TEST_CPU, request.getDiagnosticCPU());
         Assert.assertEquals(MockDeviceMetadata.TEST_DEVICE_MODEL, request.getDiagnosticDM());
+    }
+
+    @Test
+    public void testMicrosoftAuthorizationRequestWithPreferredAuthMethod(){
+        final MockMicrosoftAuthorizationRequest request = new MockMicrosoftAuthorizationRequest.Builder()
+                .setPreferredAuthMethod(PreferredAuthMethod.QR)
+                .build();
+        Assert.assertEquals(String.valueOf(PreferredAuthMethod.QR.code), request.getPreferredAuthMethodCode());
+    }
+    
+    @Test
+    public void testMicrosoftAuthorizationRequestWithNoPreferredAuthMethod(){
+        final MockMicrosoftAuthorizationRequest request = new MockMicrosoftAuthorizationRequest.Builder()
+                .build();
+        Assert.assertNull(request.getPreferredAuthMethodCode());
     }
 }
