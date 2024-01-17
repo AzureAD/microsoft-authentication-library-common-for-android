@@ -1,6 +1,7 @@
 V.Next
 ---------
 - [MINOR] Implement updates of the native auth web API (#2261)
+- [PATCH] Create consistent use of correlation ID throughout a user flow (#2283)
 
 V.17.0.0
 ---------
