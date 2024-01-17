@@ -79,6 +79,7 @@ class SignInOAuthStrategyTest {
     private val CLIENT_ID = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val CHALLENGE_TYPE = "oob password redirect"
     private val CONTINUATION_TOKEN = "12345"
+    private val CORRELATION_ID = "834jdfijvos8u45"
 
     private val OOB = "1234"
 
@@ -158,7 +159,8 @@ class SignInOAuthStrategyTest {
         )
 
         val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
-            continuationToken = "1234"
+            continuationToken = CONTINUATION_TOKEN,
+            correlationId = CORRELATION_ID
         )
 
         Assert.assertTrue(signInChallengeResult is SignInChallengeApiResult.Redirect)
@@ -240,7 +242,7 @@ class SignInOAuthStrategyTest {
         val signInInitiateResult = nativeAuthOAuth2Strategy.performSignInInitiate(
             parameters = parameters
         )
-        Assert.assertEquals(signInInitiateResult, SignInInitiateApiResult.Redirect)
+        Assert.assertTrue(signInInitiateResult is SignInInitiateApiResult.Redirect)
     }
 
     @Test
@@ -251,7 +253,8 @@ class SignInOAuthStrategyTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
         val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
-            continuationToken = CONTINUATION_TOKEN
+            continuationToken = CONTINUATION_TOKEN,
+            correlationId = CORRELATION_ID
         )
 
         Assert.assertTrue(signInChallengeResult is SignInChallengeApiResult.OOBRequired)
@@ -265,7 +268,8 @@ class SignInOAuthStrategyTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
         )
         val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
-            continuationToken = CONTINUATION_TOKEN
+            continuationToken = CONTINUATION_TOKEN,
+            correlationId = CORRELATION_ID
         )
 
         Assert.assertTrue(signInChallengeResult is SignInChallengeApiResult.PasswordRequired)
@@ -279,9 +283,10 @@ class SignInOAuthStrategyTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
         val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
-            continuationToken = CONTINUATION_TOKEN
+            continuationToken = CONTINUATION_TOKEN,
+            correlationId = CORRELATION_ID
         )
-        Assert.assertEquals(SignInChallengeApiResult.Redirect, signInChallengeResult)
+        Assert.assertTrue(signInChallengeResult is SignInChallengeApiResult.Redirect)
     }
 
     @Test

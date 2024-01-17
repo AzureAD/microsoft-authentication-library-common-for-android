@@ -48,7 +48,6 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
@@ -119,12 +118,13 @@ class ResetPasswordScenarioTest {
     @Test
     fun testResetPasswordScenarioEmailVerificationThenResetPassword() {
         var continuationToken: String
-        val correlationId = UUID.randomUUID().toString()
+        var correlationId: String? = UUID.randomUUID().toString()
+        val mockApiClientRequestId = UUID.randomUUID().toString()
 
         // Call /start
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRStart,
-            correlationId = correlationId,
+            correlationId = mockApiClientRequestId,
             responseType = MockApiResponseType.SSPR_START_SUCCESS
         )
         val mockResetPasswordStartCommandParameters = mockk<ResetPasswordStartCommandParameters>()
@@ -133,60 +133,78 @@ class ResetPasswordScenarioTest {
             mockResetPasswordStartCommandParameters
         )
         Assert.assertTrue(ssprStartResult is ResetPasswordStartApiResult.Success)
+        Assert.assertEquals(correlationId, ssprStartResult.correlationId)
+
         continuationToken = (ssprStartResult as ResetPasswordStartApiResult.Success).continuationToken
+        correlationId = ssprStartResult.correlationId
 
         // Call /challenge
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRChallenge,
-            correlationId = correlationId,
+            correlationId = mockApiClientRequestId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
         val ssprChallengeResult = nativeAuthOAuth2Strategy.performResetPasswordChallenge(
-            continuationToken = continuationToken
+            continuationToken = continuationToken,
+            correlationId = correlationId
         )
         Assert.assertTrue(ssprChallengeResult is ResetPasswordChallengeApiResult.CodeRequired)
+        Assert.assertEquals(correlationId, ssprChallengeResult.correlationId)
+
         continuationToken = (ssprChallengeResult as ResetPasswordChallengeApiResult.CodeRequired).continuationToken
+        correlationId = ssprStartResult.correlationId
 
         // Call /continue
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRContinue,
-            correlationId = correlationId,
+            correlationId = mockApiClientRequestId,
             responseType = MockApiResponseType.SSPR_CONTINUE_SUCCESS
         )
         val mockResetPasswordSubmitCodeCommandParameters = mockk<ResetPasswordSubmitCodeCommandParameters>()
         every { mockResetPasswordSubmitCodeCommandParameters.getContinuationToken() } returns continuationToken
         every { mockResetPasswordSubmitCodeCommandParameters.getCode() } returns oobCode
+        every { mockResetPasswordSubmitCodeCommandParameters.correlationId } returns correlationId
         val ssprContinueResult = nativeAuthOAuth2Strategy.performResetPasswordContinue(
             mockResetPasswordSubmitCodeCommandParameters
         )
         Assert.assertTrue(ssprContinueResult is ResetPasswordContinueApiResult.PasswordRequired)
+        Assert.assertEquals(correlationId, ssprContinueResult.correlationId)
+
         continuationToken = (ssprContinueResult as ResetPasswordContinueApiResult.PasswordRequired).continuationToken
+        correlationId = ssprStartResult.correlationId
 
         // Call /submit
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRSubmit,
-            correlationId = correlationId,
+            correlationId = mockApiClientRequestId,
             responseType = MockApiResponseType.SSPR_SUBMIT_SUCCESS
         )
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()
         every { mockResetPasswordSubmitCommandParameters.getContinuationToken() } returns continuationToken
         every { mockResetPasswordSubmitCommandParameters.getNewPassword() } returns password
+        every { mockResetPasswordSubmitCommandParameters.correlationId } returns correlationId
+
         val ssprSubmitResult = nativeAuthOAuth2Strategy.performResetPasswordSubmit(
             mockResetPasswordSubmitCommandParameters
         )
         Assert.assertTrue(ssprSubmitResult is ResetPasswordSubmitApiResult.SubmitSuccess)
+        Assert.assertEquals(correlationId, ssprSubmitResult.correlationId)
+
         continuationToken = (ssprSubmitResult as ResetPasswordSubmitApiResult.SubmitSuccess).continuationToken
+        correlationId = ssprStartResult.correlationId
 
         // Call /poll_completion
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRPoll,
-            correlationId = correlationId,
+            correlationId = mockApiClientRequestId,
             responseType = MockApiResponseType.SSPR_POLL_SUCCESS
         )
         val ssprPollResult = nativeAuthOAuth2Strategy.performResetPasswordPollCompletion(
-            continuationToken = continuationToken
+            continuationToken = continuationToken,
+            correlationId = correlationId
         )
         Assert.assertTrue(ssprPollResult is ResetPasswordPollCompletionApiResult.PollingSucceeded)
+        Assert.assertEquals(correlationId, ssprPollResult.correlationId)
     }
 
     // Acceptance criteria for Native Authentication:
@@ -194,22 +212,26 @@ class ResetPasswordScenarioTest {
     // Scenario 3.1.4: Email is not found in records
     @Test
     fun testResetPasswordScenarioUserNotFound() {
-        val correlationId = UUID.randomUUID().toString()
+        val mockApiClientRequestId = UUID.randomUUID().toString()
+        var correlationId: String? = UUID.randomUUID().toString()
 
         // Call /start
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRStart,
-            correlationId = correlationId,
+            correlationId = mockApiClientRequestId,
             responseType = MockApiResponseType.USER_NOT_FOUND
         )
         val mockResetPasswordStartCommandParameters = mockk<ResetPasswordStartCommandParameters>()
         every { mockResetPasswordStartCommandParameters.getUsername() } returns username
+        every { mockResetPasswordStartCommandParameters.correlationId } returns correlationId
+
         val ssprStartResult = nativeAuthOAuth2Strategy.performResetPasswordStart(
             mockResetPasswordStartCommandParameters
         )
 
         Assert.assertFalse(ssprStartResult is ResetPasswordStartApiResult.Success)
         Assert.assertTrue(ssprStartResult is ResetPasswordStartApiResult.UserNotFound)
+        Assert.assertEquals(correlationId, ssprStartResult.correlationId)
     }
 
     // Acceptance criteria for Native Authentication:
@@ -218,58 +240,75 @@ class ResetPasswordScenarioTest {
     @Test
     fun testResetPasswordScenarioPasswordComplexity() {
         var continuationToken: String
-        val correlationId = UUID.randomUUID().toString()
+        val mockApiClientRequestId = UUID.randomUUID().toString()
+        var correlationId: String? = UUID.randomUUID().toString()
 
         // Call /start
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRStart,
-            correlationId = correlationId,
+            correlationId = mockApiClientRequestId,
             responseType = MockApiResponseType.SSPR_START_SUCCESS
         )
         val mockResetPasswordStartCommandParameters = mockk<ResetPasswordStartCommandParameters>()
         every { mockResetPasswordStartCommandParameters.getUsername() } returns username
+        every { mockResetPasswordStartCommandParameters.correlationId } returns correlationId
+
         val ssprStartResult = nativeAuthOAuth2Strategy.performResetPasswordStart(
             mockResetPasswordStartCommandParameters
         )
         Assert.assertTrue(ssprStartResult is ResetPasswordStartApiResult.Success)
+        Assert.assertEquals(correlationId, ssprStartResult.correlationId)
+
         continuationToken = (ssprStartResult as ResetPasswordStartApiResult.Success).continuationToken
+        correlationId = ssprStartResult.correlationId
 
         // Call /challenge
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRChallenge,
-            correlationId = correlationId,
+            correlationId = mockApiClientRequestId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
         val ssprChallengeResult = nativeAuthOAuth2Strategy.performResetPasswordChallenge(
-            continuationToken = continuationToken
+            continuationToken = continuationToken,
+            correlationId = correlationId
         )
         Assert.assertTrue(ssprChallengeResult is ResetPasswordChallengeApiResult.CodeRequired)
+        Assert.assertEquals(correlationId, ssprChallengeResult.correlationId)
+
         continuationToken = (ssprChallengeResult as ResetPasswordChallengeApiResult.CodeRequired).continuationToken
+        correlationId = ssprChallengeResult.correlationId
 
         // Call /continue
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRContinue,
-            correlationId = correlationId,
+            correlationId = mockApiClientRequestId,
             responseType = MockApiResponseType.SSPR_CONTINUE_SUCCESS
         )
         val mockResetPasswordSubmitCodeCommandParameters = mockk<ResetPasswordSubmitCodeCommandParameters>()
         every { mockResetPasswordSubmitCodeCommandParameters.getContinuationToken() } returns continuationToken
         every { mockResetPasswordSubmitCodeCommandParameters.getCode() } returns oobCode
+        every { mockResetPasswordStartCommandParameters.correlationId } returns correlationId
+
         val ssprContinueResult = nativeAuthOAuth2Strategy.performResetPasswordContinue(
             mockResetPasswordSubmitCodeCommandParameters
         )
         Assert.assertTrue(ssprContinueResult is ResetPasswordContinueApiResult.PasswordRequired)
+        Assert.assertEquals(correlationId, ssprContinueResult.correlationId)
+
         continuationToken = (ssprContinueResult as ResetPasswordContinueApiResult.PasswordRequired).continuationToken
+        correlationId = ssprChallengeResult.correlationId
 
         // Call /submit
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRSubmit,
-            correlationId = correlationId,
+            correlationId = mockApiClientRequestId,
             responseType = MockApiResponseType.PASSWORD_TOO_WEAK
         )
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()
         every { mockResetPasswordSubmitCommandParameters.getContinuationToken() } returns continuationToken
         every { mockResetPasswordSubmitCommandParameters.getNewPassword() } returns password
+        every { mockResetPasswordStartCommandParameters.correlationId } returns correlationId
+
         val ssprSubmitResult = nativeAuthOAuth2Strategy.performResetPasswordSubmit(
             mockResetPasswordSubmitCommandParameters
         )
@@ -283,18 +322,23 @@ class ResetPasswordScenarioTest {
             (ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).subError,
             passwordTooWeak
         )
+        Assert.assertEquals(correlationId, ssprSubmitResult.correlationId)
+        correlationId = ssprSubmitResult.correlationId
 
         // Call /poll_completion
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRPoll,
-            correlationId = correlationId,
+            correlationId = mockApiClientRequestId,
             responseType = MockApiResponseType.SSPR_POLL_FAILED
         )
         every { mockResetPasswordSubmitCommandParameters.getNewPassword() } returns password
         val ssprPollResult = nativeAuthOAuth2Strategy.performResetPasswordPollCompletion(
-            continuationToken = continuationToken
+            continuationToken = continuationToken,
+            correlationId = correlationId
         )
         Assert.assertTrue(ssprPollResult is ResetPasswordPollCompletionApiResult.PollingFailed)
+        Assert.assertEquals(correlationId, ssprPollResult.correlationId)
+
     }
 
     // Acceptance criteria for Native Authentication:
@@ -302,46 +346,58 @@ class ResetPasswordScenarioTest {
     // Scenario 3.1.9: Continuous attempts to reset password for single email with wrong OTP
     @Test
     fun testResetPasswordScenarioSingleEmailWrongOTP() {
-        val correlationId = UUID.randomUUID().toString()
+        val mockApiClientRequestId = UUID.randomUUID().toString()
+        var correlationId: String? = UUID.randomUUID().toString()
 
         // Call /start
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRStart,
-            correlationId = correlationId,
+            correlationId = mockApiClientRequestId,
             responseType = MockApiResponseType.SSPR_START_SUCCESS
         )
         val mockResetPasswordStartCommandParameters = mockk<ResetPasswordStartCommandParameters>()
         every { mockResetPasswordStartCommandParameters.getUsername() } returns username
+        every { mockResetPasswordStartCommandParameters.correlationId } returns correlationId
+
         val ssprStartResult = nativeAuthOAuth2Strategy.performResetPasswordStart(
             mockResetPasswordStartCommandParameters
         )
         Assert.assertTrue(ssprStartResult is ResetPasswordStartApiResult.Success)
+        Assert.assertEquals(correlationId, ssprStartResult.correlationId)
+
         var continuationToken = (ssprStartResult as ResetPasswordStartApiResult.Success).continuationToken
+        correlationId = ssprStartResult.correlationId
 
         // Call /challenge
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRChallenge,
-            correlationId = correlationId,
+            correlationId = mockApiClientRequestId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
         val ssprChallengeResult = nativeAuthOAuth2Strategy.performResetPasswordChallenge(
-            continuationToken = continuationToken.toString()
+            continuationToken = continuationToken,
+            correlationId = correlationId
         )
         Assert.assertTrue(ssprChallengeResult is ResetPasswordChallengeApiResult.CodeRequired)
+        Assert.assertEquals(correlationId, ssprChallengeResult.correlationId)
+
         continuationToken = (ssprChallengeResult as ResetPasswordChallengeApiResult.CodeRequired).continuationToken
+        correlationId = ssprStartResult.correlationId
 
         // Call /continue
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRContinue,
-            correlationId = correlationId,
+            correlationId = mockApiClientRequestId,
             responseType = MockApiResponseType.INVALID_OOB_VALUE
         )
         val mockResetPasswordSubmitCodeCommandParameters = mockk<ResetPasswordSubmitCodeCommandParameters>()
         every { mockResetPasswordSubmitCodeCommandParameters.getContinuationToken() } returns continuationToken
         every { mockResetPasswordSubmitCodeCommandParameters.getCode() } returns oobCode
+        every { mockResetPasswordStartCommandParameters.correlationId } returns correlationId
         val ssprContinueResult = nativeAuthOAuth2Strategy.performResetPasswordContinue(
             mockResetPasswordSubmitCodeCommandParameters
         )
         Assert.assertTrue(ssprContinueResult is ResetPasswordContinueApiResult.CodeIncorrect)
+        Assert.assertEquals(correlationId, ssprContinueResult.correlationId)
     }
 }
