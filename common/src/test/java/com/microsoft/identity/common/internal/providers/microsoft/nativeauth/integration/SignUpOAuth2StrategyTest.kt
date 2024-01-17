@@ -80,7 +80,6 @@ class SignUpOAuth2StrategyTest {
     private val USER_ATTRIBUTES = mapOf("city" to "Dublin")
     private val OOB_CODE = "123456"
     private val CONTINUATION_TOKEN = "iFQ"
-    private val CORRELATION_ID = "834jdfijvos8u45"
 
     private val mockConfig = mock<NativeAuthOAuth2Configuration>()
     private val mockStrategyParams = mock<OAuth2StrategyParameters>()
@@ -334,30 +333,33 @@ class SignUpOAuth2StrategyTest {
 
     @Test
     fun testPerformSignUpChallengeSuccessOOBRequired() {
+        val correlationId = UUID.randomUUID().toString()
+
         configureMockApi(
             endpointType = MockApiEndpoint.SignUpChallenge,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
 
         val signupResult = nativeAuthOAuth2Strategy.performSignUpChallenge(
             continuationToken = CONTINUATION_TOKEN,
-            correlationId = CORRELATION_ID
+            correlationId = correlationId
         )
         assertTrue(signupResult is SignUpChallengeApiResult.OOBRequired)
     }
 
     @Test
     fun testPerformSignUpChallengeSuccessPasswordRequired() {
+        val correlationId = UUID.randomUUID().toString()
         configureMockApi(
             endpointType = MockApiEndpoint.SignUpChallenge,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
         )
 
         val signupResult = nativeAuthOAuth2Strategy.performSignUpChallenge(
             continuationToken = CONTINUATION_TOKEN,
-            correlationId = CORRELATION_ID
+            correlationId = correlationId
         )
         assertTrue(signupResult is SignUpChallengeApiResult.PasswordRequired)
     }

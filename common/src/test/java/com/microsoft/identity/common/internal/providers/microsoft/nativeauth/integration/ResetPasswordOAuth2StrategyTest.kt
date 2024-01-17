@@ -94,7 +94,6 @@ class ResetPasswordOAuth2StrategyTest {
     private val CHALLENGE_TYPE = "oob redirect"
     private val OOB_CODE = "123456"
     private val CONTINUATION_TOKEN = "1234"
-    private val CORRELATION_ID = "834jdfijvos8u45"
     private val INVALID_GRANT_ERROR = "invalid_grant"
     private val INVALID_CLIENT_ERROR = "invalid_client"
     private val UNSUPPORTED_CHALLENGE_TYPE_ERROR = "unsupported_challenge_type"
@@ -248,30 +247,33 @@ class ResetPasswordOAuth2StrategyTest {
      */
     @Test
     fun testPerformResetPasswordChallengeSuccess() {
+        val correlationId = UUID.randomUUID().toString()
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRChallenge,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
 
         val ssprChallengeResult = nativeAuthOAuth2Strategy.performResetPasswordChallenge(
             continuationToken = CONTINUATION_TOKEN,
-            correlationId = CORRELATION_ID
+            correlationId = correlationId
         )
         assertTrue(ssprChallengeResult is ResetPasswordChallengeApiResult.CodeRequired)
     }
 
     @Test
     fun testPerformResetPasswordChallengeExpiredTokenError() {
+        val correlationId = UUID.randomUUID().toString()
+
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRChallenge,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.EXPIRED_TOKEN
         )
 
         val ssprChallengeResult = nativeAuthOAuth2Strategy.performResetPasswordChallenge(
             continuationToken = CONTINUATION_TOKEN,
-            correlationId = CORRELATION_ID
+            correlationId = correlationId
         )
 
         assertTrue(ssprChallengeResult is ResetPasswordChallengeApiResult.ExpiredToken)
@@ -406,9 +408,11 @@ class ResetPasswordOAuth2StrategyTest {
 
     @Test
     fun testPerformResetPasswordPollCompletionSuccess() {
+        val correlationId = UUID.randomUUID().toString()
+
         val ssprPollCompletionResult = nativeAuthOAuth2Strategy.performResetPasswordPollCompletion(
             continuationToken = CONTINUATION_TOKEN,
-            correlationId = CORRELATION_ID
+            correlationId = correlationId
         )
         assertTrue(ssprPollCompletionResult is ResetPasswordPollCompletionApiResult.PollingSucceeded)
     }
