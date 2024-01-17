@@ -41,6 +41,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -303,7 +304,7 @@ public abstract class Authority {
     private static List<Authority> getKnownAuthorities(){
         sLock.readLock().lock();
         try {
-            return knownAuthorities;
+            return Collections.unmodifiableList(knownAuthorities);
         } finally {
             sLock.readLock().unlock();
         }
