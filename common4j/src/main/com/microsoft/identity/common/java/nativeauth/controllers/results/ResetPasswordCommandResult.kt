@@ -41,7 +41,7 @@ sealed interface ResetPasswordSubmitNewPasswordCommandResult: INativeAuthCommand
  */
 interface ResetPasswordCommandResult {
     data class CodeRequired(
-        val passwordResetToken: String,
+        val continuationToken: String,
         val codeLength: Int,
         val challengeTargetLabel: String,
         val challengeChannel: String,
@@ -56,12 +56,12 @@ interface ResetPasswordCommandResult {
     data class UserNotFound(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
         ResetPasswordStartCommandResult, ResetPasswordSubmitNewPasswordCommandResult
 
-    data class PasswordRequired(val passwordSubmitToken: String) : ResetPasswordSubmitCodeCommandResult
+    data class PasswordRequired(val continuationToken: String) : ResetPasswordSubmitCodeCommandResult
 
-    data class IncorrectCode(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
+    data class IncorrectCode(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId, val subError: String) :
         ResetPasswordSubmitCodeCommandResult
 
-    data class PasswordNotAccepted(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
+    data class PasswordNotAccepted(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId, val subError: String) :
         ResetPasswordSubmitNewPasswordCommandResult
 
     data class PasswordResetFailed(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :

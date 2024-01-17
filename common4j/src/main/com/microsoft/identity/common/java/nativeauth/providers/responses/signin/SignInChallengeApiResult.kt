@@ -31,23 +31,21 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErro
 sealed interface SignInChallengeApiResult {
     object Redirect : SignInChallengeApiResult
     data class OOBRequired(
-        val credentialToken: String,
+        val continuationToken: String,
         val challengeTargetLabel: String,
         val challengeChannel: String,
         val codeLength: Int
     ) : SignInChallengeApiResult
 
-    data class PasswordRequired(val credentialToken: String) : SignInChallengeApiResult
+    data class PasswordRequired(val continuationToken: String) : SignInChallengeApiResult
 
     data class UnknownError(
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
-        override val details: List<Map<String, String>>?
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
         errorCodes = errorCodes,
-        details = details
     ), SignInChallengeApiResult
 }

@@ -37,8 +37,8 @@ import lombok.experimental.SuperBuilder;
 public class ResetPasswordResendCodeCommandParameters extends BaseNativeAuthCommandParameters {
 
     /**
-     * The password reset token obtained from the start endpoint.
+     * The continuation token obtained from the start endpoint.
      */
     @NonNull
-    public final String passwordResetToken;
+    public final String continuationToken;
 }

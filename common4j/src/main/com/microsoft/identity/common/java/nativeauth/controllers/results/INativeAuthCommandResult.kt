@@ -32,7 +32,7 @@ interface INativeAuthCommandResult {
     data class Redirect(
         override val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
     ) : Error(error = BROWSER_REQUIRED_ERROR, errorDescription = BROWSER_REQUIRED_ERROR_DESCRIPTION, correlationId = correlationId),
-        SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult, SignInResendCodeCommandResult,
+        SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInSubmitCodeCommandResult, SignInResendCodeCommandResult,
         SignInSubmitPasswordCommandResult, SignUpStartCommandResult, SignUpSubmitCodeCommandResult,
         SignUpResendCodeCommandResult, SignUpSubmitPasswordCommandResult,
         SignUpSubmitUserAttributesCommandResult,
@@ -56,7 +56,7 @@ interface INativeAuthCommandResult {
         override val errorCodes: List<Int>? = null,
         val exception: Exception? = null
     ): Error(error, errorDescription, details, correlationId, errorCodes), INativeAuthCommandResult,
-        SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult,
+        SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInSubmitCodeCommandResult,
         SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult,
         SignUpStartCommandResult, SignUpSubmitUserAttributesCommandResult,
         SignUpSubmitCodeCommandResult, SignUpResendCodeCommandResult,

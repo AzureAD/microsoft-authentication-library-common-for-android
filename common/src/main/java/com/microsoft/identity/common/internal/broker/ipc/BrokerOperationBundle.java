@@ -76,6 +76,8 @@ public class BrokerOperationBundle {
         PASSTHROUGH(API.PASSTHROUGH, null),
         BROKER_READ_RESTRICTIONS_MANAGER(API.READ_RESTRICTIONS_MANAGER, null),
         MSAL_IS_QR_PIN_AVAILABLE(API.IS_QR_PIN_AVAILABLE, null);
+        BROKER_INDIVIDUAL_LOGS_UPLOAD(API.BROKER_INDIVIDUAL_LOGS_UPLOAD, null);
+      
         final API mContentApi;
         final String mAccountManagerOperation;
         Operation(API contentApi, String accountManagerOperation) {

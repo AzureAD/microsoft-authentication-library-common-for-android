@@ -38,8 +38,8 @@ public class SignInResendCodeCommandParameters extends BaseNativeAuthCommandPara
     private static final String TAG = SignInResendCodeCommandParameters.class.getSimpleName();
 
     /**
-     * The credential token obtained from the initiate endpoint.
+     * The continuation token obtained from the initiate endpoint.
      */
     @NonNull
-    public final String credentialToken;
+    public final String continuationToken;
 }

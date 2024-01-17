@@ -32,7 +32,7 @@ sealed interface SignUpChallengeApiResult {
     object Redirect : SignUpChallengeApiResult
 
     data class OOBRequired(
-        val signupToken: String,
+        val continuationToken: String,
         val challengeTargetLabel: String,
         val challengeChannel: String,
         val codeLength: Int
@@ -40,36 +40,30 @@ sealed interface SignUpChallengeApiResult {
         SignUpChallengeApiResult
 
     data class PasswordRequired(
-        val signupToken: String
+        val continuationToken: String
     ) : SignUpChallengeApiResult
 
     data class UnsupportedChallengeType(
         override val error: String,
         override val errorDescription: String,
-        override val details: List<Map<String, String>>?
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
-        details = details
     ), SignUpChallengeApiResult
 
     data class ExpiredToken(
         override val error: String,
         override val errorDescription: String,
-        override val details: List<Map<String, String>>?
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
-        details = details
     ), SignUpChallengeApiResult
 
     data class UnknownError(
         override val error: String,
         override val errorDescription: String,
-        override val details: List<Map<String, String>>?
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
-        details = details
     ), SignUpChallengeApiResult
 }

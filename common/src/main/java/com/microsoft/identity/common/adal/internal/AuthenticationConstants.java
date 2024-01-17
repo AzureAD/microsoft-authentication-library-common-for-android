@@ -1190,6 +1190,11 @@ public final class AuthenticationConstants {
         public static final String BROWSER_EXT_WEB_CP = "companyportal://";
 
         /**
+         * The URI for the Amazon app.
+         */
+        public static final String AMAZON_APP_REDIRECT_PREFIX = "aea://";
+
+        /**
          * Prefix for the Authenticator MFA linking.
          */
         public static final String AUTHENTICATOR_MFA_LINKING_PREFIX = "microsoft-authenticator://activatemfa";
@@ -1558,6 +1563,7 @@ public final class AuthenticationConstants {
             PASSTHROUGH(PASSTHROUGH_PATH, null, null),
             READ_RESTRICTIONS_MANAGER(READ_RESTRICTIONS_MANAGER_PATH, null, null),
             IS_QR_PIN_AVAILABLE(IS_QR_PIN_AVAILABLE_PATH, null, null);
+            BROKER_INDIVIDUAL_LOGS_UPLOAD(BROKER_INDIVIDUAL_LOGS_UPLOAD_PATH, null, null),;
 
             /**
              * The content provider path that the API exists behind.
@@ -1680,6 +1686,11 @@ public final class AuthenticationConstants {
          * Broker api path for passthrough communication betwwen brokers.
          */
         public static final String PASSTHROUGH_PATH = "/passthrough";
+
+        /**
+         * Api path for uploading broker logs from the invoked app.
+         */
+        public static final String BROKER_INDIVIDUAL_LOGS_UPLOAD_PATH = "/brokerIndividualLogsUpload";
 
         /**
          * Broker api path constant for adding flight information.

@@ -48,6 +48,7 @@ public class TestConstants {
         public static final String[] B2C_READ_SCOPE = {"https://msidlabb2c.onmicrosoft.com/msidlabb2capi/read"};
         public static final String[] B2C_USER_IMPERSONATION_SCOPE = {"https://msidlabb2c.onmicrosoft.com/msidlabb2capi/user_impersonation"};
         public static final String[] SUBSTRATE_USER_READ_SCOPE= {"https://substrate.office.com/profile//User.Read"};
+        public static final String[] GRAPH_DEFAULT = {"https://graph.microsoft.com/.default"};
     }
 
     public static class Authorities {

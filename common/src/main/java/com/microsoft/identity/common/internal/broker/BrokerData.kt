@@ -222,5 +222,17 @@ data class BrokerData(val packageName : String,
         fun isAccountManagerSupported(packageName: String): Boolean {
             return accountManagerBrokers.contains(packageName)
         }
+
+        /**
+         * Returns a [BrokerData] object matching the owner of the [Context].
+         **/
+        @JvmStatic
+        fun getFromContext(context: Context): BrokerData?{
+            val signingCertificateThumbprint = PackageHelper(context).getSha512SignatureForPackage(context.packageName)
+            return allBrokers.firstOrNull {
+                it.packageName == context.packageName &&
+                        it.signingCertificateThumbprint == signingCertificateThumbprint
+            }
+        }
     }
 }

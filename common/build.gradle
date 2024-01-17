@@ -148,6 +148,7 @@ dependencies {
     testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$rootProject.ext.kotlinVersion"
     androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:$rootProject.ext.kotlinVersion"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$rootProject.ext.kotlinXCoroutinesVersion"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$rootProject.ext.lifecycleKtxVersion"
 
     implementation "androidx.datastore:datastore-preferences:$rootProject.ext.jetpackDataStoreVersion"
 
@@ -163,6 +164,10 @@ dependencies {
     //For Executive Order work
     implementation "com.yubico.yubikit:android:$rootProject.ext.yubikitAndroidVersion"
     implementation "com.yubico.yubikit:piv:$rootProject.ext.yubikitPivVersion"
+    //For passkeys
+    implementation "androidx.credentials:credentials:$rootProject.ext.AndroidCredentialsVersion"
+    //needed for credentials support from play services, for devices running
+    implementation "androidx.credentials:credentials-play-services-auth:$rootProject.ext.AndroidCredentialsVersion"
 
     constraints {
         implementation ("com.squareup.okio:okio:3.4.0") {
@@ -178,6 +183,7 @@ dependencies {
     // Test dependencies
     // Needed to resolve JSONObject inside of non-instrumented tests
     testImplementation "org.json:json:$rootProject.ext.jsonVersion"
+    testImplementation "org.skyscreamer:jsonassert:$rootProject.ext.jsonAssertVersion"
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
     testImplementation "org.mockito.kotlin:mockito-kotlin:$rootProject.ext.mockitoKotlinVersion"
@@ -193,6 +199,8 @@ dependencies {
     testImplementation project(":LabApiUtilities")
 
     testImplementation(testFixtures(project(":common4j")))
+    testImplementation "androidx.lifecycle:lifecycle-runtime-testing:$rootProject.ext.lifecycleKtxVersion"
+
     testCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     testAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
 
@@ -369,7 +377,7 @@ tasks.withType(GenerateMavenPom).all {
     destination = layout.buildDirectory.file("poms/${project.name}-${project.version}.pom").get().asFile
 }
 
-def dependenciesSizeInMb = project.hasProperty("dependenciesSizeMb") ? project.dependenciesSizeMb : "11.5"
+def dependenciesSizeInMb = project.hasProperty("dependenciesSizeMb") ? project.dependenciesSizeMb : "14"
 String configToCheck = project.hasProperty("dependenciesSizeCheckConfig") ? project.dependenciesSizeCheckConfig : "distReleaseRuntimeClasspath"
 tasks.register("dependenciesSizeCheck") {
     doLast() {
@@ -384,7 +392,7 @@ tasks.register("dependenciesSizeCheck") {
                     out << "${String.format(formatStr, (it.length() / 1024))} kb\n"
                 }
         println(out)
-        if (size > dependenciesSizeInMb.toDouble() ) {
+        if (size > dependenciesSizeInMb.toDouble()) {
             throw new GradleException("Total dependencies size is $size Mb. " +
                     "It should be less than ${dependenciesSizeInMb} Mb")
         }

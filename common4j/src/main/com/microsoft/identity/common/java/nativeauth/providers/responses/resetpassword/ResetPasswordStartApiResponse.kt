@@ -27,7 +27,7 @@ import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.InnerError
-import com.microsoft.identity.common.java.nativeauth.util.isExplicitUserNotFound
+import com.microsoft.identity.common.java.nativeauth.util.isUserNotFound
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import com.microsoft.identity.common.java.nativeauth.util.isUnsupportedChallengeType
 import java.net.HttpURLConnection
@@ -38,13 +38,11 @@ import java.net.HttpURLConnection
  */
 class ResetPasswordStartApiResponse(
     @Expose override var statusCode: Int,
-    @SerializedName("password_reset_token") val passwordResetToken: String?,
+    @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
-    @Expose @SerializedName("error") val error: String?,
-    @Expose @SerializedName("error_description") val errorDescription: String?,
-    @Expose @SerializedName("error_uri") val errorUri: String?,
-    @SerializedName("details") val details: List<Map<String, String>>?,
-    @SerializedName("inner_errors") val innerErrors: List<InnerError>?
+    @SerializedName("error") val error: String?,
+    @SerializedName("error_description") val errorDescription: String?,
+    @SerializedName("error_uri") val errorUri: String?,
 ): IApiResponse(statusCode) {
 
     companion object {
@@ -63,7 +61,7 @@ class ResetPasswordStartApiResponse(
             // Handle 400 errors
             HttpURLConnection.HTTP_BAD_REQUEST -> {
                 return when {
-                    error.isExplicitUserNotFound() -> {
+                    error.isUserNotFound() -> {
                         ResetPasswordStartApiResult.UserNotFound(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty()
@@ -79,7 +77,6 @@ class ResetPasswordStartApiResponse(
                         ResetPasswordStartApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            details = details
                         )
                     }
                 }
@@ -92,11 +89,10 @@ class ResetPasswordStartApiResponse(
                 }
                 else {
                     ResetPasswordStartApiResult.Success(
-                        passwordResetToken
+                        continuationToken
                             ?: return ResetPasswordStartApiResult.UnknownError(
                                 error = "invalid_state",
                                 errorDescription = "ResetPassword /start returned redirect challenge, but did not return a flow token",
-                                details = details
                             )
                     )
                 }
@@ -107,7 +103,6 @@ class ResetPasswordStartApiResponse(
                 ResetPasswordStartApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
-                    details = details
                 )
             }
         }

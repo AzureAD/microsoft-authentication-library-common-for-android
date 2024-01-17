@@ -40,20 +40,20 @@ data class SignUpChallengeRequest private constructor(
         /**
          * Returns a request object using the provided parameters.
          * The request URL and headers passed will be set directly.
-         * The clientId, sign up token, and challengeType will be mapped to the NativeAuthRequestSignUpChallengeParameters object.
+         * The clientId, continuation token, and challengeType will be mapped to the NativeAuthRequestSignUpChallengeParameters object.
          *
          * Parameters that are null or empty will throw a ClientException.
          * @see com.microsoft.identity.common.java.exception.ClientException
          */
         fun create(
-            signUpToken: String,
+            continuationToken: String,
             clientId: String,
             challengeType: String,
             requestUrl: String,
             headers: Map<String, String?>
         ): SignUpChallengeRequest {
             // Check for empty Strings and empty Maps
-            ArgUtils.validateNonNullArg(signUpToken, "signUpToken")
+            ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             ArgUtils.validateNonNullArg(clientId, "clientId")
             ArgUtils.validateNonNullArg(challengeType, "challengeTypes")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
@@ -61,7 +61,7 @@ data class SignUpChallengeRequest private constructor(
 
             return SignUpChallengeRequest(
                 parameters = NativeAuthRequestSignUpStartParameters(
-                    signUpToken = signUpToken,
+                    continuationToken = continuationToken,
                     challengeType = challengeType,
                     clientId = clientId
                 ),
@@ -76,7 +76,7 @@ data class SignUpChallengeRequest private constructor(
      * /signup/challenge API call
      */
     data class NativeAuthRequestSignUpStartParameters(
-        @SerializedName("signup_token") val signUpToken: String,
+        @SerializedName("continuation_token") val continuationToken: String,
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("challenge_type") val challengeType: String
     ) : NativeAuthRequestParameters()

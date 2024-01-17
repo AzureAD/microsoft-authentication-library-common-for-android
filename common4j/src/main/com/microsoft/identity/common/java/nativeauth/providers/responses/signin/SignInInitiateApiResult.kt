@@ -31,7 +31,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErro
 sealed interface SignInInitiateApiResult {
     object Redirect : SignInInitiateApiResult
 
-    data class Success(val credentialToken: String) : SignInInitiateApiResult
+    data class Success(val continuationToken: String) : SignInInitiateApiResult
 
     data class UserNotFound(
         override val error: String,
@@ -47,7 +47,6 @@ sealed interface SignInInitiateApiResult {
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
-        override val details: List<Map<String, String>>?
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,

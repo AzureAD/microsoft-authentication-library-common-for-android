@@ -46,8 +46,8 @@ public class SignInSubmitPasswordCommandParameters extends BaseSignInTokenComman
 	public final char[] password;
 
 	/**
-	 * The credential token obtained from the challenge endpoint.
+	 * The continuation token obtained from the challenge endpoint.
 	 */
 	@NonNull
-	public final String credentialToken;
+	public final String continuationToken;
 }
