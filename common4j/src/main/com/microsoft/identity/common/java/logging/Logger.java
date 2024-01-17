@@ -383,7 +383,7 @@ public class Logger {
                             final String message,
                             final Throwable throwable,
                             final boolean containsPII) {
-        if (logLevel.compareTo(sLogLevel) > 0 || (!sAllowPii && containsPII)  || sLogLevel.name().equals(LogLevel.NO_LOG.name())) {
+        if (logLevel.compareTo(sLogLevel) > 0 || (!sAllowPii && containsPII)  || (sLogLevel == LogLevel.NO_LOG)) {
             return;
         }
 

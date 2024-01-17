@@ -118,14 +118,20 @@ public class LoggerTest {
 
     @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
     public void setLogLevelAsNoLog_LogWithVerbose() throws InterruptedException {
-        final Logger.LogLevel logLevel = Logger.LogLevel.NO_LOG;
         final boolean containsPII = false;
 
         Logger.setLogLevel(Logger.LogLevel.NO_LOG);
-        testLogger(tag, logLevel, correlationId, message, containsPII, new IOperationToTest() {
+        testLogger(tag, Logger.LogLevel.VERBOSE, correlationId, message, containsPII, new IOperationToTest() {
             @Override
             public void execute() {
                 Logger.verbose(tag, correlationId, message);
+            }
+        }, true);
+
+        testLogger(tag, Logger.LogLevel.WARN, correlationId, message, containsPII, new IOperationToTest() {
+            @Override
+            public void execute() {
+                Logger.warn(tag, correlationId, message);
             }
         }, true);
     }
