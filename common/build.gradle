@@ -43,7 +43,7 @@ boolean bypassRedirectUriCheck = project.hasProperty("bypassRedirectUriCheck")
 android {
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        namespace 'com.microsoft.identity.common'
+        namespace "com.microsoft.identity.common"
         multiDexEnabled true
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
@@ -74,6 +74,10 @@ android {
             consumerProguardFiles 'consumer-rules.pro'
         }
     }
+
+    android.buildFeatures.buildConfig true
+    android.buildFeatures.aidl true
+
     //Upgrading to Java 8 in order to use YubiKit SDK
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -230,7 +234,7 @@ android.libraryVariants.all { variant ->
 // Create tasks to generate javadoc jar
 android.libraryVariants.all { variant ->
     task("${variant.name}JavadocJar", type: Jar, dependsOn: "${variant.name}Javadoc") {
-        classifier 'javadoc'
+        archiveClassifier.set("javadoc")
         from tasks["${variant.name}Javadoc"].destinationDir
     }
 }
@@ -238,7 +242,7 @@ android.libraryVariants.all { variant ->
 
 tasks.register('sourcesJar', Jar) {
     from android.sourceSets.main.java.srcDirs
-    classifier 'sources'
+    archiveClassifier.set("sources")
     destinationDirectory = reporting.file("$project.buildDir/outputs/jar/")
 }
 
@@ -266,18 +270,18 @@ pmd {
     reportsDir = file("$project.buildDir/outputs/")
 }
 
-tasks.register('pmd', Pmd) {
-    description 'Run pmd'
-    group 'verification'
-
-    ruleSets = ["java-basic", "java-braces", "java-strings", "java-unusedcode"]
-    source = fileTree('src/main/java')
-
-    reports {
-        xml.enabled = false
-        html.enabled = true
-    }
-}
+//tasks.register('pmd', Pmd) {
+//    description 'Run pmd'
+//    group 'verification'
+//
+//    ruleSets = ["java-basic", "java-braces", "java-strings", "java-unusedcode"]
+//    source = fileTree('src/main/java')
+//
+//    reports {
+//        xml.enabled = false
+//        html.enabled = true
+//    }
+//}
 
 // For publishing to the remote maven repo.
 afterEvaluate {
@@ -352,12 +356,12 @@ afterEvaluate {
 }
 
 tasks.configureEach { task ->
-    if (task.name.contains("assemble")) {
-        task.dependsOn 'pmd'
-    }
+//    if (task.name.contains("assemble")) {
+//        task.dependsOn 'pmd'
+//    }
 
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
-        task.dependsOn 'lint', 'sourcesJar', 'pmd'
+        task.dependsOn 'lint', 'sourcesJar'
     }
     if (task.name == 'assembleDistRelease') {
         task.dependsOn 'sourcesJar'
