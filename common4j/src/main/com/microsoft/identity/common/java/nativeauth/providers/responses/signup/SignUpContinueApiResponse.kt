@@ -51,8 +51,8 @@ import java.net.HttpURLConnection
  */
 data class SignUpContinueApiResponse(
     @Expose override var statusCode: Int,
+    @Expose private var correlationId: String?,
     @SerializedName("continuation_token") val continuationToken: String?,
-    @Expose @SerializedName("correlation_id") val correlationId: String?,
     @Expose @SerializedName("expires_in") val expiresIn: Int?,
     @Expose @SerializedName("unverified_attributes") val unverifiedAttributes: List<Map<String, String>>?,
     @Expose @SerializedName("invalid_attributes") val invalidAttributes: List<Map<String, String>>?,
@@ -61,7 +61,7 @@ data class SignUpContinueApiResponse(
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("suberror") val subError: String?
-) : IApiResponse(statusCode) {
+) : IApiResponse(statusCode, correlationId) {
 
     companion object {
         private val TAG = SignUpContinueApiResponse::class.java.simpleName

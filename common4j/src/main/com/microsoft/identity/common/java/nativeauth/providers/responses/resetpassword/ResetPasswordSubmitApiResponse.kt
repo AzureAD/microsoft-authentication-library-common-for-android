@@ -26,7 +26,6 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
-import com.microsoft.identity.common.java.nativeauth.providers.interactors.InnerError
 import com.microsoft.identity.common.java.nativeauth.util.*
 import java.net.HttpURLConnection
 
@@ -36,14 +35,14 @@ import java.net.HttpURLConnection
  */
 class ResetPasswordSubmitApiResponse(
     @Expose override var statusCode: Int,
+    @Expose private var correlationId: String?,
     @SerializedName("continuation_token") val continuationToken: String?,
-    @Expose @SerializedName("correlation_id") val correlationId: String?,
     @Expose @SerializedName("poll_interval") val pollInterval: Int?,
     @SerializedName("error") val error: String?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
     @SerializedName("suberror") val subError: String?
-): IApiResponse(statusCode) {
+): IApiResponse(statusCode, correlationId) {
 
     companion object {
         private val TAG = ResetPasswordSubmitApiResponse::class.java.simpleName

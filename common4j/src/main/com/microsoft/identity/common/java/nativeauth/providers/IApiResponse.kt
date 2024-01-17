@@ -22,10 +22,27 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers
 
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
+
 /**
  * Base class to represent the various responses for Native Auth API requests.
  */
 abstract class IApiResponse(
     //HTTP status code
-    @Transient open val statusCode: Int
-)
+    @Transient open val statusCode: Int,
+    @Expose @SerializedName("correlation_id") private var correlationId: String?
+) {
+
+    /**
+     * Public getter
+     */
+    fun getCorrelationId(): String? = correlationId
+
+    /**
+     * Internal setter. Should only be used by [com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler]
+     */
+    internal fun setCorrelationId(correlationId: String?) {
+        this.correlationId = correlationId
+    }
+}
