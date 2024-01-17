@@ -27,24 +27,21 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
-/**
- * A set of Reset Password Submit Code command parameters for submitting the one-time password to the server for authentication.
- * extends from {@link BaseNativeAuthCommandParameters
- */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
-public class ResetPasswordSubmitCodeCommandParameters extends BaseNativeAuthCommandParameters {
+public class SignInWithContinuationTokenCommandParameters extends BaseSignInTokenCommandParameters {
+    private static final String TAG = SignInWithContinuationTokenCommandParameters.class.getSimpleName();
 
     /**
-     * The one-time password used for authentication.
-     */
-    @NonNull
-    public final String code;
-
-    /**
-     * The continuation token obtained from the challenge endpoint.
+     * A continuation token for sign in in the user from sign up or self-service-password-reset flow.
      */
     @NonNull
     public final String continuationToken;
+
+    /**
+     * The email address of the user.
+     */
+    @NonNull
+    public final String username;
 }

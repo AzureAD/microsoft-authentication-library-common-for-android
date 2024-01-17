@@ -38,8 +38,8 @@ public class SignUpResendCodeCommandParameters extends BaseNativeAuthCommandPara
     private static final String TAG = SignUpResendCodeCommandParameters.class.getSimpleName();
 
     /**
-     * The sign up token obtained from the start endpoint.
+     * The continuation token obtained from the start endpoint.
      */
     @NonNull
-    public final String signupToken;
+    public final String continuationToken;
 }

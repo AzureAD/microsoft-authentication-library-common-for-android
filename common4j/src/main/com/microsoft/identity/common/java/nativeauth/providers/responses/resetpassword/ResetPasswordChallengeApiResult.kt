@@ -32,7 +32,7 @@ sealed interface ResetPasswordChallengeApiResult {
     object Redirect : ResetPasswordChallengeApiResult
 
     data class CodeRequired(
-        val passwordResetToken: String,
+        val continuationToken: String,
         val challengeTargetLabel: String,
         val challengeChannel: String,
         val codeLength: Int) : ResetPasswordChallengeApiResult
@@ -56,10 +56,8 @@ sealed interface ResetPasswordChallengeApiResult {
     data class UnknownError(
         override val error: String,
         override val errorDescription: String,
-        override val details: List<Map<String, String>>?
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
-        details = details
     ), ResetPasswordChallengeApiResult
 }

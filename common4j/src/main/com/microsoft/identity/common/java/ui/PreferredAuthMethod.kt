@@ -20,28 +20,16 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.nativeauth.commands.parameters;
+package com.microsoft.identity.common.java.ui
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.experimental.SuperBuilder;
-
-@Getter
-@EqualsAndHashCode(callSuper = true)
-@SuperBuilder(toBuilder = true)
-public class SignInWithSLTCommandParameters extends BaseSignInTokenCommandParameters {
-    private static final String TAG = SignInWithSLTCommandParameters.class.getSimpleName();
-
+/**
+ * Preferred authentication method for the user.
+ * This code will be sent to eSTS as a hint to what authentication method the user prefers.
+ * If not specified, eSTS will use the default authentication method.
+ */
+enum class PreferredAuthMethod(@JvmField val code: Int) {
     /**
-     * A short-lived token for sign in in the user from sign up or self-service-password-reset flow.
+     * QR code + PIN authentication.
      */
-    @NonNull
-    public final String signInSLT;
-
-    /**
-     * The email address of the user.
-     */
-    @NonNull
-    public final String username;
+    QR(18)
 }

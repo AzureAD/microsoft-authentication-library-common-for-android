@@ -36,8 +36,8 @@ object NativeAuthConstants {
         const val PASSWORD = "password"
         //Authentication is done by presenting an Out of band token
         const val OOB = "oob"
-        //Authentication is done by presenting a short lived token
-        const val SLT = "slt"
+        //Authentication is done by presenting a continuation token
+        const val CONTINUATION_TOKEN = "continuation_token"
         //Authentication must be performed by following the redirect url
         const val REDIRECT = "redirect"
         //The client is submitting custom user attributes like Name, City

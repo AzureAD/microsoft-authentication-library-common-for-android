@@ -20,31 +20,31 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.nativeauth.commands.parameters;
+package com.microsoft.identity.common.internal.commands
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.experimental.SuperBuilder;
+import com.microsoft.identity.common.java.commands.BaseCommand
+import com.microsoft.identity.common.java.commands.CommandCallback
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters
+import com.microsoft.identity.common.java.controllers.BaseController
+import lombok.EqualsAndHashCode
 
 /**
- * A set of Reset Password Submit Code command parameters for submitting the one-time password to the server for authentication.
- * extends from {@link BaseNativeAuthCommandParameters
+ * Command class to call controllers to check if QR code + PIN authorization is available.
+ * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
  */
-@Getter
 @EqualsAndHashCode(callSuper = true)
-@SuperBuilder(toBuilder = true)
-public class ResetPasswordSubmitCodeCommandParameters extends BaseNativeAuthCommandParameters {
+class IsQrPinAvailableCommand(
+    parameters: CommandParameters,
+    controller: BaseController,
+    callback: CommandCallback<*, *>,
+    publicApiId: String
+) : BaseCommand<Boolean?>(parameters, controller, callback, publicApiId) {
 
-    /**
-     * The one-time password used for authentication.
-     */
-    @NonNull
-    public final String code;
+    override fun execute(): Boolean {
+        return defaultController.isQrPinAvailable
+    }
 
-    /**
-     * The continuation token obtained from the challenge endpoint.
-     */
-    @NonNull
-    public final String continuationToken;
+    override fun isEligibleForEstsTelemetry(): Boolean {
+        return false
+    }
 }

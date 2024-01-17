@@ -20,36 +20,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.nativeauth.providers.responses.signin
+package com.microsoft.identity.common.java.exception
 
-import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 
 /**
- * Represents the potential result types returned from the OAuth /initiate endpoint,
- * including a case for unexpected errors received from the server.
+ * Representing exceptions that occur when broker is required but not installed.
  */
-sealed interface SignInInitiateApiResult {
-    object Redirect : SignInInitiateApiResult
+class BrokerRequiredException(
+    brokerPackageName: String? = null,
+    cause: Throwable? = null,
+) : BaseException(ERROR_CODE, getErrorMessage(brokerPackageName), cause) {
 
-    data class Success(val continuationToken: String) : SignInInitiateApiResult
+    companion object {
+        public const val ERROR_CODE = "broker_required"
+        private const val DEFAULT_ERROR_MESSAGE = "Broker is required but not installed."
 
-    data class UserNotFound(
-        override val error: String,
-        override val errorDescription: String,
-        override val errorCodes: List<Int>
-    ) : ApiErrorResult(
-        error = error,
-        errorDescription = errorDescription,
-        errorCodes = errorCodes
-    ), SignInInitiateApiResult
-
-    data class UnknownError(
-        override val error: String,
-        override val errorDescription: String,
-        override val errorCodes: List<Int>,
-    ) : ApiErrorResult(
-        error = error,
-        errorDescription = errorDescription,
-        errorCodes = errorCodes
-    ), SignInInitiateApiResult
+        private fun getErrorMessage(brokerPackageName: String?): String {
+            return if (brokerPackageName != null) {
+                "$DEFAULT_ERROR_MESSAGE Please install $brokerPackageName."
+            } else {
+                DEFAULT_ERROR_MESSAGE
+            }
+        }
+    }
 }
