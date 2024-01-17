@@ -43,6 +43,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -210,7 +212,7 @@ public abstract class Authority {
 
             // Iterate over all of the developer trusted authorities and check if the authorities
             // are the same...
-            for (final Authority currentAuthority : knownAuthorities) {
+            for (final Authority currentAuthority : getKnownAuthorities()) {
                 if (!StringUtil.isNullOrEmpty(currentAuthority.mAuthorityUrlString)) {
                     final URL currentAuthorityUrl = new URL(currentAuthority.mAuthorityUrlString);
                     final String currentHttpAuthority = currentAuthorityUrl.getAuthority();
@@ -287,7 +289,25 @@ public abstract class Authority {
      * configuring the public client application.
      */
     private static final List<Authority> knownAuthorities = new ArrayList<>();
-    private static final Object sLock = new Object();
+    private static final ReadWriteLock sLock = new ReentrantReadWriteLock();
+
+    public static void addKnownAuthorities(List<Authority> authorities) {
+        sLock.writeLock().lock();
+        try {
+            knownAuthorities.addAll(authorities);
+        } finally {
+            sLock.writeLock().unlock();
+        }
+    }
+
+    private static List<Authority> getKnownAuthorities(){
+        sLock.readLock().lock();
+        try {
+            return knownAuthorities;
+        } finally {
+            sLock.readLock().unlock();
+        }
+    }
 
     private static void performCloudDiscovery()
             throws IOException, URISyntaxException {
@@ -296,19 +316,12 @@ public abstract class Authority {
                 TAG + methodName,
                 "Performing cloud discovery..."
         );
-        synchronized (sLock) {
-            Logger.info(TAG + methodName, "Acquired lock.");
-            if (!AzureActiveDirectory.isInitialized()) {
-                Logger.info(TAG + methodName, "Not initialized. Starting request.");
-                AzureActiveDirectory.performCloudDiscovery();
-                Logger.info(TAG + methodName, "Loaded cloud metadata.");
-            }
-        }
-    }
 
-    public static void addKnownAuthorities(List<Authority> authorities) {
-        synchronized (sLock) {
-            knownAuthorities.addAll(authorities);
+        Logger.info(TAG + methodName, "Acquired lock.");
+        if (!AzureActiveDirectory.isInitialized()) {
+            Logger.info(TAG + methodName, "Not initialized. Starting request.");
+            AzureActiveDirectory.performCloudDiscovery();
+            Logger.info(TAG + methodName, "Loaded cloud metadata.");
         }
     }
 
@@ -333,7 +346,7 @@ public abstract class Authority {
         }
 
         //Check if authority was added to configuration
-        for (final Authority currentAuthority : knownAuthorities) {
+        for (final Authority currentAuthority : getKnownAuthorities()) {
             if (currentAuthority.mAuthorityUrlString != null &&
                     authority.getAuthorityURL() != null &&
                     authority.getAuthorityURL().getAuthority() != null &&
