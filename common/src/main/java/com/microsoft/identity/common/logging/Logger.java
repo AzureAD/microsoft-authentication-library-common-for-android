@@ -67,8 +67,6 @@ public class Logger {
          */
         VERBOSE;
 
-
-
         private com.microsoft.identity.common.java.logging.Logger.LogLevel convertToJavaLogLevel() {
             switch (this) {
                 case INFO:
