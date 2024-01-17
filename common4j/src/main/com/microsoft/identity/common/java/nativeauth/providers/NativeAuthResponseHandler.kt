@@ -70,15 +70,15 @@ class NativeAuthResponseHandler {
 
         val result = if (response.body.isNullOrBlank()) {
             SignUpStartApiResponse(
-                response.statusCode,
-                EMPTY_RESPONSE_ERROR,
-                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
+                statusCode = response.statusCode,
+                error = EMPTY_RESPONSE_ERROR,
+                errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                errorCodes = null,
+                continuationToken = null,
+                unverifiedAttributes = null,
+                invalidAttributes = null,
+                challengeType = null,
+                subError = null
             )
         }
         else {
@@ -109,17 +109,16 @@ class NativeAuthResponseHandler {
 
         val result = if (response.body.isNullOrBlank()) {
             SignUpChallengeApiResponse(
-                response.statusCode,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                EMPTY_RESPONSE_ERROR,
-                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
-                null,
-                null
+                statusCode = response.statusCode,
+                error = EMPTY_RESPONSE_ERROR,
+                errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                continuationToken = null,
+                challengeType = null,
+                challengeTargetLabel = null,
+                codeLength = null,
+                bindingMethod = null,
+                interval = null,
+                challengeChannel = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -149,17 +148,16 @@ class NativeAuthResponseHandler {
 
         val result = if (response.body.isNullOrBlank()) {
             SignUpContinueApiResponse(
-                response.statusCode,
-                null,
-                null,
-                EMPTY_RESPONSE_ERROR,
-                null,
-                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
-                null,
-                null,
-                null,
-                null,
-                null
+                statusCode = response.statusCode,
+                error = EMPTY_RESPONSE_ERROR,
+                errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                errorCodes = null,
+                continuationToken = null,
+                invalidAttributes = null,
+                unverifiedAttributes = null,
+                requiredAttributes = null,
+                expiresIn = null,
+                subError = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -187,15 +185,13 @@ class NativeAuthResponseHandler {
 
         val result = if (response.body.isNullOrBlank()) {
             SignInInitiateApiResponse(
-                response.statusCode,
-                null,
-                null,
-                EMPTY_RESPONSE_ERROR,
-                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
-                null,
-                null,
-                null,
-                null
+                statusCode = response.statusCode,
+                error = EMPTY_RESPONSE_ERROR,
+                errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                errorUri = null,
+                errorCodes = null,
+                continuationToken = null,
+                challengeType = null,
             )
         }  else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -224,20 +220,19 @@ class NativeAuthResponseHandler {
 
         val result = if (response.body.isNullOrBlank()) {
             SignInChallengeApiResponse(
-                response.statusCode,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                EMPTY_RESPONSE_ERROR,
-                null,
-                null,
-                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
-                null,
-                null)
+                statusCode = response.statusCode,
+                error = EMPTY_RESPONSE_ERROR,
+                errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                errorCodes = null,
+                errorUri = null,
+                continuationToken = null,
+                challengeType = null,
+                bindingMethod = null,
+                challengeTargetLabel = null,
+                challengeChannel = null,
+                codeLength = null,
+                interval = null,
+            )
 
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -269,22 +264,13 @@ class NativeAuthResponseHandler {
         if (response.statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
             val apiResponse = if (response.body.isNullOrBlank()) {
                 SignInTokenApiResponse(
-                    response.statusCode,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    EMPTY_RESPONSE_ERROR,
-                    EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
+                    statusCode = response.statusCode,
+                    error = null,
+                    errorDescription = null,
+                    errorUri = null,
+                    errorCodes = null,
+                    subError = null,
+                    continuationToken = null
                 )
             } else {
                 ObjectMapper.deserializeJsonStringToObject(
@@ -323,14 +309,12 @@ class NativeAuthResponseHandler {
 
         val apiResponse = if (response.body.isNullOrBlank()) {
             ResetPasswordStartApiResponse(
-                response.statusCode,
-                null,
-                null,
-                EMPTY_RESPONSE_ERROR,
-                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
-                null,
-                null,
-                null
+                statusCode = response.statusCode,
+                error = EMPTY_RESPONSE_ERROR,
+                errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                errorUri = null,
+                continuationToken = null,
+                challengeType = null,
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -359,19 +343,17 @@ class NativeAuthResponseHandler {
 
         val apiResponse = if (response.body.isNullOrBlank()) {
             ResetPasswordChallengeApiResponse(
-                response.statusCode,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                EMPTY_RESPONSE_ERROR,
-                null,
-                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
-                null,
-                null
+                statusCode = response.statusCode,
+                error = EMPTY_RESPONSE_ERROR,
+                errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                errorUri = null,
+                continuationToken = null,
+                challengeType = null,
+                bindingMethod = null,
+                challengeTargetLabel = null,
+                challengeChannel = null,
+                codeLength = null,
+                interval = null,
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -400,15 +382,14 @@ class NativeAuthResponseHandler {
 
         val apiResponse = if (response.body.isNullOrBlank()) {
             ResetPasswordContinueApiResponse(
-                response.statusCode,
-                null,
-                null,
-                null,
-                EMPTY_RESPONSE_ERROR,
-                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
-                null,
-                null,
-                null
+                statusCode = response.statusCode,
+                error = EMPTY_RESPONSE_ERROR,
+                errorDescription =  EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                errorUri = null,
+                continuationToken = null,
+                challengeType = null,
+                expiresIn = null,
+                subError = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -436,14 +417,13 @@ class NativeAuthResponseHandler {
 
         val apiResponse = if (response.body.isNullOrBlank()) {
             ResetPasswordSubmitApiResponse(
-                response.statusCode,
-                null,
-                null,
-                EMPTY_RESPONSE_ERROR,
-                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
-                null,
-                null,
-                null
+                statusCode = response.statusCode,
+                error = EMPTY_RESPONSE_ERROR,
+                errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                errorUri = null,
+                continuationToken = null,
+                pollInterval = null,
+                subError = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -472,14 +452,13 @@ class NativeAuthResponseHandler {
 
         val apiResponse = if (response.body.isNullOrBlank()) {
             ResetPasswordPollCompletionApiResponse(
-                response.statusCode,
-                null,
-                null,
-                EMPTY_RESPONSE_ERROR,
-                EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
-                null,
-                null,
-                null
+                statusCode = response.statusCode,
+                error = EMPTY_RESPONSE_ERROR,
+                errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                errorUri = null,
+                status = null,
+                continuationToken = null,
+                subError = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(

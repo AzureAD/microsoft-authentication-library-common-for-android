@@ -128,6 +128,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         .build()
                 )
                 .preferredBrowser(parameters.getPreferredBrowser())
+                .preferredAuthMethod(parameters.getPreferredAuthMethod())
                 .build();
 
         return brokerRequest;

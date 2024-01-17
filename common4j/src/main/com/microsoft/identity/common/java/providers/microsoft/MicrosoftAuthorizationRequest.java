@@ -29,10 +29,13 @@ import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.DefaultStateGenerator;
 import com.microsoft.identity.common.java.providers.oauth2.PkceChallenge;
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.net.URL;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import cz.msebera.android.httpclient.extras.Base64;
 import lombok.Getter;
@@ -128,6 +131,13 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @SerializedName(INSTANCE_AWARE)
     private final Boolean mMultipleCloudAware;
 
+    @Expose()
+    @Getter
+    @Accessors(prefix = "m")
+    @SerializedName("pc")
+    private final String mPreferredAuthMethodCode;
+
+
     /**
      * Constructor of MicrosoftAuthorizationRequest.
      */
@@ -147,6 +157,9 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mMultipleCloudAware = builder.mMultipleCloudAware;
         mLibraryVersion = builder.mLibraryVersion;
         mLibraryName = builder.mLibraryName;
+        mPreferredAuthMethodCode = builder.mPreferredAuthMethod == null ?
+                null :
+                String.valueOf(builder.mPreferredAuthMethod.code);
 
         mDiagnosticOS = Device.getOsForEsts();
         mDiagnosticDM = Device.getModel();
@@ -170,6 +183,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         private UUID mCorrelationId;
         private String mLoginHint;
         private PkceChallenge mPkceChallenge;
+        private PreferredAuthMethod mPreferredAuthMethod;
 
         public Builder() {
             setState(new DefaultStateGenerator().generate());
@@ -205,6 +219,11 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
             return self();
         }
 
+        public B setPreferredAuthMethod(@Nullable final PreferredAuthMethod preferredAuthMethod) {
+            mPreferredAuthMethod = preferredAuthMethod;
+            return self();
+        }
+        
         /**
          * Used to secure authorization code grants via Proof Key for Code Exchange (PKCE) from a native client.
          */

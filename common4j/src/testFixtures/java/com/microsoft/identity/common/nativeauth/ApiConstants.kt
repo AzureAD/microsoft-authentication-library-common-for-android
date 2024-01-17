@@ -30,17 +30,19 @@ import java.net.URL
  */
 interface ApiConstants {
     companion object {
-        val signUpStartRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/v1.0/start")
-        val signUpChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/v1.0/challenge")
-        val signUpContinueRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/v1.0/continue")
-        val signInInitiateRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth2/v2.0/initiate")
-        val signInChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth2/v2.0/challenge")
-        val signInTokenRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth2/v2.0/token")
-        val ssprStartRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/v1.0/start")
-        val ssprChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/v1.0/challenge")
-        val ssprContinueRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/v1.0/continue")
-        val ssprSubmitRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/v1.0/submit")
-        val ssprPollCompletionRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/v1.0/poll_completion")
+        const val BASEPATH = "https://native-auth-mock-api.azurewebsites.net/"
+        private const val BASE_REQUEST_PATH = BASEPATH + "1234/"
+        val signUpStartRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/start")
+        val signUpChallengeRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/challenge")
+        val signUpContinueRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/continue")
+        val signInInitiateRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/initiate")
+        val signInChallengeRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/challenge")
+        val signInTokenRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/token")
+        val ssprStartRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/start")
+        val ssprChallengeRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/challenge")
+        val ssprContinueRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/continue")
+        val ssprSubmitRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/submit")
+        val ssprPollCompletionRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/poll_completion")
         val tokenEndpoint = URL("https://contoso.com/1234/token")
     }
 }

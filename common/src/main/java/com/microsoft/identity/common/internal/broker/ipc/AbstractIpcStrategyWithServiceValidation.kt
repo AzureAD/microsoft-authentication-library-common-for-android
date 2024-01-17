@@ -54,6 +54,7 @@ abstract class AbstractIpcStrategyWithServiceValidation(
      */
     abstract fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean
 
+    @Throws(BrokerCommunicationException::class)
     override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle? {
         val methodTag = "$TAG:communicateToBroker"
         if (!shouldBypassSupportValidation && !isSupportedByTargetedBroker(bundle.targetBrokerAppPackageName)) {

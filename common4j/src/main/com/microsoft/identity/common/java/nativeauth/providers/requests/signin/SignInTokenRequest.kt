@@ -32,7 +32,7 @@ import java.net.URL
 
 /**
  * Represents a request to the OAuth /token endpoint, and provides a create() function to instantiate the request using the provided parameters.
- * There are separate create() methods depending on the grant type - OOB, Password, or SLT.
+ * There are separate create() methods depending on the grant type - OOB, Password, or Continuation Token.
  */
 data class SignInTokenRequest private constructor(
     override var requestUrl: URL,
@@ -51,7 +51,7 @@ data class SignInTokenRequest private constructor(
     companion object {
         fun createOOBTokenRequest(
             oob: String,
-            credentialToken: String,
+            continuationToken: String,
             clientId: String,
             scopes: List<String>? = null,
             challengeType: String? = null,
@@ -60,7 +60,7 @@ data class SignInTokenRequest private constructor(
         ): SignInTokenRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(oob, "oob")
-            ArgUtils.validateNonNullArg(credentialToken, "credentialToken")
+            ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             ArgUtils.validateNonNullArg(clientId, "clientId")
             ArgUtils.validateNonNullArg(challengeType, "challengeType")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
@@ -70,7 +70,7 @@ data class SignInTokenRequest private constructor(
             return SignInTokenRequest(
                 parameters = NativeAuthRequestSignInTokenParameters(
                     oob = oob,
-                    credentialToken = credentialToken,
+                    continuationToken = continuationToken,
                     clientId = clientId,
                     grantType = NativeAuthConstants.GrantType.OOB,
                     challengeType = challengeType,
@@ -91,7 +91,7 @@ data class SignInTokenRequest private constructor(
          */
         fun createPasswordTokenRequest(
             password: CharArray,
-            credentialToken: String,
+            continuationToken: String,
             clientId: String,
             scopes: List<String>? = null,
             challengeType: String? = null,
@@ -100,7 +100,7 @@ data class SignInTokenRequest private constructor(
         ): SignInTokenRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(password, "password")
-            ArgUtils.validateNonNullArg(credentialToken, "credentialToken")
+            ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             ArgUtils.validateNonNullArg(clientId, "clientId")
             ArgUtils.validateNonNullArg(challengeType, "challengeType")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
@@ -110,7 +110,7 @@ data class SignInTokenRequest private constructor(
             return SignInTokenRequest(
                 parameters = NativeAuthRequestSignInTokenParameters(
                     password = password,
-                    credentialToken = credentialToken,
+                    continuationToken = continuationToken,
                     clientId = clientId,
                     grantType = NativeAuthConstants.GrantType.PASSWORD,
                     challengeType = challengeType,
@@ -124,13 +124,13 @@ data class SignInTokenRequest private constructor(
         /**
          * Returns a request object using the provided parameters.
          * The request URL and headers passed will be set directly.
-         * The NativeAuthRequestSignInChallengeParameters object will be populated with the provided username and SLT, and the grant type will be set to "slt".
+         * The NativeAuthRequestSignInChallengeParameters object will be populated with the provided username and continuation token, and the grant type will be set to "continuation_token".
          *
          * Parameters outside of scopes and challengeType that are null or empty will throw a ClientException.
          * @see com.microsoft.identity.common.java.exception.ClientException
          */
-        fun createSltTokenRequest(
-            signInSlt: String,
+        fun createContinuationTokenRequest(
+            continuationToken: String,
             clientId: String,
             username: String,
             scopes: List<String>? = null,
@@ -139,7 +139,7 @@ data class SignInTokenRequest private constructor(
             headers: Map<String, String?>
         ): SignInTokenRequest {
             // Check for empty Strings and empty Maps
-            ArgUtils.validateNonNullArg(signInSlt, "signInSlt")
+            ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             ArgUtils.validateNonNullArg(clientId, "clientId")
             ArgUtils.validateNonNullArg(username, "username")
             ArgUtils.validateNonNullArg(challengeType, "challengeType")
@@ -148,10 +148,10 @@ data class SignInTokenRequest private constructor(
 
             return SignInTokenRequest(
                 parameters = NativeAuthRequestSignInTokenParameters(
-                    signInSlt = signInSlt,
+                    continuationToken = continuationToken,
                     clientId = clientId,
                     username = username,
-                    grantType = NativeAuthConstants.GrantType.SLT,
+                    grantType = NativeAuthConstants.GrantType.CONTINUATION_TOKEN,
                     challengeType = challengeType,
                     scope = scopes?.joinToString(" ")
                 ),
@@ -169,8 +169,7 @@ data class SignInTokenRequest private constructor(
         @SerializedName("client_info") private val clientInfo: Boolean = true,
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("grant_type") val grantType: String,
-        @SerializedName("credential_token") val credentialToken: String? = null,
-        @SerializedName("signin_slt") val signInSlt: String? = null,
+        @SerializedName("continuation_token") val continuationToken: String? = null,
         @SerializedName("scope") val scope: String?,
         @SerializedName("challenge_type") val challengeType: String?
     ) : NativeAuthRequestParameters()

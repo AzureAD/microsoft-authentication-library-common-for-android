@@ -40,20 +40,20 @@ class ResetPasswordPollCompletionRequest private constructor(
         /**
          * Returns a request object using the provided parameters.
          * The request URL and headers passed will be set directly.
-         * The clientId, password reset token, oob, and grantType will be mapped to the NativeAuthResetPasswordPollCompletionRequestBody object.
+         * The clientId, continuation token, oob, and grantType will be mapped to the NativeAuthResetPasswordPollCompletionRequestBody object.
          *
          * Parameters that are null or empty will throw a ClientException.
          * @see com.microsoft.identity.common.java.exception.ClientException
          */
         fun create(
             clientId: String,
-            passwordResetToken: String,
+            continuationToken: String,
             requestUrl: String,
             headers: Map<String, String?>
         ): ResetPasswordPollCompletionRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(clientId, "clientId")
-            ArgUtils.validateNonNullArg(passwordResetToken, "passwordResetToken")
+            ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
 
@@ -62,7 +62,7 @@ class ResetPasswordPollCompletionRequest private constructor(
                 headers = headers,
                 parameters = NativeAuthResetPasswordPollCompletionRequestBody(
                     clientId = clientId,
-                    passwordResetToken = passwordResetToken
+                    continuationToken = continuationToken
                 )
             )
         }
@@ -74,6 +74,6 @@ class ResetPasswordPollCompletionRequest private constructor(
      */
     data class NativeAuthResetPasswordPollCompletionRequestBody(
         @SerializedName("client_id") override val clientId: String,
-        @SerializedName("password_reset_token") val passwordResetToken: String
+        @SerializedName("continuation_token") val continuationToken: String
     ) : NativeAuthRequestParameters()
 }
