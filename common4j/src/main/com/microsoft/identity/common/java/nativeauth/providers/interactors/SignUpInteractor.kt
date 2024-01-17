@@ -61,7 +61,11 @@ class SignUpInteractor(
     fun performSignUpStart(
         commandParameters: SignUpStartCommandParameters
     ): SignUpStartApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignUpStart")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = commandParameters.getCorrelationId(),
+            methodName = "${TAG}.performSignUpStart"
+        )
 
         val request = nativeAuthRequestProvider.createSignUpStartRequest(
             commandParameters = commandParameters
@@ -76,7 +80,11 @@ class SignUpInteractor(
     fun performSignUpStartUsingPassword(
         commandParameters: SignUpStartUsingPasswordCommandParameters
     ): SignUpStartApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignUpStartUsingPassword")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = commandParameters.getCorrelationId(),
+            methodName = "${TAG}.performSignUpStartUsingPassword")
+
         val request = nativeAuthRequestProvider.createSignUpUsingPasswordStartRequest(
             commandParameters = commandParameters
         )
@@ -88,7 +96,11 @@ class SignUpInteractor(
     }
 
     private fun performSignUpStart(request: SignUpStartRequest): SignUpStartApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignUpStart")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.performSignUpStart"
+        )
 
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
@@ -111,7 +123,11 @@ class SignUpInteractor(
         continuationToken: String,
         correlationId: String?
     ): SignUpChallengeApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignUpChallenge")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            methodName = "${TAG}.performSignUpChallenge"
+        )
 
         val request = nativeAuthRequestProvider.createSignUpChallengeRequest(
             continuationToken = continuationToken,
@@ -121,7 +137,11 @@ class SignUpInteractor(
     }
 
     private fun performSignUpChallenge(request: SignUpChallengeRequest): SignUpChallengeApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignUpChallenge")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.performSignUpChallenge"
+        )
 
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers

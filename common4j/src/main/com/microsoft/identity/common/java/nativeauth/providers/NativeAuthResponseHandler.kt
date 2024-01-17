@@ -66,7 +66,11 @@ class NativeAuthResponseHandler {
     fun getSignUpStartResultFromHttpResponse(
         response: HttpResponse
     ): SignUpStartApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getSignUpStartResultFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.getSignUpStartResultFromHttpResponse"
+        )
 
         val result = if (response.body.isNullOrBlank()) {
             SignUpStartApiResponse(
@@ -90,6 +94,7 @@ class NativeAuthResponseHandler {
         }
         result.statusCode = response.statusCode
 
+        // TODO add correlation ID
         ApiResultUtil.logResponse(TAG, result)
 
         return result
@@ -106,7 +111,11 @@ class NativeAuthResponseHandler {
     fun getSignUpChallengeResultFromHttpResponse(
         response: HttpResponse
     ): SignUpChallengeApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getSignUpChallengeResultFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName ="${TAG}.getSignUpChallengeResultFromHttpResponse"
+        )
 
         val result = if (response.body.isNullOrBlank()) {
             SignUpChallengeApiResponse(
@@ -146,7 +155,11 @@ class NativeAuthResponseHandler {
     fun getSignUpContinueResultFromHttpResponse(
         response: HttpResponse
     ): SignUpContinueApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getSignUpContinueResultFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName ="${TAG}.getSignUpContinueResultFromHttpResponse"
+        )
 
         val result = if (response.body.isNullOrBlank()) {
             SignUpContinueApiResponse(
@@ -184,7 +197,11 @@ class NativeAuthResponseHandler {
     fun getSignInInitiateResultFromHttpResponse(
         response: HttpResponse
     ): SignInInitiateApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getSignInInitiateResultFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.getSignInInitiateResultFromHttpResponse"
+        )
 
         val result = if (response.body.isNullOrBlank()) {
             SignInInitiateApiResponse(
@@ -220,7 +237,11 @@ class NativeAuthResponseHandler {
     fun getSignInChallengeResultFromHttpResponse(
         response: HttpResponse
     ): SignInChallengeApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getSignInChallengeResultFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.getSignInChallengeResultFromHttpResponse"
+        )
 
         val result = if (response.body.isNullOrBlank()) {
             SignInChallengeApiResponse(
@@ -262,7 +283,11 @@ class NativeAuthResponseHandler {
     fun getSignInTokenApiResultFromHttpResponse(
         response: HttpResponse
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.getSignInTokenApiResultFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.getSignInTokenApiResultFromHttpResponse"
+        )
 
         // Use native-auth specific class in case of API error response,
         // or standard MicrosoftStsTokenResponse in case of success response
@@ -311,7 +336,11 @@ class NativeAuthResponseHandler {
     fun getResetPasswordStartApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordStartApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordStartApiResponseFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.getResetPasswordStartApiResponseFromHttpResponse"
+        )
 
         val apiResponse = if (response.body.isNullOrBlank()) {
             ResetPasswordStartApiResponse(
@@ -346,7 +375,11 @@ class NativeAuthResponseHandler {
     fun getResetPasswordChallengeApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordChallengeApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordChallengeApiResponseFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.getResetPasswordChallengeApiResponseFromHttpResponse"
+        )
 
         val apiResponse = if (response.body.isNullOrBlank()) {
             ResetPasswordChallengeApiResponse(
@@ -386,7 +419,11 @@ class NativeAuthResponseHandler {
     fun getResetPasswordContinueApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordContinueApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordContinueApiResponseFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.getResetPasswordContinueApiResponseFromHttpResponse"
+        )
 
         val apiResponse = if (response.body.isNullOrBlank()) {
             ResetPasswordContinueApiResponse(
@@ -422,7 +459,11 @@ class NativeAuthResponseHandler {
     fun getResetPasswordSubmitApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordSubmitApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordSubmitApiResponseFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.getResetPasswordSubmitApiResponseFromHttpResponse"
+        )
 
         val apiResponse = if (response.body.isNullOrBlank()) {
             ResetPasswordSubmitApiResponse(
@@ -458,7 +499,11 @@ class NativeAuthResponseHandler {
     fun getResetPasswordPollCompletionApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordPollCompletionApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordPollCompletionApiResponseFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.getResetPasswordPollCompletionApiResponseFromHttpResponse"
+        )
 
         val apiResponse = if (response.body.isNullOrBlank()) {
             ResetPasswordPollCompletionApiResponse(

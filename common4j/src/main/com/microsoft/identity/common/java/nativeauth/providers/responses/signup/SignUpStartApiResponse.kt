@@ -67,7 +67,11 @@ data class SignUpStartApiResponse(
     }
 
     fun toResult(): SignUpStartApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.toResult")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.toResult"
+        )
 
         return when (statusCode) {
 

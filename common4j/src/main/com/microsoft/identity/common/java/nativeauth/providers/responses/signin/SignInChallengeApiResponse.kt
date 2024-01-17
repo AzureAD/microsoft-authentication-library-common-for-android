@@ -63,7 +63,11 @@ data class SignInChallengeApiResponse(
     * @see com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeApiResult
     */
     fun toResult(): SignInChallengeApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.toResult")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.toResult"
+        )
 
         return when (statusCode) {
 

@@ -59,7 +59,11 @@ class SignInInteractor(
     fun performSignInInitiate(
         parameters: SignInStartCommandParameters
     ): SignInInitiateApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignInInitiate(parameters: SignInStartCommandParameters)")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.correlationId,
+            methodName = "${TAG}.performSignInInitiate(parameters: SignInStartCommandParameters)"
+        )
         val request = nativeAuthRequestProvider.createSignInInitiateRequest(
             commandParameters = parameters
         )
@@ -67,7 +71,11 @@ class SignInInteractor(
     }
 
     private fun performSignInInitiate(request: SignInInitiateRequest): SignInInitiateApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignInInitiate")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.performSignInInitiate"
+        )
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -89,7 +97,11 @@ class SignInInteractor(
         continuationToken: String,
         correlationId: String?
     ): SignInChallengeApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignInChallenge(continuationToken: String)")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            methodName = "${TAG}.performSignInChallenge(continuationToken: String)"
+        )
         val request = nativeAuthRequestProvider.createSignInChallengeRequest(
             continuationToken = continuationToken,
             correlationId = correlationId
@@ -98,7 +110,11 @@ class SignInInteractor(
     }
 
     private fun performSignInChallenge(request: SignInChallengeRequest): SignInChallengeApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignInChallenge")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.performSignInChallenge"
+        )
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -119,7 +135,11 @@ class SignInInteractor(
     fun performOOBTokenRequest(
         parameters: SignInSubmitCodeCommandParameters
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performOOBTokenRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.correlationId,
+            methodName = "${TAG}.performOOBTokenRequest"
+        )
         val request = nativeAuthRequestProvider.createOOBTokenRequest(
             commandParameters = parameters
         )
@@ -129,7 +149,11 @@ class SignInInteractor(
     fun performContinuationTokenTokenRequest(
         parameters: SignInWithContinuationTokenCommandParameters
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performContinuationTokenTokenRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.correlationId,
+            methodName = "${TAG}.performContinuationTokenTokenRequest"
+        )
         val request = nativeAuthRequestProvider.createContinuationTokenTokenRequest(
             commandParameters = parameters
         )
@@ -139,7 +163,11 @@ class SignInInteractor(
     fun performPasswordTokenRequest(
         parameters: SignInSubmitPasswordCommandParameters
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performPasswordTokenRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.correlationId,
+            methodName = "${TAG}.performPasswordTokenRequest"
+        )
         val request = nativeAuthRequestProvider.createPasswordTokenRequest(
             commandParameters = parameters
         )
@@ -151,7 +179,11 @@ class SignInInteractor(
     }
 
     private fun performGetToken(request: SignInTokenRequest): SignInTokenApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performGetToken")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.performGetToken"
+        )
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl

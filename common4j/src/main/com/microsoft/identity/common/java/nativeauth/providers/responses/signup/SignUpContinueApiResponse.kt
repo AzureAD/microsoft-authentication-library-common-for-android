@@ -68,7 +68,11 @@ data class SignUpContinueApiResponse(
     }
 
     fun toResult(): SignUpContinueApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.toResult")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.toResult"
+        )
 
         return when (statusCode) {
 
