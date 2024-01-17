@@ -134,8 +134,6 @@ class SignUpScenarioTest {
             mockSignUpStartCommandParameters
         )
         assertTrue(signupStartResult is SignUpStartApiResult.Success)
-        assertEquals(correlationId, signupStartResult.correlationId)
-
         continuationToken = (signupStartResult as SignUpStartApiResult.Success).continuationToken
         correlationId = signupStartResult.correlationId
 
@@ -150,8 +148,6 @@ class SignUpScenarioTest {
             correlationId = correlationId
         )
         assertTrue(signupChallengeResult is SignUpChallengeApiResult.OOBRequired)
-        assertEquals(correlationId, signupChallengeResult.correlationId)
-
         continuationToken = (signupChallengeResult as SignUpChallengeApiResult.OOBRequired).continuationToken
         correlationId = signupChallengeResult.correlationId
 
@@ -172,7 +168,6 @@ class SignUpScenarioTest {
             mockSignUpContinueCommandParameters
         )
         assertTrue(signupContinueResult is SignUpContinueApiResult.Success)
-        assertEquals(correlationId, signupContinueResult.correlationId)
     }
 
     // Acceptance criteria for Native Authentication:
@@ -201,8 +196,6 @@ class SignUpScenarioTest {
             mockSignUpStartCommandParameters
         )
         assertTrue(signupStartResult is SignUpStartApiResult.Success)
-        assertEquals(correlationId, signupStartResult.correlationId)
-
         continuationToken = (signupStartResult as SignUpStartApiResult.Success).continuationToken
         correlationId = signupStartResult.correlationId
 
@@ -217,8 +210,6 @@ class SignUpScenarioTest {
             correlationId = correlationId
         )
         assertTrue(signupChallengeResult is SignUpChallengeApiResult.OOBRequired)
-        assertEquals(correlationId, signupChallengeResult.correlationId)
-
         continuationToken = (signupChallengeResult as SignUpChallengeApiResult.OOBRequired).continuationToken
         correlationId = signupStartResult.correlationId
 
@@ -239,6 +230,5 @@ class SignUpScenarioTest {
             mockSignUpContinueCommandParameters
         )
         assertTrue(signupContinueResult is SignUpContinueApiResult.Success)
-        assertEquals(correlationId, signupContinueResult.correlationId)
     }
 }

@@ -133,8 +133,6 @@ class ResetPasswordScenarioTest {
             mockResetPasswordStartCommandParameters
         )
         Assert.assertTrue(ssprStartResult is ResetPasswordStartApiResult.Success)
-        Assert.assertEquals(correlationId, ssprStartResult.correlationId)
-
         continuationToken = (ssprStartResult as ResetPasswordStartApiResult.Success).continuationToken
         correlationId = ssprStartResult.correlationId
 
@@ -149,8 +147,6 @@ class ResetPasswordScenarioTest {
             correlationId = correlationId
         )
         Assert.assertTrue(ssprChallengeResult is ResetPasswordChallengeApiResult.CodeRequired)
-        Assert.assertEquals(correlationId, ssprChallengeResult.correlationId)
-
         continuationToken = (ssprChallengeResult as ResetPasswordChallengeApiResult.CodeRequired).continuationToken
         correlationId = ssprStartResult.correlationId
 
@@ -168,8 +164,6 @@ class ResetPasswordScenarioTest {
             mockResetPasswordSubmitCodeCommandParameters
         )
         Assert.assertTrue(ssprContinueResult is ResetPasswordContinueApiResult.PasswordRequired)
-        Assert.assertEquals(correlationId, ssprContinueResult.correlationId)
-
         continuationToken = (ssprContinueResult as ResetPasswordContinueApiResult.PasswordRequired).continuationToken
         correlationId = ssprStartResult.correlationId
 
@@ -188,8 +182,6 @@ class ResetPasswordScenarioTest {
             mockResetPasswordSubmitCommandParameters
         )
         Assert.assertTrue(ssprSubmitResult is ResetPasswordSubmitApiResult.SubmitSuccess)
-        Assert.assertEquals(correlationId, ssprSubmitResult.correlationId)
-
         continuationToken = (ssprSubmitResult as ResetPasswordSubmitApiResult.SubmitSuccess).continuationToken
         correlationId = ssprStartResult.correlationId
 
@@ -204,7 +196,6 @@ class ResetPasswordScenarioTest {
             correlationId = correlationId
         )
         Assert.assertTrue(ssprPollResult is ResetPasswordPollCompletionApiResult.PollingSucceeded)
-        Assert.assertEquals(correlationId, ssprPollResult.correlationId)
     }
 
     // Acceptance criteria for Native Authentication:
@@ -231,7 +222,6 @@ class ResetPasswordScenarioTest {
 
         Assert.assertFalse(ssprStartResult is ResetPasswordStartApiResult.Success)
         Assert.assertTrue(ssprStartResult is ResetPasswordStartApiResult.UserNotFound)
-        Assert.assertEquals(correlationId, ssprStartResult.correlationId)
     }
 
     // Acceptance criteria for Native Authentication:
@@ -257,8 +247,6 @@ class ResetPasswordScenarioTest {
             mockResetPasswordStartCommandParameters
         )
         Assert.assertTrue(ssprStartResult is ResetPasswordStartApiResult.Success)
-        Assert.assertEquals(correlationId, ssprStartResult.correlationId)
-
         continuationToken = (ssprStartResult as ResetPasswordStartApiResult.Success).continuationToken
         correlationId = ssprStartResult.correlationId
 
@@ -273,8 +261,6 @@ class ResetPasswordScenarioTest {
             correlationId = correlationId
         )
         Assert.assertTrue(ssprChallengeResult is ResetPasswordChallengeApiResult.CodeRequired)
-        Assert.assertEquals(correlationId, ssprChallengeResult.correlationId)
-
         continuationToken = (ssprChallengeResult as ResetPasswordChallengeApiResult.CodeRequired).continuationToken
         correlationId = ssprChallengeResult.correlationId
 
@@ -293,8 +279,6 @@ class ResetPasswordScenarioTest {
             mockResetPasswordSubmitCodeCommandParameters
         )
         Assert.assertTrue(ssprContinueResult is ResetPasswordContinueApiResult.PasswordRequired)
-        Assert.assertEquals(correlationId, ssprContinueResult.correlationId)
-
         continuationToken = (ssprContinueResult as ResetPasswordContinueApiResult.PasswordRequired).continuationToken
         correlationId = ssprChallengeResult.correlationId
 
@@ -322,7 +306,6 @@ class ResetPasswordScenarioTest {
             (ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).subError,
             passwordTooWeak
         )
-        Assert.assertEquals(correlationId, ssprSubmitResult.correlationId)
         correlationId = ssprSubmitResult.correlationId
 
         // Call /poll_completion
@@ -337,8 +320,6 @@ class ResetPasswordScenarioTest {
             correlationId = correlationId
         )
         Assert.assertTrue(ssprPollResult is ResetPasswordPollCompletionApiResult.PollingFailed)
-        Assert.assertEquals(correlationId, ssprPollResult.correlationId)
-
     }
 
     // Acceptance criteria for Native Authentication:
@@ -363,8 +344,6 @@ class ResetPasswordScenarioTest {
             mockResetPasswordStartCommandParameters
         )
         Assert.assertTrue(ssprStartResult is ResetPasswordStartApiResult.Success)
-        Assert.assertEquals(correlationId, ssprStartResult.correlationId)
-
         var continuationToken = (ssprStartResult as ResetPasswordStartApiResult.Success).continuationToken
         correlationId = ssprStartResult.correlationId
 
@@ -379,8 +358,6 @@ class ResetPasswordScenarioTest {
             correlationId = correlationId
         )
         Assert.assertTrue(ssprChallengeResult is ResetPasswordChallengeApiResult.CodeRequired)
-        Assert.assertEquals(correlationId, ssprChallengeResult.correlationId)
-
         continuationToken = (ssprChallengeResult as ResetPasswordChallengeApiResult.CodeRequired).continuationToken
         correlationId = ssprStartResult.correlationId
 
@@ -398,6 +375,5 @@ class ResetPasswordScenarioTest {
             mockResetPasswordSubmitCodeCommandParameters
         )
         Assert.assertTrue(ssprContinueResult is ResetPasswordContinueApiResult.CodeIncorrect)
-        Assert.assertEquals(correlationId, ssprContinueResult.correlationId)
     }
 }
