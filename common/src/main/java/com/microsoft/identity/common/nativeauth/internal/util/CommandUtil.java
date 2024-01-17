@@ -24,7 +24,7 @@ package com.microsoft.identity.common.nativeauth.internal.util;
 
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.AcquireTokenNoFixedScopesCommandParameters;
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartUsingPasswordCommandParameters;
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters;
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters;
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters;
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters;
@@ -45,8 +45,8 @@ public class CommandUtil {
      * @param defaultScopes scopes to be added
      * @return [SignInStartUsingPasswordCommandParameters] object with scopes
      */
-    public static SignInStartUsingPasswordCommandParameters createSignInStartCommandParametersWithScopes(
-            SignInStartUsingPasswordCommandParameters parameters,
+    public static SignInStartCommandParameters createSignInStartCommandParametersWithScopes(
+            SignInStartCommandParameters parameters,
             List<String> defaultScopes
     ) {
         return parameters.toBuilder()
@@ -110,7 +110,7 @@ public class CommandUtil {
      * @return [SignInStartUsingPasswordCommandParameters] object with continuation token
      */
     public static SignInSubmitPasswordCommandParameters createSignInSubmitPasswordCommandParameters(
-            SignInStartUsingPasswordCommandParameters parameters,
+            SignInStartCommandParameters parameters,
             String continuationToken
     ) {
         final SignInSubmitPasswordCommandParameters commandParameters =

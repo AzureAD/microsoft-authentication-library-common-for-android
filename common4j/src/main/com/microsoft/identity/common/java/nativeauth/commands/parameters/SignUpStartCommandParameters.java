@@ -22,18 +22,43 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 /**
- * A set of Sign Up Start command parameters for sending the start request to trigger the sign up flow but using email otp.
- * extends from {@link BaseSignUpStartCommandParameters}
+ * A set of Sign Up Start command parameters for sending the start request to trigger the sign up flow but using email password.
+ * extends from {@link BaseNativeAuthCommandParameters}
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
+@SuppressFBWarnings("EI_EXPOSE_REP2")   //Suppresses spotbugs warning on the builder class
 @SuperBuilder(toBuilder = true)
-public class SignUpStartCommandParameters extends BaseSignUpStartCommandParameters {
-	private static final String TAG = SignUpStartCommandParameters.class.getSimpleName();
+public class SignUpStartCommandParameters extends BaseNativeAuthCommandParameters {
+    private static final String TAG = SignUpStartCommandParameters.class.getSimpleName();
+
+    /**
+     * The email address of the user.
+     */
+    @NonNull
+    public final String username;
+
+    /**
+     * The user attributes of the user set in the user flow need to be collected.
+     */
+    @EqualsAndHashCode.Exclude
+    @Nullable
+    public final Map<String, String> userAttributes;
+
+    /**
+     * The password of the user.
+     */
+    @Nullable
+    public final char[] password;
 }

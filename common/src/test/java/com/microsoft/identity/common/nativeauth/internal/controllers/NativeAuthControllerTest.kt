@@ -38,13 +38,11 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPa
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInResendCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpResendCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
@@ -62,15 +60,12 @@ import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil
 import com.microsoft.identity.common.nativeauth.MockApiEndpoint
 import com.microsoft.identity.common.nativeauth.MockApiResponseType
 import com.microsoft.identity.common.nativeauth.MockApiUtils
-import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
-import org.junit.After
 import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.BeforeClass
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -112,17 +107,15 @@ class NativeAuthControllerTest {
     @Captor
     lateinit var initiateApiResultCaptor: ArgumentCaptor<SignInInitiateApiResult>
     @Captor
-    lateinit var signInStartUsingPasswordCommandParametersWithScopesCaptor: ArgumentCaptor<SignInStartUsingPasswordCommandParameters>
+    lateinit var signInStartCommandParametersWithScopesCaptor: ArgumentCaptor<SignInStartCommandParameters>
     @Captor
     lateinit var signInSubmitPasswordCommandParametersWithScopesCaptor: ArgumentCaptor<SignInSubmitPasswordCommandParameters>
     @Captor
     lateinit var signInWithContinuationTokenCommandParametersWithScopesCaptor: ArgumentCaptor<SignInWithContinuationTokenCommandParameters>
     @Captor
-    lateinit var signUpStartUsingPasswordCommandParametersCaptor: ArgumentCaptor<SignUpStartUsingPasswordCommandParameters>
+    lateinit var signUpStartCommandParametersCaptor: ArgumentCaptor<SignUpStartCommandParameters>
     @Captor
     lateinit var signUpSubmitUserAttributesCommandParametersCaptor: ArgumentCaptor<SignUpSubmitUserAttributesCommandParameters>
-    @Captor
-    lateinit var signUpStartCommandParametersCaptor: ArgumentCaptor<SignUpStartCommandParameters>
     @Captor
     lateinit var oAuth2StrategyCaptor: ArgumentCaptor<NativeAuthOAuth2Strategy>
     @Captor
@@ -203,14 +196,14 @@ class NativeAuthControllerTest {
 
         verify(controller).processSignInInitiateApiResult(
             capture(initiateApiResultCaptor),
-            capture(signInStartUsingPasswordCommandParametersWithScopesCaptor),
+            capture(signInStartCommandParametersWithScopesCaptor),
             capture(oAuth2StrategyCaptor),
             capture(usePasswordCaptor)
         )
 
         val scopesToCheck = scopes + defaultScopes
         assertTrue(usePasswordCaptor.value)
-        assertEquals(scopesToCheck, signInStartUsingPasswordCommandParametersWithScopesCaptor.value?.scopes)
+        assertEquals(scopesToCheck, signInStartCommandParametersWithScopesCaptor.value?.scopes)
         assert(result is SignInCommandResult.Complete)
     }
 
@@ -375,14 +368,14 @@ class NativeAuthControllerTest {
         // Verify whether scopes include default scopes
         verify(controller).processSignInInitiateApiResult(
             capture(initiateApiResultCaptor),
-            capture(signInStartUsingPasswordCommandParametersWithScopesCaptor),
+            capture(signInStartCommandParametersWithScopesCaptor),
             capture(oAuth2StrategyCaptor),
             capture(usePasswordCaptor)
         )
 
         val scopesToCheck = scopes + defaultScopes
         assertTrue(usePasswordCaptor.value)
-        assertEquals(scopesToCheck, signInStartUsingPasswordCommandParametersWithScopesCaptor.value?.scopes)
+        assertEquals(scopesToCheck, signInStartCommandParametersWithScopesCaptor.value?.scopes)
     }
 
     @Test
@@ -704,7 +697,7 @@ class NativeAuthControllerTest {
         // Verify attributes
         verify(controller).performSignUpStartUsingPasswordRequest(
             capture(oAuth2StrategyCaptor),
-            capture(signUpStartUsingPasswordCommandParametersCaptor),
+            capture(signUpStartCommandParametersCaptor),
         )
 
         assertEquals(userAttributes, userAttributes)
@@ -740,7 +733,7 @@ class NativeAuthControllerTest {
         assert(result is SignUpCommandResult.UsernameAlreadyExists)
 
         // Verify attributes
-        verify(controller).performSignUpStartRequest(
+        verify(controller).performSignUpStartUsingPasswordRequest(
             capture(oAuth2StrategyCaptor),
             capture(signUpStartCommandParametersCaptor),
         )
@@ -765,7 +758,7 @@ class NativeAuthControllerTest {
         // Verify attributes
         verify(controller).performSignUpStartUsingPasswordRequest(
             capture(oAuth2StrategyCaptor),
-            capture(signUpStartUsingPasswordCommandParametersCaptor),
+            capture(signUpStartCommandParametersCaptor),
         )
 
         assertEquals(userAttributes, userAttributes)
@@ -789,7 +782,7 @@ class NativeAuthControllerTest {
         // Verify attributes
         verify(controller).performSignUpStartUsingPasswordRequest(
             capture(oAuth2StrategyCaptor),
-            capture(signUpStartUsingPasswordCommandParametersCaptor),
+            capture(signUpStartCommandParametersCaptor),
         )
 
         assertEquals(userAttributes, userAttributes)
@@ -813,7 +806,7 @@ class NativeAuthControllerTest {
         // Verify attributes
         verify(controller).performSignUpStartUsingPasswordRequest(
             capture(oAuth2StrategyCaptor),
-            capture(signUpStartUsingPasswordCommandParametersCaptor),
+            capture(signUpStartCommandParametersCaptor),
         )
 
         assertEquals(userAttributes, userAttributes)
@@ -837,7 +830,7 @@ class NativeAuthControllerTest {
         // Verify attributes
         verify(controller).performSignUpStartUsingPasswordRequest(
             capture(oAuth2StrategyCaptor),
-            capture(signUpStartUsingPasswordCommandParametersCaptor),
+            capture(signUpStartCommandParametersCaptor),
         )
 
         assertEquals(userAttributes, userAttributes)
@@ -861,7 +854,7 @@ class NativeAuthControllerTest {
         // Verify attributes
         verify(controller).performSignUpStartUsingPasswordRequest(
             capture(oAuth2StrategyCaptor),
-            capture(signUpStartUsingPasswordCommandParametersCaptor),
+            capture(signUpStartCommandParametersCaptor),
         )
 
         assertEquals(userAttributes, userAttributes)
@@ -884,7 +877,7 @@ class NativeAuthControllerTest {
         // Verify attributes
         verify(controller).performSignUpStartUsingPasswordRequest(
             capture(oAuth2StrategyCaptor),
-            capture(signUpStartUsingPasswordCommandParametersCaptor),
+            capture(signUpStartCommandParametersCaptor),
         )
 
         assertEquals(userAttributes, userAttributes)
@@ -1115,13 +1108,13 @@ class NativeAuthControllerTest {
     }
     // endregion
 
-    private fun createSignInStartWithPasswordCommandParameters(): SignInStartUsingPasswordCommandParameters {
+    private fun createSignInStartWithPasswordCommandParameters(): SignInStartCommandParameters {
         val authenticationScheme = AuthenticationSchemeFactory.createScheme(
             AndroidPlatformComponentsFactory.createFromContext(context),
             null
         )
 
-        return SignInStartUsingPasswordCommandParameters.builder()
+        return SignInStartCommandParameters.builder()
             .username(username)
             .password(password)
             .scopes(scopes)
@@ -1288,8 +1281,8 @@ class NativeAuthControllerTest {
         return MsalOAuth2TokenCache.create(platformComponents)
     }
 
-    private fun createSignUpStartWithPasswordCommandParameters(passwordValue: CharArray? = null): SignUpStartUsingPasswordCommandParameters {
-        return SignUpStartUsingPasswordCommandParameters.builder()
+    private fun createSignUpStartWithPasswordCommandParameters(passwordValue: CharArray? = null): SignUpStartCommandParameters {
+        return SignUpStartCommandParameters.builder()
             .username(username)
             .password(
                 if (passwordValue == null || passwordValue.isEmpty()) {

@@ -24,12 +24,12 @@ package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.in
 
 import android.os.Build
 import com.microsoft.identity.common.nativeauth.ApiConstants
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.logging.DiagnosticContext
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Strategy
@@ -47,7 +47,6 @@ import com.microsoft.identity.common.nativeauth.MockApiResponseType
 import com.microsoft.identity.common.nativeauth.MockApiUtils.Companion.configureMockApi
 import junit.framework.TestCase.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
@@ -144,7 +143,7 @@ class SignUpOAuth2StrategyTest {
             .clientId(CLIENT_ID)
             .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStartUsingPassword(
             signUpStartCommandParameters
         )
         assertTrue(signupResult is SignUpStartApiResult.Success)
@@ -164,7 +163,7 @@ class SignUpOAuth2StrategyTest {
             .clientId(CLIENT_ID)
             .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStartUsingPassword(
             signUpStartCommandParameters
         )
         assertTrue(signupResult is SignUpStartApiResult.Redirect)
@@ -184,7 +183,7 @@ class SignUpOAuth2StrategyTest {
             .clientId(CLIENT_ID)
             .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStartUsingPassword(
             signUpStartCommandParameters
         )
         assertTrue(signupResult is SignUpStartApiResult.InvalidPassword)
@@ -204,7 +203,7 @@ class SignUpOAuth2StrategyTest {
             .clientId(CLIENT_ID)
             .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStartUsingPassword(
             signUpStartCommandParameters
         )
         assertTrue(signupResult is SignUpStartApiResult.InvalidEmail)
@@ -224,7 +223,7 @@ class SignUpOAuth2StrategyTest {
             .clientId(INVALID_CLIENT_ID)
             .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStartUsingPassword(
             signUpStartCommandParameters
         )
         assertTrue(signupResult is SignUpStartApiResult.UnknownError)
@@ -244,7 +243,7 @@ class SignUpOAuth2StrategyTest {
             .clientId(CLIENT_ID)
             .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStartUsingPassword(
             signUpStartCommandParameters
         )
         assertTrue(signupResult is SignUpStartApiResult.UnsupportedChallengeType)
@@ -435,7 +434,7 @@ class SignUpOAuth2StrategyTest {
             .userAttributes(USER_ATTRIBUTES)
             .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStartUsingPassword(
             signUpSubmitUserAttributesCommandParameters
         )
         assertTrue(signupResult is SignUpStartApiResult.InvalidAttributes)
