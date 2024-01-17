@@ -89,6 +89,10 @@ public class Logger {
      */
     public enum LogLevel {
         /**
+         * No logs should be emitted
+         */
+        NO_LOG,
+        /**
          * Error level logging.
          */
         ERROR,
@@ -107,12 +111,7 @@ public class Logger {
         /**
          * Undefined. Should be used in test only.
          */
-        UNDEFINED,
-
-        /**
-         * No logs should be emitted
-         */
-        NO_LOG
+        UNDEFINED
     }
 
     // Visible for testing
