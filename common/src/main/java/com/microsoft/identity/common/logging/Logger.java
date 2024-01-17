@@ -47,6 +47,10 @@ public class Logger {
      */
     public enum LogLevel {
         /**
+         * Log level to disable logging.
+         */
+        NO_LOG,
+        /**
          * Error level logging.
          */
         ERROR,
@@ -61,9 +65,7 @@ public class Logger {
         /**
          * Verbose level logging.
          */
-        VERBOSE,
-
-        NO_LOG;
+        VERBOSE;
 
 
 
