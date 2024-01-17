@@ -330,7 +330,7 @@ public class BrokerMsalController extends BaseController {
     public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters)
             throws BaseException, InterruptedException, ExecutionException {
         final String methodTag = TAG + ":acquireToken";
-
+        Logger.info(TAG, "acquireToken initiated");
         Telemetry.emit(
                 new ApiStartEvent()
                         .putProperties(parameters)
