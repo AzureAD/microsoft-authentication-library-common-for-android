@@ -52,6 +52,7 @@ import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.ThreadUtils;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authorities.Authority;
@@ -512,20 +513,19 @@ public class LocalMSALController extends BaseController {
     }
 
     /**
-     * Checks if QR + PIN auth is available.
+     * Get the preferred auth method from the broker.
      * LocalMSALController is not eligible to use the broker.
-     * Do not check if QR + PIN is available and return false immediately.
+     * Because broker is not installed return false immediately.
      *
-     * @return true false
      */
     @Override
-    public boolean isQrPinAvailable() throws BrokerRequiredException {
-        final String methodTag = TAG + ":isQrPinAvailable";
+    public PreferredAuthMethod getPreferredAuthMethod() throws BrokerRequiredException {
+        final String methodTag = TAG + ":getPreferredAuthMethod";
         final BrokerRequiredException exception = new BrokerRequiredException(
                 BrokerData.getProdMicrosoftAuthenticator().getPackageName(),
                 null
         );
-        Logger.error(methodTag, "QR + PIN not available. Requires broker.", exception);
+        Logger.error(methodTag, "Broker required.", exception);
         throw exception;
     }
 

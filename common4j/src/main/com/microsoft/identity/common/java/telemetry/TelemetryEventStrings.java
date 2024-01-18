@@ -224,7 +224,7 @@ public class TelemetryEventStrings {
         public static final String BROKER_GET_ACCOUNTS = "206";
         public static final String BROKER_REMOVE_ACCOUNT = "207";
         public static final String BROKER_REMOVE_ACCOUNT_FROM_SHARED_DEVICE = "208";
-        public static final String IS_QR_PIN_AVAILABLE = "209";
+        public static final String GET_PREFERRED_AUTH_METHOD = "209";
 
         public static final String LOCAL_ACQUIRE_TOKEN_INTERACTIVE = "101";
         public static final String LOCAL_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE = "1032";

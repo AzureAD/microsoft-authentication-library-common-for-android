@@ -23,13 +23,24 @@
 package com.microsoft.identity.common.java.ui
 
 /**
- * Preferred authentication method for the user.
+ *  Authentication methods for the user.
  * This code will be sent to eSTS as a hint to what authentication method the user prefers.
  * If not specified, eSTS will use the default authentication method.
  */
-enum class PreferredAuthMethod(@JvmField val code: Int) {
+enum class PreferredAuthMethod(@JvmField val code: Int, @JvmField val value: String?) {
+    /**
+     * No preferred authentication method.
+     */
+    NONE(0, null),
+
     /**
      * QR code + PIN authentication.
      */
-    QR(18)
+    QR(18, "qrpin");
+    companion object {
+        @JvmStatic
+        fun fromCode(code: Int) = PreferredAuthMethod.values().first { it.code == code }
+        @JvmStatic
+        fun fromValue(value: String?) = PreferredAuthMethod.values().first { it.value == value }
+    }
 }

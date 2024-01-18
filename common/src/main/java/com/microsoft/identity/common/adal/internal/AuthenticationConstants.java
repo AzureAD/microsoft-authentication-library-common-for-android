@@ -1281,9 +1281,9 @@ public final class AuthenticationConstants {
         public static final String BROKER_GENERATE_SHR_RESULT = "broker_generate_shr_result";
 
         /**
-         * String for QR + PIN result.
+         * String for the preferred auth method code
          */
-        public static final String IS_QR_PIN_AVAILABLE = "is_qr_pin_available";
+        public static final String PREFERRED_AUTH_METHOD_CODE = "preferred_auth_method_CODE";
 
         /**
          * String to return a true if the request succeeded, false otherwise.
@@ -1562,7 +1562,7 @@ public final class AuthenticationConstants {
             BROKER_DISCOVERY_SET_ACTIVE_BROKER(BROKER_DISCOVERY_SET_ACTIVE_BROKER_PATH, null, null),
             PASSTHROUGH(PASSTHROUGH_PATH, null, null),
             READ_RESTRICTIONS_MANAGER(READ_RESTRICTIONS_MANAGER_PATH, null, null),
-            IS_QR_PIN_AVAILABLE(IS_QR_PIN_AVAILABLE_PATH, null, null),
+            GET_PREFERRED_AUTH_METHOD(BrokerContentProvider.GET_PREFERRED_AUTH_METHOD, null, null),
             BROKER_INDIVIDUAL_LOGS_UPLOAD(BROKER_INDIVIDUAL_LOGS_UPLOAD_PATH, null, null);
 
             /**
@@ -1698,9 +1698,9 @@ public final class AuthenticationConstants {
         public static final String GET_SSO_TOKEN_PATH = "/ssoToken";
 
         /**
-         * ContentProvider path to check if QR + PIN should de available.
+         * ContentProvider path to get the preferred auth method.
          */
-        public static final String IS_QR_PIN_AVAILABLE_PATH = "/isQrPinAvailable";
+        public static final String GET_PREFERRED_AUTH_METHOD = "/getPreferredAuthMethod";
 
         /**
          * ContentProvider path to read the restrictions manager.
