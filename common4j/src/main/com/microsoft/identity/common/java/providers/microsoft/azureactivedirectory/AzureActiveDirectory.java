@@ -217,14 +217,16 @@ public class AzureActiveDirectory
                 Logger.info(TAG + methodName, "Discovered ["
                         + instanceResponse.getClouds().size() + "] clouds.");
 
-                for (final AzureActiveDirectoryCloud cloud : instanceResponse.getClouds()) {
-                    cloud.setIsValidated(true); // Mark the deserialized Clouds as validated
-                    for (final String alias : cloud.getHostAliases()) {
-                        sAadClouds.put(alias.toLowerCase(Locale.US), cloud);
+                synchronized (AzureActiveDirectory.class) {
+                    for (final AzureActiveDirectoryCloud cloud : instanceResponse.getClouds()) {
+                        cloud.setIsValidated(true); // Mark the deserialized Clouds as validated
+                        for (final String alias : cloud.getHostAliases()) {
+                            sAadClouds.put(alias.toLowerCase(Locale.US), cloud);
+                        }
                     }
-                }
 
-                sIsInitialized = true;
+                    sIsInitialized = true;
+                }
             }
         } finally {
             cloudDiscoveryLock.writeLock().unlock();
