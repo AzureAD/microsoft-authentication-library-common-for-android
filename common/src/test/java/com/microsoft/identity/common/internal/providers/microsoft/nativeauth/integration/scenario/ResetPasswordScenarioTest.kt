@@ -273,7 +273,7 @@ class ResetPasswordScenarioTest {
         val mockResetPasswordSubmitCodeCommandParameters = mockk<ResetPasswordSubmitCodeCommandParameters>()
         every { mockResetPasswordSubmitCodeCommandParameters.getContinuationToken() } returns continuationToken
         every { mockResetPasswordSubmitCodeCommandParameters.getCode() } returns oobCode
-        every { mockResetPasswordStartCommandParameters.getCorrelationId() } returns correlationId
+        every { mockResetPasswordSubmitCodeCommandParameters.getCorrelationId() } returns correlationId
 
         val ssprContinueResult = nativeAuthOAuth2Strategy.performResetPasswordContinue(
             mockResetPasswordSubmitCodeCommandParameters
@@ -291,7 +291,7 @@ class ResetPasswordScenarioTest {
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()
         every { mockResetPasswordSubmitCommandParameters.getContinuationToken() } returns continuationToken
         every { mockResetPasswordSubmitCommandParameters.getNewPassword() } returns password
-        every { mockResetPasswordStartCommandParameters.getCorrelationId() } returns correlationId
+        every { mockResetPasswordSubmitCommandParameters.getCorrelationId() } returns correlationId
 
         val ssprSubmitResult = nativeAuthOAuth2Strategy.performResetPasswordSubmit(
             mockResetPasswordSubmitCommandParameters
@@ -370,7 +370,7 @@ class ResetPasswordScenarioTest {
         val mockResetPasswordSubmitCodeCommandParameters = mockk<ResetPasswordSubmitCodeCommandParameters>()
         every { mockResetPasswordSubmitCodeCommandParameters.getContinuationToken() } returns continuationToken
         every { mockResetPasswordSubmitCodeCommandParameters.getCode() } returns oobCode
-        every { mockResetPasswordStartCommandParameters.getCorrelationId() } returns correlationId
+        every { mockResetPasswordSubmitCodeCommandParameters.getCorrelationId() } returns correlationId
         val ssprContinueResult = nativeAuthOAuth2Strategy.performResetPasswordContinue(
             mockResetPasswordSubmitCodeCommandParameters
         )
