@@ -89,7 +89,7 @@ public class Logger {
      */
     public enum LogLevel {
         /**
-         * No logs should be emitted
+         * No logs should be emitted.
          */
         NO_LOG,
         /**
