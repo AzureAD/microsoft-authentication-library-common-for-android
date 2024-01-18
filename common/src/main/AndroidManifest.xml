@@ -3,9 +3,10 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Camera permission is required for QR + PIN authorization method -->
     <uses-permission android:name="android.permission.CAMERA" />
-    <!-- Min Sdk version for YubiKit is 19, so override is needed to avoid build errors with Common's min sdk version -->
-    <uses-sdk tools:overrideLibrary="com.yubico.yubikit.android" />
+    <!-- Min Sdk version for YubiKit is 19, as well as for various libraries within CredMan, so override is needed to avoid build errors with Common's min sdk version -->
+    <uses-sdk tools:overrideLibrary="com.yubico.yubikit.android, androidx.credentials.play.services.auth, com.google.android.libraries.identity.googleid" />
 
     <application>
         <!-- Because Android detects plugged in YubiKeys as keyboard config changes, configChanges must have `keyboardHidden` and `keyboard` -->

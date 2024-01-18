@@ -58,6 +58,7 @@ public abstract class AbstractJwtRequest {
         public static final String NBF = "nbf";
         public static final String EXP = "exp";
         public static final String ASSERTION = "assertion";
+        public static final String KDF_VER = "kdf_ver";
     }
 
     @SerializedName(ClaimNames.REFRESH_TOKEN)

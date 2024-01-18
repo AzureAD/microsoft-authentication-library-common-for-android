@@ -144,6 +144,13 @@ public abstract class BaseController {
     public abstract boolean getDeviceMode(final CommandParameters parameters)
             throws Exception;
 
+    /**
+     * This method is used to determine if the QR + PIN auth flow is available on the device.
+     *
+     * @return true if if QR + PIN authorization is available. False otherwise.
+     */
+    public abstract boolean isQrPinAvailable() throws Exception;
+
     public abstract List<ICacheRecord> getCurrentAccount(final CommandParameters parameters)
             throws Exception;
 
