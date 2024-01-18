@@ -22,23 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
-import lombok.NonNull;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.java.authorities.Environment;
 import com.microsoft.identity.common.java.cache.HttpCache;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.java.providers.IdentityProvider;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import org.json.JSONException;
 
@@ -56,6 +54,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import lombok.NonNull;
 
 /**
  * Implements the IdentityProvider base class...
@@ -78,6 +80,8 @@ public class AzureActiveDirectory
     private static boolean sIsInitialized = false;
     private static Environment sEnvironment = Environment.Production;
     private static final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
+
+    private static final ReadWriteLock cloudDiscoveryLock = new ReentrantReadWriteLock();
 
     @Override
     public AzureActiveDirectoryOAuth2Strategy createOAuth2Strategy(@NonNull final AzureActiveDirectoryOAuth2Configuration config,
@@ -181,43 +185,49 @@ public class AzureActiveDirectory
         }
     }
 
-    public static synchronized void performCloudDiscovery()
+    public static void performCloudDiscovery()
             throws IOException, URISyntaxException {
         final String methodName = ":performCloudDiscovery";
-        final URI instanceDiscoveryRequestUri = new CommonURIBuilder(getDefaultCloudUrl() + AAD_INSTANCE_DISCOVERY_ENDPOINT)
-                .setParameter(API_VERSION, API_VERSION_VALUE)
-                .setParameter(AUTHORIZATION_ENDPOINT, AUTHORIZATION_ENDPOINT_VALUE)
-                .build();
 
-        final HttpResponse response =
-                httpClient.get(new URL(instanceDiscoveryRequestUri.toString()),
-                        new HashMap<String, String>());
+        cloudDiscoveryLock.writeLock().lock();
+        try {
+            final URI instanceDiscoveryRequestUri = new CommonURIBuilder(getDefaultCloudUrl() + AAD_INSTANCE_DISCOVERY_ENDPOINT)
+                    .setParameter(API_VERSION, API_VERSION_VALUE)
+                    .setParameter(AUTHORIZATION_ENDPOINT, AUTHORIZATION_ENDPOINT_VALUE)
+                    .build();
 
-        if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            Logger.warn(TAG + methodName, "Error getting cloud information");
-        } else {
-            // Our request was successful. Flush the HTTP cache to disk. Should only happen once
-            // per app launch. Instance Discovery Metadata will be cached in-memory
-            // until the app is killed.
-            HttpCache.flush();
+            final HttpResponse response =
+                    httpClient.get(new URL(instanceDiscoveryRequestUri.toString()),
+                            new HashMap<String, String>());
 
-            Logger.info(TAG + methodName, "Parsing response.");
-            AzureActiveDirectoryInstanceResponse instanceResponse =
-                    ObjectMapper.deserializeJsonStringToObject(
-                            response.getBody(),
-                            AzureActiveDirectoryInstanceResponse.class
-                    );
-            Logger.info(TAG + methodName, "Discovered ["
-                    + instanceResponse.getClouds().size() + "] clouds.");
+            if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
+                Logger.warn(TAG + methodName, "Error getting cloud information");
+            } else {
+                // Our request was successful. Flush the HTTP cache to disk. Should only happen once
+                // per app launch. Instance Discovery Metadata will be cached in-memory
+                // until the app is killed.
+                HttpCache.flush();
 
-            for (final AzureActiveDirectoryCloud cloud : instanceResponse.getClouds()) {
-                cloud.setIsValidated(true); // Mark the deserialized Clouds as validated
-                for (final String alias : cloud.getHostAliases()) {
-                    sAadClouds.put(alias.toLowerCase(Locale.US), cloud);
+                Logger.info(TAG + methodName, "Parsing response.");
+                AzureActiveDirectoryInstanceResponse instanceResponse =
+                        ObjectMapper.deserializeJsonStringToObject(
+                                response.getBody(),
+                                AzureActiveDirectoryInstanceResponse.class
+                        );
+                Logger.info(TAG + methodName, "Discovered ["
+                        + instanceResponse.getClouds().size() + "] clouds.");
+
+                for (final AzureActiveDirectoryCloud cloud : instanceResponse.getClouds()) {
+                    cloud.setIsValidated(true); // Mark the deserialized Clouds as validated
+                    for (final String alias : cloud.getHostAliases()) {
+                        sAadClouds.put(alias.toLowerCase(Locale.US), cloud);
+                    }
                 }
-            }
 
-            sIsInitialized = true;
+                sIsInitialized = true;
+            }
+        } finally {
+            cloudDiscoveryLock.writeLock().unlock();
         }
     }
 
