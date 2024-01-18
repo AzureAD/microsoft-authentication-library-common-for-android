@@ -132,7 +132,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 oAuth2Strategy = oAuth2Strategy,
                 parameters = parameters)
 
-            val hasPassword = parameters.password != null && (parameters.password!!.isNotEmpty())
+            val hasPassword = parameters.password?.isNotEmpty() == true
 
             if (hasPassword)
             {
@@ -1220,7 +1220,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignUpStartCommandParameters
     ): SignUpStartApiResult {
-        return oAuth2Strategy.performSignUpStartUsingPassword(
+        return oAuth2Strategy.performSignUpStart(
             commandParameters = parameters
         )
     }

@@ -61,7 +61,7 @@ class SignUpInteractor(
         commandParameters: SignUpStartCommandParameters
     ): SignUpStartApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performSignUpStartUsingPassword")
-        val request = nativeAuthRequestProvider.createSignUpUsingPasswordStartRequest(
+        val request = nativeAuthRequestProvider.createSignUpStartRequest(
             commandParameters = commandParameters
         )
         try {

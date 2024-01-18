@@ -33,7 +33,8 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 /**
- * A set of Sign Up Start command parameters for sending the start request to trigger the sign up flow but using email password.
+ * A set of Sign Up Start command parameters for sending the start request to trigger the sign up
+ * flow by using email and optional password.
  * extends from {@link BaseNativeAuthCommandParameters}
  */
 @Getter

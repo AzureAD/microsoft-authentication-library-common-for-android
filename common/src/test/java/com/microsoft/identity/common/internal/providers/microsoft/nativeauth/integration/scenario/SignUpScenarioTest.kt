@@ -128,7 +128,7 @@ class SignUpScenarioTest {
             .password(password)
             .build()
 
-        val signupStartResult = nativeAuthOAuth2Strategy.performSignUpStartUsingPassword(
+        val signupStartResult = nativeAuthOAuth2Strategy.performSignUpStart(
             mockSignUpStartCommandParameters
         )
         assertTrue(signupStartResult is SignUpStartApiResult.Success)
@@ -184,7 +184,7 @@ class SignUpScenarioTest {
             .clientId(clientId)
             .build()
 
-        val signupStartResult = nativeAuthOAuth2Strategy.performSignUpStartUsingPassword(
+        val signupStartResult = nativeAuthOAuth2Strategy.performSignUpStart(
             mockSignUpStartCommandParameters
         )
 

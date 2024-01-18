@@ -143,7 +143,7 @@ class SignUpOAuth2StrategyTest {
             .clientId(CLIENT_ID)
             .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpStartUsingPassword(
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
             signUpStartCommandParameters
         )
         assertTrue(signupResult is SignUpStartApiResult.Success)
@@ -163,7 +163,7 @@ class SignUpOAuth2StrategyTest {
             .clientId(CLIENT_ID)
             .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpStartUsingPassword(
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
             signUpStartCommandParameters
         )
         assertTrue(signupResult is SignUpStartApiResult.Redirect)
@@ -183,7 +183,7 @@ class SignUpOAuth2StrategyTest {
             .clientId(CLIENT_ID)
             .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpStartUsingPassword(
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
             signUpStartCommandParameters
         )
         assertTrue(signupResult is SignUpStartApiResult.InvalidPassword)
@@ -203,7 +203,7 @@ class SignUpOAuth2StrategyTest {
             .clientId(CLIENT_ID)
             .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpStartUsingPassword(
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
             signUpStartCommandParameters
         )
         assertTrue(signupResult is SignUpStartApiResult.InvalidEmail)
@@ -223,7 +223,7 @@ class SignUpOAuth2StrategyTest {
             .clientId(INVALID_CLIENT_ID)
             .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpStartUsingPassword(
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
             signUpStartCommandParameters
         )
         assertTrue(signupResult is SignUpStartApiResult.UnknownError)
@@ -243,7 +243,7 @@ class SignUpOAuth2StrategyTest {
             .clientId(CLIENT_ID)
             .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpStartUsingPassword(
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
             signUpStartCommandParameters
         )
         assertTrue(signupResult is SignUpStartApiResult.UnsupportedChallengeType)
@@ -434,7 +434,7 @@ class SignUpOAuth2StrategyTest {
             .userAttributes(USER_ATTRIBUTES)
             .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpStartUsingPassword(
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
             signUpSubmitUserAttributesCommandParameters
         )
         assertTrue(signupResult is SignUpStartApiResult.InvalidAttributes)

@@ -103,7 +103,7 @@ class NativeAuthRequestHandlerTest {
             .clientId(clientId)
             .build()
 
-        nativeAuthRequestProvider.createSignUpUsingPasswordStartRequest(
+        nativeAuthRequestProvider.createSignUpStartRequest(
             commandParameters = commandParameters
         )
     }
@@ -116,7 +116,7 @@ class NativeAuthRequestHandlerTest {
             .clientId(clientId)
             .build()
 
-        val request = nativeAuthRequestProvider.createSignUpUsingPasswordStartRequest(
+        val request = nativeAuthRequestProvider.createSignUpStartRequest(
             commandParameters = commandParameters
         )
 
@@ -133,7 +133,7 @@ class NativeAuthRequestHandlerTest {
             .clientId(emptyString)
             .build()
 
-        nativeAuthRequestProvider.createSignUpUsingPasswordStartRequest(
+        nativeAuthRequestProvider.createSignUpStartRequest(
             commandParameters = commandParameters
         )
     }
@@ -148,7 +148,7 @@ class NativeAuthRequestHandlerTest {
             .clientId(clientId)
             .build()
 
-        nativeAuthRequestProvider.createSignUpUsingPasswordStartRequest(
+        nativeAuthRequestProvider.createSignUpStartRequest(
             commandParameters = commandParameters
         )
     }
@@ -162,7 +162,7 @@ class NativeAuthRequestHandlerTest {
             .userAttributes(userAttributes)
             .build()
 
-        val result = nativeAuthRequestProvider.createSignUpUsingPasswordStartRequest(
+        val result = nativeAuthRequestProvider.createSignUpStartRequest(
             commandParameters = commandParameters
         )
 
@@ -183,7 +183,7 @@ class NativeAuthRequestHandlerTest {
             .userAttributes(userAttributes)
             .build()
 
-        val result = nativeAuthRequestProvider.createSignUpUsingPasswordStartRequest(
+        val result = nativeAuthRequestProvider.createSignUpStartRequest(
             commandParameters = commandParameters
         )
 

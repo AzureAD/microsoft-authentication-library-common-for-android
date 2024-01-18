@@ -86,13 +86,13 @@ class NativeAuthOAuth2Strategy(
     }
 
     /**
-     * Makes the initial call to the /signup/start when the parameters includes password.
+     * Makes the initial call to the /signup/start
      * @param commandParameters: Attributes provided by the user
      */
-    fun performSignUpStartUsingPassword(
+    fun performSignUpStart(
         commandParameters: SignUpStartCommandParameters
     ): SignUpStartApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignUpStartUsingPassword")
+        LogSession.logMethodCall(TAG, "${TAG}.performSignUpStart")
         return signUpInteractor.performSignUpStartUsingPassword(commandParameters)
     }
 

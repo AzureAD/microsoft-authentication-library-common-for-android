@@ -222,10 +222,10 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //endregion
 
     //region /signup/start
-    internal fun createSignUpUsingPasswordStartRequest(
+    internal fun createSignUpStartRequest(
         commandParameters: SignUpStartCommandParameters
     ): SignUpStartRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createSignUpUsingPasswordStartRequest")
+        LogSession.logMethodCall(TAG, "${TAG}.createSignUpStartRequest")
 
         return SignUpStartRequest.create(
             username = commandParameters.username,
