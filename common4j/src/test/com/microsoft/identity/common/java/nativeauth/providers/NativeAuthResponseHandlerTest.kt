@@ -1971,6 +1971,7 @@ class NativeAuthResponseHandlerTest {
             errorDescription = null,
             errorUri = null,
             subError = null,
+            expiresIn = null,
             correlationId = correlationId
         )
 
@@ -1988,6 +1989,7 @@ class NativeAuthResponseHandlerTest {
             errorDescription = null,
             errorUri = null,
             subError = null,
+            expiresIn = null,
             correlationId = correlationId
         )
 
@@ -2005,7 +2007,8 @@ class NativeAuthResponseHandlerTest {
             errorDescription = null,
             errorUri = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordPollCompletionApiResponse.toResult()
@@ -2022,7 +2025,8 @@ class NativeAuthResponseHandlerTest {
             subError = passwordBannedError,
             status = null,
             continuationToken = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2039,7 +2043,8 @@ class NativeAuthResponseHandlerTest {
             subError = passwordTooShortError,
             status = null,
             continuationToken = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            expiresIn = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2056,6 +2061,7 @@ class NativeAuthResponseHandlerTest {
             subError = passwordTooLongError,
             status = null,
             continuationToken = null,
+            expiresIn = null,
             correlationId = correlationId
         )
 
@@ -2073,6 +2079,7 @@ class NativeAuthResponseHandlerTest {
             subError = passwordRecentlyUsedError,
             status = null,
             continuationToken = null,
+            expiresIn = null,
             correlationId = correlationId
         )
 
@@ -2090,6 +2097,7 @@ class NativeAuthResponseHandlerTest {
             subError = passwordTooWeakError,
             status = null,
             continuationToken = null,
+            expiresIn = null,
             correlationId = correlationId
         )
 
@@ -2107,6 +2115,7 @@ class NativeAuthResponseHandlerTest {
             subError = null,
             status = null,
             continuationToken = null,
+            expiresIn = null,
             correlationId = correlationId
         )
 
@@ -2124,6 +2133,7 @@ class NativeAuthResponseHandlerTest {
             subError = null,
             status = null,
             continuationToken = null,
+            expiresIn = null,
             correlationId = correlationId
         )
 
@@ -2141,6 +2151,7 @@ class NativeAuthResponseHandlerTest {
             errorDescription = null,
             errorUri = null,
             subError = null,
+            expiresIn = null,
             correlationId = correlationId
         )
 
@@ -2158,6 +2169,7 @@ class NativeAuthResponseHandlerTest {
             errorDescription = null,
             errorUri = null,
             subError = null,
+            expiresIn = null,
             correlationId = correlationId
         )
 

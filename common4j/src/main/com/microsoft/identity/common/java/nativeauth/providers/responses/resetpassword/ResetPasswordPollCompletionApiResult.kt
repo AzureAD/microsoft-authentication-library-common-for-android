@@ -56,8 +56,10 @@ sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
     ), ResetPasswordPollCompletionApiResult
 
     data class PollingSucceeded(
+        val continuationToken: String?,
+        val expiresIn: Int?,
         override val correlationId: String?,
-    ) : ResetPasswordPollCompletionApiResult
+        ) : ResetPasswordPollCompletionApiResult
 
     data class UserNotFound(
         override val correlationId: String?,

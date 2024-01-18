@@ -97,5 +97,9 @@ interface ResetPasswordCommandResult {
     ) :
         ResetPasswordSubmitNewPasswordCommandResult
 
-    data class Complete(override val correlationId: String?) : ResetPasswordSubmitNewPasswordCommandResult
+    data class Complete (
+        val continuationToken: String?,
+        val expiresIn: Int?,
+        override val correlationId: String?
+    ) : ResetPasswordSubmitNewPasswordCommandResult
 }

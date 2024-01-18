@@ -48,6 +48,7 @@ class ResetPasswordPollCompletionApiResponse(
     @Expose private var correlationId: String?,
     @Expose @SerializedName("status") val status: String?,
     @SerializedName("continuation_token") val continuationToken: String?,
+    @SerializedName("expires_in") val expiresIn: Int?,
     @SerializedName("error") val error: String?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
@@ -128,6 +129,8 @@ class ResetPasswordPollCompletionApiResponse(
                     }
                     status.isPollSucceeded() -> {
                         ResetPasswordPollCompletionApiResult.PollingSucceeded(
+                            continuationToken = continuationToken,
+                            expiresIn = expiresIn,
                             correlationId = correlationId
                         )
                     }

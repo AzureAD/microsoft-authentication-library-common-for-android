@@ -548,6 +548,7 @@ class NativeAuthResponseHandler {
                 errorUri = null,
                 status = null,
                 continuationToken = null,
+                expiresIn = null,
                 subError = null,
                 correlationId = null
             )
