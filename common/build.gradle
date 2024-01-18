@@ -75,8 +75,8 @@ android {
         }
     }
 
-    android.buildFeatures.buildConfig true
-    android.buildFeatures.aidl true
+    buildFeatures.buildConfig true
+    buildFeatures.aidl true
 
     //Upgrading to Java 8 in order to use YubiKit SDK
     compileOptions {
