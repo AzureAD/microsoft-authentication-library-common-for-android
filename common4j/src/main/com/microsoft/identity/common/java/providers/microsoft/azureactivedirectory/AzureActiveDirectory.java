@@ -222,36 +222,36 @@ public class AzureActiveDirectory
                 httpClient.get(new URL(instanceDiscoveryRequestUri.toString()),
                         new HashMap<String, String>());
 
-        if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            Logger.warn(TAG + methodName, "Error getting cloud information");
-        } else {
-            // Our request was successful. Flush the HTTP cache to disk. Should only happen once
-            // per app launch. Instance Discovery Metadata will be cached in-memory
-            // until the app is killed.
-            HttpCache.flush();
+        aadLock.writeLock().lock();
+        try {
+            if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
+                Logger.warn(TAG + methodName, "Error getting cloud information");
+            } else {
+                // Our request was successful. Flush the HTTP cache to disk. Should only happen once
+                // per app launch. Instance Discovery Metadata will be cached in-memory
+                // until the app is killed.
+                HttpCache.flush();
 
-            Logger.info(TAG + methodName, "Parsing response.");
-            AzureActiveDirectoryInstanceResponse instanceResponse =
-                    ObjectMapper.deserializeJsonStringToObject(
-                            response.getBody(),
-                            AzureActiveDirectoryInstanceResponse.class
-                    );
-            Logger.info(TAG + methodName, "Discovered ["
-                    + instanceResponse.getClouds().size() + "] clouds.");
+                Logger.info(TAG + methodName, "Parsing response.");
+                AzureActiveDirectoryInstanceResponse instanceResponse =
+                        ObjectMapper.deserializeJsonStringToObject(
+                                response.getBody(),
+                                AzureActiveDirectoryInstanceResponse.class
+                        );
+                Logger.info(TAG + methodName, "Discovered ["
+                        + instanceResponse.getClouds().size() + "] clouds.");
 
-            for (final AzureActiveDirectoryCloud cloud : instanceResponse.getClouds()) {
-                cloud.setIsValidated(true); // Mark the deserialized Clouds as validated
-                for (final String alias : cloud.getHostAliases()) {
-                    sAadClouds.put(alias.toLowerCase(Locale.US), cloud);
+                for (final AzureActiveDirectoryCloud cloud : instanceResponse.getClouds()) {
+                    cloud.setIsValidated(true); // Mark the deserialized Clouds as validated
+                    for (final String alias : cloud.getHostAliases()) {
+                        sAadClouds.put(alias.toLowerCase(Locale.US), cloud);
+                    }
                 }
-            }
 
-            aadLock.writeLock().lock();
-            try {
                 sIsInitialized = true;
-            } finally {
-                aadLock.writeLock().unlock();
             }
+        } finally {
+        aadLock.writeLock().unlock();
         }
     }
 
