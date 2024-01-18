@@ -136,6 +136,7 @@ public final class PublicApiId {
 
     public static final String PCA_GET_DEVICE_MODE = "1200";
 
+    public static final String PCA_IS_QR_PIN_AVAILABLE = "1300";
     //region NativeAuthPublicClientApplication
     //==============================================================================================
     public static final String NATIVE_AUTH_SIGN_IN_WITH_EMAIL = "210";

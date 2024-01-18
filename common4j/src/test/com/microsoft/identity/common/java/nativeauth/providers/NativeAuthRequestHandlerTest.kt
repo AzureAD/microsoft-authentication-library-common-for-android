@@ -40,7 +40,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithSLTCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
@@ -52,12 +52,10 @@ import com.microsoft.identity.common.java.nativeauth.providers.requests.NativeAu
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertEquals
-import org.junit.Ignore
 import org.junit.Test
 import org.mockito.kotlin.mock
 import java.net.URL
 
-@Ignore
 class NativeAuthRequestHandlerTest {
     private val username = "user@email.com"
     private val password = "verySafePassword".toCharArray()
@@ -70,14 +68,10 @@ class NativeAuthRequestHandlerTest {
     private val oobGrantType = "oob"
     private val passwordGrantType = "password"
     private val oobCode = "123456"
-    private val passwordResetToken = "123456"
-    private val passwordSubmitToken = "123456"
-    private val signInSLT = "1234"
     private val emptyString = ""
     private val emptyPassword = "".toCharArray()
-    private val credentialToken = "uY29tL2F1dGhlbnRpY"
+    private val continuationToken = "uY29tL2F1dGhlbnRpY"
     private val grantType = NativeAuthConstants.GrantType.OOB
-    private val signupToken = "ifQ"
 
     private val mockConfig = mockk<NativeAuthOAuth2Configuration> {
         every { getSignUpStartEndpoint() } returns signUpStartRequestUrl
@@ -204,7 +198,7 @@ class NativeAuthRequestHandlerTest {
     fun testSignUpSubmitCodeSuccess() {
         val commandParameters = SignUpSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .signupToken(signupToken)
+            .continuationToken(continuationToken)
             .code(oobCode)
             .clientId(clientId)
             .build()
@@ -214,7 +208,7 @@ class NativeAuthRequestHandlerTest {
         )
 
         assertEquals(oobCode, result.parameters.oob)
-        assertEquals(signupToken, result.parameters.signUpToken)
+        assertEquals(continuationToken, result.parameters.continuationToken)
         assertEquals(oobGrantType, result.parameters.grantType)
         assertEquals(signUpContinueRequestUrl, result.requestUrl)
     }
@@ -223,7 +217,7 @@ class NativeAuthRequestHandlerTest {
     fun testSignUpSubmitPasswordSuccess() {
         val commandParameters = SignUpSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .signupToken(signupToken)
+            .continuationToken(continuationToken)
             .password(password)
             .clientId(clientId)
             .build()
@@ -233,7 +227,7 @@ class NativeAuthRequestHandlerTest {
         )
 
         assertEquals(password.toString(), result.parameters.password.toString())
-        assertEquals(signupToken, result.parameters.signUpToken)
+        assertEquals(continuationToken, result.parameters.continuationToken)
         assertEquals(passwordGrantType, result.parameters.grantType)
         assertEquals(signUpContinueRequestUrl, result.requestUrl)
     }
@@ -242,7 +236,7 @@ class NativeAuthRequestHandlerTest {
     fun testSignUpSubmitUserAttributesSuccess() {
         val commandParameters = SignUpSubmitUserAttributesCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .signupToken(signupToken)
+            .continuationToken(continuationToken)
             .userAttributes(userAttributes)
             .clientId(clientId)
             .build()
@@ -252,7 +246,7 @@ class NativeAuthRequestHandlerTest {
         )
 
         assertEquals(userAttributes.toJsonString(userAttributes), result.parameters.attributes)
-        assertEquals(signupToken, result.parameters.signUpToken)
+        assertEquals(continuationToken, result.parameters.continuationToken)
         assertEquals(signUpContinueRequestUrl, result.requestUrl)
     }
 
@@ -260,7 +254,7 @@ class NativeAuthRequestHandlerTest {
     fun testSignUpSubmitEmptyUserAttributesShouldThrowExceptionSuccess() {
         val commandParameters = SignUpSubmitUserAttributesCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .signupToken(signupToken)
+            .continuationToken(continuationToken)
             .userAttributes(emptyUserAttributes)
             .clientId(clientId)
             .build()
@@ -274,7 +268,7 @@ class NativeAuthRequestHandlerTest {
     fun testSignUpSubmitEmptyPasswordShouldThrowExceptionSuccess() {
         val commandParameters = SignUpSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .signupToken(signupToken)
+            .continuationToken(continuationToken)
             .password(emptyPassword)
             .clientId(clientId)
             .build()
@@ -288,7 +282,7 @@ class NativeAuthRequestHandlerTest {
     fun testSignUpSubmitEmptyCodedShouldThrowExceptionSuccess() {
         val commandParameters = SignUpSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .signupToken(signupToken)
+            .continuationToken(continuationToken)
             .code(emptyString)
             .clientId(clientId)
             .build()
@@ -302,22 +296,22 @@ class NativeAuthRequestHandlerTest {
     @Test
     fun testSignUpChallengeSuccess() {
         nativeAuthRequestProvider.createSignUpChallengeRequest(
-            signUpToken = signupToken
+            continuationToken = continuationToken
         )
 
         val result = nativeAuthRequestProvider.createSignUpChallengeRequest(
-            signUpToken = signupToken
+            continuationToken = continuationToken
         )
 
         assertEquals(challengeType, result.parameters.challengeType)
-        assertEquals(signupToken, result.parameters.signUpToken)
+        assertEquals(continuationToken, result.parameters.continuationToken)
         assertEquals(signUpChallengeRequestUrl, result.requestUrl)
     }
 
     @Test(expected = ClientException::class)
-    fun testSignUpChallengeWithEmptySignUpTokenShouldThrowException() {
+    fun testSignUpChallengeWithEmptyContinuationTokenShouldThrowException() {
         nativeAuthRequestProvider.createSignUpChallengeRequest(
-            signUpToken = emptyString
+            continuationToken = emptyString
         )
     }
 
@@ -326,7 +320,7 @@ class NativeAuthRequestHandlerTest {
         every { mockConfig.clientId } returns emptyString
 
         nativeAuthRequestProvider.createSignUpChallengeRequest(
-            signUpToken = signupToken
+            continuationToken = continuationToken
         )
     }
 
@@ -335,7 +329,7 @@ class NativeAuthRequestHandlerTest {
         every { mockConfig.challengeType } returns emptyString
 
         nativeAuthRequestProvider.createSignUpChallengeRequest(
-            signUpToken = signupToken
+            continuationToken = continuationToken
         )
     }
 
@@ -402,7 +396,7 @@ class NativeAuthRequestHandlerTest {
         every { mockConfig.clientId } returns emptyString
 
         nativeAuthRequestProvider.createSignInChallengeRequest(
-            credentialToken = credentialToken
+            continuationToken = continuationToken
         )
     }
 
@@ -411,25 +405,25 @@ class NativeAuthRequestHandlerTest {
         every { mockConfig.challengeType } returns emptyString
 
         nativeAuthRequestProvider.createSignInChallengeRequest(
-            credentialToken = credentialToken
+            continuationToken = continuationToken
         )
     }
 
     @Test(expected = ClientException::class)
-    fun testSignInChallengeWithEmptyCredentialTokenShouldThrowException() {
+    fun testSignInChallengeWithEmptyContinuationTokenShouldThrowException() {
         nativeAuthRequestProvider.createSignInChallengeRequest(
-            credentialToken = emptyString
+            continuationToken = emptyString
         )
     }
 
     @Test
     fun testSignInChallengeSuccess() {
         val result = nativeAuthRequestProvider.createSignInChallengeRequest(
-            credentialToken = credentialToken
+            continuationToken = continuationToken
         )
 
         assertEquals(clientId, result.parameters.clientId)
-        assertEquals(credentialToken, result.parameters.credentialToken)
+        assertEquals(continuationToken, result.parameters.continuationToken)
         assertEquals(signInChallengeRequestUrl, result.requestUrl)
     }
 
@@ -492,53 +486,40 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testSignInTokenWithSLTSuccess() {
-        val commandParameters = SignInWithSLTCommandParameters.builder()
+    fun testSignInTokenWithContinuationTokenSuccess() {
+        val commandParameters = SignInWithContinuationTokenCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .signInSLT(signInSLT)
+            .continuationToken(continuationToken)
             .username(username)
             .build()
 
-        nativeAuthRequestProvider.createSLTTokenRequest(
+        nativeAuthRequestProvider.createContinuationTokenTokenRequest(
             parameters = commandParameters
         )
     }
 
     @Test(expected = ClientException::class)
-    fun testSignInTokenWithEmptySLTShouldThrowException() {
-        val commandParameters = SignInWithSLTCommandParameters.builder()
+    fun testSignInTokenWithEmptyContinuationTokenShouldThrowException() {
+        val commandParameters = SignInWithContinuationTokenCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .signInSLT(emptyString)
+            .continuationToken(emptyString)
             .username(username)
             .build()
 
-        nativeAuthRequestProvider.createSLTTokenRequest(
+        nativeAuthRequestProvider.createContinuationTokenTokenRequest(
             parameters = commandParameters
         )
     }
 
     @Test(expected = ClientException::class)
     fun testSignInTokenWithEmptyUsernameShouldThrowException() {
-        val commandParameters = SignInWithSLTCommandParameters.builder()
+        val commandParameters = SignInWithContinuationTokenCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .signInSLT(signInSLT)
+            .continuationToken(continuationToken)
             .username(emptyString)
             .build()
 
-        nativeAuthRequestProvider.createSLTTokenRequest(
-            parameters = commandParameters
-        )
-    }
-
-    @Test(expected = ClientException::class)
-    fun testSignInTokenWithEmptyCredentialTokenShouldThrowException() {
-        val commandParameters = SignInSubmitCodeCommandParameters.builder()
-            .platformComponents(mock<PlatformComponents>())
-            .code(oobCode)
-            .credentialToken(emptyString)
-            .build()
-
-        nativeAuthRequestProvider.createOOBTokenRequest(
+        nativeAuthRequestProvider.createContinuationTokenTokenRequest(
             parameters = commandParameters
         )
     }
@@ -548,7 +529,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = SignInSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .code(emptyString)
-            .credentialToken(credentialToken)
+            .continuationToken(continuationToken)
             .build()
 
         nativeAuthRequestProvider.createOOBTokenRequest(
@@ -561,7 +542,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = SignInSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .password(emptyPassword)
-            .credentialToken(credentialToken)
+            .continuationToken(continuationToken)
             .build()
 
         nativeAuthRequestProvider.createPasswordTokenRequest(
@@ -570,11 +551,11 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test(expected = ClientException::class)
-    fun testPasswordTokenRequestWithEmptyCredentialTokenShouldThrowException() {
+    fun testPasswordTokenRequestWithEmptyContinuationTokenShouldThrowException() {
         val commandParameters = SignInSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .password(password)
-            .credentialToken(emptyString)
+            .continuationToken(emptyString)
             .build()
 
         nativeAuthRequestProvider.createPasswordTokenRequest(
@@ -587,7 +568,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = SignInSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .password(password)
-            .credentialToken(credentialToken)
+            .continuationToken(continuationToken)
             .build()
 
         nativeAuthRequestProvider.createPasswordTokenRequest(
@@ -596,10 +577,10 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test(expected = ClientException::class)
-    fun testSignUpContinueWithEmptySignUpTokenThrowException() {
+    fun testSignUpContinueWithEmptyContinuationTokenThrowException() {
         val commandParameters = SignUpSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .signupToken(emptyString)
+            .continuationToken(emptyString)
             .code(oobCode)
             .build()
 
@@ -614,7 +595,7 @@ class NativeAuthRequestHandlerTest {
 
         val commandParameters = SignUpSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .signupToken(signupToken)
+            .continuationToken(continuationToken)
             .code(oobCode)
             .build()
 
@@ -682,21 +663,21 @@ class NativeAuthRequestHandlerTest {
         every { mockConfig.clientId } returns emptyString
 
         nativeAuthRequestProvider.createResetPasswordChallengeRequest(
-            passwordResetToken = passwordResetToken
+            continuationToken = continuationToken
         )
     }
 
     @Test(expected = ClientException::class)
-    fun testResetPasswordChallengeWithEmptyPasswordResetTokenShouldThrowException() {
+    fun testResetPasswordChallengeWithEmptyContinuationTokenShouldThrowException() {
         nativeAuthRequestProvider.createResetPasswordChallengeRequest(
-            passwordResetToken = emptyString
+            continuationToken = emptyString
         )
     }
 
     @Test
     fun testResetPasswordChallengeSuccess() {
         nativeAuthRequestProvider.createResetPasswordChallengeRequest(
-            passwordResetToken = passwordResetToken
+            continuationToken = continuationToken
         )
     }
 
@@ -708,7 +689,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = ResetPasswordSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .code(oobCode)
-            .passwordResetToken(passwordResetToken)
+            .continuationToken(continuationToken)
             .build()
 
         nativeAuthRequestProvider.createResetPasswordContinueRequest(
@@ -717,11 +698,11 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test(expected = ClientException::class)
-    fun testResetPasswordContinueWithEmptyPasswordResetTokenShouldThrowException() {
+    fun testResetPasswordContinueWithEmptycontinuationTokenShouldThrowException() {
         val commandParameters = ResetPasswordSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .code(oobCode)
-            .passwordResetToken(emptyString)
+            .continuationToken(emptyString)
             .build()
 
         nativeAuthRequestProvider.createResetPasswordContinueRequest(
@@ -734,7 +715,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = ResetPasswordSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .code(emptyString)
-            .passwordResetToken(passwordResetToken)
+            .continuationToken(continuationToken)
             .build()
 
         nativeAuthRequestProvider.createResetPasswordContinueRequest(
@@ -747,7 +728,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = ResetPasswordSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .code(oobCode)
-            .passwordResetToken(passwordResetToken)
+            .continuationToken(continuationToken)
             .build()
 
         nativeAuthRequestProvider.createResetPasswordContinueRequest(
@@ -762,7 +743,7 @@ class NativeAuthRequestHandlerTest {
 
         val commandParameters = ResetPasswordSubmitNewPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .passwordSubmitToken(passwordSubmitToken)
+            .continuationToken(continuationToken)
             .newPassword(password)
             .build()
 
@@ -775,7 +756,7 @@ class NativeAuthRequestHandlerTest {
     fun testResetPasswordSubmitWithEmptyPasswordShouldThrowException() {
         val commandParameters = ResetPasswordSubmitNewPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .passwordSubmitToken(passwordSubmitToken)
+            .continuationToken(continuationToken)
             .newPassword(emptyPassword)
             .build()
 
@@ -785,10 +766,10 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test(expected = ClientException::class)
-    fun testResetPasswordSubmitWithEmptyPasswordSubmitTokenShouldThrowException() {
+    fun testResetPasswordSubmitWithEmptyContinuationTokenShouldThrowException() {
         val commandParameters = ResetPasswordSubmitNewPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .passwordSubmitToken(emptyString)
+            .continuationToken(emptyString)
             .newPassword(password)
             .build()
 
@@ -801,7 +782,7 @@ class NativeAuthRequestHandlerTest {
     fun testResetPasswordSubmitSuccess() {
         val commandParameters = ResetPasswordSubmitNewPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .passwordSubmitToken(passwordSubmitToken)
+            .continuationToken(continuationToken)
             .newPassword(password)
             .build()
 
@@ -816,21 +797,21 @@ class NativeAuthRequestHandlerTest {
         every { mockConfig.clientId } returns emptyString
 
         nativeAuthRequestProvider.createResetPasswordPollCompletionRequest(
-            passwordResetToken = passwordResetToken
+            continuationToken = continuationToken
         )
     }
 
     @Test(expected = ClientException::class)
-    fun testResetPasswordPollCompletionWithEmptyPasswordSubmitTokenShouldThrowException() {
+    fun testResetPasswordPollCompletionWithEmptyContinuationTokenShouldThrowException() {
         nativeAuthRequestProvider.createResetPasswordPollCompletionRequest(
-            passwordResetToken = emptyString
+            continuationToken = emptyString
         )
     }
 
     @Test
     fun testResetPasswordPollCompletionSuccess() {
         nativeAuthRequestProvider.createResetPasswordPollCompletionRequest(
-            passwordResetToken = passwordResetToken
+            continuationToken = continuationToken
         )
     }
 }

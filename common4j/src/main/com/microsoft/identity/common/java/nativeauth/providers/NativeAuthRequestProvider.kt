@@ -30,7 +30,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPa
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithSLTCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
@@ -95,17 +95,17 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
 
     //region /oauth/v2.0/challenge
     /**
-     * Creates request object for /oauth/v2.0/challenge API call from credential token
-     * @param credentialToken: credential token from a previous signin command
+     * Creates request object for /oauth/v2.0/challenge API call from continuation token
+     * @param continuationToken: continuation token from a previous signin command
      */
     internal fun createSignInChallengeRequest(
-        credentialToken: String
+        continuationToken: String
     ): SignInChallengeRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createSignInChallengeRequest")
 
         return SignInChallengeRequest.create(
             clientId = config.clientId,
-            credentialToken = credentialToken,
+            continuationToken = continuationToken,
             challengeType = config.challengeType,
             requestUrl = signInChallengeEndpoint,
             headers = getRequestHeaders()
@@ -126,7 +126,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         return SignInTokenRequest.createOOBTokenRequest(
             oob = parameters.code,
             scopes = parameters.scopes,
-            credentialToken = parameters.credentialToken,
+            continuationToken = parameters.continuationToken,
             clientId = config.clientId,
             challengeType = config.challengeType,
             requestUrl = signInTokenEndpoint,
@@ -135,16 +135,16 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     }
 
     /**
-     * Creates request object for /oauth/v2.0/token API call from [SignInWithSLTCommandParameters]
+     * Creates request object for /oauth/v2.0/token API call from [SignInWithContinuationTokenCommandParameters]
      * @param parameters: command parameters object
      */
-    internal fun createSLTTokenRequest(
-        parameters: SignInWithSLTCommandParameters
+    internal fun createContinuationTokenTokenRequest(
+        parameters: SignInWithContinuationTokenCommandParameters
     ): SignInTokenRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createSLTTokenRequest")
+        LogSession.logMethodCall(TAG, "${TAG}.createContinuationTokenRequest")
 
-        return SignInTokenRequest.createSltTokenRequest(
-            signInSlt = parameters.signInSLT,
+        return SignInTokenRequest.createContinuationTokenRequest(
+            continuationToken = parameters.continuationToken,
             scopes = parameters.scopes,
             clientId = config.clientId,
             username = parameters.username,
@@ -166,7 +166,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         return SignInTokenRequest.createPasswordTokenRequest(
             password = parameters.password,
             scopes = parameters.scopes,
-            credentialToken = parameters.credentialToken,
+            continuationToken = parameters.continuationToken,
             clientId = config.clientId,
             challengeType = config.challengeType,
             requestUrl = signInTokenEndpoint,
@@ -193,13 +193,13 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
 
     //region /resetpassword/challenge
     internal fun createResetPasswordChallengeRequest(
-        passwordResetToken: String
+        continuationToken: String
     ): ResetPasswordChallengeRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordChallengeRequest")
 
         return ResetPasswordChallengeRequest.create(
             clientId = config.clientId,
-            passwordResetToken = passwordResetToken,
+            continuationToken = continuationToken,
             challengeType = config.challengeType,
             requestUrl = resetPasswordChallengeEndpoint,
             headers = getRequestHeaders()
@@ -215,7 +215,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
 
         return ResetPasswordContinueRequest.create(
             clientId = config.clientId,
-            passwordResetToken = parameters.passwordResetToken,
+            continuationToken = parameters.continuationToken,
             oob = parameters.code,
             requestUrl = resetPasswordContinueEndpoint,
             headers = getRequestHeaders()
@@ -270,7 +270,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
 
         return ResetPasswordSubmitRequest.create(
             clientId = config.clientId,
-            passwordSubmitToken = commandParameters.passwordSubmitToken,
+            continuationToken = commandParameters.continuationToken,
             newPassword = commandParameters.newPassword,
             requestUrl = resetPasswordSubmitEndpoint,
             headers = getRequestHeaders()
@@ -280,13 +280,13 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
 
     //region /resetpassword/pollcompletion
     internal fun createResetPasswordPollCompletionRequest(
-        passwordResetToken: String
+        continuationToken: String
     ): ResetPasswordPollCompletionRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordPollCompletionRequest")
 
         return ResetPasswordPollCompletionRequest.create(
             clientId = config.clientId,
-            passwordResetToken = passwordResetToken,
+            continuationToken = continuationToken,
             requestUrl = resetPasswordPollCompletionEndpoint,
             headers = getRequestHeaders()
         )
@@ -302,7 +302,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         return SignUpContinueRequest.create(
             oob = commandParameters.code,
             clientId = config.clientId,
-            signUpToken = commandParameters.signupToken,
+            continuationToken = commandParameters.continuationToken,
             grantType = NativeAuthConstants.GrantType.OOB,
             requestUrl = signUpContinueEndpoint,
             headers = getRequestHeaders()
@@ -317,7 +317,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         return SignUpContinueRequest.create(
             password = commandParameters.password,
             clientId = config.clientId,
-            signUpToken = commandParameters.signupToken,
+            continuationToken = commandParameters.continuationToken,
             grantType = NativeAuthConstants.GrantType.PASSWORD,
             requestUrl = signUpContinueEndpoint,
             headers = getRequestHeaders()
@@ -332,7 +332,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         return SignUpContinueRequest.create(
             attributes = commandParameters.userAttributes,
             clientId = config.clientId,
-            signUpToken = commandParameters.signupToken,
+            continuationToken = commandParameters.continuationToken,
             grantType = NativeAuthConstants.GrantType.ATTRIBUTES,
             requestUrl = signUpContinueEndpoint,
             headers = getRequestHeaders()
@@ -342,12 +342,12 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
 
     //region /signup/challenge
     internal fun createSignUpChallengeRequest(
-        signUpToken: String
+        continuationToken: String
     ): SignUpChallengeRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createSignUpChallengeRequest")
 
         return SignUpChallengeRequest.create(
-            signUpToken = signUpToken,
+            continuationToken = continuationToken,
             clientId = config.clientId,
             challengeType = config.challengeType,
             requestUrl = signUpChallengeEndpoint,

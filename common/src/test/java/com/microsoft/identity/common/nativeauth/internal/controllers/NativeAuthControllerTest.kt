@@ -41,7 +41,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithSLTCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpResendCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartUsingPasswordCommandParameters
@@ -88,24 +88,19 @@ import java.util.UUID
  * Tests for [NativeAuthMsalController].
  */
 @RunWith(RobolectricTestRunner::class)
-@Ignore
 class NativeAuthControllerTest {
     private val code = "12345"
-    private val credentialToken = "sk490fj8a83n*@f-1"
     private val username = "user@email.com"
     private val password = "verySafePassword".toCharArray()
     private val defaultScopes: List<String> = AuthenticationConstants.DEFAULT_SCOPES.toList()
     private val scopes: List<String> = listOf("scope1", "scope2", "scope3")
-    private val passwordResetToken = "sk490fj8a83n*@f-2"
-    private val passwordSubmitToken = "sk490fj8a83n*@f-3"
     private val invalidGrantError = "invalid_grant"
-    private val invalidRequestError = "invalid_request"
     private val credentialRequiredError = "credential_required"
-    private val signInSLT = "1234"
+    private val userNotFoundError = "user_not_found"
+    private val continuationToken = "1234"
     private val newPassword = "newPassword".toCharArray()
     private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val authorityUrl = "https://msidlabciam1.ciamlogin.com/msidlabciam1.onmicrosoft.com"
-    private val signUpToken = "ifQ"
     private val userAttributes = mapOf("city" to "dublin")
 
     private lateinit var platformComponents: IPlatformComponents
@@ -121,7 +116,7 @@ class NativeAuthControllerTest {
     @Captor
     lateinit var signInSubmitPasswordCommandParametersWithScopesCaptor: ArgumentCaptor<SignInSubmitPasswordCommandParameters>
     @Captor
-    lateinit var signInWithSLTCommandParametersWithScopesCaptor: ArgumentCaptor<SignInWithSLTCommandParameters>
+    lateinit var signInWithContinuationTokenCommandParametersWithScopesCaptor: ArgumentCaptor<SignInWithContinuationTokenCommandParameters>
     @Captor
     lateinit var signUpStartUsingPasswordCommandParametersCaptor: ArgumentCaptor<SignUpStartUsingPasswordCommandParameters>
     @Captor
@@ -433,7 +428,7 @@ class NativeAuthControllerTest {
     }
 
     @Test
-    fun testSignInWithSLTSuccess() {
+    fun testSignInWithContinuationTokenSuccess() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SignInToken,
@@ -441,22 +436,22 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.TOKEN_SUCCESS
         )
 
-        val parameters = createSignInWithSLTCommandParameters(withScopes = true)
-        val result = controller.signInWithSLT(parameters)
+        val parameters = createSignInWithContinuationTokenCommandParameters(withScopes = true)
+        val result = controller.signInWithContinuationToken(parameters)
         assert(result is SignInCommandResult.Complete)
 
         // Verify scopes
-        verify(controller).performSLTTokenRequest(
+        verify(controller).performContinuationTokenTokenRequest(
             capture(oAuth2StrategyCaptor),
-            capture(signInWithSLTCommandParametersWithScopesCaptor),
+            capture(signInWithContinuationTokenCommandParametersWithScopesCaptor),
         )
 
         val scopesToCheck = scopes + defaultScopes
-        assertEquals(scopesToCheck, signInWithSLTCommandParametersWithScopesCaptor.value?.scopes)
+        assertEquals(scopesToCheck, signInWithContinuationTokenCommandParametersWithScopesCaptor.value?.scopes)
     }
 
     @Test
-    fun testSignInWithSLTInvalidGrant() {
+    fun testSignInWithContinuationTokenInvalidGrant() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SignInToken,
@@ -464,14 +459,14 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.INVALID_GRANT
         )
 
-        val parameters = createSignInWithSLTCommandParameters()
-        val result = controller.signInWithSLT(parameters)
+        val parameters = createSignInWithContinuationTokenCommandParameters()
+        val result = controller.signInWithContinuationToken(parameters)
         assert(result is INativeAuthCommandResult.UnknownError)
         assert((result as INativeAuthCommandResult.UnknownError).error == invalidGrantError)
     }
 
     @Test
-    fun testSignInWithSLTCodeIncorrect() {
+    fun testSignInWithContinuationTokenCodeIncorrect() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SignInToken,
@@ -479,14 +474,14 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.INVALID_OOB_VALUE
         )
 
-        val parameters = createSignInWithSLTCommandParameters()
-        val result = controller.signInWithSLT(parameters)
+        val parameters = createSignInWithContinuationTokenCommandParameters()
+        val result = controller.signInWithContinuationToken(parameters)
         assert(result is INativeAuthCommandResult.UnknownError)
-        assert((result as INativeAuthCommandResult.UnknownError).error == invalidRequestError)
+        assert((result as INativeAuthCommandResult.UnknownError).error == invalidGrantError)
     }
 
     @Test
-    fun testSignInWithSLTUserNotFound() {
+    fun testSignInWithContinuationTokenUserNotFound() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SignInToken,
@@ -494,14 +489,14 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.USER_NOT_FOUND
         )
 
-        val parameters = createSignInWithSLTCommandParameters()
-        val result = controller.signInWithSLT(parameters)
+        val parameters = createSignInWithContinuationTokenCommandParameters()
+        val result = controller.signInWithContinuationToken(parameters)
         assert(result is INativeAuthCommandResult.UnknownError)
-        assert((result as INativeAuthCommandResult.UnknownError).error == invalidGrantError)
+        assert((result as INativeAuthCommandResult.UnknownError).error == userNotFoundError)
     }
 
     @Test
-    fun testSignInWithSLTPasswordIncorrect() {
+    fun testSignInWithContinuationTokenPasswordIncorrect() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SignInToken,
@@ -509,8 +504,8 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.SIGNIN_INVALID_PASSWORD
         )
 
-        val parameters = createSignInWithSLTCommandParameters()
-        val result = controller.signInWithSLT(parameters)
+        val parameters = createSignInWithContinuationTokenCommandParameters()
+        val result = controller.signInWithContinuationToken(parameters)
         assert(result is INativeAuthCommandResult.UnknownError)
         assert((result as INativeAuthCommandResult.UnknownError).error == invalidGrantError)
     }
@@ -597,7 +592,7 @@ class NativeAuthControllerTest {
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SSPRStart,
             correlationId = UUID.randomUUID().toString(),
-            responseType = MockApiResponseType.EXPLICIT_USER_NOT_FOUND
+            responseType = MockApiResponseType.USER_NOT_FOUND
         )
 
         val parameters = createSsprStartCommandParameters()
@@ -623,7 +618,7 @@ class NativeAuthControllerTest {
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SSPRContinue,
             correlationId = UUID.randomUUID().toString(),
-            responseType = MockApiResponseType.EXPLICIT_INVALID_OOB_VALUE
+            responseType = MockApiResponseType.INVALID_OOB_VALUE
         )
 
         val parameters = createSsprSubmitCodeCommandParameters()
@@ -693,7 +688,7 @@ class NativeAuthControllerTest {
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SignUpStart,
             correlationId = correlationId,
-            responseType = MockApiResponseType.VERIFICATION_REQUIRED
+            responseType = MockApiResponseType.SIGNUP_START_SUCCESS
         )
 
         MockApiUtils.configureMockApi(
@@ -1045,7 +1040,7 @@ class NativeAuthControllerTest {
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SignUpStart,
             correlationId = correlationId,
-            responseType = MockApiResponseType.VERIFICATION_REQUIRED
+            responseType = MockApiResponseType.SIGNUP_START_SUCCESS
         )
 
         MockApiUtils.configureMockApi(
@@ -1158,13 +1153,13 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSignInWithSLTCommandParameters(withScopes: Boolean = false): SignInWithSLTCommandParameters {
+    private fun createSignInWithContinuationTokenCommandParameters(withScopes: Boolean = false): SignInWithContinuationTokenCommandParameters {
         val authenticationScheme = AuthenticationSchemeFactory.createScheme(
             AndroidPlatformComponentsFactory.createFromContext(context),
             null
         )
 
-        return SignInWithSLTCommandParameters.builder()
+        return SignInWithContinuationTokenCommandParameters.builder()
             .authenticationScheme(authenticationScheme)
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
             .clientId(clientId)
@@ -1173,7 +1168,7 @@ class NativeAuthControllerTest {
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
-            .signInSLT(signInSLT)
+            .continuationToken(continuationToken)
             .username(username)
             .build()
     }
@@ -1187,7 +1182,7 @@ class NativeAuthControllerTest {
         return SignInSubmitCodeCommandParameters.builder()
             .code(code)
             .authenticationScheme(authenticationScheme)
-            .credentialToken(credentialToken)
+            .continuationToken(continuationToken)
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
             .clientId(clientId)
             .platformComponents(platformComponents)
@@ -1201,7 +1196,7 @@ class NativeAuthControllerTest {
         return SignInResendCodeCommandParameters.builder()
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
             .clientId(clientId)
-            .credentialToken(credentialToken)
+            .continuationToken(continuationToken)
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
@@ -1221,7 +1216,7 @@ class NativeAuthControllerTest {
             .authenticationScheme(authenticationScheme)
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
             .clientId(clientId)
-            .credentialToken(credentialToken)
+            .continuationToken(continuationToken)
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
@@ -1244,7 +1239,7 @@ class NativeAuthControllerTest {
     private fun createSsprSubmitCodeCommandParameters(): ResetPasswordSubmitCodeCommandParameters {
         return ResetPasswordSubmitCodeCommandParameters.builder()
             .code(code)
-            .passwordResetToken(passwordResetToken)
+            .continuationToken(continuationToken)
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
             .clientId(clientId)
             .platformComponents(platformComponents)
@@ -1258,7 +1253,7 @@ class NativeAuthControllerTest {
         return ResetPasswordResendCodeCommandParameters.builder()
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
             .clientId(clientId)
-            .passwordResetToken(passwordResetToken)
+            .continuationToken(continuationToken)
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
@@ -1269,7 +1264,7 @@ class NativeAuthControllerTest {
     private fun createSsprSubmitNewPasswordCommandParameters(): ResetPasswordSubmitNewPasswordCommandParameters {
         return ResetPasswordSubmitNewPasswordCommandParameters.builder()
             .newPassword(newPassword)
-            .passwordSubmitToken(passwordSubmitToken)
+            .continuationToken(continuationToken)
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
             .clientId(clientId)
             .platformComponents(platformComponents)
@@ -1328,7 +1323,7 @@ class NativeAuthControllerTest {
     private fun createSignUpResendCodeCommandParameters(): SignUpResendCodeCommandParameters {
         return SignUpResendCodeCommandParameters.builder()
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
-            .signupToken(signUpToken)
+            .continuationToken(continuationToken)
             .clientId(clientId)
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
@@ -1339,7 +1334,7 @@ class NativeAuthControllerTest {
 
     private fun createSignUpSubmitCodeCommandParameters(): SignUpSubmitCodeCommandParameters {
         return SignUpSubmitCodeCommandParameters.builder()
-            .signupToken(signUpToken)
+            .continuationToken(continuationToken)
             .code(code)
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
             .clientId(clientId)
@@ -1352,7 +1347,7 @@ class NativeAuthControllerTest {
 
     private fun createSignUpSubmitPasswordCommandParameters(): SignUpSubmitPasswordCommandParameters {
         return SignUpSubmitPasswordCommandParameters.builder()
-            .signupToken(signUpToken)
+            .continuationToken(continuationToken)
             .password(password)
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
             .clientId(clientId)
@@ -1365,7 +1360,7 @@ class NativeAuthControllerTest {
 
     private fun createSignUpSubmitUserAttributesCommandParameters(): SignUpSubmitUserAttributesCommandParameters {
         return SignUpSubmitUserAttributesCommandParameters.builder()
-            .signupToken(signUpToken)
+            .continuationToken(continuationToken)
             .userAttributes(userAttributes)
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
             .clientId(clientId)

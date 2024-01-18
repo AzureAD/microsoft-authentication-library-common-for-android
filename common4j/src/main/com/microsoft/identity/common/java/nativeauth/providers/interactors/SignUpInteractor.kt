@@ -108,12 +108,12 @@ class SignUpInteractor(
 
     //region /signup/challenge
     fun performSignUpChallenge(
-        signUpToken: String
+        continuationToken: String
     ): SignUpChallengeApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performSignUpChallenge")
 
         val request = nativeAuthRequestProvider.createSignUpChallengeRequest(
-            signUpToken = signUpToken
+            continuationToken = continuationToken
         )
         return performSignUpChallenge(request)
     }

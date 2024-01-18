@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 
 import java.io.Serializable;
 
@@ -75,6 +76,8 @@ public class BrokerRequest implements Serializable {
         final static String POWER_OPT_CHECK_ENABLED = "power_opt_check_enabled";
         final static String SPAN_CONTEXT = "span_context";
         final static String PREFERRED_BROWSER = "preferred_browser";
+
+        final static String PREFERRED_AUTH_METHOD = "preferred_auth_method";
     }
 
     /**
@@ -247,4 +250,7 @@ public class BrokerRequest implements Serializable {
     @SerializedName(SerializedNames.PREFERRED_BROWSER)
     private BrowserDescriptor mPreferredBrowser;
 
+    @Nullable
+    @SerializedName(SerializedNames.PREFERRED_AUTH_METHOD)
+    private PreferredAuthMethod mPreferredAuthMethod;
 }

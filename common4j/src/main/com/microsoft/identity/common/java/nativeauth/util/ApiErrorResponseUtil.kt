@@ -62,6 +62,9 @@ internal fun String?.isPasswordRecentlyUsed(): Boolean {
     return this.contentEquals(other = "password_recently_used", ignoreCase = true)
 }
 
+internal fun String?.isPasswordInvalid(): Boolean {
+    return this.contentEquals(other = "password_is_invalid", ignoreCase = true)
+}
 internal fun String?.isPasswordBanned(): Boolean {
     return this.contentEquals(other = "password_banned", ignoreCase = true)
 }
@@ -74,7 +77,7 @@ internal fun String?.isPollSucceeded(): Boolean {
     return this.contentEquals(other = "succeeded", ignoreCase = true)
 }
 
-internal fun String?.isExplicitUserNotFound(): Boolean {
+internal fun String?.isUserNotFound(): Boolean {
     return this.contentEquals(other = "user_not_found", ignoreCase = true)
 }
 
@@ -86,10 +89,6 @@ internal fun String?.isExpiredToken(): Boolean {
     return this.contentEquals(other = "expired_token", ignoreCase = true)
 }
 
-internal fun Int?.isUserNotFound(): Boolean {
-    return this == 50034
-}
-
 internal fun Int?.isInvalidParameter() : Boolean {
     return this == 90100
 }
@@ -98,9 +97,6 @@ internal fun Int?.isInvalidCredentials(): Boolean {
     return this == 50126
 }
 
-internal fun Int?.isOtpCodeIncorrect(): Boolean {
-    return arrayOf(50181, 50184, 501811).contains(this)
-}
 
 internal fun Int?.isInvalidAuthenticationType(): Boolean {
     return this == 400002
