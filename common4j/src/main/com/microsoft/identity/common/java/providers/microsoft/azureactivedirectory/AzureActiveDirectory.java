@@ -22,23 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
-import lombok.NonNull;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.java.authorities.Environment;
 import com.microsoft.identity.common.java.cache.HttpCache;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.java.providers.IdentityProvider;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import org.json.JSONException;
 
@@ -56,6 +54,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import lombok.NonNull;
 
 /**
  * Implements the IdentityProvider base class...
@@ -79,6 +81,8 @@ public class AzureActiveDirectory
     private static Environment sEnvironment = Environment.Production;
     private static final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
 
+    private static final ReadWriteLock aadLock = new ReentrantReadWriteLock();
+
     @Override
     public AzureActiveDirectoryOAuth2Strategy createOAuth2Strategy(@NonNull final AzureActiveDirectoryOAuth2Configuration config,
                                                                    @NonNull final IPlatformComponents commonComponents) throws ClientException {
@@ -97,22 +101,37 @@ public class AzureActiveDirectory
         return hasCloudHost(authorityUrl) && getAzureActiveDirectoryCloud(authorityUrl).isValidated();
     }
 
-    public static synchronized boolean isInitialized() {
-        return sIsInitialized;
+    public static boolean isInitialized() {
+        aadLock.readLock().lock();
+        try {
+            return sIsInitialized;
+        } finally {
+            aadLock.readLock().unlock();
+        }
     }
 
-    public static synchronized void setEnvironment(@NonNull final Environment environment) {
-        if (environment != sEnvironment) {
-            // Environment changed, so mark sIsInitialized to false
-            // to make a instance discovery network request for this environment.
-            sIsInitialized = false;
-            sEnvironment = environment;
+    public static void setEnvironment(@NonNull final Environment environment) {
+        aadLock.writeLock().lock();
+        try {
+            if (environment != sEnvironment) {
+                // Environment changed, so mark sIsInitialized to false
+                // to make a instance discovery network request for this environment.
+                sIsInitialized = false;
+                sEnvironment = environment;
+            }
+        } finally {
+            aadLock.writeLock().unlock();
         }
 
     }
 
-    public static synchronized Environment getEnvironment() {
-        return sEnvironment;
+    public static Environment getEnvironment() {
+        aadLock.readLock().lock();
+        try {
+            return sEnvironment;
+        } finally {
+            aadLock.readLock().unlock();
+        }
     }
 
     /**
@@ -170,14 +189,24 @@ public class AzureActiveDirectory
             }
         }
 
-        sIsInitialized = true;
+        aadLock.writeLock().lock();
+        try {
+            sIsInitialized = true;
+        } finally {
+            aadLock.writeLock().unlock();
+        }
     }
 
-    public static synchronized String getDefaultCloudUrl() {
-        if (sEnvironment == Environment.PreProduction) {
-            return AzureActiveDirectoryEnvironment.PREPRODUCTION_CLOUD_URL;
-        } else {
-            return AzureActiveDirectoryEnvironment.PRODUCTION_CLOUD_URL;
+    public static String getDefaultCloudUrl() {
+        aadLock.readLock().lock();
+        try {
+            if (sEnvironment == Environment.PreProduction) {
+                return AzureActiveDirectoryEnvironment.PREPRODUCTION_CLOUD_URL;
+            } else {
+                return AzureActiveDirectoryEnvironment.PRODUCTION_CLOUD_URL;
+            }
+        } finally {
+            aadLock.readLock().unlock();
         }
     }
 
@@ -217,7 +246,12 @@ public class AzureActiveDirectory
                 }
             }
 
-            sIsInitialized = true;
+            aadLock.writeLock().lock();
+            try {
+                sIsInitialized = true;
+            } finally {
+                aadLock.writeLock().unlock();
+            }
         }
     }
 
