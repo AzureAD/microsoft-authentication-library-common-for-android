@@ -57,7 +57,7 @@ class SignUpInteractor(
     private val TAG:String = SignUpInteractor::class.java.simpleName
 
     //region /signup/start
-    fun performSignUpStartUsingPassword(
+    fun performSignUpStart(
         commandParameters: SignUpStartCommandParameters
     ): SignUpStartApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performSignUpStartUsingPassword")

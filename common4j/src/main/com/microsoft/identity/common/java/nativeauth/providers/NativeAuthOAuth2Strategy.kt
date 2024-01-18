@@ -93,7 +93,7 @@ class NativeAuthOAuth2Strategy(
         commandParameters: SignUpStartCommandParameters
     ): SignUpStartApiResult {
         LogSession.logMethodCall(TAG, "${TAG}.performSignUpStart")
-        return signUpInteractor.performSignUpStartUsingPassword(commandParameters)
+        return signUpInteractor.performSignUpStart(commandParameters)
     }
 
     /**
