@@ -69,7 +69,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import org.powermock.core.classloader.annotations.PowerMockIgnore
 import org.powermock.core.classloader.annotations.PrepareForTest
-import org.powermock.modules.junit4.PowerMockRunner
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.util.UUID
 
@@ -81,7 +81,7 @@ import java.util.UUID
 
 
 @RunWith(
-    PowerMockRunner::class
+    RobolectricTestRunner::class
 )
 @PowerMockIgnore("javax.net.ssl.*")
 @PrepareForTest(DiagnosticContext::class)
