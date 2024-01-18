@@ -22,21 +22,22 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry;
 
+import static com.microsoft.identity.common.java.logging.DiagnosticContext.CORRELATION_ID;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
+
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.telemetry.adapter.BrokerTelemetryAdapter;
-import com.microsoft.identity.common.java.telemetry.observers.IBrokerTelemetryObserver;
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.telemetry.adapter.TelemetryAggregationAdapter;
 import com.microsoft.identity.common.java.telemetry.adapter.TelemetryDefaultAdapter;
 import com.microsoft.identity.common.java.telemetry.events.BaseEvent;
+import com.microsoft.identity.common.java.telemetry.observers.IBrokerTelemetryObserver;
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryAggregatedObserver;
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryDefaultObserver;
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryObserver;
 import com.microsoft.identity.common.java.telemetry.rules.TelemetryPiiOiiRules;
-import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.logging.DiagnosticContext;
-
-import lombok.NonNull;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,8 +49,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static com.microsoft.identity.common.java.logging.DiagnosticContext.CORRELATION_ID;
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
+import lombok.NonNull;
 
 /**
  * A singleton class for logging Telemetry.
@@ -222,9 +222,10 @@ public class Telemetry {
      * @return the event reference for future properties modification.
      */
     public static void emit(final BaseEvent event) {
-        if (getInstance().mIsTelemetryEnabled) {
+        final Telemetry instance = getInstance();
+        if (instance.mIsTelemetryEnabled) {
             //only enqueue the telemetry properties when the telemetry is enabled.
-            getInstance().getRequestMap().add(event.getProperties());
+            instance.getRequestMap().add(event.getProperties());
         }
     }
 
