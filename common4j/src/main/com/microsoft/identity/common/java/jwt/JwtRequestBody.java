@@ -79,10 +79,10 @@ public final class JwtRequestBody extends AbstractJwtRequest {
     @SerializedName(ClaimNames.EXP)
     private String mExp;
 
-    @SerializedName("jwe_crypto")
+    @SerializedName(ClaimNames.JWE_CRYPTO)
     private JsonObject mJweCrypto;
 
-    @SerializedName("session_key_crypto")
+    @SerializedName(ClaimNames.SESSION_KEY_CRYPTO)
     private JsonObject mSessionKeyCrypto;
 
     public void setIat(final long iat) {
