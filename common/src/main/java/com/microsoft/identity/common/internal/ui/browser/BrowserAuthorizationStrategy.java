@@ -126,6 +126,7 @@ public abstract class BrowserAuthorizationStrategy<
     // Suppressing unchecked warnings during casting to HashMap<String,String> due to no generic type with mAuthorizationRequest
     @SuppressWarnings(WarningType.unchecked_warning)
     private Intent buildAuthorizationActivityStartIntent(Intent authIntent, URI requestUrl) {
+         // RedirectURI used to get the auth code in nested app auth is that of a hub app (brkRedirectURI)   
         final String redirectUri = mAuthorizationRequest.getBrkRedirectUri() != null ? mAuthorizationRequest.getBrkRedirectUri() : mAuthorizationRequest.getRedirectUri();
         final Intent intent = AuthorizationActivityFactory.getAuthorizationActivityIntent(
                 getApplicationContext(),
