@@ -24,8 +24,10 @@ package com.microsoft.identity.common.java.nativeauth.util
 
 import com.microsoft.identity.common.java.commands.ICommandResult
 import com.microsoft.identity.common.java.controllers.CommandResult
+import com.microsoft.identity.common.java.exception.ClientException
 
 const val UNSUCCESSFUL_COMMAND_ERROR = "unsuccessful_command"
+const val INVALID_USERNAME_ERROR = "username"
 
 /**
  * CommandResult.result value can be of an expected type (ExpectedType), or, if an underlying exception
@@ -45,12 +47,21 @@ inline fun <reified ExpectedType: com.microsoft.identity.common.java.nativeauth.
             exceptionMessage = exception.message
         }
 
-        return com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult.UnknownError(
-            error = UNSUCCESSFUL_COMMAND_ERROR,
-            errorDescription = exceptionMessage,
-            exception = exception,
-            correlationId = this.correlationId
-        ) as ExpectedType
+         return if (exception is ClientException && exception.errorCode == INVALID_USERNAME_ERROR) {
+             com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult.InvalidUsername(
+                 error = exception.errorCode,
+                 errorDescription = exceptionMessage,
+                 exception = exception,
+                 correlationId = this.correlationId
+             ) as ExpectedType
+         } else {
+             com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult.UnknownError(
+                 error = UNSUCCESSFUL_COMMAND_ERROR,
+                 errorDescription = exceptionMessage,
+                 exception = exception,
+                 correlationId = this.correlationId
+             ) as ExpectedType
+         }
     } else {
         return this.result.let { result ->
             when {

@@ -43,6 +43,16 @@ sealed interface SignInInitiateApiResult {
         errorCodes = errorCodes
     ), SignInInitiateApiResult
 
+//    data class InvalidUsername(
+//        override val error: String,
+//        override val errorDescription: String,
+//        override val errorCodes: List<Int>
+//    ) : ApiErrorResult(
+//        error = error,
+//        errorDescription = errorDescription,
+//        errorCodes = errorCodes
+//    ), SignInInitiateApiResult
+
     data class UnknownError(
         override val error: String,
         override val errorDescription: String,
