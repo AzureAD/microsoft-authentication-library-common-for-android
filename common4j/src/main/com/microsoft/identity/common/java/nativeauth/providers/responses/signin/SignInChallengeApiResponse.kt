@@ -36,9 +36,9 @@ import java.net.HttpURLConnection
  * Represents the raw response from the /challenge endpoint.
  * Can be converted to SignInChallengeApiResult using the provided toResult() method.
  */
-data class SignInChallengeApiResponse(
+class SignInChallengeApiResponse(
     @Expose override var statusCode: Int,
-    @Expose private var correlationId: String?,
+    correlationId: String?,
     @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
     @Expose @SerializedName("binding_method") val bindingMethod: String?,

@@ -38,9 +38,9 @@ import java.net.HttpURLConnection
  * Represents the raw response from the Sign Up /challenge endpoint.
  * Can be converted to SignUpChallengeApiResult using the provided toResult() method.
  */
-data class SignUpChallengeApiResponse(
+class SignUpChallengeApiResponse(
     @Expose override var statusCode: Int,
-    @Expose private var correlationId: String?,
+    correlationId: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
     @SerializedName("challenge_target_label") val challengeTargetLabel: String?,
     @Expose @SerializedName("code_length") val codeLength: Int?,

@@ -40,9 +40,9 @@ import com.microsoft.identity.common.java.nativeauth.util.isUserNotFound
  * Note: mainly used for representing error cases from the /token endpoint. Successful responses are otherwise mapped to MicrosoftStsTokenResponse instead.
  * @see com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
  */
-data class SignInTokenApiResponse(
+class SignInTokenApiResponse(
     @Expose override var statusCode: Int,
-    @Expose private var correlationId: String?,
+    correlationId: String?,
     @SerializedName("error") val error: String?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,

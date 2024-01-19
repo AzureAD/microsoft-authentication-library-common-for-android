@@ -49,9 +49,9 @@ import java.net.HttpURLConnection
  * Represents the raw response from the Sign Up /continue endpoint.
  * Can be converted to SignUpContinueApiResult using the provided toResult() method.
  */
-data class SignUpContinueApiResponse(
+class SignUpContinueApiResponse(
     @Expose override var statusCode: Int,
-    @Expose private var correlationId: String?,
+    correlationId: String?,
     @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("expires_in") val expiresIn: Int?,
     @Expose @SerializedName("unverified_attributes") val unverifiedAttributes: List<Map<String, String>>?,

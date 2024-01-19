@@ -31,18 +31,10 @@ import com.google.gson.annotations.SerializedName
 abstract class IApiResponse(
     //HTTP status code
     @Transient open val statusCode: Int,
-    @Expose @SerializedName("correlation_id") private var correlationId: String?
+    correlationId: String?
 ) {
 
-    /**
-     * Public getter
-     */
-    fun getCorrelationId(): String? = correlationId
-
-    /**
-     * Internal setter. Should only be used by [com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler]
-     */
-    internal fun setCorrelationId(correlationId: String?) {
-        this.correlationId = correlationId
-    }
+    // Custom setter. Limit access to this method, to avoid accidental overwrite.
+    var correlationId = correlationId
+        internal set
 }

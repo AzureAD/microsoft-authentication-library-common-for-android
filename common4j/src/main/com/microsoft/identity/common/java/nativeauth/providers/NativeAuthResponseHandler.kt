@@ -96,7 +96,7 @@ class NativeAuthResponseHandler {
             )
         }
         result.statusCode = response.statusCode
-        result.setCorrelationId(correlationId)
+        result.correlationId = correlationId
 
         // TODO add correlation ID
         ApiResultUtil.logResponse(TAG, result)
@@ -138,14 +138,13 @@ class NativeAuthResponseHandler {
                 correlationId = correlationId
             )
         } else {
-            val jsonResult = ObjectMapper.deserializeJsonStringToObject(
+            ObjectMapper.deserializeJsonStringToObject(
                 response.body,
                 SignUpChallengeApiResponse::class.java
             )
-            jsonResult.statusCode = response.statusCode
-            jsonResult.setCorrelationId(correlationId)
-            jsonResult
         }
+        result.statusCode = response.statusCode
+        result.correlationId = correlationId
 
         ApiResultUtil.logResponse(TAG, result)
 
@@ -186,14 +185,13 @@ class NativeAuthResponseHandler {
                 correlationId = null
             )
         } else {
-            val jsonResult = ObjectMapper.deserializeJsonStringToObject(
+            ObjectMapper.deserializeJsonStringToObject(
                 response.body,
                 SignUpContinueApiResponse::class.java
             )
-            jsonResult.statusCode = response.statusCode
-            jsonResult.setCorrelationId(correlationId)
-            jsonResult
         }
+        result.statusCode = response.statusCode
+        result.correlationId = correlationId
 
         ApiResultUtil.logResponse(TAG, result)
 
@@ -228,14 +226,13 @@ class NativeAuthResponseHandler {
                 correlationId = null
             )
         }  else {
-            val jsonResult = ObjectMapper.deserializeJsonStringToObject(
+            ObjectMapper.deserializeJsonStringToObject(
                 response.body,
                 SignInInitiateApiResponse::class.java
             )
-            jsonResult.statusCode = response.statusCode
-            jsonResult.setCorrelationId(correlationId)
-            jsonResult
         }
+        result.statusCode = response.statusCode
+        result.correlationId = correlationId
 
         ApiResultUtil.logResponse(TAG, result)
 
@@ -277,14 +274,13 @@ class NativeAuthResponseHandler {
             )
 
         } else {
-            val jsonResult = ObjectMapper.deserializeJsonStringToObject(
+            ObjectMapper.deserializeJsonStringToObject(
                 response.body,
                 SignInChallengeApiResponse::class.java
             )
-            jsonResult.statusCode = response.statusCode
-            jsonResult.setCorrelationId(correlationId)
-            jsonResult
         }
+        result.statusCode = response.statusCode
+        result.correlationId = correlationId
 
         ApiResultUtil.logResponse(TAG, result)
 
@@ -323,14 +319,14 @@ class NativeAuthResponseHandler {
                     correlationId = null
                 )
             } else {
-                val jsonResult = ObjectMapper.deserializeJsonStringToObject(
+                ObjectMapper.deserializeJsonStringToObject(
                     response.body,
                     SignInTokenApiResponse::class.java
                 )
-                jsonResult.statusCode = response.statusCode
-                jsonResult.setCorrelationId(correlationId)
-                jsonResult
             }
+            apiResponse.statusCode = response.statusCode
+            apiResponse.correlationId = correlationId
+
             ApiResultUtil.logResponse(TAG, apiResponse)
             return apiResponse.toErrorResult()
         } else {
@@ -365,7 +361,7 @@ class NativeAuthResponseHandler {
         )
         val correlationId = response.getHeaderValue(AuthenticationConstants.AAD.CLIENT_REQUEST_ID, 0)
 
-        val apiResponse = if (response.body.isNullOrBlank()) {
+        val result = if (response.body.isNullOrBlank()) {
             ResetPasswordStartApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
@@ -376,18 +372,17 @@ class NativeAuthResponseHandler {
                 correlationId = null
             )
         } else {
-            val jsonResult = ObjectMapper.deserializeJsonStringToObject(
+            ObjectMapper.deserializeJsonStringToObject(
                 response.body,
                 ResetPasswordStartApiResponse::class.java
             )
-            jsonResult.statusCode = response.statusCode
-            jsonResult.setCorrelationId(correlationId)
-            jsonResult
         }
+        result.statusCode = response.statusCode
+        result.correlationId = correlationId
 
-        ApiResultUtil.logResponse(TAG, apiResponse)
+        ApiResultUtil.logResponse(TAG, result)
 
-        return apiResponse
+        return result
     }
 
     //region /resetpassword/challenge
@@ -407,7 +402,7 @@ class NativeAuthResponseHandler {
         )
         val correlationId = response.getHeaderValue(AuthenticationConstants.AAD.CLIENT_REQUEST_ID, 0)
 
-        val apiResponse = if (response.body.isNullOrBlank()) {
+        val result = if (response.body.isNullOrBlank()) {
             ResetPasswordChallengeApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
@@ -423,18 +418,17 @@ class NativeAuthResponseHandler {
                 correlationId = null
             )
         } else {
-            val jsonResult = ObjectMapper.deserializeJsonStringToObject(
+            ObjectMapper.deserializeJsonStringToObject(
                 response.body,
                 ResetPasswordChallengeApiResponse::class.java
             )
-            jsonResult.statusCode = response.statusCode
-            jsonResult.setCorrelationId(correlationId)
-            jsonResult
         }
+        result.statusCode = response.statusCode
+        result.correlationId = correlationId
 
-        ApiResultUtil.logResponse(TAG, apiResponse)
+        ApiResultUtil.logResponse(TAG, result)
 
-        return apiResponse
+        return result
     }
 
     //region /resetpassword/continue
@@ -454,7 +448,7 @@ class NativeAuthResponseHandler {
         )
         val correlationId = response.getHeaderValue(AuthenticationConstants.AAD.CLIENT_REQUEST_ID, 0)
 
-        val apiResponse = if (response.body.isNullOrBlank()) {
+        val result = if (response.body.isNullOrBlank()) {
             ResetPasswordContinueApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
@@ -467,17 +461,16 @@ class NativeAuthResponseHandler {
                 correlationId = null
             )
         } else {
-            val jsonResult = ObjectMapper.deserializeJsonStringToObject(
+            ObjectMapper.deserializeJsonStringToObject(
                 response.body,
                 ResetPasswordContinueApiResponse::class.java
             )
-            jsonResult.statusCode = response.statusCode
-            jsonResult.setCorrelationId(correlationId)
-            jsonResult
         }
+        result.statusCode = response.statusCode
+        result.correlationId = correlationId
 
-        ApiResultUtil.logResponse(TAG, apiResponse)
-        return apiResponse
+        ApiResultUtil.logResponse(TAG, result)
+        return result
     }
 
     //region /resetpassword/submit
@@ -497,7 +490,7 @@ class NativeAuthResponseHandler {
         )
         val correlationId = response.getHeaderValue(AuthenticationConstants.AAD.CLIENT_REQUEST_ID, 0)
 
-        val apiResponse = if (response.body.isNullOrBlank()) {
+        val result = if (response.body.isNullOrBlank()) {
             ResetPasswordSubmitApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
@@ -509,18 +502,17 @@ class NativeAuthResponseHandler {
                 correlationId = null
             )
         } else {
-            val jsonResult = ObjectMapper.deserializeJsonStringToObject(
+            ObjectMapper.deserializeJsonStringToObject(
                 response.body,
                 ResetPasswordSubmitApiResponse::class.java
             )
-            jsonResult.statusCode = response.statusCode
-            jsonResult.setCorrelationId(correlationId)
-            jsonResult
         }
+        result.statusCode = response.statusCode
+        result.correlationId = correlationId
 
-        ApiResultUtil.logResponse(TAG, apiResponse)
+        ApiResultUtil.logResponse(TAG, result)
 
-        return apiResponse
+        return result
     }
 
     //region /resetpassword/poll_completion
@@ -540,7 +532,7 @@ class NativeAuthResponseHandler {
         )
         val correlationId = response.getHeaderValue(AuthenticationConstants.AAD.CLIENT_REQUEST_ID, 0)
 
-        val apiResponse = if (response.body.isNullOrBlank()) {
+        val result = if (response.body.isNullOrBlank()) {
             ResetPasswordPollCompletionApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
@@ -553,17 +545,16 @@ class NativeAuthResponseHandler {
                 correlationId = null
             )
         } else {
-            val jsonResult = ObjectMapper.deserializeJsonStringToObject(
+            ObjectMapper.deserializeJsonStringToObject(
                 response.body,
                 ResetPasswordPollCompletionApiResponse::class.java
             )
-            jsonResult.statusCode = response.statusCode
-            jsonResult.setCorrelationId(correlationId)
-            jsonResult
         }
+        result.statusCode = response.statusCode
+        result.correlationId = correlationId
 
-        ApiResultUtil.logResponse(TAG, apiResponse)
+        ApiResultUtil.logResponse(TAG, result)
 
-        return apiResponse
+        return result
     }
 }
