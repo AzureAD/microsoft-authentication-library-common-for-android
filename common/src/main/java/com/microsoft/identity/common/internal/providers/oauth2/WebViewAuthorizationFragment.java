@@ -139,6 +139,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final View view = inflater.inflate(R.layout.common_activity_authentication, container, false);
         mProgressBar = view.findViewById(R.id.common_auth_webview_progressbar);
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            WebView.setWebContentsDebuggingEnabled(true);
+        }
+
         final FragmentActivity activity = getActivity();
         if (activity == null) {
             return null;
@@ -242,7 +246,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
 
                 mAADWebViewClient.setRequestHeaders(mRequestHeaders);
-                mWebView.loadUrl(mAuthorizationRequestUrl + "&dc=ESTS-PUB-SCUS-LZ1-FD000-TEST1&fidotest=true", mRequestHeaders);
+                mWebView.loadUrl(mAuthorizationRequestUrl + "&dc=ESTS-PUB-NCUS-LZ1-FD000-TEST1&fidotest=true", mRequestHeaders);
 
                 // The first page load could take time, and we do not want to just show a blank page.
                 // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.

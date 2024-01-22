@@ -60,7 +60,7 @@ class WebAuthnJsonUtil {
                 }
             }
             val options = PublicKeyCredentialRequestOptions(
-                challenge,
+                challenge, //challenge.removePrefix("O."),
                 relyingPartyIdentifier,
                 publicKeyCredentialDescriptorList,
                 userVerificationPolicy
@@ -76,12 +76,15 @@ class WebAuthnJsonUtil {
             val fullResponseJsonObject = JSONObject(fullResponseJson);
             var authResponseJsonObject = fullResponseJsonObject
                 .getJSONObject(FidoConstants.WEBAUTHN_AUTHENTICATION_ASSERTION_RESPONSE_JSON_KEY)
+
             // Making sure that Id is here because ESTS expects it.
             // I've noticed that GPM will sometimes not include the id in the response object.
-            /*            if (!authResponseJsonObject.has(WEBAUTHN_RESPONSE_ID_JSON_KEY)) {
+            if (!authResponseJsonObject.has(WEBAUTHN_RESPONSE_ID_JSON_KEY)) {
                 authResponseJsonObject = authResponseJsonObject.put(WEBAUTHN_RESPONSE_ID_JSON_KEY, fullResponseJsonObject.get(WEBAUTHN_RESPONSE_ID_JSON_KEY))
-            }*/
-            val result = JSONObject()
+            }
+            return authResponseJsonObject.toString()
+
+/*            val result = JSONObject()
             result.put(
                 WEBAUTHN_RESPONSE_ID_JSON_KEY,
                 fullResponseJsonObject.get(WEBAUTHN_RESPONSE_ID_JSON_KEY)
@@ -98,15 +101,15 @@ class WebAuthnJsonUtil {
             authResponseJsonObject.get("userHandle").let {
                 result.put("userHandle", convertToBase64UrlString(it as String))
             }
-            return authResponseJsonObject.toString()
+            return authResponseJsonObject.toString()*/
         }
 
         fun convertToBase64UrlString(str: String): String {
-            //val data: ByteArray = str.toByteArray(Charsets.UTF_8)
-            //val base64: String = Base64.encodeToString(data, (Base64.URL_SAFE or Base64.NO_WRAP))
-            //return base64.replace("=", "")
-            val base64 = str
-            return base64.replace("=", "").replace("+", "-").replace("/", "_")
+            val data: ByteArray = str.toByteArray(Charsets.UTF_8)
+            val base64: String = Base64.encodeToString(data, (Base64.URL_SAFE or Base64.NO_WRAP))
+            return base64.replace("=", "")
+            //val base64 = str
+            //return base64.replace("=", "").replace("+", "-").replace("/", "_")
         }
     }
 }
