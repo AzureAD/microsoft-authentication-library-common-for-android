@@ -284,6 +284,12 @@ public abstract class OAuth2Strategy
                     if (!StringUtil.isNullOrEmpty(slice.getDataCenter())) {
                         commonUriBuilder.setParameter(AzureActiveDirectorySlice.DC_PARAMETER, slice.getDataCenter());
                     }
+                    if (slice.getFlightParameters() != null && !slice.getFlightParameters().isEmpty()) {
+                        for (Map.Entry<String, String> entry : slice.getFlightParameters().entrySet()) {
+                            commonUriBuilder.setParameter(entry.getKey(), entry.getValue());
+                        }
+                    }
+
                     mTokenEndpoint = commonUriBuilder.build().toString();
                 } catch (final URISyntaxException e) {
                     throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
