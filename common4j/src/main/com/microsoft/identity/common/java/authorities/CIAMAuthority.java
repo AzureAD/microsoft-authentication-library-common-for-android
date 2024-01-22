@@ -71,6 +71,7 @@ public class CIAMAuthority extends Authority {
             final AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
             slice.setSlice(mSlice.getSlice());
             slice.setDataCenter(mSlice.getDataCenter());
+            slice.setFlightParameters(mSlice.getFlightParameters());
             config.setSlice(slice);
         }
 

@@ -157,6 +157,9 @@ def sliceParameter = "" // will be blank unless specified by developer
 def dcParameter = "" // will be blank unless specified by developer
 def useMockApiForNativeAuthParameter = false // will be false unless specified by developer
 def disableAcquireTokenSilentTimeoutParameter = false // will be false unless specified by developer
+// Expecting this param to be JSON format, i.e. {testFlight:true,testFlight2:false}
+// Can include multiple flights
+def localFlightsParameter = "" // will be blank unless specified by user
 
 if (project.hasProperty("slice")) {
     sliceParameter = slice
@@ -178,6 +181,10 @@ if (project.hasProperty("disableAcquireTokenSilentTimeout")) {
     disableAcquireTokenSilentTimeoutParameter = true
 }
 
+if (project.hasProperty("localFlights")) {
+    localFlightsParameter = localFlights
+}
+
 sourceSets {
     main {
         java.srcDirs = ['src/main', "$project.buildDir/generated/source/buildConfig/main"]
@@ -185,6 +192,7 @@ sourceSets {
         buildConfigField("String", "DC", "\"$dcParameter\"")
         buildConfigField("boolean", "USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY", "${useMockApiForNativeAuthParameter}")
         buildConfigField("boolean", "DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT", "${disableAcquireTokenSilentTimeoutParameter}")
+        buildConfigField("String", "FLIGHTS", "\"$localFlightsParameter\"")
     }
     test {
         java.srcDirs = ['src/test']
