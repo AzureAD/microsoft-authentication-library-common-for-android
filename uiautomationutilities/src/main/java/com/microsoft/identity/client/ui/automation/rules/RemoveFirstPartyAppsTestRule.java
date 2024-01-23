@@ -52,7 +52,7 @@ public class RemoveFirstPartyAppsTestRule implements TestRule {
                 new BrowserEdge().uninstall();
                 new OneAuthTestApp().uninstall();
                 // Commenting this until new msalAutomationApp name is added
-                // new MsalTestApp().uninstall();
+                 new MsalTestApp().uninstall();
                 base.evaluate();
             }
         };
