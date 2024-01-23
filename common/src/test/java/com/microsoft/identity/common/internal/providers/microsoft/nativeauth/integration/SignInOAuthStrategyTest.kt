@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.in
 import android.os.Build
 import com.microsoft.identity.common.nativeauth.ApiConstants
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
@@ -50,7 +49,6 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
@@ -59,7 +57,6 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore
 import org.powermock.core.classloader.annotations.PrepareForTest
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import java.net.URL
 import java.util.UUID
 
 /**
@@ -172,7 +169,7 @@ class SignInOAuthStrategyTest {
             responseType = MockApiResponseType.INITIATE_SUCCESS
         )
 
-        val parameters = SignInStartUsingPasswordCommandParameters.builder()
+        val parameters = SignInStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(USERNAME)
             .password(PASSWORD)
