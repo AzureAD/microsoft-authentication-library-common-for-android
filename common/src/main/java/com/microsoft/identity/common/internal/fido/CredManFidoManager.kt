@@ -30,6 +30,7 @@ import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.PublicKeyCredential
 import java.nio.charset.Charset
 import java.security.MessageDigest
+import java.util.Locale
 
 /**
  * Makes calls to the Android Credential Manager API in order to return an attestation.
@@ -55,14 +56,13 @@ class CredManFidoManager (val context: Context) : IFidoManager {
             allowedCredentials,
             userVerificationPolicy
         )
-        val clientDataHash = getSha256Hash(jsonSerializeCollectedClientData(challenge))
+        //val clientDataHash = getSha256Hash(jsonSerializeCollectedClientData(challenge))
         val publicKeyCredentialOption = GetPublicKeyCredentialOption(
             requestJson = requestJson,
-            clientDataHash = clientDataHash
+            //clientDataHash = clientDataHash
         )
         val getCredRequest = GetCredentialRequest(
-            credentialOptions = listOf(publicKeyCredentialOption),
-            origin = "https://login.microsoft.com"
+            credentialOptions = listOf(publicKeyCredentialOption)
         )
         val result = credentialManager.getCredential(
             context = context,
@@ -85,11 +85,14 @@ class CredManFidoManager (val context: Context) : IFidoManager {
         // 4. Append 0x2c226368616c6c656e6765223a (,"challenge":) to result.
         result += "2c226368616c6c656e6765223a".decodeHex()
         // 5. Append CCDToString(challenge) to result.
-        result += ccdToString(challenge)
+        result += ccdToString(WebAuthnJsonUtil.convertToBase64UrlString(challenge))
         // 6. Append 0x2c226f726967696e223a (,"origin":) to result.
         result += "2c226f726967696e223a".decodeHex()
         // 7. Append CCDToString(origin) to result.
-        result += ccdToString("https://login.microsoft.com")
+        val origin = "android:apk-key-hash:" + WebAuthnJsonUtil.convertFromHexToBase64UrlString( "".replace(":", "").lowercase(
+            Locale.getDefault()
+        ))
+        result += ccdToString(origin)
         // 8. Append 0x2c2263726f73734f726967696e223a (,"crossOrigin":) to result.
         result += "2c2263726f73734f726967696e223a".decodeHex()
         // 9.10. Append false("66616c7365")/true("74727565") based on crossOrigin value:

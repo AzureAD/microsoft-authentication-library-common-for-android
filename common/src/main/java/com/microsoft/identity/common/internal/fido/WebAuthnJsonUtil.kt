@@ -26,6 +26,7 @@ import android.util.Base64
 import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter
 import com.microsoft.identity.common.java.constants.FidoConstants
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_RESPONSE_ID_JSON_KEY
+import okio.ByteString.Companion.decodeHex
 import org.json.JSONObject
 import java.net.URLEncoder
 
@@ -110,6 +111,22 @@ class WebAuthnJsonUtil {
             return base64.replace("=", "")
             //val base64 = str
             //return base64.replace("=", "").replace("+", "-").replace("/", "_")
+        }
+
+        fun convertFromHexToBase64UrlString(str: String): String {
+            val data = str.decodeHex()
+            val base64: String = Base64.encodeToString(data, (Base64.URL_SAFE or Base64.NO_WRAP))
+            return base64.replace("=", "")
+            //val base64 = str
+            //return base64.replace("=", "").replace("+", "-").replace("/", "_")
+        }
+
+        fun String.decodeHex(): ByteArray {
+            check(length % 2 == 0) { "Must have an even length" }
+
+            return chunked(2)
+                .map { it.toInt(16).toByte() }
+                .toByteArray()
         }
     }
 }
