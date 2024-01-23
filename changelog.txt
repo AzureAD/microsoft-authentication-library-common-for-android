@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [MINOR] Add AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp (#2294)
 - [MINOR] Update SignIn/Signup parameters classes for Native Auth(#2284)
 - [MINOR] Add IsQrPinAvailableCommand, controllers behavior and define constants for the isQrAvailable API (#2219)
 - [MINOR] Add PreferredAuthMethod to interactive token flow (#2245)

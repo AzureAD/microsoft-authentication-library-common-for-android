@@ -35,6 +35,8 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.logging.Logger;
 
+import java.util.List;
+
 public final class AccountManagerUtil {
     private static final String TAG = AccountManagerUtil.class.getSimpleName();
 
@@ -46,7 +48,8 @@ public final class AccountManagerUtil {
     /**
      * To verify if the caller can use to AccountManager to use broker.
      */
-    public static boolean canUseAccountManagerOperation(final Context context) {
+    public static boolean canUseAccountManagerOperation(final Context context,
+                                                        final List<String> accountTypes) {
         final String methodTag = TAG + ":canUseAccountManagerOperation:";
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -63,9 +66,10 @@ public final class AccountManagerUtil {
             if (devicePolicyManager != null) {
                 final String[] accountTypesWithManagementDisabled = devicePolicyManager.getAccountTypesWithManagementDisabled();
                 if (accountTypesWithManagementDisabled != null) {
-                    for (final String accountType : accountTypesWithManagementDisabled) {
-                        if (BROKER_ACCOUNT_TYPE.equalsIgnoreCase(accountType)) {
-                            Logger.verbose(methodTag, "Broker account type is disabled by MDM.");
+                    for (final String disabledAccountType : accountTypesWithManagementDisabled) {
+                        if (accountTypes.contains(disabledAccountType)) {
+                            Logger.info(methodTag, "Account type " + disabledAccountType +
+                                    " is disabled by MDM.");
                             return false;
                         }
                     }
