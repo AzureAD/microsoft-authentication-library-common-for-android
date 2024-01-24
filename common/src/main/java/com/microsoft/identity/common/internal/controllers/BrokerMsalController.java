@@ -203,7 +203,7 @@ public class BrokerMsalController extends BaseController {
         }
 
         if (AccountManagerUtil.canUseAccountManagerOperation(applicationContext,
-                Collections.singletonList(BROKER_ACCOUNT_TYPE)))
+                Collections.singleton(BROKER_ACCOUNT_TYPE)))
         {
             sb.append("AccountManagerStrategy.");
             strategies.add(new AccountManagerAddAccountStrategy(applicationContext));

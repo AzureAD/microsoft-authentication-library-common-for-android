@@ -23,8 +23,6 @@
 
 package com.microsoft.identity.common.internal.util;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
-
 import android.app.admin.DevicePolicyManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -35,7 +33,7 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.logging.Logger;
 
-import java.util.List;
+import java.util.Set;
 
 public final class AccountManagerUtil {
     private static final String TAG = AccountManagerUtil.class.getSimpleName();
@@ -46,10 +44,13 @@ public final class AccountManagerUtil {
     }
 
     /**
-     * To verify if the caller can use to AccountManager to use broker.
+     * To verify if the caller can use to AccountManager to communicate to broker.
+     *
+     * @param context       an Android context.
+     * @param accountTypes  AccountManager account type to check (if they're being controlled by MDM).
      */
     public static boolean canUseAccountManagerOperation(final Context context,
-                                                        final List<String> accountTypes) {
+                                                        final Set<String> accountTypes) {
         final String methodTag = TAG + ":canUseAccountManagerOperation:";
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

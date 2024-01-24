@@ -37,7 +37,6 @@ import com.microsoft.identity.common.logging.Logger
 /**
  * An IPC strategy that utilizes AccountManager.addAccount().
  *
- * Designed to be used for communication to a specific broker app. (e.g. AuthApp, CP, LTW)
  * The receiving end of this class is Broker's AccountAuthenticatorForBrokerDiscovery.
  * Each broker apps would need to wire that class up to AccountManager manually,
  * with a unique account type.
@@ -107,9 +106,10 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp
                 AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp?{
             if (!AccountManagerUtil.canUseAccountManagerOperation(
                     context,
-                    listOf(LTW_BACKUP_IPC_ACCOUNT_MANAGER_ACCOUNT_TYPE,
+                    setOf(LTW_BACKUP_IPC_ACCOUNT_MANAGER_ACCOUNT_TYPE,
                         CP_BACKUP_IPC_ACCOUNT_MANAGER_ACCOUNT_TYPE,
-                        AUTHAPP_BACKUP_IPC_ACCOUNT_MANAGER_ACCOUNT_TYPE))){
+                        AUTHAPP_BACKUP_IPC_ACCOUNT_MANAGER_ACCOUNT_TYPE)
+                )){
                 return null
             }
 
