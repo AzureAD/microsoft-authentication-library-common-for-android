@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.in
 
 import com.microsoft.identity.common.nativeauth.ApiConstants
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
@@ -122,7 +121,7 @@ class SignUpScenarioTest {
             responseType = MockApiResponseType.SIGNUP_START_SUCCESS
         )
 
-        val mockSignUpStartCommandParameters = SignUpStartUsingPasswordCommandParameters.builder()
+        val mockSignUpStartCommandParameters = SignUpStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(USERNAME)
             .clientId(CLIENT_ID)
@@ -130,7 +129,7 @@ class SignUpScenarioTest {
             .correlationId(correlationId)
             .build()
 
-        val signupStartResult = nativeAuthOAuth2Strategy.performSignUpStartUsingPassword(
+        val signupStartResult = nativeAuthOAuth2Strategy.performSignUpStart(
             mockSignUpStartCommandParameters
         )
         assertTrue(signupStartResult is SignUpStartApiResult.Success)

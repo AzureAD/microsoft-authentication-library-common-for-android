@@ -22,11 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.interactors
 
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler

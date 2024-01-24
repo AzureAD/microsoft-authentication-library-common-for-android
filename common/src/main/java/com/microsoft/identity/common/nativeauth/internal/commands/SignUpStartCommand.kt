@@ -23,17 +23,17 @@
 package com.microsoft.identity.common.nativeauth.internal.commands
 
 import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseSignUpStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpStartCommandResult
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
 
 /**
  * Command class to call controllers to start the sign up flow.
  * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
  */
 class SignUpStartCommand(
-    private val parameters: BaseSignUpStartCommandParameters,
+    private val parameters: SignUpStartCommandParameters,
     private val controller: NativeAuthMsalController,
     publicApiId: String
 ) : BaseNativeAuthCommand<SignUpStartCommandResult>(

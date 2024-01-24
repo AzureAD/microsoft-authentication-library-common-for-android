@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.java.nativeauth.providers.interactors
 
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.logging.LogSession
@@ -68,24 +67,6 @@ class SignUpInteractor(
         )
 
         val request = nativeAuthRequestProvider.createSignUpStartRequest(
-            commandParameters = commandParameters
-        )
-        try {
-            return performSignUpStart(request)
-        } finally {
-            StringUtil.overwriteWithNull(request.parameters.password)
-        }
-    }
-
-    fun performSignUpStartUsingPassword(
-        commandParameters: SignUpStartUsingPasswordCommandParameters
-    ): SignUpStartApiResult {
-        LogSession.logMethodCall(
-            tag = TAG,
-            correlationId = commandParameters.getCorrelationId(),
-            methodName = "${TAG}.performSignUpStartUsingPassword")
-
-        val request = nativeAuthRequestProvider.createSignUpUsingPasswordStartRequest(
             commandParameters = commandParameters
         )
         try {

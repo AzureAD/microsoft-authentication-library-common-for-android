@@ -37,12 +37,10 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPa
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
@@ -51,6 +49,7 @@ import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.nativeauth.providers.requests.NativeAuthRequest.Companion.toJsonString
 import io.mockk.every
 import io.mockk.mockk
+import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.mockito.kotlin.mock
@@ -110,18 +109,19 @@ class NativeAuthRequestHandlerTest {
         )
     }
 
-    @Test(expected = ClientException::class)
-    fun testSignUpStartWithEmptyPasswordShouldThrowException() {
-        val commandParameters = SignUpStartUsingPasswordCommandParameters.builder()
+    fun testSignUpStartWithEmptyPasswordShouldNotThrowException() {
+        val commandParameters = SignUpStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .password(emptyPassword)
             .clientId(clientId)
             .build()
 
-        nativeAuthRequestProvider.createSignUpUsingPasswordStartRequest(
+        val request = nativeAuthRequestProvider.createSignUpStartRequest(
             commandParameters = commandParameters
         )
+
+        Assert.assertNotNull(request)
     }
 
     @Test(expected = ClientException::class)
@@ -176,7 +176,7 @@ class NativeAuthRequestHandlerTest {
 
     @Test
     fun testSignUpStartWithPasswordSuccess() {
-        val commandParameters = SignUpStartUsingPasswordCommandParameters.builder()
+        val commandParameters = SignUpStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .password(password)
@@ -184,7 +184,7 @@ class NativeAuthRequestHandlerTest {
             .userAttributes(userAttributes)
             .build()
 
-        val result = nativeAuthRequestProvider.createSignUpUsingPasswordStartRequest(
+        val result = nativeAuthRequestProvider.createSignUpStartRequest(
             commandParameters = commandParameters
         )
 
@@ -441,7 +441,7 @@ class NativeAuthRequestHandlerTest {
     fun testSignInInitiateWithPasswordCommandParametersWithEmptyClientIdShouldThrowException() {
         every { mockConfig.clientId } returns emptyString
 
-        val commandParameters = SignInStartUsingPasswordCommandParameters.builder()
+        val commandParameters = SignInStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .password(password)
@@ -456,7 +456,7 @@ class NativeAuthRequestHandlerTest {
     fun testSignInInitiateWithPasswordCommandParametersWithEmptyChallengeTypeShouldThrowException() {
         every { mockConfig.challengeType } returns emptyString
 
-        val commandParameters = SignInStartUsingPasswordCommandParameters.builder()
+        val commandParameters = SignInStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .password(password)
@@ -469,7 +469,7 @@ class NativeAuthRequestHandlerTest {
 
     @Test(expected = ClientException::class)
     fun testSignInInitiateWithPasswordCommandParametersWithEmptyUsernameShouldThrowException() {
-        val commandParameters = SignInStartUsingPasswordCommandParameters.builder()
+        val commandParameters = SignInStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(emptyString)
             .password(password)
@@ -484,7 +484,7 @@ class NativeAuthRequestHandlerTest {
     // to be done here.
     @Test
     fun testSignInInitiateWithPasswordCommandParametersWithEmptyPasswordShouldNotThrowException() {
-        val commandParameters = SignInStartUsingPasswordCommandParameters.builder()
+        val commandParameters = SignInStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .password(emptyPassword)

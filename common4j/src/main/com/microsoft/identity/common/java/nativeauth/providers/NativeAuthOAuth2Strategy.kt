@@ -26,16 +26,15 @@ package com.microsoft.identity.common.java.nativeauth.providers
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.ResetPasswordInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordChallengeApiResult
@@ -87,7 +86,7 @@ class NativeAuthOAuth2Strategy(
     }
 
     /**
-     * Makes the initial call to the /signup/start.
+     * Makes the initial call to the /signup/start
      * @param commandParameters: Attributes provided by the user
      */
     fun performSignUpStart(
@@ -99,21 +98,6 @@ class NativeAuthOAuth2Strategy(
             "${TAG}.performSignUpStart"
         )
         return signUpInteractor.performSignUpStart(commandParameters)
-    }
-
-    /**
-     * Makes the initial call to the /signup/start when the parameters includes password.
-     * @param commandParameters: Attributes provided by the user
-     */
-    fun performSignUpStartUsingPassword(
-        commandParameters: SignUpStartUsingPasswordCommandParameters
-    ): SignUpStartApiResult {
-        LogSession.logMethodCall(
-            tag = TAG,
-            correlationId = commandParameters.getCorrelationId(),
-            "${TAG}.performSignUpStartUsingPassword"
-        )
-        return signUpInteractor.performSignUpStartUsingPassword(commandParameters)
     }
 
     /**
