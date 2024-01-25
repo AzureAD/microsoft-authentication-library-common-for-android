@@ -20,28 +20,31 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.nativeauth.commands.parameters;
+package com.microsoft.identity.common.internal.commands
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.experimental.SuperBuilder;
+import com.microsoft.identity.common.java.commands.BaseCommand
+import com.microsoft.identity.common.java.commands.CommandCallback
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters
+import com.microsoft.identity.common.java.controllers.BaseController
+import lombok.EqualsAndHashCode
 
 /**
- * A set of Sign Up Start command parameters for sending the start request to trigger the sign up flow but using email password.
- * extends from {@link BaseSignUpStartCommandParameters}
+ * Command class to call controllers to check if QR code + PIN authorization is available.
+ * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
  */
-@Getter
 @EqualsAndHashCode(callSuper = true)
-@SuppressFBWarnings("EI_EXPOSE_REP2")   //Suppresses spotbugs warning on the builder class
-@SuperBuilder(toBuilder = true)
-public class SignUpStartUsingPasswordCommandParameters extends BaseSignUpStartCommandParameters {
-    private static final String TAG = SignUpStartUsingPasswordCommandParameters.class.getSimpleName();
+class IsQrPinAvailableCommand(
+    parameters: CommandParameters,
+    controller: BaseController,
+    callback: CommandCallback<*, *>,
+    publicApiId: String
+) : BaseCommand<Boolean?>(parameters, controller, callback, publicApiId) {
 
-    /**
-     * The password of the user.
-     */
-    @NonNull
-    public final char[] password;
+    override fun execute(): Boolean {
+        return defaultController.isQrPinAvailable
+    }
+
+    override fun isEligibleForEstsTelemetry(): Boolean {
+        return false
+    }
 }

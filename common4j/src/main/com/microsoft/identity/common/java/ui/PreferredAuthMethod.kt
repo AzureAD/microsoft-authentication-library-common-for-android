@@ -20,35 +20,16 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.nativeauth.commands.parameters;
-
-import java.util.Map;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.experimental.SuperBuilder;
+package com.microsoft.identity.common.java.ui
 
 /**
- * BaseSignUpTokenCommandParameters is the base class for parameters for all all Native Auth sign up related commands.
+ * Preferred authentication method for the user.
+ * This code will be sent to eSTS as a hint to what authentication method the user prefers.
+ * If not specified, eSTS will use the default authentication method.
  */
-@Getter
-@EqualsAndHashCode(callSuper = true)
-@SuperBuilder(toBuilder = true)
-public class BaseSignUpStartCommandParameters extends BaseNativeAuthCommandParameters {
-    private static final String TAG = BaseSignUpStartCommandParameters.class.getSimpleName();
-
+enum class PreferredAuthMethod(@JvmField val code: Int) {
     /**
-     * The email address of the user.
+     * QR code + PIN authentication.
      */
-    @NonNull
-    public final String username;
-
-    /**
-     * The user attributes of the user set in the user flow need to be collected.
-     */
-    @EqualsAndHashCode.Exclude
-    @Nullable
-    public final Map<String, String> userAttributes;
+    QR(18)
 }

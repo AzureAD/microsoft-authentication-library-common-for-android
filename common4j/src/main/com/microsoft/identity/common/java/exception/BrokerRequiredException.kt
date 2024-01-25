@@ -20,28 +20,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.nativeauth.commands.parameters;
+package com.microsoft.identity.common.java.exception
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.experimental.SuperBuilder;
 
 /**
- * a set of Sign In Start command parameters for sending the start request to trigger the sign in flow but using email password.4
- * extends from {@link SignInStartCommandParameters}
+ * Representing exceptions that occur when broker is required but not installed.
  */
-@Getter
-@EqualsAndHashCode(callSuper = true)
-@SuppressFBWarnings("EI_EXPOSE_REP2")   //Suppresses spotbugs warning on the builder class
-@SuperBuilder(toBuilder = true)
-public class SignInStartUsingPasswordCommandParameters extends SignInStartCommandParameters {
-    private static final String TAG = SignInStartUsingPasswordCommandParameters.class.getSimpleName();
+class BrokerRequiredException(
+    brokerPackageName: String? = null,
+    cause: Throwable? = null,
+) : BaseException(ERROR_CODE, getErrorMessage(brokerPackageName), cause) {
 
-    /**
-     * The password of the user.
-     */
-    @NonNull
-    public final char[] password;
+    companion object {
+        public const val ERROR_CODE = "broker_required"
+        private const val DEFAULT_ERROR_MESSAGE = "Broker is required but not installed."
+
+        private fun getErrorMessage(brokerPackageName: String?): String {
+            return if (brokerPackageName != null) {
+                "$DEFAULT_ERROR_MESSAGE Please install $brokerPackageName."
+            } else {
+                DEFAULT_ERROR_MESSAGE
+            }
+        }
+    }
 }
