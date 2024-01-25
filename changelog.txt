@@ -1,5 +1,6 @@
 v.17.0.1
 ---------
+- [PATCH] Update robolectricVersion 4.11.1 (#2292)
 - [PATCH] Removing CredMan (#2295)
 
 V.17.0.0
