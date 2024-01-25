@@ -39,12 +39,13 @@ sealed interface ResetPasswordChallengeApiResult: ApiResult {
         val continuationToken: String,
         val challengeTargetLabel: String,
         val challengeChannel: String,
-        val codeLength: Int) : ResetPasswordChallengeApiResult
+        val codeLength: Int
+    ) : ResetPasswordChallengeApiResult
 
     data class UnsupportedChallengeType(
-        override val correlationId: String,
         override val error: String,
-        override val errorDescription: String
+        override val errorDescription: String,
+        override val correlationId: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -52,9 +53,9 @@ sealed interface ResetPasswordChallengeApiResult: ApiResult {
     ), ResetPasswordChallengeApiResult
 
     data class ExpiredToken(
-        override val correlationId: String,
         override val error: String,
-        override val errorDescription: String
+        override val errorDescription: String,
+        override val correlationId: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -62,9 +63,9 @@ sealed interface ResetPasswordChallengeApiResult: ApiResult {
     ), ResetPasswordChallengeApiResult
 
     data class UnknownError(
-        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
+        override val correlationId: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
