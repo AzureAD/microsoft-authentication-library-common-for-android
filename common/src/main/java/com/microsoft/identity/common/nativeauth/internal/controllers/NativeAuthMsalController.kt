@@ -149,7 +149,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 val mergedScopes = addDefaultScopes(parameters.scopes)
                 var parametersWithScopes = CommandUtil.createSignInStartCommandParametersWithScopes(
                     parameters,
-                    mergedScopes)
+                    mergedScopes
+                )
 
                 try {
                     return processSignInInitiateApiResult(
@@ -405,6 +406,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             val parametersWithScopes =
                 CommandUtil.createSignInSubmitPasswordCommandParametersWithScopes(
                     parameters,
+                    parameters.getCorrelationId(),
                     mergedScopes
                 )
 
@@ -668,7 +670,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         // so we can use it in BaseController.getCachedAccountRecord()
         val silentTokenCommandParameters =
             CommandUtil.convertAcquireTokenNoFixedScopesCommandParameters(
-                parameters
+                parameters,
+                parameters.getCorrelationId()
             )
 
         // We want to retrieve all tokens from the cache, regardless of their scopes. Since in the
@@ -1071,7 +1074,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     private fun resetPasswordPollCompletion(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         continuationToken: String,
-        correlationId: String?,
+        correlationId: String,
         pollIntervalInSeconds: Int
     ): ResetPasswordSubmitNewPasswordCommandResult {
         fun pollCompletionTimedOut(startTime: Long): Boolean {
@@ -1244,7 +1247,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     private fun performSignInChallengeCall(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         continuationToken: String,
-        correlationId: String?
+        correlationId: String
     ): SignInChallengeApiResult {
         LogSession.logMethodCall(
             tag = TAG,
@@ -1274,7 +1277,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     private fun performResetPasswordChallengeCall(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         continuationToken: String,
-        correlationId: String?
+        correlationId: String
     ): ResetPasswordChallengeApiResult {
         LogSession.logMethodCall(
             tag = TAG,
@@ -1318,7 +1321,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     private fun performResetPasswordPollCompletionCall(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         continuationToken: String,
-        correlationId: String?
+        correlationId: String
     ): ResetPasswordPollCompletionApiResult {
         LogSession.logMethodCall(
             tag = TAG,
@@ -1366,7 +1369,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 records,
                 SdkType.MSAL,
                 false
-            )
+            ),
+            correlationId = tokenApiResult.correlationId
         )
     }
 
@@ -1512,7 +1516,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     private fun performSignUpChallengeCall(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         continuationToken: String,
-        correlationId: String?
+        correlationId: String
     ): SignUpChallengeApiResult {
         return oAuth2Strategy.performSignUpChallenge(
             continuationToken = continuationToken,
@@ -1991,6 +1995,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     val signInSubmitPasswordCommandParameters =
                         CommandUtil.createSignInSubmitPasswordCommandParameters(
                             parametersWithScopes,
+                            result.correlationId,
                             result.continuationToken
                         )
                     try {
