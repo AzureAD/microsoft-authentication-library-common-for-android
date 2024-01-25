@@ -38,16 +38,13 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPa
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseSignUpStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInResendCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpResendCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
@@ -135,12 +132,14 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 oAuth2Strategy = oAuth2Strategy,
                 parameters = parameters)
 
-            if (parameters is SignInStartUsingPasswordCommandParameters)
+            val hasPassword = parameters.password?.isNotEmpty() == true
+
+            if (hasPassword)
             {
-                Logger.verbose(TAG, "Parameters is of type SignInStartUsingPasswordCommandParameters");
+                Logger.verbose(TAG, "Parameters has password");
                 val mergedScopes = addDefaultScopes(parameters.scopes)
                 var parametersWithScopes = CommandUtil.createSignInStartCommandParametersWithScopes(
-                    parameters as SignInStartUsingPasswordCommandParameters,
+                    parameters,
                     mergedScopes)
 
                 try {
@@ -155,7 +154,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             }
             else
             {
-                Logger.verbose(TAG, "Parameters is not of type SignInStartUsingPasswordCommandParameters");
+                Logger.verbose(TAG, "Parameters doesn't have password");
                 return processSignInInitiateApiResult(
                     initiateApiResult = initiateApiResult,
                     oAuth2Strategy = oAuth2Strategy)
@@ -369,26 +368,15 @@ class NativeAuthMsalController : BaseNativeAuthController() {
      * Makes a call to the signup/start endpoint, mapping responses returned from the server into a command result.
      * If the call is successful, additionally calls the signup/challenge endpoint, returning the result.
      */
-    fun signUpStart(parameters: BaseSignUpStartCommandParameters): SignUpStartCommandResult {
+    fun signUpStart(parameters: SignUpStartCommandParameters): SignUpStartCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.signUpStart")
         try {
             val oAuth2Strategy = createOAuth2Strategy(parameters)
 
-            val signUpStartApiResult = if (parameters is SignUpStartUsingPasswordCommandParameters) {
-
-                Logger.verbose(TAG, "Parameters is of type SignUpStartUsingPasswordCommandParameters");
-                performSignUpStartUsingPasswordRequest(
+            val signUpStartApiResult = performSignUpStartUsingPasswordRequest(
                     oAuth2Strategy = oAuth2Strategy,
-                    parameters = (parameters as SignUpStartUsingPasswordCommandParameters)
+                    parameters
                 )
-            } else {
-
-                Logger.verbose(TAG, "Parameters is of type SignUpStartCommandParameters");
-                performSignUpStartRequest(
-                    oAuth2Strategy = oAuth2Strategy,
-                    parameters = (parameters as SignUpStartCommandParameters)
-                )
-            }
             return when (signUpStartApiResult) {
                 is SignUpStartApiResult.Success -> {
                     performSignUpChallengeCall(
@@ -1231,21 +1219,11 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     }
 
     @VisibleForTesting
-    fun performSignUpStartRequest(
+    fun performSignUpStartUsingPasswordRequest(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignUpStartCommandParameters
     ): SignUpStartApiResult {
         return oAuth2Strategy.performSignUpStart(
-            commandParameters = parameters
-        )
-    }
-
-    @VisibleForTesting
-    fun performSignUpStartUsingPasswordRequest(
-        oAuth2Strategy: NativeAuthOAuth2Strategy,
-        parameters: SignUpStartUsingPasswordCommandParameters
-    ): SignUpStartApiResult {
-        return oAuth2Strategy.performSignUpStartUsingPassword(
             commandParameters = parameters
         )
     }
@@ -1534,7 +1512,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
     private fun SignInTokenApiResult.toSignInStartCommandResult(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
-        parametersWithScopes: SignInStartUsingPasswordCommandParameters,
+        parametersWithScopes: SignInStartCommandParameters,
     ): SignInStartCommandResult {
         LogSession.logMethodCall(TAG, "${TAG}.execute")
         return when (this) {
@@ -1610,7 +1588,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     @VisibleForTesting
     fun processSignInInitiateApiResult(
         initiateApiResult: SignInInitiateApiResult,
-        parametersWithScopes: SignInStartUsingPasswordCommandParameters? = null,
+        parametersWithScopes: SignInStartCommandParameters? = null,
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         usePassword: Boolean = false
     ): SignInStartCommandResult {
@@ -1653,7 +1631,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
     private fun processSignInChallengeCall(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
-        parametersWithScopes: SignInStartUsingPasswordCommandParameters?,
+        parametersWithScopes: SignInStartCommandParameters?,
         result: SignInChallengeApiResult,
         usePassword: Boolean
     ): SignInStartCommandResult {

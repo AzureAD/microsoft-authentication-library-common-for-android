@@ -1,5 +1,7 @@
 V.Next
 ---------
+- [MINOR] Adding additional fields to JwtRequestBody for sending PRTv4 requests (#2289)
+- [MINOR] Update SignIn/Signup parameters classes for Native Auth(#2284)
 - [MINOR] Add IsQrPinAvailableCommand, controllers behavior and define constants for the isQrAvailable API (#2219)
 - [MINOR] Add PreferredAuthMethod to interactive token flow (#2245)
 - [MINOR] Implement updates of the native auth web API (#2261)
