@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.flighting;
 
+import org.json.JSONObject;
+
 import lombok.NonNull;
 
 /**
@@ -62,4 +64,6 @@ public interface IFlightsProvider {
      * @return
      */
     String getStringValue(@NonNull IFlightConfig flightConfig);
+
+    JSONObject getJsonValue(@NonNull IFlightConfig flightConfig);
 }
