@@ -27,18 +27,16 @@ import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
-import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpassword.ResetPasswordChallengeRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpassword.ResetPasswordContinueRequest
@@ -228,27 +226,6 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         commandParameters: SignUpStartCommandParameters
     ): SignUpStartRequest {
         LogSession.logMethodCall(TAG, "${TAG}.createSignUpStartRequest")
-
-        return SignUpStartRequest.create(
-            username = commandParameters.username,
-            attributes = commandParameters.userAttributes,
-            challengeType = config.challengeType,
-            clientId = config.clientId,
-            requestUrl = signUpStartEndpoint,
-            headers = getRequestHeaders()
-        )
-    }
-
-    internal fun createSignUpUsingPasswordStartRequest(
-        commandParameters: SignUpStartUsingPasswordCommandParameters
-    ): SignUpStartRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createSignUpUsingPasswordStartRequest")
-
-        if (commandParameters.password.isEmpty() || commandParameters.password.all { it.isWhitespace() })
-        {
-            var msg = "password can't be empty or consists solely of whitespace characters"
-            throw ClientException("$TAG $msg", msg)
-        }
 
         return SignUpStartRequest.create(
             username = commandParameters.username,
