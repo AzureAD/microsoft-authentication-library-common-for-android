@@ -23,17 +23,11 @@
 package com.microsoft.identity.common.internal.fido
 
 import android.content.Context
-import androidx.credentials.CredentialManager
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.GetPublicKeyCredentialOption
-import androidx.credentials.PublicKeyCredential
 
 /**
  * Makes calls to the Android Credential Manager API in order to return an attestation.
  */
 class CredManFidoManager (val context: Context) : IFidoManager {
-
-    val credentialManager = CredentialManager.create(context)
 
     /**
      * Interacts with the FIDO credential provider and returns an assertion.
@@ -45,23 +39,8 @@ class CredManFidoManager (val context: Context) : IFidoManager {
                                       relyingPartyIdentifier: String,
                                       allowedCredentials: List<String>?,
                                       userVerificationPolicy: String): String {
-        val requestJson = WebAuthnJsonUtil.createJsonAuthRequest(
-            challenge,
-            relyingPartyIdentifier,
-            allowedCredentials,
-            userVerificationPolicy
-        )
-        val publicKeyCredentialOption = GetPublicKeyCredentialOption(
-            requestJson = requestJson
-        )
-        val getCredRequest = GetCredentialRequest(
-            listOf(publicKeyCredentialOption)
-        )
-        val result = credentialManager.getCredential(
-            context = context,
-            request = getCredRequest
-        )
-        val credential: PublicKeyCredential = result.credential as PublicKeyCredential
-        return WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(credential.authenticationResponseJson)
+        // Removed use of CredMan here for this particular version.
+        // This version also has passkey related code disabled.
+        return ""
     }
 }
