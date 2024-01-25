@@ -72,4 +72,15 @@ interface INativeAuthCommandResult {
         open val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
         open val errorCodes: List<Int>? = null
     )
+
+    data class InvalidUsername(
+        override val error: String?,
+        override val errorDescription: String?,
+        override val details: List<Map<String, String>>? = null,
+        override val correlationId: String,
+        override val errorCodes: List<Int>? = null,
+        val exception: Exception? = null
+    ) : Error(error, errorDescription, details, correlationId, errorCodes),
+        INativeAuthCommandResult, SignInStartCommandResult, SignUpStartCommandResult, ResetPasswordStartCommandResult
+
 }
