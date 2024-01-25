@@ -36,14 +36,14 @@ sealed interface SignUpContinueApiResult: ApiResult {
      * The response from Signup Continue is to redirect to a browser based authentication.
      */
     data class Redirect(
-        override val correlationId: String?,
+        override val correlationId: String,
     ) : SignUpContinueApiResult
 
     /**
      * Signup operation has successfully completed.
      */
     data class Success(
-        override val correlationId: String?,
+        override val correlationId: String,
         val continuationToken: String?,
         val expiresIn: Int?
     ) : SignUpContinueApiResult
@@ -52,7 +52,7 @@ sealed interface SignUpContinueApiResult: ApiResult {
      * Signup operation requires user attributes to continue further.
      */
     data class AttributesRequired(
-        override val correlationId: String?,
+        override val correlationId: String,
         val continuationToken: String,
         override val error: String,
         override val errorDescription: String,
@@ -67,7 +67,7 @@ sealed interface SignUpContinueApiResult: ApiResult {
      * Signup operation requires user credentials to continue further.
      */
     data class CredentialRequired(
-        override val correlationId: String?,
+        override val correlationId: String,
         val continuationToken: String,
         override val error: String,
         override val errorDescription: String
@@ -81,7 +81,7 @@ sealed interface SignUpContinueApiResult: ApiResult {
      * Signup continue request was issues with an expired token.
      */
     data class ExpiredToken(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String
     ): ApiErrorResult(
@@ -94,7 +94,7 @@ sealed interface SignUpContinueApiResult: ApiResult {
      * Signup operation was started for a username that already has an account.
      */
     data class UsernameAlreadyExists(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
     ): ApiErrorResult(
@@ -107,7 +107,7 @@ sealed interface SignUpContinueApiResult: ApiResult {
      * The OOB value sent as part of Signup continue request was incorrect.
      */
     data class InvalidOOBValue(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         val subError: String
@@ -122,7 +122,7 @@ sealed interface SignUpContinueApiResult: ApiResult {
      * validation on server.
      */
     data class InvalidAttributes(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         val invalidAttributes: List<String>,
@@ -137,7 +137,7 @@ sealed interface SignUpContinueApiResult: ApiResult {
      * The Signup Continue API request failed due to an unknown error.
      */
     data class UnknownError(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
     ): ApiErrorResult(
@@ -150,7 +150,7 @@ sealed interface SignUpContinueApiResult: ApiResult {
      * The Sign Up continue request failed as the password failed server side validation.
      */
     data class InvalidPassword(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         val subError: String

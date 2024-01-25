@@ -106,7 +106,7 @@ class NativeAuthOAuth2Strategy(
      */
     fun performSignUpChallenge(
         continuationToken: String,
-        correlationId: String?
+        correlationId: String
     ): SignUpChallengeApiResult {
         LogSession.logMethodCall(
             tag = TAG,
@@ -189,7 +189,7 @@ class NativeAuthOAuth2Strategy(
      */
     fun performSignInChallenge(
         continuationToken: String,
-        correlationId: String?
+        correlationId: String
     ): SignInChallengeApiResult {
         LogSession.logMethodCall(
             tag = TAG,
@@ -276,7 +276,7 @@ class NativeAuthOAuth2Strategy(
      */
     fun performResetPasswordChallenge(
         continuationToken: String,
-        correlationId: String?
+        correlationId: String
     ): ResetPasswordChallengeApiResult {
         LogSession.logMethodCall(
             tag = TAG,
@@ -332,7 +332,7 @@ class NativeAuthOAuth2Strategy(
      */
     fun performResetPasswordPollCompletion(
         continuationToken: String,
-        correlationId: String?
+        correlationId: String
     ): ResetPasswordPollCompletionApiResult {
         LogSession.logMethodCall(
             tag = TAG,

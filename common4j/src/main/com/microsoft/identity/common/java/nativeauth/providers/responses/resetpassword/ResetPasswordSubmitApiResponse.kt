@@ -35,7 +35,7 @@ import java.net.HttpURLConnection
  */
 class ResetPasswordSubmitApiResponse(
     @Expose override var statusCode: Int,
-    correlationId: String?,
+    correlationId: String,
     @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("poll_interval") val pollInterval: Int?,
     @SerializedName("error") val error: String?,

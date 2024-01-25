@@ -42,7 +42,7 @@ import com.microsoft.identity.common.java.nativeauth.util.isUserNotFound
  */
 class SignInTokenApiResponse(
     @Expose override var statusCode: Int,
-    correlationId: String?,
+    correlationId: String,
     @SerializedName("error") val error: String?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,

@@ -31,16 +31,16 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
  */
 sealed interface ResetPasswordStartApiResult: ApiResult {
     data class Redirect(
-        override val correlationId: String?,
+        override val correlationId: String,
     ): ResetPasswordStartApiResult
 
     data class Success(
         val continuationToken: String,
-        override val correlationId: String?,
+        override val correlationId: String,
     ) : ResetPasswordStartApiResult
 
     data class UserNotFound(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String
     ) : ApiErrorResult(
@@ -50,7 +50,7 @@ sealed interface ResetPasswordStartApiResult: ApiResult {
     ), ResetPasswordStartApiResult
 
     data class UnsupportedChallengeType(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String
     ) : ApiErrorResult(
@@ -60,7 +60,7 @@ sealed interface ResetPasswordStartApiResult: ApiResult {
     ), ResetPasswordStartApiResult
 
     data class UnknownError(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
     ) : ApiErrorResult(

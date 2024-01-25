@@ -32,12 +32,12 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
  */
 sealed interface SignInTokenApiResult: ApiResult {
     data class Success(
-        override val correlationId: String? = null,
+        override val correlationId: String,
         val tokenResponse: MicrosoftStsTokenResponse
     ) : SignInTokenApiResult
 
     data class MFARequired(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>
@@ -52,7 +52,7 @@ sealed interface SignInTokenApiResult: ApiResult {
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
-        override val correlationId: String?,
+        override val correlationId: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -64,7 +64,7 @@ sealed interface SignInTokenApiResult: ApiResult {
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
-        override val correlationId: String?,
+        override val correlationId: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -77,7 +77,7 @@ sealed interface SignInTokenApiResult: ApiResult {
         override val errorDescription: String,
         override val errorCodes: List<Int>,
         val subError: String,
-        override val correlationId: String?
+        override val correlationId: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -89,7 +89,7 @@ sealed interface SignInTokenApiResult: ApiResult {
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
-        override val correlationId: String?,
+        override val correlationId: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -101,7 +101,7 @@ sealed interface SignInTokenApiResult: ApiResult {
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
-        override val correlationId: String?,
+        override val correlationId: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,

@@ -38,7 +38,7 @@ import java.net.HttpURLConnection
  */
 class ResetPasswordChallengeApiResponse(
     @Expose override var statusCode: Int,
-    correlationId: String?,
+    correlationId: String,
     @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
     @Expose @SerializedName("binding_method") val bindingMethod: String?,

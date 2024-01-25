@@ -31,13 +31,13 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
  */
 sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
     data class InProgress(
-        override val correlationId: String?,
+        override val correlationId: String,
     ) : ResetPasswordPollCompletionApiResult
 
     data class PollingFailed(
         override val error: String,
         override val errorDescription: String,
-        override val correlationId: String?,
+        override val correlationId: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -45,7 +45,7 @@ sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
     ), ResetPasswordPollCompletionApiResult
 
     data class PasswordInvalid(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         val subError: String
@@ -58,11 +58,11 @@ sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
     data class PollingSucceeded(
         val continuationToken: String?,
         val expiresIn: Int?,
-        override val correlationId: String?,
+        override val correlationId: String,
         ) : ResetPasswordPollCompletionApiResult
 
     data class UserNotFound(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String
     ) : ApiErrorResult(
@@ -72,7 +72,7 @@ sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
     ), ResetPasswordPollCompletionApiResult
 
     data class ExpiredToken(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String
     ) : ApiErrorResult(
@@ -82,7 +82,7 @@ sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
     ), ResetPasswordPollCompletionApiResult
 
     data class UnknownError(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
     ) : ApiErrorResult(

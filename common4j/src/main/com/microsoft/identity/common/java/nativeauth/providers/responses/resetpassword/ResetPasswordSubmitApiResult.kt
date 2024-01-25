@@ -33,11 +33,11 @@ sealed interface ResetPasswordSubmitApiResult: ApiResult {
     data class SubmitSuccess(
         val continuationToken: String,
         val pollInterval: Int,
-        override val correlationId: String?,
+        override val correlationId: String,
     ) : ResetPasswordSubmitApiResult
 
     data class PasswordInvalid(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         val subError: String
@@ -48,7 +48,7 @@ sealed interface ResetPasswordSubmitApiResult: ApiResult {
     ), ResetPasswordSubmitApiResult
 
     data class ExpiredToken(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String
     ) : ApiErrorResult(
@@ -58,7 +58,7 @@ sealed interface ResetPasswordSubmitApiResult: ApiResult {
     ), ResetPasswordSubmitApiResult
 
     data class UnknownError(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
     ) : ApiErrorResult(

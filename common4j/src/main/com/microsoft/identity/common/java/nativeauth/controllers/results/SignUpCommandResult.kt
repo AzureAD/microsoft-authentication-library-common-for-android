@@ -46,7 +46,7 @@ interface SignUpCommandResult {
     data class UsernameAlreadyExists(
         val error: String,
         val errorDescription: String,
-        override val correlationId: String?,
+        override val correlationId: String,
     ) : SignUpStartCommandResult, SignUpSubmitCodeCommandResult,
         SignUpSubmitUserAttributesCommandResult, SignUpSubmitPasswordCommandResult
 
@@ -54,7 +54,7 @@ interface SignUpCommandResult {
      * Denotes completion of Signup operation
      */
     data class Complete (
-        override val correlationId: String?,
+        override val correlationId: String,
         val continuationToken: String?,
         val expiresIn: Int?
     ) : SignUpStartCommandResult,
@@ -65,7 +65,7 @@ interface SignUpCommandResult {
      * Signup is at a state where the user has to provide an out of band code to progress in the flow.
      */
     data class CodeRequired(
-        override val correlationId: String?,
+        override val correlationId: String,
         val continuationToken: String,
         val challengeTargetLabel: String,
         val challengeChannel: String,
@@ -78,7 +78,7 @@ interface SignUpCommandResult {
      * Signup operation requires user to supply a password to progress in the flow.
      */
     data class PasswordRequired(
-        override val correlationId: String?,
+        override val correlationId: String,
         val continuationToken: String
     ) : SignUpStartCommandResult,
         SignUpSubmitCodeCommandResult
@@ -92,7 +92,7 @@ interface SignUpCommandResult {
         val error: String,
         val errorDescription: String,
         val requiredAttributes: List<UserAttributeApiResult>,
-        override val correlationId: String?
+        override val correlationId: String
     ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult,
         SignUpSubmitUserAttributesCommandResult,
         SignUpSubmitCodeCommandResult
@@ -103,7 +103,7 @@ interface SignUpCommandResult {
     data class InvalidEmail(
         val error: String,
         val errorDescription: String,
-        override val correlationId: String?
+        override val correlationId: String
     ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult
 
     /**
@@ -112,7 +112,7 @@ interface SignUpCommandResult {
     data class InvalidPassword(
         val error: String,
         val errorDescription: String,
-        override val correlationId: String?,
+        override val correlationId: String,
         val subError: String
     ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult
 
@@ -123,7 +123,7 @@ interface SignUpCommandResult {
     data class InvalidCode(
         val error: String,
         val errorDescription: String,
-        override val correlationId: String?,
+        override val correlationId: String,
         val subError: String
     ) : SignUpSubmitCodeCommandResult
 
@@ -135,7 +135,7 @@ interface SignUpCommandResult {
         val error: String,
         val errorDescription: String,
         val invalidAttributes: List<String>,
-        override val correlationId: String?,
+        override val correlationId: String,
     ) : SignUpStartCommandResult, SignUpSubmitUserAttributesCommandResult
 
     /**
@@ -144,6 +144,6 @@ interface SignUpCommandResult {
     data class AuthNotSupported(
         val error: String,
         val errorDescription: String,
-        override val correlationId: String?,
+        override val correlationId: String,
     ) : SignUpStartCommandResult
 }

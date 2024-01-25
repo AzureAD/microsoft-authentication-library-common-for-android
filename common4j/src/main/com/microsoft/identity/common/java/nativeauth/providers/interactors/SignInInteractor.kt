@@ -67,10 +67,16 @@ class SignInInteractor(
         val request = nativeAuthRequestProvider.createSignInInitiateRequest(
             commandParameters = parameters
         )
-        return performSignInInitiate(request)
+        return performSignInInitiate(
+            requestCorrelationId = parameters.getCorrelationId(),
+            request = request
+        )
     }
 
-    private fun performSignInInitiate(request: SignInInitiateRequest): SignInInitiateApiResult {
+    private fun performSignInInitiate(
+        requestCorrelationId: String,
+        request: SignInInitiateRequest
+    ): SignInInitiateApiResult {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = null,
@@ -86,6 +92,7 @@ class SignInInteractor(
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
         val rawApiResponse = nativeAuthResponseHandler.getSignInInitiateResultFromHttpResponse(
+            requestCorrelationId = requestCorrelationId,
             response = response
         )
         return rawApiResponse.toResult()
@@ -95,7 +102,7 @@ class SignInInteractor(
     //region /oauth/v2.0/challenge
     fun performSignInChallenge(
         continuationToken: String,
-        correlationId: String?
+        correlationId: String
     ): SignInChallengeApiResult {
         LogSession.logMethodCall(
             tag = TAG,
@@ -106,10 +113,16 @@ class SignInInteractor(
             continuationToken = continuationToken,
             correlationId = correlationId
         )
-        return performSignInChallenge(request)
+        return performSignInChallenge(
+            requestCorrelationId = correlationId,
+            request = request
+        )
     }
 
-    private fun performSignInChallenge(request: SignInChallengeRequest): SignInChallengeApiResult {
+    private fun performSignInChallenge(
+        requestCorrelationId: String,
+        request: SignInChallengeRequest
+    ): SignInChallengeApiResult {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = null,
@@ -125,6 +138,7 @@ class SignInInteractor(
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
         val result = nativeAuthResponseHandler.getSignInChallengeResultFromHttpResponse(
+            requestCorrelationId = requestCorrelationId,
             response = response
         )
         return result.toResult()
@@ -143,7 +157,10 @@ class SignInInteractor(
         val request = nativeAuthRequestProvider.createOOBTokenRequest(
             commandParameters = parameters
         )
-        return performGetToken(request)
+        return performGetToken(
+            requestCorrelationId = parameters.getCorrelationId(),
+            request = request
+        )
     }
 
     fun performContinuationTokenTokenRequest(
@@ -157,7 +174,10 @@ class SignInInteractor(
         val request = nativeAuthRequestProvider.createContinuationTokenTokenRequest(
             commandParameters = parameters
         )
-        return performGetToken(request)
+        return performGetToken(
+            requestCorrelationId = parameters.getCorrelationId(),
+            request = request
+        )
     }
 
     fun performPasswordTokenRequest(
@@ -172,13 +192,19 @@ class SignInInteractor(
             commandParameters = parameters
         )
         try {
-            return performGetToken(request);
+            return performGetToken(
+                requestCorrelationId = parameters.getCorrelationId(),
+                request = request
+            );
         } finally {
             StringUtil.overwriteWithNull(request.parameters.password)
         }
     }
 
-    private fun performGetToken(request: SignInTokenRequest): SignInTokenApiResult {
+    private fun performGetToken(
+        requestCorrelationId: String,
+        request: SignInTokenRequest
+    ): SignInTokenApiResult {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = null,
@@ -194,6 +220,7 @@ class SignInInteractor(
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
         return nativeAuthResponseHandler.getSignInTokenApiResultFromHttpResponse(
+            requestCorrelationId = requestCorrelationId,
             response = response
         )
     }

@@ -26,5 +26,5 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses
  * Base class to encapsulate Native Auth API responses
  */
 interface ApiResult {
-    val correlationId: String?
+    val correlationId: String
 }

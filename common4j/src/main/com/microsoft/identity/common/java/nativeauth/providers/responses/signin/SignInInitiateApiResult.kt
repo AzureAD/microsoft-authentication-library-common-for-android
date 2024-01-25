@@ -31,11 +31,11 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
  */
 sealed interface SignInInitiateApiResult: ApiResult {
     data class Redirect(
-        override val correlationId: String?
+        override val correlationId: String
     ) : SignInInitiateApiResult
 
     data class Success(
-        override val correlationId: String?,
+        override val correlationId: String,
         val continuationToken: String
     ) : SignInInitiateApiResult
 
@@ -43,7 +43,7 @@ sealed interface SignInInitiateApiResult: ApiResult {
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
-        override val correlationId: String?
+        override val correlationId: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -55,7 +55,7 @@ sealed interface SignInInitiateApiResult: ApiResult {
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
-        override val correlationId: String?
+        override val correlationId: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,

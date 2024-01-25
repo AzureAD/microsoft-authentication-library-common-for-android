@@ -31,7 +31,7 @@ import com.google.gson.annotations.SerializedName
 abstract class IApiResponse(
     //HTTP status code
     @Transient open val statusCode: Int,
-    correlationId: String?
+    correlationId: String
 ) {
 
     // Custom setter. Limit access to this method, to avoid accidental overwrite.

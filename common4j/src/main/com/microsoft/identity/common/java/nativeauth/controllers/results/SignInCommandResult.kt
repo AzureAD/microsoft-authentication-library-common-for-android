@@ -40,21 +40,21 @@ sealed interface SignInSubmitPasswordCommandResult: INativeAuthCommandResult
  */
 interface SignInCommandResult {
     data class Complete(
-        override val correlationId: String? = null,
+        override val correlationId: String,
         val authenticationResult: ILocalAuthenticationResult
     ) :
         SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInSubmitCodeCommandResult,
         SignInSubmitPasswordCommandResult
 
     data class PasswordRequired(
-        override val correlationId: String?,
+        override val correlationId: String,
         val continuationToken: String
     ) :
         SignInStartCommandResult, SignInWithContinuationTokenCommandResult
 
     data class CodeRequired(
         val continuationToken: String,
-        override val correlationId: String?,
+        override val correlationId: String,
         val challengeTargetLabel: String,
         val challengeChannel: String,
         val codeLength: Int
@@ -64,7 +64,7 @@ interface SignInCommandResult {
     data class UserNotFound(
         val error: String,
         val errorDescription: String,
-        override val correlationId: String?,
+        override val correlationId: String,
         val errorCodes: List<Int>
     ) :
         SignInStartCommandResult
@@ -72,7 +72,7 @@ interface SignInCommandResult {
     data class InvalidCredentials(
         val error: String,
         val errorDescription: String,
-        override val correlationId: String?,
+        override val correlationId: String,
         val errorCodes: List<Int>
     ) :
         SignInStartCommandResult, SignInSubmitPasswordCommandResult
@@ -80,7 +80,7 @@ interface SignInCommandResult {
     data class IncorrectCode(
         val error: String,
         val errorDescription: String,
-        override val correlationId: String?,
+        override val correlationId: String,
         val errorCodes: List<Int>,
         val subError: String
     ) :

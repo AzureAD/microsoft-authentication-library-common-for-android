@@ -31,10 +31,10 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
  */
 sealed interface SignInChallengeApiResult: ApiResult {
     data class Redirect(
-        override val correlationId: String?
+        override val correlationId: String
     ) : SignInChallengeApiResult
     data class OOBRequired(
-        override val correlationId: String?,
+        override val correlationId: String,
         val continuationToken: String,
         val challengeTargetLabel: String,
         val challengeChannel: String,
@@ -42,12 +42,12 @@ sealed interface SignInChallengeApiResult: ApiResult {
     ) : SignInChallengeApiResult
 
     data class PasswordRequired(
-        override val correlationId: String?,
+        override val correlationId: String,
         val continuationToken: String
     ) : SignInChallengeApiResult
 
     data class UnknownError(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,

@@ -51,7 +51,7 @@ import java.net.HttpURLConnection
  */
 class SignUpStartApiResponse(
     @Expose override var statusCode: Int,
-    correlationId: String?,
+    correlationId: String,
     @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("unverified_attributes") val unverifiedAttributes: List<Map<String, String>>?,
     @Expose @SerializedName("invalid_attributes") val invalidAttributes: List<Map<String, String>>?,

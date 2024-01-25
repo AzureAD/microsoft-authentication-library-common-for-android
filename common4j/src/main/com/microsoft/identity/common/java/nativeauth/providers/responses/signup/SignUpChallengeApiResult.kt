@@ -31,11 +31,11 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
  */
 sealed interface SignUpChallengeApiResult: ApiResult {
     data class Redirect(
-        override val correlationId: String?
+        override val correlationId: String
     ) : SignUpChallengeApiResult
 
     data class OOBRequired(
-        override val correlationId: String?,
+        override val correlationId: String,
         val continuationToken: String,
         val challengeTargetLabel: String,
         val challengeChannel: String,
@@ -44,12 +44,12 @@ sealed interface SignUpChallengeApiResult: ApiResult {
         SignUpChallengeApiResult
 
     data class PasswordRequired(
-        override val correlationId: String?,
+        override val correlationId: String,
         val continuationToken: String
     ) : SignUpChallengeApiResult
 
     data class UnsupportedChallengeType(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
     ) : ApiErrorResult(
@@ -59,7 +59,7 @@ sealed interface SignUpChallengeApiResult: ApiResult {
     ), SignUpChallengeApiResult
 
     data class ExpiredToken(
-        override val correlationId: String?,
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
     ) : ApiErrorResult(
@@ -71,7 +71,7 @@ sealed interface SignUpChallengeApiResult: ApiResult {
     data class UnknownError(
         override val error: String,
         override val errorDescription: String,
-        override val correlationId: String?,
+        override val correlationId: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,

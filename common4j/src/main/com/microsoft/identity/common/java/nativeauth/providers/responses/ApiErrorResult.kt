@@ -31,7 +31,7 @@ open class ApiErrorResult(
     open val error: String?,
     open val errorDescription: String?,
     open val errorCodes: List<Int>? = null,
-    override val correlationId: String?
+    override val correlationId: String
 ): ApiResult
 {
     companion object {

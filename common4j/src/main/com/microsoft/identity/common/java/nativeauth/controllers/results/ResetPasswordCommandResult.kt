@@ -41,7 +41,7 @@ sealed interface ResetPasswordSubmitNewPasswordCommandResult: INativeAuthCommand
  */
 interface ResetPasswordCommandResult {
     data class CodeRequired(
-        override val correlationId: String?,
+        override val correlationId: String,
         val continuationToken: String,
         val codeLength: Int,
         val challengeTargetLabel: String,
@@ -51,33 +51,33 @@ interface ResetPasswordCommandResult {
     data class EmailNotVerified(
         val error: String,
         val errorDescription: String,
-        override val correlationId: String?
+        override val correlationId: String
     ) :
         ResetPasswordStartCommandResult
 
     data class PasswordNotSet(
         val error: String,
         val errorDescription: String,
-        override val correlationId: String?
+        override val correlationId: String
     ) :
         ResetPasswordStartCommandResult
 
     data class UserNotFound(
         val error: String,
         val errorDescription: String,
-        override val correlationId: String?
+        override val correlationId: String
     ) :
         ResetPasswordStartCommandResult, ResetPasswordSubmitNewPasswordCommandResult
 
     data class PasswordRequired(
-        override val correlationId: String?,
+        override val correlationId: String,
         val continuationToken: String
     ) : ResetPasswordSubmitCodeCommandResult
 
     data class IncorrectCode(
         val error: String,
         val errorDescription: String,
-        override val correlationId: String?,
+        override val correlationId: String,
         val subError: String
     ) :
         ResetPasswordSubmitCodeCommandResult
@@ -85,7 +85,7 @@ interface ResetPasswordCommandResult {
     data class PasswordNotAccepted(
         val error: String,
         val errorDescription: String,
-        override val correlationId: String?,
+        override val correlationId: String,
         val subError: String
     ) :
         ResetPasswordSubmitNewPasswordCommandResult
@@ -93,13 +93,13 @@ interface ResetPasswordCommandResult {
     data class PasswordResetFailed(
         val error: String,
         val errorDescription: String,
-        override val correlationId: String?
+        override val correlationId: String
     ) :
         ResetPasswordSubmitNewPasswordCommandResult
 
     data class Complete (
         val continuationToken: String?,
         val expiresIn: Int?,
-        override val correlationId: String?
+        override val correlationId: String
     ) : ResetPasswordSubmitNewPasswordCommandResult
 }

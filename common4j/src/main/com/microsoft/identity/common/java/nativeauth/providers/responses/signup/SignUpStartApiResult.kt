@@ -35,7 +35,7 @@ sealed interface SignUpStartApiResult: ApiResult {
      * The response from Signup Start is to redirect to a browser based authentication.
      */
     data class Redirect(
-        override val correlationId: String?
+        override val correlationId: String
     ) : SignUpStartApiResult
 
 
@@ -44,7 +44,7 @@ sealed interface SignUpStartApiResult: ApiResult {
      */
     data class Success(
         val continuationToken: String,
-        override val correlationId: String?
+        override val correlationId: String
     ) : SignUpStartApiResult
 
     /**
@@ -54,7 +54,7 @@ sealed interface SignUpStartApiResult: ApiResult {
         override val error: String,
         override val errorDescription: String,
         val subError: String,
-        override val correlationId: String?
+        override val correlationId: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -70,7 +70,7 @@ sealed interface SignUpStartApiResult: ApiResult {
         override val errorDescription: String,
         val invalidAttributes: List<String>,
         val subError: String,
-        override val correlationId: String?
+        override val correlationId: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -84,7 +84,7 @@ sealed interface SignUpStartApiResult: ApiResult {
     data class UnknownError(
         override val error: String,
         override val errorDescription: String,
-        override val correlationId: String?
+        override val correlationId: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -98,7 +98,7 @@ sealed interface SignUpStartApiResult: ApiResult {
     data class UnsupportedChallengeType(
         override val error: String,
         override val errorDescription: String,
-        override val correlationId: String?
+        override val correlationId: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -111,7 +111,7 @@ sealed interface SignUpStartApiResult: ApiResult {
     data class UsernameAlreadyExists(
         override val error: String,
         override val errorDescription: String,
-        override val correlationId: String?
+        override val correlationId: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -124,7 +124,7 @@ sealed interface SignUpStartApiResult: ApiResult {
     data class InvalidEmail(
         override val error: String,
         override val errorDescription: String,
-        override val correlationId: String?
+        override val correlationId: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -137,7 +137,7 @@ sealed interface SignUpStartApiResult: ApiResult {
     data class AuthNotSupported(
         override val error: String,
         override val errorDescription: String,
-        override val correlationId: String?
+        override val correlationId: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
