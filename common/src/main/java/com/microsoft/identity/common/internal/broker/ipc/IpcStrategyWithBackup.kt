@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.broker.ipc
 
 import android.os.Bundle
+import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 
@@ -34,8 +35,12 @@ import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 class IpcStrategyWithBackup (
     private val primary: IIpcStrategy,
     private val backup: List<IIpcStrategy>): IIpcStrategy{
+    companion object{
+        val TAG = IpcStrategyWithBackup::class.simpleName
+    }
 
     override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle? {
+        val methodTag = "$TAG:communicateToBroker"
         return try {
             primary.communicateToBroker(bundle)
         } catch (t: Throwable) {
@@ -46,9 +51,10 @@ class IpcStrategyWithBackup (
                         AttributeName.backup_ipc_used.name,
                         ipc.type.name
                     )
+                    Logger.info(methodTag, "${ipc.type.name} backup ipc succeeded.")
                     return result
                 } catch (t: Throwable) {
-                    // do nothing.
+                    Logger.info(methodTag, "${ipc.type.name} backup ipc failed : ${t.message}")
                 }
             }
             // If all backup fails... throw the original error.
