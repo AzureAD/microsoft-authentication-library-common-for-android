@@ -8,6 +8,11 @@ V.Next
 - [MINOR] Update ResetPasswordPollCompletion related command, results, and responses to support signing in a user after a successful password reset. (#2281)
 - [MINOR] Added support for setting no log level (#2282)
 
+v.17.0.1
+---------
+- [PATCH] Update robolectricVersion 4.11.1 (#2292)
+- [PATCH] Removing CredMan (Only for 17.0.1) (#2295)
+
 V.17.0.0
 ---------
 - [PATCH] Add JWT header field for KDF version (#2220)
