@@ -210,6 +210,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @SuppressLint({"SetJavaScriptEnabled", "ClickableViewAccessibility"})
     private void setUpWebView(@NonNull final View view,
                               @NonNull final AzureActiveDirectoryWebViewClient webViewClient) {
+        final String methodTag = TAG + ":setUpWebView";
+
         // Create the Web View to show the page
         mWebView = view.findViewById(R.id.common_auth_webview);
         WebSettings userAgentSetting = mWebView.getSettings();
@@ -245,13 +247,16 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // We can only grant or deny permissions for video capture/camera.
                 // To avoid unintentionally granting requests for not defined permissions.
                 if (iSPermissionRequestForCamera(request)) {
+                    Logger.info(methodTag, "Camera request received.");
                     mCameraPermissionRequest = request;
                     if (isCameraPermissionGranted()) {
+                        Logger.info(methodTag, "Camera permission already granted.");
                         acceptCameraRequest();
                     } else if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+                        Logger.info(methodTag, "Show camera rationale.");
                         showCameraRationale();
                     } else {
-                        requestCameraPermission();
+                        requestCameraPermissionFromUser();
                     }
                 }
             }
@@ -310,6 +315,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private final ActivityResultLauncher<String> cameraRequestActivity = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(),
             permissionGranted   -> {
+                Logger.info(TAG, "Camera permission granted: " + permissionGranted);
                 if (permissionGranted) {
                     acceptCameraRequest();
                 }
@@ -322,7 +328,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     /**
      * Launches the camera permission request for the app.
      */
-    private void requestCameraPermission() {
+    private void requestCameraPermissionFromUser() {
+        final String methodTAG = TAG + ":requestCameraPermissionFromUser";
+        Logger.info(methodTAG, "Requesting camera permission.");
         cameraRequestActivity.launch(Manifest.permission.CAMERA);
     }
 
@@ -338,7 +346,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         "Please allow the camera access in order to continue.")
                 .setTitle("Camera permission required")
                 .setCancelable(false)
-                .setPositiveButton("OK", (dialog, id) -> requestCameraPermission())
+                .setPositiveButton("OK", (dialog, id) -> requestCameraPermissionFromUser())
                 .setNegativeButton("Cancel", (dialog, id) -> denyCameraRequest());
         builder.show();
     }
