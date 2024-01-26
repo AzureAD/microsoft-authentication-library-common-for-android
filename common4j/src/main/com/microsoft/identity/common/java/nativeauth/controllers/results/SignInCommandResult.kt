@@ -50,7 +50,7 @@ interface SignInCommandResult {
         override val correlationId: String,
         val continuationToken: String
     ) :
-        SignInStartCommandResult, SignInWithContinuationTokenCommandResult
+        SignInStartCommandResult
 
     data class CodeRequired(
         val continuationToken: String,
@@ -59,7 +59,7 @@ interface SignInCommandResult {
         val challengeChannel: String,
         val codeLength: Int
     ) :
-        SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInResendCodeCommandResult
+        SignInStartCommandResult, SignInResendCodeCommandResult
 
     data class UserNotFound(
         val error: String,

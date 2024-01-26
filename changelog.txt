@@ -7,6 +7,7 @@ V.Next
 - [MINOR] Implement updates of the native auth web API (#2261)
 - [MINOR] Update ResetPasswordPollCompletion related command, results, and responses to support signing in a user after a successful password reset. (#2281)
 - [PATCH] Create consistent use of correlation ID throughout a user flow (#2283)
+- [MINOR] Added support for setting no log level (#2282)
 
 V.17.0.0
 ---------
