@@ -81,5 +81,5 @@ interface INativeAuthCommandResult {
         override val errorCodes: List<Int>? = null,
         val exception: Exception? = null
     ) : Error(error, errorDescription, details, correlationId, errorCodes),
-        INativeAuthCommandResult, SignInStartCommandResult, SignUpStartCommandResult, ResetPasswordStartCommandResult
+        INativeAuthCommandResult, SignInStartCommandResult, SignUpStartCommandResult, SignUpSubmitPasswordCommandResult, ResetPasswordStartCommandResult
 }

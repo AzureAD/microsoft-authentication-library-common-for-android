@@ -95,15 +95,6 @@ interface SignUpCommandResult {
         SignUpSubmitCodeCommandResult
 
     /**
-     * The signup operation cannot progress as the provided email address is invalid.
-     */
-    data class InvalidEmail(
-        val error: String,
-        val errorDescription: String,
-        val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId  //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
-    ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult
-
-    /**
      * The signup operation cannot progress as the provided password is not acceptable
      */
     data class InvalidPassword(
