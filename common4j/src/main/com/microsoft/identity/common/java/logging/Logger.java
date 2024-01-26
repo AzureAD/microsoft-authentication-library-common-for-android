@@ -89,6 +89,10 @@ public class Logger {
      */
     public enum LogLevel {
         /**
+         * No logs should be emitted.
+         */
+        NO_LOG,
+        /**
          * Error level logging.
          */
         ERROR,
@@ -107,7 +111,7 @@ public class Logger {
         /**
          * Undefined. Should be used in test only.
          */
-        UNDEFINED,
+        UNDEFINED
     }
 
     // Visible for testing
@@ -378,7 +382,7 @@ public class Logger {
                             final String message,
                             final Throwable throwable,
                             final boolean containsPII) {
-        if (logLevel.compareTo(sLogLevel) > 0 || (!sAllowPii && containsPII)) {
+        if ((sLogLevel == LogLevel.NO_LOG) || logLevel.compareTo(sLogLevel) > 0 || (!sAllowPii && containsPII)) {
             return;
         }
 
