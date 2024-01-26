@@ -59,7 +59,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import java.net.URL
 
 class NativeAuthResponseHandlerTest {
     private val clientId = "1234"
@@ -280,7 +279,7 @@ class NativeAuthResponseHandlerTest {
             subError = null
         )
         val apiResult = signUpStartApiResponse.toResult()
-        assertTrue(apiResult is SignUpStartApiResult.InvalidEmail)
+        assertTrue(apiResult is SignUpStartApiResult.InvalidUsername)
     }
 
     @Test

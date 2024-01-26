@@ -404,8 +404,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         errorDescription = signUpStartApiResult.errorDescription
                     )
                 }
-                is SignUpStartApiResult.InvalidEmail -> {
-                    SignUpCommandResult.InvalidEmail(
+                is SignUpStartApiResult.InvalidUsername -> {
+                    INativeAuthCommandResult.InvalidUsername(
                         error = signUpStartApiResult.error,
                         errorDescription = signUpStartApiResult.errorDescription
                     )
