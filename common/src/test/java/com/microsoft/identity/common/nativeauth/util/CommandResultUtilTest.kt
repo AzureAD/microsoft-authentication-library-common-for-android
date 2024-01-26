@@ -486,7 +486,8 @@ private val signInCodeRequiredCommandResult = SignInCommandResult.CodeRequired(
 )
 
 private val signInCompleteCommandResult = SignInCommandResult.Complete(
-    authenticationResult = mockk<ILocalAuthenticationResult>()
+    authenticationResult = mockk<ILocalAuthenticationResult>(),
+    correlationId = CORRELATION_ID
 )
 
 private val signInInvalidCredentialsCommandResult = SignInCommandResult.InvalidCredentials(
