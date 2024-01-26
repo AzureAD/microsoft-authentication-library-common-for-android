@@ -112,12 +112,11 @@ class SignUpScenarioTest {
     @Test
     fun testSignUpScenarioEmailPasswordWithOOBVerification() {
         var continuationToken: String
-        var correlationId: String? = UUID.randomUUID().toString()
-        val mockApiClientRequestId = UUID.randomUUID().toString()
+        var correlationId = UUID.randomUUID().toString()
 
         configureMockApi(
             endpointType = MockApiEndpoint.SignUpStart,
-            correlationId = mockApiClientRequestId,
+            correlationId = correlationId,
             responseType = MockApiResponseType.SIGNUP_START_SUCCESS
         )
 
@@ -138,7 +137,7 @@ class SignUpScenarioTest {
 
         configureMockApi(
             endpointType = MockApiEndpoint.SignUpChallenge,
-            correlationId = mockApiClientRequestId,
+            correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
 
@@ -152,7 +151,7 @@ class SignUpScenarioTest {
 
         configureMockApi(
             endpointType = MockApiEndpoint.SignUpContinue,
-            correlationId = mockApiClientRequestId,
+            correlationId = correlationId,
             responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
         )
 
@@ -175,12 +174,11 @@ class SignUpScenarioTest {
     @Test
     fun testSignUpScenarioEmailVerificationFirstThenPassword() {
         var continuationToken: String
-        var correlationId: String? = UUID.randomUUID().toString()
-        val mockApiClientRequestId = UUID.randomUUID().toString()
+        var correlationId = UUID.randomUUID().toString()
 
         configureMockApi(
             endpointType = MockApiEndpoint.SignUpStart,
-            correlationId = mockApiClientRequestId,
+            correlationId = correlationId,
             responseType = MockApiResponseType.SIGNUP_START_SUCCESS
         )
 
@@ -200,7 +198,7 @@ class SignUpScenarioTest {
 
         configureMockApi(
             endpointType = MockApiEndpoint.SignUpChallenge,
-            correlationId = mockApiClientRequestId,
+            correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
 
@@ -214,7 +212,7 @@ class SignUpScenarioTest {
 
         configureMockApi(
             endpointType = MockApiEndpoint.SignUpContinue,
-            correlationId = mockApiClientRequestId,
+            correlationId = correlationId,
             responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
         )
 

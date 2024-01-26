@@ -97,6 +97,7 @@ class NativeAuthControllerTest {
     private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val authorityUrl = "https://msidlabciam1.ciamlogin.com/msidlabciam1.onmicrosoft.com"
     private val userAttributes = mapOf("city" to "dublin")
+    private val correlationId = "kljsdfn8274nf982y"
 
     private lateinit var platformComponents: IPlatformComponents
     private lateinit var context: Context
@@ -1163,6 +1164,7 @@ class NativeAuthControllerTest {
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .continuationToken(continuationToken)
             .username(username)
+            .correlationId(correlationId)
             .build()
     }
 
@@ -1181,6 +1183,7 @@ class NativeAuthControllerTest {
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
+            .correlationId(correlationId)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .build()
     }
@@ -1193,6 +1196,7 @@ class NativeAuthControllerTest {
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
+            .correlationId(correlationId)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .build()
     }
@@ -1213,6 +1217,7 @@ class NativeAuthControllerTest {
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
+            .correlationId(correlationId)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .build()
     }
@@ -1225,6 +1230,7 @@ class NativeAuthControllerTest {
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
+            .correlationId(correlationId)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .build()
     }
@@ -1238,6 +1244,7 @@ class NativeAuthControllerTest {
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
+            .correlationId(correlationId)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .build()
     }
@@ -1250,6 +1257,7 @@ class NativeAuthControllerTest {
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
+            .correlationId(correlationId)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .build()
     }
@@ -1263,6 +1271,7 @@ class NativeAuthControllerTest {
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
+            .correlationId(correlationId)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .build()
     }
@@ -1274,6 +1283,7 @@ class NativeAuthControllerTest {
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
+            .correlationId(correlationId)
             .build()
     }
 
@@ -1297,6 +1307,7 @@ class NativeAuthControllerTest {
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
+            .correlationId(correlationId)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .build()
     }
@@ -1309,6 +1320,7 @@ class NativeAuthControllerTest {
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
+            .correlationId(correlationId)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .build()
     }
@@ -1321,6 +1333,7 @@ class NativeAuthControllerTest {
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
+            .correlationId(correlationId)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .build()
     }
@@ -1334,6 +1347,7 @@ class NativeAuthControllerTest {
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
+            .correlationId(correlationId)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .build()
     }
@@ -1347,6 +1361,7 @@ class NativeAuthControllerTest {
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
+            .correlationId(correlationId)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .build()
     }
@@ -1360,6 +1375,7 @@ class NativeAuthControllerTest {
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
+            .correlationId(correlationId)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .build()
     }
