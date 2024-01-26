@@ -1,6 +1,7 @@
 V.Next
 ---------
 - [MINOR] Add IpcStrategyWithBackup (#2301)
+- [MINOR] Add AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp (#2294)
 - [MINOR] Adding additional fields to JwtRequestBody for sending PRTv4 requests (#2289)
 - [MINOR] Update SignIn/Signup parameters classes for Native Auth(#2284)
 - [MINOR] Add IsQrPinAvailableCommand, controllers behavior and define constants for the isQrAvailable API (#2219)
