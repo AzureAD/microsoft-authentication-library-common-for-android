@@ -61,7 +61,7 @@ class WebAuthnJsonUtil {
                 }
             }
             val options = PublicKeyCredentialRequestOptions(
-                challenge, //challenge.removePrefix("O."),
+                convertToBase64UrlString(challenge),
                 relyingPartyIdentifier,
                 publicKeyCredentialDescriptorList,
                 userVerificationPolicy
