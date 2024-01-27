@@ -44,7 +44,7 @@ interface SignInCommandResult {
         SignInSubmitPasswordCommandResult
 
     data class PasswordRequired(val continuationToken: String) :
-        SignInStartCommandResult, SignInWithContinuationTokenCommandResult
+        SignInStartCommandResult
 
     data class CodeRequired(
         val continuationToken: String,
@@ -52,7 +52,7 @@ interface SignInCommandResult {
         val challengeChannel: String,
         val codeLength: Int
     ) :
-        SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInResendCodeCommandResult
+        SignInStartCommandResult, SignInResendCodeCommandResult
 
     data class UserNotFound(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId, val errorCodes: List<Int>) :
         SignInStartCommandResult

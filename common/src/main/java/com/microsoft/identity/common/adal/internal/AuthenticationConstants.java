@@ -1532,8 +1532,6 @@ public final class AuthenticationConstants {
          * place, so that we only need to make updates in one location, and it's clearer what we need
          * to do when adding new APIs.
          */
-        @Getter
-        @Accessors(prefix = "m")
         @AllArgsConstructor
         public enum API {
             MSAL_HELLO(MSAL_HELLO_PATH, null, VERSION_3),
@@ -1568,15 +1566,27 @@ public final class AuthenticationConstants {
             /**
              * The content provider path that the API exists behind.
              */
-            private String mPath;
+            private final String mPath;
             /**
              * The broker-host-to-broker protocol version that the API requires.
              */
-            private String mBrokerVersion;
+            private final String mBrokerVersion;
             /**
              * The msal-to-broker version that the API requires.
              */
-            private String mMsalVersion;
+            private final String mMsalVersion;
+
+            public String getPath(){
+                return mPath;
+            }
+
+            public String getBrokerVersion(){
+                return mBrokerVersion;
+            }
+
+            public String getMsalVersion(){
+                return mMsalVersion;
+            }
         }
 
         /**

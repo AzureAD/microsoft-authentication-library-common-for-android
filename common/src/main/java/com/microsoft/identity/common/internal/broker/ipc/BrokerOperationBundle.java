@@ -46,8 +46,6 @@ import lombok.experimental.Accessors;
 public class BrokerOperationBundle {
     private static final String TAG = BrokerOperationBundle.class.getSimpleName();
 
-    @Getter
-    @Accessors(prefix = "m")
     public enum Operation {
         MSAL_HELLO(API.MSAL_HELLO, BrokerAccountManagerOperation.HELLO),
         MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST(API.ACQUIRE_TOKEN_INTERACTIVE, BrokerAccountManagerOperation.GET_INTENT_FOR_INTERACTIVE_REQUEST),
@@ -80,6 +78,15 @@ public class BrokerOperationBundle {
       
         final API mContentApi;
         final String mAccountManagerOperation;
+
+        public API getContentApi(){
+            return mContentApi;
+        }
+
+        public String getAccountManagerOperation(){
+            return mAccountManagerOperation;
+        }
+
         Operation(API contentApi, String accountManagerOperation) {
             this.mContentApi = contentApi;
             this.mAccountManagerOperation = accountManagerOperation;

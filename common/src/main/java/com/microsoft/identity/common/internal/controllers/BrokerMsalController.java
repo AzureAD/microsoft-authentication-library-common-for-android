@@ -40,6 +40,8 @@ import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationB
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SIGN_OUT_FROM_SHARED_DEVICE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SSO_TOKEN;
 import static com.microsoft.identity.common.internal.controllers.BrokerOperationExecutor.BrokerOperation;
+import static com.microsoft.identity.common.internal.util.StringUtil.isEmpty;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
@@ -116,6 +118,8 @@ import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -199,7 +203,9 @@ public class BrokerMsalController extends BaseController {
             strategies.add(new BoundServiceStrategy<>(client));
         }
 
-        if (AccountManagerUtil.canUseAccountManagerOperation(applicationContext)) {
+        if (AccountManagerUtil.canUseAccountManagerOperation(applicationContext,
+                Collections.singleton(BROKER_ACCOUNT_TYPE)))
+        {
             sb.append("AccountManagerStrategy.");
             strategies.add(new AccountManagerAddAccountStrategy(applicationContext));
         }
