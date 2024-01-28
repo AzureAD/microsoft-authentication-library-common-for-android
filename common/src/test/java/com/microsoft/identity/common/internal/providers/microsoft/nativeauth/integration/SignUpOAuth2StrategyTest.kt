@@ -214,7 +214,7 @@ class SignUpOAuth2StrategyTest {
         val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
             signUpStartCommandParameters
         )
-        assertTrue(signupResult is SignUpStartApiResult.InvalidEmail)
+        assertTrue(signupResult is SignUpStartApiResult.InvalidUsername)
     }
 
     @Test

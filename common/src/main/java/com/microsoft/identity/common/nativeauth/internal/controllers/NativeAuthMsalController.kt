@@ -480,8 +480,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         correlationId = signUpStartApiResult.correlationId
                     )
                 }
-                is SignUpStartApiResult.InvalidEmail -> {
-                    SignUpCommandResult.InvalidEmail(
+                is SignUpStartApiResult.InvalidUsername -> {
+                    INativeAuthCommandResult.InvalidUsername(
                         error = signUpStartApiResult.error,
                         errorDescription = signUpStartApiResult.errorDescription,
                         correlationId = signUpStartApiResult.correlationId

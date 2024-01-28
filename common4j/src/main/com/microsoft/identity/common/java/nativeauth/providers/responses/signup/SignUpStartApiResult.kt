@@ -121,7 +121,7 @@ sealed interface SignUpStartApiResult: ApiResult {
     /**
      * Signup start operation was started for a malformed email address.
      */
-    data class InvalidEmail(
+    data class InvalidUsername(
         override val error: String,
         override val errorDescription: String,
         override val correlationId: String

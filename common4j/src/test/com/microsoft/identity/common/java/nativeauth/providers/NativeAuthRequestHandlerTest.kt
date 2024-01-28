@@ -96,8 +96,8 @@ class NativeAuthRequestHandlerTest {
         )
 
     // signup start tests
-    @Test(expected = ClientException::class)
-    fun testSignUpStartWithEmptyUsernameShouldThrowException() {
+    @Test
+    fun testSignUpStartWithEmptyUsernameShouldNotThrowException() {
         val commandParameters = SignUpStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(emptyString)
@@ -340,8 +340,8 @@ class NativeAuthRequestHandlerTest {
     }
 
     // signin tests
-    @Test(expected = ClientException::class)
-    fun testSignInInitiateWithEmptyUsernameShouldThrowException() {
+    @Test
+    fun testSignInInitiateWithEmptyUsernameShouldNotThrowException() {
         val commandParameters = SignInStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(emptyString)
@@ -467,8 +467,8 @@ class NativeAuthRequestHandlerTest {
         )
     }
 
-    @Test(expected = ClientException::class)
-    fun testSignInInitiateWithPasswordCommandParametersWithEmptyUsernameShouldThrowException() {
+    @Test
+    fun testSignInInitiateWithPasswordCommandParametersWithEmptyUsernameShouldNotThrowException() {
         val commandParameters = SignInStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(emptyString)
@@ -615,8 +615,8 @@ class NativeAuthRequestHandlerTest {
     }
 
     // sspr start tests
-    @Test(expected = ClientException::class)
-    fun testResetPasswordStartWithEmptyUsernameShouldThrowException() {
+    @Test
+    fun testResetPasswordStartWithEmptyUsernameShouldNotThrowException() {
         val commandParameters = ResetPasswordStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(emptyString)

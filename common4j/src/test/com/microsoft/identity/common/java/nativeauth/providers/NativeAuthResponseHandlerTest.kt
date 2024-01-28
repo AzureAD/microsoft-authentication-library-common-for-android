@@ -284,7 +284,7 @@ class NativeAuthResponseHandlerTest {
             correlationId = correlationId
         )
         val apiResult = signUpStartApiResponse.toResult()
-        assertTrue(apiResult is SignUpStartApiResult.InvalidEmail)
+        assertTrue(apiResult is SignUpStartApiResult.InvalidUsername)
     }
 
     @Test

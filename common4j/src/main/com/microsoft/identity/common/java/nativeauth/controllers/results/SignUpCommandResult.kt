@@ -98,15 +98,6 @@ interface SignUpCommandResult {
         SignUpSubmitCodeCommandResult
 
     /**
-     * The signup operation cannot progress as the provided email address is invalid.
-     */
-    data class InvalidEmail(
-        val error: String,
-        val errorDescription: String,
-        override val correlationId: String
-    ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult
-
-    /**
      * The signup operation cannot progress as the provided password is not acceptable
      */
     data class InvalidPassword(
