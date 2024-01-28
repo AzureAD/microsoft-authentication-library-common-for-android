@@ -97,7 +97,6 @@ class NativeAuthControllerTest {
     private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val authorityUrl = "https://msidlabciam1.ciamlogin.com/msidlabciam1.onmicrosoft.com"
     private val userAttributes = mapOf("city" to "dublin")
-    private val correlationId = "kljsdfn8274nf982y"
 
     private lateinit var platformComponents: IPlatformComponents
     private lateinit var context: Context
@@ -168,7 +167,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.TOKEN_SUCCESS
         )
 
-        val parameters = createSignInStartWithPasswordCommandParameters()
+        val parameters = createSignInStartWithPasswordCommandParameters(correlationId)
         val result = controller.signInStart(parameters)
         assert(result is SignInCommandResult.Complete)
     }
@@ -192,7 +191,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.TOKEN_SUCCESS
         )
 
-        val parameters = createSignInStartWithPasswordCommandParameters()
+        val parameters = createSignInStartWithPasswordCommandParameters(correlationId)
         val result = controller.signInStart(parameters)
 
         verify(controller).processSignInInitiateApiResult(
@@ -227,7 +226,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.SIGNIN_INVALID_PASSWORD
         )
 
-        val parameters = createSignInStartWithPasswordCommandParameters()
+        val parameters = createSignInStartWithPasswordCommandParameters(correlationId)
         val result = controller.signInStart(parameters)
         assert(result is SignInCommandResult.InvalidCredentials)
     }
@@ -241,7 +240,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.USER_NOT_FOUND
         )
 
-        val parameters = createSignInStartWithPasswordCommandParameters()
+        val parameters = createSignInStartWithPasswordCommandParameters(correlationId)
         val result = controller.signInStart(parameters)
         assert(result is SignInCommandResult.UserNotFound)
     }
@@ -260,7 +259,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
 
-        val parameters = createSignInStartWithPasswordCommandParameters()
+        val parameters = createSignInStartWithPasswordCommandParameters(correlationId)
         val result = controller.signInStart(parameters)
         assert(result is SignInCommandResult.CodeRequired)
     }
@@ -274,7 +273,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.MFA_REQUIRED
         )
 
-        val parameters = createSignInStartWithPasswordCommandParameters()
+        val parameters = createSignInStartWithPasswordCommandParameters(correlationId)
         val result = controller.signInStart(parameters)
         assert(result is INativeAuthCommandResult.Redirect)
     }
@@ -288,7 +287,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.USER_NOT_FOUND
         )
 
-        val parameters = createSignInStartCommandParameters()
+        val parameters = createSignInStartCommandParameters(correlationId)
         val result = controller.signInStart(parameters)
         assert(result is SignInCommandResult.UserNotFound)
     }
@@ -307,7 +306,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
 
-        val parameters = createSignInStartCommandParameters()
+        val parameters = createSignInStartCommandParameters(correlationId)
         val result = controller.signInStart(parameters)
         assert(result is SignInCommandResult.CodeRequired)
     }
@@ -321,7 +320,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.TOKEN_SUCCESS
         )
 
-        val parameters = createSignInSubmitCodeCommandParameters()
+        val parameters = createSignInSubmitCodeCommandParameters(correlationId)
         val result = controller.signInSubmitCode(parameters)
         assert(result is SignInCommandResult.Complete)
     }
@@ -335,7 +334,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.INVALID_OOB_VALUE
         )
 
-        val parameters = createSignInSubmitCodeCommandParameters()
+        val parameters = createSignInSubmitCodeCommandParameters(correlationId)
         val result = controller.signInSubmitCode(parameters)
         assert(result is SignInCommandResult.IncorrectCode)
     }
@@ -349,7 +348,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
 
-        val parameters = createSignInResendCodeCommandParameters()
+        val parameters = createSignInResendCodeCommandParameters(correlationId)
         val result = controller.signInResendCode(parameters)
         assert(result is SignInCommandResult.CodeRequired)
     }
@@ -362,7 +361,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.SIGNIN_INVALID_PASSWORD
         )
 
-        val parameters = createSignInSubmitPasswordCommandParameters()
+        val parameters = createSignInSubmitPasswordCommandParameters(correlationId)
         val result = controller.signInSubmitPassword(parameters)
         assert(result is SignInCommandResult.InvalidCredentials)
 
@@ -388,7 +387,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.TOKEN_SUCCESS
         )
 
-        val parameters = createSignInSubmitPasswordCommandParameters()
+        val parameters = createSignInSubmitPasswordCommandParameters(correlationId)
         val result = controller.signInSubmitPassword(parameters)
         assert(result is SignInCommandResult.Complete)
 
@@ -416,7 +415,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
         )
 
-        val parameters = createSignInStartCommandParameters()
+        val parameters = createSignInStartCommandParameters(correlationId)
         val result = controller.signInStart(parameters)
         assert(result is SignInCommandResult.PasswordRequired)
     }
@@ -430,7 +429,10 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.TOKEN_SUCCESS
         )
 
-        val parameters = createSignInWithContinuationTokenCommandParameters(withScopes = true)
+        val parameters = createSignInWithContinuationTokenCommandParameters(
+            withScopes = true,
+            correlationId = correlationId
+        )
         val result = controller.signInWithContinuationToken(parameters)
         assert(result is SignInCommandResult.Complete)
 
@@ -453,7 +455,9 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.INVALID_GRANT
         )
 
-        val parameters = createSignInWithContinuationTokenCommandParameters()
+        val parameters = createSignInWithContinuationTokenCommandParameters(
+            correlationId = correlationId
+        )
         val result = controller.signInWithContinuationToken(parameters)
         assert(result is INativeAuthCommandResult.UnknownError)
         assert((result as INativeAuthCommandResult.UnknownError).error == invalidGrantError)
@@ -468,7 +472,9 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.INVALID_OOB_VALUE
         )
 
-        val parameters = createSignInWithContinuationTokenCommandParameters()
+        val parameters = createSignInWithContinuationTokenCommandParameters(
+            correlationId = correlationId
+        )
         val result = controller.signInWithContinuationToken(parameters)
         assert(result is INativeAuthCommandResult.UnknownError)
         assert((result as INativeAuthCommandResult.UnknownError).error == invalidGrantError)
@@ -483,7 +489,9 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.USER_NOT_FOUND
         )
 
-        val parameters = createSignInWithContinuationTokenCommandParameters()
+        val parameters = createSignInWithContinuationTokenCommandParameters(
+            correlationId = correlationId
+        )
         val result = controller.signInWithContinuationToken(parameters)
         assert(result is INativeAuthCommandResult.UnknownError)
         assert((result as INativeAuthCommandResult.UnknownError).error == userNotFoundError)
@@ -498,7 +506,9 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.SIGNIN_INVALID_PASSWORD
         )
 
-        val parameters = createSignInWithContinuationTokenCommandParameters()
+        val parameters = createSignInWithContinuationTokenCommandParameters(
+            correlationId = correlationId
+        )
         val result = controller.signInWithContinuationToken(parameters)
         assert(result is INativeAuthCommandResult.UnknownError)
         assert((result as INativeAuthCommandResult.UnknownError).error == invalidGrantError)
@@ -513,7 +523,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
 
-        val parameters = createSignInStartWithPasswordCommandParameters()
+        val parameters = createSignInStartWithPasswordCommandParameters(correlationId)
         val result = controller.signInStart(parameters)
         assert(result is INativeAuthCommandResult.Redirect)
     }
@@ -529,19 +539,26 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.TOKEN_SUCCESS
         )
 
-        val signInParameters = createSignInSubmitPasswordCommandParameters()
+        val signInParameters = createSignInSubmitPasswordCommandParameters(correlationId)
         val signInResult = controller.signInSubmitPassword(signInParameters) as SignInCommandResult.Complete
 
         val account = signInResult.authenticationResult.accountRecord as AccountRecord
-        val parameters = createRemoveAccountCommandParameters(account)
+        val parameters = createRemoveAccountCommandParameters(
+            account = account,
+            correlationId = correlationId
+        )
         val result = localController.removeCurrentAccount(parameters)
         assert(result)
     }
 
     @Test
     fun testSignOutFailedWithEmptyAccountRecord() {
+        val correlationId = UUID.randomUUID().toString()
         val account = AccountRecord()
-        val parameters = createRemoveAccountCommandParameters(account)
+        val parameters = createRemoveAccountCommandParameters(
+            account = account,
+            correlationId = correlationId
+        )
         val result = localController.removeCurrentAccount(parameters)
         assertFalse(result)
     }
@@ -563,72 +580,82 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
 
-        val parameters = createSsprStartCommandParameters()
+        val parameters = createSsprStartCommandParameters(correlationId)
         val result = controller.resetPasswordStart(parameters)
         assert(result is ResetPasswordCommandResult.CodeRequired)
     }
 
     @Test
     fun testSsprStartSsprRedirect() {
+        val correlationId = UUID.randomUUID().toString()
+
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SSPRStart,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
 
-        val parameters = createSsprStartCommandParameters()
+        val parameters = createSsprStartCommandParameters(correlationId)
         val result = controller.resetPasswordStart(parameters)
         assert(result is INativeAuthCommandResult.Redirect)
     }
 
     @Test
     fun testSsprStartUserNotFound() {
+        val correlationId = UUID.randomUUID().toString()
+
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SSPRStart,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.USER_NOT_FOUND
         )
 
-        val parameters = createSsprStartCommandParameters()
+        val parameters = createSsprStartCommandParameters(correlationId)
         val result = controller.resetPasswordStart(parameters)
         assert(result is ResetPasswordCommandResult.UserNotFound)
     }
 
     @Test
     fun testSsprSubmitCodeWithSuccess() {
+        val correlationId = UUID.randomUUID().toString()
+
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SSPRContinue,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.SSPR_CONTINUE_SUCCESS
         )
 
-        val parameters = createSsprSubmitCodeCommandParameters()
+        val parameters = createSsprSubmitCodeCommandParameters(correlationId)
         val result = controller.resetPasswordSubmitCode(parameters)
         assert(result is ResetPasswordCommandResult.PasswordRequired)
     }
 
     @Test
     fun testSsprSubmitCodeWithInvalidCode() {
+        val correlationId = UUID.randomUUID().toString()
+
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SSPRContinue,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.INVALID_OOB_VALUE
         )
 
-        val parameters = createSsprSubmitCodeCommandParameters()
+        val parameters = createSsprSubmitCodeCommandParameters(correlationId)
         val result = controller.resetPasswordSubmitCode(parameters)
         assert(result is ResetPasswordCommandResult.IncorrectCode)
     }
 
     @Test
     fun testSsprResendCode() {
+        val correlationId = UUID.randomUUID().toString()
+
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SSPRChallenge,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
 
-        val parameters = createSsprResendCodeCommandParameters()
+        val parameters = createSsprResendCodeCommandParameters(correlationId)
         val result = controller.resetPasswordResendCode(parameters)
         assert(result is ResetPasswordCommandResult.CodeRequired)
     }
@@ -648,7 +675,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.SSPR_POLL_SUCCESS
         )
 
-        val parameters = createSsprSubmitNewPasswordCommandParameters()
+        val parameters = createSsprSubmitNewPasswordCommandParameters(correlationId)
         val result = controller.resetPasswordSubmitNewPassword(parameters)
         assert(result is ResetPasswordCommandResult.Complete)
     }
@@ -668,7 +695,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.SSPR_POLL_FAILED
         )
 
-        val parameters = createSsprSubmitNewPasswordCommandParameters()
+        val parameters = createSsprSubmitNewPasswordCommandParameters(correlationId)
         val result = controller.resetPasswordSubmitNewPassword(parameters)
         assert(result is ResetPasswordCommandResult.PasswordResetFailed)
     }
@@ -691,7 +718,9 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
         )
 
-        val parameters = createSignUpStartWithPasswordCommandParameters()
+        val parameters = createSignUpStartWithPasswordCommandParameters(
+            correlationId = correlationId
+        )
         val result = controller.signUpStart(parameters)
         assert(result is SignUpCommandResult.PasswordRequired)
 
@@ -714,7 +743,9 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.PASSWORD_TOO_LONG
         )
 
-        val parameters = createSignUpStartWithPasswordCommandParameters()
+        val parameters = createSignUpStartWithPasswordCommandParameters(
+            correlationId = correlationId
+        )
         val result = controller.signUpStart(parameters)
         assert(result is SignUpCommandResult.InvalidPassword)
     }
@@ -729,7 +760,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.USER_ALREADY_EXISTS
         )
 
-        val parameters = createSignUpStartCommandParameters()
+        val parameters = createSignUpStartCommandParameters(correlationId)
         val result = controller.signUpStart(parameters)
         assert(result is SignUpCommandResult.UsernameAlreadyExists)
 
@@ -752,7 +783,10 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.PASSWORD_TOO_WEAK
         )
 
-        val parameters = createSignUpStartWithPasswordCommandParameters(passwordValue = "Test@123".toCharArray())
+        val parameters = createSignUpStartWithPasswordCommandParameters(
+            passwordValue = "Test@123".toCharArray(),
+            correlationId = correlationId
+        )
         val result = controller.signUpStart(parameters)
         assert(result is SignUpCommandResult.InvalidPassword)
 
@@ -776,7 +810,10 @@ class NativeAuthControllerTest {
         )
 
         val parameters =
-            createSignUpStartWithPasswordCommandParameters(passwordValue = "123".toCharArray())
+            createSignUpStartWithPasswordCommandParameters(
+                passwordValue = "123".toCharArray(),
+                correlationId = correlationId
+            )
         val result = controller.signUpStart(parameters)
         assert(result is SignUpCommandResult.InvalidPassword)
 
@@ -800,7 +837,10 @@ class NativeAuthControllerTest {
         )
 
         val parameters =
-            createSignUpStartWithPasswordCommandParameters(passwordValue = "Abc@123".toCharArray())
+            createSignUpStartWithPasswordCommandParameters(
+                passwordValue = "Abc@123".toCharArray(),
+                correlationId = correlationId
+            )
         val result = controller.signUpStart(parameters)
         assert(result is SignUpCommandResult.InvalidPassword)
 
@@ -824,7 +864,10 @@ class NativeAuthControllerTest {
         )
 
         val parameters =
-            createSignUpStartWithPasswordCommandParameters(passwordValue = "079af063-4ea7-4dcd-91ff-2b24f54621ea-079af063-4ea7-4dcd-91ff-2b24f54621ea-079af063-4ea7-4dcd-91ff-2b24f54621ea".toCharArray())
+            createSignUpStartWithPasswordCommandParameters(
+                passwordValue = "079af063-4ea7-4dcd-91ff-2b24f54621ea-079af063-4ea7-4dcd-91ff-2b24f54621ea-079af063-4ea7-4dcd-91ff-2b24f54621ea".toCharArray(),
+                correlationId = correlationId
+            )
         val result = controller.signUpStart(parameters)
         assert(result is SignUpCommandResult.InvalidPassword)
 
@@ -848,7 +891,10 @@ class NativeAuthControllerTest {
         )
 
         val parameters =
-            createSignUpStartWithPasswordCommandParameters(passwordValue = password)
+            createSignUpStartWithPasswordCommandParameters(
+                passwordValue = password,
+                correlationId = correlationId
+            )
         val result = controller.signUpStart(parameters)
         assert(result is SignUpCommandResult.InvalidPassword)
 
@@ -871,7 +917,9 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.AUTH_NOT_SUPPORTED
         )
 
-        val parameters = createSignUpStartWithPasswordCommandParameters()
+        val parameters = createSignUpStartWithPasswordCommandParameters(
+            correlationId = correlationId
+        )
         val result = controller.signUpStart(parameters)
         assert(result is SignUpCommandResult.AuthNotSupported)
 
@@ -894,7 +942,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.AUTH_NOT_SUPPORTED
         )
 
-        val parameters = createSignUpStartCommandParameters()
+        val parameters = createSignUpStartCommandParameters(correlationId)
         val result = controller.signUpStart(parameters)
         assert(result is SignUpCommandResult.AuthNotSupported)
     }
@@ -909,7 +957,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
 
-        val parameters = createSignUpResendCodeCommandParameters()
+        val parameters = createSignUpResendCodeCommandParameters(correlationId)
         val result = controller.signUpResendCode(parameters)
         assert(result is SignUpCommandResult.CodeRequired)
     }
@@ -924,7 +972,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
         )
 
-        val parameters = createSignUpSubmitCodeCommandParameters()
+        val parameters = createSignUpSubmitCodeCommandParameters(correlationId)
         val result = controller.signUpSubmitCode(parameters)
         assert(result is SignUpCommandResult.Complete)
     }
@@ -939,7 +987,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
         )
 
-        val parameters = createSignUpSubmitPasswordCommandParameters()
+        val parameters = createSignUpSubmitPasswordCommandParameters(correlationId)
         val result = controller.signUpSubmitPassword(parameters)
         assert(result is SignUpCommandResult.Complete)
     }
@@ -954,7 +1002,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.PASSWORD_TOO_WEAK
         )
 
-        val parameters = createSignUpSubmitPasswordCommandParameters()
+        val parameters = createSignUpSubmitPasswordCommandParameters(correlationId)
         val result = controller.signUpSubmitPassword(parameters)
         assert(result is SignUpCommandResult.InvalidPassword)
     }
@@ -969,7 +1017,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
         )
 
-        val parameters = createSignUpSubmitUserAttributesCommandParameters()
+        val parameters = createSignUpSubmitUserAttributesCommandParameters(correlationId)
         val result = controller.signUpSubmitUserAttributes(parameters)
         assert(result is SignUpCommandResult.Complete)
 
@@ -992,7 +1040,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.ATTRIBUTES_REQUIRED
         )
 
-        val parameters = createSignUpSubmitPasswordCommandParameters()
+        val parameters = createSignUpSubmitPasswordCommandParameters(correlationId)
         val result = controller.signUpSubmitPassword(parameters)
         assert(result is SignUpCommandResult.AttributesRequired)
     }
@@ -1007,7 +1055,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
 
-        val parameters = createSignUpStartCommandParameters()
+        val parameters = createSignUpStartCommandParameters(correlationId)
         val result = controller.signUpStart(parameters)
         assert(result is INativeAuthCommandResult.Redirect)
     }
@@ -1022,7 +1070,9 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
 
-        val parameters = createSignUpStartWithPasswordCommandParameters()
+        val parameters = createSignUpStartWithPasswordCommandParameters(
+            correlationId = correlationId
+        )
         val result = controller.signUpStart(parameters)
         assert(result is INativeAuthCommandResult.Redirect)
     }
@@ -1043,7 +1093,9 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
 
-        val parameters = createSignUpStartWithPasswordCommandParameters()
+        val parameters = createSignUpStartWithPasswordCommandParameters(
+            correlationId = correlationId
+        )
         val result = controller.signUpStart(parameters)
         assert(result is INativeAuthCommandResult.Redirect)
     }
@@ -1058,7 +1110,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.ATTRIBUTES_REQUIRED
         )
 
-        val parameters = createSignUpSubmitUserAttributesCommandParameters()
+        val parameters = createSignUpSubmitUserAttributesCommandParameters(correlationId)
         val result = controller.signUpSubmitUserAttributes(parameters)
         assert(result is SignUpCommandResult.AttributesRequired)
     }
@@ -1073,7 +1125,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.INVALID_OOB_VALUE
         )
 
-        val parameters = createSignUpSubmitCodeCommandParameters()
+        val parameters = createSignUpSubmitCodeCommandParameters(correlationId)
         val result = controller.signUpSubmitCode(parameters)
         assert(result is SignUpCommandResult.InvalidCode)
     }
@@ -1088,7 +1140,7 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.ATTRIBUTE_VALIDATION_FAILED
         )
 
-        val parameters = createSignUpSubmitUserAttributesCommandParameters()
+        val parameters = createSignUpSubmitUserAttributesCommandParameters(correlationId)
         val result = controller.signUpSubmitUserAttributes(parameters)
         assert(result is SignUpCommandResult.InvalidAttributes)
     }
@@ -1103,13 +1155,15 @@ class NativeAuthControllerTest {
             responseType = MockApiResponseType.ATTRIBUTE_VALIDATION_FAILED
         )
 
-        val parameters = createSignUpStartCommandParameters()
+        val parameters = createSignUpStartCommandParameters(correlationId)
         val result = controller.signUpStart(parameters)
         assert(result is SignUpCommandResult.InvalidAttributes)
     }
     // endregion
 
-    private fun createSignInStartWithPasswordCommandParameters(): SignInStartCommandParameters {
+    private fun createSignInStartWithPasswordCommandParameters(
+        correlationId: String
+    ): SignInStartCommandParameters {
         val authenticationScheme = AuthenticationSchemeFactory.createScheme(
             AndroidPlatformComponentsFactory.createFromContext(context),
             null
@@ -1125,11 +1179,14 @@ class NativeAuthControllerTest {
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
+            .correlationId(correlationId)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .build()
     }
 
-    private fun createSignInStartCommandParameters(): SignInStartCommandParameters {
+    private fun createSignInStartCommandParameters(
+        correlationId: String
+    ): SignInStartCommandParameters {
         val authenticationScheme = AuthenticationSchemeFactory.createScheme(
             AndroidPlatformComponentsFactory.createFromContext(context),
             null
@@ -1143,11 +1200,15 @@ class NativeAuthControllerTest {
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
+            .correlationId(correlationId)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .build()
     }
 
-    private fun createSignInWithContinuationTokenCommandParameters(withScopes: Boolean = false): SignInWithContinuationTokenCommandParameters {
+    private fun createSignInWithContinuationTokenCommandParameters(
+        withScopes: Boolean = false,
+        correlationId: String
+    ): SignInWithContinuationTokenCommandParameters {
         val authenticationScheme = AuthenticationSchemeFactory.createScheme(
             AndroidPlatformComponentsFactory.createFromContext(context),
             null
@@ -1168,7 +1229,7 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSignInSubmitCodeCommandParameters(): SignInSubmitCodeCommandParameters {
+    private fun createSignInSubmitCodeCommandParameters(correlationId: String): SignInSubmitCodeCommandParameters {
         val authenticationScheme = AuthenticationSchemeFactory.createScheme(
             AndroidPlatformComponentsFactory.createFromContext(context),
             null
@@ -1188,7 +1249,7 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSignInResendCodeCommandParameters(): SignInResendCodeCommandParameters {
+    private fun createSignInResendCodeCommandParameters(correlationId: String): SignInResendCodeCommandParameters {
         return SignInResendCodeCommandParameters.builder()
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
             .clientId(clientId)
@@ -1201,7 +1262,7 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSignInSubmitPasswordCommandParameters(): SignInSubmitPasswordCommandParameters {
+    private fun createSignInSubmitPasswordCommandParameters(correlationId: String): SignInSubmitPasswordCommandParameters {
         val authenticationScheme = AuthenticationSchemeFactory.createScheme(
             AndroidPlatformComponentsFactory.createFromContext(context),
             null
@@ -1222,7 +1283,7 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSsprStartCommandParameters(): ResetPasswordStartCommandParameters {
+    private fun createSsprStartCommandParameters(correlationId: String): ResetPasswordStartCommandParameters {
         return ResetPasswordStartCommandParameters.builder()
             .username(username)
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
@@ -1235,7 +1296,7 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSsprSubmitCodeCommandParameters(): ResetPasswordSubmitCodeCommandParameters {
+    private fun createSsprSubmitCodeCommandParameters(correlationId: String): ResetPasswordSubmitCodeCommandParameters {
         return ResetPasswordSubmitCodeCommandParameters.builder()
             .code(code)
             .continuationToken(continuationToken)
@@ -1249,7 +1310,7 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSsprResendCodeCommandParameters(): ResetPasswordResendCodeCommandParameters {
+    private fun createSsprResendCodeCommandParameters(correlationId: String): ResetPasswordResendCodeCommandParameters {
         return ResetPasswordResendCodeCommandParameters.builder()
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
             .clientId(clientId)
@@ -1262,7 +1323,7 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSsprSubmitNewPasswordCommandParameters(): ResetPasswordSubmitNewPasswordCommandParameters {
+    private fun createSsprSubmitNewPasswordCommandParameters(correlationId: String): ResetPasswordSubmitNewPasswordCommandParameters {
         return ResetPasswordSubmitNewPasswordCommandParameters.builder()
             .newPassword(newPassword)
             .continuationToken(continuationToken)
@@ -1276,7 +1337,10 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createRemoveAccountCommandParameters(account: AccountRecord): RemoveAccountCommandParameters {
+    private fun createRemoveAccountCommandParameters(
+        account: AccountRecord,
+        correlationId: String
+    ): RemoveAccountCommandParameters {
         return RemoveAccountCommandParameters.builder()
             .account(account)
             .clientId(clientId)
@@ -1291,7 +1355,10 @@ class NativeAuthControllerTest {
         return MsalOAuth2TokenCache.create(platformComponents)
     }
 
-    private fun createSignUpStartWithPasswordCommandParameters(passwordValue: CharArray? = null): SignUpStartCommandParameters {
+    private fun createSignUpStartWithPasswordCommandParameters(
+        passwordValue: CharArray? = null,
+        correlationId: String
+    ): SignUpStartCommandParameters {
         return SignUpStartCommandParameters.builder()
             .username(username)
             .password(
@@ -1312,7 +1379,9 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSignUpStartCommandParameters(): SignUpStartCommandParameters {
+    private fun createSignUpStartCommandParameters(
+        correlationId: String
+    ): SignUpStartCommandParameters {
         return SignUpStartCommandParameters.builder()
             .username(username)
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
@@ -1325,7 +1394,9 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSignUpResendCodeCommandParameters(): SignUpResendCodeCommandParameters {
+    private fun createSignUpResendCodeCommandParameters(
+        correlationId: String
+    ): SignUpResendCodeCommandParameters {
         return SignUpResendCodeCommandParameters.builder()
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
             .continuationToken(continuationToken)
@@ -1338,7 +1409,9 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSignUpSubmitCodeCommandParameters(): SignUpSubmitCodeCommandParameters {
+    private fun createSignUpSubmitCodeCommandParameters(
+        correlationId: String
+    ): SignUpSubmitCodeCommandParameters {
         return SignUpSubmitCodeCommandParameters.builder()
             .continuationToken(continuationToken)
             .code(code)
@@ -1352,7 +1425,9 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSignUpSubmitPasswordCommandParameters(): SignUpSubmitPasswordCommandParameters {
+    private fun createSignUpSubmitPasswordCommandParameters(
+        correlationId: String
+    ): SignUpSubmitPasswordCommandParameters {
         return SignUpSubmitPasswordCommandParameters.builder()
             .continuationToken(continuationToken)
             .password(password)
@@ -1366,7 +1441,9 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSignUpSubmitUserAttributesCommandParameters(): SignUpSubmitUserAttributesCommandParameters {
+    private fun createSignUpSubmitUserAttributesCommandParameters(
+        correlationId: String
+    ): SignUpSubmitUserAttributesCommandParameters {
         return SignUpSubmitUserAttributesCommandParameters.builder()
             .continuationToken(continuationToken)
             .userAttributes(userAttributes)
