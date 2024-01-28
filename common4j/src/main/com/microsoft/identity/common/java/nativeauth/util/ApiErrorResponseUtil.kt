@@ -110,7 +110,7 @@ internal fun String?.isVerificationRequired(): Boolean {
     return this.contentEquals(other = "verification_required", ignoreCase = true)
 }
 
-internal fun String?.isInvalidEmail(): Boolean {
+internal fun String?.isInvalidUsername(): Boolean {
     return (this?.contains(other = "username parameter is empty or not valid", ignoreCase = true) == true )
 }
 

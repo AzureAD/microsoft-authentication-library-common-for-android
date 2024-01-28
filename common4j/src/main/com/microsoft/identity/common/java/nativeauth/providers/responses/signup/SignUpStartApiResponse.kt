@@ -29,8 +29,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.util.isAttributeValidationFailed
 import com.microsoft.identity.common.java.nativeauth.util.isAuthNotSupported
-import com.microsoft.identity.common.java.nativeauth.util.isInvalidClient
-import com.microsoft.identity.common.java.nativeauth.util.isInvalidEmail
+import com.microsoft.identity.common.java.nativeauth.util.isInvalidUsername
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidParameter
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordBanned
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordInvalid
@@ -41,7 +40,6 @@ import com.microsoft.identity.common.java.nativeauth.util.isPasswordTooWeak
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import com.microsoft.identity.common.java.nativeauth.util.isUnsupportedChallengeType
 import com.microsoft.identity.common.java.nativeauth.util.isUserAlreadyExists
-import com.microsoft.identity.common.java.nativeauth.util.isVerificationRequired
 import com.microsoft.identity.common.java.nativeauth.util.toAttributeList
 import java.net.HttpURLConnection
 
@@ -79,8 +77,8 @@ data class SignUpStartApiResponse(
                             errorDescription = errorDescription.orEmpty()
                         )
                     }
-                    errorCodes?.get(0).isInvalidParameter() and (errorDescription?.isInvalidEmail() == true) -> {
-                        SignUpStartApiResult.InvalidEmail(
+                    errorCodes?.get(0).isInvalidParameter() and (errorDescription?.isInvalidUsername() == true) -> {
+                        SignUpStartApiResult.InvalidUsername(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty()
                         )
