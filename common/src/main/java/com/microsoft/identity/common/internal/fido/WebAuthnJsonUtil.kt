@@ -88,7 +88,6 @@ class WebAuthnJsonUtil {
             val data: ByteArray = this.toByteArray(Charsets.UTF_8)
             val base64: String = Base64.encodeToString(data, (Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING))
             return base64.replace("=", "")
-            //return base64.replace("=", "").replace("+", "-").replace("/", "_")
         }
     }
 }
