@@ -51,7 +51,11 @@ class SignInWithContinuationTokenCommand(
      * It calls the signInWithContinuationToken method of the native auth MSAL controller with the given parameters.
      */
     override fun execute(): SignInWithContinuationTokenCommandResult {
-        LogSession.logMethodCall(TAG, "${TAG}.execute")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.execute"
+        )
 
         val result = controller.signInWithContinuationToken(
             parameters = parameters
