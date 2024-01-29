@@ -102,6 +102,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .username(emptyString)
             .clientId(clientId)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createSignUpStartRequest(
@@ -115,6 +116,7 @@ class NativeAuthRequestHandlerTest {
             .username(username)
             .password(emptyPassword)
             .clientId(clientId)
+            .correlationId(correlationId)
             .build()
 
         val request = nativeAuthRequestProvider.createSignUpStartRequest(
@@ -132,6 +134,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .clientId(emptyString)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createSignUpStartRequest(
@@ -147,6 +150,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .clientId(clientId)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createSignUpStartRequest(
@@ -161,6 +165,7 @@ class NativeAuthRequestHandlerTest {
             .username(username)
             .clientId(clientId)
             .userAttributes(userAttributes)
+            .correlationId(correlationId)
             .build()
 
         val result = nativeAuthRequestProvider.createSignUpStartRequest(
@@ -182,6 +187,7 @@ class NativeAuthRequestHandlerTest {
             .password(password)
             .clientId(clientId)
             .userAttributes(userAttributes)
+            .correlationId(correlationId)
             .build()
 
         val result = nativeAuthRequestProvider.createSignUpStartRequest(
@@ -202,6 +208,7 @@ class NativeAuthRequestHandlerTest {
             .continuationToken(continuationToken)
             .code(oobCode)
             .clientId(clientId)
+            .correlationId(correlationId)
             .build()
 
         val result = nativeAuthRequestProvider.createSignUpSubmitCodeRequest(
@@ -221,6 +228,7 @@ class NativeAuthRequestHandlerTest {
             .continuationToken(continuationToken)
             .password(password)
             .clientId(clientId)
+            .correlationId(correlationId)
             .build()
 
         val result = nativeAuthRequestProvider.createSignUpSubmitPasswordRequest(
@@ -240,6 +248,7 @@ class NativeAuthRequestHandlerTest {
             .continuationToken(continuationToken)
             .userAttributes(userAttributes)
             .clientId(clientId)
+            .correlationId(correlationId)
             .build()
 
         val result = nativeAuthRequestProvider.createSignUpSubmitUserAttributesRequest(
@@ -258,6 +267,7 @@ class NativeAuthRequestHandlerTest {
             .continuationToken(continuationToken)
             .userAttributes(emptyUserAttributes)
             .clientId(clientId)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createSignUpSubmitUserAttributesRequest(
@@ -272,6 +282,7 @@ class NativeAuthRequestHandlerTest {
             .continuationToken(continuationToken)
             .password(emptyPassword)
             .clientId(clientId)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createSignUpSubmitPasswordRequest(
@@ -286,6 +297,7 @@ class NativeAuthRequestHandlerTest {
             .continuationToken(continuationToken)
             .code(emptyString)
             .clientId(clientId)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createSignUpSubmitCodeRequest(
@@ -345,6 +357,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = SignInStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(emptyString)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createSignInInitiateRequest(
@@ -359,6 +372,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = SignInStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createSignInInitiateRequest(
@@ -373,6 +387,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = SignInStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createSignInInitiateRequest(
@@ -385,6 +400,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = SignInStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
+            .correlationId(correlationId)
             .build()
 
         val result = nativeAuthRequestProvider.createSignInInitiateRequest(
@@ -445,6 +461,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .password(password)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createSignInInitiateRequest(
@@ -460,6 +477,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .password(password)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createSignInInitiateRequest(
@@ -473,6 +491,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .username(emptyString)
             .password(password)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createSignInInitiateRequest(
@@ -488,6 +507,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .password(emptyPassword)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createSignInInitiateRequest(
@@ -501,6 +521,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
             .username(username)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createContinuationTokenTokenRequest(
@@ -514,6 +535,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(emptyString)
             .username(username)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createContinuationTokenTokenRequest(
@@ -527,6 +549,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
             .username(emptyString)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createContinuationTokenTokenRequest(
@@ -540,6 +563,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .code(emptyString)
             .continuationToken(continuationToken)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createOOBTokenRequest(
@@ -553,6 +577,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .password(emptyPassword)
             .continuationToken(continuationToken)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createPasswordTokenRequest(
@@ -566,6 +591,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .password(password)
             .continuationToken(emptyString)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createPasswordTokenRequest(
@@ -579,6 +605,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .password(password)
             .continuationToken(continuationToken)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createPasswordTokenRequest(
@@ -591,6 +618,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = SignUpSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(emptyString)
+            .correlationId(correlationId)
             .code(oobCode)
             .build()
 
@@ -607,6 +635,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
             .code(oobCode)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createSignUpSubmitCodeRequest(
@@ -620,6 +649,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = ResetPasswordStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(emptyString)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createResetPasswordStartRequest(
@@ -634,6 +664,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = ResetPasswordStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createResetPasswordStartRequest(
@@ -648,6 +679,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = ResetPasswordStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createResetPasswordStartRequest(
@@ -660,6 +692,7 @@ class NativeAuthRequestHandlerTest {
         val commandParameters = ResetPasswordStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createResetPasswordStartRequest(
@@ -703,6 +736,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .code(oobCode)
             .continuationToken(continuationToken)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createResetPasswordContinueRequest(
@@ -716,6 +750,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .code(oobCode)
             .continuationToken(emptyString)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createResetPasswordContinueRequest(
@@ -729,6 +764,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .code(emptyString)
             .continuationToken(continuationToken)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createResetPasswordContinueRequest(
@@ -742,6 +778,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .code(oobCode)
             .continuationToken(continuationToken)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createResetPasswordContinueRequest(
@@ -758,6 +795,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
             .newPassword(password)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createResetPasswordSubmitRequest(
@@ -771,6 +809,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
             .newPassword(emptyPassword)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createResetPasswordSubmitRequest(
@@ -784,6 +823,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(emptyString)
             .newPassword(password)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createResetPasswordSubmitRequest(
@@ -797,6 +837,7 @@ class NativeAuthRequestHandlerTest {
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
             .newPassword(password)
+            .correlationId(correlationId)
             .build()
 
         nativeAuthRequestProvider.createResetPasswordSubmitRequest(
