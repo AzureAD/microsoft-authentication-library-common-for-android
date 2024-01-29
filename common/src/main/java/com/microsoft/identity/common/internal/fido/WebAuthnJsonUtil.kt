@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
+import android.util.Base64
 import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter
 import com.microsoft.identity.common.java.constants.FidoConstants
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_RESPONSE_ID_JSON_KEY
@@ -55,7 +56,7 @@ class WebAuthnJsonUtil {
                 }
             }
             val options = PublicKeyCredentialRequestOptions(
-                challenge,
+                challenge.base64UrlEncoded(),
                 relyingPartyIdentifier,
                 publicKeyCredentialDescriptorList,
                 userVerificationPolicy
@@ -77,6 +78,17 @@ class WebAuthnJsonUtil {
                 authResponseJsonObject = authResponseJsonObject.put(WEBAUTHN_RESPONSE_ID_JSON_KEY, fullResponseJsonObject.get(WEBAUTHN_RESPONSE_ID_JSON_KEY))
             }
             return authResponseJsonObject.toString()
+        }
+
+        /**
+         * Returns a base64URL encoding of the string.
+         * @return String
+         */
+        fun String.base64UrlEncoded(): String {
+            val data: ByteArray = this.toByteArray(Charsets.UTF_8)
+            val base64: String = Base64.encodeToString(data, (Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING))
+            return base64.replace("=", "")
+            //return base64.replace("=", "").replace("+", "-").replace("/", "_")
         }
     }
 }
