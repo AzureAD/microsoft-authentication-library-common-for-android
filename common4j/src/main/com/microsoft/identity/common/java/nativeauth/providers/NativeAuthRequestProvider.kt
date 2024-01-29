@@ -103,7 +103,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
      */
     internal fun createSignInChallengeRequest(
         continuationToken: String,
-        correlationId: String?
+        correlationId: String
     ): SignInChallengeRequest {
         LogSession.logMethodCall(
             tag = TAG,
@@ -218,7 +218,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //region /resetpassword/challenge
     internal fun createResetPasswordChallengeRequest(
         continuationToken: String,
-        correlationId: String?
+        correlationId: String
     ): ResetPasswordChallengeRequest {
         LogSession.logMethodCall(
             tag = TAG,
@@ -301,7 +301,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //region /resetpassword/pollcompletion
     internal fun createResetPasswordPollCompletionRequest(
         continuationToken: String,
-        correlationId: String?
+        correlationId: String
     ): ResetPasswordPollCompletionRequest {
         LogSession.logMethodCall(
             tag = TAG,
@@ -380,7 +380,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //region /signup/challenge
     internal fun createSignUpChallengeRequest(
         continuationToken: String,
-        correlationId: String?
+        correlationId: String
     ): SignUpChallengeRequest {
         LogSession.logMethodCall(
             tag = TAG,
@@ -399,16 +399,9 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //endregion
 
     //region helpers
-    private fun getRequestHeaders(correlationId: String?): Map<String, String?> {
+    private fun getRequestHeaders(correlationId: String): Map<String, String?> {
         val headers: MutableMap<String, String?> = TreeMap()
-        // If correlationId is null, use the ID from DiagnosticContext, to avoid this field not being set when making the API request
-        val localCorrelationId: String? = if (correlationId == null) {
-            Logger.info(TAG, "correlationID not set, using correlationID from DiagnosticContext")
-            DiagnosticContext.INSTANCE.requestContext[DiagnosticContext.CORRELATION_ID]
-        } else {
-            correlationId
-        }
-        headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = localCorrelationId
+        headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = correlationId
         headers[AuthenticationConstants.SdkPlatformFields.PRODUCT] = DiagnosticContext.INSTANCE.requestContext[AuthenticationConstants.SdkPlatformFields.PRODUCT]
         headers[AuthenticationConstants.SdkPlatformFields.VERSION] = Device.getProductVersion()
         headers.putAll(Device.getPlatformIdParameters())
