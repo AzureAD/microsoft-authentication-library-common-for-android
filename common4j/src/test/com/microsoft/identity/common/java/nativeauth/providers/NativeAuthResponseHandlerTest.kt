@@ -20,8 +20,10 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.nativeauth.providers
+package com.microsoft.identity.common.internal.nativeauth.providers
 
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.UserAttributeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.UserAttributeOptionsApiResult
@@ -2765,7 +2767,8 @@ class NativeAuthResponseHandlerTest {
         whenever(response.body).thenReturn(body)
 
         val result = nativeAuthResponseHandler.getSignInTokenApiResultFromHttpResponse(
-            response
+            requestCorrelationId = correlationId,
+            response = response
         )
         assertTrue(result is SignInTokenApiResult.Success)
     }
@@ -2845,7 +2848,10 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignUpStartNullResponse() {
-        val response = handler.getSignUpStartResultFromHttpResponse(nullHttpResponse)
+        val response = handler.getSignUpStartResultFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = nullHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.challengeType)
@@ -2859,7 +2865,10 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignUpStartEmptyResponse() {
-        val response = handler.getSignUpStartResultFromHttpResponse(emptyHttpResponse)
+        val response = handler.getSignUpStartResultFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = emptyHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.challengeType)
@@ -2873,7 +2882,10 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignUpChallengeNullResponse() {
-        val response = handler.getSignUpChallengeResultFromHttpResponse(nullHttpResponse)
+        val response = handler.getSignUpChallengeResultFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = nullHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.challengeType)
@@ -2889,7 +2901,10 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignUpChallengeEmptyResponse() {
-        val response = handler.getSignUpChallengeResultFromHttpResponse(emptyHttpResponse)
+        val response = handler.getSignUpChallengeResultFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = emptyHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.challengeType)
@@ -2905,7 +2920,10 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignUpContinueNullResponse() {
-        val response = handler.getSignUpContinueResultFromHttpResponse(nullHttpResponse)
+        val response = handler.getSignUpContinueResultFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = nullHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.subError)
@@ -2921,7 +2939,10 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignUpContinueEmptyResponse() {
-        val response = handler.getSignUpContinueResultFromHttpResponse(emptyHttpResponse)
+        val response = handler.getSignUpContinueResultFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = emptyHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.subError)
@@ -2937,7 +2958,10 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignInInitiateNullResponse() {
-        val response = handler.getSignInInitiateResultFromHttpResponse(nullHttpResponse)
+        val response = handler.getSignInInitiateResultFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = nullHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.challengeType)
@@ -2949,7 +2973,10 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignInInitiateEmptyResponse() {
-        val response = handler.getSignInInitiateResultFromHttpResponse(emptyHttpResponse)
+        val response = handler.getSignInInitiateResultFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = emptyHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.challengeType)
@@ -2961,7 +2988,10 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignInChallengeNullResponse() {
-        val response = handler.getSignInChallengeResultFromHttpResponse(nullHttpResponse)
+        val response = handler.getSignInChallengeResultFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = nullHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.challengeType)
@@ -2976,7 +3006,10 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignInChallengeEmptyResponse() {
-        val response = handler.getSignInChallengeResultFromHttpResponse(emptyHttpResponse)
+        val response = handler.getSignInChallengeResultFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = emptyHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.challengeType)
@@ -2991,21 +3024,30 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignInTokenNullResponse() {
-        val response = handler.getSignInTokenApiResultFromHttpResponse(nullHttpResponse)
+        val response = handler.getSignInTokenApiResultFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = nullHttpResponse
+        )
 
         Assert.assertNotNull(response)
     }
 
     @Test
     fun testSignInTokenEmptyResponse() {
-        val response = handler.getSignInTokenApiResultFromHttpResponse(emptyHttpResponse)
+        val response = handler.getSignInTokenApiResultFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = emptyHttpResponse
+        )
 
         Assert.assertNotNull(response)
     }
 
     @Test
     fun testResetPasswordStartNullResponse() {
-        val response = handler.getResetPasswordChallengeApiResponseFromHttpResponse(nullHttpResponse)
+        val response = handler.getResetPasswordChallengeApiResponseFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = nullHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.challengeType)
@@ -3021,7 +3063,10 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testResetPasswordStartEmptyResponse() {
-        val response = handler.getResetPasswordChallengeApiResponseFromHttpResponse(emptyHttpResponse)
+        val response = handler.getResetPasswordChallengeApiResponseFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = emptyHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.challengeType)
@@ -3037,7 +3082,10 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testResetPasswordChallengeNullResponse() {
-        val response = handler.getResetPasswordStartApiResponseFromHttpResponse(nullHttpResponse)
+        val response = handler.getResetPasswordStartApiResponseFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = nullHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.challengeType)
@@ -3049,7 +3097,10 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testResetPasswordChallengeEmptyResponse() {
-        val response = handler.getResetPasswordStartApiResponseFromHttpResponse(emptyHttpResponse)
+        val response = handler.getResetPasswordStartApiResponseFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = emptyHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.challengeType)
@@ -3061,7 +3112,10 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testResetPasswordContinueNullResponse() {
-        val response = handler.getResetPasswordContinueApiResponseFromHttpResponse(nullHttpResponse)
+        val response = handler.getResetPasswordContinueApiResponseFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = nullHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.challengeType)
@@ -3074,7 +3128,10 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testResetPasswordContinueEmptyResponse() {
-        val response = handler.getResetPasswordContinueApiResponseFromHttpResponse(emptyHttpResponse)
+        val response = handler.getResetPasswordContinueApiResponseFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = emptyHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.subError)
@@ -3088,7 +3145,10 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testResetPasswordSubmitNullResponse() {
-        val response = handler.getResetPasswordSubmitApiResponseFromHttpResponse(nullHttpResponse)
+        val response = handler.getResetPasswordSubmitApiResponseFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = nullHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.subError)
@@ -3100,7 +3160,10 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testResetPasswordSubmitEmptyResponse() {
-        val response = handler.getResetPasswordSubmitApiResponseFromHttpResponse(emptyHttpResponse)
+        val response = handler.getResetPasswordSubmitApiResponseFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = emptyHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.subError)
@@ -3112,7 +3175,10 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testResetPasswordPollNullResponse() {
-        val response = handler.getResetPasswordPollCompletionApiResponseFromHttpResponse(nullHttpResponse)
+        val response = handler.getResetPasswordPollCompletionApiResponseFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = nullHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.subError)
@@ -3123,7 +3189,10 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testResetPasswordPollEmptyResponse() {
-        val response = handler.getResetPasswordPollCompletionApiResponseFromHttpResponse(emptyHttpResponse)
+        val response = handler.getResetPasswordPollCompletionApiResponseFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = emptyHttpResponse
+        )
 
         Assert.assertEquals(response.statusCode, nullHttpResponse.statusCode)
         Assert.assertNull(response.subError)
