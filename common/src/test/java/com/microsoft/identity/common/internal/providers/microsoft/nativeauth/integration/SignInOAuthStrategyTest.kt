@@ -337,7 +337,7 @@ class SignInOAuthStrategyTest {
 
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SignInToken,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.TOKEN_SUCCESS
         )
 

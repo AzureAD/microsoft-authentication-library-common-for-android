@@ -135,7 +135,7 @@ class ResetPasswordScenarioTest {
         )
         Assert.assertTrue(ssprStartResult is ResetPasswordStartApiResult.Success)
         continuationToken = (ssprStartResult as ResetPasswordStartApiResult.Success).continuationToken
-        correlationId = ssprStartResult.correlationId ?: UUID.randomUUID().toString()
+        correlationId = ssprStartResult.correlationId
 
         // Call /challenge
         configureMockApi(
@@ -149,7 +149,7 @@ class ResetPasswordScenarioTest {
         )
         Assert.assertTrue(ssprChallengeResult is ResetPasswordChallengeApiResult.CodeRequired)
         continuationToken = (ssprChallengeResult as ResetPasswordChallengeApiResult.CodeRequired).continuationToken
-        correlationId = ssprStartResult.correlationId ?: UUID.randomUUID().toString()
+        correlationId = ssprStartResult.correlationId
 
         // Call /continue
         configureMockApi(
@@ -166,7 +166,7 @@ class ResetPasswordScenarioTest {
         )
         Assert.assertTrue(ssprContinueResult is ResetPasswordContinueApiResult.PasswordRequired)
         continuationToken = (ssprContinueResult as ResetPasswordContinueApiResult.PasswordRequired).continuationToken
-        correlationId = ssprStartResult.correlationId ?: UUID.randomUUID().toString()
+        correlationId = ssprStartResult.correlationId
 
         // Call /submit
         configureMockApi(
@@ -184,7 +184,7 @@ class ResetPasswordScenarioTest {
         )
         Assert.assertTrue(ssprSubmitResult is ResetPasswordSubmitApiResult.SubmitSuccess)
         continuationToken = (ssprSubmitResult as ResetPasswordSubmitApiResult.SubmitSuccess).continuationToken
-        correlationId = ssprStartResult.correlationId ?: UUID.randomUUID().toString()
+        correlationId = ssprStartResult.correlationId
 
         // Call /poll_completion
         configureMockApi(
@@ -247,7 +247,7 @@ class ResetPasswordScenarioTest {
         )
         Assert.assertTrue(ssprStartResult is ResetPasswordStartApiResult.Success)
         continuationToken = (ssprStartResult as ResetPasswordStartApiResult.Success).continuationToken
-        correlationId = ssprStartResult.correlationId ?: UUID.randomUUID().toString()
+        correlationId = ssprStartResult.correlationId
 
         // Call /challenge
         configureMockApi(
@@ -261,7 +261,7 @@ class ResetPasswordScenarioTest {
         )
         Assert.assertTrue(ssprChallengeResult is ResetPasswordChallengeApiResult.CodeRequired)
         continuationToken = (ssprChallengeResult as ResetPasswordChallengeApiResult.CodeRequired).continuationToken
-        correlationId = ssprChallengeResult.correlationId ?: UUID.randomUUID().toString()
+        correlationId = ssprChallengeResult.correlationId
 
         // Call /continue
         configureMockApi(
@@ -279,7 +279,7 @@ class ResetPasswordScenarioTest {
         )
         Assert.assertTrue(ssprContinueResult is ResetPasswordContinueApiResult.PasswordRequired)
         continuationToken = (ssprContinueResult as ResetPasswordContinueApiResult.PasswordRequired).continuationToken
-        correlationId = ssprChallengeResult.correlationId ?: UUID.randomUUID().toString()
+        correlationId = ssprChallengeResult.correlationId
 
         // Call /submit
         configureMockApi(
@@ -305,7 +305,7 @@ class ResetPasswordScenarioTest {
             (ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).subError,
             passwordTooWeak
         )
-        correlationId = ssprSubmitResult.correlationId ?: UUID.randomUUID().toString()
+        correlationId = ssprSubmitResult.correlationId
 
         // Call /poll_completion
         configureMockApi(
@@ -343,7 +343,7 @@ class ResetPasswordScenarioTest {
         )
         Assert.assertTrue(ssprStartResult is ResetPasswordStartApiResult.Success)
         var continuationToken = (ssprStartResult as ResetPasswordStartApiResult.Success).continuationToken
-        correlationId = ssprStartResult.correlationId ?: UUID.randomUUID().toString()
+        correlationId = ssprStartResult.correlationId
 
         // Call /challenge
         configureMockApi(
@@ -357,7 +357,7 @@ class ResetPasswordScenarioTest {
         )
         Assert.assertTrue(ssprChallengeResult is ResetPasswordChallengeApiResult.CodeRequired)
         continuationToken = (ssprChallengeResult as ResetPasswordChallengeApiResult.CodeRequired).continuationToken
-        correlationId = ssprStartResult.correlationId ?: UUID.randomUUID().toString()
+        correlationId = ssprStartResult.correlationId
 
         // Call /continue
         configureMockApi(
