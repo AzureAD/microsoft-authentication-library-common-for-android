@@ -262,5 +262,10 @@ public enum AttributeName {
     /**
      * Indicates the request sequence used by cached credential service (if used) on server side
      */
-    ccs_request_sequence
+    ccs_request_sequence,
+
+    /**
+     * Indicates the package name of the app making the request to the broker.
+     */
+    calling_package_name;
 }
