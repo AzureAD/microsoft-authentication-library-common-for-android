@@ -10,6 +10,7 @@ V.Next
 - [MINOR] Update ResetPasswordPollCompletion related command, results, and responses to support signing in a user after a successful password reset. (#2281)
 - [PATCH] Create consistent use of correlation ID throughout a user flow (#2283)
 - [MINOR] Added support for setting no log level (#2282)
+- [MINOR] Redirect to hub app in case of NAA flow (#2290)
 
 V.17.0.0
 ---------
