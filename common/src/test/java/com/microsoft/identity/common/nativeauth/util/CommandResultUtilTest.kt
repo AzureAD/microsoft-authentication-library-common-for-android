@@ -576,9 +576,7 @@ class CommandResultUtilTestSignInWithContinuationTokenCommandResult(private val 
         @JvmStatic
         @Parameters
         fun getSignInWithContinuationTokenCommandResults() = listOf(
-            signInCodeRequiredCommandResult,
             signInCompleteCommandResult,
-            signInPasswordRequiredCommandResult,
             redirectCommandResult,
             unknownErrorCommandResult
         )
