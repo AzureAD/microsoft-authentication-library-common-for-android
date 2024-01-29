@@ -490,9 +490,9 @@ public class MicrosoftStsOAuth2Strategy
         request.setScope(StringUtil.join(" ", parameters.getScopes()));
         setTokenRequestCorrelationId(request);
 
-        if (AuthenticationSchemeFactory.isPopAuthenticationScheme(parameters.getAuthenticationScheme())) {
-            throw new UnsupportedOperationException("MSAL Android supports ROPC on Bearer flows only for testing purposes.");
-        }
+//        if (AuthenticationSchemeFactory.isPopAuthenticationScheme(parameters.getAuthenticationScheme())) {
+//            throw new UnsupportedOperationException("MSAL Android supports ROPC on Bearer flows only for testing purposes.");
+//        }
 
         return request;
     }
