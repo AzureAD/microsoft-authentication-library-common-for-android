@@ -35,7 +35,6 @@ import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.G
 
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
-import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
@@ -489,10 +488,6 @@ public class MicrosoftStsOAuth2Strategy
         request.setRedirectUri(parameters.getRedirectUri());
         request.setScope(StringUtil.join(" ", parameters.getScopes()));
         setTokenRequestCorrelationId(request);
-
-//        if (AuthenticationSchemeFactory.isPopAuthenticationScheme(parameters.getAuthenticationScheme())) {
-//            throw new UnsupportedOperationException("MSAL Android supports ROPC on Bearer flows only for testing purposes.");
-//        }
 
         return request;
     }
