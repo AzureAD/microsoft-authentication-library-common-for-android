@@ -51,7 +51,11 @@ class SignInSubmitPasswordCommand(
      * It calls the signInSubmitPassword method of the native auth MSAL controller with the given parameters.
      */
     override fun execute(): SignInSubmitPasswordCommandResult {
-        LogSession.logMethodCall(TAG, "${TAG}.execute")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.execute"
+        )
 
         val result = controller.signInSubmitPassword(
             parameters = parameters

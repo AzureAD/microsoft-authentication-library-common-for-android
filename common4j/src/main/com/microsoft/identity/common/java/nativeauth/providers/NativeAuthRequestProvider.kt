@@ -27,18 +27,17 @@ import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
-import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
+import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpassword.ResetPasswordChallengeRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpassword.ResetPasswordContinueRequest
@@ -76,19 +75,23 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //region /oauth/v2.0/initiate
     /**
      * Creates request object for /oauth/v2.0/initiate API call from [SignInStartCommandParameters]
-     * @param parameters: command parameters object
+     * @param commandParameters: command parameters object
      */
     internal fun createSignInInitiateRequest(
-        parameters: SignInStartCommandParameters
+        commandParameters: SignInStartCommandParameters
     ): SignInInitiateRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createSignInInitiateRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = commandParameters.getCorrelationId(),
+            methodName = "${TAG}.createSignInInitiateRequest"
+        )
 
         return SignInInitiateRequest.create(
-            username = parameters.username,
+            username = commandParameters.username,
             clientId = config.clientId,
             challengeType = config.challengeType,
             requestUrl = signInInitiateEndpoint,
-            headers = getRequestHeaders()
+            headers = getRequestHeaders(commandParameters.getCorrelationId())
         )
     }
     //endregion
@@ -99,16 +102,21 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
      * @param continuationToken: continuation token from a previous signin command
      */
     internal fun createSignInChallengeRequest(
-        continuationToken: String
+        continuationToken: String,
+        correlationId: String
     ): SignInChallengeRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createSignInChallengeRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            methodName = "${TAG}.createSignInChallengeRequest"
+        )
 
         return SignInChallengeRequest.create(
             clientId = config.clientId,
             continuationToken = continuationToken,
             challengeType = config.challengeType,
             requestUrl = signInChallengeEndpoint,
-            headers = getRequestHeaders()
+            headers = getRequestHeaders(correlationId)
         )
     }
     //endregion
@@ -116,109 +124,134 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //region /oauth/v2.0/token
     /**
      * Creates request object for /oauth/v2.0/token API call from [SignInSubmitCodeCommandParameters]
-     * @param parameters: command parameters object
+     * @param commandParameters: command parameters object
      */
     internal fun createOOBTokenRequest(
-        parameters: SignInSubmitCodeCommandParameters
+        commandParameters: SignInSubmitCodeCommandParameters
     ): SignInTokenRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createOOBTokenRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = commandParameters.getCorrelationId(),
+            methodName = "${TAG}.createOOBTokenRequest"
+        )
 
         return SignInTokenRequest.createOOBTokenRequest(
-            oob = parameters.code,
-            scopes = parameters.scopes,
-            continuationToken = parameters.continuationToken,
+            oob = commandParameters.code,
+            scopes = commandParameters.scopes,
+            continuationToken = commandParameters.continuationToken,
             clientId = config.clientId,
             challengeType = config.challengeType,
             requestUrl = signInTokenEndpoint,
-            headers = getRequestHeaders()
+            headers = getRequestHeaders(commandParameters.getCorrelationId())
         )
     }
 
     /**
      * Creates request object for /oauth/v2.0/token API call from [SignInWithContinuationTokenCommandParameters]
-     * @param parameters: command parameters object
+     * @param commandParameters: command parameters object
      */
     internal fun createContinuationTokenTokenRequest(
-        parameters: SignInWithContinuationTokenCommandParameters
+        commandParameters: SignInWithContinuationTokenCommandParameters
     ): SignInTokenRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createContinuationTokenRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = commandParameters.getCorrelationId(),
+            methodName = "${TAG}.createContinuationTokenRequest"
+        )
 
         return SignInTokenRequest.createContinuationTokenRequest(
-            continuationToken = parameters.continuationToken,
-            scopes = parameters.scopes,
+            continuationToken = commandParameters.continuationToken,
+            scopes = commandParameters.scopes,
             clientId = config.clientId,
-            username = parameters.username,
+            username = commandParameters.username,
             challengeType = config.challengeType,
             requestUrl = signInTokenEndpoint,
-            headers = getRequestHeaders()
+            headers = getRequestHeaders(commandParameters.getCorrelationId())
         )
     }
 
     /**
      * Creates request object for /oauth/v2.0/token API call from [SignInSubmitPasswordCommandParameters]
-     * @param parameters: command parameters object
+     * @param commandParameters: command parameters object
      */
     internal fun createPasswordTokenRequest(
-        parameters: SignInSubmitPasswordCommandParameters
+        commandParameters: SignInSubmitPasswordCommandParameters
     ): SignInTokenRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createPasswordTokenRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = commandParameters.getCorrelationId(),
+            methodName = "${TAG}.createPasswordTokenRequest"
+        )
 
         return SignInTokenRequest.createPasswordTokenRequest(
-            password = parameters.password,
-            scopes = parameters.scopes,
-            continuationToken = parameters.continuationToken,
+            password = commandParameters.password,
+            scopes = commandParameters.scopes,
+            continuationToken = commandParameters.continuationToken,
             clientId = config.clientId,
             challengeType = config.challengeType,
             requestUrl = signInTokenEndpoint,
-            headers = getRequestHeaders()
+            headers = getRequestHeaders(commandParameters.getCorrelationId())
         )
     }
     //endregion
 
     //region /resetpassword/start
     internal fun createResetPasswordStartRequest(
-        parameters: ResetPasswordStartCommandParameters
+        commandParameters: ResetPasswordStartCommandParameters
     ): ResetPasswordStartRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordStartRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = commandParameters.getCorrelationId(),
+            methodName = "${TAG}.createResetPasswordStartRequest"
+        )
 
         return ResetPasswordStartRequest.create(
             clientId = config.clientId,
-            username = parameters.username,
+            username = commandParameters.username,
             challengeType = config.challengeType,
             requestUrl = resetPasswordStartEndpoint,
-            headers = getRequestHeaders()
+            headers = getRequestHeaders(commandParameters.getCorrelationId())
         )
     }
     //endregion
 
     //region /resetpassword/challenge
     internal fun createResetPasswordChallengeRequest(
-        continuationToken: String
+        continuationToken: String,
+        correlationId: String
     ): ResetPasswordChallengeRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordChallengeRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            methodName = "${TAG}.createResetPasswordChallengeRequest"
+        )
 
         return ResetPasswordChallengeRequest.create(
             clientId = config.clientId,
             continuationToken = continuationToken,
             challengeType = config.challengeType,
             requestUrl = resetPasswordChallengeEndpoint,
-            headers = getRequestHeaders()
+            headers = getRequestHeaders(correlationId)
         )
     }
     //endregion
 
     //region /resetpassword/continue
     internal fun createResetPasswordContinueRequest(
-        parameters: ResetPasswordSubmitCodeCommandParameters
+        commandParameters: ResetPasswordSubmitCodeCommandParameters
     ): ResetPasswordContinueRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordContinueRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = commandParameters.getCorrelationId(),
+            methodName = "${TAG}.createResetPasswordContinueRequest"
+        )
 
         return ResetPasswordContinueRequest.create(
             clientId = config.clientId,
-            continuationToken = parameters.continuationToken,
-            oob = parameters.code,
+            continuationToken = commandParameters.continuationToken,
+            oob = commandParameters.code,
             requestUrl = resetPasswordContinueEndpoint,
-            headers = getRequestHeaders()
+            headers = getRequestHeaders(commandParameters.getCorrelationId())
         )
     }    
     //endregion
@@ -227,28 +260,11 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     internal fun createSignUpStartRequest(
         commandParameters: SignUpStartCommandParameters
     ): SignUpStartRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createSignUpStartRequest")
-
-        return SignUpStartRequest.create(
-            username = commandParameters.username,
-            attributes = commandParameters.userAttributes,
-            challengeType = config.challengeType,
-            clientId = config.clientId,
-            requestUrl = signUpStartEndpoint,
-            headers = getRequestHeaders()
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = commandParameters.getCorrelationId(),
+            methodName = "${TAG}.createSignUpStartRequest"
         )
-    }
-
-    internal fun createSignUpUsingPasswordStartRequest(
-        commandParameters: SignUpStartUsingPasswordCommandParameters
-    ): SignUpStartRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createSignUpUsingPasswordStartRequest")
-
-        if (commandParameters.password.isEmpty() || commandParameters.password.all { it.isWhitespace() })
-        {
-            var msg = "password can't be empty or consists solely of whitespace characters"
-            throw ClientException("$TAG $msg", msg)
-        }
 
         return SignUpStartRequest.create(
             username = commandParameters.username,
@@ -257,7 +273,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             challengeType = config.challengeType,
             clientId = config.clientId,
             requestUrl = signUpStartEndpoint,
-            headers = getRequestHeaders()
+            headers = getRequestHeaders(commandParameters.getCorrelationId())
         )
     }
     //endregion
@@ -266,29 +282,38 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     internal fun createResetPasswordSubmitRequest(
         commandParameters: ResetPasswordSubmitNewPasswordCommandParameters
     ): ResetPasswordSubmitRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordSubmitRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = commandParameters.getCorrelationId(),
+            methodName = "${TAG}.createResetPasswordSubmitRequest"
+        )
 
         return ResetPasswordSubmitRequest.create(
             clientId = config.clientId,
             continuationToken = commandParameters.continuationToken,
             newPassword = commandParameters.newPassword,
             requestUrl = resetPasswordSubmitEndpoint,
-            headers = getRequestHeaders()
+            headers = getRequestHeaders(commandParameters.getCorrelationId())
         )
     }
     //endregion
 
     //region /resetpassword/pollcompletion
     internal fun createResetPasswordPollCompletionRequest(
-        continuationToken: String
+        continuationToken: String,
+        correlationId: String
     ): ResetPasswordPollCompletionRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createResetPasswordPollCompletionRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            methodName = "${TAG}.createResetPasswordPollCompletionRequest"
+        )
 
         return ResetPasswordPollCompletionRequest.create(
             clientId = config.clientId,
             continuationToken = continuationToken,
             requestUrl = resetPasswordPollCompletionEndpoint,
-            headers = getRequestHeaders()
+            headers = getRequestHeaders(correlationId)
         )
     }
     //endregion
@@ -297,7 +322,11 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     internal fun createSignUpSubmitCodeRequest(
         commandParameters: SignUpSubmitCodeCommandParameters
     ): SignUpContinueRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createSignUpSubmitCodeRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = commandParameters.getCorrelationId(),
+            methodName = "${TAG}.createSignUpSubmitCodeRequest"
+        )
 
         return SignUpContinueRequest.create(
             oob = commandParameters.code,
@@ -305,14 +334,18 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             continuationToken = commandParameters.continuationToken,
             grantType = NativeAuthConstants.GrantType.OOB,
             requestUrl = signUpContinueEndpoint,
-            headers = getRequestHeaders()
+            headers = getRequestHeaders(commandParameters.getCorrelationId())
         )
     }
 
     internal fun createSignUpSubmitPasswordRequest(
         commandParameters: SignUpSubmitPasswordCommandParameters
     ): SignUpContinueRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createSignUpSubmitPasswordRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = commandParameters.getCorrelationId(),
+            methodName = "${TAG}.createSignUpSubmitPasswordRequest"
+        )
 
         return SignUpContinueRequest.create(
             password = commandParameters.password,
@@ -320,14 +353,18 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             continuationToken = commandParameters.continuationToken,
             grantType = NativeAuthConstants.GrantType.PASSWORD,
             requestUrl = signUpContinueEndpoint,
-            headers = getRequestHeaders()
+            headers = getRequestHeaders(commandParameters.getCorrelationId())
         )
     }
 
     internal fun createSignUpSubmitUserAttributesRequest(
         commandParameters: SignUpSubmitUserAttributesCommandParameters
     ): SignUpContinueRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createSignUpSubmitUserAttributesRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = commandParameters.getCorrelationId(),
+            methodName = "${TAG}.createSignUpSubmitUserAttributesRequest"
+        )
 
         return SignUpContinueRequest.create(
             attributes = commandParameters.userAttributes,
@@ -335,31 +372,36 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             continuationToken = commandParameters.continuationToken,
             grantType = NativeAuthConstants.GrantType.ATTRIBUTES,
             requestUrl = signUpContinueEndpoint,
-            headers = getRequestHeaders()
+            headers = getRequestHeaders(commandParameters.getCorrelationId())
         )
     }
     //endregion
 
     //region /signup/challenge
     internal fun createSignUpChallengeRequest(
-        continuationToken: String
+        continuationToken: String,
+        correlationId: String
     ): SignUpChallengeRequest {
-        LogSession.logMethodCall(TAG, "${TAG}.createSignUpChallengeRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            methodName = "${TAG}.createSignUpChallengeRequest"
+        )
 
         return SignUpChallengeRequest.create(
             continuationToken = continuationToken,
             clientId = config.clientId,
             challengeType = config.challengeType,
             requestUrl = signUpChallengeEndpoint,
-            headers = getRequestHeaders()
+            headers = getRequestHeaders(correlationId)
         )
     }
     //endregion
 
     //region helpers
-    private fun getRequestHeaders(): Map<String, String?> {
+    private fun getRequestHeaders(correlationId: String): Map<String, String?> {
         val headers: MutableMap<String, String?> = TreeMap()
-        headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = DiagnosticContext.INSTANCE.requestContext[DiagnosticContext.CORRELATION_ID]
+        headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = correlationId
         headers[AuthenticationConstants.SdkPlatformFields.PRODUCT] = DiagnosticContext.INSTANCE.requestContext[AuthenticationConstants.SdkPlatformFields.PRODUCT]
         headers[AuthenticationConstants.SdkPlatformFields.VERSION] = Device.getProductVersion()
         headers.putAll(Device.getPlatformIdParameters())

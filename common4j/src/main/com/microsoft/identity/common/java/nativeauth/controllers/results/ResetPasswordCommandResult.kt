@@ -41,31 +41,65 @@ sealed interface ResetPasswordSubmitNewPasswordCommandResult: INativeAuthCommand
  */
 interface ResetPasswordCommandResult {
     data class CodeRequired(
+        override val correlationId: String,
         val continuationToken: String,
         val codeLength: Int,
         val challengeTargetLabel: String,
         val challengeChannel: String,
     ) : ResetPasswordStartCommandResult, ResetPasswordResendCodeCommandResult
 
-    data class EmailNotVerified(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
+    data class EmailNotVerified(
+        val error: String,
+        val errorDescription: String,
+        override val correlationId: String
+    ) :
         ResetPasswordStartCommandResult
 
-    data class PasswordNotSet(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
+    data class PasswordNotSet(
+        val error: String,
+        val errorDescription: String,
+        override val correlationId: String
+    ) :
         ResetPasswordStartCommandResult
 
-    data class UserNotFound(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
+    data class UserNotFound(
+        val error: String,
+        val errorDescription: String,
+        override val correlationId: String
+    ) :
         ResetPasswordStartCommandResult, ResetPasswordSubmitNewPasswordCommandResult
 
-    data class PasswordRequired(val continuationToken: String) : ResetPasswordSubmitCodeCommandResult
+    data class PasswordRequired(
+        override val correlationId: String,
+        val continuationToken: String
+    ) : ResetPasswordSubmitCodeCommandResult
 
-    data class IncorrectCode(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId, val subError: String) :
+    data class IncorrectCode(
+        val error: String,
+        val errorDescription: String,
+        override val correlationId: String,
+        val subError: String
+    ) :
         ResetPasswordSubmitCodeCommandResult
 
-    data class PasswordNotAccepted(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId, val subError: String) :
+    data class PasswordNotAccepted(
+        val error: String,
+        val errorDescription: String,
+        override val correlationId: String,
+        val subError: String
+    ) :
         ResetPasswordSubmitNewPasswordCommandResult
 
-    data class PasswordResetFailed(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId) :
+    data class PasswordResetFailed(
+        val error: String,
+        val errorDescription: String,
+        override val correlationId: String
+    ) :
         ResetPasswordSubmitNewPasswordCommandResult
 
-    object Complete : ResetPasswordSubmitNewPasswordCommandResult
+    data class Complete (
+        val continuationToken: String?,
+        val expiresIn: Int?,
+        override val correlationId: String
+    ) : ResetPasswordSubmitNewPasswordCommandResult
 }

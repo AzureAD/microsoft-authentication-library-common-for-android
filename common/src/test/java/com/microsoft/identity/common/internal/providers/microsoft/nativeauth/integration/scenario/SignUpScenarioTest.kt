@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.in
 
 import com.microsoft.identity.common.nativeauth.ApiConstants
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
@@ -43,22 +42,20 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParamet
 import com.microsoft.identity.common.nativeauth.MockApiEndpoint
 import com.microsoft.identity.common.nativeauth.MockApiResponseType
 import com.microsoft.identity.common.nativeauth.MockApiUtils.Companion.configureMockApi
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import java.util.UUID
 
 class SignUpScenarioTest {
-    private val username = "user@email.com"
-    private val email = "user@email.com"
-    private val password = "verySafePassword".toCharArray()
-    private val tenant = "samtoso.onmicrosoft.com"
-    private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
-    private val challengeType = "oob redirect"
-    private val oobCode = "123456"
+    private val USERNAME = "user@email.com"
+    private val PASSWORD = "verySafePassword".toCharArray()
+    private val CLIENT_ID = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
+    private val CHALLENGE_TYPE = "oob redirect"
+    private val OOB_CODE = "123456"
 
     private val mockConfig = mock<NativeAuthOAuth2Configuration>()
     private val mockStrategyParams = mock<OAuth2StrategyParameters>()
@@ -67,7 +64,7 @@ class SignUpScenarioTest {
 
     @Before
     fun setup() {
-        whenever(mockConfig.clientId).thenReturn(clientId)
+        whenever(mockConfig.clientId).thenReturn(CLIENT_ID)
         whenever(mockConfig.tokenEndpoint).thenReturn(ApiConstants.tokenEndpoint)
         whenever(mockConfig.getSignUpStartEndpoint()).thenReturn(ApiConstants.signUpStartRequestUrl)
         whenever(mockConfig.getSignUpChallengeEndpoint()).thenReturn(ApiConstants.signUpChallengeRequestUrl)
@@ -80,7 +77,7 @@ class SignUpScenarioTest {
         whenever(mockConfig.getResetPasswordContinueEndpoint()).thenReturn(ApiConstants.ssprContinueRequestUrl)
         whenever(mockConfig.getResetPasswordSubmitEndpoint()).thenReturn(ApiConstants.ssprSubmitRequestUrl)
         whenever(mockConfig.getResetPasswordPollCompletionEndpoint()).thenReturn(ApiConstants.ssprPollCompletionRequestUrl)
-        whenever(mockConfig.challengeType).thenReturn(challengeType)
+        whenever(mockConfig.challengeType).thenReturn(CHALLENGE_TYPE)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
             config = mockConfig,
@@ -115,7 +112,7 @@ class SignUpScenarioTest {
     @Test
     fun testSignUpScenarioEmailPasswordWithOOBVerification() {
         var continuationToken: String
-        val correlationId = UUID.randomUUID().toString()
+        var correlationId = UUID.randomUUID().toString()
 
         configureMockApi(
             endpointType = MockApiEndpoint.SignUpStart,
@@ -123,18 +120,20 @@ class SignUpScenarioTest {
             responseType = MockApiResponseType.SIGNUP_START_SUCCESS
         )
 
-        val mockSignUpStartCommandParameters = SignUpStartUsingPasswordCommandParameters.builder()
+        val mockSignUpStartCommandParameters = SignUpStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .username(username)
-            .clientId(clientId)
-            .password(password)
+            .username(USERNAME)
+            .clientId(CLIENT_ID)
+            .password(PASSWORD)
+            .correlationId(correlationId)
             .build()
 
-        val signupStartResult = nativeAuthOAuth2Strategy.performSignUpStartUsingPassword(
+        val signupStartResult = nativeAuthOAuth2Strategy.performSignUpStart(
             mockSignUpStartCommandParameters
         )
         assertTrue(signupStartResult is SignUpStartApiResult.Success)
         continuationToken = (signupStartResult as SignUpStartApiResult.Success).continuationToken
+        correlationId = signupStartResult.correlationId
 
         configureMockApi(
             endpointType = MockApiEndpoint.SignUpChallenge,
@@ -143,10 +142,12 @@ class SignUpScenarioTest {
         )
 
         val signupChallengeResult = nativeAuthOAuth2Strategy.performSignUpChallenge(
-            continuationToken = continuationToken
+            continuationToken = continuationToken,
+            correlationId = correlationId
         )
         assertTrue(signupChallengeResult is SignUpChallengeApiResult.OOBRequired)
         continuationToken = (signupChallengeResult as SignUpChallengeApiResult.OOBRequired).continuationToken
+        correlationId = signupChallengeResult.correlationId
 
         configureMockApi(
             endpointType = MockApiEndpoint.SignUpContinue,
@@ -157,7 +158,8 @@ class SignUpScenarioTest {
         val mockSignUpContinueCommandParameters = SignUpSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
-            .code(oobCode)
+            .code(OOB_CODE)
+            .correlationId(correlationId)
             .build()
 
         val signupContinueResult = nativeAuthOAuth2Strategy.performSignUpSubmitCode(
@@ -172,7 +174,7 @@ class SignUpScenarioTest {
     @Test
     fun testSignUpScenarioEmailVerificationFirstThenPassword() {
         var continuationToken: String
-        val correlationId = UUID.randomUUID().toString()
+        var correlationId = UUID.randomUUID().toString()
 
         configureMockApi(
             endpointType = MockApiEndpoint.SignUpStart,
@@ -182,16 +184,17 @@ class SignUpScenarioTest {
 
         val mockSignUpStartCommandParameters = SignUpStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .username(username)
-            .clientId(clientId)
+            .username(USERNAME)
+            .clientId(CLIENT_ID)
+            .correlationId(correlationId)
             .build()
 
         val signupStartResult = nativeAuthOAuth2Strategy.performSignUpStart(
             mockSignUpStartCommandParameters
         )
-
         assertTrue(signupStartResult is SignUpStartApiResult.Success)
         continuationToken = (signupStartResult as SignUpStartApiResult.Success).continuationToken
+        correlationId = signupStartResult.correlationId
 
         configureMockApi(
             endpointType = MockApiEndpoint.SignUpChallenge,
@@ -200,10 +203,12 @@ class SignUpScenarioTest {
         )
 
         val signupChallengeResult = nativeAuthOAuth2Strategy.performSignUpChallenge(
-            continuationToken = continuationToken
+            continuationToken = continuationToken,
+            correlationId = correlationId
         )
         assertTrue(signupChallengeResult is SignUpChallengeApiResult.OOBRequired)
         continuationToken = (signupChallengeResult as SignUpChallengeApiResult.OOBRequired).continuationToken
+        correlationId = signupStartResult.correlationId
 
         configureMockApi(
             endpointType = MockApiEndpoint.SignUpContinue,
@@ -214,7 +219,8 @@ class SignUpScenarioTest {
         val mockSignUpContinueCommandParameters = SignUpSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
-            .code(oobCode)
+            .code(OOB_CODE)
+            .correlationId(correlationId)
             .build()
 
         val signupContinueResult = nativeAuthOAuth2Strategy.performSignUpSubmitCode(

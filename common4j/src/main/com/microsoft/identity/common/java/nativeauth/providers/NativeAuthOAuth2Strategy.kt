@@ -26,16 +26,15 @@ package com.microsoft.identity.common.java.nativeauth.providers
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.ResetPasswordInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordChallengeApiResult
@@ -87,25 +86,18 @@ class NativeAuthOAuth2Strategy(
     }
 
     /**
-     * Makes the initial call to the /signup/start.
+     * Makes the initial call to the /signup/start
      * @param commandParameters: Attributes provided by the user
      */
     fun performSignUpStart(
         commandParameters: SignUpStartCommandParameters
     ): SignUpStartApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignUpStart")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = commandParameters.getCorrelationId(),
+            "${TAG}.performSignUpStart"
+        )
         return signUpInteractor.performSignUpStart(commandParameters)
-    }
-
-    /**
-     * Makes the initial call to the /signup/start when the parameters includes password.
-     * @param commandParameters: Attributes provided by the user
-     */
-    fun performSignUpStartUsingPassword(
-        commandParameters: SignUpStartUsingPasswordCommandParameters
-    ): SignUpStartApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignUpStartUsingPassword")
-        return signUpInteractor.performSignUpStartUsingPassword(commandParameters)
     }
 
     /**
@@ -113,11 +105,17 @@ class NativeAuthOAuth2Strategy(
      * @param signUpToken: Token received from the previous /signup/start call
      */
     fun performSignUpChallenge(
-        continuationToken: String
+        continuationToken: String,
+        correlationId: String
     ): SignUpChallengeApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignUpChallenge")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            "${TAG}.performSignUpChallenge"
+        )
         return signUpInteractor.performSignUpChallenge(
-            continuationToken = continuationToken
+            continuationToken = continuationToken,
+            correlationId = correlationId
         )
     }
 
@@ -128,7 +126,11 @@ class NativeAuthOAuth2Strategy(
     fun performSignUpSubmitCode(
         commandParameters: SignUpSubmitCodeCommandParameters
     ): SignUpContinueApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignUpSubmitCode")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = commandParameters.getCorrelationId(),
+            "${TAG}.performSignUpSubmitCode"
+        )
         return signUpInteractor.performSignUpSubmitCode(
             commandParameters = commandParameters
         )
@@ -141,7 +143,11 @@ class NativeAuthOAuth2Strategy(
     fun performSignUpSubmitPassword(
         commandParameters: SignUpSubmitPasswordCommandParameters
     ): SignUpContinueApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignUpSubmitPassword")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = commandParameters.getCorrelationId(),
+            "${TAG}.performSignUpSubmitPassword"
+        )
         return signUpInteractor.performSignUpSubmitPassword(
             commandParameters = commandParameters
         )
@@ -154,7 +160,11 @@ class NativeAuthOAuth2Strategy(
     fun performSignUpSubmitUserAttributes(
         commandParameters: SignUpSubmitUserAttributesCommandParameters
     ): SignUpContinueApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignUpSubmitUserAttributes")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = commandParameters.getCorrelationId(),
+            "${TAG}.performSignUpSubmitUserAttributes"
+        )
         return signUpInteractor.performSignUpSubmitUserAttributes(
             commandParameters = commandParameters
         )
@@ -166,7 +176,11 @@ class NativeAuthOAuth2Strategy(
     fun performSignInInitiate(
         parameters: SignInStartCommandParameters
     ): SignInInitiateApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignInInitiate")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            "${TAG}.performSignInInitiate"
+        )
         return signInInteractor.performSignInInitiate(parameters)
     }
 
@@ -175,10 +189,16 @@ class NativeAuthOAuth2Strategy(
      */
     fun performSignInChallenge(
         continuationToken: String,
+        correlationId: String
     ): SignInChallengeApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignInChallenge")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            "${TAG}.performSignInChallenge"
+        )
         return signInInteractor.performSignInChallenge(
             continuationToken = continuationToken,
+            correlationId = correlationId
         )
     }
 
@@ -189,7 +209,11 @@ class NativeAuthOAuth2Strategy(
     fun performContinuationTokenTokenRequest(
         parameters: SignInWithContinuationTokenCommandParameters
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performContinuationTokenRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            "${TAG}.performContinuationTokenRequest"
+        )
         return signInInteractor.performContinuationTokenTokenRequest(
             parameters = parameters
         )
@@ -201,7 +225,11 @@ class NativeAuthOAuth2Strategy(
     fun performOOBTokenRequest(
         parameters: SignInSubmitCodeCommandParameters
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performOOBTokenRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            "${TAG}.performOOBTokenRequest"
+        )
         return signInInteractor.performOOBTokenRequest(
             parameters = parameters
         )
@@ -213,7 +241,11 @@ class NativeAuthOAuth2Strategy(
     fun performPasswordTokenRequest(
         parameters: SignInSubmitPasswordCommandParameters
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performPasswordTokenRequest")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            "${TAG}.performPasswordTokenRequest"
+        )
         return signInInteractor.performPasswordTokenRequest(
             parameters = parameters
         )
@@ -227,7 +259,11 @@ class NativeAuthOAuth2Strategy(
     fun performResetPasswordStart(
         parameters: ResetPasswordStartCommandParameters
     ): ResetPasswordStartApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordStart")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            "${TAG}.performResetPasswordStart"
+        )
         return resetPasswordInteractor.performResetPasswordStart(
             parameters = parameters
         )
@@ -239,11 +275,17 @@ class NativeAuthOAuth2Strategy(
      * @return result of the API call as [ResetPasswordChallengeApiResult] object
      */
     fun performResetPasswordChallenge(
-        continuationToken: String
+        continuationToken: String,
+        correlationId: String
     ): ResetPasswordChallengeApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordChallenge")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            "${TAG}.performResetPasswordChallenge"
+        )
         return resetPasswordInteractor.performResetPasswordChallenge(
-            continuationToken = continuationToken
+            continuationToken = continuationToken,
+            correlationId = correlationId
         )
     }
 
@@ -255,7 +297,11 @@ class NativeAuthOAuth2Strategy(
     fun performResetPasswordContinue(
         parameters: ResetPasswordSubmitCodeCommandParameters
     ): ResetPasswordContinueApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordContinue")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            "${TAG}.performResetPasswordContinue"
+        )
         return resetPasswordInteractor.performResetPasswordContinue(
             parameters = parameters
         )
@@ -269,7 +315,11 @@ class NativeAuthOAuth2Strategy(
     fun performResetPasswordSubmit(
         parameters: ResetPasswordSubmitNewPasswordCommandParameters
     ): ResetPasswordSubmitApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordSubmit")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            "${TAG}.performResetPasswordSubmit"
+        )
         return resetPasswordInteractor.performResetPasswordSubmit(
             commandParameters = parameters
         )
@@ -281,11 +331,17 @@ class NativeAuthOAuth2Strategy(
      * @return result of the API call as [ResetPasswordPollCompletionApiResult] object
      */
     fun performResetPasswordPollCompletion(
-        continuationToken: String
+        continuationToken: String,
+        correlationId: String
     ): ResetPasswordPollCompletionApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performResetPasswordPollCompletion")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            "${TAG}.performResetPasswordPollCompletion"
+        )
         return resetPasswordInteractor.performResetPasswordPollCompletion(
-            continuationToken = continuationToken
+            continuationToken = continuationToken,
+            correlationId = correlationId
         )
     }
 }

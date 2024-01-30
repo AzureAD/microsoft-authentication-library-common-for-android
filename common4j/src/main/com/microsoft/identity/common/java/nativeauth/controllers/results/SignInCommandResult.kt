@@ -39,27 +39,50 @@ sealed interface SignInSubmitPasswordCommandResult: INativeAuthCommandResult
  * @see com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
  */
 interface SignInCommandResult {
-    data class Complete(val authenticationResult: ILocalAuthenticationResult) :
+    data class Complete(
+        override val correlationId: String,
+        val authenticationResult: ILocalAuthenticationResult
+    ) :
         SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInSubmitCodeCommandResult,
         SignInSubmitPasswordCommandResult
 
-    data class PasswordRequired(val continuationToken: String) :
-        SignInStartCommandResult, SignInWithContinuationTokenCommandResult
+    data class PasswordRequired(
+        override val correlationId: String,
+        val continuationToken: String
+    ) :
+        SignInStartCommandResult
 
     data class CodeRequired(
         val continuationToken: String,
+        override val correlationId: String,
         val challengeTargetLabel: String,
         val challengeChannel: String,
         val codeLength: Int
     ) :
-        SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInResendCodeCommandResult
+        SignInStartCommandResult, SignInResendCodeCommandResult
 
-    data class UserNotFound(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId, val errorCodes: List<Int>) :
+    data class UserNotFound(
+        val error: String,
+        val errorDescription: String,
+        override val correlationId: String,
+        val errorCodes: List<Int>
+    ) :
         SignInStartCommandResult
 
-    data class InvalidCredentials(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId, val errorCodes: List<Int>) :
+    data class InvalidCredentials(
+        val error: String,
+        val errorDescription: String,
+        override val correlationId: String,
+        val errorCodes: List<Int>
+    ) :
         SignInStartCommandResult, SignInSubmitPasswordCommandResult
 
-    data class IncorrectCode(val error: String, val errorDescription: String, val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId, val errorCodes: List<Int>, val subError: String) :
+    data class IncorrectCode(
+        val error: String,
+        val errorDescription: String,
+        override val correlationId: String,
+        val errorCodes: List<Int>,
+        val subError: String
+    ) :
         SignInSubmitCodeCommandResult
 }

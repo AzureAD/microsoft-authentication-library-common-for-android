@@ -20,35 +20,11 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.nativeauth.commands.parameters;
-
-import java.util.Map;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.experimental.SuperBuilder;
+package com.microsoft.identity.common.java.nativeauth.providers.responses
 
 /**
- * BaseSignUpTokenCommandParameters is the base class for parameters for all all Native Auth sign up related commands.
+ * Base class to encapsulate Native Auth API responses
  */
-@Getter
-@EqualsAndHashCode(callSuper = true)
-@SuperBuilder(toBuilder = true)
-public class BaseSignUpStartCommandParameters extends BaseNativeAuthCommandParameters {
-    private static final String TAG = BaseSignUpStartCommandParameters.class.getSimpleName();
-
-    /**
-     * The email address of the user.
-     */
-    @NonNull
-    public final String username;
-
-    /**
-     * The user attributes of the user set in the user flow need to be collected.
-     */
-    @EqualsAndHashCode.Exclude
-    @Nullable
-    public final Map<String, String> userAttributes;
+interface ApiResult {
+    val correlationId: String
 }
