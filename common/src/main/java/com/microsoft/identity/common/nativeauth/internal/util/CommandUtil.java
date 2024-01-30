@@ -51,6 +51,7 @@ public class CommandUtil {
     ) {
         return parameters.toBuilder()
                 .scopes(defaultScopes)
+                .correlationId(parameters.getCorrelationId())
                 .build();
     }
 
@@ -67,6 +68,7 @@ public class CommandUtil {
     ) {
         return parameters.toBuilder()
                 .scopes(defaultScopes)
+                .correlationId(parameters.getCorrelationId())
                 .build();
     }
 
@@ -83,6 +85,7 @@ public class CommandUtil {
     ) {
         return parameters.toBuilder()
                 .scopes(defaultScopes)
+                .correlationId(parameters.getCorrelationId())
                 .build();
     }
 
@@ -90,15 +93,18 @@ public class CommandUtil {
      * Adds scopes to [SignInSubmitPasswordCommandParameters] object and returns a new
      * [SignInSubmitCodeCommandParameters] object.
      * @param parameters input command parameter
+     * @param correlationId correlationId to be used in the request
      * @param defaultScopes scopes to be added
      * @return [SignInSubmitPasswordCommandParameters] object with scopes
      */
     public static SignInSubmitPasswordCommandParameters createSignInSubmitPasswordCommandParametersWithScopes(
             SignInSubmitPasswordCommandParameters parameters,
+            String correlationId,
             List<String> defaultScopes
     ) {
         return parameters.toBuilder()
                 .scopes(defaultScopes)
+                .correlationId(correlationId)
                 .build();
     }
 
@@ -106,11 +112,13 @@ public class CommandUtil {
      * Adds continuation token to [SignInStartCommandParameters] object and returns a new
      * [SignInSubmitPasswordCommandParameters] object.
      * @param parameters input command parameter
+     * @param correlationId correlationId to be used in the request
      * @param continuationToken continuation token to be added
      * @return [SignInSubmitPasswordCommandParameters] object with continuation token
      */
     public static SignInSubmitPasswordCommandParameters createSignInSubmitPasswordCommandParameters(
             SignInStartCommandParameters parameters,
+            String correlationId,
             String continuationToken
     ) {
         final SignInSubmitPasswordCommandParameters commandParameters =
@@ -130,6 +138,7 @@ public class CommandUtil {
                         .continuationToken(continuationToken)
                         .password(parameters.getPassword())
                         .scopes(parameters.getScopes())
+                        .correlationId(correlationId)
                         .challengeType(parameters.getChallengeType())
                         .build();
 
@@ -140,10 +149,12 @@ public class CommandUtil {
      * Converts to [AcquireTokenNoFixedScopesCommandParameters] object to a new
      * [SilentTokenCommandParameters] object.
      * @param parameters input command parameter
+     * @param correlationId correlationId to be used in the request
      * @return [SilentTokenCommandParameters] object
      */
     public static SilentTokenCommandParameters convertAcquireTokenNoFixedScopesCommandParameters(
-            AcquireTokenNoFixedScopesCommandParameters parameters
+            AcquireTokenNoFixedScopesCommandParameters parameters,
+            String correlationId
     ) {
         final SilentTokenCommandParameters commandParameters = SilentTokenCommandParameters
                 .builder()
@@ -162,6 +173,7 @@ public class CommandUtil {
                 .account(parameters.getAccount())
                 .authenticationScheme(parameters.getAuthenticationScheme())
                 .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
+                .correlationId(correlationId)
                 .correlationId(parameters.getCorrelationId())
                 .build();
 

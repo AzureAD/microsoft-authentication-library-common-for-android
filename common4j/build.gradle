@@ -251,7 +251,6 @@ dependencies {
     
     resolvableTestFixturesImplementation "org.robolectric:junit:$rootProject.ext.robolectricVersion"
 
-    implementation platform("io.opentelemetry:opentelemetry-bom:$rootProject.ext.openTelemetryVersion")
     implementation("io.opentelemetry:opentelemetry-api:$rootProject.ext.openTelemetryVersion")
 }
 

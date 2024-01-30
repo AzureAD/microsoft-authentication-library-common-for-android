@@ -53,7 +53,11 @@ class SignUpResendCodeCommand(
      * It calls the signUpResendCode method of the native auth MSAL controller with the given parameters.
      */
     override fun execute(): SignUpResendCodeCommandResult {
-        LogSession.logMethodCall(TAG, "${TAG}.execute")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.execute"
+        )
 
         val result = controller.signUpResendCode(
             parameters = parameters
