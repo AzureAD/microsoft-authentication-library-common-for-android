@@ -211,7 +211,7 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerAppTest {
             )
         } catch (t: Throwable) {
             Assert.assertEquals(
-                BrokerCommunicationException.Category.CONNECTION_ERROR,
+                BrokerCommunicationException.Category.VALIDATION_ERROR,
                 (t as BrokerCommunicationException).category)
         }
     }
@@ -247,7 +247,7 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerAppTest {
             )
         } catch (t: Throwable) {
             Assert.assertEquals(
-                BrokerCommunicationException.Category.CONNECTION_ERROR,
+                BrokerCommunicationException.Category.VALIDATION_ERROR,
                 (t as BrokerCommunicationException).category)
         }
     }
