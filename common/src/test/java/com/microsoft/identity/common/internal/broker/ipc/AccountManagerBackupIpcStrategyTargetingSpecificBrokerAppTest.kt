@@ -211,7 +211,7 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerAppTest {
             )
         } catch (t: Throwable) {
             Assert.assertEquals(
-                BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE,
+                BrokerCommunicationException.Category.CONNECTION_ERROR,
                 (t as BrokerCommunicationException).category)
         }
     }
@@ -247,7 +247,7 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerAppTest {
             )
         } catch (t: Throwable) {
             Assert.assertEquals(
-                BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE,
+                BrokerCommunicationException.Category.CONNECTION_ERROR,
                 (t as BrokerCommunicationException).category)
         }
     }

@@ -193,7 +193,7 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp
             }
         } catch (t: Throwable) {
             throw BrokerCommunicationException(
-                BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE,
+                BrokerCommunicationException.Category.CONNECTION_ERROR,
                 type,
                 "$targetPackageName doesn't support account manager backup ipc for Broker Discovery.",
                 null)
@@ -201,7 +201,7 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp
 
         if (!brokerValidator.isValidBrokerPackage(targetAppInfo.packageName)) {
             throw BrokerCommunicationException(
-                BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE,
+                BrokerCommunicationException.Category.CONNECTION_ERROR,
                 type,
                 "${targetAppInfo.packageName} is not a valid broker app",
                 null
