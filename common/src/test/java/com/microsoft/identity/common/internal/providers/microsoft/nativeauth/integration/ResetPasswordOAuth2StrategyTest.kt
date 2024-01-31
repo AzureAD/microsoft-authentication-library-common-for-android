@@ -158,8 +158,11 @@ class ResetPasswordOAuth2StrategyTest {
      */
     @Test
     fun testPerformResetPasswordStartSuccessWithUsername() {
+        val correlationId = UUID.randomUUID().toString()
+
         val mockResetPasswordStartCommandParameters = mockk<ResetPasswordStartCommandParameters>()
         every { mockResetPasswordStartCommandParameters.getUsername() } returns USERNAME
+        every { mockResetPasswordStartCommandParameters.getCorrelationId() } returns correlationId
 
         val ssprStartResult = nativeAuthOAuth2Strategy.performResetPasswordStart(
             mockResetPasswordStartCommandParameters
@@ -169,14 +172,17 @@ class ResetPasswordOAuth2StrategyTest {
 
     @Test
     fun testPerformResetPasswordStartVerificationInvalidClientError() {
+        val correlationId = UUID.randomUUID().toString()
+
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRStart,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.INVALID_CLIENT
         )
 
         val mockResetPasswordStartCommandParameters = mockk<ResetPasswordStartCommandParameters>()
         every { mockResetPasswordStartCommandParameters.getUsername() } returns USERNAME
+        every { mockResetPasswordStartCommandParameters.getCorrelationId() } returns correlationId
 
         val ssprStartResult = nativeAuthOAuth2Strategy.performResetPasswordStart(
             mockResetPasswordStartCommandParameters
@@ -187,14 +193,17 @@ class ResetPasswordOAuth2StrategyTest {
 
     @Test
     fun testPerformResetPasswordStartUnsupportedChallengeTypeRequestError() {
+        val correlationId = UUID.randomUUID().toString()
+
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRStart,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.UNSUPPORTED_CHALLENGE_TYPE
         )
 
         val mockResetPasswordStartCommandParameters = mockk<ResetPasswordStartCommandParameters>()
         every { mockResetPasswordStartCommandParameters.getUsername() } returns USERNAME
+        every { mockResetPasswordStartCommandParameters.getCorrelationId() } returns correlationId
 
         val ssprStartResult = nativeAuthOAuth2Strategy.performResetPasswordStart(
             mockResetPasswordStartCommandParameters
@@ -205,14 +214,17 @@ class ResetPasswordOAuth2StrategyTest {
 
     @Test
     fun testPerformResetPasswordStartChallengeTypeRedirectError() {
+        val correlationId = UUID.randomUUID().toString()
+
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRStart,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
 
         val mockResetPasswordStartCommandParameters = mockk<ResetPasswordStartCommandParameters>()
         every { mockResetPasswordStartCommandParameters.getUsername() } returns USERNAME
+        every { mockResetPasswordStartCommandParameters.getCorrelationId() } returns correlationId
 
         val ssprStartResult = nativeAuthOAuth2Strategy.performResetPasswordStart(
             mockResetPasswordStartCommandParameters
@@ -227,14 +239,17 @@ class ResetPasswordOAuth2StrategyTest {
      */
     @Test
     fun testPerformResetPasswordStartUserNotFoundError() {
+        val correlationId = UUID.randomUUID().toString()
+
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRStart,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.USER_NOT_FOUND
         )
 
         val mockResetPasswordStartCommandParameters = mockk<ResetPasswordStartCommandParameters>()
         every { mockResetPasswordStartCommandParameters.getUsername() } returns USERNAME
+        every { mockResetPasswordStartCommandParameters.getCorrelationId() } returns correlationId
 
         val ssprStartResult = nativeAuthOAuth2Strategy.performResetPasswordStart(
             mockResetPasswordStartCommandParameters
@@ -247,28 +262,33 @@ class ResetPasswordOAuth2StrategyTest {
      */
     @Test
     fun testPerformResetPasswordChallengeSuccess() {
+        val correlationId = UUID.randomUUID().toString()
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRChallenge,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
 
         val ssprChallengeResult = nativeAuthOAuth2Strategy.performResetPasswordChallenge(
-            continuationToken = CONTINUATION_TOKEN
+            continuationToken = CONTINUATION_TOKEN,
+            correlationId = correlationId
         )
         assertTrue(ssprChallengeResult is ResetPasswordChallengeApiResult.CodeRequired)
     }
 
     @Test
     fun testPerformResetPasswordChallengeExpiredTokenError() {
+        val correlationId = UUID.randomUUID().toString()
+
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRChallenge,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.EXPIRED_TOKEN
         )
 
         val ssprChallengeResult = nativeAuthOAuth2Strategy.performResetPasswordChallenge(
-            continuationToken = CONTINUATION_TOKEN
+            continuationToken = CONTINUATION_TOKEN,
+            correlationId = correlationId
         )
 
         assertTrue(ssprChallengeResult is ResetPasswordChallengeApiResult.ExpiredToken)
@@ -277,15 +297,18 @@ class ResetPasswordOAuth2StrategyTest {
 
     @Test
     fun testPerformResetPasswordContinueSuccess() {
+        val correlationId = UUID.randomUUID().toString()
+
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRContinue,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.SSPR_CONTINUE_SUCCESS
         )
 
         val mockResetPasswordSubmitCodeCommandParameters = mockk<ResetPasswordSubmitCodeCommandParameters>()
         every { mockResetPasswordSubmitCodeCommandParameters.getContinuationToken() } returns CONTINUATION_TOKEN
         every { mockResetPasswordSubmitCodeCommandParameters.getCode() } returns OOB_CODE
+        every { mockResetPasswordSubmitCodeCommandParameters.getCorrelationId() } returns correlationId
 
         val ssprContinueApiResult = nativeAuthOAuth2Strategy.performResetPasswordContinue(
             mockResetPasswordSubmitCodeCommandParameters
@@ -296,9 +319,12 @@ class ResetPasswordOAuth2StrategyTest {
 
     @Test
     fun testPerformResetPasswordSubmitSuccess() {
+        val correlationId = UUID.randomUUID().toString()
+
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()
         every { mockResetPasswordSubmitCommandParameters.getContinuationToken() } returns CONTINUATION_TOKEN
         every { mockResetPasswordSubmitCommandParameters.getNewPassword() } returns PASSWORD
+        every { mockResetPasswordSubmitCommandParameters.getCorrelationId() } returns correlationId
 
         val ssprSubmitResult = nativeAuthOAuth2Strategy.performResetPasswordSubmit(
             mockResetPasswordSubmitCommandParameters
@@ -308,15 +334,18 @@ class ResetPasswordOAuth2StrategyTest {
 
     @Test
     fun testPerformResetPasswordSubmitPasswordTooWeakError() {
+        val correlationId = UUID.randomUUID().toString()
+
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRSubmit,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.PASSWORD_TOO_WEAK
         )
 
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()
         every { mockResetPasswordSubmitCommandParameters.getContinuationToken() } returns CONTINUATION_TOKEN
         every { mockResetPasswordSubmitCommandParameters.getNewPassword() } returns PASSWORD
+        every { mockResetPasswordSubmitCommandParameters.getCorrelationId() } returns correlationId
 
         val ssprSubmitResult = nativeAuthOAuth2Strategy.performResetPasswordSubmit(
             mockResetPasswordSubmitCommandParameters
@@ -327,15 +356,18 @@ class ResetPasswordOAuth2StrategyTest {
 
     @Test
     fun testPerformResetPasswordSubmitPasswordTooShortError() {
+        val correlationId = UUID.randomUUID().toString()
+
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRSubmit,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.PASSWORD_TOO_SHORT
         )
 
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()
         every { mockResetPasswordSubmitCommandParameters.getContinuationToken() } returns CONTINUATION_TOKEN
         every { mockResetPasswordSubmitCommandParameters.getNewPassword() } returns PASSWORD
+        every { mockResetPasswordSubmitCommandParameters.getCorrelationId() } returns correlationId
 
         val ssprSubmitResult = nativeAuthOAuth2Strategy.performResetPasswordSubmit(
             mockResetPasswordSubmitCommandParameters
@@ -346,15 +378,17 @@ class ResetPasswordOAuth2StrategyTest {
 
     @Test
     fun testPerformResetPasswordSubmitPasswordTooLongError() {
+        val correlationId = UUID.randomUUID().toString()
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRSubmit,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.PASSWORD_TOO_LONG
         )
 
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()
         every { mockResetPasswordSubmitCommandParameters.getContinuationToken() } returns CONTINUATION_TOKEN
         every { mockResetPasswordSubmitCommandParameters.getNewPassword() } returns PASSWORD
+        every { mockResetPasswordSubmitCommandParameters.getCorrelationId() } returns correlationId
 
         val ssprSubmitResult = nativeAuthOAuth2Strategy.performResetPasswordSubmit(
             mockResetPasswordSubmitCommandParameters
@@ -365,15 +399,18 @@ class ResetPasswordOAuth2StrategyTest {
 
     @Test
     fun testPerformResetPasswordSubmitPasswordRecentlyUsedError() {
+        val correlationId = UUID.randomUUID().toString()
+
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRSubmit,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.PASSWORD_RECENTLY_USED
         )
 
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()
         every { mockResetPasswordSubmitCommandParameters.getContinuationToken() } returns CONTINUATION_TOKEN
         every { mockResetPasswordSubmitCommandParameters.getNewPassword() } returns PASSWORD
+        every { mockResetPasswordSubmitCommandParameters.getCorrelationId() } returns correlationId
 
         val ssprSubmitResult = nativeAuthOAuth2Strategy.performResetPasswordSubmit(
             mockResetPasswordSubmitCommandParameters
@@ -384,15 +421,18 @@ class ResetPasswordOAuth2StrategyTest {
 
     @Test
     fun testPerformResetPasswordSubmitPasswordBannedError() {
+        val correlationId = UUID.randomUUID().toString()
+
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRSubmit,
-            correlationId = UUID.randomUUID().toString(),
+            correlationId = correlationId,
             responseType = MockApiResponseType.PASSWORD_BANNED
         )
 
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()
         every { mockResetPasswordSubmitCommandParameters.getContinuationToken() } returns CONTINUATION_TOKEN
         every { mockResetPasswordSubmitCommandParameters.getNewPassword() } returns PASSWORD
+        every { mockResetPasswordSubmitCommandParameters.getCorrelationId() } returns correlationId
 
         val ssprSubmitResult = nativeAuthOAuth2Strategy.performResetPasswordSubmit(
             mockResetPasswordSubmitCommandParameters
@@ -403,8 +443,11 @@ class ResetPasswordOAuth2StrategyTest {
 
     @Test
     fun testPerformResetPasswordPollCompletionSuccess() {
+        val correlationId = UUID.randomUUID().toString()
+
         val ssprPollCompletionResult = nativeAuthOAuth2Strategy.performResetPasswordPollCompletion(
-            continuationToken = CONTINUATION_TOKEN
+            continuationToken = CONTINUATION_TOKEN,
+            correlationId = correlationId
         )
         assertTrue(ssprPollCompletionResult is ResetPasswordPollCompletionApiResult.PollingSucceeded)
     }

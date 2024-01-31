@@ -24,72 +24,88 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.signin
 
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResult
 
 /**
  * Represents the potential result types returned from the OAuth /token endpoint,
  * including a case for unexpected errors received from the server.
  */
-sealed interface SignInTokenApiResult {
-    data class Success(val tokenResponse: MicrosoftStsTokenResponse) : SignInTokenApiResult
+sealed interface SignInTokenApiResult: ApiResult {
+    data class Success(
+        override val correlationId: String,
+        val tokenResponse: MicrosoftStsTokenResponse
+    ) : SignInTokenApiResult
 
     data class MFARequired(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
-        errorCodes = errorCodes
+        errorCodes = errorCodes,
+        correlationId = correlationId
     ), SignInTokenApiResult
 
     data class UserNotFound(
         override val error: String,
         override val errorDescription: String,
-        override val errorCodes: List<Int>
+        override val errorCodes: List<Int>,
+        override val correlationId: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
-        errorCodes = errorCodes
+        errorCodes = errorCodes,
+        correlationId = correlationId
     ), SignInTokenApiResult
 
     data class InvalidCredentials(
         override val error: String,
         override val errorDescription: String,
-        override val errorCodes: List<Int>
+        override val errorCodes: List<Int>,
+        override val correlationId: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
-        errorCodes = errorCodes
+        errorCodes = errorCodes,
+        correlationId = correlationId
     ), SignInTokenApiResult
 
     data class CodeIncorrect(
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
-        val subError: String
+        val subError: String,
+        override val correlationId: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
-        errorCodes = errorCodes
+        errorCodes = errorCodes,
+        correlationId = correlationId
     ), SignInTokenApiResult
 
     data class InvalidAuthenticationType(
         override val error: String,
         override val errorDescription: String,
-        override val errorCodes: List<Int>
+        override val errorCodes: List<Int>,
+        override val correlationId: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
-        errorCodes = errorCodes
+        errorCodes = errorCodes,
+        correlationId = correlationId
     ), SignInTokenApiResult
 
     data class UnknownError(
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
+        override val correlationId: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
-        errorCodes = errorCodes
+        errorCodes = errorCodes,
+        correlationId = correlationId
     ), SignInTokenApiResult
 }
