@@ -93,8 +93,8 @@ public final class AccountManagerUtil {
     }
 
     @Nullable
-    private static DevicePolicyManager getDevicePolicyManager(Context context) {
-        final String methodTag = TAG + ":getDevicePolicyManager:";
+    private static DevicePolicyManager getDevicePolicyManager(@NonNull final Context context) {
+        final String methodTag = TAG + ":getDevicePolicyManager";
         try {
             return (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
         } catch (@NonNull final Throwable t){
