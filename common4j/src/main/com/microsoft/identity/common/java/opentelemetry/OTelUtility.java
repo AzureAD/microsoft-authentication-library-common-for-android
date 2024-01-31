@@ -47,7 +47,8 @@ public class OTelUtility {
     }
 
     /**
-     * Creates a span (with shared basic attributes).
+     * Creates a span from a parent Span Context (with shared basic attributes) and caller pkg name
+     * pre-populated on the span upon creation.
      **/
     @NonNull
     public static Span createSpan(@NonNull final String name, @NonNull final String callingPackageName) {
@@ -58,8 +59,7 @@ public class OTelUtility {
     }
 
     /**
-     * Creates a span from a parent Span Context (with shared basic attributes) and caller pkg name
-     * pre-populated on the span upon creation.
+     * Creates a span from a parent Span Context (with shared basic attributes).
      **/
     @NonNull
     public static Span createSpanFromParent(@NonNull final String name,
