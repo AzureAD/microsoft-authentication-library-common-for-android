@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [PATCH] Add exception registration in LocalBroadcaster (#2305)
 - [MINOR] Add IpcStrategyWithBackup (#2301)
 - [PATCH] Fix MSAL Issue 1864 (#2280)
 - [MINOR] Add AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp (#2294)

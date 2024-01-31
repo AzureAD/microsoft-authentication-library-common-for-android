@@ -66,7 +66,7 @@ public enum LocalBroadcaster {
         final String methodName = ":registerExceptionDuringCallback";
 
         if (!mReceivers.containsKey(alias)){
-            // Reaching this should be impossible, log
+            // Reaching this should be impossible, log a warning instead of throwing another exception
             Logger.warn(TAG + methodName, "No alias found in the local broadcaster when trying to register exception for: " + alias);
         } else {
             Logger.error(TAG + methodName, "Registering Exception for Alias: " + alias, e);
