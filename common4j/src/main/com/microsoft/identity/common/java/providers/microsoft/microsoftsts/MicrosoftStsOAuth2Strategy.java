@@ -142,7 +142,7 @@ public class MicrosoftStsOAuth2Strategy
         setTokenEndpoint(config.getTokenEndpoint().toString());
         if (parameters.isUsingOpenIdConfiguration()) {
             if (config.getSlice() != null && config.getSlice().getDataCenter() != null) {
-                String extraParams = AzureActiveDirectorySlice.DC_PARAMETER + config.getSlice().getDataCenter();
+                String extraParams = AzureActiveDirectorySlice.DC_PARAMETER + "=" + config.getSlice().getDataCenter();
                 loadOpenIdProviderConfiguration(extraParams);
             } else {
                 loadOpenIdProviderConfiguration();

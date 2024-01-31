@@ -143,7 +143,7 @@ public class OpenIdProviderConfigurationClient {
         try {
             final String uriString;
             if (extraParams != null) {
-                uriString = sanitize(tenantedAuthorityString) + WELL_KNOWN_CONFIG_PATH + extraParams;
+                uriString = sanitize(tenantedAuthorityString) + WELL_KNOWN_CONFIG_PATH + "?" + extraParams;
             } else {
                 uriString = sanitize(tenantedAuthorityString) + WELL_KNOWN_CONFIG_PATH;
             }
