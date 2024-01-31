@@ -30,6 +30,7 @@ import android.os.Build;
 import android.os.UserManager;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.logging.Logger;
 
@@ -62,8 +63,7 @@ public final class AccountManagerUtil {
             }
 
             // Check if our account type is disabled.
-            final DevicePolicyManager devicePolicyManager =
-                    (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+            final DevicePolicyManager devicePolicyManager = getDevicePolicyManager(context);
             if (devicePolicyManager != null) {
                 final String[] accountTypesWithManagementDisabled = devicePolicyManager.getAccountTypesWithManagementDisabled();
                 if (accountTypesWithManagementDisabled != null) {
@@ -90,6 +90,17 @@ public final class AccountManagerUtil {
         Logger.verbose(methodTag,
                 "Cannot verify. Skipping AccountManager operation.");
         return false;
+    }
+
+    @Nullable
+    private static DevicePolicyManager getDevicePolicyManager(Context context) {
+        final String methodTag = TAG + ":getDevicePolicyManager:";
+        try {
+            return (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+        } catch (@NonNull final Throwable t){
+            Logger.verbose(methodTag, "Cannot get DevicePolicyManager.");
+            return null;
+        }
     }
 
     public static boolean isPermissionGranted(@NonNull final Context context,
