@@ -47,7 +47,7 @@ public interface IFlightsProvider {
     boolean getBooleanValue(@NonNull IFlightConfig flightConfig);
 
     /**
-     * Gets the value of a integer flight.
+     * Gets the value of an integer flight.
      *
      * @param flightConfig {@link IFlightConfig} to check
      * @return the flight value if set otherwise returns the defaultValue
