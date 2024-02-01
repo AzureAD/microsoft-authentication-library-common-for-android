@@ -93,9 +93,8 @@ android {
         }
     }
 
+    buildFeatures.buildConfig true
 }
-
-android.buildFeatures.buildConfig true
 
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
