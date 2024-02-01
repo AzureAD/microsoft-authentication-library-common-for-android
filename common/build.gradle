@@ -134,6 +134,17 @@ android {
             outputFileName = "${archivesBaseName}-${version}.aar"
         }
     }
+
+    publishing {
+        singleVariant('distRelease') {
+            withSourcesJar()
+            withJavadocJar()
+        }
+        singleVariant('distDebug') {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
 }
 
 dependencies {
