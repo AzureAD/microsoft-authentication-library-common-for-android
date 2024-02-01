@@ -262,5 +262,15 @@ public enum AttributeName {
     /**
      * Indicates the request sequence used by cached credential service (if used) on server side
      */
-    ccs_request_sequence
+    ccs_request_sequence,
+
+    /**
+     * Indicates names of the backup ipc that might be used in a given flow.
+     */
+    backup_ipc_used,
+
+    /**
+     * Indicates the package name of the app making the request to the broker.
+     */
+    calling_package_name;
 }
