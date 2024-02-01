@@ -94,7 +94,7 @@ public class LocalMSALController extends BaseController {
     private IAuthorizationStrategy mAuthorizationStrategy = null;
 
     @SuppressWarnings({WarningType.rawtype_warning, WarningType.unchecked_warning})
-    ResultFuture<AuthorizationResult> mAuthorizationResultFuture = null;
+    private ResultFuture<AuthorizationResult> mAuthorizationResultFuture = null;
 
     @SuppressWarnings(WarningType.rawtype_warning)
     private AuthorizationRequest mAuthorizationRequest = null;
