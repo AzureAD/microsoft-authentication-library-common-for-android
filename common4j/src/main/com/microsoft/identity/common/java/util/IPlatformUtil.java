@@ -67,6 +67,7 @@ public interface IPlatformUtil {
      */
     void removeCookiesFromWebView();
 
+
     /**
      * Validate that the app owns the redirect URI.
      * Returns true if nothing goes wrong.

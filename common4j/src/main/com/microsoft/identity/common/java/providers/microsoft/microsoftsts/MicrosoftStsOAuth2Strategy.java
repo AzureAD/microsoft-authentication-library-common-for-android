@@ -605,7 +605,7 @@ public class MicrosoftStsOAuth2Strategy
 
         final TokenResult result = new TokenResult(tokenResponse, tokenErrorResponse);
 
-        ResultUtil.logResult(TAG, result);
+        ResultUtil.logResult(TAG,  result);
 
         if (null != response.getHeaders()) {
             final Map<String, List<String>> responseHeaders = response.getHeaders();
@@ -677,7 +677,7 @@ public class MicrosoftStsOAuth2Strategy
                                          @NonNull final MicrosoftStsTokenResponse response)
             throws ClientException {
         validateAuthScheme(request, response);
-        validateTokensAreInResponse(request, response);
+       // validateTokensAreInResponse(request, response);
     }
 
     /**

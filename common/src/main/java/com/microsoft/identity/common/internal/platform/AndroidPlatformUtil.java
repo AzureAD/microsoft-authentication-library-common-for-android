@@ -109,6 +109,10 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         return null;
     }
 
+    public Context getContext() {
+        return mContext;
+    }
+
     public void throwIfNetworkNotAvailable(final boolean performPowerOptimizationCheck)
             throws ClientException {
 

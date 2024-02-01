@@ -230,7 +230,11 @@ public abstract class OAuth2Strategy
             }
         }
 
-        final URL requestUrl = new URL(getTokenEndpoint());
+        final URL requestUrl = new URL(getTokenEndpoint()+"?proxymsatransfertokenrequest=true&dc=ESTS-PUB-KRSLR1-LZ3-FD000-TEST1");
+        Logger.info(TAG, "request body is "+ requestBody);
+       // final String fakeReqBody = "claims=%7B%7D&client-request-id=a97cd4ca-0652-498c-b93f-43a5ca009bfa&client_id=9668f2bd-6103-4292-9024-84fa2d1b6fb2&client_info=1&grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&mPKeyAuthHeaderAllowed=false&prt_protocol_version=3.0&redirect_uri=msauth%3A%2F%2Fcom.msft.identity.client.sample.local%2F1wIqXSqBj7w%252Bh11ZifsnqwgyKrY%253D&request=eyJhbGciOiJIUzI1NiIsImN0eCI6ImI2cUtrcHZ3cHo4RmYyVGt4d0hUdmZnUzREZCtWanFOIiwia2lkIjoic2Vzc2lvbiIsImtkZl92ZXIiOjEsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwczovL2xvZ2luLm1pY3Jvc29mdG9ubGluZS5jb20vY29uc3VtZXJzL29BdXRoMi92Mi4wL3Rva2VuIiwiZXhwIjoiMTcwNTg3MTA1NiIsImdyYW50X3R5cGUiOiJyZWZyZXNoX3Rva2VuIiwiaWF0IjoiMTcwNTg3MDc1NiIsImlzcyI6IjI5ZDllZDk4LWE0NjktNDUzNi1hZGUyLWY5ODFiYzFkNjA1ZSIsInNjb3BlIjoidXNlci5yZWFkIG9wZW5pZCBvZmZsaW5lX2FjY2VzcyBwcm9maWxlIiwibmJmIjoiMTcwNTg3MDc1NiIsInJlcXVlc3Rfbm9uY2UiOiJBd0FCQUFFQUFBQUNBT3pfQlFEMF8tSkp3WHo2V0daTWhvTncxWUxnd2c1anI3em40OWcxbFlCbVYtUVc2MFoyTVB2NExFZ3RQdTFKSm45QnN6RXlpZldrc3hIbXNZMldtT1A1V2liU0dTRWdBQSIsInJlZGlyZWN0X3VyaSI6Im1zYXV0aDovL2NvbS5tc2Z0LmlkZW50aXR5LmNsaWVudC5zYW1wbGUubG9jYWwvMXdJcVhTcUJqN3clMkJoMTFaaWZzbnF3Z3lLclklM0QiLCJjbGllbnRfaWQiOiI5NjY4ZjJiZC02MTAzLTQyOTItOTAyNC04NGZhMmQxYjZmYjIiLCJyZWZyZXNoX3Rva2VuIjoiTS5DMTA3X0JMMi4tQ3VvU0ZjRm9HMkQhZ1Q1YU9CUipQTmlHNkQ2T0g1cTJ3QXV6a3Q1cm9qWHAxcFFsUjFUaDVRMFJRVlJpTmtNUUp3VFJleU5zc0NpaDFIcHFzVFJkIVNFbEI3Yk9zZmVtandNUkgzRVlxQml6dVA1aHdPRDFOdFFrUHZyZmxBWiE1VHIxdEQzZUNxVmZVRGdCWTNBY0xPYkRPQTdFZHBGVEoqKlVUWDVpbk9QSE83OGxESHJFRHFDQk96SUo1NEtBTkFHRjFJT1JobGVuNDd2SThObWZ6elNtcVpEcGxXNTNpc2FmNXU5eGhMSk5hZipyWVIwQ1VQOFhoYmt0NU9sN1FGUHhNS2FOS1ZFRHNUQzltWWp2VDg1STZWejY2SkZKaHJOWXdVYlBwSGJOWjlQU1pyeWVpSlkqWWY1SUtNTGx3OVk3Z0RBVGdDNDcycktwRmpsc1ZNUWNnUTBRRGNvWEplUDExZkZDRnBqa2MhWUJnRnhVKndiSlNjV1dNYVZLS0Y5YldJeHB0NjhsMXJIYjdnQnJuRmhkY2hpanlHTyFZc0FaTlZJMHM5ZnkifQ.Ocj0rojnuzH610VmMLZcIpWf1DAr4EQOJyr_WNhNRbQ&x-app-name=com.msft.identity.client.sample.local&x-app-ver=1.0-local";
+
+        Logger.info(TAG, "\nrequest url is "+ requestUrl.toString());
         final long networkStartTime = System.currentTimeMillis();
         final HttpResponse response = httpClient.post(
                 requestUrl,
@@ -246,6 +250,8 @@ public abstract class OAuth2Strategy
         if (null != response.getDate()) {
             recordClockSkew(response.getDate().getTime());
         }
+
+        Logger.info(TAG, "response "+response);
         return response;
     }
 

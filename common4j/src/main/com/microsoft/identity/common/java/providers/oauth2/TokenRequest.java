@@ -92,6 +92,9 @@ public class TokenRequest implements IHasExtraParameters {
     @SerializedName("refresh_token")
     private String mRefreshToken;
 
+    @SerializedName("transfer_token")
+    private String mTransferToken;
+
     @Expose()
     @SerializedName("token_type")
     private String mTokenType;
@@ -293,6 +296,19 @@ public class TokenRequest implements IHasExtraParameters {
      */
     public void setRefreshToken(final String refreshToken) {
         mRefreshToken = refreshToken;
+    }
+
+    public String getTransferToken() {
+        return mTransferToken;
+    }
+
+    /**
+     * Sets the refresh_token.
+     *
+     * @param transferToken The refresh_token to set.
+     */
+    public void setTransferToken(final String transferToken) {
+        mTransferToken = transferToken;
     }
 
     public static class GrantTypes {
