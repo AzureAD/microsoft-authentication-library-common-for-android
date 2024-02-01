@@ -42,7 +42,6 @@ public enum LocalBroadcaster {
     }
 
     final ConcurrentHashMap<String, IReceiverCallback> mReceivers = new ConcurrentHashMap<>();
-    final ConcurrentHashMap<String, Exception> mExceptions = new ConcurrentHashMap<>();
 
     public void registerCallback(@NonNull final String alias, @NonNull final IReceiverCallback callback){
         final String methodName = ":registerCallback";
@@ -56,48 +55,11 @@ public enum LocalBroadcaster {
         mReceivers.put(alias, callback);
     }
 
-    /**
-     * Register an exception for an exisiting receiver alias.
-     * This should only be called inside the {@link IReceiverCallback#onReceive} method.
-     * @param alias alias of the receiver to log the exception
-     * @param e the exception being logged
-     */
-    public void registerExceptionDuringCallback(@NonNull final String alias, @NonNull final Exception e){
-        final String methodName = ":registerExceptionDuringCallback";
-
-        if (!mReceivers.containsKey(alias)){
-            // Reaching this should be impossible, log a warning instead of throwing another exception
-            Logger.warn(TAG + methodName, "No alias found in the local broadcaster when trying to register exception for: " + alias);
-        } else {
-            Logger.error(TAG + methodName, "Registering Exception for Alias: " + alias, e);
-            mExceptions.put(alias, e);
-        }
-    }
-
-    /**
-     * Get the exception for receiver alias provided.
-     * @param alias alias of the receiver to fetch exception for
-     * @return the exception registered for the receiver, returns null if alias is not registered, or if no exception exists
-     */
-    public Exception getExceptionForAlias(@NonNull final String alias){
-        final String methodName = ":getExceptionForAlias";
-
-        if (mReceivers.containsKey(alias) && mExceptions.containsKey(alias)){
-            Logger.info(TAG + methodName, "Returning exception for alias: " + alias);
-            return mExceptions.get(alias);
-        }
-
-        // If there is no receiver for the given alias, or if there is no exception for that receiver,
-        // return null.
-        return null;
-    }
-
     public void unregisterCallback(@NonNull final String alias){
         final String methodName = ":unregisterCallback";
 
         Logger.info(TAG + methodName, "Removing alias: " + alias);
         mReceivers.remove(alias);
-        mExceptions.remove(alias);
     }
 
     public boolean hasReceivers(@NonNull final String alias) {
@@ -125,7 +87,6 @@ public enum LocalBroadcaster {
      */
     public void clearReceivers() {
         mReceivers.clear();
-        mExceptions.clear();
     }
 
     /**

@@ -751,13 +751,15 @@ public class CommandDispatcher {
 
                             EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
+                            final BaseException[] receiverException = new BaseException[1];
+
                             final LocalBroadcaster.IReceiverCallback resultReceiver = new LocalBroadcaster.IReceiverCallback() {
                                 @Override
                                 public void onReceive(@NonNull PropertyBag dataBag) {
                                     try {
                                         completeInteractive(dataBag);
-                                    } catch (final Exception e) {
-                                        LocalBroadcaster.INSTANCE.registerExceptionDuringCallback(RETURN_AUTHORIZATION_REQUEST_RESULT, e);
+                                    } catch (Exception e) {
+                                        receiverException[0] = ExceptionAdapter.baseExceptionFromException(e);
                                     }
                                 }
                             };
@@ -773,23 +775,11 @@ public class CommandDispatcher {
                             commandResult = executeCommand(command);
                             sCommand = null;
 
-                            // Fetch the registered exception for this alias (if it exists)
-                            BaseException receiverException = null;
-                            final Exception exception = LocalBroadcaster.INSTANCE.getExceptionForAlias(RETURN_AUTHORIZATION_REQUEST_RESULT);
-
-                            if (exception != null) {
-                                if (exception instanceof BaseException) {
-                                    receiverException = (BaseException) exception;
-                                } else {
-                                    receiverException = ExceptionAdapter.baseExceptionFromException(exception);
-                                }
-                            }
-
                             LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_AUTHORIZATION_REQUEST_RESULT);
 
                             // If we received an exception during the receiver callback execution,
                             // we should set that as the command result
-                            if (receiverException != null) {
+                            if (receiverException[0] != null) {
                                 commandResult = CommandResult.of(CommandResult.ResultStatus.ERROR, receiverException, correlationId);
                             }
 

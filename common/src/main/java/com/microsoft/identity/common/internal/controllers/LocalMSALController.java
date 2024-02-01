@@ -261,8 +261,6 @@ public class LocalMSALController extends BaseController {
                         .put(TelemetryEventStrings.Key.REQUEST_CODE, String.valueOf(requestCode))
         );
 
-
-
         try {
             mAuthorizationStrategy.completeAuthorization(requestCode, RawAuthorizationResult.fromPropertyBag(data));
         } catch (Exception e){
