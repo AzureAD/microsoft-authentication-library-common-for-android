@@ -40,7 +40,7 @@ jobs:
     displayName: Assemble Local
     inputs:
       javaHomeSelection: JDKVersion
-      jdkVersionOption: "1.11"
+      jdkVersionOption: "1.17"
       tasks: clean common:assembleLocal
       publishJUnitResults: false
       jdkArchitecture: x64
@@ -49,14 +49,14 @@ jobs:
     displayName: Run Unit tests
     inputs:
       javaHomeSelection: JDKVersion
-      jdkVersionOption: "1.11"
+      jdkVersionOption: "1.17"
       tasks: common:testLocalDebugUnitTest
   - task: Gradle@3
     displayName: Check Dependencies size
     condition: eq(variables['system.pullRequest.targetBranch'], 'dev')
     inputs:
       tasks: common:dependenciesSizeCheck -PdependenciesSizeCheckConfig=distReleaseRuntimeClasspath
-      jdkVersionOption: "1.11"
+      jdkVersionOption: "1.17"
 
 - job: spotbugs
   displayName: SpotBugs
@@ -88,7 +88,7 @@ jobs:
       tasks: clean common:lintLocalDebug
       publishJUnitResults: false
       javaHomeSelection: JDKVersion
-      jdkVersionOption: "1.11"
+      jdkVersionOption: "1.17"
 - job: codeql
   displayName: CodeQL
   cancelTimeoutInMinutes: 1
@@ -99,7 +99,7 @@ jobs:
     persistCredentials: True
   - task: JavaToolInstaller@0
     inputs:
-        versionSpec: '11'
+        versionSpec: '17'
         jdkArchitectureOption: 'x64'
         jdkSourceOption: 'PreInstalled'
   - task: CmdLine@1
@@ -117,7 +117,7 @@ jobs:
       buildCommandsString: 'gradlew.bat clean common:assembleLocal'
       querySuite: 'Recommended'
       timeout: '1800'
-      jdkVersionOption: "1.11"
+      jdkVersionOption: "1.17"
   - task: PublishPipelineArtifact@1
     displayName: 'Publish code analysis artifacts'
     inputs:
