@@ -758,7 +758,7 @@ public class CommandDispatcher {
                                 public void onReceive(@NonNull PropertyBag dataBag) {
                                     try {
                                         completeInteractive(dataBag);
-                                    } catch (Exception e) {
+                                    } catch (final Exception e) {
                                         receiverException[0] = ExceptionAdapter.baseExceptionFromException(e);
                                     }
                                 }
@@ -780,7 +780,7 @@ public class CommandDispatcher {
                             // If we received an exception during the receiver callback execution,
                             // we should set that as the command result
                             if (receiverException[0] != null) {
-                                commandResult = CommandResult.of(CommandResult.ResultStatus.ERROR, receiverException, correlationId);
+                                commandResult = CommandResult.of(CommandResult.ResultStatus.ERROR, receiverException[0], correlationId);
                             }
 
                             Logger.info(TAG + methodName,

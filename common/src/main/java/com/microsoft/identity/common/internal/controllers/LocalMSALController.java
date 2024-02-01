@@ -56,11 +56,8 @@ import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.platform.DevicePoPUtils;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
@@ -97,7 +94,7 @@ public class LocalMSALController extends BaseController {
     private IAuthorizationStrategy mAuthorizationStrategy = null;
 
     @SuppressWarnings({WarningType.rawtype_warning, WarningType.unchecked_warning})
-    ResultFuture<AuthorizationResult> mAuthorizationFuture = null;
+    ResultFuture<AuthorizationResult> mAuthorizationResultFuture = null;
 
     @SuppressWarnings(WarningType.rawtype_warning)
     private AuthorizationRequest mAuthorizationRequest = null;
@@ -234,13 +231,13 @@ public class LocalMSALController extends BaseController {
         mAuthorizationRequest = getAuthorizationRequest(strategy, parameters);
 
         // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and AuthorizationStrategy to GenericAuthorizationStrategy in the arguments of call to requestAuthorization method
-        mAuthorizationFuture = strategy.requestAuthorization(
+        mAuthorizationResultFuture = strategy.requestAuthorization(
                 mAuthorizationRequest,
                 mAuthorizationStrategy
         );
 
-        AuthorizationResult result = mAuthorizationFuture.get();
-        mAuthorizationFuture = null;
+        AuthorizationResult result = mAuthorizationResultFuture.get();
+        mAuthorizationResultFuture = null;
         return result;
     }
 
@@ -265,8 +262,8 @@ public class LocalMSALController extends BaseController {
             mAuthorizationStrategy.completeAuthorization(requestCode, RawAuthorizationResult.fromPropertyBag(data));
         } catch (Exception e){
             // If the future is somehow initialized and waiting, give the future an exception
-            if (mAuthorizationFuture != null && !mAuthorizationFuture.isDone()) {
-                mAuthorizationFuture.setException(e);
+            if (mAuthorizationResultFuture != null && !mAuthorizationResultFuture.isDone()) {
+                mAuthorizationResultFuture.setException(e);
             } else {
                 // Best Effort
                 throw e;
