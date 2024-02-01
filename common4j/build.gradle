@@ -67,7 +67,7 @@ task sourcesJar(type: Jar) {
 }
 
 // Task to generate javadoc
-task generateJavadoc(type: Javadoc) {
+task generateJavadoc(type: Javadoc, dependsOn: generateBuildConfig) {
     failOnError false
     title = "Microsoft Identity Common Java"
     source = sourceSets.main.java
