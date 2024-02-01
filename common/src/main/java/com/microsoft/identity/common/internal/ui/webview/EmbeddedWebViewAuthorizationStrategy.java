@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -43,9 +45,6 @@ import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URI;
-import java.util.concurrent.Future;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
 
 /**
  * Serve as a class to do the OAuth2 auth code grant flow with Android embedded web view.
@@ -76,8 +75,8 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
      * The activity result is set in Authorization.setResult() and passed to the onActivityResult() of the calling activity.
      */
     @Override
-    public Future<AuthorizationResult> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
-                                                            GenericOAuth2Strategy oAuth2Strategy) throws ClientException {
+    public ResultFuture<AuthorizationResult> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
+                                                                  GenericOAuth2Strategy oAuth2Strategy) throws ClientException {
         final String methodTag = TAG + ":requestAuthorization";
         mAuthorizationResultFuture = new ResultFuture<>();
         mOAuth2Strategy = oAuth2Strategy;

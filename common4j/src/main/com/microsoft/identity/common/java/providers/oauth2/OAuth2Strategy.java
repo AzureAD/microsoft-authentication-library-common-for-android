@@ -30,7 +30,6 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
-import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -53,10 +52,11 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.telemetry.events.UiShownEvent;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -67,7 +67,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.Future;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -139,15 +138,14 @@ public abstract class OAuth2Strategy
      * @param authorizationStrategy generic authorization strategy.
      * @return GenericAuthorizationResponse
      */
-    @NonNull
-    public Future<AuthorizationResult> requestAuthorization(
+    public ResultFuture<AuthorizationResult> requestAuthorization(
             final GenericAuthorizationRequest request,
             final GenericAuthorizationStrategy authorizationStrategy)
             throws ClientException {
         validateAuthorizationRequest(request);
 
         // Suppressing unchecked warnings due to casting an object in reference of current class to the child class GenericOAuth2Strategy while calling method requestAuthorization()
-        @SuppressWarnings(WarningType.unchecked_warning) final Future<AuthorizationResult> authorizationFuture =
+        @SuppressWarnings(WarningType.unchecked_warning) final ResultFuture<AuthorizationResult> authorizationFuture =
                 authorizationStrategy.requestAuthorization(request, this);
         Telemetry.emit(new UiShownEvent().putVisible(TelemetryEventStrings.Value.TRUE));
 
