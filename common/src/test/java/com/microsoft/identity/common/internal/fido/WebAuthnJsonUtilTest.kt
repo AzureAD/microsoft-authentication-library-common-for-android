@@ -22,12 +22,18 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
+import com.microsoft.identity.common.internal.fido.WebAuthnJsonUtil.Companion.base64UrlEncoded
+import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import org.skyscreamer.jsonassert.JSONAssert
 import org.skyscreamer.jsonassert.JSONCompareMode
 
+@RunWith(RobolectricTestRunner::class)
 class WebAuthnJsonUtilTest {
-    val challengeStr = "T1xCsnxM2DNL2KdK5CLa6fMhD7OBqho6syzInk_n-Uo"
+    // Demo challenge from https://jwt.io/
+    val challengeStr = "O.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
     val relyingPartyIdentifier = "login.microsoft.com"
     val userVerificationPolicy = "required"
     val version = "1.0"
@@ -40,8 +46,8 @@ class WebAuthnJsonUtilTest {
     val allowCredentials2 = "id2"
 
     //Moshi's built in adapter alphabetizes  the fields.
-    val expectedJsonAllFieldsFilled = """{"allowCredentials":[{"id":"$allowCredentials1","type":"public-key"},{"id":"$allowCredentials2","type":"public-key"}],"challenge":"$challengeStr","rpId":"$relyingPartyIdentifier","userVerification":"$userVerificationPolicy"}"""
-    val expectedJsonOnlyRequiredFields = """{"allowCredentials":[],"challenge":"$challengeStr","rpId":"$relyingPartyIdentifier","userVerification":"$userVerificationPolicy"}"""
+    val expectedJsonAllFieldsFilled = """{"allowCredentials":[{"id":"$allowCredentials1","type":"public-key"},{"id":"$allowCredentials2","type":"public-key"}],"challenge":"${challengeStr.base64UrlEncoded()}","rpId":"$relyingPartyIdentifier","userVerification":"$userVerificationPolicy"}"""
+    val expectedJsonOnlyRequiredFields = """{"allowCredentials":[],"challenge":"${challengeStr.base64UrlEncoded()}","rpId":"$relyingPartyIdentifier","userVerification":"$userVerificationPolicy"}"""
 
     //Test AuthenticationResponse values and Json strings.
     //Demo values from Google's Credential Manager docs, or made up.
@@ -66,6 +72,12 @@ class WebAuthnJsonUtilTest {
     val demoAuthenticationResponseJsonOnlyRequiredFields = """{"clientExtensionResults":{},"id":"KEDetxZcUfinhVi6Za5nZQ","rawId":"KEDetxZcUfinhVi6Za5nZQ","response":{"attestationObject":null,"authenticatorData":"$authenticatorData","clientDataJSON":"$clientDataJSON","id":"$idAssertionResponse","signature":"$signature","userHandle":"$userHandle"},"type":"public-key"}"""
     val demoAuthenticationResponseJsonMissingSignature = """{"clientExtensionResults":{},"id":"KEDetxZcUfinhVi6Za5nZQ","rawId":"KEDetxZcUfinhVi6Za5nZQ","response":{"attestationObject":null,"authenticatorData":"$authenticatorData","clientDataJSON":"$clientDataJSON","id":"$idAssertionResponse","userHandle":"$userHandle"},"type":"public-key"}"""
     val demoAuthenticationResponseJsonMissingIdInAuthenticatorAssertionResponse = """{"clientExtensionResults":{},"id":"$idAssertionResponse","rawId":"KEDetxZcUfinhVi6Za5nZQ","response":{"attestationObject":null,"authenticatorData":"$authenticatorData","clientDataJSON":"$clientDataJSON","signature":"$signature","userHandle":"$userHandle"},"type":"public-key"}"""
+
+    // Demo JWT from https://jwt.io/
+    val demoJWT = "O.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    val expectedEncodedJWT = "Ty5leUpoYkdjaU9pSklVekkxTmlJc0luUjVjQ0k2SWtwWFZDSjkuZXlKemRXSWlPaUl4TWpNME5UWTNPRGt3SWl3aWJtRnRaU0k2SWtwdmFHNGdSRzlsSWl3aWFXRjBJam94TlRFMk1qTTVNREl5ZlEuU2ZsS3h3UkpTTWVLS0YyUVQ0ZndwTWVKZjM2UE9rNnlKVl9hZFFzc3c1Yw"
+    val randomString = "qwerty12345.QWERTYSomethingElseHere"
+    val expectedEncodedRandomString = "cXdlcnR5MTIzNDUuUVdFUlRZU29tZXRoaW5nRWxzZUhlcmU"
 
 
     @Test
@@ -118,5 +130,20 @@ class WebAuthnJsonUtilTest {
         val result = WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(demoAuthenticationResponseJsonMissingIdInAuthenticatorAssertionResponse)
         // Should include id.
         JSONAssert.assertEquals(expectedAuthenticationAssertionResponseOnlyRequiredFields, result, JSONCompareMode.LENIENT)
+    }
+
+    @Test
+    fun testBase64UrlEncoded_JWTFromServer() {
+        assertEquals(expectedEncodedJWT, demoJWT.base64UrlEncoded())
+    }
+
+    @Test
+    fun testBase64UrlEncoded_EmptyString() {
+        assertEquals("", "".base64UrlEncoded())
+    }
+
+    @Test
+    fun testBase64UrlEncoded_RandomString() {
+        assertEquals(expectedEncodedRandomString, randomString.base64UrlEncoded())
     }
 }

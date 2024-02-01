@@ -14,6 +14,7 @@ V.Next
 - [MINOR] Added support for setting no log level (#2282)
 - [MINOR] Redirect to hub app in case of NAA flow (#2290)
 - [MINOR] Changes to support app based targeting of telemetry sampling rate (#2302)
+- [MINOR] Adding base64Url encoding method (#2303)
 
 v.17.0.1
 ---------
