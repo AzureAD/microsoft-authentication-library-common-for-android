@@ -43,9 +43,9 @@ import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarker
 import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.BaseCommand;
+import com.microsoft.identity.common.java.commands.DeviceCodeFlowAuthResultCommand;
 import com.microsoft.identity.common.java.commands.DeviceCodeFlowCommand;
 import com.microsoft.identity.common.java.commands.DeviceCodeFlowTokenResultCommand;
-import com.microsoft.identity.common.java.commands.DeviceCodeFlowAuthResultCommand;
 import com.microsoft.identity.common.java.commands.ICommandResult;
 import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.SilentTokenCommand;
@@ -89,7 +89,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -708,7 +707,7 @@ public class CommandDispatcher {
             }
         }
 
-        public static void beginInteractive ( final InteractiveTokenCommand command){
+        public static void beginInteractive (final InteractiveTokenCommand command) {
             final String methodName = ":beginInteractive";
             synchronized (sLock) {
 
@@ -752,10 +751,16 @@ public class CommandDispatcher {
 
                             EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
+                            final BaseException[] receiverException = new BaseException[1];
+
                             final LocalBroadcaster.IReceiverCallback resultReceiver = new LocalBroadcaster.IReceiverCallback() {
                                 @Override
                                 public void onReceive(@NonNull PropertyBag dataBag) {
-                                    completeInteractive(dataBag);
+                                    try {
+                                        completeInteractive(dataBag);
+                                    } catch (final Exception e) {
+                                        receiverException[0] = ExceptionAdapter.baseExceptionFromException(e);
+                                    }
                                 }
                             };
 
@@ -771,6 +776,12 @@ public class CommandDispatcher {
                             sCommand = null;
 
                             LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_AUTHORIZATION_REQUEST_RESULT);
+
+                            // If we received an exception during the receiver callback execution,
+                            // we should set that as the command result
+                            if (receiverException[0] != null) {
+                                commandResult = CommandResult.of(CommandResult.ResultStatus.ERROR, receiverException[0], correlationId);
+                            }
 
                             Logger.info(TAG + methodName,
                                     "Completed interactive request for correlation id : **" + correlationId +

@@ -23,39 +23,47 @@
 package com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword
 
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResult
 
 /**
  * Represents the potential result types returned from the Reset Password /submit endpoint,
  * including a case for unexpected errors received from the server.
  */
-sealed interface ResetPasswordSubmitApiResult {
+sealed interface ResetPasswordSubmitApiResult: ApiResult {
     data class SubmitSuccess(
         val continuationToken: String,
-        val pollInterval: Int
+        val pollInterval: Int,
+        override val correlationId: String,
     ) : ResetPasswordSubmitApiResult
 
     data class PasswordInvalid(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         val subError: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), ResetPasswordSubmitApiResult
 
     data class ExpiredToken(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), ResetPasswordSubmitApiResult
 
     data class UnknownError(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), ResetPasswordSubmitApiResult
 }

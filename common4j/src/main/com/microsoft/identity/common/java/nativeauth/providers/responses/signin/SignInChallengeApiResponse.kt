@@ -26,7 +26,6 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
-import com.microsoft.identity.common.java.nativeauth.providers.interactors.InnerError
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.util.isOOB
 import com.microsoft.identity.common.java.nativeauth.util.isPassword
@@ -37,8 +36,9 @@ import java.net.HttpURLConnection
  * Represents the raw response from the /challenge endpoint.
  * Can be converted to SignInChallengeApiResult using the provided toResult() method.
  */
-data class SignInChallengeApiResponse(
+class SignInChallengeApiResponse(
     @Expose override var statusCode: Int,
+    correlationId: String,
     @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
     @Expose @SerializedName("binding_method") val bindingMethod: String?,
@@ -50,7 +50,7 @@ data class SignInChallengeApiResponse(
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
-): IApiResponse(statusCode) {
+): IApiResponse(statusCode, correlationId) {
 
     companion object {
         private val TAG = SignInChallengeApiResponse::class.java.simpleName
@@ -62,7 +62,11 @@ data class SignInChallengeApiResponse(
     * @see com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeApiResult
     */
     fun toResult(): SignInChallengeApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.toResult")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.toResult"
+        )
 
         return when (statusCode) {
 
@@ -72,14 +76,16 @@ data class SignInChallengeApiResponse(
                     SignInChallengeApiResult.UnknownError(
                         error = error,
                         errorDescription = errorDescription.orEmpty(),
-                        errorCodes = errorCodes.orEmpty()
+                        errorCodes = errorCodes.orEmpty(),
+                        correlationId = correlationId
                     )
                 }
                 else {
                     SignInChallengeApiResult.UnknownError(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
-                        errorCodes = errorCodes.orEmpty()
+                        errorCodes = errorCodes.orEmpty(),
+                        correlationId = correlationId
                     )
                 }
             }
@@ -88,7 +94,9 @@ data class SignInChallengeApiResponse(
             HttpURLConnection.HTTP_OK -> {
                 return when {
                     challengeType.isRedirect() -> {
-                        SignInChallengeApiResult.Redirect
+                        SignInChallengeApiResult.Redirect(
+                            correlationId = correlationId
+                        )
                     }
                     challengeType.isOOB() -> {
                         return when {
@@ -96,21 +104,24 @@ data class SignInChallengeApiResponse(
                                 SignInChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignIn /challenge did not return a challenge_target_label with oob challenge type",
-                                    errorCodes = errorCodes.orEmpty()
+                                    errorCodes = errorCodes.orEmpty(),
+                                    correlationId = correlationId
                                 )
                             }
                             challengeChannel.isNullOrBlank() -> {
                                 SignInChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignIn /challenge did not return a challenge_channel with oob challenge type",
-                                    errorCodes = errorCodes.orEmpty()
+                                    errorCodes = errorCodes.orEmpty(),
+                                    correlationId = correlationId
                                 )
                             }
                             codeLength == null -> {
                                 SignInChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignIn /challenge did not return a code_length with oob challenge type",
-                                    errorCodes = errorCodes.orEmpty()
+                                    errorCodes = errorCodes.orEmpty(),
+                                    correlationId = correlationId
                                 )
                             }
                             else -> {
@@ -119,11 +130,13 @@ data class SignInChallengeApiResponse(
                                         ?: return SignInChallengeApiResult.UnknownError(
                                             error = ApiErrorResult.INVALID_STATE,
                                             errorDescription = "SignIn /challenge did not return a continuation token with oob challenge type",
-                                            errorCodes = errorCodes.orEmpty()
+                                            errorCodes = errorCodes.orEmpty(),
+                                            correlationId = correlationId
                                         ),
                                     challengeTargetLabel = challengeTargetLabel,
                                     codeLength = codeLength,
-                                    challengeChannel = challengeChannel
+                                    challengeChannel = challengeChannel,
+                                    correlationId = correlationId
                                 )
                             }
                         }
@@ -134,15 +147,18 @@ data class SignInChallengeApiResponse(
                                 ?: return SignInChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignIn /challenge did not return a continuation token with password challenge type",
-                                    errorCodes = errorCodes.orEmpty()
-                                )
+                                    errorCodes = errorCodes.orEmpty(),
+                                    correlationId = correlationId
+                                ),
+                            correlationId = correlationId
                         )
                     }
                     else -> {
                         SignInChallengeApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            errorCodes = errorCodes.orEmpty()
+                            errorCodes = errorCodes.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                 }
@@ -153,7 +169,8 @@ data class SignInChallengeApiResponse(
                 SignInChallengeApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
-                    errorCodes = errorCodes.orEmpty()
+                    errorCodes = errorCodes.orEmpty(),
+                    correlationId = correlationId
                 )
             }
         }

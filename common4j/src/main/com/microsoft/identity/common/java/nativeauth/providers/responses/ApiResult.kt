@@ -20,15 +20,11 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.nativeauth.providers.interactors
-
-import com.google.gson.annotations.SerializedName
+package com.microsoft.identity.common.java.nativeauth.providers.responses
 
 /**
- * Data class to denote the inner error in a data class for Native Auth API errors. This represents
- * the source error that causes the Native Auth API operation to fail.
+ * Base class to encapsulate Native Auth API responses
  */
-data class InnerError(
-    @SerializedName("inner_error") val innerError: String?,      //Error name
-    @SerializedName("error_description") val errorDescription: String?   //Detailed error message
-)
+interface ApiResult {
+    val correlationId: String
+}

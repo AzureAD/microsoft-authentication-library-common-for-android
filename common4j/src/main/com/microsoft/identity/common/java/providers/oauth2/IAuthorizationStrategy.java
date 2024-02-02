@@ -26,7 +26,7 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 
-import java.util.concurrent.Future;
+import com.microsoft.identity.common.java.util.ResultFuture;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -43,8 +43,8 @@ public interface IAuthorizationStrategy<
     /**
      * Perform the authorization request.
      */
-    Future<AuthorizationResult> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
-                                                     GenericOAuth2Strategy oAuth2Strategy)
+    ResultFuture<AuthorizationResult> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
+                                                           GenericOAuth2Strategy oAuth2Strategy)
             throws ClientException;
 
     /**

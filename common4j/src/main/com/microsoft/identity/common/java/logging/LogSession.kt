@@ -36,8 +36,8 @@ class LogSession {
          *                     It usually identifies the class or activity where the log call occurs.
          * @param methodName   The methodName to log.
          */
-        fun logMethodCall(tag: String, methodName: String) {
-            Logger.info(tag, methodName)
+        fun logMethodCall(tag: String, correlationId: String?, methodName: String) {
+            Logger.info(tag, correlationId, methodName)
         }
     }
 }

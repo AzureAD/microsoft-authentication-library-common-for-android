@@ -22,8 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.flighting;
 
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.Map;
+
+import lombok.NonNull;
 
 public class MockFlightsProvider implements IFlightsProvider {
     private final Map<String, String> mFlights;
@@ -62,6 +66,11 @@ public class MockFlightsProvider implements IFlightsProvider {
 
     @Override
     public String getStringValue(IFlightConfig flightConfig) {
+        return null;
+    }
+
+    @Override
+    public JSONObject getJsonValue(@NonNull IFlightConfig flightConfig) {
         return null;
     }
 }

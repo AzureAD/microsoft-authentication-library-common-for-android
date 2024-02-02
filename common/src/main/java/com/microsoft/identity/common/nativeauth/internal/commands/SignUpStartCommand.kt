@@ -51,7 +51,11 @@ class SignUpStartCommand(
      * It calls the signUpStart method of the native auth MSAL controller with the given parameters.
      */
     override fun execute(): SignUpStartCommandResult {
-        LogSession.logMethodCall(TAG, "${TAG}.execute")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.execute"
+        )
 
         val result = controller.signUpStart(
             parameters = parameters

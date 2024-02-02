@@ -23,15 +23,19 @@
 package com.microsoft.identity.common.java.nativeauth.providers.responses.signup
 
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResult
 
 /**
  * Represents the potential result types returned from the Sign Up /challenge endpoint,
  * including a case for unexpected errors received from the server.
  */
-sealed interface SignUpChallengeApiResult {
-    object Redirect : SignUpChallengeApiResult
+sealed interface SignUpChallengeApiResult: ApiResult {
+    data class Redirect(
+        override val correlationId: String
+    ) : SignUpChallengeApiResult
 
     data class OOBRequired(
+        override val correlationId: String,
         val continuationToken: String,
         val challengeTargetLabel: String,
         val challengeChannel: String,
@@ -40,30 +44,37 @@ sealed interface SignUpChallengeApiResult {
         SignUpChallengeApiResult
 
     data class PasswordRequired(
+        override val correlationId: String,
         val continuationToken: String
     ) : SignUpChallengeApiResult
 
     data class UnsupportedChallengeType(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), SignUpChallengeApiResult
 
     data class ExpiredToken(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), SignUpChallengeApiResult
 
     data class UnknownError(
         override val error: String,
         override val errorDescription: String,
+        override val correlationId: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), SignUpChallengeApiResult
 }

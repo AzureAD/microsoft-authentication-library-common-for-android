@@ -47,6 +47,10 @@ public class Logger {
      */
     public enum LogLevel {
         /**
+         * Log level to disable logging.
+         */
+        NO_LOG,
+        /**
          * Error level logging.
          */
         ERROR,
@@ -71,6 +75,8 @@ public class Logger {
                     return com.microsoft.identity.common.java.logging.Logger.LogLevel.WARN;
                 case ERROR:
                     return com.microsoft.identity.common.java.logging.Logger.LogLevel.ERROR;
+                case NO_LOG:
+                    return com.microsoft.identity.common.java.logging.Logger.LogLevel.NO_LOG;
                 default:
                     return com.microsoft.identity.common.java.logging.Logger.LogLevel.VERBOSE;
             }
@@ -85,6 +91,8 @@ public class Logger {
                     return WARN;
                 case ERROR:
                     return ERROR;
+                case NO_LOG:
+                    return NO_LOG;
                 default:
                     return VERBOSE;
             }

@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.flighting;
 
+import org.json.JSONObject;
+
 import lombok.NonNull;
 
 /**
@@ -29,21 +31,24 @@ import lombok.NonNull;
  */
 public interface IFlightsProvider {
     /**
-     * Checks if a flight is enabled
+     * Checks if a flight is enabled.
+     *
      * @param flightConfig flight to check
      * @return true if the flight is enabled otherwise returns the defaultValue
      */
     boolean isFlightEnabled(@NonNull IFlightConfig flightConfig);
 
     /**
-     * Gets the value of a boolean flight
+     * Gets the value of a boolean flight.
+     *
      * @param flightConfig {@link IFlightConfig} to check
      * @return the flight value if set otherwise returns the defaultValue
      */
     boolean getBooleanValue(@NonNull IFlightConfig flightConfig);
 
     /**
-     * Gets the value of a integer flight
+     * Gets the value of an integer flight.
+     *
      * @param flightConfig {@link IFlightConfig} to check
      * @return the flight value if set otherwise returns the defaultValue
      */
@@ -51,15 +56,25 @@ public interface IFlightsProvider {
 
     /**
      * Gets the value of a double flight.
+     *
      * @param flightConfig {@link IFlightConfig} to check
      * @return the flight value if set otherwise returns the defaultValue
      */
     double getDoubleValue(@NonNull IFlightConfig flightConfig);
 
     /**
-     * Gets the value of a flight
+     * Gets the value of a flight.
+     *
      * @param flightConfig {@link IFlightConfig} flight to check
-     * @return
+     * @return the flight value if set otherwise returns the defaultValue
      */
     String getStringValue(@NonNull IFlightConfig flightConfig);
+
+    /**
+     * Gets the value of a JSON Object flight.
+     *
+     * @param flightConfig {@link IFlightConfig} flight to check
+     * @return the flight value if set otherwise returns the defaultValue
+     */
+    JSONObject getJsonValue(@NonNull IFlightConfig flightConfig);
 }

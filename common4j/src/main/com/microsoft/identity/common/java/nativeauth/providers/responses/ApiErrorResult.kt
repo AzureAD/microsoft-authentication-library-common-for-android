@@ -30,9 +30,9 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext
 open class ApiErrorResult(
     open val error: String?,
     open val errorDescription: String?,
-    open val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
-    open val errorCodes: List<Int>? = null
-)
+    open val errorCodes: List<Int>? = null,
+    override val correlationId: String
+): ApiResult
 {
     companion object {
         public val INVALID_STATE = "invalid_state"

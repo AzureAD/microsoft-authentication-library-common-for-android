@@ -29,8 +29,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.util.isAttributeValidationFailed
 import com.microsoft.identity.common.java.nativeauth.util.isAuthNotSupported
-import com.microsoft.identity.common.java.nativeauth.util.isInvalidClient
-import com.microsoft.identity.common.java.nativeauth.util.isInvalidEmail
+import com.microsoft.identity.common.java.nativeauth.util.isInvalidUsername
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidParameter
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordBanned
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordInvalid
@@ -41,7 +40,6 @@ import com.microsoft.identity.common.java.nativeauth.util.isPasswordTooWeak
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import com.microsoft.identity.common.java.nativeauth.util.isUnsupportedChallengeType
 import com.microsoft.identity.common.java.nativeauth.util.isUserAlreadyExists
-import com.microsoft.identity.common.java.nativeauth.util.isVerificationRequired
 import com.microsoft.identity.common.java.nativeauth.util.toAttributeList
 import java.net.HttpURLConnection
 
@@ -49,8 +47,9 @@ import java.net.HttpURLConnection
  * Represents the raw response from the Sign Up /start endpoint.
  * Can be converted to SignUpContinueApiResult using the provided toResult() method.
  */
-data class SignUpStartApiResponse(
+class SignUpStartApiResponse(
     @Expose override var statusCode: Int,
+    correlationId: String,
     @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("unverified_attributes") val unverifiedAttributes: List<Map<String, String>>?,
     @Expose @SerializedName("invalid_attributes") val invalidAttributes: List<Map<String, String>>?,
@@ -59,14 +58,18 @@ data class SignUpStartApiResponse(
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("suberror") val subError: String?
-) : IApiResponse(statusCode) {
+) : IApiResponse(statusCode, correlationId) {
 
     companion object {
         private val TAG = SignUpStartApiResponse::class.java.simpleName
     }
 
     fun toResult(): SignUpStartApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.toResult")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.toResult"
+        )
 
         return when (statusCode) {
 
@@ -76,19 +79,22 @@ data class SignUpStartApiResponse(
                     error.isUserAlreadyExists() -> {
                         SignUpStartApiResult.UsernameAlreadyExists(
                             error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
+                            errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
-                    errorCodes?.get(0).isInvalidParameter() and (errorDescription?.isInvalidEmail() == true) -> {
-                        SignUpStartApiResult.InvalidEmail(
+                    errorCodes?.get(0).isInvalidParameter() and (errorDescription?.isInvalidUsername() == true) -> {
+                        SignUpStartApiResult.InvalidUsername(
                             error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
+                            errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     error.isAuthNotSupported() -> {
                         SignUpStartApiResult.AuthNotSupported(
                             error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
+                            errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     subError.isAttributeValidationFailed() -> {
@@ -99,14 +105,17 @@ data class SignUpStartApiResponse(
                                 ?: return SignUpStartApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
                                     errorDescription = "SignUp /start did not return a invalid_attributes with validation_failed error",
+                                    correlationId = correlationId
                                 ),
-                            subError = subError.orEmpty()
+                            subError = subError.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     error.isUnsupportedChallengeType() -> {
                         SignUpStartApiResult.UnsupportedChallengeType(
                             error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
+                            errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     subError.isPasswordTooWeak() || subError.isPasswordTooLong() || subError.isPasswordTooShort()
@@ -114,13 +123,15 @@ data class SignUpStartApiResponse(
                         SignUpStartApiResult.InvalidPassword(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            subError = subError.orEmpty()
+                            subError = subError.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     else -> {
                         SignUpStartApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                 }
@@ -129,7 +140,9 @@ data class SignUpStartApiResponse(
             // Handle success and redirect
             HttpURLConnection.HTTP_OK -> {
                 if (challengeType.isRedirect()) {
-                    SignUpStartApiResult.Redirect
+                    SignUpStartApiResult.Redirect(
+                        correlationId = correlationId
+                    )
                 }
                 else {
                     SignUpStartApiResult.Success(
@@ -137,7 +150,9 @@ data class SignUpStartApiResponse(
                             ?: return SignUpStartApiResult.UnknownError(
                                 error = "invalid_state",
                                 errorDescription = "Sign up /start did not return a continuation token",
-                            )
+                                correlationId = correlationId
+                            ),
+                        correlationId = correlationId
                     )
                 }
             }
@@ -147,6 +162,7 @@ data class SignUpStartApiResponse(
                 SignUpStartApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
+                    correlationId = correlationId
                 )
             }
         }

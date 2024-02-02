@@ -77,7 +77,11 @@ class NativeAuthCIAMAuthority (
     }
 
     private fun createNativeAuthOAuth2Configuration(challengeTypes: List<String>?): NativeAuthOAuth2Configuration {
-       LogSession.logMethodCall(TAG, "${TAG}.createNativeAuthOAuth2Configuration")
+       LogSession.logMethodCall(
+           tag = TAG,
+           correlationId = null,
+           "${TAG}.createNativeAuthOAuth2Configuration"
+       )
         return NativeAuthOAuth2Configuration(
             authorityUrl = this.authorityURL,
             clientId = this.clientId,
@@ -95,7 +99,11 @@ class NativeAuthCIAMAuthority (
      * (e.g. "oob password redirect")
      */
     private fun getChallengeTypesWithDefault(challengeTypes: List<String>?): String {
-        LogSession.logMethodCall(TAG, "${TAG}.getChallengeTypesWithDefault")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            "${TAG}.getChallengeTypesWithDefault"
+        )
         Logger.info(TAG, "Challenge Types passed = $challengeTypes")
         return (challengeTypes ?: emptyList()).plus(listOf(NativeAuthConstants.GrantType.REDIRECT)).distinct().joinToString(" ")
     }

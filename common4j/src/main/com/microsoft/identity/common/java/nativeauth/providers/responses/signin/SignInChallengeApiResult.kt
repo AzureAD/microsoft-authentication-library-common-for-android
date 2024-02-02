@@ -23,23 +23,31 @@
 package com.microsoft.identity.common.java.nativeauth.providers.responses.signin
 
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResult
 
 /**
  * Represents the potential result types returned from the OAuth /challenge endpoint,
  * including a case for unexpected errors received from the server.
  */
-sealed interface SignInChallengeApiResult {
-    object Redirect : SignInChallengeApiResult
+sealed interface SignInChallengeApiResult: ApiResult {
+    data class Redirect(
+        override val correlationId: String
+    ) : SignInChallengeApiResult
     data class OOBRequired(
+        override val correlationId: String,
         val continuationToken: String,
         val challengeTargetLabel: String,
         val challengeChannel: String,
         val codeLength: Int
     ) : SignInChallengeApiResult
 
-    data class PasswordRequired(val continuationToken: String) : SignInChallengeApiResult
+    data class PasswordRequired(
+        override val correlationId: String,
+        val continuationToken: String
+    ) : SignInChallengeApiResult
 
     data class UnknownError(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
@@ -47,5 +55,6 @@ sealed interface SignInChallengeApiResult {
         error = error,
         errorDescription = errorDescription,
         errorCodes = errorCodes,
+        correlationId = correlationId
     ), SignInChallengeApiResult
 }

@@ -122,6 +122,11 @@ public class CommandParameters {
         // return true even if one of the nested app params is present
         return !StringUtil.isNullOrEmpty(childRedirectUri) || !StringUtil.isNullOrEmpty(childClientId);
     }
+
+    // Helper method for Kotlin classes, as Lombok doesn't play nice with Kotlin.
+    public String getCorrelationId() {
+        return correlationId;
+    }
 }
 
 

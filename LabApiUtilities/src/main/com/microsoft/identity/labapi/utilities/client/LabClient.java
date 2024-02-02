@@ -66,6 +66,8 @@ public class LabClient implements ILabClient {
      */
     private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(15);
 
+    public static final long TEMP_USER_WAIT_TIME = TimeUnit.SECONDS.toMillis(35);
+
     @Override
     public ILabAccount getLabAccount(@NonNull final LabQuery labQuery) throws LabApiException {
         final List<ConfigInfo> configInfos = fetchConfigsFromLab(labQuery);

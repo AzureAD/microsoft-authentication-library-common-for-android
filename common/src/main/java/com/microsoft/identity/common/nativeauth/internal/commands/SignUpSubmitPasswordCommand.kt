@@ -51,7 +51,11 @@ class SignUpSubmitPasswordCommand(
      * It calls the signUpSubmitPassword method of the native auth MSAL controller with the given parameters.
      */
     override fun execute(): SignUpSubmitPasswordCommandResult {
-        LogSession.logMethodCall(TAG, "${TAG}.execute")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.execute"
+        )
 
         val result = controller.signUpSubmitPassword(
             parameters = parameters

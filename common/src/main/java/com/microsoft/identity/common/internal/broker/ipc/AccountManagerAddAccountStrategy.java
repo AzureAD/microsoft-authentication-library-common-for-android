@@ -46,6 +46,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.
 
 /**
  * A strategy for communicating with the targeted broker via AccountManager's addAccount().
+ * This will only communicate to the owner of com.microsoft.workaccount account type.
  * <p>
  * NOTE: SuppressLint is added because this API requires MANAGE_ACCOUNTS for API<= 22.
  * AccountManagerUtil.canUseAccountManagerOperation() will validate that.

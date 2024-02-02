@@ -54,7 +54,6 @@ data class ResetPasswordStartRequest private constructor(
         ): ResetPasswordStartRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(clientId, "clientId")
-            ArgUtils.validateNonNullArg(username, "username")
             ArgUtils.validateNonNullArg(challengeType, "challengeType")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")

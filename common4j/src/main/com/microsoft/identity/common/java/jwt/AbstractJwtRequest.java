@@ -59,6 +59,9 @@ public abstract class AbstractJwtRequest {
         public static final String EXP = "exp";
         public static final String ASSERTION = "assertion";
         public static final String KDF_VER = "kdf_ver";
+
+        public static final String JWE_CRYPTO = "jwe_crypto";
+        public static final String SESSION_KEY_CRYPTO = "session_key_crypto";
     }
 
     @SerializedName(ClaimNames.REFRESH_TOKEN)

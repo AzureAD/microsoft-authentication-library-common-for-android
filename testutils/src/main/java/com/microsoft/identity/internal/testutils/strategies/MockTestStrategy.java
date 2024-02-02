@@ -24,7 +24,6 @@ package com.microsoft.identity.internal.testutils.strategies;
 
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
@@ -43,7 +42,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.Future;
 
 public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrategy {
 
@@ -59,12 +57,12 @@ public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrate
     /**
      * Template method for executing an OAuth2 authorization request.
      *
-     * @param request               microsoft sts authorization request.
+     * @param request                microsoft sts authorization request.
      * @param IAuthorizationStrategy authorization strategy.
      * @return GenericAuthorizationResponse
      */
     @Override
-    public Future<AuthorizationResult> requestAuthorization(
+    public ResultFuture<AuthorizationResult> requestAuthorization(
             final MicrosoftStsAuthorizationRequest request,
             final IAuthorizationStrategy IAuthorizationStrategy) {
         final MockSuccessAuthorizationResultMockedTests authorizationResult = new MockSuccessAuthorizationResultMockedTests();

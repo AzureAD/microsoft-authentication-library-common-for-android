@@ -51,7 +51,11 @@ class SignInStartCommand(
      * It calls the signInStart method of the native auth MSAL controller with the given parameters.
      */
     override fun execute(): SignInStartCommandResult {
-        LogSession.logMethodCall(TAG, "${TAG}.execute")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.execute"
+        )
         val result = controller.signInStart(
             parameters = parameters
         )

@@ -29,8 +29,9 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext
  * INativeAuthCommandResult interface defines the base class for errors used in Native Auth.
  */
 interface INativeAuthCommandResult {
+    val correlationId: String
     data class Redirect(
-        override val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
+        override val correlationId: String,
     ) : Error(error = BROWSER_REQUIRED_ERROR, errorDescription = BROWSER_REQUIRED_ERROR_DESCRIPTION, correlationId = correlationId),
         SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInSubmitCodeCommandResult, SignInResendCodeCommandResult,
         SignInSubmitPasswordCommandResult, SignUpStartCommandResult, SignUpSubmitCodeCommandResult,
@@ -51,8 +52,7 @@ interface INativeAuthCommandResult {
         override val error: String?,
         override val errorDescription: String?,
         override val details: List<Map<String, String>>? = null,
-        //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
-        override val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
+        override val correlationId: String,
         override val errorCodes: List<Int>? = null,
         val exception: Exception? = null
     ): Error(error, errorDescription, details, correlationId, errorCodes), INativeAuthCommandResult,
@@ -68,8 +68,17 @@ interface INativeAuthCommandResult {
         open val error: String?,
         open val errorDescription: String?,
         open val details: List<Map<String, String>>? = null,
-        //TODO: This initialisation will be removed as part of PBI https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2710164
-        open val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
+        open val correlationId: String,
         open val errorCodes: List<Int>? = null
     )
+
+    data class InvalidUsername(
+        override val error: String?,
+        override val errorDescription: String?,
+        override val details: List<Map<String, String>>? = null,
+        override val correlationId: String = DiagnosticContext.INSTANCE.threadCorrelationId,
+        override val errorCodes: List<Int>? = null,
+        val exception: Exception? = null
+    ) : Error(error, errorDescription, details, correlationId, errorCodes),
+        INativeAuthCommandResult, SignInStartCommandResult, SignUpStartCommandResult, SignUpSubmitPasswordCommandResult, ResetPasswordStartCommandResult
 }

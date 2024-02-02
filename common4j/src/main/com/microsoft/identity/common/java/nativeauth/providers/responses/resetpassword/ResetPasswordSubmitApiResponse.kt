@@ -26,7 +26,6 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
-import com.microsoft.identity.common.java.nativeauth.providers.interactors.InnerError
 import com.microsoft.identity.common.java.nativeauth.util.*
 import java.net.HttpURLConnection
 
@@ -36,13 +35,14 @@ import java.net.HttpURLConnection
  */
 class ResetPasswordSubmitApiResponse(
     @Expose override var statusCode: Int,
+    correlationId: String,
     @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("poll_interval") val pollInterval: Int?,
     @SerializedName("error") val error: String?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
     @SerializedName("suberror") val subError: String?
-): IApiResponse(statusCode) {
+): IApiResponse(statusCode, correlationId) {
 
     companion object {
         private val TAG = ResetPasswordSubmitApiResponse::class.java.simpleName
@@ -57,7 +57,11 @@ class ResetPasswordSubmitApiResponse(
      * @see com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResult
      */
     fun toResult(): ResetPasswordSubmitApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.toResult")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.toResult"
+        )
 
         return when (statusCode) {
 
@@ -69,19 +73,22 @@ class ResetPasswordSubmitApiResponse(
                         ResetPasswordSubmitApiResult.PasswordInvalid(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            subError = subError.orEmpty()
+                            subError = subError.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     error.isExpiredToken() -> {
                         ResetPasswordSubmitApiResult.ExpiredToken(
                             error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
+                            errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                     else -> {
                         ResetPasswordSubmitApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
+                            correlationId = correlationId
                         )
                     }
                 }
@@ -94,8 +101,10 @@ class ResetPasswordSubmitApiResponse(
                         ?: return ResetPasswordSubmitApiResult.UnknownError(
                             error = "invalid_state",
                             errorDescription = "ResetPassword /submit successful, but did not return a flow token",
+                            correlationId = correlationId
                         ),
-                    pollInterval = clampPollInterval(pollInterval)
+                    pollInterval = clampPollInterval(pollInterval),
+                    correlationId = correlationId
                 )
             }
 
@@ -104,12 +113,13 @@ class ResetPasswordSubmitApiResponse(
                 ResetPasswordSubmitApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
+                    correlationId = correlationId
                 )
             }
         }
     }
 
-    fun clampPollInterval(pollIntervalInSeconds: Int?): Int {
+    private fun clampPollInterval(pollIntervalInSeconds: Int?): Int {
         if (pollIntervalInSeconds == null || pollIntervalInSeconds < MINIMUM_POLL_COMPLETION_INTERVAL_IN_SECONDS || pollIntervalInSeconds > MAXIMUM_POLL_COMPLETION_INTERVAL_IN_SECONDS)
         {
             return DEFAULT_POLL_COMPLETION_INTERVAL_IN_SECONDS

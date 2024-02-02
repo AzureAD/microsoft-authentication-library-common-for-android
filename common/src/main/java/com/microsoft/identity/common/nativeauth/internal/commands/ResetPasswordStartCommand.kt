@@ -51,7 +51,12 @@ class ResetPasswordStartCommand(
      * It calls the resetPasswordStart method of the native auth MSAL controller with the given parameters.
      */
     override fun execute(): ResetPasswordStartCommandResult {
-        LogSession.logMethodCall(TAG, "${TAG}.execute")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.execute"
+        )
+
         val result = controller.resetPasswordStart(
             parameters = parameters
         )

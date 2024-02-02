@@ -23,41 +23,51 @@
 package com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword
 
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResult
 
 /**
  * Represents the potential result types returned from the Reset Password /continue endpoint,
  * including a case for unexpected errors received from the server.
  */
-sealed interface ResetPasswordContinueApiResult {
-    object Redirect : ResetPasswordContinueApiResult
+sealed interface ResetPasswordContinueApiResult: ApiResult {
+    data class Redirect(
+        override val correlationId: String,
+    ) : ResetPasswordContinueApiResult
 
     data class PasswordRequired(
+        override val correlationId: String,
         val continuationToken: String,
         val expiresIn: Int?
     ) : ResetPasswordContinueApiResult
 
     data class CodeIncorrect(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         val subError: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), ResetPasswordContinueApiResult
 
     data class ExpiredToken(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), ResetPasswordContinueApiResult
 
     data class UnknownError(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), ResetPasswordContinueApiResult
 }

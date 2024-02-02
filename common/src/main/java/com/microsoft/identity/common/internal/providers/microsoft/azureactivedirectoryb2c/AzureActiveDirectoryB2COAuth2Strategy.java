@@ -43,7 +43,7 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 
-import java.util.concurrent.Future;
+import com.microsoft.identity.common.java.util.ResultFuture;
 
 /**
  * Azure Active Directory B2C OAuth Strategy.
@@ -68,7 +68,7 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and AuthorizationStrategy to GenericAuthorizationStrategy in the arguments of call to super class' method requestAuthorization
     @SuppressWarnings(WarningType.unchecked_warning)
     @Override
-    public Future<AuthorizationResult> requestAuthorization(AuthorizationRequest request, IAuthorizationStrategy authorizationStrategy) throws ClientException {
+    public ResultFuture<AuthorizationResult> requestAuthorization(AuthorizationRequest request, IAuthorizationStrategy authorizationStrategy) throws ClientException {
         return super.requestAuthorization(request, authorizationStrategy);
     }
 

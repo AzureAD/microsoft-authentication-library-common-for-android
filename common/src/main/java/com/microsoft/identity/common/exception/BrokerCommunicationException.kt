@@ -46,7 +46,8 @@ class BrokerCommunicationException(
         // The operation is not supported on the client (calling) side of IPC connection.
         OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE("ipc_operation_not_supported_on_client_side"),  // The operation is not supported on the server (target) side of IPC connection.
         OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE("ipc_operation_not_supported_on_server_side"),  // IPC connection failed due to an error.
-        CONNECTION_ERROR("ipc_connection_error");
+        CONNECTION_ERROR("ipc_connection_error"),
+        VALIDATION_ERROR("ipc_validation_error");
 
         override fun toString(): String {
             return categoryName

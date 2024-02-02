@@ -43,7 +43,7 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 
-import java.util.concurrent.Future;
+import com.microsoft.identity.common.java.util.ResultFuture;
 
 /**
  * Azure Active Directory Federation Services 2012 R2 OAuth Strategy
@@ -70,7 +70,7 @@ public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth
     // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and AuthorizationStrategy to GenericAuthorizationStrategy in the arguments of call to super class' method requestAuthorization
     @SuppressWarnings(WarningType.unchecked_warning)
     @Override
-    public Future<AuthorizationResult> requestAuthorization(AuthorizationRequest request, IAuthorizationStrategy IAuthorizationStrategy)
+    public ResultFuture<AuthorizationResult> requestAuthorization(AuthorizationRequest request, IAuthorizationStrategy IAuthorizationStrategy)
             throws ClientException {
         return super.requestAuthorization(request, IAuthorizationStrategy);
     }
