@@ -348,6 +348,7 @@ afterEvaluate {
                 artifactId 'common-debug'
                 //Edit the 'version' here for VSTS RC build
                 version = project.version
+                generateMetadataFileForDistDebugPublication.dependsOn bundleDistReleaseAar
             }
         }
 
