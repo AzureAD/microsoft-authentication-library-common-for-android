@@ -116,7 +116,7 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
                         "OAuth2Cache not an instance of BrokerOAuth2TokenCache"
                 );
             }
-            if (!getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
+            if (!getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName(), getClientId())) {
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
                         ArgumentException.REDIRECT_URI_ARGUMENT_NAME, "The redirect URI doesn't match the uri" +

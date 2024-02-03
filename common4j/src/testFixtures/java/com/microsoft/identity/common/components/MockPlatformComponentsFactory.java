@@ -157,6 +157,11 @@ public class MockPlatformComponentsFactory {
             throw new UnsupportedOperationException();
         }
 
+        @Override
+        public boolean isValidCallingApp(@NonNull String redirectUri, @NonNull String packageName, @NonNull String clientId) {
+            return this.isValidCallingApp(redirectUri, packageName);
+        }
+
         @Nullable
         @Override
         public String getEnrollmentId(@NonNull String userId, @NonNull String packageName) {

@@ -172,6 +172,11 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     }
 
     @Override
+    public boolean isValidCallingApp(@NonNull final String redirectUri, @NonNull final String packageName, @NonNull String clientId) {
+        return this.isValidCallingApp(redirectUri, packageName);
+    }
+
+    @Override
     @Nullable
     public String getEnrollmentId(@NonNull final String userId, @NonNull final String packageName) {
         return IntuneMAMEnrollmentIdGateway

@@ -93,7 +93,7 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
             );
         }
 
-        if (!getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
+        if (!getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName(), getClientId())) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
                     "mRedirectUri", "The redirect URI doesn't match the uri" +

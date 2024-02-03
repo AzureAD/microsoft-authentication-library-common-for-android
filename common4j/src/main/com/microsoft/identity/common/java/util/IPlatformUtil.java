@@ -71,7 +71,14 @@ public interface IPlatformUtil {
      * Validate that the app owns the redirect URI.
      * Returns true if nothing goes wrong.
      */
+    @Deprecated
     boolean isValidCallingApp(@NonNull final String redirectUri, @NonNull final String packageName);
+
+    /**
+     * Validate that the app owns the redirect URI.
+     * Returns true if nothing goes wrong.
+     */
+    boolean isValidCallingApp(@NonNull final String redirectUri, @NonNull final String packageName, @NonNull final String clientId);
 
     /**
      * Retrieve the Intune MAM enrollment id for the given user and package from
