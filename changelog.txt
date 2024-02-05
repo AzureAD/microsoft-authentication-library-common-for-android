@@ -1,7 +1,7 @@
 V.Next
 ---------
 
-V.17.1.0-RC2
+V.17.1.0-RC3
 ---------
 - [PATCH] Revert #2305 (#2307)
 - [PATCH] Fix MSAL Issue 1864 (#2280)
