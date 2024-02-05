@@ -67,6 +67,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.Future;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -138,14 +139,14 @@ public abstract class OAuth2Strategy
      * @param authorizationStrategy generic authorization strategy.
      * @return GenericAuthorizationResponse
      */
-    public ResultFuture<AuthorizationResult> requestAuthorization(
+    public Future<AuthorizationResult> requestAuthorization(
             final GenericAuthorizationRequest request,
             final GenericAuthorizationStrategy authorizationStrategy)
             throws ClientException {
         validateAuthorizationRequest(request);
 
         // Suppressing unchecked warnings due to casting an object in reference of current class to the child class GenericOAuth2Strategy while calling method requestAuthorization()
-        @SuppressWarnings(WarningType.unchecked_warning) final ResultFuture<AuthorizationResult> authorizationFuture =
+        @SuppressWarnings(WarningType.unchecked_warning) final Future<AuthorizationResult> authorizationFuture =
                 authorizationStrategy.requestAuthorization(request, this);
         Telemetry.emit(new UiShownEvent().putVisible(TelemetryEventStrings.Value.TRUE));
 
