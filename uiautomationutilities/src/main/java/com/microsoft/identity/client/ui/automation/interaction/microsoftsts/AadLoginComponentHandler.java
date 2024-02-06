@@ -39,6 +39,8 @@ import org.junit.Assert;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static org.junit.Assert.fail;
 
+import android.widget.Button;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -222,6 +224,21 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         // Looks like we sometimes see this UI prompt asking "How would like to sign in?"
         // We press button1, which is "Ok" to confirm the default selection of using device certificate.
         UiAutomatorUtils.handleButtonClickSafely("android:id/button1", mFindLoginUiElementTimeout);
+    }
+
+    @Override
+    public void handleSignInFromOtherDevice(@NonNull final String expectedDeviceLoginUrl) {
+        // handler it
+        final UiObject signInOptions = UiAutomatorUtils.obtainUiObjectWithTextAndClassType("Sign-in options", Button.class);
+        try {
+            signInOptions.click();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+        UiAutomatorUtils.handleButtonClickForObjectWithText("Sign in from another device");
+
+        // verify the remote device login url is displayed.
+        Assert.assertTrue(UiAutomatorUtils.obtainUiObjectWithText(expectedDeviceLoginUrl).exists());
     }
 
     @Override
