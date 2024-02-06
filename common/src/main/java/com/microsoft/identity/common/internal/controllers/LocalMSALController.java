@@ -82,6 +82,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import lombok.EqualsAndHashCode;
 
@@ -94,7 +95,7 @@ public class LocalMSALController extends BaseController {
     private IAuthorizationStrategy mAuthorizationStrategy = null;
 
     @SuppressWarnings({WarningType.rawtype_warning, WarningType.unchecked_warning})
-    private ResultFuture<AuthorizationResult> mAuthorizationResultFuture = null;
+    private Future<AuthorizationResult> mAuthorizationFuture = null;
 
     @SuppressWarnings(WarningType.rawtype_warning)
     private AuthorizationRequest mAuthorizationRequest = null;
@@ -231,13 +232,13 @@ public class LocalMSALController extends BaseController {
         mAuthorizationRequest = getAuthorizationRequest(strategy, parameters);
 
         // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and AuthorizationStrategy to GenericAuthorizationStrategy in the arguments of call to requestAuthorization method
-        mAuthorizationResultFuture = strategy.requestAuthorization(
+        mAuthorizationFuture = strategy.requestAuthorization(
                 mAuthorizationRequest,
                 mAuthorizationStrategy
         );
 
-        AuthorizationResult result = mAuthorizationResultFuture.get();
-        mAuthorizationResultFuture = null;
+        AuthorizationResult result = mAuthorizationFuture.get();
+        mAuthorizationFuture = null;
         return result;
     }
 
@@ -261,11 +262,15 @@ public class LocalMSALController extends BaseController {
         try {
             mAuthorizationStrategy.completeAuthorization(requestCode, RawAuthorizationResult.fromPropertyBag(data));
         } catch (Exception e){
-            // If the future is somehow initialized and waiting, give the future an exception
-            if (mAuthorizationResultFuture != null && !mAuthorizationResultFuture.isDone()) {
-                mAuthorizationResultFuture.setException(e);
+            // Best effort
+            if (mAuthorizationFuture != null
+                    && mAuthorizationFuture instanceof Future
+                    && !mAuthorizationFuture.isDone()) {
+                // If the future is somehow initialized and waiting, give the future an exception
+                // Adjusting method signatures to get a ResultFuture back seems to have some unintended breaking change in MSAL
+                // so instead will use checked type casting.
+                ((ResultFuture<AuthorizationResult>) mAuthorizationFuture).setException(e);
             } else {
-                // Best Effort
                 throw e;
             }
         }

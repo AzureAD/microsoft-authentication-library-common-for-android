@@ -41,6 +41,8 @@ import com.microsoft.identity.internal.testutils.MicrosoftStsRopcTokenRequest;
 import com.microsoft.identity.internal.testutils.labutils.LabConfig;
 import com.microsoft.identity.internal.testutils.mocks.MockSuccessAuthorizationResultNetworkTests;
 
+import java.util.concurrent.Future;
+
 public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOAuth2Strategy {
 
     public static final String USERNAME_EMPTY_OR_NULL = "username_empty_or_null";
@@ -74,7 +76,7 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
      * @return GenericAuthorizationResponse
      */
     @Override
-    public ResultFuture<AuthorizationResult> requestAuthorization(
+    public Future<AuthorizationResult> requestAuthorization(
             final MicrosoftStsAuthorizationRequest request,
             final IAuthorizationStrategy IAuthorizationStrategy) {
         final MockSuccessAuthorizationResultNetworkTests authorizationResult = new MockSuccessAuthorizationResultNetworkTests();
