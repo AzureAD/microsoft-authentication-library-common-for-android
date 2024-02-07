@@ -1,6 +1,5 @@
 V.Next
 ---------
-- [PATCH] Handle Receiver Callback Exception in CommandDispatcher interactive command (#2305)
 - [MINOR] Add IpcStrategyWithBackup (#2301)
 - [PATCH] Fix MSAL Issue 1864 (#2280)
 - [MINOR] Add AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp (#2294)
