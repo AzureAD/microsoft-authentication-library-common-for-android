@@ -26,12 +26,16 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration;
+import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfigurationClient;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.JsonUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -357,10 +361,40 @@ public abstract class Authority {
 
         //Check if authority was added to configuration
         for (final Authority currentAuthority : knownAuthorities) {
-            if (currentAuthority.mAuthorityUrlString != null &&
-                    authority.getAuthorityURL() != null &&
+            String authorityUrl;
+            if (currentAuthority.mAuthorityTypeString.equals(Authority.CIAM)) {
+                // Don't compare the raw authority URL passed as part of config, as this can be
+                // behind a (changing) custom, non-Microsoft domain. The authority passed as input
+                // parameter is composed based on the account, and thus ID token, issuer claim.
+                // This should be compared against the OpenID Config issuer value of the authorities
+                // in knownAuthorities. The latter is the true authority access through a custom
+                // domain.
+                final OpenIdProviderConfigurationClient client =
+                        new OpenIdProviderConfigurationClient();
+                try {
+                    OpenIdProviderConfiguration openIdProviderConfiguration =
+                            client.loadOpenIdProviderConfigurationFromAuthority(
+                                    currentAuthority.mAuthorityUrlString
+                            );
+                    authorityUrl = openIdProviderConfiguration.getIssuer();
+                } catch (ServiceException e) {
+                    Logger.error(
+                            TAG,
+                            "There was a problem with loading the openIdConfiguration." +
+                                    "Using authority URL from configuration instead.",
+                            e
+                    );
+                    authorityUrl = currentAuthority.mAuthorityUrlString;
+                }
+
+            } else {
+                authorityUrl = currentAuthority.mAuthorityUrlString;
+            }
+
+            if (authority.getAuthorityURL() != null &&
                     authority.getAuthorityURL().getAuthority() != null &&
-                    currentAuthority.mAuthorityUrlString.toLowerCase(Locale.ROOT).contains(
+                    authorityUrl != null &&
+                    authorityUrl.toLowerCase(Locale.ROOT).contains(
                             authority
                                     .getAuthorityURL()
                                     .getAuthority()
