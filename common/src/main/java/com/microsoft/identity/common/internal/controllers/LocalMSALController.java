@@ -72,7 +72,6 @@ import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
-import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.java.util.ResultUtil;
 import com.microsoft.identity.common.java.util.ThreadUtils;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
@@ -82,6 +81,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import lombok.EqualsAndHashCode;
 
@@ -92,9 +92,6 @@ public class LocalMSALController extends BaseController {
 
     @SuppressWarnings(WarningType.rawtype_warning)
     private IAuthorizationStrategy mAuthorizationStrategy = null;
-
-    @SuppressWarnings({WarningType.rawtype_warning, WarningType.unchecked_warning})
-    private ResultFuture<AuthorizationResult> mAuthorizationResultFuture = null;
 
     @SuppressWarnings(WarningType.rawtype_warning)
     private AuthorizationRequest mAuthorizationRequest = null;
@@ -231,14 +228,12 @@ public class LocalMSALController extends BaseController {
         mAuthorizationRequest = getAuthorizationRequest(strategy, parameters);
 
         // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and AuthorizationStrategy to GenericAuthorizationStrategy in the arguments of call to requestAuthorization method
-        mAuthorizationResultFuture = strategy.requestAuthorization(
+        @SuppressWarnings(WarningType.unchecked_warning) final Future<AuthorizationResult> future = strategy.requestAuthorization(
                 mAuthorizationRequest,
                 mAuthorizationStrategy
         );
 
-        AuthorizationResult result = mAuthorizationResultFuture.get();
-        mAuthorizationResultFuture = null;
-        return result;
+        return future.get();
     }
 
     @Override
@@ -258,17 +253,7 @@ public class LocalMSALController extends BaseController {
                         .put(TelemetryEventStrings.Key.REQUEST_CODE, String.valueOf(requestCode))
         );
 
-        try {
-            mAuthorizationStrategy.completeAuthorization(requestCode, RawAuthorizationResult.fromPropertyBag(data));
-        } catch (Exception e){
-            // If the future is somehow initialized and waiting, give the future an exception
-            if (mAuthorizationResultFuture != null && !mAuthorizationResultFuture.isDone()) {
-                mAuthorizationResultFuture.setException(e);
-            } else {
-                // Best Effort
-                throw e;
-            }
-        }
+        mAuthorizationStrategy.completeAuthorization(requestCode, RawAuthorizationResult.fromPropertyBag(data));
 
         Telemetry.emit(
                 new ApiEndEvent()
