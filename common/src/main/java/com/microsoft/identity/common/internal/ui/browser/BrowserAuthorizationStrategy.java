@@ -33,20 +33,17 @@ import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidAuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityFactory;
-import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.java.ui.BrowserDescriptor;
+import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URI;
-import java.util.List;
-import java.util.concurrent.Future;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
 
@@ -77,7 +74,7 @@ public abstract class BrowserAuthorizationStrategy<
     }
 
     @Override
-    public Future<AuthorizationResult> requestAuthorization(
+    public ResultFuture<AuthorizationResult> requestAuthorization(
             GenericAuthorizationRequest authorizationRequest,
             GenericOAuth2Strategy oAuth2Strategy)
             throws ClientException {
@@ -126,11 +123,13 @@ public abstract class BrowserAuthorizationStrategy<
     // Suppressing unchecked warnings during casting to HashMap<String,String> due to no generic type with mAuthorizationRequest
     @SuppressWarnings(WarningType.unchecked_warning)
     private Intent buildAuthorizationActivityStartIntent(Intent authIntent, URI requestUrl) {
+         // RedirectURI used to get the auth code in nested app auth is that of a hub app (brkRedirectURI)   
+        final String redirectUri = mAuthorizationRequest.getBrkRedirectUri() != null ? mAuthorizationRequest.getBrkRedirectUri() : mAuthorizationRequest.getRedirectUri();
         final Intent intent = AuthorizationActivityFactory.getAuthorizationActivityIntent(
                 getApplicationContext(),
                 authIntent,
                 requestUrl.toString(),
-                mAuthorizationRequest.getRedirectUri(),
+                redirectUri,
                 mAuthorizationRequest.getRequestHeaders(),
                 AuthorizationAgent.BROWSER,
                 true,

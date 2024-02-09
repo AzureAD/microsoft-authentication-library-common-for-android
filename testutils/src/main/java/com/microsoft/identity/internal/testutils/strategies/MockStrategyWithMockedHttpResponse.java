@@ -30,8 +30,6 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.internal.testutils.mocks.MockSuccessAuthorizationResultMockedTests;
 
-import java.util.concurrent.Future;
-
 public class MockStrategyWithMockedHttpResponse extends ResourceOwnerPasswordCredentialsTestStrategy {
 
     /**
@@ -46,12 +44,12 @@ public class MockStrategyWithMockedHttpResponse extends ResourceOwnerPasswordCre
     /**
      * Template method for executing an OAuth2 authorization request.
      *
-     * @param request               microsoft sts authorization request.
+     * @param request                microsoft sts authorization request.
      * @param IAuthorizationStrategy authorization strategy.
      * @return GenericAuthorizationResponse
      */
     @Override
-    public Future<AuthorizationResult> requestAuthorization(
+    public ResultFuture<AuthorizationResult> requestAuthorization(
             final MicrosoftStsAuthorizationRequest request,
             final IAuthorizationStrategy IAuthorizationStrategy) {
         final MockSuccessAuthorizationResultMockedTests authorizationResult = new MockSuccessAuthorizationResultMockedTests();

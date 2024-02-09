@@ -60,19 +60,34 @@ class SignUpInteractor(
     fun performSignUpStart(
         commandParameters: SignUpStartCommandParameters
     ): SignUpStartApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignUpStartUsingPassword")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = commandParameters.getCorrelationId(),
+            methodName = "${TAG}.performSignUpStart"
+        )
+
         val request = nativeAuthRequestProvider.createSignUpStartRequest(
             commandParameters = commandParameters
         )
         try {
-            return performSignUpStart(request)
+            return performSignUpStart(
+                requestCorrelationId = commandParameters.getCorrelationId(),
+                request = request
+            )
         } finally {
             StringUtil.overwriteWithNull(request.parameters.password)
         }
     }
 
-    private fun performSignUpStart(request: SignUpStartRequest): SignUpStartApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignUpStart")
+    private fun performSignUpStart(
+        requestCorrelationId: String,
+        request: SignUpStartRequest
+    ): SignUpStartApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.performSignUpStart"
+        )
 
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
@@ -84,7 +99,8 @@ class SignUpInteractor(
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
         val rawApiResponse = nativeAuthResponseHandler.getSignUpStartResultFromHttpResponse(
-            response = response
+            response = response,
+            requestCorrelationId = requestCorrelationId
         )
         return rawApiResponse.toResult()
     }
@@ -92,18 +108,34 @@ class SignUpInteractor(
 
     //region /signup/challenge
     fun performSignUpChallenge(
-        continuationToken: String
+        continuationToken: String,
+        correlationId: String
     ): SignUpChallengeApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignUpChallenge")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            methodName = "${TAG}.performSignUpChallenge"
+        )
 
         val request = nativeAuthRequestProvider.createSignUpChallengeRequest(
-            continuationToken = continuationToken
+            continuationToken = continuationToken,
+            correlationId = correlationId
         )
-        return performSignUpChallenge(request)
+        return performSignUpChallenge(
+            requestCorrelationId = correlationId,
+            request = request
+        )
     }
 
-    private fun performSignUpChallenge(request: SignUpChallengeRequest): SignUpChallengeApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.performSignUpChallenge")
+    private fun performSignUpChallenge(
+        requestCorrelationId: String,
+        request: SignUpChallengeRequest
+    ): SignUpChallengeApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.performSignUpChallenge"
+        )
 
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
@@ -115,7 +147,8 @@ class SignUpInteractor(
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
         val rawApiResponse = nativeAuthResponseHandler.getSignUpChallengeResultFromHttpResponse(
-            response = response
+            response = response,
+            requestCorrelationId = requestCorrelationId
         )
         return rawApiResponse.toResult()
     }
@@ -127,7 +160,10 @@ class SignUpInteractor(
             commandParameters = commandParameters
         )
 
-        return performSignUpContinue(request)
+        return performSignUpContinue(
+            requestCorrelationId = commandParameters.getCorrelationId(),
+            request = request
+        )
     }
 
     fun performSignUpSubmitPassword(commandParameters: SignUpSubmitPasswordCommandParameters1): SignUpContinueApiResult {
@@ -136,7 +172,10 @@ class SignUpInteractor(
         )
 
         try {
-            return performSignUpContinue(request)
+            return performSignUpContinue(
+                requestCorrelationId = commandParameters.getCorrelationId(),
+                request = request
+            )
         } finally {
             StringUtil.overwriteWithNull(request.parameters.password)
         }
@@ -147,10 +186,16 @@ class SignUpInteractor(
             commandParameters = commandParameters
         )
 
-        return performSignUpContinue(request)
+        return performSignUpContinue(
+            requestCorrelationId = commandParameters.getCorrelationId(),
+            request = request
+        )
     }
 
-    private fun performSignUpContinue(request: SignUpContinueRequest): SignUpContinueApiResult {
+    private fun performSignUpContinue(
+        requestCorrelationId: String,
+        request: SignUpContinueRequest
+    ): SignUpContinueApiResult {
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -161,7 +206,8 @@ class SignUpInteractor(
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
         val rawApiResponse = nativeAuthResponseHandler.getSignUpContinueResultFromHttpResponse(
-            response = response
+            response = response,
+            requestCorrelationId = requestCorrelationId
         )
         return rawApiResponse.toResult()
     }

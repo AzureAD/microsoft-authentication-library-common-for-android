@@ -26,9 +26,7 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
-import com.microsoft.identity.common.java.nativeauth.providers.interactors.InnerError
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
-import com.microsoft.identity.common.java.nativeauth.util.isInvalidGrant
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import com.microsoft.identity.common.java.nativeauth.util.isUserNotFound
 import java.net.HttpURLConnection
@@ -37,15 +35,16 @@ import java.net.HttpURLConnection
  * Represents the raw response from the /initiate endpoint.
  * Can be converted to SignInInitiateApiResult using the provided toResult() method.
  */
-data class SignInInitiateApiResponse(
+class SignInInitiateApiResponse(
     @Expose override var statusCode: Int,
+    correlationId: String,
     @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
     @SerializedName("error") val error: String?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
     @SerializedName("error_codes") val errorCodes: List<Int>?,
-): IApiResponse(statusCode) {
+): IApiResponse(statusCode, correlationId) {
 
     companion object {
         private val TAG = SignInInitiateApiResponse::class.java.simpleName
@@ -56,7 +55,11 @@ data class SignInInitiateApiResponse(
      * @see com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResult
      */
     fun toResult(): SignInInitiateApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.toResult")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.toResult"
+        )
 
         return when (statusCode) {
 
@@ -66,14 +69,16 @@ data class SignInInitiateApiResponse(
                     SignInInitiateApiResult.UserNotFound(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
-                        errorCodes = errorCodes.orEmpty()
+                        errorCodes = errorCodes.orEmpty(),
+                        correlationId = correlationId
                     )
                 }
                 else {
                     SignInInitiateApiResult.UnknownError(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
-                        errorCodes = errorCodes.orEmpty()
+                        errorCodes = errorCodes.orEmpty(),
+                        correlationId = correlationId
                     )
                 }
             }
@@ -81,7 +86,9 @@ data class SignInInitiateApiResponse(
             // Handle success and redirect
             HttpURLConnection.HTTP_OK -> {
                 if (challengeType.isRedirect()) {
-                    SignInInitiateApiResult.Redirect
+                    SignInInitiateApiResult.Redirect(
+                        correlationId = correlationId
+                    )
                 }
                 else {
                     SignInInitiateApiResult.Success(
@@ -89,8 +96,10 @@ data class SignInInitiateApiResponse(
                             ?: return SignInInitiateApiResult.UnknownError(
                                 error = ApiErrorResult.INVALID_STATE,
                                 errorDescription = "SignIn /initiate did not return a flow token",
-                                errorCodes = errorCodes.orEmpty()
-                            )
+                                errorCodes = errorCodes.orEmpty(),
+                                correlationId = correlationId
+                            ),
+                        correlationId = correlationId
                     )
                 }
             }
@@ -100,7 +109,8 @@ data class SignInInitiateApiResponse(
                 SignInInitiateApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
-                    errorCodes = errorCodes.orEmpty()
+                    errorCodes = errorCodes.orEmpty(),
+                    correlationId = correlationId
                 )
             }
         }

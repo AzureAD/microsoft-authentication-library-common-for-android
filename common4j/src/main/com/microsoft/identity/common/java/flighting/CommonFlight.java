@@ -23,6 +23,8 @@
 
 package com.microsoft.identity.common.java.flighting;
 
+import static com.microsoft.identity.common.java.commands.SilentTokenCommand.ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS;
+
 import lombok.NonNull;
 
 /**
@@ -42,7 +44,13 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to control whether to expose the CCS (CachedCredService) request sequence in TokenResponse.
      * This flight is default-on 
      */
-    EXPOSE_CCS_REQUEST_SEQUENCE_IN_TOKENRESPONSE("ExposeCcsRequestSequenceInTokenResponse", true);
+    EXPOSE_CCS_REQUEST_SEQUENCE_IN_TOKENRESPONSE("ExposeCcsRequestSequenceInTokenResponse", true),
+
+    /**
+     * Flight to control the timeout duration for Acquire Token Silent Calls
+     * The default value is set to {@link ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS}
+     */
+    ACQUIRE_TOKEN_SILENT_TIMEOUT_MILLISECONDS("AcquireTokenSilentTimeoutMilliSeconds", ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS);
 
     private String key;
     private Object defaultValue;

@@ -23,23 +23,27 @@
 package com.microsoft.identity.common.java.nativeauth.providers.responses.signup
 
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.UserAttributeApiResult
 
 /**
  * Represents the potential result types returned from the Sign Up /continue endpoint,
  * including a case for unexpected errors received from the server.
  */
-sealed interface SignUpContinueApiResult {
+sealed interface SignUpContinueApiResult: ApiResult {
 
     /**
      * The response from Signup Continue is to redirect to a browser based authentication.
      */
-    object Redirect : SignUpContinueApiResult
+    data class Redirect(
+        override val correlationId: String,
+    ) : SignUpContinueApiResult
 
     /**
      * Signup operation has successfully completed.
      */
     data class Success(
+        override val correlationId: String,
         val continuationToken: String?,
         val expiresIn: Int?
     ) : SignUpContinueApiResult
@@ -48,6 +52,7 @@ sealed interface SignUpContinueApiResult {
      * Signup operation requires user attributes to continue further.
      */
     data class AttributesRequired(
+        override val correlationId: String,
         val continuationToken: String,
         override val error: String,
         override val errorDescription: String,
@@ -55,52 +60,61 @@ sealed interface SignUpContinueApiResult {
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), SignUpContinueApiResult
 
     /**
      * Signup operation requires user credentials to continue further.
      */
     data class CredentialRequired(
+        override val correlationId: String,
         val continuationToken: String,
         override val error: String,
         override val errorDescription: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), SignUpContinueApiResult
 
     /**
      * Signup continue request was issues with an expired token.
      */
     data class ExpiredToken(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), SignUpContinueApiResult
 
     /**
      * Signup operation was started for a username that already has an account.
      */
     data class UsernameAlreadyExists(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), SignUpContinueApiResult
 
     /**
      * The OOB value sent as part of Signup continue request was incorrect.
      */
     data class InvalidOOBValue(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         val subError: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), SignUpContinueApiResult
 
     /**
@@ -108,6 +122,7 @@ sealed interface SignUpContinueApiResult {
      * validation on server.
      */
     data class InvalidAttributes(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         val invalidAttributes: List<String>,
@@ -115,28 +130,33 @@ sealed interface SignUpContinueApiResult {
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), SignUpContinueApiResult
 
     /**
      * The Signup Continue API request failed due to an unknown error.
      */
     data class UnknownError(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), SignUpContinueApiResult
 
     /**
      * The Sign Up continue request failed as the password failed server side validation.
      */
     data class InvalidPassword(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         val subError: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        correlationId = correlationId
     ), SignUpContinueApiResult
 }
