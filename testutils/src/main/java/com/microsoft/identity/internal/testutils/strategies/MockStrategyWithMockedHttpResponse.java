@@ -30,6 +30,8 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.internal.testutils.mocks.MockSuccessAuthorizationResultMockedTests;
 
+import java.util.concurrent.Future;
+
 public class MockStrategyWithMockedHttpResponse extends ResourceOwnerPasswordCredentialsTestStrategy {
 
     /**
@@ -49,7 +51,7 @@ public class MockStrategyWithMockedHttpResponse extends ResourceOwnerPasswordCre
      * @return GenericAuthorizationResponse
      */
     @Override
-    public ResultFuture<AuthorizationResult> requestAuthorization(
+    public Future<AuthorizationResult> requestAuthorization(
             final MicrosoftStsAuthorizationRequest request,
             final IAuthorizationStrategy IAuthorizationStrategy) {
         final MockSuccessAuthorizationResultMockedTests authorizationResult = new MockSuccessAuthorizationResultMockedTests();
