@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Future;
 
 public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrategy {
 
@@ -62,7 +63,7 @@ public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrate
      * @return GenericAuthorizationResponse
      */
     @Override
-    public ResultFuture<AuthorizationResult> requestAuthorization(
+    public Future<AuthorizationResult> requestAuthorization(
             final MicrosoftStsAuthorizationRequest request,
             final IAuthorizationStrategy IAuthorizationStrategy) {
         final MockSuccessAuthorizationResultMockedTests authorizationResult = new MockSuccessAuthorizationResultMockedTests();
