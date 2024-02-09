@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Teď můžete čipovou kartu odebrat.</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Rozumím</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Chcete této aplikaci povolit přístup ke kameře?</string>
+    <string name="qr_code_rationale_message">Pak se můžete přihlásit pomocí kódu QR.</string>
+    <string name="qr_code_rationale_allow">Povolit</string>
+    <string name="qr_code_rationale_block">Blokovat</string>
 </resources>

@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Agora você pode remover seu cartão inteligente</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Entendi</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Permitir que este aplicativo acesse a sua câmera?</string>
+    <string name="qr_code_rationale_message">Em seguida, você pode entrar com um código QR.</string>
+    <string name="qr_code_rationale_allow">Permitir</string>
+    <string name="qr_code_rationale_block">Bloquear</string>
 </resources>
