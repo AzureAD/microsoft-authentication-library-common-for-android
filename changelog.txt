@@ -1,7 +1,7 @@
 V.Next
 ---------
 
-V.17.1.0-RC3
+V.17.1.0-RC5
 ---------
 - [MINOR] Add flight to control silent token timeout (#2311)
 - [PATCH] Revert #2305 (#2307)
