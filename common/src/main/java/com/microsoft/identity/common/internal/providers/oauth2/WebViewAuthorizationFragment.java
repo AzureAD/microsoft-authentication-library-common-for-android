@@ -341,13 +341,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      */
     private void showCameraRationale() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setMessage("The app requires the camera permission to scan the QR Code, " +
-                        "denying the permission will block this feature. " +
-                        "Please allow the camera access in order to continue.")
-                .setTitle("Camera permission required")
+        builder.setMessage(R.string.qr_code_rationale_message)
+                .setTitle(R.string.qr_code_rationale_header)
                 .setCancelable(false)
-                .setPositiveButton("OK", (dialog, id) -> requestCameraPermissionFromUser())
-                .setNegativeButton("Cancel", (dialog, id) -> denyCameraRequest());
+                .setPositiveButton(R.string.qr_code_rationale_allow, (dialog, id) -> requestCameraPermissionFromUser())
+                .setNegativeButton(R.string.qr_code_rationale_block, (dialog, id) -> denyCameraRequest());
         builder.show();
     }
 
