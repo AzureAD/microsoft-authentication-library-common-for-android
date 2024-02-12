@@ -339,19 +339,27 @@ public abstract class Authority {
         }
     }
 
+    private static String getIssuerForAuthority(Authority authorityUrl) throws ServiceException {
+        final OpenIdProviderConfigurationClient client = new OpenIdProviderConfigurationClient();
+        OpenIdProviderConfiguration openIdProviderConfiguration = client.loadOpenIdProviderConfigurationFromAuthority(
+                authorityUrl.mAuthorityUrlString
+        );
+        return openIdProviderConfiguration.getIssuer();
+    }
+
     /**
      * Authorities are either known by the developer and communicated to the library via configuration or they
      * are known to Microsoft based on the list of clouds returned from:
      *
-     * @param authority Authority to check against.
+     * @param authorityToCheck Authority to check against.
      * @return True if the authority is known to Microsoft or defined in the configuration.
      */
-    public static boolean isKnownAuthority(Authority authority) {
+    public static boolean isKnownAuthority(Authority authorityToCheck) {
         final String methodName = ":isKnownAuthority";
         boolean knownToDeveloper = false;
         boolean knownToMicrosoft;
 
-        if (authority == null) {
+        if (authorityToCheck == null) {
             Logger.warn(
                     TAG + methodName,
                     "Authority is null"
@@ -360,53 +368,55 @@ public abstract class Authority {
         }
 
         //Check if authority was added to configuration
-        for (final Authority currentAuthority : knownAuthorities) {
-            String authorityUrl;
-            if (currentAuthority.mAuthorityTypeString.equals(Authority.CIAM)) {
+        for (final Authority currentKnownAuthority : knownAuthorities) {
+            if (currentKnownAuthority.mAuthorityTypeString.equals(Authority.CIAM)) {
                 // Don't compare the raw authority URL passed as part of config, as this can be
                 // behind a (changing) custom, non-Microsoft domain. The authority passed as input
                 // parameter is composed based on the account, and thus ID token, issuer claim.
                 // This should be compared against the OpenID Config issuer value of the authorities
-                // in knownAuthorities. The latter is the true authority access through a custom
+                // in knownAuthorities. The latter is the true authority accessed through a custom
                 // domain.
-                final OpenIdProviderConfigurationClient client =
-                        new OpenIdProviderConfigurationClient();
                 try {
-                    OpenIdProviderConfiguration openIdProviderConfiguration =
-                            client.loadOpenIdProviderConfigurationFromAuthority(
-                                    currentAuthority.mAuthorityUrlString
-                            );
-                    authorityUrl = openIdProviderConfiguration.getIssuer();
+                    String currentKnownAuthorityIssuer = getIssuerForAuthority(currentKnownAuthority);
+                    String authorityToCheckIssuer = getIssuerForAuthority(authorityToCheck);
+                    URL authorityToCheckIssuerURL = new URI(authorityToCheckIssuer).toURL();
+
+                    if (currentKnownAuthorityIssuer != null &&
+                            currentKnownAuthorityIssuer.toLowerCase(Locale.ROOT).contains(
+                                    authorityToCheckIssuerURL.getAuthority().toLowerCase(Locale.ROOT)
+                            )
+                    ) {
+                        knownToDeveloper = true;
+                        break;
+                    }
                 } catch (ServiceException e) {
-                    Logger.error(
-                            TAG,
-                            "There was a problem with loading the openIdConfiguration." +
-                                    "Using authority URL from configuration instead.",
-                            e
-                    );
-                    authorityUrl = currentAuthority.mAuthorityUrlString;
+                    // TODO
+                    throw new RuntimeException(e);
+                } catch (MalformedURLException e) {
+                    throw new RuntimeException(e);
+                } catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
                 }
 
-            } else {
-                authorityUrl = currentAuthority.mAuthorityUrlString;
-            }
 
-            if (authority.getAuthorityURL() != null &&
-                    authority.getAuthorityURL().getAuthority() != null &&
-                    authorityUrl != null &&
-                    authorityUrl.toLowerCase(Locale.ROOT).contains(
-                            authority
-                                    .getAuthorityURL()
-                                    .getAuthority()
-                                    .toLowerCase(Locale.ROOT))) {
-                knownToDeveloper = true;
-                break;
+            } else {
+                if (authorityToCheck.getAuthorityURL() != null &&
+                        authorityToCheck.getAuthorityURL().getAuthority() != null &&
+                        currentKnownAuthority.mAuthorityUrlString != null &&
+                        currentKnownAuthority.mAuthorityUrlString.toLowerCase(Locale.ROOT).contains(
+                                authorityToCheck
+                                        .getAuthorityURL()
+                                        .getAuthority()
+                                        .toLowerCase(Locale.ROOT))) {
+                    knownToDeveloper = true;
+                    break;
+                }
             }
         }
 
         // Check whether the authority is known to Microsoft or not.  Microsoft can recognize authorities that exist within public clouds.
         // Microsoft does not maintain a list of B2C authorities or a list of ADFS or 3rd party authorities (issuers).
-        knownToMicrosoft = AzureActiveDirectory.hasCloudHost(authority.getAuthorityURL());
+        knownToMicrosoft = AzureActiveDirectory.hasCloudHost(authorityToCheck.getAuthorityURL());
 
         final boolean isKnown = (knownToDeveloper || knownToMicrosoft);
 
