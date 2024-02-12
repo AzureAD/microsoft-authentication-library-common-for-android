@@ -266,6 +266,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     /**
      * Call this method to grant the permission to access the camera resource.
      * The granted permission is only valid for the current WebView.
+     * <p>
+     * Note: This method is only available on API level 21 or higher.
      */
     private void acceptCameraRequest() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -280,6 +282,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     /**
      * Call this method to deny the permission to access the camera resource.
+     * <p>
+     * Note: This method is only available on API level 21 or higher.
      */
     private void denyCameraRequest() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &&
@@ -313,6 +317,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             return request.getResources().length == 1 &&
                     PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(request.getResources()[0]);
         }
+        Logger.warn(TAG, "PermissionRequest.getResources() method is not available on API:"
+                + Build.VERSION.SDK_INT + ". We cannot determine if the request is for camera.");
         return false;
     }
 
