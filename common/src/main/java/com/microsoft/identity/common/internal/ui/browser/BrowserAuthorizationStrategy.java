@@ -44,6 +44,7 @@ import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URI;
+import java.util.concurrent.Future;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
 
@@ -74,7 +75,7 @@ public abstract class BrowserAuthorizationStrategy<
     }
 
     @Override
-    public ResultFuture<AuthorizationResult> requestAuthorization(
+    public Future<AuthorizationResult> requestAuthorization(
             GenericAuthorizationRequest authorizationRequest,
             GenericOAuth2Strategy oAuth2Strategy)
             throws ClientException {

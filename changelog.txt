@@ -1,5 +1,11 @@
 V.Next
 ---------
+
+V.17.1.0
+---------
+- [MINOR] Add flight to control silent token timeout (#2311)
+- [PATCH] Revert #2305 (#2307)
+- [PATCH] Fix MSAL Issue 1864 (#2280)
 - [PATCH] Handle Receiver Callback Exception in CommandDispatcher interactive command (#2305)
 - [MINOR] Add IpcStrategyWithBackup (#2301)
 - [PATCH] Fix MSAL Issue 1864 (#2280)
