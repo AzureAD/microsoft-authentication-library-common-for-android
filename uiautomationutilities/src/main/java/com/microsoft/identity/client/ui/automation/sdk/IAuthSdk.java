@@ -26,6 +26,9 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.ui.automation.TokenRequestTimeout;
 import com.microsoft.identity.client.ui.automation.interaction.OnInteractionRequired;
+import com.microsoft.identity.common.java.request.ILocalAuthenticationCallback;
+
+import java.util.concurrent.Future;
 
 /**
  * An interface describing methods of acquire token. Implementing this interface
@@ -33,20 +36,33 @@ import com.microsoft.identity.client.ui.automation.interaction.OnInteractionRequ
  * token either interactively or silently.
  */
 
-public interface IAuthSdk<T extends AuthTestParams> {
+public interface IAuthSdk<T extends AuthTestParams, R extends AuthResult> {
 
     /**
      * Get the token interactively that can be used to access resources.
      *
-     * @return A resultant token or an exception occurred while acquiring token interactively
+     * @return A resultant token or an exception occurred while acquiring token interactively.
      */
     AuthResult acquireTokenInteractive(@NonNull final T authTestParams,
-                                       final OnInteractionRequired interactionRequiredCallback, @NonNull final TokenRequestTimeout tokenRequestTimeout) throws Throwable;
+                                       final OnInteractionRequired interactionRequiredCallback,
+                                       @NonNull final TokenRequestTimeout tokenRequestTimeout
+    ) throws Throwable;
+
+    /**
+     * Get the token interactively async that can be used to access resources.
+     *
+     * @return A result future which can be used to for getting the resultant token or
+     * an exception occurred while acquiring token interactively.
+     */
+    ResultFuture<R, Exception> acquireTokenInteractiveAsync(@NonNull final T authTestParams,
+                                               final OnInteractionRequired interactionRequiredCallback,
+                                               @NonNull final TokenRequestTimeout tokenRequestTimeout
+    ) throws Throwable;
 
     /**
      * Get the token silently that can be used to access resources.
      *
-     * @return A resultant token or an exception occurred while acquiring token silently
+     * @return A resultant token or an exception occurred while acquiring token silently.
      */
     AuthResult acquireTokenSilent(@NonNull final T authTestParams, @NonNull final TokenRequestTimeout tokenRequestTimeout) throws Throwable;
 }
