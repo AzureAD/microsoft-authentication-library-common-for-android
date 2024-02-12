@@ -300,6 +300,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     /**
      * Determines whatever if the given permission request is for the camera resource.
+     * <p>
+     * Note: This method is only available on API level 21 or higher.
+     * Devices running on lower API levels will not be able to grant or deny camera permission requests.
+     * getResources() method is only available on API level 21 or higher.
      *
      * @param request The permission request.
      * @return true if the given permission request is for camera, false otherwise.
