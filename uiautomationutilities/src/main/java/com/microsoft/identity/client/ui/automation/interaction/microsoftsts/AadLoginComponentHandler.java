@@ -52,6 +52,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     public final static String ACCOUNT_PICKER_DID_NOT_APPEAR_ERROR = "Account picker screen did not show up";
 
+    public final static String SIGN_IN_FROM_OTHER_DEVICE = "Sign in from another device";
     private final long mFindLoginUiElementTimeout;
 
     public AadLoginComponentHandler() {
@@ -228,17 +229,21 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     @Override
     public void handleSignInFromOtherDevice(@NonNull final String expectedDeviceLoginUrl) {
-        // handle it
+        this.handleSignInOptions();
+        UiAutomatorUtils.handleButtonClickForObjectWithText(SIGN_IN_FROM_OTHER_DEVICE);
+
+        // verify the remote device login url is displayed.
+        Assert.assertTrue(UiAutomatorUtils.obtainUiObjectWithText(expectedDeviceLoginUrl).exists());
+    }
+
+    @Override
+    public void handleSignInOptions() {
         final UiObject signInOptions = UiAutomatorUtils.obtainUiObjectWithTextAndClassType("Sign-in options", Button.class);
         try {
             signInOptions.click();
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
-        UiAutomatorUtils.handleButtonClickForObjectWithText("Sign in from another device");
-
-        // verify the remote device login url is displayed.
-        Assert.assertTrue(UiAutomatorUtils.obtainUiObjectWithText(expectedDeviceLoginUrl).exists());
     }
 
     @Override

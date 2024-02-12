@@ -91,4 +91,9 @@ public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponen
      *                               exercised.
      */
     void handleSignInFromOtherDevice(@NonNull final String expectedDeviceLoginUrl);
+
+    /**
+     * Handle interaction with "Sign in options".
+     */
+    void handleSignInOptions();
 }
