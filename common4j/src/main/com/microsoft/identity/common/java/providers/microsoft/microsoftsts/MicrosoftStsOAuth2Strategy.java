@@ -376,6 +376,12 @@ public class MicrosoftStsOAuth2Strategy
             setTokenEndpoint(getCloudSpecificTokenEndpoint(response));
         }
 
+        // If DC or flight parameters are supplied by the developer, the token endpoint URL should
+        // be updated to contain these query parameters.
+        if (request.getDc() != null || (request.getFlightParameters() != null && !request.getFlightParameters().isEmpty())) {
+            updateTokenEndpoint(request.getDc(), request.getFlightParameters());
+        }
+
         final MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
         tokenRequest.setCodeVerifier(request.getPkceCodeVerifier());
         tokenRequest.setCode(response.getCode());

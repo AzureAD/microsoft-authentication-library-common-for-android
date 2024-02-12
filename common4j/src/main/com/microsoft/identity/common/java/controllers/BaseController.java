@@ -291,6 +291,14 @@ public abstract class BaseController {
 
         if (builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
             ((MicrosoftStsAuthorizationRequest.Builder) builder).setApplicationIdentifier(parameters.getApplicationIdentifier());
+
+            if (parameters.getDc() != null) {
+                ((MicrosoftStsAuthorizationRequest.Builder) builder).setDc(parameters.getDc());
+            }
+
+            if (parameters.getFlightInformation() != null && !parameters.getFlightInformation().isEmpty()) {
+                ((MicrosoftStsAuthorizationRequest.Builder) builder).setFlightParameters(parameters.getFlightInformation());
+            }
         }
 
         final Set<String> scopes = parameters.getScopes();

@@ -92,6 +92,10 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @Accessors(prefix = "m")
     private transient final String mPkceCodeVerifier;
 
+    @Getter
+    @Accessors(prefix = "m")
+    private final String mDc;
+
     /**
      * The version of the calling library.
      */
@@ -154,6 +158,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mPkceCodeChallenge = challenge.getCodeChallenge();
         mPkceCodeVerifier = challenge.getCodeVerifier();
 
+        mDc = builder.mDc;
+
         mMultipleCloudAware = builder.mMultipleCloudAware;
         mLibraryVersion = builder.mLibraryVersion;
         mLibraryName = builder.mLibraryName;
@@ -183,6 +189,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         private UUID mCorrelationId;
         private String mLoginHint;
         private PkceChallenge mPkceChallenge;
+        private String mDc;
         private PreferredAuthMethod mPreferredAuthMethod;
 
         public Builder() {
@@ -229,6 +236,11 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
          */
         public B setPkceChallenge(@NonNull final PkceChallenge pkceChallenge) {
             mPkceChallenge = pkceChallenge;
+            return self();
+        }
+
+        public B setDc(String dc) {
+            mDc = dc;
             return self();
         }
 
