@@ -61,6 +61,7 @@ public class CIAMAuthority extends Authority {
         );
         final MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
         config.setAuthorityUrl(this.getAuthorityURL());
+        config.setAuthorityType(Authority.CIAM);
         config.setMultipleCloudsSupported(false);
 
         if (mSlice != null) {

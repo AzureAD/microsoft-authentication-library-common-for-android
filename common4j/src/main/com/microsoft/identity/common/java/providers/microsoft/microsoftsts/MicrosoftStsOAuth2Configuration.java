@@ -41,6 +41,8 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
     private static final String TOKEN_ENDPOINT_SUFFIX = ENDPOINT_SUFFIX + "/token";
     private static final String DEVICE_AUTHORIZE_ENDPOINT_SUFFIX = ENDPOINT_SUFFIX + "/devicecode";
 
+    private String mAuthorityType;
+
     /**
      * Get the authorization endpoint to be used for making a authorization request.
      * This must NOT be called from the main thread.
@@ -88,5 +90,13 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
         }
 
         return null;
+    }
+
+    public void setAuthorityType(final String authorityType) {
+        this.mAuthorityType = authorityType;
+    }
+
+    public String getAuthorityType() {
+        return mAuthorityType;
     }
 }

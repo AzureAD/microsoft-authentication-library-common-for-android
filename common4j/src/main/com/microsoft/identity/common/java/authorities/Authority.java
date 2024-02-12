@@ -339,10 +339,11 @@ public abstract class Authority {
         }
     }
 
-    private static String getIssuerForAuthority(Authority authorityUrl) throws ServiceException {
+    private static String getIssuerForAuthority(Authority authority) throws ServiceException {
         final OpenIdProviderConfigurationClient client = new OpenIdProviderConfigurationClient();
         OpenIdProviderConfiguration openIdProviderConfiguration = client.loadOpenIdProviderConfigurationFromAuthority(
-                authorityUrl.mAuthorityUrlString
+                authority.mAuthorityUrlString,
+                authority.mAuthorityTypeString
         );
         return openIdProviderConfiguration.getIssuer();
     }
@@ -371,11 +372,8 @@ public abstract class Authority {
         for (final Authority currentKnownAuthority : knownAuthorities) {
             if (currentKnownAuthority.mAuthorityTypeString.equals(Authority.CIAM)) {
                 // Don't compare the raw authority URL passed as part of config, as this can be
-                // behind a (changing) custom, non-Microsoft domain. The authority passed as input
-                // parameter is composed based on the account, and thus ID token, issuer claim.
-                // This should be compared against the OpenID Config issuer value of the authorities
-                // in knownAuthorities. The latter is the true authority accessed through a custom
-                // domain.
+                // behind a (changing) custom, non-Microsoft domain. Use the OIDC document to fetch
+                // the "real" authority, in this case defined as the issuer.
                 try {
                     String currentKnownAuthorityIssuer = getIssuerForAuthority(currentKnownAuthority);
                     String authorityToCheckIssuer = getIssuerForAuthority(authorityToCheck);
@@ -389,16 +387,20 @@ public abstract class Authority {
                         knownToDeveloper = true;
                         break;
                     }
-                } catch (ServiceException e) {
-                    // TODO
-                    throw new RuntimeException(e);
-                } catch (MalformedURLException e) {
-                    throw new RuntimeException(e);
-                } catch (URISyntaxException e) {
-                    throw new RuntimeException(e);
+                } catch (ServiceException | MalformedURLException | URISyntaxException e) {
+                    // Do raw authority URL comparison
+                    if (authorityToCheck.getAuthorityURL() != null &&
+                            authorityToCheck.getAuthorityURL().getAuthority() != null &&
+                            currentKnownAuthority.mAuthorityUrlString != null &&
+                            currentKnownAuthority.mAuthorityUrlString.toLowerCase(Locale.ROOT).contains(
+                                    authorityToCheck
+                                            .getAuthorityURL()
+                                            .getAuthority()
+                                            .toLowerCase(Locale.ROOT))) {
+                        knownToDeveloper = true;
+                        break;
+                    }
                 }
-
-
             } else {
                 if (authorityToCheck.getAuthorityURL() != null &&
                         authorityToCheck.getAuthorityURL().getAuthority() != null &&

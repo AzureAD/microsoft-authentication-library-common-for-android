@@ -152,7 +152,7 @@ public abstract class AzureActiveDirectoryAudience {
 
         final OpenIdProviderConfigurationClient client =
                 new OpenIdProviderConfigurationClient();
-        return client.loadOpenIdProviderConfigurationFromAuthority(requestAuthority);
+        return client.loadOpenIdProviderConfigurationFromAuthority(requestAuthority, null);
     }
 
     public void setTenantId(String tenantId) {
