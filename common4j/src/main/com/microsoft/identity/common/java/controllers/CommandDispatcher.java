@@ -28,7 +28,6 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBr
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
-import static com.microsoft.identity.common.java.commands.SilentTokenCommand.ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_DCF_COMMAND_EXECUTION_END;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_DCF_COMMAND_EXECUTION_START;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_DCF_EXECUTOR_START;
@@ -43,9 +42,9 @@ import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarker
 import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.BaseCommand;
+import com.microsoft.identity.common.java.commands.DeviceCodeFlowAuthResultCommand;
 import com.microsoft.identity.common.java.commands.DeviceCodeFlowCommand;
 import com.microsoft.identity.common.java.commands.DeviceCodeFlowTokenResultCommand;
-import com.microsoft.identity.common.java.commands.DeviceCodeFlowAuthResultCommand;
 import com.microsoft.identity.common.java.commands.ICommandResult;
 import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.SilentTokenCommand;
@@ -58,6 +57,8 @@ import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.UserCancelException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightManager;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.logging.RequestContext;
@@ -89,7 +90,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -252,7 +252,8 @@ public class CommandDispatcher {
             if (BuildConfig.DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT){
                 commandResult = submitSilentReturningFuture(command).get();
             } else {
-                commandResult = submitSilentReturningFuture(command).get(ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS);
+                final int silentTokenTimeOutMs = CommonFlightManager.getIntValue(CommonFlight.ACQUIRE_TOKEN_SILENT_TIMEOUT_MILLISECONDS);
+                commandResult = submitSilentReturningFuture(command).get(silentTokenTimeOutMs, TimeUnit.MILLISECONDS);
             }
         } catch (final InterruptedException | ExecutionException | TimeoutException e) {
             throw ExceptionAdapter.baseExceptionFromException(e);
@@ -708,7 +709,7 @@ public class CommandDispatcher {
             }
         }
 
-        public static void beginInteractive ( final InteractiveTokenCommand command){
+        public static void beginInteractive (final InteractiveTokenCommand command) {
             final String methodName = ":beginInteractive";
             synchronized (sLock) {
 

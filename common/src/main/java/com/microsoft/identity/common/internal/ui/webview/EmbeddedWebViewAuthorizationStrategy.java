@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -44,8 +46,6 @@ import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URI;
 import java.util.concurrent.Future;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
 
 /**
  * Serve as a class to do the OAuth2 auth code grant flow with Android embedded web view.
