@@ -137,13 +137,16 @@ public class EncryptedNameValueStorage<T> implements INameValueStorage<T> {
             return;
         }
 
-        // If the encryption failed, we won't be storing anything.
+        // If the encryption fails, write null to the storage.
+        // This might not be the right behavior, but it's possible that PROD relies on this.
+        String encryptedValue = null;
         try {
-            final String encryptedValue = mEncryptionManager.encrypt(adaptedValue);
-            mRawNameValueStorage.put(name, encryptedValue);
+            encryptedValue = mEncryptionManager.encrypt(adaptedValue);
         } catch (final ClientException e) {
             Logger.error(methodTag, "Failed to store encrypted value", null);
         }
+
+        mRawNameValueStorage.put(name, encryptedValue);
     }
 
     @Override

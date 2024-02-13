@@ -153,12 +153,18 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
                 return;
             }
 
-            // If the encryption failed, we won't be storing anything.
+            // NOTE: Maybe the right behavior is that we shouldn't write NULL whenever encryption fails.
+            // However, it's possible that we're relying on this behavior in PROD (due to KeyStore failure)
+            // Not persisting the key in memory means getAll() or getAllFilteredByKey() will not work.
+            // Those operations load keys from the storage layer, and invoke getString() - which could return the in-memory cached value.
+            String encryptedValue = null;
             try {
-                editor.putString(key, mEncryptionManager.encrypt(value)).apply();
+                encryptedValue = mEncryptionManager.encrypt(value);
             } catch (final ClientException e){
                 Logger.error(methodTag, "Failed to store encrypted value", null);
             }
+
+            editor.putString(key, encryptedValue).apply();
         }
     }
 
