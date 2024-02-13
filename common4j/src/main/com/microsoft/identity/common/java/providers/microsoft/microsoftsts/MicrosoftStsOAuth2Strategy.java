@@ -876,7 +876,7 @@ public class MicrosoftStsOAuth2Strategy
     private void loadOpenIdProviderConfiguration() throws ServiceException {
         final OpenIdProviderConfigurationClient client =
                 new OpenIdProviderConfigurationClient();
-        mOpenIdProviderConfiguration = client.loadOpenIdProviderConfigurationFromAuthority(mConfig.getAuthorityUrl().toString(), mConfig.getAuthorityType());
+        mOpenIdProviderConfiguration = client.loadOpenIdProviderConfigurationFromAuthority(mConfig.getAuthorityUrl().toString());
 
     }
 
@@ -889,6 +889,6 @@ public class MicrosoftStsOAuth2Strategy
     private void loadOpenIdProviderConfiguration(@NonNull final String extraParams) throws ServiceException {
         final OpenIdProviderConfigurationClient client =
                 new OpenIdProviderConfigurationClient();
-        mOpenIdProviderConfiguration = client.loadOpenIdProviderConfigurationFromAuthorityWithExtraParams(mConfig.getAuthorityUrl().toString(), extraParams, mConfig.getAuthorityType());
+        mOpenIdProviderConfiguration = client.loadOpenIdProviderConfigurationFromAuthorityWithExtraParams(mConfig.getAuthorityUrl().toString(), extraParams);
     }
 }

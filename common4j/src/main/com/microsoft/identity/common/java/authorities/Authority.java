@@ -342,8 +342,7 @@ public abstract class Authority {
     private static String getIssuerForAuthority(Authority authority) throws ServiceException {
         final OpenIdProviderConfigurationClient client = new OpenIdProviderConfigurationClient();
         OpenIdProviderConfiguration openIdProviderConfiguration = client.loadOpenIdProviderConfigurationFromAuthority(
-                authority.mAuthorityUrlString,
-                authority.mAuthorityTypeString
+                authority.mAuthorityUrlString
         );
         return openIdProviderConfiguration.getIssuer();
     }

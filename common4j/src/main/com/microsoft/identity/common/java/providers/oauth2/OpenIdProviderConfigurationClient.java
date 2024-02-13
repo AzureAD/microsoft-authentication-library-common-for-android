@@ -55,7 +55,6 @@ public class OpenIdProviderConfigurationClient {
     private static final String HTTPS_SCHEME = "https";
     private static final String WELL_KNOWN_CONFIG_HOST = "login.microsoftonline.com";
     private static final String WELL_KNOWN_CONFIG_PATH = "/.well-known/openid-configuration";
-    private static final String V2_WELL_KNOWN_CONFIG_PATH = "/v2.0/.well-known/openid-configuration";
     private static final ExecutorService sBackgroundExecutor = Executors.newCachedThreadPool();
     private static final Map<URI, OpenIdProviderConfiguration> sConfigCache = new HashMap<>();
     private static final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
@@ -77,12 +76,12 @@ public class OpenIdProviderConfigurationClient {
     }
 
     public void loadOpenIdProviderConfiguration(
-            @NonNull final OpenIdProviderConfigurationCallback callback, @NonNull final String authority, @NonNull final String tenantType) {
+            @NonNull final OpenIdProviderConfigurationCallback callback, @NonNull final String authority) {
         sBackgroundExecutor.submit(new Runnable() {
             @Override
             public void run() {
                 try {
-                    callback.onTaskCompleted(loadOpenIdProviderConfigurationFromAuthority(authority, tenantType));
+                    callback.onTaskCompleted(loadOpenIdProviderConfigurationFromAuthority(authority));
                 } catch (ServiceException e) {
                     callback.onError(e);
                 }
@@ -95,7 +94,7 @@ public class OpenIdProviderConfigurationClient {
      *
      * @return OpenIdProviderConfiguration
      */
-    public synchronized OpenIdProviderConfiguration loadOpenIdProviderConfigurationFromTenant(@NonNull final String tenantIdentifier, @NonNull final String tenantType)
+    public synchronized OpenIdProviderConfiguration loadOpenIdProviderConfigurationFromTenant(@NonNull final String tenantIdentifier)
             throws ServiceException {
         try {
             final String tenantedAuthorityUrl = new CommonURIBuilder()
@@ -103,7 +102,7 @@ public class OpenIdProviderConfigurationClient {
                     .setHost(WELL_KNOWN_CONFIG_HOST)
                     .setPathSegments(tenantIdentifier)
                     .build().toString();
-            return loadOpenIdProviderConfigurationInternal(tenantedAuthorityUrl, null, tenantType);
+            return loadOpenIdProviderConfigurationInternal(tenantedAuthorityUrl, null);
         } catch (final URISyntaxException e) {
             throw new ServiceException(
                     OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD,
@@ -118,9 +117,9 @@ public class OpenIdProviderConfigurationClient {
      *
      * @return OpenIdProviderConfiguration
      */
-    public synchronized OpenIdProviderConfiguration loadOpenIdProviderConfigurationFromAuthority(@NonNull final String authorityUrl, final String tenantType)
+    public synchronized OpenIdProviderConfiguration loadOpenIdProviderConfigurationFromAuthority(@NonNull final String authorityUrl)
             throws ServiceException {
-        return loadOpenIdProviderConfigurationInternal(authorityUrl, null, tenantType);
+        return loadOpenIdProviderConfigurationInternal(authorityUrl, null);
     }
 
     /**
@@ -128,9 +127,9 @@ public class OpenIdProviderConfigurationClient {
      *
      * @return OpenIdProviderConfiguration
      */
-    public synchronized OpenIdProviderConfiguration loadOpenIdProviderConfigurationFromAuthorityWithExtraParams(@NonNull final String authorityUrl, @NonNull final String extraParams, final String tenantType)
+    public synchronized OpenIdProviderConfiguration loadOpenIdProviderConfigurationFromAuthorityWithExtraParams(@NonNull final String authorityUrl, @NonNull final String extraParams)
             throws ServiceException {
-        return loadOpenIdProviderConfigurationInternal(authorityUrl, extraParams, tenantType);
+        return loadOpenIdProviderConfigurationInternal(authorityUrl, extraParams);
     }
 
     /**
@@ -138,27 +137,16 @@ public class OpenIdProviderConfigurationClient {
      *
      * @return OpenIdProviderConfiguration
      */
-    private synchronized OpenIdProviderConfiguration loadOpenIdProviderConfigurationInternal(@NonNull final String tenantedAuthorityString, final String extraParams, final String tenantType)
+    private synchronized OpenIdProviderConfiguration loadOpenIdProviderConfigurationInternal(@NonNull final String tenantedAuthorityString, final String extraParams)
             throws ServiceException {
         final String methodName = ":loadOpenIdProviderConfiguration";
 
         try {
-            final String configPath;
-            // CIAM token responses will have issuer "https://<tenantId>.ciamlogin.com/<tenantId>/v2.0.
-            // This issuer field is used to compose the authority in the persisted account, and is used
-            // in refresh token calls. In those cases, use the non-versioned /.well-known, as the base
-            // URL already contains v2.0
-            if (!tenantType.equals(Authority.CIAM) || tenantedAuthorityString.endsWith("/v2.0")) {
-                configPath = WELL_KNOWN_CONFIG_PATH;
-            } else {
-                configPath = V2_WELL_KNOWN_CONFIG_PATH;
-            }
-
             final String uriString;
             if (extraParams != null) {
-                uriString = sanitize(tenantedAuthorityString) + configPath + extraParams;
+                uriString = sanitize(tenantedAuthorityString) + WELL_KNOWN_CONFIG_PATH + extraParams;
             } else {
-                uriString = sanitize(tenantedAuthorityString) + configPath;
+                uriString = sanitize(tenantedAuthorityString) + WELL_KNOWN_CONFIG_PATH;
             }
             final URI configUrl = new URI(uriString);
 
