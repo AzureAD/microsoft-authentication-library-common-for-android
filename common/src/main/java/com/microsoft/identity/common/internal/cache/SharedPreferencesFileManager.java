@@ -176,7 +176,6 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
             final String storedValue = mSharedPreferences.getString(key, null);
             if (StringUtil.isNullOrEmpty(storedValue)) {
                 Logger.info(methodTag, "Data associated to the given key is null or empty", null);
-                remove(key);
                 return null;
             }
 
