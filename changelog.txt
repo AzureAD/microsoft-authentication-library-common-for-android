@@ -1,3 +1,7 @@
+V.Next 2
+---------
+- [MINOR] Add support for CIAM custom domain (#2314)
+
 V.Next
 ---------
 - [PATCH] Handle Receiver Callback Exception in CommandDispatcher interactive command (#2315)
