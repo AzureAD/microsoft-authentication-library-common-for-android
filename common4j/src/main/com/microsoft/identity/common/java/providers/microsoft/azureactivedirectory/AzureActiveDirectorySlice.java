@@ -24,9 +24,6 @@ package com.microsoft.identity.common.java.providers.microsoft.azureactivedirect
 
 import com.google.gson.annotations.SerializedName;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -44,13 +41,10 @@ public class AzureActiveDirectorySlice {
 
     public final static String SLICE_PARAMETER = "slice";
     public final static String DC_PARAMETER = "dc";
-    public final static String FLIGHT_PARAMETER = "flight";
 
     @SerializedName(SLICE_PARAMETER)
     private String mSlice;
 
     @SerializedName(DC_PARAMETER)
     private String mDataCenter;
-
-    private Map<String, String> mFlightParameters = new HashMap<>();
 }

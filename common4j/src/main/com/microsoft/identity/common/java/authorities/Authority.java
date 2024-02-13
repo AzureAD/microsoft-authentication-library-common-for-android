@@ -119,29 +119,10 @@ public abstract class Authority {
             justification="Somehow, spotbugs thinks that BuildConfig.SLICE and BuildConfig.DC are the same values.")
     public Authority() {
         // setting slice directly here in constructor if slice provided as command line param
-        if (!StringUtil.isNullOrEmpty(BuildConfig.SLICE) || !StringUtil.isNullOrEmpty(BuildConfig.DC)
-                || !StringUtil.isNullOrEmpty(BuildConfig.FLIGHTS)) {
+        if (!StringUtil.isNullOrEmpty(BuildConfig.SLICE) || !StringUtil.isNullOrEmpty(BuildConfig.DC)) {
             final AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
-
-            if (!StringUtil.isNullOrEmpty(BuildConfig.SLICE) || !StringUtil.isNullOrEmpty(BuildConfig.DC)) {
-                slice.setSlice(BuildConfig.SLICE);
-                slice.setDataCenter(BuildConfig.DC);
-            }
-
-            final String localFlightsFromBuild = BuildConfig.FLIGHTS;
-            if (!StringUtil.isNullOrEmpty(localFlightsFromBuild)) {
-                try {
-                    Map<String, String> localFlights = JsonUtil.extractJsonObjectIntoMap(localFlightsFromBuild);
-                    for (Map.Entry<String, String> entry : localFlights.entrySet()) {
-                        slice.getFlightParameters().put(entry.getKey(), entry.getValue());
-                    }
-                } catch (JSONException e) {
-                    Logger.error(
-                            TAG,
-                            "Unable to set flight parameters",
-                            e);
-                }
-            }
+            slice.setSlice(BuildConfig.SLICE);
+            slice.setDataCenter(BuildConfig.DC);
             mSlice = slice;
         }
     }

@@ -263,11 +263,6 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             if (!StringUtil.isNullOrEmpty(mSlice.getDataCenter())) {
                 builder.addParameterIfAbsent(AzureActiveDirectorySlice.DC_PARAMETER, mSlice.getDataCenter());
             }
-            if (mSlice.getFlightParameters() != null && !mSlice.getFlightParameters().isEmpty()) {
-                for (Map.Entry<String, String> entry : mSlice.getFlightParameters().entrySet()) {
-                    builder.addParameterIfAbsent(entry.getKey(), entry.getValue());
-                }
-            }
         }
 
         // If login_hint is provided, block the user from switching user during login.

@@ -61,7 +61,6 @@ public class CIAMAuthority extends Authority {
         );
         final MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
         config.setAuthorityUrl(this.getAuthorityURL());
-        config.setAuthorityType(Authority.CIAM);
         config.setMultipleCloudsSupported(false);
 
         if (mSlice != null) {
@@ -72,7 +71,6 @@ public class CIAMAuthority extends Authority {
             final AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
             slice.setSlice(mSlice.getSlice());
             slice.setDataCenter(mSlice.getDataCenter());
-            slice.setFlightParameters(mSlice.getFlightParameters());
             config.setSlice(slice);
         }
 
