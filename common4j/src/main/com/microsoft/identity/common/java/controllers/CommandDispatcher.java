@@ -753,16 +753,10 @@ public class CommandDispatcher {
 
                             EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
-                            final BaseException[] receiverException = new BaseException[1];
-
                             final LocalBroadcaster.IReceiverCallback resultReceiver = new LocalBroadcaster.IReceiverCallback() {
                                 @Override
                                 public void onReceive(@NonNull PropertyBag dataBag) {
-                                    try {
-                                        completeInteractive(dataBag);
-                                    } catch (final Exception e) {
-                                        receiverException[0] = ExceptionAdapter.baseExceptionFromException(e);
-                                    }
+                                    completeInteractive(dataBag);
                                 }
                             };
 
@@ -778,12 +772,6 @@ public class CommandDispatcher {
                             sCommand = null;
 
                             LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_AUTHORIZATION_REQUEST_RESULT);
-
-                            // If we received an exception during the receiver callback execution,
-                            // we should set that as the command result
-                            if (receiverException[0] != null) {
-                                commandResult = CommandResult.of(CommandResult.ResultStatus.ERROR, receiverException[0], correlationId);
-                            }
 
                             Logger.info(TAG + methodName,
                                     "Completed interactive request for correlation id : **" + correlationId +
