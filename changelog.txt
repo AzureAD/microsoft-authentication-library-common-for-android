@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [MINOR] Gracefully handles unexpected error in encryption layer (#2318)
 - [PATCH] Handle Receiver Callback Exception in CommandDispatcher interactive command (#2315)
 - [MINOR] Add flight to control silent token timeout (#2311)
 - [MINOR] Add IpcStrategyWithBackup (#2301)
