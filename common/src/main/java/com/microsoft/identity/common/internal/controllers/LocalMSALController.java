@@ -93,9 +93,6 @@ public class LocalMSALController extends BaseController {
     @SuppressWarnings(WarningType.rawtype_warning)
     private IAuthorizationStrategy mAuthorizationStrategy = null;
 
-    @SuppressWarnings({WarningType.rawtype_warning, WarningType.unchecked_warning})
-    private Future<AuthorizationResult> mAuthorizationResultFuture = null;
-
     @SuppressWarnings(WarningType.rawtype_warning)
     private AuthorizationRequest mAuthorizationRequest = null;
 
@@ -256,22 +253,7 @@ public class LocalMSALController extends BaseController {
                         .put(TelemetryEventStrings.Key.REQUEST_CODE, String.valueOf(requestCode))
         );
 
-        try {
-            mAuthorizationStrategy.completeAuthorization(requestCode, RawAuthorizationResult.fromPropertyBag(data));
-        } catch (Exception e){
-            // Best effort
-            if (mAuthorizationResultFuture != null
-                    && mAuthorizationResultFuture instanceof ResultFuture
-                    && !mAuthorizationResultFuture.isDone()) {
-                // If the future is somehow initialized and waiting, give the future an exception
-                // Adjusting method signatures to get a ResultFuture back seems to have some unintended breaking change in MSAL
-                // so instead will use checked type casting.
-                ((ResultFuture<AuthorizationResult>) mAuthorizationResultFuture).setException(e);
-            } else {
-                throw e;
-            }
-
-        }
+        mAuthorizationStrategy.completeAuthorization(requestCode, RawAuthorizationResult.fromPropertyBag(data));
 
         Telemetry.emit(
                 new ApiEndEvent()
