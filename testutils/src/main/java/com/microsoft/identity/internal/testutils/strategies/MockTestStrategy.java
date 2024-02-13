@@ -24,7 +24,6 @@ package com.microsoft.identity.internal.testutils.strategies;
 
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
@@ -59,7 +58,7 @@ public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrate
     /**
      * Template method for executing an OAuth2 authorization request.
      *
-     * @param request               microsoft sts authorization request.
+     * @param request                microsoft sts authorization request.
      * @param IAuthorizationStrategy authorization strategy.
      * @return GenericAuthorizationResponse
      */

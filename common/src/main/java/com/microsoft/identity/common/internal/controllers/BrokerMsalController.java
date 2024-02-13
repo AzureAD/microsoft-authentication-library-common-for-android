@@ -40,7 +40,6 @@ import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationB
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SIGN_OUT_FROM_SHARED_DEVICE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SSO_TOKEN;
 import static com.microsoft.identity.common.internal.controllers.BrokerOperationExecutor.BrokerOperation;
-import static com.microsoft.identity.common.internal.util.StringUtil.isEmpty;
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
@@ -116,9 +115,9 @@ import com.microsoft.identity.common.java.util.ThreadUtils;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.sharedwithoneauth.OneAuthSharedFunctions;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -165,7 +164,7 @@ public class BrokerMsalController extends BaseController {
         this(applicationContext,
                 components,
                 activeBrokerPackageName,
-                getIpcStrategies(applicationContext, activeBrokerPackageName));
+                OneAuthSharedFunctions.getIpcStrategies(applicationContext, activeBrokerPackageName));
     }
 
     @VisibleForTesting
@@ -177,42 +176,6 @@ public class BrokerMsalController extends BaseController {
                 mComponents,
                 HELLO_CACHE_ENTRY_TIMEOUT
         );
-    }
-
-    /**
-     * Gets a list of communication strategies.
-     * Order of objects in the list will reflects the order of strategies that will be used.
-     */
-    @NonNull
-    static List<IIpcStrategy> getIpcStrategies(final Context applicationContext,
-                                               final String activeBrokerPackageName) {
-        final String methodTag = TAG + ":getIpcStrategies";
-        final List<IIpcStrategy> strategies = new ArrayList<>();
-        final StringBuilder sb = new StringBuilder(100);
-        sb.append("Broker Strategies added : ");
-
-        final ContentProviderStrategy contentProviderStrategy = new ContentProviderStrategy(applicationContext);
-        if (contentProviderStrategy.isSupportedByTargetedBroker(activeBrokerPackageName)) {
-            sb.append("ContentProviderStrategy, ");
-            strategies.add(contentProviderStrategy);
-        }
-
-        final MicrosoftAuthClient client = new MicrosoftAuthClient(applicationContext);
-        if (client.isBoundServiceSupported(activeBrokerPackageName)) {
-            sb.append("BoundServiceStrategy, ");
-            strategies.add(new BoundServiceStrategy<>(client));
-        }
-
-        if (AccountManagerUtil.canUseAccountManagerOperation(applicationContext,
-                Collections.singleton(BROKER_ACCOUNT_TYPE)))
-        {
-            sb.append("AccountManagerStrategy.");
-            strategies.add(new AccountManagerAddAccountStrategy(applicationContext));
-        }
-
-        Logger.info(methodTag, sb.toString());
-
-        return strategies;
     }
 
     /**

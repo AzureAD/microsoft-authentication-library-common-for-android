@@ -51,7 +51,11 @@ class SignUpSubmitUserAttributesCommand(
      * It calls the signUpSubmitUserAttributes method of the native auth MSAL controller with the given parameters.
      */
     override fun execute(): SignUpSubmitUserAttributesCommandResult {
-        LogSession.logMethodCall(TAG, "${TAG}.execute")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.execute"
+        )
 
         val result = controller.signUpSubmitUserAttributes(
             parameters = parameters

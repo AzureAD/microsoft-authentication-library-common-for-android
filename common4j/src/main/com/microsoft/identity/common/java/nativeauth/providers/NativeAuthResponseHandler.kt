@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers
 
+import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
@@ -64,9 +65,23 @@ class NativeAuthResponseHandler {
      */
     @Throws(ClientException::class)
     fun getSignUpStartResultFromHttpResponse(
+        requestCorrelationId: String,
         response: HttpResponse
     ): SignUpStartApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getSignUpStartResultFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.getSignUpStartResultFromHttpResponse"
+        )
+
+        // If the API doesn't return a correlation ID header value, use the correlation ID of the original API request
+        val correlationId: String = response.getHeaderValue(AuthenticationConstants.AAD.CLIENT_REQUEST_ID, 0).let {responseCorrelationId ->
+            if (responseCorrelationId.isNullOrBlank()) {
+                requestCorrelationId
+            } else {
+                responseCorrelationId
+            }
+        }
 
         val result = if (response.body.isNullOrBlank()) {
             SignUpStartApiResponse(
@@ -78,7 +93,8 @@ class NativeAuthResponseHandler {
                 unverifiedAttributes = null,
                 invalidAttributes = null,
                 challengeType = null,
-                subError = null
+                subError = null,
+                correlationId = correlationId
             )
         }
         else {
@@ -88,7 +104,9 @@ class NativeAuthResponseHandler {
             )
         }
         result.statusCode = response.statusCode
+        result.correlationId = correlationId
 
+        // TODO add correlation ID
         ApiResultUtil.logResponse(TAG, result)
 
         return result
@@ -103,9 +121,23 @@ class NativeAuthResponseHandler {
      */
     @Throws(ClientException::class)
     fun getSignUpChallengeResultFromHttpResponse(
+        requestCorrelationId: String,
         response: HttpResponse
     ): SignUpChallengeApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getSignUpChallengeResultFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName ="${TAG}.getSignUpChallengeResultFromHttpResponse"
+        )
+
+        // If the API doesn't return a correlation ID header value, use the correlation ID of the original API request
+        val correlationId: String = response.getHeaderValue(AuthenticationConstants.AAD.CLIENT_REQUEST_ID, 0).let {responseCorrelationId ->
+            if (responseCorrelationId.isNullOrBlank()) {
+                requestCorrelationId
+            } else {
+                responseCorrelationId
+            }
+        }
 
         val result = if (response.body.isNullOrBlank()) {
             SignUpChallengeApiResponse(
@@ -118,7 +150,8 @@ class NativeAuthResponseHandler {
                 codeLength = null,
                 bindingMethod = null,
                 interval = null,
-                challengeChannel = null
+                challengeChannel = null,
+                correlationId = correlationId
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -127,6 +160,7 @@ class NativeAuthResponseHandler {
             )
         }
         result.statusCode = response.statusCode
+        result.correlationId = correlationId
 
         ApiResultUtil.logResponse(TAG, result)
 
@@ -142,9 +176,23 @@ class NativeAuthResponseHandler {
      */
     @Throws(ClientException::class)
     fun getSignUpContinueResultFromHttpResponse(
+        requestCorrelationId: String,
         response: HttpResponse
     ): SignUpContinueApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getSignUpContinueResultFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName ="${TAG}.getSignUpContinueResultFromHttpResponse"
+        )
+
+        // If the API doesn't return a correlation ID header value, use the correlation ID of the original API request
+        val correlationId: String = response.getHeaderValue(AuthenticationConstants.AAD.CLIENT_REQUEST_ID, 0).let {responseCorrelationId ->
+            if (responseCorrelationId.isNullOrBlank()) {
+                requestCorrelationId
+            } else {
+                responseCorrelationId
+            }
+        }
 
         val result = if (response.body.isNullOrBlank()) {
             SignUpContinueApiResponse(
@@ -157,7 +205,8 @@ class NativeAuthResponseHandler {
                 unverifiedAttributes = null,
                 requiredAttributes = null,
                 expiresIn = null,
-                subError = null
+                subError = null,
+                correlationId = correlationId
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -166,6 +215,7 @@ class NativeAuthResponseHandler {
             )
         }
         result.statusCode = response.statusCode
+        result.correlationId = correlationId
 
         ApiResultUtil.logResponse(TAG, result)
 
@@ -179,9 +229,23 @@ class NativeAuthResponseHandler {
      */
     @Throws(ClientException::class)
     fun getSignInInitiateResultFromHttpResponse(
+        requestCorrelationId: String,
         response: HttpResponse
     ): SignInInitiateApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getSignInInitiateResultFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.getSignInInitiateResultFromHttpResponse"
+        )
+
+        // If the API doesn't return a correlation ID header value, use the correlation ID of the original API request
+        val correlationId: String = response.getHeaderValue(AuthenticationConstants.AAD.CLIENT_REQUEST_ID, 0).let {responseCorrelationId ->
+            if (responseCorrelationId.isNullOrBlank()) {
+                requestCorrelationId
+            } else {
+                responseCorrelationId
+            }
+        }
 
         val result = if (response.body.isNullOrBlank()) {
             SignInInitiateApiResponse(
@@ -192,6 +256,7 @@ class NativeAuthResponseHandler {
                 errorCodes = null,
                 continuationToken = null,
                 challengeType = null,
+                correlationId = correlationId
             )
         }  else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -200,6 +265,7 @@ class NativeAuthResponseHandler {
             )
         }
         result.statusCode = response.statusCode
+        result.correlationId = correlationId
 
         ApiResultUtil.logResponse(TAG, result)
 
@@ -214,9 +280,23 @@ class NativeAuthResponseHandler {
      */
     @Throws(ClientException::class)
     fun getSignInChallengeResultFromHttpResponse(
+        requestCorrelationId: String,
         response: HttpResponse
     ): SignInChallengeApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getSignInChallengeResultFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.getSignInChallengeResultFromHttpResponse"
+        )
+
+        // If the API doesn't return a correlation ID header value, use the correlation ID of the original API request
+        val correlationId: String = response.getHeaderValue(AuthenticationConstants.AAD.CLIENT_REQUEST_ID, 0).let {responseCorrelationId ->
+            if (responseCorrelationId.isNullOrBlank()) {
+                requestCorrelationId
+            } else {
+                responseCorrelationId
+            }
+        }
 
         val result = if (response.body.isNullOrBlank()) {
             SignInChallengeApiResponse(
@@ -232,6 +312,7 @@ class NativeAuthResponseHandler {
                 challengeChannel = null,
                 codeLength = null,
                 interval = null,
+                correlationId = correlationId
             )
 
         } else {
@@ -241,6 +322,7 @@ class NativeAuthResponseHandler {
             )
         }
         result.statusCode = response.statusCode
+        result.correlationId = correlationId
 
         ApiResultUtil.logResponse(TAG, result)
 
@@ -255,9 +337,23 @@ class NativeAuthResponseHandler {
      */
     @Throws(ClientException::class)
     fun getSignInTokenApiResultFromHttpResponse(
+        requestCorrelationId: String,
         response: HttpResponse
     ): SignInTokenApiResult {
-        LogSession.logMethodCall(TAG, "${TAG}.getSignInTokenApiResultFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.getSignInTokenApiResultFromHttpResponse"
+        )
+
+        // If the API doesn't return a correlation ID header value, use the correlation ID of the original API request
+        val correlationId: String = response.getHeaderValue(AuthenticationConstants.AAD.CLIENT_REQUEST_ID, 0).let {responseCorrelationId ->
+            if (responseCorrelationId.isNullOrBlank()) {
+                requestCorrelationId
+            } else {
+                responseCorrelationId
+            }
+        }
 
         // Use native-auth specific class in case of API error response,
         // or standard MicrosoftStsTokenResponse in case of success response
@@ -270,7 +366,8 @@ class NativeAuthResponseHandler {
                     errorUri = null,
                     errorCodes = null,
                     subError = null,
-                    continuationToken = null
+                    continuationToken = null,
+                    correlationId = correlationId
                 )
             } else {
                 ObjectMapper.deserializeJsonStringToObject(
@@ -278,6 +375,9 @@ class NativeAuthResponseHandler {
                     SignInTokenApiResponse::class.java
                 )
             }
+            apiResponse.statusCode = response.statusCode
+            apiResponse.correlationId = correlationId
+
             ApiResultUtil.logResponse(TAG, apiResponse)
             return apiResponse.toErrorResult()
         } else {
@@ -290,7 +390,10 @@ class NativeAuthResponseHandler {
                     " isMsaAccount:$apiResponse.isMsaAccount() tenantId $apiResponse.tenantId" +
                     " cloudInstanceHostName $apiResponse.cloudInstanceHostName")
 
-            return SignInTokenApiResult.Success(tokenResponse = apiResponse)
+            return SignInTokenApiResult.Success(
+                tokenResponse = apiResponse,
+                correlationId = correlationId
+            )
         }
     }
     //endregion
@@ -303,11 +406,25 @@ class NativeAuthResponseHandler {
      */
     @Throws(ClientException::class)
     fun getResetPasswordStartApiResponseFromHttpResponse(
+        requestCorrelationId: String,
         response: HttpResponse
     ): ResetPasswordStartApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordStartApiResponseFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.getResetPasswordStartApiResponseFromHttpResponse"
+        )
 
-        val apiResponse = if (response.body.isNullOrBlank()) {
+        // If the API doesn't return a correlation ID header value, use the correlation ID of the original API request
+        val correlationId: String = response.getHeaderValue(AuthenticationConstants.AAD.CLIENT_REQUEST_ID, 0).let {responseCorrelationId ->
+            if (responseCorrelationId.isNullOrBlank()) {
+                requestCorrelationId
+            } else {
+                responseCorrelationId
+            }
+        }
+
+        val result = if (response.body.isNullOrBlank()) {
             ResetPasswordStartApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
@@ -315,6 +432,7 @@ class NativeAuthResponseHandler {
                 errorUri = null,
                 continuationToken = null,
                 challengeType = null,
+                correlationId = correlationId
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -322,11 +440,12 @@ class NativeAuthResponseHandler {
                 ResetPasswordStartApiResponse::class.java
             )
         }
-        apiResponse.statusCode = response.statusCode
+        result.statusCode = response.statusCode
+        result.correlationId = correlationId
 
-        ApiResultUtil.logResponse(TAG, apiResponse)
+        ApiResultUtil.logResponse(TAG, result)
 
-        return apiResponse
+        return result
     }
 
     //region /resetpassword/challenge
@@ -337,11 +456,25 @@ class NativeAuthResponseHandler {
      */
     @Throws(ClientException::class)
     fun getResetPasswordChallengeApiResponseFromHttpResponse(
+        requestCorrelationId: String,
         response: HttpResponse
     ): ResetPasswordChallengeApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordChallengeApiResponseFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.getResetPasswordChallengeApiResponseFromHttpResponse"
+        )
 
-        val apiResponse = if (response.body.isNullOrBlank()) {
+        // If the API doesn't return a correlation ID header value, use the correlation ID of the original API request
+        val correlationId: String = response.getHeaderValue(AuthenticationConstants.AAD.CLIENT_REQUEST_ID, 0).let {responseCorrelationId ->
+            if (responseCorrelationId.isNullOrBlank()) {
+                requestCorrelationId
+            } else {
+                responseCorrelationId
+            }
+        }
+
+        val result = if (response.body.isNullOrBlank()) {
             ResetPasswordChallengeApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
@@ -354,6 +487,7 @@ class NativeAuthResponseHandler {
                 challengeChannel = null,
                 codeLength = null,
                 interval = null,
+                correlationId = correlationId
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -361,11 +495,12 @@ class NativeAuthResponseHandler {
                 ResetPasswordChallengeApiResponse::class.java
             )
         }
-        apiResponse.statusCode = response.statusCode
+        result.statusCode = response.statusCode
+        result.correlationId = correlationId
 
-        ApiResultUtil.logResponse(TAG, apiResponse)
+        ApiResultUtil.logResponse(TAG, result)
 
-        return apiResponse
+        return result
     }
 
     //region /resetpassword/continue
@@ -376,11 +511,25 @@ class NativeAuthResponseHandler {
      */
     @Throws(ClientException::class)
     fun getResetPasswordContinueApiResponseFromHttpResponse(
+        requestCorrelationId: String,
         response: HttpResponse
     ): ResetPasswordContinueApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordContinueApiResponseFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.getResetPasswordContinueApiResponseFromHttpResponse"
+        )
 
-        val apiResponse = if (response.body.isNullOrBlank()) {
+        // If the API doesn't return a correlation ID header value, use the correlation ID of the original API request
+        val correlationId: String = response.getHeaderValue(AuthenticationConstants.AAD.CLIENT_REQUEST_ID, 0).let {responseCorrelationId ->
+            if (responseCorrelationId.isNullOrBlank()) {
+                requestCorrelationId
+            } else {
+                responseCorrelationId
+            }
+        }
+
+        val result = if (response.body.isNullOrBlank()) {
             ResetPasswordContinueApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
@@ -389,7 +538,8 @@ class NativeAuthResponseHandler {
                 continuationToken = null,
                 challengeType = null,
                 expiresIn = null,
-                subError = null
+                subError = null,
+                correlationId = correlationId
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -397,10 +547,11 @@ class NativeAuthResponseHandler {
                 ResetPasswordContinueApiResponse::class.java
             )
         }
-        apiResponse.statusCode = response.statusCode
+        result.statusCode = response.statusCode
+        result.correlationId = correlationId
 
-        ApiResultUtil.logResponse(TAG, apiResponse)
-        return apiResponse
+        ApiResultUtil.logResponse(TAG, result)
+        return result
     }
 
     //region /resetpassword/submit
@@ -411,11 +562,25 @@ class NativeAuthResponseHandler {
      */
     @Throws(ClientException::class)
     fun getResetPasswordSubmitApiResponseFromHttpResponse(
+        requestCorrelationId: String,
         response: HttpResponse
     ): ResetPasswordSubmitApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordSubmitApiResponseFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.getResetPasswordSubmitApiResponseFromHttpResponse"
+        )
 
-        val apiResponse = if (response.body.isNullOrBlank()) {
+        // If the API doesn't return a correlation ID header value, use the correlation ID of the original API request
+        val correlationId: String = response.getHeaderValue(AuthenticationConstants.AAD.CLIENT_REQUEST_ID, 0).let {responseCorrelationId ->
+            if (responseCorrelationId.isNullOrBlank()) {
+                requestCorrelationId
+            } else {
+                responseCorrelationId
+            }
+        }
+
+        val result = if (response.body.isNullOrBlank()) {
             ResetPasswordSubmitApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
@@ -423,7 +588,8 @@ class NativeAuthResponseHandler {
                 errorUri = null,
                 continuationToken = null,
                 pollInterval = null,
-                subError = null
+                subError = null,
+                correlationId = correlationId
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -431,11 +597,12 @@ class NativeAuthResponseHandler {
                 ResetPasswordSubmitApiResponse::class.java
             )
         }
-        apiResponse.statusCode = response.statusCode
+        result.statusCode = response.statusCode
+        result.correlationId = correlationId
 
-        ApiResultUtil.logResponse(TAG, apiResponse)
+        ApiResultUtil.logResponse(TAG, result)
 
-        return apiResponse
+        return result
     }
 
     //region /resetpassword/poll_completion
@@ -446,11 +613,25 @@ class NativeAuthResponseHandler {
      */
     @Throws(ClientException::class)
     fun getResetPasswordPollCompletionApiResponseFromHttpResponse(
+        requestCorrelationId: String,
         response: HttpResponse
     ): ResetPasswordPollCompletionApiResponse {
-        LogSession.logMethodCall(TAG, "${TAG}.getResetPasswordPollCompletionApiResponseFromHttpResponse")
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.getResetPasswordPollCompletionApiResponseFromHttpResponse"
+        )
 
-        val apiResponse = if (response.body.isNullOrBlank()) {
+        // If the API doesn't return a correlation ID header value, use the correlation ID of the original API request
+        val correlationId: String = response.getHeaderValue(AuthenticationConstants.AAD.CLIENT_REQUEST_ID, 0).let {responseCorrelationId ->
+            if (responseCorrelationId.isNullOrBlank()) {
+                requestCorrelationId
+            } else {
+                responseCorrelationId
+            }
+        }
+
+        val result = if (response.body.isNullOrBlank()) {
             ResetPasswordPollCompletionApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
@@ -459,7 +640,8 @@ class NativeAuthResponseHandler {
                 status = null,
                 continuationToken = null,
                 expiresIn = null,
-                subError = null
+                subError = null,
+                correlationId = correlationId
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -467,10 +649,11 @@ class NativeAuthResponseHandler {
                 ResetPasswordPollCompletionApiResponse::class.java
             )
         }
-        apiResponse.statusCode = response.statusCode
+        result.statusCode = response.statusCode
+        result.correlationId = correlationId
 
-        ApiResultUtil.logResponse(TAG, apiResponse)
+        ApiResultUtil.logResponse(TAG, result)
 
-        return apiResponse
+        return result
     }
 }
