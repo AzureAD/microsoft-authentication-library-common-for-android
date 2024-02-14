@@ -33,6 +33,7 @@ import com.microsoft.identity.common.internal.broker.IBrokerValidator
 import com.microsoft.identity.common.internal.util.AccountManagerUtil
 import com.microsoft.identity.common.internal.util.ProcessUtil
 import com.microsoft.identity.common.logging.Logger
+import java.util.concurrent.TimeUnit
 
 /**
  * An IPC strategy that utilizes AccountManager.addAccount().
@@ -126,7 +127,7 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp
                         null,
                         null,
                         ProcessUtil.getPreferredHandler()
-                    ).result
+                    ).getResult(5, TimeUnit.SECONDS)
                 },
                 getAccountManagerApps = {
                     accountManager.authenticatorTypes
