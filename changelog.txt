@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [MINOR] Changes to support safe deserialization of KeyPair in Linux (#2319)
 
 V.17.1.0
 ---------
