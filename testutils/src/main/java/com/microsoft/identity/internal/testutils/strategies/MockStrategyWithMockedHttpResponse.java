@@ -40,7 +40,7 @@ public class MockStrategyWithMockedHttpResponse extends ResourceOwnerPasswordCre
      * @param config Microsoft Sts OAuth2 configuration
      */
     public MockStrategyWithMockedHttpResponse(MicrosoftStsOAuth2Configuration config) throws ClientException {
-        super(config);
+        super(config, false);
     }
 
     /**

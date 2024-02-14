@@ -314,9 +314,36 @@ public abstract class Authority {
         }
     }
 
+    // Used in tests. When running multiple tests in batch, knownAuthorities stays populated with
+    // authorities that don't belong to the test runs.
+    public static void clearKnownAuthorities() {
+        synchronized (sLock) {
+            knownAuthorities.clear();
+        }
+    }
+
     public static void addKnownAuthorities(List<Authority> authorities) {
         synchronized (sLock) {
             knownAuthorities.addAll(authorities);
+            StringBuilder print = new StringBuilder("Adding known authorities: ");
+            for (final Authority a : authorities) {
+                print.append(a.toString()).append(", ");
+            }
+            Logger.error(
+                    TAG,
+                    print.toString(),
+                    null
+            );
+
+            StringBuilder print2 = new StringBuilder("Full knownAuthorities list is now: ");
+            for (final Authority a : knownAuthorities) {
+                print2.append(a.toString()).append(", ");
+            }
+            Logger.error(
+                    TAG,
+                    print2.toString(),
+                    null
+            );
         }
     }
 
@@ -350,6 +377,11 @@ public abstract class Authority {
 
         //Check if authority was added to configuration
         for (final Authority currentKnownAuthority : knownAuthorities) {
+            Logger.error(
+                    TAG + methodName,
+                    "currentKnownAuthority.mAuthorityTypeString: " + currentKnownAuthority.mAuthorityTypeString,
+                    null
+            );
             if (currentKnownAuthority.mAuthorityTypeString.equals(Authority.CIAM)) {
                 // Don't compare the raw authority URL passed as part of config, as this can be
                 // behind a (changing) custom, non-Microsoft domain. Use the OIDC document to fetch
