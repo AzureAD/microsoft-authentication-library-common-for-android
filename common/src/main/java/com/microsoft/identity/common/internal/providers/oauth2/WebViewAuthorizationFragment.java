@@ -239,14 +239,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setBuiltInZoomControls(webViewZoomControlsEnabled);
         mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
         mWebView.setVisibility(View.INVISIBLE);
-        mWebView.getSettings().setPluginState(WebSettings.PluginState.ON);
         mWebView.setWebViewClient(webViewClient);
         mWebView.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
                 // We can only grant or deny permissions for video capture/camera.
                 // To avoid unintentionally granting requests for not defined permissions.
-                if (iSPermissionRequestForCamera(request)) {
+                if (isPermissionRequestForCamera(request)) {
                     Logger.info(methodTag, "Camera request received.");
                     mCameraPermissionRequest = request;
                     if (isCameraPermissionGranted()) {
@@ -312,7 +311,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      * @param request The permission request.
      * @return true if the given permission request is for camera, false otherwise.
      */
-    private boolean iSPermissionRequestForCamera(final PermissionRequest request) {
+    private boolean isPermissionRequestForCamera(final PermissionRequest request) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return request.getResources().length == 1 &&
                     PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(request.getResources()[0]);
