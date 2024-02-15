@@ -87,6 +87,14 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
     private static final String ENCODE_VERSION = "E1";
 
     /**
+     * Length of key identifiers that are appended before the encrypted data.
+     * See: PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER,
+     *      AndroidWrappedKeyLoader.WRAPPED_KEY_KEY_IDENTIFIER,
+     *      KeyringKeyLoader.KEY_IDENTIFIER
+     */
+    public static final int KEY_IDENTIFIER_LENGTH = 4;
+
+    /**
      * IV generator.
      */
     private final IVGenerator mGenerator;
@@ -358,8 +366,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             return new String(
                     stripEncodeVersionFromCipherText(cipherText),
                     0,
-                    // This method assumes that all key identifiers has the same length.
-                    PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER.length(),
+                    KEY_IDENTIFIER_LENGTH,
                     ENCODING_UTF8
             );
         } catch (final Exception e) {
