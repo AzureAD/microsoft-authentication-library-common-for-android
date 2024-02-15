@@ -153,10 +153,15 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
                 return;
             }
 
-            // NOTE: Maybe the right behavior is that we shouldn't write NULL whenever encryption fails.
-            // However, it's possible that we're relying on this behavior in PROD (due to KeyStore failure)
-            // Not persisting the key in memory means getAll() or getAllFilteredByKey() will not work.
-            // Those operations load keys from the storage layer, and invoke getString() - which could return the in-memory cached value.
+            // What this does is that if the encryption fails, we would still write "null" to the storage.
+            // This might not be the right behavior, but changing this could break stuff.
+            // e.g.
+            //      1. In putString(), we would store data in the in-memory cache first, then try encrypting data.
+            //      2. Assuming the encryption fails, this will persist the key.
+            //      3. the getAll() and getAllFilteredByKey() below relies on the key "in the storage".
+            //         If we don't persist the key to the storage, getAll() will not have any key to pull data from in-memory storage.
+            //
+            // Therefore. i'm leaving this untouched.
             String encryptedValue = null;
             try {
                 encryptedValue = mEncryptionManager.encrypt(value);
