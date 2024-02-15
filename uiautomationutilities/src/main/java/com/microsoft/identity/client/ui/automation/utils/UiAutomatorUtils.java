@@ -426,7 +426,7 @@ public class UiAutomatorUtils {
         try {
             device.wakeUp();
         } catch (RemoteException e) {
-            throw new RuntimeException(e);
+            Logger.e(TAG, "Exception while waking up device screen", e);
         }
     }
 
