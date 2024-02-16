@@ -33,6 +33,7 @@ import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
 import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
 
+import com.google.gson.JsonParseException;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
@@ -584,10 +585,17 @@ public class MicrosoftStsOAuth2Strategy
 
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
             //An error occurred
-            tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(
-                    getBodyFromUnsuccessfulResponse(response.getBody()),
-                    MicrosoftTokenErrorResponse.class
-            );
+            try {
+                tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(
+                        getBodyFromUnsuccessfulResponse(response.getBody()),
+                        MicrosoftTokenErrorResponse.class
+                );
+            } catch (final JsonParseException ex) {
+                tokenErrorResponse = new MicrosoftTokenErrorResponse();
+                final String statusCode = String.valueOf(response.getStatusCode());
+                tokenErrorResponse.setError(statusCode);
+                tokenErrorResponse.setErrorDescription("Received " + statusCode + " status code from Server ");
+            }
             tokenErrorResponse.setStatusCode(response.getStatusCode());
 
             if (null != response.getHeaders()) {
