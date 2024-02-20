@@ -46,7 +46,7 @@ public class MockStrategyWithMockedHttpResponse extends ResourceOwnerPasswordCre
     /**
      * Template method for executing an OAuth2 authorization request.
      *
-     * @param request               microsoft sts authorization request.
+     * @param request                microsoft sts authorization request.
      * @param IAuthorizationStrategy authorization strategy.
      * @return GenericAuthorizationResponse
      */

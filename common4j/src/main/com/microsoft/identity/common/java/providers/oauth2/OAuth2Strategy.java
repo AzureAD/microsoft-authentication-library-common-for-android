@@ -30,7 +30,6 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
-import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -53,10 +52,10 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.telemetry.events.UiShownEvent;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -139,7 +138,6 @@ public abstract class OAuth2Strategy
      * @param authorizationStrategy generic authorization strategy.
      * @return GenericAuthorizationResponse
      */
-    @NonNull
     public Future<AuthorizationResult> requestAuthorization(
             final GenericAuthorizationRequest request,
             final GenericAuthorizationStrategy authorizationStrategy)
