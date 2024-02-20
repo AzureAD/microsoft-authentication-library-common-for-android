@@ -50,4 +50,18 @@ public class CommonFlightManager {
 
         return mFlightProvider.isFlightEnabled(flightConfig);
     }
+
+    /**
+     * Gets the value of an integer flight.
+     *
+     * @param flightConfig {@link IFlightConfig} to check
+     * @return the flight value if set otherwise returns the defaultValue
+     */
+    public static int getIntValue(@NonNull IFlightConfig flightConfig) {
+        if (mFlightProvider == null) {
+            return (int) flightConfig.getDefaultValue();
+        }
+
+        return mFlightProvider.getIntValue(flightConfig);
+    }
 }
