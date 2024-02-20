@@ -1,6 +1,10 @@
 V.Next
 ---------
 
+V.17.1.1
+---------
+- [PATCH] Add timeout to backup IPC mechanism (#2323)
+
 V.17.1.0
 ---------
 - [PATCH] Revert #2305 (#2307)
