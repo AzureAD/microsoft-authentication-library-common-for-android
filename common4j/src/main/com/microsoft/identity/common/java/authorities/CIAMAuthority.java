@@ -95,7 +95,7 @@ public class CIAMAuthority extends Authority {
      * @param authorityNoPath authority to be transformed
      * @return full CIAM authority with path
      */
-    public static String getFullAuthorityUrlFromAuthorityWithoutPath(@NonNull String authorityNoPath){
+    public static String getTenantNameVariantUrlFromAuthorityWithoutPath(@NonNull String authorityNoPath){
         // Remove "https://" if it was included as part of the authority
         if (authorityNoPath.startsWith("https://")){
             authorityNoPath = authorityNoPath.substring(8);
@@ -106,5 +106,22 @@ public class CIAMAuthority extends Authority {
         // Split environment to isolate the tenant
         final String tenant = authorityNoPath.split("\\.")[0];
         return "https://" + authorityNoPath + "/" + tenant + ".onmicrosoft.com";
+    }
+
+    /**
+     * This method takes a CIAM authority string of format "tenant.ciamlogin.com" or "https://tenant.ciamlogin.com"
+     * and converts it into a full authority url with a path segment of format "/tenantId"
+     * @param authorityNoPath authority to be transformed
+     * @return full CIAM authority with path
+     */
+    public static String getTenantIdVariantUrlFromAuthorityWithoutPath(@NonNull String authorityNoPath, @NonNull String tenantId){
+        // Remove "https://" if it was included as part of the authority
+        if (authorityNoPath.startsWith("https://")){
+            authorityNoPath = authorityNoPath.substring(8);
+        }
+        if (authorityNoPath.endsWith("/")){
+            authorityNoPath = authorityNoPath.substring(0, authorityNoPath.length() - 1);
+        }
+        return "https://" + authorityNoPath + "/" + tenantId;
     }
 }

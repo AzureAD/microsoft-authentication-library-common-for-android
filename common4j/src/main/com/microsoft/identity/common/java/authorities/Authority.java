@@ -26,21 +26,14 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration;
-import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfigurationClient;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
-import com.microsoft.identity.common.java.util.JsonUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
-
-import org.json.JSONException;
+import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -50,7 +43,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -149,7 +141,7 @@ public abstract class Authority {
         if (pathSegments.size() == 0 || (pathSegments.size() == 1 && pathSegments.get(0).equals(""))) {
             if (authorityUrl.contains(CIAMAuthority.CIAM_LOGIN_URL_SEGMENT)){
                 // This is a CIAM authority, return CIAMAuthority
-                return new CIAMAuthority(CIAMAuthority.getFullAuthorityUrlFromAuthorityWithoutPath(authorityUrl));
+                return new CIAMAuthority(CIAMAuthority.getTenantNameVariantUrlFromAuthorityWithoutPath(authorityUrl));
             }
             return new UnknownAuthority();
         }
@@ -314,60 +306,25 @@ public abstract class Authority {
         }
     }
 
-    // Used in tests. When running multiple tests in batch, knownAuthorities stays populated with
-    // authorities that don't belong to the test runs.
-    public static void clearKnownAuthorities() {
-        synchronized (sLock) {
-            knownAuthorities.clear();
-        }
-    }
-
     public static void addKnownAuthorities(List<Authority> authorities) {
         synchronized (sLock) {
             knownAuthorities.addAll(authorities);
-            StringBuilder print = new StringBuilder("Adding known authorities: ");
-            for (final Authority a : authorities) {
-                print.append(a.toString()).append(", ");
-            }
-            Logger.error(
-                    TAG,
-                    print.toString(),
-                    null
-            );
-
-            StringBuilder print2 = new StringBuilder("Full knownAuthorities list is now: ");
-            for (final Authority a : knownAuthorities) {
-                print2.append(a.toString()).append(", ");
-            }
-            Logger.error(
-                    TAG,
-                    print2.toString(),
-                    null
-            );
         }
-    }
-
-    private static String getIssuerForAuthority(Authority authority) throws ServiceException {
-        final OpenIdProviderConfigurationClient client = new OpenIdProviderConfigurationClient();
-        OpenIdProviderConfiguration openIdProviderConfiguration = client.loadOpenIdProviderConfigurationFromAuthority(
-                authority.mAuthorityUrlString
-        );
-        return openIdProviderConfiguration.getIssuer();
     }
 
     /**
      * Authorities are either known by the developer and communicated to the library via configuration or they
      * are known to Microsoft based on the list of clouds returned from:
      *
-     * @param authorityToCheck Authority to check against.
+     * @param authority Authority to check against.
      * @return True if the authority is known to Microsoft or defined in the configuration.
      */
-    public static boolean isKnownAuthority(Authority authorityToCheck) {
+    public static boolean isKnownAuthority(Authority authority) {
         final String methodName = ":isKnownAuthority";
         boolean knownToDeveloper = false;
         boolean knownToMicrosoft;
 
-        if (authorityToCheck == null) {
+        if (authority == null) {
             Logger.warn(
                     TAG + methodName,
                     "Authority is null"
@@ -376,61 +333,23 @@ public abstract class Authority {
         }
 
         //Check if authority was added to configuration
-        for (final Authority currentKnownAuthority : knownAuthorities) {
-            Logger.error(
-                    TAG + methodName,
-                    "currentKnownAuthority.mAuthorityTypeString: " + currentKnownAuthority.mAuthorityTypeString,
-                    null
-            );
-            if (currentKnownAuthority.mAuthorityTypeString.equals(Authority.CIAM)) {
-                // Don't compare the raw authority URL passed as part of config, as this can be
-                // behind a (changing) custom, non-Microsoft domain. Use the OIDC document to fetch
-                // the "real" authority, in this case defined as the issuer.
-                try {
-                    String currentKnownAuthorityIssuer = getIssuerForAuthority(currentKnownAuthority);
-                    String authorityToCheckIssuer = getIssuerForAuthority(authorityToCheck);
-                    URL authorityToCheckIssuerURL = new URI(authorityToCheckIssuer).toURL();
-
-                    if (currentKnownAuthorityIssuer != null &&
-                            currentKnownAuthorityIssuer.toLowerCase(Locale.ROOT).contains(
-                                    authorityToCheckIssuerURL.getAuthority().toLowerCase(Locale.ROOT)
-                            )
-                    ) {
-                        knownToDeveloper = true;
-                        break;
-                    }
-                } catch (ServiceException | MalformedURLException | URISyntaxException e) {
-                    // Do raw authority URL comparison
-                    if (authorityToCheck.getAuthorityURL() != null &&
-                            authorityToCheck.getAuthorityURL().getAuthority() != null &&
-                            currentKnownAuthority.mAuthorityUrlString != null &&
-                            currentKnownAuthority.mAuthorityUrlString.toLowerCase(Locale.ROOT).contains(
-                                    authorityToCheck
-                                            .getAuthorityURL()
-                                            .getAuthority()
-                                            .toLowerCase(Locale.ROOT))) {
-                        knownToDeveloper = true;
-                        break;
-                    }
-                }
-            } else {
-                if (authorityToCheck.getAuthorityURL() != null &&
-                        authorityToCheck.getAuthorityURL().getAuthority() != null &&
-                        currentKnownAuthority.mAuthorityUrlString != null &&
-                        currentKnownAuthority.mAuthorityUrlString.toLowerCase(Locale.ROOT).contains(
-                                authorityToCheck
-                                        .getAuthorityURL()
-                                        .getAuthority()
-                                        .toLowerCase(Locale.ROOT))) {
-                    knownToDeveloper = true;
-                    break;
-                }
+        for (final Authority currentAuthority : knownAuthorities) {
+            if (currentAuthority.mAuthorityUrlString != null &&
+                    authority.getAuthorityURL() != null &&
+                    authority.getAuthorityURL().getAuthority() != null &&
+                    currentAuthority.mAuthorityUrlString.toLowerCase(Locale.ROOT).contains(
+                            authority
+                                    .getAuthorityURL()
+                                    .getAuthority()
+                                    .toLowerCase(Locale.ROOT))) {
+                knownToDeveloper = true;
+                break;
             }
         }
 
         // Check whether the authority is known to Microsoft or not.  Microsoft can recognize authorities that exist within public clouds.
         // Microsoft does not maintain a list of B2C authorities or a list of ADFS or 3rd party authorities (issuers).
-        knownToMicrosoft = AzureActiveDirectory.hasCloudHost(authorityToCheck.getAuthorityURL());
+        knownToMicrosoft = AzureActiveDirectory.hasCloudHost(authority.getAuthorityURL());
 
         final boolean isKnown = (knownToDeveloper || knownToMicrosoft);
 
