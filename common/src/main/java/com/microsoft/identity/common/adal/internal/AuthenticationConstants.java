@@ -1281,7 +1281,7 @@ public final class AuthenticationConstants {
         public static final String BROKER_GENERATE_SHR_RESULT = "broker_generate_shr_result";
 
         /**
-         * String for the preferred auth method code
+         * String for the preferred auth method code.
          */
         public static final String PREFERRED_AUTH_METHOD_CODE = "preferred_auth_method_CODE";
 
