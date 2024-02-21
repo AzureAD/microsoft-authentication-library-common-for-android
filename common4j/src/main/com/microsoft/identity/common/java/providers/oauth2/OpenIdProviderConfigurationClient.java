@@ -25,7 +25,6 @@ package com.microsoft.identity.common.java.providers.oauth2;
 import static com.microsoft.identity.common.java.exception.ServiceException.OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD;
 
 import com.google.gson.Gson;
-import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpClient;
