@@ -351,6 +351,10 @@ public class ExceptionAdapter {
 
     @NonNull
     public static ClientException clientExceptionFromException(@NonNull final Throwable exception) {
+        if (exception instanceof ClientException){
+            return (ClientException) exception;
+        }
+
         Throwable e = exception;
         if (exception instanceof ExecutionException) {
             e = exception.getCause();

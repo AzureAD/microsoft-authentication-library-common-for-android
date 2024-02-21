@@ -137,44 +137,69 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     public final void putString(
             final String key,
             final String value) {
+        final String methodTag = TAG + ":putString";
+
         synchronized (cacheLock) {
             if (value != null) {
                 fileCache.put(key, value);
             } else {
                 fileCache.remove(key);
             }
+
             final SharedPreferences.Editor editor = mSharedPreferences.edit();
 
             if (null == mEncryptionManager || StringUtil.isNullOrEmpty(value)) {
-                editor.putString(key, value);
-            } else {
-                final String encryptedValue = encrypt(value);
-                editor.putString(key, encryptedValue);
+                editor.putString(key, value).apply();
+                return;
             }
 
-            editor.apply();
+            // What this does is that if the encryption fails, we would still write "null" to the storage.
+            // This might not be the right behavior, but changing this could break stuff.
+            // e.g.
+            //      1. In putString(), we would store data in the in-memory cache first, then try encrypting data.
+            //      2. Assuming the encryption fails, this will persist the key.
+            //      3. the getAll() and getAllFilteredByKey() below relies on the key "in the storage".
+            //         If we don't persist the key to the storage, getAll() will not have any key to pull data from in-memory storage.
+            //
+            // Therefore. i'm leaving this untouched.
+            String encryptedValue = null;
+            try {
+                encryptedValue = mEncryptionManager.encrypt(value);
+            } catch (final ClientException e){
+                Logger.error(methodTag, "Failed to store encrypted value", null);
+            }
+
+            editor.putString(key, encryptedValue).apply();
         }
     }
 
     @Override
     @Nullable
     public final String getString(final String key) {
+        final String methodTag = TAG + ":getString";
+
         synchronized (cacheLock) {
             String memCache = fileCache.get(key);
             if (memCache != null) {
                 return memCache;
             }
-            String restoredValue = mSharedPreferences.getString(key, null);
 
-            if (null != mEncryptionManager && !StringUtil.isNullOrEmpty(restoredValue)) {
-                restoredValue = decrypt(restoredValue);
-
-                if (StringUtil.isNullOrEmpty(restoredValue)) {
-                    logWarningAndRemoveKey(key);
-                }
+            final String storedValue = mSharedPreferences.getString(key, null);
+            if (StringUtil.isNullOrEmpty(storedValue)) {
+                Logger.info(methodTag, "Data associated to the given key is null or empty", null);
+                return null;
             }
 
-            return restoredValue;
+            if (mEncryptionManager == null){
+                return storedValue;
+            }
+
+            try {
+                return mEncryptionManager.decrypt(storedValue);
+            } catch (final ClientException e){
+                Logger.error(methodTag, "Failed to decrypt value", null);
+                return null;
+            }
         }
     }
 
@@ -194,17 +219,6 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
         return 0;
     }
 
-    private void logWarningAndRemoveKey(String key) {
-        final String methodTag = TAG + ":logWarningAndRemoveKey";
-        Logger.warn(
-                methodTag,
-                "Failed to decrypt value! "
-                        + "This usually signals an issue with KeyStore or the provided SecretKeys."
-        );
-
-        remove(key);
-    }
-
     @Override
     public final Map<String, String> getAll() {
         // We're not synchronizing this access, since we're not modifying it here.
@@ -212,10 +226,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
         @SuppressWarnings(WarningType.unchecked_warning) final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
 
         if (null != mEncryptionManager) {
-            final Iterator<Map.Entry<String, String>> iterator = entries.entrySet().iterator();
-
-            while (iterator.hasNext()) {
-                final Map.Entry<String, String> entry = iterator.next();
+            for (Map.Entry<String, String> entry : entries.entrySet()) {
                 //This is slightly wasteful, but we have no better key iterator and decryption
                 //is probably more painful than the additional file read when we miss in the cache.
                 String decryptedValue = getString(entry.getKey());
@@ -315,66 +326,4 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
                         + "]"
         );
     }
-
-    @Nullable
-    private String encrypt(@NonNull final String clearText) {
-        return encryptDecryptInternal(clearText, true);
-    }
-
-    @Nullable
-    private String decrypt(@NonNull final String encryptedBlob) {
-        return encryptDecryptInternal(encryptedBlob, false);
-    }
-
-    @Nullable
-    private String encryptDecryptInternal(
-            @NonNull final String inputText,
-            final boolean encrypt) {
-        final String methodTag = TAG + ":encryptDecryptInternal";
-
-        String result;
-        try {
-            result = encrypt
-                    ? mEncryptionManager.encrypt(inputText)
-                    : mEncryptionManager.decrypt(inputText);
-        } catch (ClientException e ) {
-            Logger.error(
-                    methodTag,
-                    "Failed to " + (encrypt ? "encrypt" : "decrypt") + " value",
-                    encrypt
-                            ? null // If we failed to encrypt, don't log the error as it may contain a token
-                            : e // If we failed to decrypt, we couldn't see that secret value so log the error
-            );
-
-            // TODO determine if an Exception should be thrown here...
-            result = null;
-        } catch (final ProviderException e) {
-            if ((Build.VERSION.SDK_INT == Build.VERSION_CODES.Q || Build.VERSION.SDK_INT == Build.VERSION_CODES.R)) {
-                // Catch the exception only on Android OS 10 & 11 as we are seeing some unknown crypto errors on these versions
-                Logger.error(
-                        methodTag,
-                        "Keystore error - Failed to " + (encrypt ? "encrypt" : "decrypt") + " value",
-                        encrypt
-                                ? null // If we failed to encrypt, don't log the error as it may contain a token
-                                : e // If we failed to decrypt, we couldn't see that secret value so log the error
-                );
-            }
-            result = null;
-        }
-
-        return result;
-    }
-
-    /**
-     * This method performs a commit() to ensure that all outstanding apply() calls are completed.
-     * This should be called after any putX() call where we need to ensure that apply() is not delayed or missed.
-     * @return true if the commit is successful.
-     */
-    public boolean flushSharedPreference(){
-        synchronized (cacheLock) {
-            final SharedPreferences.Editor editor = mSharedPreferences.edit();
-            return editor.commit();
-        }
-    }
-
 }

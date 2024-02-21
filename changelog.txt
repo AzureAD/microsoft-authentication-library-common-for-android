@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [MINOR] Gracefully handles unexpected error in encryption layer (#2318)
 
 V.17.1.1
 ---------
@@ -7,14 +8,14 @@ V.17.1.1
 
 V.17.1.0
 ---------
-- [PATCH] Revert #2305 (#2307)
-- [PATCH] Handle Receiver Callback Exception in CommandDispatcher interactive command (#2315)
 - [MINOR] Add flight to control silent token timeout (#2311)
+- [PATCH] Revert #2305 (#2307)
+- [PATCH] Handle Receiver Callback Exception in CommandDispatcher interactive command (#2305)
 - [MINOR] Add IpcStrategyWithBackup (#2301)
 - [PATCH] Fix MSAL Issue 1864 (#2280)
 - [MINOR] Add AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp (#2294)
 - [MINOR] Adding additional fields to JwtRequestBody for sending PRTv4 requests (#2289)
-- [MINOR] Update SignIn/Signup parameters classes for Native Auth(#2284)
+- [MINOR] Update SignIn/Signup parameters classes for Native Auth (#2284)
 - [MINOR] Add IsQrPinAvailableCommand, controllers behavior and define constants for the isQrAvailable API (#2219)
 - [MINOR] Add PreferredAuthMethod to interactive token flow (#2245)
 - [MINOR] Implement updates of the native auth web API (#2261)
