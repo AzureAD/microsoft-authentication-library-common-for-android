@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [MINOR] Fix crash on MsaBrokerController initialization when queryContentProviders fails. (#2328)
 - [MINOR] Gracefully handles unexpected error in encryption layer (#2318)
 
 V.17.1.0
