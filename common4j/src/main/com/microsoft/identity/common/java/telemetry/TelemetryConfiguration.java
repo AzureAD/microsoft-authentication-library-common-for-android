@@ -26,6 +26,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 
+@Deprecated
 public class TelemetryConfiguration implements Serializable {
 
     private static final long serialVersionUID = 4048693049821792485L;

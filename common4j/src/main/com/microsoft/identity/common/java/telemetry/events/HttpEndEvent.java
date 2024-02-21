@@ -26,6 +26,7 @@ import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 
+@Deprecated
 public class HttpEndEvent extends BaseEvent {
     public HttpEndEvent() {
         super();

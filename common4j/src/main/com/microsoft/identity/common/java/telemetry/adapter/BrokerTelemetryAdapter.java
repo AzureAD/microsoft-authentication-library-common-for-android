@@ -41,6 +41,7 @@ import lombok.NonNull;
  * and add combine it with the aggregated event. This means that the event sent by {@link TelemetryAggregationAdapter} only contains
  * the last error that was dispatched.
  */
+@Deprecated
 public class BrokerTelemetryAdapter extends TelemetryAggregationAdapter {
     public BrokerTelemetryAdapter(@NonNull IBrokerTelemetryObserver observer) {
         super(observer);
