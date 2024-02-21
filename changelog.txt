@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [PATCH] Update nimbus-jose-jwt 9.37.3 (#2326)
 
 V.17.1.0
 ---------
