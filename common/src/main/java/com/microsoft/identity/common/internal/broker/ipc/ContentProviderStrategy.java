@@ -154,8 +154,13 @@ public class ContentProviderStrategy extends AbstractIpcStrategyWithServiceValid
         final String methodTag = TAG + ":isSupportedByTargetedBroker";
         final String contentProviderAuthority = getContentProviderAuthority(targetedBrokerPackageName);
 
-        final List<ProviderInfo> providers = mContext.getPackageManager()
-                .queryContentProviders(null, 0, 0);
+        final List<ProviderInfo> providers;
+        try {
+            providers = mContext.getPackageManager().queryContentProviders(null, 0, 0);
+        } catch (final Throwable t) {
+            Logger.error(methodTag, "Failed to query content providers.", t);
+            return false;
+        }
 
         if (providers == null) {
             Logger.error(methodTag, "Content Provider not found.", null);
