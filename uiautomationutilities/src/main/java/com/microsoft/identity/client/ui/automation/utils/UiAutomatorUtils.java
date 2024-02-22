@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.utils;
 
+import android.os.RemoteException;
 import android.view.accessibility.AccessibilityWindowInfo;
 import android.widget.ScrollView;
 
@@ -410,6 +411,23 @@ public class UiAutomatorUtils {
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         device.pressEnter();
+    }
+
+    /**
+     * Attempts to wake up device and turn on the screen. If instrumented test have UI
+     * interaction, then this method can help turn UI on for those interactions.
+     */
+    public static void wakeUpScreen() {
+        Logger.i(TAG, "Attempt to wake up the device screen.");
+        final UiDevice device =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        // attempt to wake up the device
+        try {
+            device.wakeUp();
+        } catch (RemoteException e) {
+            Logger.e(TAG, "Exception while waking up device screen", e);
+        }
     }
 
     private static boolean isKeyboardOpen() {
