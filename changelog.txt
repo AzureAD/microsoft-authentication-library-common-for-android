@@ -3,6 +3,10 @@ V.Next
 - [PATCH] Update nimbus-jose-jwt 9.37.3 (#2326)
 - [MINOR] Gracefully handles unexpected error in encryption layer (#2318)
 
+V.17.1.1
+---------
+- [PATCH] Add timeout to backup IPC mechanism (#2323)
+
 V.17.1.0
 ---------
 - [MINOR] Add flight to control silent token timeout (#2311)
