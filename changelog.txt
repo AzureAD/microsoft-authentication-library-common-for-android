@@ -2,6 +2,7 @@ V.Next
 ---------
 - [PATCH] Update nimbus-jose-jwt 9.37.3 (#2326)
 - [MINOR] Gracefully handles unexpected error in encryption layer (#2318)
+- [MINOR] Add flight to passkey feature for rollback purposes (#2329)
 
 V.17.1.1
 ---------
