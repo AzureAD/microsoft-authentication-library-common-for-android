@@ -62,6 +62,7 @@ import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthoriza
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
@@ -139,8 +140,13 @@ public class MicrosoftStsOAuth2Strategy
                                       @NonNull final OAuth2StrategyParameters parameters) throws ClientException {
         super(config, parameters);
         setTokenEndpoint(config.getTokenEndpoint().toString());
-        if (parameters.isUsingOpenIdConfiguration()){
-            loadOpenIdProviderConfiguration();
+        if (parameters.isUsingOpenIdConfiguration()) {
+            if (config.getSlice() != null && config.getSlice().getDataCenter() != null) {
+                String extraParams = AzureActiveDirectorySlice.DC_PARAMETER + "=" + config.getSlice().getDataCenter();
+                loadOpenIdProviderConfiguration(extraParams);
+            } else {
+                loadOpenIdProviderConfiguration();
+            }
         }
     }
 
