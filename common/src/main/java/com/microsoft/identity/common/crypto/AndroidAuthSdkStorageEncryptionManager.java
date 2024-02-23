@@ -99,7 +99,8 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
             return Collections.<AbstractSecretKeyLoader>singletonList(mKeyStoreKeyLoader);
         }
 
-        Logger.warn(methodTag, "Cannot find a matching key to decrypt the given blob");
+        Logger.warn(methodTag,
+                "Cannot find a matching key to decrypt the given blob. Key Identifier = " + keyIdentifier);
         return Collections.emptyList();
     }
 }
