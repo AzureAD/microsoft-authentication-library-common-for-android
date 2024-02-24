@@ -48,6 +48,8 @@ import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWeb
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.constants.FidoConstants;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightManager;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
@@ -242,7 +244,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
 
                 mAADWebViewClient.setRequestHeaders(mRequestHeaders);
-                mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
+                mWebView.loadUrl(mAuthorizationRequestUrl +  "&dc=ESTS-PUB-SCUS-LZ1-FD000-TEST1&fidotest=true", mRequestHeaders);
 
                 // The first page load could take time, and we do not want to just show a blank page.
                 // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.
@@ -275,7 +277,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             HashMap<String, String> requestHeaders = (HashMap<String, String>) state.getSerializable(REQUEST_HEADERS);
             // In cases of WebView as an auth agent, we want to always add the passkey protocol header.
             // (Not going to add passkey protocol header until full feature is ready.)
-            if (FidoConstants.IS_PASSKEY_SUPPORT_READY) {
+            if (CommonFlightManager.isFlightEnabled(CommonFlight.ENABLE_PASSKEY_FEATURE)) {
                 if (requestHeaders == null) {
                     requestHeaders = new HashMap<>();
                 }
