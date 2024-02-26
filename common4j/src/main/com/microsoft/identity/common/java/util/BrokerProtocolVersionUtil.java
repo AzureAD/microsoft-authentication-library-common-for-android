@@ -126,7 +126,7 @@ public class BrokerProtocolVersionUtil {
      * @param requiredBrokerProtocol minimum required protocol version for the feature.
      * @return true if the provided protocol is larger or equal than required protocol, false otherwise.
      */
-    protected static final boolean isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+    public static boolean isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
             @Nullable final String providedBrokerProtocol,
             @NonNull final String requiredBrokerProtocol) {
 
