@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Kini Anda dapat menghapus kartu pintar</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Mengerti</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Izinkan aplikasi ini mengakses kamera Anda?</string>
+    <string name="qr_code_rationale_message">Anda kemudian dapat masuk menggunakan kode QR.</string>
+    <string name="qr_code_rationale_allow">Izinkan</string>
+    <string name="qr_code_rationale_block">Blokir</string>
 </resources>

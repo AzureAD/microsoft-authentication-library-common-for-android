@@ -34,6 +34,7 @@ import java.util.Set;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Device;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 
+@Deprecated
 final public class TelemetryPiiOiiRules {
     private static TelemetryPiiOiiRules sInstance;
     private Set<String> piiPropertiesSet;

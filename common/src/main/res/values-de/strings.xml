@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Sie können jetzt Ihre Smartcard entfernen.</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Verstanden</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Zulassen, dass diese App auf Ihre Kamera zugreift?</string>
+    <string name="qr_code_rationale_message">Sie können sich dann mit einem QR-Code anmelden.</string>
+    <string name="qr_code_rationale_allow">Zulassen</string>
+    <string name="qr_code_rationale_block">Blockieren</string>
 </resources>

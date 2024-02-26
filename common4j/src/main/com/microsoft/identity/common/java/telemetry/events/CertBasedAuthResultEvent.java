@@ -30,6 +30,7 @@ import lombok.NonNull;
 /**
  * Event specifically for emitting certificate-based authentication (CBA) result information.
  */
+@Deprecated
 public class CertBasedAuthResultEvent extends BaseEvent {
 
     /**
