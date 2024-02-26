@@ -42,6 +42,7 @@ import lombok.NonNull;
  * TelemetryContext for Android.
  * Containing Android Metadata. It also persists data in SharedPreferences.
  */
+@Deprecated
 public class AndroidTelemetryContext extends AbstractTelemetryContext {
 
     private static final String TAG = AndroidTelemetryContext.class.getSimpleName();

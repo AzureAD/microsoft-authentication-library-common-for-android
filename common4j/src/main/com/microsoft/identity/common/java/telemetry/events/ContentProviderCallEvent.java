@@ -29,6 +29,7 @@ import lombok.NonNull;
 /**
  * Telemetry Event to capture details about a content provider call from broker
  */
+@Deprecated
 public class ContentProviderCallEvent extends BaseEvent {
     /**
      * Constructor for ContentProviderCallEvent

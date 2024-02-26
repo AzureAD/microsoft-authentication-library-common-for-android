@@ -1,6 +1,7 @@
 V.Next
 ---------
 - [MINOR] Request camera permission on the WebViewAuthorizationFragment (#2258)
+- [MINOR] Deprecate legacy telemetry code (#2327)
 - [PATCH] Update nimbus-jose-jwt 9.37.3 (#2326)
 - [MINOR] Gracefully handles unexpected error in encryption layer (#2318)
 
