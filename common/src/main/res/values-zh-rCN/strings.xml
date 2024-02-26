@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">现在可以取下智能卡</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">知道了</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">是否允许此应用访问相机?</string>
+    <string name="qr_code_rationale_message">然后可以使用 QR 码登录。</string>
+    <string name="qr_code_rationale_allow">允许</string>
+    <string name="qr_code_rationale_block">阻止</string>
 </resources>

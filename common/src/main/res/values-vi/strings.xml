@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Giờ đây, bạn có thể loại bỏ thẻ thông minh của mình</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Đã hiểu</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Cho phép ứng dụng này truy nhập camera của bạn?</string>
+    <string name="qr_code_rationale_message">Sau đó, bạn có thể đăng nhập bằng mã QR.</string>
+    <string name="qr_code_rationale_allow">Cho phép</string>
+    <string name="qr_code_rationale_block">Chặn</string>
 </resources>

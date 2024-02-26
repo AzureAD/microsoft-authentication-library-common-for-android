@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">يمكنك الآن إزالة بطاقتك الذكية</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">حسناً</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">هل تريد السماح لهذا التطبيق بالوصول إلى الكاميرا لديك؟</string>
+    <string name="qr_code_rationale_message">يمكنك بعدها تسجيل الدخول باستخدام شفرة استجابة سريعة.</string>
+    <string name="qr_code_rationale_allow">سماح</string>
+    <string name="qr_code_rationale_block">منع</string>
 </resources>

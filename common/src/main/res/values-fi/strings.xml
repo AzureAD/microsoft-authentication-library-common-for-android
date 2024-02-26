@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Voit nyt poistaa älykortin</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Selvä</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Annatko tälle sovellukselle oikeuden käyttää kameraa?</string>
+    <string name="qr_code_rationale_message">Tämän jälkeen voit kirjautua sisään QR-koodilla.</string>
+    <string name="qr_code_rationale_allow">Salli</string>
+    <string name="qr_code_rationale_block">Estä</string>
 </resources>
