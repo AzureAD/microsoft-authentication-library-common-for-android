@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [MINOR] Clear active broker cache if the active broker doesn't support the ipc mechanism (#2331)
 - [MINOR] Changes to support safe deserialization of KeyPair in Linux (#2319)
 - [MINOR] Request camera permission on the WebViewAuthorizationFragment (#2258)
 - [MINOR] Deprecate legacy telemetry code (#2327)
