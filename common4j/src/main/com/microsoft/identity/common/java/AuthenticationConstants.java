@@ -503,6 +503,10 @@ public class AuthenticationConstants {
         public static final String DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME = "wpj";
     }
 
+    /**
+     * Represents the constants for broker.
+     */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class Broker {
 
         /**
