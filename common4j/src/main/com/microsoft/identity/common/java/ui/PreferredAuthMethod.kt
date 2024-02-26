@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.ui
 
+import kotlin.jvm.Throws
+
 /**
  *  Authentication methods for the user.
  * This code will be sent to eSTS as a hint to what authentication method the user prefers.
@@ -39,8 +41,10 @@ enum class PreferredAuthMethod(@JvmField val code: Int, @JvmField val value: Str
     QR(18, "qrpin");
     companion object {
         @JvmStatic
+        @Throws(NoSuchElementException::class)
         fun fromCode(code: Int) = PreferredAuthMethod.values().first { it.code == code }
         @JvmStatic
+        @Throws(NoSuchElementException::class)
         fun fromValue(value: String?) = PreferredAuthMethod.values().first { it.value == value }
     }
 }

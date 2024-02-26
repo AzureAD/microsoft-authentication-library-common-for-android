@@ -88,6 +88,7 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
@@ -826,13 +827,25 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      * @return The {@link PreferredAuthMethod} if the bundle contains the key.
      * @throws BaseException If the bundle does not contain the key.
      */
-    public PreferredAuthMethod getIfQrPinIsAvailableFromResultBundle(@Nullable final Bundle bundle) throws BaseException {
+    public PreferredAuthMethod getPreferredAuthMethodFromResultBundle(@Nullable final Bundle bundle) throws BaseException {
+        final String methodTag = TAG + ":getPreferredAuthMethodFromResultBundle";
         if (bundle == null) {
             throw getExceptionForEmptyResultBundle();
         }
         if (!bundle.containsKey(PREFERRED_AUTH_METHOD_CODE)) {
             throw new MsalBrokerResultAdapter().getBaseExceptionFromBundle(bundle);
         }
-        return PreferredAuthMethod.fromCode(bundle.getInt(PREFERRED_AUTH_METHOD_CODE));
+        final int preferredAuthMethodCode = bundle.getInt(PREFERRED_AUTH_METHOD_CODE);
+        try {
+            return PreferredAuthMethod.fromCode(preferredAuthMethodCode);
+        } catch (final NoSuchElementException e) {
+            final ClientException exception = new ClientException(
+                    ClientException.CLIENT_UPDATE_REQUIRED,
+                    "Preferred auth method code "+ preferredAuthMethodCode +" not recognized.",
+                    e
+            );
+            Logger.error(methodTag, exception.getMessage(), exception);
+            throw exception;
+        }
     }
 }
