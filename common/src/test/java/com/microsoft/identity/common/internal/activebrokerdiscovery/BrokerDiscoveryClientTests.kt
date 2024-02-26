@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.activebrokerdiscovery
 import android.os.Bundle
 import com.microsoft.identity.common.exception.BrokerCommunicationException
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.prodCompanyPortal
+import com.microsoft.identity.common.internal.broker.BrokerData.Companion.prodLTW
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.prodMicrosoftAuthenticator
 import com.microsoft.identity.common.internal.broker.ipc.AbstractIpcStrategyWithServiceValidation
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle
@@ -77,6 +78,9 @@ class BrokerDiscoveryClientTests {
 
                     throw IllegalStateException()
                 }
+                override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+                    return true
+                }
                 override fun getType(): IIpcStrategy.Type {
                     return IIpcStrategy.Type.CONTENT_PROVIDER
                 }
@@ -113,6 +117,9 @@ class BrokerDiscoveryClientTests {
                         null
                     )
                 }
+                override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+                    return true
+                }
                 override fun getType(): IIpcStrategy.Type {
                     return IIpcStrategy.Type.CONTENT_PROVIDER
                 }
@@ -144,6 +151,9 @@ class BrokerDiscoveryClientTests {
             ipcStrategy = object : IIpcStrategy {
                 override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
                     throw ClientException(ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE)
+                }
+                override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+                    return true
                 }
                 override fun getType(): IIpcStrategy.Type {
                     return IIpcStrategy.Type.CONTENT_PROVIDER
@@ -201,6 +211,64 @@ class BrokerDiscoveryClientTests {
 
 
     /**
+     * If we have the LTW broker cached.
+     * The user uninstall + reinstall LTW, and somehow the new LTW doesn't have the broker discovery flight turned on.
+     *
+     * In such case, the cached value (LTW) should be wiped.
+     * Broker discovery should be triggered, and AuthApp should be persisted there.
+     **/
+    @Test
+    fun testQuery_UnsupportedBrokerErrorReturned_cacheInvalidated(){
+        val cache = InMemoryActiveBrokerCache()
+        cache.setCachedActiveBroker(prodLTW)
+
+        val client = BrokerDiscoveryClient(
+            brokerCandidates = setOf(
+                prodMicrosoftAuthenticator, prodCompanyPortal
+            ),
+            getActiveBrokerFromAccountManager = {
+                // Account Manager shouldn't be used.
+                throw IllegalStateException()
+            },
+            ipcStrategy = object : IIpcStrategy {
+                override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
+                    if (bundle.targetBrokerAppPackageName == prodMicrosoftAuthenticator.packageName ||
+                        bundle.targetBrokerAppPackageName == prodCompanyPortal.packageName) {
+                        val returnBundle = Bundle()
+                        returnBundle.putString(
+                            BrokerDiscoveryClient.ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY,
+                            prodMicrosoftAuthenticator.packageName
+                        )
+                        returnBundle.putString(
+                            BrokerDiscoveryClient.ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY,
+                            prodMicrosoftAuthenticator.signingCertificateThumbprint
+                        )
+                        return returnBundle
+                    }
+
+                    throw IllegalStateException()
+                }
+
+                override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+                    return targetedBrokerPackageName == prodMicrosoftAuthenticator.packageName ||
+                            targetedBrokerPackageName == prodCompanyPortal.packageName
+                }
+
+                override fun getType(): IIpcStrategy.Type {
+                    return IIpcStrategy.Type.CONTENT_PROVIDER
+                }
+            },
+            cache = cache,
+            isPackageInstalled =  {
+                it == prodMicrosoftAuthenticator || it == prodCompanyPortal || it == prodLTW
+            },
+            isValidBroker = { true }
+        )
+
+        Assert.assertEquals(prodMicrosoftAuthenticator, client.getActiveBroker())
+    }
+
+    /**
      * No Broker is installed.
      **/
     @Test
@@ -215,6 +283,9 @@ class BrokerDiscoveryClientTests {
             ipcStrategy = object : IIpcStrategy {
                 override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
                     throw IllegalStateException()
+                }
+                override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+                    return true
                 }
                 override fun getType(): IIpcStrategy.Type {
                     return IIpcStrategy.Type.CONTENT_PROVIDER
@@ -249,6 +320,9 @@ class BrokerDiscoveryClientTests {
                 override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
                     throw IllegalStateException()
                 }
+                override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+                    return true
+                }
                 override fun getType(): IIpcStrategy.Type {
                     return IIpcStrategy.Type.CONTENT_PROVIDER
                 }
@@ -281,6 +355,9 @@ class BrokerDiscoveryClientTests {
             ipcStrategy = object : IIpcStrategy {
                 override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
                     throw IllegalStateException()
+                }
+                override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+                    return true
                 }
                 override fun getType(): IIpcStrategy.Type {
                     return IIpcStrategy.Type.CONTENT_PROVIDER
@@ -315,6 +392,9 @@ class BrokerDiscoveryClientTests {
                 override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
                     throw IllegalStateException()
                 }
+                override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+                    return true
+                }
                 override fun getType(): IIpcStrategy.Type {
                     return IIpcStrategy.Type.CONTENT_PROVIDER
                 }
@@ -346,6 +426,9 @@ class BrokerDiscoveryClientTests {
             ipcStrategy = object : IIpcStrategy {
                 override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
                     throw IllegalStateException()
+                }
+                override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+                    return true
                 }
                 override fun getType(): IIpcStrategy.Type {
                     return IIpcStrategy.Type.CONTENT_PROVIDER
@@ -394,6 +477,9 @@ class BrokerDiscoveryClientTests {
                     }
 
                     throw IllegalStateException()
+                }
+                override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+                    return true
                 }
                 override fun getType(): IIpcStrategy.Type {
                     return IIpcStrategy.Type.CONTENT_PROVIDER
@@ -532,6 +618,9 @@ class BrokerDiscoveryClientTests {
 
                     throw UnsupportedOperationException("Unknown broker app.")
                 }
+                override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+                    return true
+                }
                 override fun getType(): IIpcStrategy.Type {
                     return IIpcStrategy.Type.CONTENT_PROVIDER
                 }
@@ -580,6 +669,9 @@ class BrokerDiscoveryClientTests {
                         null,
                         null
                     )
+                }
+                override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+                    return prodMicrosoftAuthenticator.packageName == targetedBrokerPackageName
                 }
                 override fun getType(): IIpcStrategy.Type {
                     return IIpcStrategy.Type.CONTENT_PROVIDER

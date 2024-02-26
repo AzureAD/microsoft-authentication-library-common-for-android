@@ -57,6 +57,10 @@ class IpcStrategyWithBackupTests {
             return resultBundle
         }
 
+        override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+            return true
+        }
+
         override fun getType(): IIpcStrategy.Type {
             return type
         }
@@ -78,7 +82,7 @@ class IpcStrategyWithBackupTests {
             )
         )
 
-        Assert.assertEquals(IIpcStrategy.Type.CONTENT_PROVIDER, strategy.type)
+        Assert.assertEquals(IIpcStrategy.Type.CONTENT_PROVIDER, strategy.getType())
     }
 
     // Test with 2 backups. the primary succeeds but all backup fails.
