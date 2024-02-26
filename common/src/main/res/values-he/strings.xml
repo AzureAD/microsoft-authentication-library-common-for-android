@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">כעת באפשרותך להסיר את הכרטיס החכם שלך</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">הבנתי</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">האם לאפשר לאפליקציה זו לגשת למצלמה שלך?</string>
+    <string name="qr_code_rationale_message">לאחר מכן תוכל להיכנס באמצעות קוד QR.</string>
+    <string name="qr_code_rationale_allow">אפשר</string>
+    <string name="qr_code_rationale_block">חסום</string>
 </resources>

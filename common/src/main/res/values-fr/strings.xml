@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Vous pouvez maintenant supprimer votre carte à puce</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">OK</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Autoriser cette application à accéder à votre caméra ?</string>
+    <string name="qr_code_rationale_message">Vous pouvez ensuite vous connecter avec un code QR.</string>
+    <string name="qr_code_rationale_allow">Autoriser</string>
+    <string name="qr_code_rationale_block">Bloquer</string>
 </resources>

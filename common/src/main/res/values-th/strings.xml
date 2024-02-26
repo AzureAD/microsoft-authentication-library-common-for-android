@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">ขณะนี้คุณสามารถเอาสมาร์ทการ์ดของคุณออกได้แล้ว</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">เข้าใจแล้ว</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">อนุญาตให้แอปนี้เข้าถึงกล้องของคุณหรือไม่</string>
+    <string name="qr_code_rationale_message">จากนั้นคุณสามารถลงชื่อเข้าใช้ด้วยคิวอาร์โค้ดได้</string>
+    <string name="qr_code_rationale_allow">อนุญาต</string>
+    <string name="qr_code_rationale_block">บล็อก</string>
 </resources>
