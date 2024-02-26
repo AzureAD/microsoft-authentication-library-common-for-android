@@ -43,6 +43,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
@@ -60,6 +61,7 @@ import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizatio
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -159,6 +161,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 new OnPageLoadedCallback() {
                     @Override
                     public void onPageLoaded(final String url) {
+                        // Reset the camera permission request when a new page is loaded.
+                        mCameraPermissionRequest = null;
                         final String[] javascriptToExecute = new String[1];
                         mProgressBar.setVisibility(View.INVISIBLE);
                         try {
@@ -241,8 +245,21 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
         mWebView.setWebChromeClient(new WebChromeClient() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
+                Logger.info(methodTag,
+                        "Permission requested from:" +request.getOrigin() +
+                                " for resources:" + Arrays.toString(request.getResources())
+                );
+
+                if (mCameraPermissionRequest != null) {
+                    // There is a issue in ESTS UX where it sends multiple camera permission requests.
+                    // So, if there is already a camera permission request in progress we deny the new request.
+                    Logger.info(methodTag, "Camera permission request already exists.");
+                    request.deny();
+                    return;
+                }
                 // We can only grant or deny permissions for video capture/camera.
                 // To avoid unintentionally granting requests for not defined permissions.
                 if (isPermissionRequestForCamera(request)) {
