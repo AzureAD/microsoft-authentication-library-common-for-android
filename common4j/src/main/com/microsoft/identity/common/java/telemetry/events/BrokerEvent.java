@@ -29,6 +29,7 @@ import lombok.NonNull;
 /**
  * A generic broker event. This can be used to emit any kind of event in the broker. e.g. an event with the IPC strategy.
  */
+@Deprecated
 public class BrokerEvent extends BaseEvent {
     public BrokerEvent(final String eventName) {
         super();

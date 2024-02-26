@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry;
 
+@Deprecated
 public class TelemetryEventStrings {
     private static final String EVENT_PREFIX = "Microsoft.MSAL.";
 
