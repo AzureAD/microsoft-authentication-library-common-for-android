@@ -212,7 +212,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                     if(!ipcStrategy.isSupportedByTargetedBroker(it.packageName)){
                         Logger.info(
                             methodTag,
-                            "Clearing cache as the installed app does not provide any IPC mechanism to communicate to. (e.g. the broker code isn't shipped)"
+                            "Clearing cache as the installed app does not provide any IPC mechanism to communicate to. (e.g. the broker code isn't shipped with this apk)"
                         )
                         cache.clearCachedActiveBroker()
                         return@let
