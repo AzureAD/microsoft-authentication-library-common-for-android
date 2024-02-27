@@ -42,6 +42,11 @@ resources:
     name: AzureAD/azure-activedirectory-library-for-android
     ref: dev
     endpoint: ANDROID_GITHUB
+  - repository: OneAuth
+    type: git
+    name: OneAuth/OneAuthAndroidCommonWrapper
+    ref: main
+    endpoint: OneAuthServiceConnection_3
 
 stages:
 - stage: getLabel
