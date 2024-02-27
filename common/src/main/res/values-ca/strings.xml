@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Ara ja podeu suprimir la targeta intel·ligent</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Entesos</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Voleu permetre que aquesta aplicació accedeixi a la càmera?</string>
+    <string name="qr_code_rationale_message">A continuació, podreu iniciar la sessió amb un codi QR.</string>
+    <string name="qr_code_rationale_allow">Permet</string>
+    <string name="qr_code_rationale_block">Bloqueja</string>
 </resources>

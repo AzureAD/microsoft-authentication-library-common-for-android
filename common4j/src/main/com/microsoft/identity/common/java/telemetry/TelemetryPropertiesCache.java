@@ -31,6 +31,7 @@ import java.util.UUID;
 /**
  * Tracks properties used in telemetry.
  */
+@Deprecated
 public class TelemetryPropertiesCache {
 
     // region Cached Properties
