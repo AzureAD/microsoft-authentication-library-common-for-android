@@ -270,3 +270,81 @@ stages:
         tasks: adal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
         jdkArchitecture: x64
         jdkVersionOption: "1.11"
+
+    # OneAuth
+  - job: oneAuthValidation
+    displayName: OneAuth
+    dependsOn: setupBranch
+    variables:
+      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    steps:
+      - checkout: OneAuth
+        displayName: Checkout OneAuth repository
+        clean: true
+        submodules: true
+        persistCredentials: True
+      - task: CmdLine@2
+        displayName: Checkout OneAuthAndroidCommonWrapper
+        inputs:
+          script: |
+            git fetch
+            git checkout main
+            git pull
+            git status
+            git rev-parse HEAD
+          workingDirectory: $(Agent.BuildDirectory)/s/
+      - task: CmdLine@2
+        displayName: Checkout common submodule $(commonBranch)
+        inputs:
+          script: |
+            git fetch
+            git checkout $(commonBranch)
+            git pull
+            git status
+            git rev-parse HEAD
+          workingDirectory: $(Agent.BuildDirectory)/s/common
+      - task: CmdLine@2
+        displayName: Checkout OneAuth submodule $(oneAuthBranchName)
+        inputs:
+          script: |
+            git fetch
+            git checkout $(oneAuthBranchName)
+            git pull
+            git status
+            git rev-parse HEAD
+          workingDirectory: $(Agent.BuildDirectory)/s/OneAuth
+
+      - task: MavenAuthenticate@0
+        displayName: Authenticate to the IdentityDivision Android Maven feed
+        inputs:
+          MavenServiceConnections: IdentityDivision
+
+      - task: MavenAuthenticate@0
+        displayName: Authenticate to the Intune_App_SDK feed
+        inputs:
+          MavenServiceConnections: Intune_App_SDK
+
+      - task: Bash@3
+        displayName: Install ninja
+        inputs:
+          targetType: inline
+          script: |
+            if [[ "$AGENT_OS" == "Darwin" ]]; then
+              HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_AUTO_UPDATE=1 brew install ninja
+            elif [[ "$AGENT_OS" == "Windows_NT" ]]; then
+              choco install -y ninja
+            elif [[ "$AGENT_OS" == "Linux" ]]; then
+              sudo apt-get install -y ninja-build
+            fi
+      - task: Gradle@2
+        displayName: Assemble OneAuth
+        inputs:
+          cwd: $(Agent.BuildDirectory)/s/
+          gradleWrapperFile: $(Agent.BuildDIrectory)/s/gradlew.bat
+          tasks: clean OneAuth:assembleLocalDebug
+      - task: Gradle@2
+        displayName: Run OneAuth Unit tests
+        inputs:
+          cwd: $(Agent.BuildDirectory)/s/
+          gradleWrapperFile: $(Agent.BuildDIrectory)/s/gradlew.bat
+          tasks: OneAuth:testLocalDebugUnitTest
