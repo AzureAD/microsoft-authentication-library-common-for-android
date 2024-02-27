@@ -212,7 +212,7 @@ class BrokerDiscoveryClientTests {
 
     /**
      * If we have the LTW broker cached.
-     * The user uninstall + reinstall LTW, and somehow the new LTW doesn't have the broker discovery flight turned on.
+     * The user uninstall + reinstall LTW, and somehow the new LTW doesn't have the broker code.
      *
      * In such case, the cached value (LTW) should be wiped.
      * Broker discovery should be triggered, and AuthApp should be persisted there.
