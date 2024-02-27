@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [PATCH] Handle repeated camera requests. (#2332)
 - [MINOR] Changes to support safe deserialization of KeyPair in Linux (#2319)
 - [MINOR] Request camera permission on the WebViewAuthorizationFragment (#2258)
 - [MINOR] Deprecate legacy telemetry code (#2327)
