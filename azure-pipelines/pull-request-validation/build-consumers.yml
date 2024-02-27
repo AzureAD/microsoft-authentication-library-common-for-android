@@ -324,23 +324,18 @@ stages:
         inputs:
           MavenServiceConnections: IdentityDivision
 
-      - task: MavenAuthenticate@0
-        displayName: Authenticate to the Intune_App_SDK feed
-        inputs:
-          MavenServiceConnections: Intune_App_SDK
-
-      - task: Bash@3
-        displayName: Install ninja
-        inputs:
-          targetType: inline
-          script: |
-            if [[ "$AGENT_OS" == "Darwin" ]]; then
-              HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_AUTO_UPDATE=1 brew install ninja
-            elif [[ "$AGENT_OS" == "Windows_NT" ]]; then
-              choco install -y ninja
-            elif [[ "$AGENT_OS" == "Linux" ]]; then
-              sudo apt-get install -y ninja-build
-            fi
+#      - task: Bash@3
+#        displayName: Install ninja
+#        inputs:
+#          targetType: inline
+#          script: |
+#            if [[ "$AGENT_OS" == "Darwin" ]]; then
+#              HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_AUTO_UPDATE=1 brew install ninja
+#            elif [[ "$AGENT_OS" == "Windows_NT" ]]; then
+#              choco install -y ninja
+#            elif [[ "$AGENT_OS" == "Linux" ]]; then
+#              sudo apt-get install -y ninja-build
+#            fi
       - task: Gradle@2
         displayName: Assemble OneAuth
         inputs:
