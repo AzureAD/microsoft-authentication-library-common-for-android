@@ -260,7 +260,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     request.deny();
                     return;
                 }
-                Logger.info(methodTag, "Camera request received.");
                 // There is a issue in ESTS UX where it sends multiple camera permission requests.
                 // So, if there is already a camera permission request in progress we handle it here.
                 if (mCameraPermissionRequest != null) {
@@ -294,13 +293,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void handleRecurrentRequests(@NonNull final PermissionRequest request) {
         final String methodTag = TAG + ":handleRecurrentRequests";
-        Logger.info(methodTag, "Camera permission request already exists.");
         if (isCameraPermissionGranted()) {
+            Logger.info(methodTag, "Camera permission request already exists,granting the permission.");
             final String[] cameraPermission = new String[] {
                     PermissionRequest.RESOURCE_VIDEO_CAPTURE
             };
             request.grant(cameraPermission);
         } else {
+            Logger.info(methodTag, "Camera permission request already exists, denying the permission");
             request.deny();
         }
     }
