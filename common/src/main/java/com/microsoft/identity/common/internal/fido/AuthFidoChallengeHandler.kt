@@ -165,7 +165,7 @@ class AuthFidoChallengeHandler (
         )
         webView.post {
             Logger.info(methodTag, "Responding to Fido challenge.")
-            webView.loadUrl(submitUrl + "&dc=ESTS-PUB-SCUS-LZ1-FD000-TEST1&fidotest=true", header)
+            webView.loadUrl(submitUrl + "&dc=ESTS-PUB-SEASLR1-AZ3-FD000-TEST1&fidotest=true", header)
         }
     }
 
