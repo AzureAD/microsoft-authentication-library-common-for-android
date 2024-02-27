@@ -318,11 +318,20 @@ stages:
             git status
             git rev-parse HEAD
           workingDirectory: $(Agent.BuildDirectory)/s/OneAuth
-
-      - task: MavenAuthenticate@0
-        displayName: Authenticate to the IdentityDivision Android Maven feed
+      - task: PythonScript@0
+        displayName: OneAuth Android Instrumented Test
         inputs:
-          MavenServiceConnections: IdentityDivision
+          scriptPath: build.py
+          arguments: --platform android --configuration debug --arch x64 --test --djinni-mode hashfail --automation-secret $(AndroidAutomationRunnerAppSecret) $(androidCommonVersionPyArg)
+      - task: PublishTestResults@2
+        displayName: Publish Instrumented Test Results
+        inputs:
+          testResultsFiles: sources/android/gradle/build/outputs/androidTest-results/connected/flavors/**/*.xml
+        condition: succeededOrFailed()
+#      - task: MavenAuthenticate@0
+#        displayName: Authenticate to the IdentityDivision Android Maven feed
+#        inputs:
+#          MavenServiceConnections: IdentityDivision
 
 #      - task: Bash@3
 #        displayName: Install ninja
@@ -336,15 +345,15 @@ stages:
 #            elif [[ "$AGENT_OS" == "Linux" ]]; then
 #              sudo apt-get install -y ninja-build
 #            fi
-      - task: Gradle@2
-        displayName: Assemble OneAuth
-        inputs:
-          cwd: $(Agent.BuildDirectory)/s/
-          gradleWrapperFile: $(Agent.BuildDIrectory)/s/gradlew.bat
-          tasks: clean OneAuth:assembleLocalDebug
-      - task: Gradle@2
-        displayName: Run OneAuth Unit tests
-        inputs:
-          cwd: $(Agent.BuildDirectory)/s/
-          gradleWrapperFile: $(Agent.BuildDIrectory)/s/gradlew.bat
-          tasks: OneAuth:testLocalDebugUnitTest
+#      - task: Gradle@2
+#        displayName: Assemble OneAuth
+#        inputs:
+#          cwd: $(Agent.BuildDirectory)/s/
+#          gradleWrapperFile: $(Agent.BuildDIrectory)/s/gradlew.bat
+#          tasks: clean OneAuth:assembleLocalDebug
+#      - task: Gradle@2
+#        displayName: Run OneAuth Unit tests
+#        inputs:
+#          cwd: $(Agent.BuildDirectory)/s/
+#          gradleWrapperFile: $(Agent.BuildDIrectory)/s/gradlew.bat
+#          tasks: OneAuth:testLocalDebugUnitTest
