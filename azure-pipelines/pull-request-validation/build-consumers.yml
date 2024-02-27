@@ -286,7 +286,7 @@ stages:
       - checkout: OneAuth
         displayName: Checkout OneAuth repository
         clean: true
-        submodules: true
+        submodules: recursive
         persistCredentials: True
       - task: CmdLine@2
         displayName: Checkout OneAuthAndroidCommonWrapper
@@ -321,7 +321,7 @@ stages:
       - task: PythonScript@0
         displayName: OneAuth Android Instrumented Test
         inputs:
-          scriptPath: build.py
+          scriptPath: $(Agent.BuildDirectory)/s/OneAuth/build.py
           arguments: --platform android --configuration debug --arch x64 --test --djinni-mode hashfail --automation-secret $(AndroidAutomationRunnerAppSecret) $(androidCommonVersionPyArg)
       - task: PublishTestResults@2
         displayName: Publish Instrumented Test Results
