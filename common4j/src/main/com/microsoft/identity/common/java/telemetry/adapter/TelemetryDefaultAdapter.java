@@ -29,6 +29,7 @@ import com.microsoft.identity.common.java.telemetry.observers.ITelemetryDefaultO
 import java.util.List;
 import java.util.Map;
 
+@Deprecated
 public final class TelemetryDefaultAdapter implements ITelemetryAdapter<List<Map<String, String>>> {
     private ITelemetryDefaultObserver mObserver;
 

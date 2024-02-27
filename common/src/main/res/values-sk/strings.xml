@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Teraz môžete inteligentnú kartu odobrať</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Rozumiem</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Chcete povoliť tejto aplikácii prístup k svojmu fotoaparátu?</string>
+    <string name="qr_code_rationale_message">Potom sa môžete prihlásiť pomocou QR kódu.</string>
+    <string name="qr_code_rationale_allow">Povoliť</string>
+    <string name="qr_code_rationale_block">Blokovať</string>
 </resources>

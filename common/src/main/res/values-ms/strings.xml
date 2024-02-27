@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Anda kini boleh mengalih keluar kad pintar anda</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Faham</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Benarkan aplikasi ini mencapai kamera anda?</string>
+    <string name="qr_code_rationale_message">Anda kemudiannya boleh mendaftar masuk dengan kod QR.</string>
+    <string name="qr_code_rationale_allow">Benarkan</string>
+    <string name="qr_code_rationale_block">Sekat</string>
 </resources>

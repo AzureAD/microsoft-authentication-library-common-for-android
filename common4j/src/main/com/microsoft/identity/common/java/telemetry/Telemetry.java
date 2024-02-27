@@ -55,6 +55,7 @@ import lombok.NonNull;
  * A singleton class for logging Telemetry.
  * Must be instantiated via {@link Telemetry.Builder} before use.
  */
+@Deprecated
 public class Telemetry {
     private final static String TAG = Telemetry.class.getSimpleName();
     private static volatile Telemetry sTelemetryInstance = null;

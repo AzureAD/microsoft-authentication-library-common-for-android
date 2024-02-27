@@ -88,21 +88,22 @@ public class EncryptedNameValueStorage<T> implements INameValueStorage<T> {
     @Nullable
     @Override
     public T get(@NonNull final String name) {
+        final String methodTag = TAG + ":get";
+
         final String encryptedString = mRawNameValueStorage.get(name);
-
         if (StringUtil.isNullOrEmpty(encryptedString)) {
+            Logger.info(methodTag, "Data associated to the given key is null or empty", null);
+            remove(name);
             return null;
         }
 
-        final String decryptedString = decrypt(encryptedString);
-
-        if (StringUtil.isNullOrEmpty(decryptedString)) {
-            // This is what the Android Broker's SharedPreferencesFileManager does right now
-            logWarningAndRemoveKey(name);
+        try {
+            final String decryptedString = mEncryptionManager.decrypt(encryptedString);
+            return mStringAdapter.adapt(decryptedString);
+        } catch (final ClientException e){
+            Logger.error(methodTag, "Failed to read encrypted value", null);
             return null;
         }
-
-        return mStringAdapter.adapt(decryptedString);
     }
 
     @Override
@@ -123,19 +124,28 @@ public class EncryptedNameValueStorage<T> implements INameValueStorage<T> {
 
     @Override
     public void put(@NonNull final String name, @Nullable final T value) {
+        final String methodTag = TAG + ":put";
+
         if (value == null) {
             mRawNameValueStorage.put(name, null);
             return;
         }
 
         final String adaptedValue = mStringAdapter.adapt(value);
-
         if (StringUtil.isNullOrEmpty(adaptedValue)) {
             mRawNameValueStorage.put(name, adaptedValue);
             return;
         }
 
-        final String encryptedValue = encrypt(adaptedValue);
+        // If the encryption fails, write null to the storage.
+        // This might not be the right behavior, but it's possible that PROD relies on this.
+        String encryptedValue = null;
+        try {
+            encryptedValue = mEncryptionManager.encrypt(adaptedValue);
+        } catch (final ClientException e) {
+            Logger.error(methodTag, "Failed to store encrypted value", null);
+        }
+
         mRawNameValueStorage.put(name, encryptedValue);
     }
 
@@ -163,47 +173,5 @@ public class EncryptedNameValueStorage<T> implements INameValueStorage<T> {
             }
         }
         return newMap.entrySet().iterator();
-    }
-
-    @Nullable
-    private String encrypt(@NonNull final String clearText) {
-        return encryptDecryptInternal(clearText, true);
-    }
-
-    @Nullable
-    private String decrypt(@NonNull final String encryptedBlob) {
-        return encryptDecryptInternal(encryptedBlob, false);
-    }
-
-    @Nullable
-    private String encryptDecryptInternal(
-            @NonNull final String inputText,
-            final boolean encrypt) {
-        final String methodName = "encryptDecryptInternal";
-
-        try {
-            return encrypt
-                    ? mEncryptionManager.encrypt(inputText)
-                    : mEncryptionManager.decrypt(inputText);
-        } catch (final ClientException e) {
-            Logger.error(
-                    TAG + ":" + methodName,
-                    "Failed to " + (encrypt ? "encrypt" : "decrypt") + " value",
-                    encrypt
-                            ? null // If we failed to encrypt, don't log the error as it may contain a token
-                            : e // If we failed to decrypt, we couldn't see that secret value so log the error
-            );
-            return null;
-        }
-    }
-
-    private void logWarningAndRemoveKey(@NonNull final String key) {
-        Logger.warn(
-                TAG,
-                "Failed to decrypt value! "
-                        + "This usually signals an issue with KeyStore or the provided SecretKeys."
-        );
-
-        remove(key);
     }
 }

@@ -46,6 +46,7 @@ import javax.annotation.Nullable;
 
 import lombok.NonNull;
 
+@Deprecated
 public class ApiStartEvent extends BaseEvent {
     private static final String TAG = ApiStartEvent.class.getSimpleName();
 

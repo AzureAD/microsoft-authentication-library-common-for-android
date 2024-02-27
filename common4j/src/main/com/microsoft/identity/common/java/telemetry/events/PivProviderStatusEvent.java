@@ -27,6 +27,7 @@ import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 /**
  * Event for emitting status information of when a PivProvider is present, added, or removed from the Security static list.
  */
+@Deprecated
 public class PivProviderStatusEvent extends BaseEvent {
 
     /**
