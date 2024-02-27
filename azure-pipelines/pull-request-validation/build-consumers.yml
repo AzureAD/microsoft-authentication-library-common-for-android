@@ -321,7 +321,7 @@ stages:
       - task: PythonScript@0
         displayName: OneAuth Android Instrumented Test
         inputs:
-          scriptPath: $(Agent.BuildDirectory)/s/build.py
+          scriptPath: $(Agent.BuildDirectory)/s/OneAuth/msal/build.py
           arguments: --platform android --configuration debug --arch x64 --test --djinni-mode hashfail --automation-secret $(AndroidAutomationRunnerAppSecret) $(androidCommonVersionPyArg)
       - task: PublishTestResults@2
         displayName: Publish Instrumented Test Results
