@@ -263,9 +263,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // There is a issue in ESTS UX where it sends multiple camera permission requests.
                 // So, if there is already a camera permission request in progress we handle it here.
                 if (mCameraPermissionRequest != null) {
-                    handleRecurrentRequests(request);
+                    handleRepeatedRequests(request);
                     return;
                 }
+                Logger.info(methodTag, "New camera request.");
                 mCameraPermissionRequest = request;
                 if (isCameraPermissionGranted()) {
                     Logger.info(methodTag, "Camera permission already granted.");
@@ -282,7 +283,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     }
 
     /**
-     * Handles the recurrent camera permission requests.
+     * Handles repeated camera permission requests.
      * if the camera permission has been granted, it will grant the permission to the request.
      * Otherwise, it will deny the permission to the request.
      * <p>
@@ -291,16 +292,16 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      * @param request The permission request.
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private void handleRecurrentRequests(@NonNull final PermissionRequest request) {
-        final String methodTag = TAG + ":handleRecurrentRequests";
+    private void handleRepeatedRequests(@NonNull final PermissionRequest request) {
+        final String methodTag = TAG + ":handleRepeatedRequests";
         if (isCameraPermissionGranted()) {
-            Logger.info(methodTag, "Camera permission request already exists,granting the permission.");
+            Logger.info(methodTag, "Repeated request, granting the permission.");
             final String[] cameraPermission = new String[] {
                     PermissionRequest.RESOURCE_VIDEO_CAPTURE
             };
             request.grant(cameraPermission);
         } else {
-            Logger.info(methodTag, "Camera permission request already exists, denying the permission");
+            Logger.info(methodTag, "Repeated request, denying the permission");
             request.deny();
         }
     }
