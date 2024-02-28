@@ -1,7 +1,6 @@
 V.Next
 ---------
 - [MINOR] Rename "is QR + PIN available" API to "get preferred auth method". (#2288)
-- [PATCH] Handle Receiver Callback Exception in CommandDispatcher interactive command (#2315)
 - [MINOR] Request camera permission on the WebViewAuthorizationFragment (#2258)
 - [MINOR] Deprecate legacy telemetry code (#2327)
 - [PATCH] Update nimbus-jose-jwt 9.37.3 (#2326)

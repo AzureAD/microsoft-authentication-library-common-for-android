@@ -37,6 +37,7 @@ enum class PreferredAuthMethod(@JvmField val code: Int, @JvmField val value: Str
 
     /**
      * QR code + PIN authentication.
+     * 18 is the code for QR code + PIN authentication on ESTS.
      */
     QR(18, "qrpin");
     companion object {
