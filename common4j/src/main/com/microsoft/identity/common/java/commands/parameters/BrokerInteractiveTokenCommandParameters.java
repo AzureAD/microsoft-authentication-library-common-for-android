@@ -77,6 +77,8 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     @Expose
     private final String homeTenantId;
 
+    private final IWorkplaceJoinData workplaceJoinData;
+
     @Override
     public void validate() throws ArgumentException {
         super.validate();

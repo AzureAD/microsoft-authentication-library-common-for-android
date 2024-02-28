@@ -56,6 +56,8 @@ public class BrokerDeviceCodeFlowCommandParameters extends DeviceCodeFlowCommand
     private final int sleepTimeBeforePrtAcquisition;
     private final int callerUid;
 
+    private final IWorkplaceJoinData workplaceJoinData;
+
     @Override
     public void validate() throws ArgumentException {
         super.validate();

@@ -113,4 +113,6 @@ public interface IBrokerTokenCommandParameters {
         return getRequestType() == BrokerRequestType.BROKER_RT_REQUEST ||
                 getRequestType() == BrokerRequestType.RESOLVE_INTERRUPT;
     }
+
+    IWorkplaceJoinData getWorkplaceJoinData();
 }
