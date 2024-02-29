@@ -7,7 +7,7 @@ V.Next
 - [PATCH] Update nimbus-jose-jwt 9.37.3 (#2326)
 - [MINOR] Gracefully handles unexpected error in encryption layer (#2318)
 - [MINOR] Add support for CIAM custom domain (#2314)
-- [MINOR] Minor updates to passkey response logic
+- [MINOR] Minor updates to passkey response logic (#2334)
 
 V.17.1.1
 ---------
