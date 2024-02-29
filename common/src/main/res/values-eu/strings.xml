@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Txartel adimenduna kendu dezakezu orain</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Ados</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Kamera erabiltzen utzi nahi diozu aplikazio honi?</string>
+    <string name="qr_code_rationale_message">Ondoren, hasi saioa QR kode batekin.</string>
+    <string name="qr_code_rationale_allow">Onartu</string>
+    <string name="qr_code_rationale_block">Blokeatu</string>
 </resources>

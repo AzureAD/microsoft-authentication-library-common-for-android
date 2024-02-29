@@ -27,6 +27,7 @@ package com.microsoft.identity.common.java.telemetry;
  * Temporary interface.
  * For injecting telemetry into common (until broker's telemetry is properly wired up).
  * */
+@Deprecated
 public interface ITelemetryCallback {
     void logEvent(final String operation, final Boolean isFailed, final String reason);
 }

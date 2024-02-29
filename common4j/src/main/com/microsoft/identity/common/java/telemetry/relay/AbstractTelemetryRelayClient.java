@@ -33,6 +33,7 @@ import lombok.NonNull;
  *
  * @param <T>
  */
+@Deprecated
 public abstract class AbstractTelemetryRelayClient<T> implements ITelemetryObserver<T> {
 
     private static final String TAG = AbstractTelemetryRelayClient.class.getSimpleName();

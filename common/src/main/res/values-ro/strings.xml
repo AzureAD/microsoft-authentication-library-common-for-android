@@ -63,4 +63,9 @@
     <string name="smartcard_removal_prompt_dialog_title">Acum vă puteți elimina smart card-ul</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Am înțeles</string>
 
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Permiteți acestei aplicații să vă acceseze camera?</string>
+    <string name="qr_code_rationale_message">Apoi vă puteți conecta cu un cod QR.</string>
+    <string name="qr_code_rationale_allow">Permiteți</string>
+    <string name="qr_code_rationale_block">Blocați</string>
 </resources>

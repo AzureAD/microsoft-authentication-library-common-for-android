@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Du kan nu fjerne dit chipkort</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Forstået</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Vil du tillade, at denne app får adgang til dit kamera?</string>
+    <string name="qr_code_rationale_message">Du kan derefter logge på med en QR-kode.</string>
+    <string name="qr_code_rationale_allow">Tillad</string>
+    <string name="qr_code_rationale_block">Bloker</string>
 </resources>

@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry.adapter;
 
+@Deprecated
 public interface ITelemetryAdapter<T> {
     //Future extensibility void process(T observable, Rule rule);
     void process(T observable);

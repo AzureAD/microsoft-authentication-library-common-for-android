@@ -34,6 +34,7 @@ import lombok.NonNull;
  * Telemetry properties cache for Android.
  * Use Shared Preference as storage.
  * */
+@Deprecated
 public class AndroidTelemetryPropertiesCache extends TelemetryPropertiesCache {
 
     private static final String SHARED_PREFS_NAME = "com.microsoft.common.telemetry-properties";

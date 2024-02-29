@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Võite nüüd kiipkaardi eemaldada</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Sain aru</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Kas lubate sellel rakendusel kaamerale juurde pääseda?</string>
+    <string name="qr_code_rationale_message">Seejärel saate sisse logida QR-koodiga.</string>
+    <string name="qr_code_rationale_allow">Luba</string>
+    <string name="qr_code_rationale_block">Blokeeri</string>
 </resources>

@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 /**
  * An error event captures an Exception and extracts details from it.
  */
+@Deprecated
 public class ErrorEvent extends BaseEvent {
 
     public static final String ERROR_TAG_PREFIX = "tag_";

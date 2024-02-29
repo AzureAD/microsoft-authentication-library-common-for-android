@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">अब आप अपना स्मार्ट कार्ड निकाल सकते हैं</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">समझ गया</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">इस ऐप को आपके कैमरे तक पहुँचने की अनुमति दें?</string>
+    <string name="qr_code_rationale_message">फिर आप QR कोड के साथ साइन इन कर सकते हैं.</string>
+    <string name="qr_code_rationale_allow">अनुमति दें</string>
+    <string name="qr_code_rationale_block">ब्लॉक</string>
 </resources>
