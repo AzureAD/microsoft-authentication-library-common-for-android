@@ -49,12 +49,12 @@ class IpcStrategyWithBackup (
                     val result = ipc.communicateToBroker(bundle)
                     SpanExtension.current().setAttribute(
                         AttributeName.backup_ipc_used.name,
-                        ipc.type.name
+                        ipc.getType().name
                     )
-                    Logger.info(methodTag, "${ipc.type.name} backup ipc succeeded.")
+                    Logger.info(methodTag, "${ipc.getType().name} backup ipc succeeded.")
                     return result
                 } catch (t: Throwable) {
-                    Logger.info(methodTag, "${ipc.type.name} backup ipc failed : ${t.message}")
+                    Logger.info(methodTag, "${ipc.getType().name} backup ipc failed : ${t.message}")
                 }
             }
             // If all backup fails... throw the original error.
@@ -62,7 +62,11 @@ class IpcStrategyWithBackup (
         }
     }
 
+    override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+        return primary.isSupportedByTargetedBroker(targetedBrokerPackageName)
+    }
+
     override fun getType(): IIpcStrategy.Type {
-        return primary.type
+        return primary.getType()
     }
 }
