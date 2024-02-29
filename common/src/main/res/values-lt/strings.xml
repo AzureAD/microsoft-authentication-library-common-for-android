@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Dabar galite pašalinti savo intelektualiąją kortelę</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Supratau</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Leisti šiai programėlei pasiekti jūsų fotoaparatą?</string>
+    <string name="qr_code_rationale_message">Tada galėsite prisijungti naudodami QR kodą.</string>
+    <string name="qr_code_rationale_allow">Leisti</string>
+    <string name="qr_code_rationale_block">Blokuoti</string>
 </resources>

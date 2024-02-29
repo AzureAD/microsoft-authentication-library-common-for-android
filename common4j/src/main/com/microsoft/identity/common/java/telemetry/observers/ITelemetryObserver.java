@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.telemetry.observers;
 /**
  * The interface function for apps to override if they want to get the Telemetry.
  */
+@Deprecated
 public interface ITelemetryObserver<T> {
 
     /**

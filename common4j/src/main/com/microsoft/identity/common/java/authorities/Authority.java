@@ -141,7 +141,7 @@ public abstract class Authority {
         if (pathSegments.size() == 0 || (pathSegments.size() == 1 && pathSegments.get(0).equals(""))) {
             if (authorityUrl.contains(CIAMAuthority.CIAM_LOGIN_URL_SEGMENT)){
                 // This is a CIAM authority, return CIAMAuthority
-                return new CIAMAuthority(CIAMAuthority.getFullAuthorityUrlFromAuthorityWithoutPath(authorityUrl));
+                return new CIAMAuthority(CIAMAuthority.getTenantNameVariantUrlFromAuthorityWithoutPath(authorityUrl));
             }
             return new UnknownAuthority();
         }

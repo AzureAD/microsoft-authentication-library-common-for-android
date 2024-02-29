@@ -49,7 +49,7 @@ public class MockDelayedResponseStrategy extends ResourceOwnerPasswordCredential
      * @param config Microsoft Sts OAuth2 configuration
      */
     public MockDelayedResponseStrategy(MicrosoftStsOAuth2Configuration config) throws ClientException {
-        super(config);
+        super(config, false);
     }
 
     @Override

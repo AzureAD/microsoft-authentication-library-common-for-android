@@ -7,7 +7,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  *
  * @see com.microsoft.identity.common.java.telemetry.TelemetryEventStrings
  * */
-// TODO @Deprecated
+@Deprecated
 @SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 public class TelemetryEventStrings extends com.microsoft.identity.common.java.telemetry.TelemetryEventStrings {
 }
