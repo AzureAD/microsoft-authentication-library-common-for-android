@@ -32,12 +32,16 @@ import android.webkit.HttpAuthHandler;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
+import androidx.webkit.WebSettingsCompat;
+import androidx.webkit.WebViewFeature;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ChallengeFactory;
@@ -203,6 +207,27 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     public void onPageStarted(final WebView view,
                               final String url,
                               final Bitmap favicon) {
+        final WebSettings webSettings = view.getSettings();
+        final boolean isFeatureSupported = WebViewFeature.isFeatureSupported(WebViewFeature.ENTERPRISE_AUTHENTICATION_APP_LINK_POLICY);
+
+        if (isFeatureSupported) {
+            Toast.makeText(getActivity(), "Feature is ENABLED", Toast.LENGTH_LONG).show();
+            Logger.info("MY_tag", "Feature is ENABLED");
+            final boolean isAuthAppLinkPolicyEnabled = WebSettingsCompat.getEnterpriseAuthenticationAppLinkPolicyEnabled(webSettings);
+
+            if (isAuthAppLinkPolicyEnabled) {
+                Toast.makeText(getActivity(), "Feature is ENABLED AND AuthAppPolicy is ENABLED", Toast.LENGTH_LONG).show();
+                Logger.info("MY_tag", "Feature is ENABLED AND AuthAppPolicy is ENABLED");
+            } else {
+                Toast.makeText(getActivity(), "Feature is ENABLED but AuthAppPolicy is DISABLED", Toast.LENGTH_LONG).show();
+                Logger.info("MY_tag", "Feature is ENABLED but AuthAppPolicy is DISABLED");
+            }
+        } else {
+            Toast.makeText(getActivity(), "Feature is DISABLED", Toast.LENGTH_LONG).show();
+            Logger.info("MY_tag", "Feature is DISABLED");
+        }
+
+
         final String methodTag = TAG + ":onPageStarted";
         checkStartUrl(url);
         Logger.info(methodTag,"WebView starts loading.");

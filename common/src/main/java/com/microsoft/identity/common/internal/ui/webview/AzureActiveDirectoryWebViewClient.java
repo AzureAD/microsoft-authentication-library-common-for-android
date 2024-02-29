@@ -31,12 +31,16 @@ import android.os.Build;
 import android.os.Handler;
 import android.webkit.ClientCertRequest;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.lifecycle.ViewTreeLifecycleOwner;
+import androidx.webkit.WebSettingsCompat;
+import androidx.webkit.WebViewFeature;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -117,6 +121,26 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @SuppressWarnings(WarningType.deprecation_warning)
     @Override
     public boolean shouldOverrideUrlLoading(final WebView view, final String url) {
+        final WebSettings webSettings = view.getSettings();
+        final boolean isFeatureSupported = WebViewFeature.isFeatureSupported(WebViewFeature.ENTERPRISE_AUTHENTICATION_APP_LINK_POLICY);
+
+        if (isFeatureSupported) {
+            Toast.makeText(getActivity(), "Feature is ENABLED", Toast.LENGTH_LONG).show();
+            Logger.info("MY_tag", "Feature is ENABLED");
+            final boolean isAuthAppLinkPolicyEnabled = WebSettingsCompat.getEnterpriseAuthenticationAppLinkPolicyEnabled(webSettings);
+
+            if (isAuthAppLinkPolicyEnabled) {
+                Toast.makeText(getActivity(), "Feature is ENABLED AND AuthAppPolicy is ENABLED", Toast.LENGTH_LONG).show();
+                Logger.info("MY_tag", "Feature is ENABLED AND AuthAppPolicy is ENABLED");
+            } else {
+                Toast.makeText(getActivity(), "Feature is ENABLED but AuthAppPolicy is DISABLED", Toast.LENGTH_LONG).show();
+                Logger.info("MY_tag", "Feature is ENABLED but AuthAppPolicy is DISABLED");
+            }
+        } else {
+            Toast.makeText(getActivity(), "Feature is DISABLED", Toast.LENGTH_LONG).show();
+            Logger.info("MY_tag", "Feature is DISABLED");
+        }
+
         if (StringUtil.isNullOrEmpty(url)) {
             throw new IllegalArgumentException("Redirect to empty url in web view.");
         }
