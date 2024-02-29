@@ -37,8 +37,6 @@ import org.junit.runners.JUnit4;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_PKCE_CHALLENGE;

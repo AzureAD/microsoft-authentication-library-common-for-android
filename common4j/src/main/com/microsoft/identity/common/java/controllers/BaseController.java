@@ -49,7 +49,6 @@ import com.microsoft.identity.common.java.commands.parameters.RemoveAccountComma
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
-import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
@@ -85,7 +84,7 @@ import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
-import com.microsoft.identity.common.java.ui.AuthorizationAgent;
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ResultUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -145,11 +144,11 @@ public abstract class BaseController {
             throws Exception;
 
     /**
-     * This method is used to determine if the QR + PIN auth flow is available on the device.
+     * This method is used to read the preferred authentication method from the broker.
      *
-     * @return true if if QR + PIN authorization is available. False otherwise.
+     * @return The preferred authentication method.
      */
-    public abstract boolean isQrPinAvailable() throws Exception;
+    public abstract PreferredAuthMethod getPreferredAuthMethod() throws Exception;
 
     public abstract List<ICacheRecord> getCurrentAccount(final CommandParameters parameters)
             throws Exception;

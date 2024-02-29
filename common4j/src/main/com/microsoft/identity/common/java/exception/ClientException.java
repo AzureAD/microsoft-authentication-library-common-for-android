@@ -98,6 +98,11 @@ public class ClientException extends BaseException {
     public static final String IO_ERROR = "io_error";
 
     /**
+     * Indicates a msal client update is required.
+     */
+    public static final String CLIENT_UPDATE_REQUIRED = "client_update_required";
+
+    /**
      * Emitted when a particular padding mechanism is requested but is not available in the environment.
      */
     public static final String NO_SUCH_PADDING = "no_such_padding";

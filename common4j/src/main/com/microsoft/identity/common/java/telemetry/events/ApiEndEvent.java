@@ -36,6 +36,7 @@ import javax.annotation.Nullable;
 
 import lombok.NonNull;
 
+@Deprecated
 public class ApiEndEvent extends BaseEvent {
     public ApiEndEvent() {
         super();

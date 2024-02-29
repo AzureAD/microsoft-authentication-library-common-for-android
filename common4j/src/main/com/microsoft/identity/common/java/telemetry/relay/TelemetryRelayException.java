@@ -37,6 +37,7 @@ import lombok.experimental.Accessors;
 @EqualsAndHashCode(callSuper = true)
 @Data()
 @Accessors(prefix = "m")
+@Deprecated
 public class TelemetryRelayException extends BaseException  {
     private static final long serialVersionUID = -1543623857511895210L;
 
