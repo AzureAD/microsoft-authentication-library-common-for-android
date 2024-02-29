@@ -196,6 +196,10 @@ public class BrokerOperationExecutorTests {
             }
 
             @Override
+            public boolean isSupportedByTargetedBroker(@NonNull final String targetedBrokerPackageName) {
+                return true;
+            }
+            @Override
             public Type getType() {
                 return MOCK_TYPE;
             }
@@ -318,6 +322,10 @@ public class BrokerOperationExecutorTests {
             }
 
             @Override
+            public boolean isSupportedByTargetedBroker(@NonNull final String targetedBrokerPackageName) {
+                return true;
+            }
+            @Override
             public Type getType() {
                 return MOCK_TYPE;
             }
@@ -332,6 +340,10 @@ public class BrokerOperationExecutorTests {
                 return new Bundle();
             }
 
+            @Override
+            public boolean isSupportedByTargetedBroker(@NonNull final String targetedBrokerPackageName) {
+                return true;
+            }
             @Override
             public Type getType() {
                 return MOCK_TYPE;
@@ -350,6 +362,10 @@ public class BrokerOperationExecutorTests {
             }
 
             @Override
+            public boolean isSupportedByTargetedBroker(@NonNull final String targetedBrokerPackageName) {
+                return true;
+            }
+            @Override
             public Type getType() {
                 return MOCK_TYPE;
             }
@@ -367,6 +383,10 @@ public class BrokerOperationExecutorTests {
             }
 
             @Override
+            public boolean isSupportedByTargetedBroker(@NonNull final String targetedBrokerPackageName) {
+                return true;
+            }
+            @Override
             public Type getType() {
                 return MOCK_TYPE;
             }
@@ -381,6 +401,10 @@ public class BrokerOperationExecutorTests {
                 throw new BrokerCommunicationException(CONNECTION_ERROR, BOUND_SERVICE, "Some connection error", null);
             }
 
+            @Override
+            public boolean isSupportedByTargetedBroker(@NonNull final String targetedBrokerPackageName) {
+                return true;
+            }
             @Override
             public Type getType() {
                 return MOCK_TYPE;
