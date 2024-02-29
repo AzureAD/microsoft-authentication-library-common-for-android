@@ -60,6 +60,7 @@ import com.microsoft.identity.common.java.result.FinalizableResultFuture;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 import org.junit.Assert;
@@ -1063,6 +1064,10 @@ public class CommandDispatcherTest {
             return null;
         }
 
+        @Override
+        public PreferredAuthMethod getPreferredAuthMethod() throws Exception {
+            return PreferredAuthMethod.NONE;
+        }
     }
 
     private static CommandParameters getEmptyTestParams() {

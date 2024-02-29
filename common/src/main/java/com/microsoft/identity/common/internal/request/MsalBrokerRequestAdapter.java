@@ -100,6 +100,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .scope(TextUtils.join(" ", parameters.getScopes()))
                 .redirect(parameters.getRedirectUri())
                 .clientId(parameters.getClientId())
+                .childRedirectUri(parameters.getChildRedirectUri())
+                .childClientId(parameters.getChildClientId())
                 .userName(parameters.getLoginHint())
                 .extraQueryStringParameter(extraQueryStringParameter)
                 .extraOptions(extraOptions)
@@ -126,6 +128,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         .build()
                 )
                 .preferredBrowser(parameters.getPreferredBrowser())
+                .preferredAuthMethod(parameters.getPreferredAuthMethod())
                 .build();
 
         return brokerRequest;
@@ -174,6 +177,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .redirect(parameters.getRedirectUri())
                 .extraOptions(extraOptions)
                 .clientId(parameters.getClientId())
+                .childRedirectUri(parameters.getChildRedirectUri())
+                .childClientId(parameters.getChildClientId())
                 .homeAccountId(parameters.getAccount().getHomeAccountId())
                 .localAccountId(parameters.getAccount().getLocalAccountId())
                 .userName(parameters.getAccount().getUsername())

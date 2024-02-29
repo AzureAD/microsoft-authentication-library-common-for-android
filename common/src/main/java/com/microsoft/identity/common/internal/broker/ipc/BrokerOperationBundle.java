@@ -23,6 +23,11 @@
 
 package com.microsoft.identity.common.internal.broker.ipc;
 
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.CONTENT_PROVIDER;
+import static com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater.KEY_REQUEST_ACTIVE_BROKER_DATA;
+
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -37,17 +42,10 @@ import com.microsoft.identity.common.logging.Logger;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
-import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE;
-import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT;
-import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.CONTENT_PROVIDER;
-import static com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater.KEY_REQUEST_ACTIVE_BROKER_DATA;
-
 
 public class BrokerOperationBundle {
     private static final String TAG = BrokerOperationBundle.class.getSimpleName();
 
-    @Getter
-    @Accessors(prefix = "m")
     public enum Operation {
         MSAL_HELLO(API.MSAL_HELLO, BrokerAccountManagerOperation.HELLO),
         MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST(API.ACQUIRE_TOKEN_INTERACTIVE, BrokerAccountManagerOperation.GET_INTENT_FOR_INTERACTIVE_REQUEST),
@@ -73,10 +71,22 @@ public class BrokerOperationBundle {
         BROKER_DISCOVERY_METADATA_RETRIEVAL(API.BROKER_DISCOVERY_METADATA_RETRIEVAL, null),
         BROKER_DISCOVERY_FROM_SDK(API.BROKER_DISCOVERY_FROM_SDK, null),
         BROKER_DISCOVERY_SET_ACTIVE_BROKER(API.BROKER_DISCOVERY_SET_ACTIVE_BROKER, null),
-        PASSTHROUGH(API.PASSTHROUGH, null);
+        PASSTHROUGH(API.PASSTHROUGH, null),
+        BROKER_READ_RESTRICTIONS_MANAGER(API.READ_RESTRICTIONS_MANAGER, null),
+        MSAL_GET_PREFERRED_AUTH_METHOD(API.GET_PREFERRED_AUTH_METHOD, null),
+        BROKER_INDIVIDUAL_LOGS_UPLOAD(API.BROKER_INDIVIDUAL_LOGS_UPLOAD, null);
       
         final API mContentApi;
         final String mAccountManagerOperation;
+
+        public API getContentApi(){
+            return mContentApi;
+        }
+
+        public String getAccountManagerOperation(){
+            return mAccountManagerOperation;
+        }
+
         Operation(API contentApi, String accountManagerOperation) {
             this.mContentApi = contentApi;
             this.mAccountManagerOperation = accountManagerOperation;
@@ -97,11 +107,10 @@ public class BrokerOperationBundle {
                                  @Nullable final Bundle bundle) {
         this.operation = operation;
         this.targetBrokerAppPackageName = targetBrokerAppPackageName;
-        this.bundle = bundle != null ? bundle : new Bundle();
+        this.bundle = bundle == null ? new Bundle() : new Bundle(bundle);
         this.bundle.putBoolean(KEY_REQUEST_ACTIVE_BROKER_DATA, true);
         Logger.info(TAG, "Requested Active Broker Data");
     }
-
 
     /**
      * Packs the response bundle with the account manager key.

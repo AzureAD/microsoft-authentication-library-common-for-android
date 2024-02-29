@@ -247,5 +247,30 @@ public enum AttributeName {
     /**
      * The time (in milliseconds) spent on network when acquiring AT.
      */
-    elapsed_time_network_acquire_at;
+    elapsed_time_network_acquire_at,
+
+    /**
+     * The broker operation name.
+     */
+    broker_operation_name,
+
+    /**
+     * Fido challenge handler type.
+     */
+    fido_challenge_handler,
+
+    /**
+     * Indicates the request sequence used by cached credential service (if used) on server side
+     */
+    ccs_request_sequence,
+
+    /**
+     * Indicates names of the backup ipc that might be used in a given flow.
+     */
+    backup_ipc_used,
+
+    /**
+     * Indicates the package name of the app making the request to the broker.
+     */
+    calling_package_name;
 }

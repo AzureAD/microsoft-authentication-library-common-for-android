@@ -28,6 +28,7 @@ import java.util.Map;
 /**
  * The default telemetry observer interface which upload raw telemetry data.
  */
+@Deprecated
 public interface ITelemetryDefaultObserver extends ITelemetryObserver<List<Map<String, String>>> {
     @Override
     void onReceived(List<Map<String, String>> telemetryData);

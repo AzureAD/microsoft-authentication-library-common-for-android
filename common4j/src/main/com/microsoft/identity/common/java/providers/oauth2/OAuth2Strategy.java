@@ -52,10 +52,10 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.telemetry.events.UiShownEvent;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -138,7 +138,6 @@ public abstract class OAuth2Strategy
      * @param authorizationStrategy generic authorization strategy.
      * @return GenericAuthorizationResponse
      */
-    @NonNull
     public Future<AuthorizationResult> requestAuthorization(
             final GenericAuthorizationRequest request,
             final GenericAuthorizationStrategy authorizationStrategy)
@@ -217,21 +216,21 @@ public abstract class OAuth2Strategy
         headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
 
         if (request instanceof MicrosoftTokenRequest) {
+            final MicrosoftTokenRequest microsoftTokenRequest = (MicrosoftTokenRequest) request;
             headers.put(
                     AuthenticationConstants.AAD.APP_PACKAGE_NAME,
-                    ((MicrosoftTokenRequest) request).getClientAppName()
+                    microsoftTokenRequest.getClientAppName()
             );
             headers.put(
                     AuthenticationConstants.AAD.APP_VERSION,
-                    ((MicrosoftTokenRequest) request).getClientAppVersion()
+                    microsoftTokenRequest.getClientAppVersion()
             );
-            if (((MicrosoftTokenRequest) request).isPKeyAuthHeaderAllowed()) {
+            if (microsoftTokenRequest.isPKeyAuthHeaderAllowed()) {
                 headers.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
             }
         }
 
         final URL requestUrl = new URL(getTokenEndpoint());
-
         final long networkStartTime = System.currentTimeMillis();
         final HttpResponse response = httpClient.post(
                 requestUrl,
@@ -283,6 +282,7 @@ public abstract class OAuth2Strategy
                     if (!StringUtil.isNullOrEmpty(slice.getDataCenter())) {
                         commonUriBuilder.setParameter(AzureActiveDirectorySlice.DC_PARAMETER, slice.getDataCenter());
                     }
+
                     mTokenEndpoint = commonUriBuilder.build().toString();
                 } catch (final URISyntaxException e) {
                     throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);

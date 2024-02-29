@@ -53,6 +53,11 @@ public final class HttpConstants {
          * Header to track if Cached Credential Service (CCS) was used
          */
         public static final String XMS_CCS_REQUEST_ID = "xms-ccs-requestid";
+
+        /**
+         * Header to track if Cached Credential Service (CCS) request sequence
+         */
+        public static final String XMS_CCS_REQUEST_SEQUENCE = "x-ms-srs";
     }
 
     /**

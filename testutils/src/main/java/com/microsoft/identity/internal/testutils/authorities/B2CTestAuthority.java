@@ -42,6 +42,6 @@ public class B2CTestAuthority extends AzureActiveDirectoryB2CAuthority {
         final MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
 
         // return a custom ropc test strategy to perform ropc flow for test automation
-        return new ResourceOwnerPasswordCredentialsTestStrategy(config);
+        return new ResourceOwnerPasswordCredentialsTestStrategy(config, false);
     }
 }

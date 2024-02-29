@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Tagad varat noņemt viedkarti</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Sapratu</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Vai atļaut šai programmai piekļūt jūsu kamerai?</string>
+    <string name="qr_code_rationale_message">Pēc tam varat pierakstīties, izmantojot QR kodu.</string>
+    <string name="qr_code_rationale_allow">Atļaut</string>
+    <string name="qr_code_rationale_block">Bloķēt</string>
 </resources>

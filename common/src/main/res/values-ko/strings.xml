@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">이제 스마트 카드를 제거할 수 있습니다.</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">확인</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">이 앱이 카메라에 액세스하도록 허용하시겠습니까?</string>
+    <string name="qr_code_rationale_message">그런 다음 QR 코드로 로그인할 수 있습니다.</string>
+    <string name="qr_code_rationale_allow">허용</string>
+    <string name="qr_code_rationale_block">차단</string>
 </resources>

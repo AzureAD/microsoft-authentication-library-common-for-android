@@ -119,10 +119,10 @@ open class BrokerValidator: IBrokerValidator {
         return try {
             val signingCertificate = getSigningCertificateForApp(brokerData.packageName)
             validateSigningCertificate(brokerData.signingCertificateThumbprint, signingCertificate)
-            Logger.info(methodTag, "${brokerData.packageName} is installed, and is a valid broker.")
+            Logger.verbose(methodTag, "$brokerData is a valid broker app.")
             true
         } catch (t: Throwable) {
-            Logger.error(methodTag, t.message, t)
+            Logger.verbose(methodTag, "$brokerData verification failed: " + t.message)
             false
         }
     }

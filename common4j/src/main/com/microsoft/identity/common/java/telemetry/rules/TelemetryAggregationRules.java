@@ -32,6 +32,7 @@ import java.util.Set;
 
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 
+@Deprecated
 public class TelemetryAggregationRules {
     private static TelemetryAggregationRules sInstance;
     private Set<String> aggregatedPropertiesSet;

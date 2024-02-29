@@ -61,6 +61,11 @@ public final class ErrorStrings {
     public static final String JSON_PARSE_FAILURE = "json_parse_failure";
 
     /**
+     * Error occurred while deserializing JSON string.
+     */
+    public static final String JSON_DESERIALIZATION_FAILURE = "json_deserialization_failure";
+
+    /**
      * IOException happened, could be the device/network errors.
      */
     public static final String IO_ERROR = "io_error";
@@ -414,6 +419,12 @@ public final class ErrorStrings {
     public static final String SINGLE_ACCOUNT_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_MESSAGE = "A single account public client application could not be created for unknown reasons.";
 
     /**
+     * A Native Auth public client application could not be created for unknown reasons.
+     */
+    public static final String NATIVE_AUTH_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_CODE = "native_auth_pca_init_fail_unknown_reason";
+    public static final String NATIVE_AUTH_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_MESSAGE = "A native auth public client application could not be created for unknown reasons.";
+
+    /**
      * Some or all requested scopes where declined by the server. Developer should decide whether to continue
      * authentication with the granted scopes or end the authentication process.
      */
@@ -503,4 +514,9 @@ public final class ErrorStrings {
      * Use this message for when Device Code Flow fails with an error code that doesn't match any of the pre-defined Device Code Flow codes.
      */
     public final static String DEVICE_CODE_FLOW_DEFAULT_ERROR_MESSAGE = "Device Code Flow has failed with an unexpected error. The error code shown was received from the result object.";
+
+    /**
+     * Access token doesn't exist and is required for NativeAuth token refresh
+     */
+    public static final String NATIVE_AUTH_NO_ACCESS_TOKEN_FOUND = "native_auth_no_access_token_found";
 }

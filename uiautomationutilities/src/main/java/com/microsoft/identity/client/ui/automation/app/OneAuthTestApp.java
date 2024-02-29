@@ -31,15 +31,16 @@ import android.widget.EditText;
 import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
 
-import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+import com.microsoft.identity.labapi.utilities.constants.UserType;
 
 import org.junit.Assert;
 
@@ -53,7 +54,7 @@ import java.util.List;
  */
 public class OneAuthTestApp extends App implements IFirstPartyApp {
     private final static String TAG = "OneAuthTestApp";
-    public final static String ONEAUTH_TESTAPP_PACKAGE_NAME = "com.microsoft.oneauth.testapp";
+    public final static String ONEAUTH_TESTAPP_PACKAGE_NAME = "com.msft.oneauth.testapp";
     public final static String ONEAUTH_TESTAPP_NAME = "OneAuth Testapp";
     public final static String ONEAUTH_TESTAPP_APK = "OneAuthTestApp.apk";
     public final static String OLD_ONEAUTH_TESTAPP_APK = "OldOneAuthTestApp.apk";
@@ -82,12 +83,10 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     @Override
     public void handleFirstRun() {
         CommonUtils.grantPackagePermission();
-        try {
-            selectFromAppConfiguration("com.microsoft.identity.LabsApi.Guest");
-        } catch (UiObjectNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        // Because switching the App Configuration will decide whether to truly enable the Broker,
+        // it's essential to turn on the Broker beforehand.
         handlePreferBrokerSwitchButton();
+        selectFromAppConfiguration("com.microsoft.OneAuthTestApp");
     }
 
     @Override
@@ -115,7 +114,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
 
     public String acquireTokenSilent() {
         // Click Get Access token button
-        UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/get_access_token_button");
+        UiAutomatorUtils.handleButtonClick("com.msft.oneauth.testapp:id/get_access_token_button");
         try {
             // Add a delay so that UI is updated with the token successfully
             Thread.sleep(5000);
@@ -128,10 +127,11 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     private void signIn(@NonNull final String username,
                         @NonNull final String password,
                         @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
-        UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/sign_in_button");
-
         Logger.i(TAG, "Adding username and password on login screen..");
         try {
+            final UiObject signInBtn = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/sign_in_button");
+            scrollToElement(signInBtn);
+            signInBtn.click();
             final UiObject emailField = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
                     "", EditText.class);
             emailField.setText(username);
@@ -148,8 +148,16 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     }
 
     public void handleSignInWithoutPrompt() {
-        UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/sign_in_button");
+        UiAutomatorUtils.handleButtonClick("com.msft.oneauth.testapp:id/sign_in_button");
         assertSuccess();
+    }
+
+    // Handles first run of the app based on the user account type to be used.
+    public void handleFirstRunBasedOnUserType(UserType userType) {
+        handleFirstRun();
+        if (userType == UserType.MSA){
+            handleConfigureFlightsButton();
+        }
     }
 
     public void handleBackButton() {
@@ -157,18 +165,49 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     }
 
     public void handleUserNameInput(@NonNull final String input) {
-        UiAutomatorUtils.handleInput("com.microsoft.oneauth.testapp:id/account_hints_edittext", input);
+        UiAutomatorUtils.handleInput("com.msft.oneauth.testapp:id/account_hints_edittext", input);
     }
 
     public void handlePreferBrokerSwitchButton() {
-        UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/prefer_broker_switch_button");
+        final UiObject preferBrokerSwitchBtn = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/prefer_broker_switch_button");
+        try {
+            scrollToElement(preferBrokerSwitchBtn);
+            preferBrokerSwitchBtn.click();
+        } catch (UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
     }
 
-    public void selectFromAppConfiguration(@NonNull final String text) throws UiObjectNotFoundException {
-        final UiObject appConfigurationSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/app_configuration_spinner");
-        appConfigurationSpinner.click();
-        final UiObject appConfiguration = UiAutomatorUtils.obtainUiObjectWithText(text);
-        appConfiguration.click();
+    private void handleConfigureFlightsButton() {
+        try {
+            final UiObject configureFlightsBtn = UiAutomatorUtils.obtainUiObjectWithText("Configure flights");
+            scrollToElement(configureFlightsBtn);
+            configureFlightsBtn.click();
+        UiAutomatorUtils.handleButtonClick("com.msft.oneauth.testapp:id/android_broker_for_msa");
+        final UiObject doneBtn = UiAutomatorUtils.obtainUiObjectWithText("DONE");
+        doneBtn.click();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError("Could not click on android broker for msa toggle");
+        }
+    }
+
+    private void scrollToElement(UiObject obj) throws UiObjectNotFoundException {
+        UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
+        scrollable.scrollIntoView(obj);
+        obj.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+    }
+
+    public void selectFromAppConfiguration(@NonNull final String text)  {
+        final UiObject appConfigurationSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/app_configuration_spinner");
+        try {
+            scrollToElement(appConfigurationSpinner);
+            appConfigurationSpinner.click();
+            final UiObject appConfiguration = UiAutomatorUtils.obtainUiObjectWithText(text);
+            appConfiguration.click();
+        } catch (UiObjectNotFoundException e) {
+            throw new AssertionError("Could not click on app config spinner");
+        }
+
     }
 
     @Override
@@ -179,7 +218,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     @Override
     public void confirmAccount(@NonNull final String username) {
         // Make sure we are seeing the output text view
-        final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/txtGeneralInfo");
+        final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/txtGeneralInfo");
         try {
             Assert.assertTrue(resultUIObject.getText().contains("Result: Success"));
         } catch (final UiObjectNotFoundException e) {
@@ -189,10 +228,10 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
 
     public void assertSuccess() {
         try {
-            final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/txtGeneralInfo");
+            final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/txtGeneralInfo");
             resultUIObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
 
-            final UiObject accountIdObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/txtAccountId");
+            final UiObject accountIdObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/txtAccountId");
             accountIdObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
 
             Assert.assertTrue(resultUIObject.getText().contains("Result: Success"));
@@ -208,8 +247,8 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
      */
     public List<String> getAllAccounts() {
         final List<String> accountsList = new ArrayList<>();
-        UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/get_all_accounts_button");
-        final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/all_accounts_list");
+        UiAutomatorUtils.handleButtonClick("com.msft.oneauth.testapp:id/get_all_accounts_button");
+        final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/all_accounts_list");
         try {
             int childCount = resultUIObject.getChildCount();
             for (int i = 0; i < childCount; i++) {
@@ -223,7 +262,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     }
 
     public String getTokenSecret() {
-        final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/txtSecret");
+        final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/txtSecret");
         try {
             return resultUIObject.getText();
         } catch (final UiObjectNotFoundException e) {

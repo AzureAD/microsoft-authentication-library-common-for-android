@@ -33,7 +33,9 @@ import static com.microsoft.identity.common.java.exception.ClientException.INVAL
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
 import static com.microsoft.identity.common.java.exception.ClientException.UNEXPECTED_HMAC_LENGTH;
+import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_CRYPTO_ERROR;
 
+import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.java.crypto.key.AbstractSecretKeyLoader;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
 import com.microsoft.identity.common.java.crypto.key.PredefinedKeyLoader;
@@ -46,6 +48,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.crypto.BadPaddingException;
@@ -84,6 +87,14 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
     private static final String ENCODE_VERSION = "E1";
 
     /**
+     * Length of key identifiers that are appended before the encrypted data.
+     * See: PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER,
+     *      AndroidWrappedKeyLoader.WRAPPED_KEY_KEY_IDENTIFIER,
+     *      KeyringKeyLoader.KEY_IDENTIFIER
+     */
+    public static final int KEY_IDENTIFIER_LENGTH = 4;
+
+    /**
      * IV generator.
      */
     private final IVGenerator mGenerator;
@@ -113,14 +124,17 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             throws ClientException {
         final String methodName = ":encrypt";
 
-        Logger.verbose(TAG + methodName, "Starting encryption");
-
         final String errCode;
-        final Exception exception;
-        try {
-            // load key for encryption if not loaded
-            final AbstractSecretKeyLoader keyLoader = getKeyLoaderForEncryption();
+        final Throwable exception;
 
+        // load key for encryption if not loaded
+        final AbstractSecretKeyLoader keyLoader = getKeyLoaderForEncryption();
+        if (keyLoader == null) {
+            // Developer error. Throw.
+            throw new IllegalStateException("Cannot find a matching Keyloader.");
+        }
+
+        try {
             final SecretKey encryptionKey = keyLoader.getKey();
             final SecretKey encryptionHMACKey = KeyUtil.getHMacKey(encryptionKey);
             final byte[] keyIdentifier = keyLoader.getKeyTypeIdentifier().getBytes(ENCODING_UTF8);
@@ -175,6 +189,11 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
         } catch (final InvalidAlgorithmParameterException e) {
             errCode = INVALID_ALG_PARAMETER;
             exception = e;
+        } catch (final ClientException e) {
+            throw e;
+        } catch (final Throwable e) {
+            errCode = UNKNOWN_CRYPTO_ERROR;
+            exception = e;
         }
 
         throw new ClientException(errCode, exception.getMessage(), exception);
@@ -182,47 +201,43 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
 
     @Override
     public byte[] decrypt(final byte[] cipherText) throws ClientException {
-        final String methodName = ":decrypt";
-        Logger.verbose(TAG + methodName, "Starting decryption");
+        final String methodTag = TAG + ":decrypt";
 
         final byte[] dataBytes;
         try {
             dataBytes = stripEncodeVersionFromCipherText(cipherText);
         } catch (final ClientException e){
-            Logger.verbose(TAG + methodName,
+            Logger.verbose(methodTag,
                     "Failed to strip encode version from cipherText, string might not be encrypted. Exception: ", e.getMessage());
             return cipherText;
         }
 
         final List<AbstractSecretKeyLoader> keysForDecryption = getKeyLoaderForDecryption(cipherText);
         if (keysForDecryption.size() == 0) {
-            throw new IllegalStateException("KeyLoader list must not be null or empty.");
+            // Developer error. Throw.
+            throw new IllegalStateException("Cannot find a matching Keyloader.");
         }
 
-        final ClientException exceptionToThrowIfAllFails = new ClientException(ErrorStrings.DECRYPTION_FAILED,
-                "Tried all decryption keys and decryption still fails.");
-
+        final List<Throwable> suppressedException = new ArrayList<>();
         for (final AbstractSecretKeyLoader keyLoader : keysForDecryption) {
-            if (keyLoader == null){
-                throw new IllegalStateException("KeyLoader must not be null.");
-            }
-            
             try {
-                final byte[] result = decryptWithSecretKey(dataBytes, keyLoader);
-                Logger.verbose(TAG + methodName, "Finished decryption with key:" + keyLoader.getAlias());
-                return result;
-            } catch (final ClientException e) {
-                Logger.warn(TAG + methodName, "Failed to decrypt with key:" + keyLoader.getAlias() +
+                return decryptWithSecretKey(dataBytes, keyLoader);
+            } catch (final Throwable e) {
+                Logger.warn(methodTag, "Failed to decrypt with key:" + keyLoader.getAlias() +
                         " thumbprint : " + KeyUtil.getKeyThumbPrint(keyLoader));
-                exceptionToThrowIfAllFails.addSuppressedException(e);
+                suppressedException.add(e);
             }
         }
 
-        Logger.warn(
-                TAG + methodName,
-                exceptionToThrowIfAllFails.getMessage());
-
-        throw exceptionToThrowIfAllFails;
+        // How should we throw an error?
+        if (suppressedException.size() == 1){
+            throw ExceptionAdapter.clientExceptionFromException(suppressedException.get(0));
+        } else {
+            final ClientException exceptionToThrowIfAllFails = new ClientException(ErrorStrings.DECRYPTION_FAILED,
+                    "Tried all decryption keys and decryption still fails.");
+            exceptionToThrowIfAllFails.getSuppressedException().addAll(suppressedException);
+            throw exceptionToThrowIfAllFails;
+        }
     }
 
     @Override
@@ -266,7 +281,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
                                         @NonNull final AbstractSecretKeyLoader keyLoader)
             throws ClientException {
         final String errCode;
-        final Exception exception;
+        final Throwable exception;
         try {
             final SecretKey secretKey = keyLoader.getKey();
             final SecretKey hmacKey = KeyUtil.getHMacKey(secretKey);
@@ -329,38 +344,14 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
         } catch (final IllegalArgumentException e) {
             errCode = DATA_MALFORMED;
             exception = e;
+        } catch (final ClientException e) {
+            throw e;
+        } catch (final Throwable e) {
+            errCode = UNKNOWN_CRYPTO_ERROR;
+            exception = e;
         }
 
         throw new ClientException(errCode, exception.getMessage(), exception);
-    }
-
-    /**
-     * Returns true if the given cipherText was encrypted by the owner of the identifier.
-     *
-     * @param cipherText    the cipherText to be verified against.
-     * @param keyIdentifier identifier to verify.
-     */
-    protected static boolean isEncryptedByThisKeyIdentifier(
-            final byte[] cipherText,
-            @NonNull final String keyIdentifier) {
-        final String methodName = ":isEncryptedByThisKeyIdentifier";
-
-        final byte[] bytes;
-        try {
-            bytes = stripEncodeVersionFromCipherText(cipherText);
-
-            final String keyVersion = new String(
-                    bytes,
-                    0,
-                    keyIdentifier.length(),
-                    ENCODING_UTF8
-            );
-
-            return keyIdentifier.equalsIgnoreCase(keyVersion);
-        } catch (final Exception e) {
-            Logger.verbose(TAG + methodName, e.getMessage());
-            return false;
-        }
     }
 
     /**
@@ -375,7 +366,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             return new String(
                     stripEncodeVersionFromCipherText(cipherText),
                     0,
-                    PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER.length(),
+                    KEY_IDENTIFIER_LENGTH,
                     ENCODING_UTF8
             );
         } catch (final Exception e) {

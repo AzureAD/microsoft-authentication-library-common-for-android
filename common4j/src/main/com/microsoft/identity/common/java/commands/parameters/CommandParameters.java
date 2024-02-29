@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.request.SdkType;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.Collections;
 import java.util.Map;
@@ -116,6 +117,16 @@ public class CommandParameters {
         return String.format(APPLICATION_IDENTIFIER_FORMAT, this.callerPackageName, this.callerSignature);
     }
 
+    // Verifies if any nested app parameter is present
+    public boolean hasNestedAppParameters() {
+        // return true even if one of the nested app params is present
+        return !StringUtil.isNullOrEmpty(childRedirectUri) || !StringUtil.isNullOrEmpty(childClientId);
+    }
+
+    // Helper method for Kotlin classes, as Lombok doesn't play nice with Kotlin.
+    public String getCorrelationId() {
+        return correlationId;
+    }
 }
 
 

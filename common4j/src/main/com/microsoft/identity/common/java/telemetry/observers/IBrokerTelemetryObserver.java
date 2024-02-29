@@ -22,5 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry.observers;
 
+@Deprecated
 public interface IBrokerTelemetryObserver extends ITelemetryAggregatedObserver {
 }

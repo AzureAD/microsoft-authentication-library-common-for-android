@@ -134,7 +134,30 @@ public final class PublicApiId {
     public static final String BROKER_REFRESH_ON = "1202";
     //endregion
 
-
-
     public static final String PCA_GET_DEVICE_MODE = "1200";
+
+    public static final String PCA_IS_QR_PIN_AVAILABLE = "1300";
+    //region NativeAuthPublicClientApplication
+    //==============================================================================================
+    public static final String NATIVE_AUTH_SIGN_IN_WITH_EMAIL = "210";
+    public static final String NATIVE_AUTH_SIGN_IN_WITH_EMAIL_PASSWORD = "211";
+    public static final String NATIVE_AUTH_SIGN_IN_SUBMIT_CODE = "212";
+    public static final String NATIVE_AUTH_SIGN_IN_RESEND_CODE = "213";
+    public static final String NATIVE_AUTH_SIGN_IN_SUBMIT_PASSWORD = "214";
+    public static final String NATIVE_AUTH_GET_ACCOUNT = "215";
+    public static final String NATIVE_AUTH_SIGN_IN_WITH_SLT = "216";
+    public static final String NATIVE_AUTH_RESET_PASSWORD_START = "220";
+    public static final String NATIVE_AUTH_RESET_PASSWORD_SUBMIT_CODE = "221";
+    public static final String NATIVE_AUTH_RESET_PASSWORD_RESEND_CODE = "222";
+    public static final String NATIVE_AUTH_RESET_PASSWORD_SUBMIT_NEW_PASSWORD = "223";
+    public static final String NATIVE_AUTH_SIGN_UP_WITH_CODE = "230";
+    public static final String NATIVE_AUTH_SIGN_UP_START = "231";
+    public static final String NATIVE_AUTH_SIGN_UP_START_WITH_PASSWORD = "232";
+    public static final String NATIVE_AUTH_SIGN_UP_RESEND_CODE = "233";
+    public static final String NATIVE_AUTH_SIGN_UP_SUBMIT_PASSWORD = "234";
+    public static final String NATIVE_AUTH_SIGN_UP_SUBMIT_ATTRIBUTES = "234";
+    public static final String NATIVE_AUTH_SIGN_UP_SUBMIT_CODE = "235";
+    public static final String NATIVE_AUTH_ACCOUNT_SIGN_OUT = "240";
+    public static final String NATIVE_AUTH_ACCOUNT_GET_ACCESS_TOKEN = "250";
+    //endregion
 }

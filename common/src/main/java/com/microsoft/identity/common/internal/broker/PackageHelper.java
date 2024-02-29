@@ -166,10 +166,10 @@ public class PackageHelper {
                 enabled = applicationInfo.enabled;
             }
         } catch (NameNotFoundException e) {
-            Logger.warn(methodTag, "Package is not found. Package name: " + packageName);
+            Logger.verbose(methodTag, packageName + " is not found");
         }
 
-        Logger.info(methodTag, " Is package installed and enabled? [" + enabled + "]");
+        Logger.verbose(methodTag, packageName + " is installed. enabled? [" + enabled + "]");
         return enabled;
     }
 

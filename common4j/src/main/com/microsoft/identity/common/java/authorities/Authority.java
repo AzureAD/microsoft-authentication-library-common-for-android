@@ -26,13 +26,14 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
-import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
+import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -55,6 +56,7 @@ public abstract class Authority {
     private static final String B2C_PATH_SEGMENT = "tfp";
     public static final String B2C = "B2C";
     public static final String CIAM = "CIAM";
+    public static final String AAD_NA = "AAD_NA";
 
     @SerializedName("default")
     protected boolean mIsDefault = false;
@@ -139,7 +141,7 @@ public abstract class Authority {
         if (pathSegments.size() == 0 || (pathSegments.size() == 1 && pathSegments.get(0).equals(""))) {
             if (authorityUrl.contains(CIAMAuthority.CIAM_LOGIN_URL_SEGMENT)){
                 // This is a CIAM authority, return CIAMAuthority
-                return new CIAMAuthority(CIAMAuthority.getFullAuthorityUrlFromAuthorityWithoutPath(authorityUrl));
+                return new CIAMAuthority(CIAMAuthority.getTenantNameVariantUrlFromAuthorityWithoutPath(authorityUrl));
             }
             return new UnknownAuthority();
         }
@@ -154,6 +156,10 @@ public abstract class Authority {
                 authority = new AzureActiveDirectoryB2CAuthority(authorityUrl);
             } else if (CIAM.equalsIgnoreCase(authorityTypeStr)) {
                 authority = new CIAMAuthority(authorityUrl);
+            } else if (AAD_NA.equalsIgnoreCase(authorityTypeStr) && configuredAuthority instanceof NativeAuthCIAMAuthority) {
+                authority = new NativeAuthCIAMAuthority(
+                        authorityUrl,
+                        ((NativeAuthCIAMAuthority) configuredAuthority).getClientId());
             } else {
                 authority = createAadAuthority(authorityCommonUriBuilder, pathSegments);
             }

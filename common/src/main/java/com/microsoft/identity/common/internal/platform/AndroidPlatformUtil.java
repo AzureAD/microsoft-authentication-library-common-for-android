@@ -35,6 +35,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 
+import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.DefaultConnectionService;
 import com.microsoft.identity.common.internal.broker.BrokerData;
@@ -135,6 +136,12 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     @Override
     public boolean isValidCallingApp(@NonNull String redirectUri, @NonNull String packageName) {
         final String methodTag = TAG + ":isValidCallingApp";
+
+        if (BuildConfig.bypassRedirectUriCheck || isValidHubRedirectURIForNAATests(redirectUri)) {
+            Logger.warn(methodTag, "Bypassing RedirectUri Check. This should not be enabled in PROD. "+ redirectUri);
+            return true;
+        }
+
         final String expectedBrokerRedirectUri = PackageHelper.getBrokerRedirectUri(mContext, packageName);
         boolean isValidBrokerRedirect = StringUtil.equalsIgnoreCase(redirectUri, expectedBrokerRedirectUri);
         if (packageName.equals(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)) {
@@ -259,5 +266,13 @@ public class AndroidPlatformUtil implements IPlatformUtil {
             //Normally all tasks have an affinity unless configured explicitly for multi-window support to not have one
             return true;
         }
+    }
+
+    private boolean isValidHubRedirectURIForNAATests(String redirectUri) {
+        // The only allow-listed hub app on ESTS is Teams app. We cannot use our test app's clientId/redirecrURI for testing NAA scenarios
+        // Below redirectURI is being used in our automation tests and also by OneAuth tests for NAA
+        return BuildConfig.DEBUG && (redirectUri.equals("msauth://com.microsoft.teams/VCpKgbYCXucoq1mZ4BZPsh5taNE=")
+                || redirectUri.equals("msauth://com.microsoft.teams/fcg80qvoM1YMKJZibjBwQcDfOno=")
+                || redirectUri.equals("https://login.microsoftonline.com/common/oauth2/nativeclient"));
     }
 }

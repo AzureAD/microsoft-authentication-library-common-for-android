@@ -28,15 +28,19 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
+import com.microsoft.identity.client.ui.automation.browser.IBrowser;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+import com.microsoft.identity.labapi.utilities.constants.UserType;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,16 +72,28 @@ public class MsalTestApp extends App {
         install();
     }
 
+    public String acquireToken(@NonNull final String username,
+                               @NonNull final String password,
+                               @NonNull final PromptHandlerParameters promptHandlerParameters,
+                               @NonNull final boolean shouldHandlePrompt) throws UiObjectNotFoundException, InterruptedException {
+        return acquireToken(username, password, promptHandlerParameters, null, false, shouldHandlePrompt);
+    }
     // click on button acquire token interactive
     public String acquireToken(@NonNull final String username,
                                @NonNull final String password,
                                @NonNull final PromptHandlerParameters promptHandlerParameters,
+                               @Nullable final IBrowser browser,
+                               final boolean shouldHandleBrowserFirstRun,
                                @NonNull final boolean shouldHandlePrompt) throws UiObjectNotFoundException, InterruptedException {
 
         final UiObject acquireTokenButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_acquiretoken");
         scrollToElement(acquireTokenButton);
         acquireTokenButton.click();
 
+        if (promptHandlerParameters.getBroker() == null && browser != null && shouldHandleBrowserFirstRun) {
+            // handle browser first run as applicable
+            browser.handleFirstRun();
+        }
         // handle prompt if needed
         if (shouldHandlePrompt) {
             try {
@@ -125,6 +141,7 @@ public class MsalTestApp extends App {
         return users;
     }
 
+    // select from Auth Scheme dropdown
     public void selectFromAuthScheme(@NonNull final String text) throws UiObjectNotFoundException {
         final UiObject authSchemeSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/authentication_scheme");
         authSchemeSpinner.click();
@@ -132,6 +149,15 @@ public class MsalTestApp extends App {
         authScheme.click();
     }
 
+    // Select configuration to be used from dropdown.
+    public void selectFromConfigFile(@NonNull final String text) throws UiObjectNotFoundException {
+        final UiObject configFileSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/configFile");
+        configFileSpinner.click();
+        final UiObject configFile = UiAutomatorUtils.obtainUiObjectWithText(text);
+        configFile.click();
+    }
+
+    // click on button generateSHR
     public String generateSHR() throws UiObjectNotFoundException {
         final UiObject generateSHRButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_generate_shr");
         scrollToElement(generateSHRButton);
@@ -140,6 +166,7 @@ public class MsalTestApp extends App {
         return result.getText();
     }
 
+    // click on button removeUser
     public String removeUser() throws UiObjectNotFoundException {
         final UiObject removeUserButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_clearCache");
         scrollToElement(removeUserButton);
@@ -149,6 +176,17 @@ public class MsalTestApp extends App {
         return text;
     }
 
+    // click on button removeUser on Legacy MsalTestApp
+    public String removeUserLegacy() throws UiObjectNotFoundException {
+        final UiObject removeUserButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_clearCache");
+        scrollToElement(removeUserButton);
+        removeUserButton.click();
+        final UiObject textView = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/status");
+        final String text = textView.getText();
+        return text;
+    }
+
+    // click on button getActiveBroker
     public String getActiveBrokerPackageName() throws UiObjectNotFoundException {
         final UiObject getPackageNameButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btnGetActiveBroker");
         scrollToElement(getPackageNameButton);
@@ -158,6 +196,7 @@ public class MsalTestApp extends App {
         return text;
     }
 
+    // check MsalTestApp mode
     public String checkMode() throws UiObjectNotFoundException {
         final UiObject modeText = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/public_application_mode");
         return modeText.getText();
@@ -183,5 +222,13 @@ public class MsalTestApp extends App {
     @Override
     public void handleFirstRun() {
         UiAutomatorUtils.handleButtonClick("com.msft.identity.client.sample.local:id/btnStartTask");
+    }
+
+    // Handles first run of the app based on the user account type to be used.
+    public void handleFirstRunBasedOnUserType(UserType userType) throws UiObjectNotFoundException {
+        handleFirstRun();
+        if (userType == UserType.MSA) {
+            selectFromConfigFile("MSA");
+        }
     }
 }

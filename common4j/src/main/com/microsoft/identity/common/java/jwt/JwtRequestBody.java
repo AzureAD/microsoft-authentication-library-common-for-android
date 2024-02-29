@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.jwt;
 
+import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 
 import lombok.AccessLevel;
@@ -58,6 +59,14 @@ public final class JwtRequestBody extends AbstractJwtRequest {
     @SerializedName(ClaimNames.REDIRECT_URI)
     private String mRedirectUri;
 
+
+    /**
+     * The hub/brk redirectUri for the request.
+     * <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview/pullrequest/7876">...</a>
+     */
+    @SerializedName(ClaimNames.BRK_REDIRECT_URI)
+    private String mBrkRedirectUri;
+
     @Setter(AccessLevel.NONE)
     @SerializedName(ClaimNames.IAT)
     private String mIat;
@@ -69,6 +78,12 @@ public final class JwtRequestBody extends AbstractJwtRequest {
     @Setter(AccessLevel.NONE)
     @SerializedName(ClaimNames.EXP)
     private String mExp;
+
+    @SerializedName(ClaimNames.JWE_CRYPTO)
+    private JsonObject mJweCrypto;
+
+    @SerializedName(ClaimNames.SESSION_KEY_CRYPTO)
+    private JsonObject mSessionKeyCrypto;
 
     public void setIat(final long iat) {
         mIat = String.valueOf(iat);

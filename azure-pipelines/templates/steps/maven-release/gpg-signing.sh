@@ -73,15 +73,15 @@ if [ $JAVADOCJAR == "true" ]; then
     fi
 fi
 
-gpg --batch --pinentry-mode loopback --passphrase-file $PASSPHRASE_SECUREFILEPATH --armor --detach-sign pom-default.xml
+gpg --batch --pinentry-mode loopback --passphrase-file $PASSPHRASE_SECUREFILEPATH --armor --detach-sign $PROJECT-$PROJECTVERSION.pom
 signed=$?
 
 if [ $signed -ne 0 ]; then
-    echo "GPG signing failed with for pom-default.xml with error code $signed"
+    echo "GPG signing failed with for $PROJECT-$PROJECTVERSION.pom with error code $signed"
     exit $signed
 fi
-if [ ! -f pom-default.xml.asc ]; then
-    exit "Signature file for pom-default.xml not found."
+if [ ! -f $PROJECT-$PROJECTVERSION.pom.asc ]; then
+    exit "Signature file for $PROJECT-$PROJECTVERSION.pom not found."
 fi
 
 for file in *; do

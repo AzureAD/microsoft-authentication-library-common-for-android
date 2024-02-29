@@ -89,6 +89,10 @@ public class Logger {
      */
     public enum LogLevel {
         /**
+         * No logs should be emitted.
+         */
+        NO_LOG,
+        /**
          * Error level logging.
          */
         ERROR,
@@ -107,7 +111,7 @@ public class Logger {
         /**
          * Undefined. Should be used in test only.
          */
-        UNDEFINED,
+        UNDEFINED
     }
 
     // Visible for testing
@@ -378,7 +382,7 @@ public class Logger {
                             final String message,
                             final Throwable throwable,
                             final boolean containsPII) {
-        if (logLevel.compareTo(sLogLevel) > 0 || (!sAllowPii && containsPII)) {
+        if ((sLogLevel == LogLevel.NO_LOG) || logLevel.compareTo(sLogLevel) > 0 || (!sAllowPii && containsPII)) {
             return;
         }
 
@@ -442,10 +446,10 @@ public class Logger {
      */
     private static String getDiagnosticContextMetadata(@Nullable String correlationId) {
         final IRequestContext requestContext = DiagnosticContext.INSTANCE.getRequestContext();
-        String threadName = requestContext.get(DiagnosticContext.THREAD_NAME);
+        String threadId = requestContext.get(DiagnosticContext.THREAD_ID);
 
-        if (StringUtil.isNullOrEmpty(threadName)) {
-            threadName = UNSET;
+        if (StringUtil.isNullOrEmpty(threadId)) {
+            threadId = UNSET;
         }
         if (StringUtil.isNullOrEmpty(correlationId)) {
             correlationId = requestContext.get(DiagnosticContext.CORRELATION_ID);
@@ -455,6 +459,6 @@ public class Logger {
         }
 
         return String.format("%s: %s, %s: %s",
-                DiagnosticContext.THREAD_NAME, threadName, DiagnosticContext.CORRELATION_ID, correlationId);
+                DiagnosticContext.THREAD_ID, threadId, DiagnosticContext.CORRELATION_ID, correlationId);
     }
 }

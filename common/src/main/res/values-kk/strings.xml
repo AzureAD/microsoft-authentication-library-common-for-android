@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Енді смарт картаны шығаруға болады</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Түсінікті</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Бұл бағдарламаға камераға қатынасуға рұқсат етесіз бе?</string>
+    <string name="qr_code_rationale_message">Содан кейін QR кодымен кіруге болады.</string>
+    <string name="qr_code_rationale_allow">Рұқсат ету</string>
+    <string name="qr_code_rationale_block">Блоктау</string>
 </resources>

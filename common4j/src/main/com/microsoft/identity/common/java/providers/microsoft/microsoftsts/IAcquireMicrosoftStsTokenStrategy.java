@@ -41,7 +41,7 @@ public interface IAcquireMicrosoftStsTokenStrategy<T extends TokenCommandParamet
     /**
      * Create a token request
      * @param parameters Silent or Interactive request parameters
-     * @return a new PRT
+     * @return a token request
      */
     @NonNull
     MicrosoftStsTokenRequest createTokenRequest(@NonNull final T parameters) throws BaseException;

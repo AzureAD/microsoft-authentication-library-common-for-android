@@ -32,6 +32,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.HELLO_ERROR_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.HELLO_ERROR_MESSAGE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PREFERRED_AUTH_METHOD_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
 import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
 import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BROKER_BUNDLE;
@@ -76,6 +77,7 @@ import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -86,6 +88,7 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
@@ -815,5 +818,34 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         );
 
         return shrResult;
+    }
+
+    /**
+     * Checks if the provided {@link Bundle} contains a key indicating the preferred auth method.
+     *
+     * @param bundle The {@link Bundle} to check.
+     * @return The {@link PreferredAuthMethod} if the bundle contains the key.
+     * @throws BaseException If the bundle does not contain the key.
+     */
+    public PreferredAuthMethod getPreferredAuthMethodFromResultBundle(@Nullable final Bundle bundle) throws BaseException {
+        final String methodTag = TAG + ":getPreferredAuthMethodFromResultBundle";
+        if (bundle == null) {
+            throw getExceptionForEmptyResultBundle();
+        }
+        if (!bundle.containsKey(PREFERRED_AUTH_METHOD_CODE)) {
+            throw new MsalBrokerResultAdapter().getBaseExceptionFromBundle(bundle);
+        }
+        final int preferredAuthMethodCode = bundle.getInt(PREFERRED_AUTH_METHOD_CODE);
+        try {
+            return PreferredAuthMethod.fromCode(preferredAuthMethodCode);
+        } catch (final NoSuchElementException e) {
+            final ClientException exception = new ClientException(
+                    ClientException.CLIENT_UPDATE_REQUIRED,
+                    "Preferred auth method code "+ preferredAuthMethodCode +" not recognized.",
+                    e
+            );
+            Logger.error(methodTag, exception.getMessage(), exception);
+            throw exception;
+        }
     }
 }

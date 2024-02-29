@@ -215,6 +215,31 @@ public class ExceptionAdapter {
         return outErr;
     }
 
+    /**
+     * Converts any child of ServiceException (e.g. UiRequiredException) to generic ServiceException
+     * Additional instructions are set to inform the developer about the next steps.
+     *
+     * @param exception the ServiceException to convert
+     * @return ServiceException
+     */
+    public static ServiceException convertToNativeAuthException(@NonNull final ServiceException exception) {
+        final ServiceException outErr;
+
+        String message = "Token request failed. Please perform sign-in.\nOriginal exception details: " + exception.getMessage();
+
+        // UiRequiredException is not a native authentication concept, so we convert it into a generic
+        // ServiceException
+        outErr = new ServiceException(
+                exception.getErrorCode(),
+                message,
+                exception.getHttpStatusCode(),
+                exception
+        );
+        outErr.setOauthSubErrorCode(exception.getOAuthSubErrorCode());
+        outErr.setHttpResponseHeaders(exception.getHttpResponseHeaders());
+        outErr.setHttpResponseBody(exception.getHttpResponseBody());
+        return outErr;
+    }
 
     @SuppressFBWarnings("BC_UNCONFIRMED_CAST")
     public static ServiceException getExceptionFromTokenErrorResponse(@Nullable final CommandParameters commandParameters,
@@ -326,6 +351,10 @@ public class ExceptionAdapter {
 
     @NonNull
     public static ClientException clientExceptionFromException(@NonNull final Throwable exception) {
+        if (exception instanceof ClientException){
+            return (ClientException) exception;
+        }
+
         Throwable e = exception;
         if (exception instanceof ExecutionException) {
             e = exception.getCause();

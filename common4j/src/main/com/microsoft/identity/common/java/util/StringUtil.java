@@ -312,8 +312,6 @@ public class StringUtil {
      */
     @NonNull
     public static Date RFC3339StringToDate(@NonNull String dateStr) throws ParseException {
-        final String methodName = "RFC3339StringToDate";
-        Logger.verbose(TAG + methodName, "RFC3339StringToDate is called.");
         final SimpleDateFormat RFC3339DateFormat = new SimpleDateFormat(RFC3339_DATE_FORMAT, Locale.US);
         RFC3339DateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         return RFC3339DateFormat.parse(dateStr);
@@ -499,6 +497,17 @@ public class StringUtil {
         } catch (IllegalArgumentException e) {
             Logger.error(methodTag, failureMessage + " " + e.getMessage(), null);
             throw e;
+        }
+    }
+
+    /**
+     * Helper function to overwrite all characters in an array with null values
+     * @param chars
+     */
+    public static void overwriteWithNull(final char[] chars) {
+        final int length = chars == null ? 0: chars.length;
+        for (int i =0; i < length; i++) {
+            chars[i] = '\0';
         }
     }
 }

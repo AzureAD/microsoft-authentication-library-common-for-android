@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Сега можете да извадите вашата смарт карта</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Разбрах</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Разрешаване на това приложение да осъществява достъп до камерата?</string>
+    <string name="qr_code_rationale_message">След това можете да влезете с QR код.</string>
+    <string name="qr_code_rationale_allow">Позволяване</string>
+    <string name="qr_code_rationale_block">Блок</string>
 </resources>
