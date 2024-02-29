@@ -30,6 +30,11 @@ package com.microsoft.identity.common.java.ui
 enum class PreferredAuthMethod(@JvmField val code: Int) {
     /**
      * QR code + PIN authentication.
+     * QR + PIN Authentication, is possible in MSAL only and MSAL with Broker flows.
+     * By default broker flows will have the capability to use QR code + PIN authentication.
+     * If is only MSAL, the user will have to add the camera permission to the app manifest
+     * to use QR code + PIN authentication, i.e. <uses-permission android:name="android.permission.CAMERA" />
+     * 18 is the code for QR code + PIN authentication on ESTS.
      */
     QR(18)
 }
