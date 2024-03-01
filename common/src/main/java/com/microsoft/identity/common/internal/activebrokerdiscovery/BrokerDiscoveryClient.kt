@@ -171,7 +171,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         cache = cache,
         isPackageInstalled = { brokerData ->
             PackageHelper(context).
-                isPackageInstalledAndEnabled(brokerData.packageName)
+            isPackageInstalledAndEnabled(brokerData.packageName)
         },
         isValidBroker = { brokerData ->
             BrokerValidator(context).isSignedByKnownKeys(brokerData)
@@ -204,6 +204,15 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                         Logger.info(
                             methodTag,
                             "Clearing cache as the installed app does not have a matching signature hash."
+                        )
+                        cache.clearCachedActiveBroker()
+                        return@let
+                    }
+
+                    if(!ipcStrategy.isSupportedByTargetedBroker(it.packageName)){
+                        Logger.info(
+                            methodTag,
+                            "Clearing cache as the installed app does not provide any IPC mechanism to communicate to. (e.g. the broker code isn't shipped with this apk)"
                         )
                         cache.clearCachedActiveBroker()
                         return@let

@@ -1,10 +1,12 @@
 V.Next
 ---------
+- [PATCH] Handle repeated camera requests. (#2332)
+- [MINOR] Clear active broker cache if the (cached) active broker app doesn't support ipc mechanism (#2331)
+- [MINOR] Add support for CIAM custom domain (#2314)
 - [MINOR] Rename "is QR + PIN available" API to "get preferred auth method". (#2288)
 - [MINOR] Changes to support safe deserialization of KeyPair in Linux (#2319)
 - [MINOR] Request camera permission on the WebViewAuthorizationFragment (#2258)
 - [MINOR] Deprecate legacy telemetry code (#2327)
-- [PATCH] Update nimbus-jose-jwt 9.37.3 (#2326)
 - [MINOR] Gracefully handles unexpected error in encryption layer (#2318)
 - [MINOR] Add support for CIAM custom domain (#2314)
 - [MINOR] Minor updates to passkey response logic (#2334)
