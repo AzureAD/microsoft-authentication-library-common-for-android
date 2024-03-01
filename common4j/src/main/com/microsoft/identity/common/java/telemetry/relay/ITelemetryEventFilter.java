@@ -29,6 +29,7 @@ import lombok.NonNull;
  * An interface that describes an event filter for a telemetry relay client {@link AbstractTelemetryRelayClient}
  * @param <T> the event data
  */
+@Deprecated
 public interface ITelemetryEventFilter<T> {
 
     /**

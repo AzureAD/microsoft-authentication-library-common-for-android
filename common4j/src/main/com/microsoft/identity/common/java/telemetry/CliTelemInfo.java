@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 
+@Deprecated
 public class CliTelemInfo implements Serializable {
 
     private static final String TAG = CliTelemInfo.class.getSimpleName();

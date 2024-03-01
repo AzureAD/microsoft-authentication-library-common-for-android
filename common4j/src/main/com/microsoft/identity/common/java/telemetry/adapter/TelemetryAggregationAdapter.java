@@ -35,6 +35,7 @@ import java.util.Map;
 
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 
+@Deprecated
 public class TelemetryAggregationAdapter implements ITelemetryAdapter<List<Map<String, String>>> {
     private ITelemetryAggregatedObserver mObserver;
     private static final String START = "start";

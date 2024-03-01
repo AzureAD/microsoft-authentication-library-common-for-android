@@ -26,6 +26,7 @@ import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 
 import javax.annotation.Nonnull;
 
+@Deprecated
 public class DeprecatedApiUsageEvent extends BaseEvent {
 
     public DeprecatedApiUsageEvent() {

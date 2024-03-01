@@ -35,12 +35,11 @@ import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationB
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_DEVICE_MODE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST;
-import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_IS_QR_PIN_AVAILABLE;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_PREFERRED_AUTH_METHOD;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_REMOVE_ACCOUNT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SIGN_OUT_FROM_SHARED_DEVICE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SSO_TOKEN;
 import static com.microsoft.identity.common.internal.controllers.BrokerOperationExecutor.BrokerOperation;
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
@@ -59,11 +58,9 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.BrokerActivity;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
-import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient;
 import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccountStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
-import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.cache.ClientActiveBrokerCache;
@@ -76,7 +73,6 @@ import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
-import com.microsoft.identity.common.internal.util.AccountManagerUtil;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
@@ -107,6 +103,7 @@ import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -116,8 +113,6 @@ import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.sharedwithoneauth.OneAuthSharedFunctions;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -772,16 +767,16 @@ public class BrokerMsalController extends BaseController {
 
 
     /**
-     * Checks if QR + PIN authorization is available.
+     * This method is used to read the preferred authentication method from the broker.
      *
-     * @return true if if QR + PIN authorization is available. False otherwise.
+     * @return the preferred authentication method.
      */
     @Override
-    public boolean isQrPinAvailable() throws BaseException {
-        final String methodTag = TAG + ":isQrPinAvailable";
+    public PreferredAuthMethod getPreferredAuthMethod() throws BaseException {
+        final String methodTag = TAG + ":getPreferredAuthMethod";
         return mBrokerOperationExecutor.execute(
                 null,
-                new BrokerOperation<Boolean>() {
+                new BrokerOperation<PreferredAuthMethod>() {
 
                     @Override
                     public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BrokerCommunicationException {
@@ -789,7 +784,7 @@ public class BrokerMsalController extends BaseController {
                         // We are failing fast here to avoid unnecessary IPC calls.
                         // IPC calls through BoundServiceStrategy takes approximate 25s to timeout.
                         if (strategy instanceof BoundServiceStrategy || strategy instanceof AccountManagerAddAccountStrategy) {
-                            final String errorMessage = strategy + " is not supported for isQrPinAvailable operation";
+                            final String errorMessage = strategy + " is not supported for getPreferredAuthMethod operation";
                             Logger.warn(methodTag,  errorMessage);
                             throw new BrokerCommunicationException(
                                     BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE,
@@ -804,7 +799,7 @@ public class BrokerMsalController extends BaseController {
                     @NonNull
                     public BrokerOperationBundle getBundle() {
                         return new BrokerOperationBundle(
-                                MSAL_IS_QR_PIN_AVAILABLE,
+                                MSAL_GET_PREFERRED_AUTH_METHOD,
                                 mActiveBrokerPackageName,
                                 null
                         );
@@ -812,24 +807,24 @@ public class BrokerMsalController extends BaseController {
 
                     @Override
                     @NonNull
-                    public Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
-                        return mResultAdapter.getIfQrPinIsAvailableFromResultBundle(resultBundle);
+                    public PreferredAuthMethod extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                        return mResultAdapter.getPreferredAuthMethodFromResultBundle(resultBundle);
                     }
 
                     @Override
                     @NonNull
                     public String getMethodName() {
-                        return ":isQrPinAvailable";
+                        return ":getPreferredAuthMethod";
                     }
 
                     @Override
                     @NonNull
                     public String getTelemetryApiId() {
-                        return TelemetryEventStrings.Api.IS_QR_PIN_AVAILABLE;
+                        return TelemetryEventStrings.Api.GET_PREFERRED_AUTH_METHOD;
                     }
 
                     @Override
-                    public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull Boolean result) {
+                    public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull PreferredAuthMethod result) {
                         // Deprecated telemetry.
                     }
                 });

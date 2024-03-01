@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Most már eltávolíthatja az intelligens kártyát</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Rendben</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Engedélyezi az alkalmazásnak a kamerához való hozzáférést?</string>
+    <string name="qr_code_rationale_message">Ezután bejelentkezhet QR-kóddal.</string>
+    <string name="qr_code_rationale_allow">Engedélyezés</string>
+    <string name="qr_code_rationale_block">Letiltás</string>
 </resources>

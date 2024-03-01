@@ -29,6 +29,7 @@ import java.util.Map;
  * An interface describing a telemetry accessor i.e. anyone that has the ability to return a
  * telemetry object.
  */
+@Deprecated
 public interface ITelemetryAccessor {
 
     /**

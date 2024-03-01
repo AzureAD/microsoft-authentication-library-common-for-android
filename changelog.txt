@@ -1,16 +1,29 @@
 V.Next
 ---------
+- [PATCH] Handle repeated camera requests. (#2332)
+- [MINOR] Clear active broker cache if the (cached) active broker app doesn't support ipc mechanism (#2331)
+- [MINOR] Add support for CIAM custom domain (#2314)
+- [MINOR] Rename "is QR + PIN available" API to "get preferred auth method". (#2288)
+- [MINOR] Changes to support safe deserialization of KeyPair in Linux (#2319)
+- [MINOR] Request camera permission on the WebViewAuthorizationFragment (#2258)
+- [MINOR] Deprecate legacy telemetry code (#2327)
+- [MINOR] Gracefully handles unexpected error in encryption layer (#2318)
+- [MINOR] Add flight to passkey feature for rollback purposes (#2329)
+
+V.17.1.1
+---------
+- [PATCH] Add timeout to backup IPC mechanism (#2323)
 
 V.17.1.0
 ---------
-- [PATCH] Revert #2305 (#2307)
-- [PATCH] Handle Receiver Callback Exception in CommandDispatcher interactive command (#2315)
 - [MINOR] Add flight to control silent token timeout (#2311)
+- [PATCH] Revert #2305 (#2307)
+- [PATCH] Handle Receiver Callback Exception in CommandDispatcher interactive command (#2305)
 - [MINOR] Add IpcStrategyWithBackup (#2301)
 - [PATCH] Fix MSAL Issue 1864 (#2280)
 - [MINOR] Add AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp (#2294)
 - [MINOR] Adding additional fields to JwtRequestBody for sending PRTv4 requests (#2289)
-- [MINOR] Update SignIn/Signup parameters classes for Native Auth(#2284)
+- [MINOR] Update SignIn/Signup parameters classes for Native Auth (#2284)
 - [MINOR] Add IsQrPinAvailableCommand, controllers behavior and define constants for the isQrAvailable API (#2219)
 - [MINOR] Add PreferredAuthMethod to interactive token flow (#2245)
 - [MINOR] Implement updates of the native auth web API (#2261)
