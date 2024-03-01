@@ -530,6 +530,12 @@ public class MsalOAuth2TokenCache
         }
     }
 
+    @Override
+    public void save(RefreshTokenRecord refreshTokenRecord) {
+        saveCredentialsInternal(refreshTokenRecord);
+       // removeAllRefreshTokensExcept();
+    }
+
     /**
      * Given an AccountRecord and associated client_id, load a sparse ICacheRecord containing
      * the provided AccountRecord and its accompanying IdTokens. "Sparse" here indicates that any

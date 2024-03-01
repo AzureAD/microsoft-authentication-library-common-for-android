@@ -472,6 +472,44 @@ public class BrokerOAuth2TokenCache
         }
     }
 
+    @Override
+    @SuppressWarnings(UNCHECKED)
+    public void save(
+            @NonNull final RefreshTokenRecord refreshTokenRecord) {
+        synchronized (this) {
+            final String methodName = ":saveAndLoadAggregatedAccountData";
+
+            final boolean isFoci = !StringUtil.isNullOrEmpty(refreshTokenRecord.getFamilyId());
+
+            OAuth2TokenCache targetCache;
+
+            Logger.info(
+                    TAG + methodName,
+                    "Saving to FOCI cache? ["
+                            + isFoci
+                            + "]"
+            );
+
+            if (isFoci) {
+                targetCache = mFociCache;
+            } else {
+                targetCache = initializeProcessUidCache(getComponents(), mUid);
+            }
+
+           targetCache.save(
+                        refreshTokenRecord
+            );
+
+
+            updateApplicationMetadataCache(
+                    refreshTokenRecord.getClientId(),
+                    refreshTokenRecord.getEnvironment(),
+                    refreshTokenRecord.getFamilyId(),
+                    mUid
+            );
+        }
+    }
+
     private void updateApplicationMetadataCache(@NonNull final String clientId,
                                                 @NonNull final String environment,
                                                 @Nullable final String familyId,

@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.oauth2;
 
+import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.WarningType;
@@ -85,6 +86,15 @@ public abstract class OAuth2TokenCache
             final T oAuth2Strategy,
             final U request,
             final V response) throws ClientException;
+
+    /**
+     * Saves the supplied Account and Credential in the cache.
+     *
+     * @param accountRecord The AccountRecord to save.
+     * @param idTokenRecord The IdTokenRecord to save.
+     * @return The {@link ICacheRecord} containing the Account + Credential[s] saved to the cache.
+     */
+    public abstract void save(final RefreshTokenRecord accountRecord);
 
     /**
      * Saves the supplied Account and Credential in the cache.

@@ -35,6 +35,7 @@ import com.microsoft.identity.common.java.adal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.cache.IShareSingleSignOnState;
+import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.AccountRecord;
@@ -195,6 +196,13 @@ public class ADALOAuth2TokenCache
 
     @Override
     public List<ICacheRecord> saveAndLoadAggregatedAccountData(AzureActiveDirectoryOAuth2Strategy oAuth2Strategy, AzureActiveDirectoryAuthorizationRequest request, AzureActiveDirectoryTokenResponse response) throws ClientException {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public void save(RefreshTokenRecord accountRecord) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );
