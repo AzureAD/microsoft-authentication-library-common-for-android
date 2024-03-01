@@ -90,6 +90,12 @@ public class BrokerMsalControllerTest {
             }
 
             @Override
+            public boolean isSupportedByTargetedBroker(@NonNull final String targetedBrokerPackageName) {
+                return true;
+            }
+
+            @Override
+            @NonNull
             public Type getType() {
                 return Type.CONTENT_PROVIDER;
             }

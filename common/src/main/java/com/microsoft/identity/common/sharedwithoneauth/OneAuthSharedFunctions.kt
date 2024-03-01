@@ -28,8 +28,6 @@ import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccoun
 import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy
 import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy
-import com.microsoft.identity.common.internal.util.AccountManagerUtil
-import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.logging.Logger
 
 // Functions to be invoked by both OneAuth and MSAL Android
@@ -62,18 +60,16 @@ class OneAuthSharedFunctions {
                 strategies.add(contentProviderStrategy)
             }
 
-            val client = MicrosoftAuthClient(context)
-            if (client.isBoundServiceSupported(activeBrokerPackageName)) {
+            val boundServiceStrategy = BoundServiceStrategy(MicrosoftAuthClient(context))
+            if (boundServiceStrategy.isSupportedByTargetedBroker(activeBrokerPackageName)) {
                 sb.append("BoundServiceStrategy, ")
-                strategies.add(BoundServiceStrategy(client))
+                strategies.add(boundServiceStrategy)
             }
 
-            if (AccountManagerUtil.canUseAccountManagerOperation(
-                    context, setOf(AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE)
-                )
-            ) {
+            val accountManagerStrategy = AccountManagerAddAccountStrategy(context)
+            if (accountManagerStrategy.isSupportedByTargetedBroker(activeBrokerPackageName)) {
                 sb.append("AccountManagerStrategy.")
-                strategies.add(AccountManagerAddAccountStrategy(context))
+                strategies.add(accountManagerStrategy)
             }
 
             Logger.info(methodTag, sb.toString())
