@@ -80,6 +80,7 @@ public abstract class Authority {
 
     public URI getAuthorityUri() {
         try {
+            Logger.info(TAG, "In AADAuth "+ mAuthorityUrlString);
             return new URI(mAuthorityUrlString);
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Authority URL is not a URI.", e);
@@ -88,6 +89,7 @@ public abstract class Authority {
 
     public URL getAuthorityURL() {
         try {
+            Logger.info(TAG, "in getAuthortyURL "+mAuthorityUrlString);
             return getAuthorityUri().toURL();
         } catch (final MalformedURLException e) {
             throw new IllegalArgumentException("Authority URI is not a URL.", e);

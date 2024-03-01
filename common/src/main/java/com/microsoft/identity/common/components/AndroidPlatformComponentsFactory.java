@@ -107,7 +107,7 @@ public class AndroidPlatformComponentsFactory {
         initializeGlobalStates(context);
 
         final PlatformComponents.PlatformComponentsBuilder builder = PlatformComponents.builder();
-        fillBuilderWithBasicImplementations(builder, context, activity, fragment);
+         fillBuilderWithBasicImplementations(builder, context, activity, fragment);
         return builder.build();
     }
 
@@ -121,7 +121,8 @@ public class AndroidPlatformComponentsFactory {
             @NonNull final Context context,
             @Nullable final Activity activity,
             @Nullable final Fragment fragment) {
-        builder.clockSkewManager(new AndroidClockSkewManager(context))
+        builder
+                .clockSkewManager(new AndroidClockSkewManager(context))
                 .broadcaster(new AndroidBroadcaster(context))
                 .popManagerLoader(new AndroidPopManagerSupplier(context))
                 .storageSupplier(new AndroidStorageSupplier(context,

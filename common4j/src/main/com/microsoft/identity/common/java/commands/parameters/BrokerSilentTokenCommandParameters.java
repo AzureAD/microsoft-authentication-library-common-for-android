@@ -66,6 +66,8 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
     @Expose
     private final String homeTenantId;
 
+    private final String transferToken;
+
     @Override
     public void validate() throws ArgumentException {
         if (callerUid == 0) {

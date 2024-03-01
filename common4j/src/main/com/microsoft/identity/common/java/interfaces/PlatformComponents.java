@@ -47,16 +47,16 @@ import lombok.experimental.SuperBuilder;
 @Accessors(prefix = "m")
 public class PlatformComponents implements IPlatformComponents {
 
-    @NonNull
+   // @NonNull
     private final IClockSkewManager mClockSkewManager;
 
-    @NonNull
+   // @NonNull
     private final IBroadcaster mBroadcaster;
 
-    @NonNull
+   // @NonNull
     private final IPopManagerSupplier mPopManagerLoader;
 
-    @NonNull
+    @Nullable
     private final IStorageSupplier mStorageSupplier;
 
     @SuppressWarnings(WarningType.rawtype_warning)
@@ -66,10 +66,10 @@ public class PlatformComponents implements IPlatformComponents {
     @Nullable
     private final IStateGenerator mStateGenerator;
 
-    @NonNull
+    // @NonNull
     private final IPlatformUtil mPlatformUtil;
 
-    @NonNull
+    // @NonNull
     private final IHttpClientWrapper mHttpClientWrapper;
 
     // TODO: Remove these methods and have the caller invoke IPopManagerSupplier directly.

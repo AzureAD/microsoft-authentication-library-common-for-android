@@ -1370,6 +1370,11 @@ public final class AuthenticationConstants {
         public static final String REMOVE_BROKER_ACCOUNT_SUCCEEDED = "remove_broker_account_succeeded";
 
         /**
+         * Boolean to return when tokens are successfully restored.
+         */
+        public static final String RESTORE_TOKENS_SUCCEEDED = "restore_tokens_succeeded";
+
+        /**
          * Boolean to return when a Broker RT is successfully updated.
          */
         public static final String UPDATE_BROKER_RT_SUCCEEDED = "update_broker_rt_succeeded";
@@ -1547,6 +1552,8 @@ public final class AuthenticationConstants {
             BROKER_GET_ACCOUNTS(BROKER_API_GET_BROKER_ACCOUNTS_PATH, BROKER_VERSION_1, null),
             BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_VERSION_1, null),
             BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_VERSION_1, null),
+
+            RESTORE_TOKENS(BROKER_API_RESTORE_TOKENS_PATH, BROKER_VERSION_4, null),
             BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_3, null),
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_3, null),
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
@@ -1665,6 +1672,8 @@ public final class AuthenticationConstants {
          * URI Path constant for BrokerApi-to-Broker updateBrt request using ContentProvider.
          */
         public static final String BROKER_API_UPDATE_BRT_PATH = "/brokerApi/updateBrt";
+
+        public static final String BROKER_API_RESTORE_TOKENS_PATH = "/brokerApi/restoreTokens";
 
         /**
          * Broker api path constant for setting flight information.

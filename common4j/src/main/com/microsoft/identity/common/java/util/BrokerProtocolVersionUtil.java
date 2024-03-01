@@ -24,6 +24,8 @@
 package com.microsoft.identity.common.java.util;
 
 
+import com.microsoft.identity.common.java.logging.Logger;
+
 import javax.annotation.Nullable;
 
 import lombok.NonNull;
@@ -130,6 +132,7 @@ public class BrokerProtocolVersionUtil {
             @Nullable final String providedBrokerProtocol,
             @NonNull final String requiredBrokerProtocol) {
 
+        Logger.info("tag", "isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol "+ providedBrokerProtocol + " "+ requiredBrokerProtocol);
         if (StringUtil.isNullOrEmpty(providedBrokerProtocol)) {
             return false;
         }
