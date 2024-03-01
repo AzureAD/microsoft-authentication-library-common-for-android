@@ -8,8 +8,8 @@ V.Next
 - [MINOR] Request camera permission on the WebViewAuthorizationFragment (#2258)
 - [MINOR] Deprecate legacy telemetry code (#2327)
 - [MINOR] Gracefully handles unexpected error in encryption layer (#2318)
-- [MINOR] Minor updates to passkey response logic (#2334)
 - [MINOR] Add flight to passkey feature for rollback purposes (#2329)
+- [MINOR] Minor updates to passkey response logic (#2334)
 
 V.17.1.1
 ---------
