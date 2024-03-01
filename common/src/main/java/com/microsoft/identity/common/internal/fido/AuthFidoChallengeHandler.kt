@@ -190,7 +190,7 @@ class AuthFidoChallengeHandler (
         if (exception != null) {
             span.recordException(exception)
             span.setStatus(StatusCode.ERROR)
-            respondToChallenge(submitUrl, exception.toString(), context, span)
+            respondToChallenge(submitUrl, exception.javaClass.name + ": " + exception.message, context, span)
         } else {
             span.setStatus(StatusCode.ERROR, errorMessage)
             respondToChallenge(submitUrl, errorMessage, context, span)
