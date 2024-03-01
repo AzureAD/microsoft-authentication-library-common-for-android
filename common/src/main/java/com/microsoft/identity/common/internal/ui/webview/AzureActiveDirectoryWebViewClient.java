@@ -49,6 +49,8 @@ import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractS
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
 import com.microsoft.identity.common.java.constants.FidoConstants;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightManager;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -169,7 +171,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url);
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
-            } else if (FidoConstants.IS_PASSKEY_SUPPORT_READY && isPasskeyUrl(formattedURL)) {
+            } else if (CommonFlightManager.isFlightEnabled(CommonFlight.ENABLE_PASSKEY_FEATURE) && isPasskeyUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for passkey protocol.");
                 final FidoChallenge challenge = FidoChallenge.createFromRedirectUri(url);
                 final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity)getActivity()).getSpanContext() : null;

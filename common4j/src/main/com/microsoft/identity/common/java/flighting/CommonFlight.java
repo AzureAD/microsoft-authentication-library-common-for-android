@@ -50,7 +50,13 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to control the timeout duration for Acquire Token Silent Calls
      * The default value is set to {@link ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS}
      */
-    ACQUIRE_TOKEN_SILENT_TIMEOUT_MILLISECONDS("AcquireTokenSilentTimeoutMilliSeconds", ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS);
+    ACQUIRE_TOKEN_SILENT_TIMEOUT_MILLISECONDS("AcquireTokenSilentTimeoutMilliSeconds", ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS),
+
+    /**
+     * Flight to be able to disable/rollback the passkey feature in broker if necessary.
+     * This will be set to true by default.
+     */
+    ENABLE_PASSKEY_FEATURE("EnablePasskeyFeature", true);
 
     private String key;
     private Object defaultValue;
