@@ -111,6 +111,26 @@ class FidoConstants {
         const val WEBAUTHN_AUTHENTICATION_ASSERTION_RESPONSE_JSON_KEY = "response"
 
         /**
+         * JSON key value of clientDataJSON in Webauthn response JSON object.
+         */
+        const val WEBAUTHN_RESPONSE_CLIENT_DATA_JSON_KEY = "clientDataJSON"
+
+        /**
+         * JSON key value of authenticatorData in Webauthn response JSON object.
+         */
+        const val WEBAUTHN_RESPONSE_AUTHENTICATOR_DATA_JSON_KEY = "authenticatorData"
+
+        /**
+         * JSON key value of signature in Webauthn response JSON object.
+         */
+        const val WEBAUTHN_RESPONSE_SIGNATURE_JSON_KEY = "signature"
+
+        /**
+         * JSON key value of userHandle in Webauthn response JSON object.
+         */
+        const val WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY = "userHandle"
+
+        /**
          * JSON key value of id in response of Webauthn JSON object.
          */
         const val WEBAUTHN_RESPONSE_ID_JSON_KEY = "id"
