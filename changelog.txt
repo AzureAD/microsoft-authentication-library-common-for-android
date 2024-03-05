@@ -1,4 +1,4 @@
-V.Next
+V.17.2.0
 ---------
 - [PATCH] Move SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY to BaseActiveBrokerCache (#2340)
 - [PATCH] Add cache for ContentProviderStrategy.isSupportedByTargetedBroker() (#2338)
