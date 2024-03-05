@@ -1,4 +1,4 @@
-V.Next
+V.17.2.0
 ---------
 - [PATCH] Handle repeated camera requests. (#2332)
 - [MINOR] Clear active broker cache if the (cached) active broker app doesn't support ipc mechanism (#2331)
