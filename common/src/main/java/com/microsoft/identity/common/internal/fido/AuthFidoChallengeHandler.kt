@@ -179,6 +179,7 @@ class AuthFidoChallengeHandler (
      * @param errorMessage  Error message string.
      * @param exception     Exception associated with error. Default null.
      * @param assertion     String representing response with signed challenge.
+     * @param methodTag     methodTag of method where exception occurred.
      */
     fun respondToChallengeWithError(submitUrl: String,
                                     context: String,
@@ -191,10 +192,32 @@ class AuthFidoChallengeHandler (
         if (exception != null) {
             span.recordException(exception)
             span.setStatus(StatusCode.ERROR)
-            respondToChallenge(submitUrl, PASSKEY_PROTOCOL_ERROR_PREFIX_STRING + exception.javaClass.name + ": " + exception.message, context, span)
         } else {
             span.setStatus(StatusCode.ERROR, errorMessage)
-            respondToChallenge(submitUrl, PASSKEY_PROTOCOL_ERROR_PREFIX_STRING + errorMessage, context, span)
         }
+        respondToChallenge(
+            submitUrl,
+            getErrorAssertion(
+                errorMessage,
+                exception
+            ),
+            context,
+            span
+        )
+    }
+
+    /**
+     * Formats the exception/error message to be sent via the assertion header of the passkey protocol.
+     *
+     * @param errorMessage  Error message string.
+     * @param exception     Exception associated with error. Default null.
+     */
+    private fun getErrorAssertion(errorMessage: String,
+                                  exception: Exception? = null
+    ): String {
+        if (exception != null) {
+            return PASSKEY_PROTOCOL_ERROR_PREFIX_STRING + exception.javaClass.name + ": " + exception.message
+        }
+        return PASSKEY_PROTOCOL_ERROR_PREFIX_STRING + errorMessage
     }
 }
