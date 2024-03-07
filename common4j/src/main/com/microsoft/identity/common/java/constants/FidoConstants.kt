@@ -106,6 +106,11 @@ class FidoConstants {
         const val PASSKEY_PROTOCOL_HEADER_VALUE = "$PASSKEY_PROTOCOL_VERSION/$PASSKEY_PROTOCOL_KEY_TYPES_SUPPORTED"
 
         /**
+         * Error messages sent to ESTS via the protocol should have a prefix attached.
+         */
+        const val PASSKEY_PROTOCOL_ERROR_PREFIX_STRING = "ERROR: "
+
+        /**
          * JSON key value of assertion response of authentication response JSON object.
          */
         const val WEBAUTHN_AUTHENTICATION_ASSERTION_RESPONSE_JSON_KEY = "response"
