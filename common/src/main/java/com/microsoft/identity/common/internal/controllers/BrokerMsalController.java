@@ -52,6 +52,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 
 import com.microsoft.identity.common.PropertyBagUtil;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -133,22 +134,23 @@ public class BrokerMsalController extends BaseController {
 
     private ResultFuture<Bundle> mBrokerResultFuture;
     private final String mActiveBrokerPackageName;
-    private final BrokerOperationExecutor mBrokerOperationExecutor;
     private final HelloCache mHelloCache;
     private final IPlatformComponents mComponents;
     private final Context mApplicationContext;
 
+    // Can be set in unit tests, otherwise this will be null.
+    @Nullable
+    private final List<IIpcStrategy> ipcStrategies;
+
+    @VisibleForTesting
     public BrokerMsalController(@NonNull final Context applicationContext,
                                 @NonNull final IPlatformComponents components,
                                 @NonNull final String activeBrokerPackageName,
-                                @NonNull final List<IIpcStrategy> ipcStrategies) {
+                                @Nullable final List<IIpcStrategy> ipcStrategies) {
         mComponents = components;
         mApplicationContext = applicationContext;
         mActiveBrokerPackageName = activeBrokerPackageName;
-        mBrokerOperationExecutor = new BrokerOperationExecutor(
-                ipcStrategies,
-                new ActiveBrokerCacheUpdater(applicationContext,
-                        ClientActiveBrokerCache.getClientSdkCache(components.getStorageSupplier())));
+        this.ipcStrategies = ipcStrategies;
         mHelloCache = getHelloCache();
     }
 
@@ -158,7 +160,17 @@ public class BrokerMsalController extends BaseController {
         this(applicationContext,
                 components,
                 activeBrokerPackageName,
-                OneAuthSharedFunctions.getIpcStrategies(applicationContext, activeBrokerPackageName));
+                null);
+    }
+
+    /** Should only be invoked in Background thread, given that getIpcStrategies could be a long running operation. */
+    @WorkerThread
+    private BrokerOperationExecutor getBrokerOperationExecutor(){
+        return new BrokerOperationExecutor(
+                ipcStrategies != null ? ipcStrategies :
+                        OneAuthSharedFunctions.getIpcStrategies(mApplicationContext, mActiveBrokerPackageName),
+                new ActiveBrokerCacheUpdater(mApplicationContext,
+                        ClientActiveBrokerCache.getClientSdkCache(mComponents.getStorageSupplier())));
     }
 
     @VisibleForTesting
@@ -413,7 +425,7 @@ public class BrokerMsalController extends BaseController {
     private @NonNull
     Intent getBrokerAuthorizationIntent(
             final @NonNull InteractiveTokenCommandParameters parameters) throws BaseException {
-        return mBrokerOperationExecutor.execute(parameters,
+        return getBrokerOperationExecutor().execute(parameters,
                 new BrokerOperation<Intent>() {
                     private String negotiatedBrokerProtocolVersion;
 
@@ -472,7 +484,7 @@ public class BrokerMsalController extends BaseController {
     public AuthorizationResult deviceCodeFlowAuthRequest(final DeviceCodeFlowCommandParameters parameters)
             throws BaseException, ClientException {
         // IPC to Broker : fetch DCF auth result
-        return mBrokerOperationExecutor.execute(parameters,
+        return getBrokerOperationExecutor().execute(parameters,
                 new BrokerOperation<AuthorizationResult>() {
                     private String negotiatedBrokerProtocolVersion;
 
@@ -525,7 +537,7 @@ public class BrokerMsalController extends BaseController {
             throws BaseException, ClientException {
 
         // IPC to Broker : AcquireTokenWithDCF API in Broker
-        return mBrokerOperationExecutor.execute(parameters,
+        return getBrokerOperationExecutor().execute(parameters,
                 new BrokerOperation<AcquireTokenResult>() {
                     private String negotiatedBrokerProtocolVersion;
 
@@ -597,7 +609,7 @@ public class BrokerMsalController extends BaseController {
     @Override
     public @NonNull
     AcquireTokenResult acquireTokenSilent(final @NonNull SilentTokenCommandParameters parameters) throws BaseException {
-        return mBrokerOperationExecutor.execute(parameters,
+        return getBrokerOperationExecutor().execute(parameters,
                 new BrokerOperation<AcquireTokenResult>() {
                     private String negotiatedBrokerProtocolVersion;
 
@@ -659,7 +671,7 @@ public class BrokerMsalController extends BaseController {
     @Override
     public @NonNull
     List<ICacheRecord> getAccounts(final @NonNull CommandParameters parameters) throws BaseException {
-        return mBrokerOperationExecutor.execute(parameters,
+        return getBrokerOperationExecutor().execute(parameters,
                 new BrokerOperation<List<ICacheRecord>>() {
                     private String negotiatedBrokerProtocolVersion;
 
@@ -718,7 +730,7 @@ public class BrokerMsalController extends BaseController {
      */
     @Override
     public boolean removeAccount(final @NonNull RemoveAccountCommandParameters parameters) throws BaseException {
-        return mBrokerOperationExecutor.execute(parameters,
+        return getBrokerOperationExecutor().execute(parameters,
                 new BrokerOperation<Boolean>() {
                     private String negotiatedBrokerProtocolVersion;
 
@@ -774,7 +786,7 @@ public class BrokerMsalController extends BaseController {
     @Override
     public PreferredAuthMethod getPreferredAuthMethod() throws BaseException {
         final String methodTag = TAG + ":getPreferredAuthMethod";
-        return mBrokerOperationExecutor.execute(
+        return getBrokerOperationExecutor().execute(
                 null,
                 new BrokerOperation<PreferredAuthMethod>() {
 
@@ -838,7 +850,7 @@ public class BrokerMsalController extends BaseController {
      */
     @Override
     public boolean getDeviceMode(final @NonNull CommandParameters parameters) throws BaseException {
-        return mBrokerOperationExecutor.execute(parameters,
+        return getBrokerOperationExecutor().execute(parameters,
                 new BrokerOperation<Boolean>() {
                     @Override
                     public void performPrerequisites(final @NonNull IIpcStrategy strategy) {
@@ -898,7 +910,7 @@ public class BrokerMsalController extends BaseController {
             return getAccounts(parameters);
         }
 
-        return mBrokerOperationExecutor.execute(parameters,
+        return getBrokerOperationExecutor().execute(parameters,
                 new BrokerOperation<List<ICacheRecord>>() {
                     private String negotiatedBrokerProtocolVersion;
 
@@ -974,7 +986,7 @@ public class BrokerMsalController extends BaseController {
          * If everything succeeds on the broker side, it will then
          * 4. Sign out from default browser.
          */
-        return mBrokerOperationExecutor.execute(parameters,
+        return getBrokerOperationExecutor().execute(parameters,
                 new BrokerOperation<Boolean>() {
                     private String negotiatedBrokerProtocolVersion;
 
@@ -1028,7 +1040,7 @@ public class BrokerMsalController extends BaseController {
 
     @Override
     public GenerateShrResult generateSignedHttpRequest(@NonNull final GenerateShrCommandParameters parameters) throws BaseException {
-        return mBrokerOperationExecutor.execute(parameters, new BrokerOperation<GenerateShrResult>() {
+        return getBrokerOperationExecutor().execute(parameters, new BrokerOperation<GenerateShrResult>() {
 
             private String negotiatedBrokerProtocolVersion;
 
@@ -1082,7 +1094,7 @@ public class BrokerMsalController extends BaseController {
     }
 
     public AcquirePrtSsoTokenResult getSsoToken(final @NonNull AcquirePrtSsoTokenCommandParameters parameters) throws BaseException {
-        return mBrokerOperationExecutor.execute(parameters, new BrokerOperation<AcquirePrtSsoTokenResult>() {
+        return getBrokerOperationExecutor().execute(parameters, new BrokerOperation<AcquirePrtSsoTokenResult>() {
 
             private String negotiatedBrokerProtocolVersion;
 

@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.sharedwithoneauth
 
 import android.content.Context
+import androidx.annotation.WorkerThread
 import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient
 import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccountStrategy
 import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy
@@ -45,6 +46,7 @@ class OneAuthSharedFunctions {
          * @param activeBrokerPackageName name of the app hosting the broker process to communicate to.
          **/
         @JvmStatic
+        @WorkerThread
         fun getIpcStrategies(
             context: Context,
             activeBrokerPackageName: String,
