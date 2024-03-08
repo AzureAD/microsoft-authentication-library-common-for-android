@@ -45,12 +45,24 @@ import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationB
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_REMOVE_ACCOUNT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SIGN_OUT_FROM_SHARED_DEVICE;
 
+import lombok.NonNull;
+
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = {Build.VERSION_CODES.N}, shadows = {ShadowContentResolverWithSuccessResult.class})
 public class ContentProviderStrategyTests extends IpcStrategyTests {
+
+    static class MockQueryContentProviderLoader implements IQueryContentProviderLoader {
+        @Override
+        public boolean getResult(@NonNull String packageName) {
+            return true;
+        }
+    }
+
     @Override
     protected IIpcStrategy getStrategy() {
-        return new ContentProviderStrategy(ApplicationProvider.getApplicationContext(), true);
+        return new ContentProviderStrategy(ApplicationProvider.getApplicationContext(),
+                new MockQueryContentProviderLoader(),
+                true);
     }
 
     @Test

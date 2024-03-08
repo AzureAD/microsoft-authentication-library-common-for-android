@@ -29,7 +29,6 @@ import static com.microsoft.identity.common.exception.BrokerCommunicationExcepti
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.CONTENT_PROVIDER;
 
 import android.content.Context;
-import android.content.pm.ProviderInfo;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -41,9 +40,8 @@ import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.util.ParcelableUtil;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.logging.Logger;
-
-import java.util.List;
 
 /**
  * A strategy for communicating with the targeted broker via Content Provider.
@@ -52,17 +50,21 @@ public class ContentProviderStrategy extends AbstractIpcStrategyWithServiceValid
 
     private static final String TAG = ContentProviderStrategy.class.getSimpleName();
     private final Context mContext;
+    private final IQueryContentProviderLoader mCache;
 
-    public ContentProviderStrategy(final Context context) {
+    public ContentProviderStrategy(final Context context, final IPlatformComponents components) {
         super(false);
         mContext = context;
+        mCache = new QueryContentProviderLoader(context, components);
     }
 
     @VisibleForTesting
     protected ContentProviderStrategy(final Context context,
+                                      final IQueryContentProviderLoader cache,
                                       final boolean shouldBypassSupportValidation) {
         super(shouldBypassSupportValidation);
         mContext = context;
+        mCache = cache;
     }
 
     @Override
@@ -142,7 +144,7 @@ public class ContentProviderStrategy extends AbstractIpcStrategyWithServiceValid
     /**
      * Returns content provider authority.
      */
-    private String getContentProviderAuthority(final @NonNull String targetedBrokerPackageName) {
+    public static String getContentProviderAuthority(final @NonNull String targetedBrokerPackageName) {
         return targetedBrokerPackageName + "." + AUTHORITY;
     }
 
@@ -151,22 +153,6 @@ public class ContentProviderStrategy extends AbstractIpcStrategyWithServiceValid
      */
     @Override
     public boolean isSupportedByTargetedBroker(final @NonNull String targetedBrokerPackageName) {
-        final String methodTag = TAG + ":isSupportedByTargetedBroker";
-        final String contentProviderAuthority = getContentProviderAuthority(targetedBrokerPackageName);
-
-        final List<ProviderInfo> providers = mContext.getPackageManager()
-                .queryContentProviders(null, 0, 0);
-
-        if (providers == null) {
-            Logger.error(methodTag, "Content Provider not found.", null);
-            return false;
-        }
-
-        for (final ProviderInfo providerInfo : providers) {
-            if (providerInfo.authority != null && providerInfo.authority.equals(contentProviderAuthority)) {
-                return true;
-            }
-        }
-        return false;
+        return mCache.getResult(targetedBrokerPackageName);
     }
 }
