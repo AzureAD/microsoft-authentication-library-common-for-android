@@ -398,15 +398,11 @@ public abstract class Authority {
         Logger.info(TAG + methodName, "Cloud discovery complete.");
 
         if (clientException == null) {
-            if (!isKnownAuthority(authority)) {
-                clientException = new ClientException(
-                        ClientException.UNKNOWN_AUTHORITY,
-                        "Provided authority is not known.  MSAL will only make requests to known authorities"
-                );
-            } else {
+
+            //remove authority check
                 Logger.info(TAG + methodName, "Cloud is known.");
                 known = true;
-            }
+            
         }
 
         return new KnownAuthorityResult(known, clientException);
