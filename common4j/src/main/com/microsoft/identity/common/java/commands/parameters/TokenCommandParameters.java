@@ -67,6 +67,9 @@ public class TokenCommandParameters extends CommandParameters {
     @Expose()
     private final boolean forceRefresh;
 
+    @Expose()
+    private final String dc;
+
     private final String loginHint;
 
     private final List<Map.Entry<String, String>> extraOptions;

@@ -120,6 +120,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     protected transient AzureActiveDirectorySlice mSlice;
 
     @SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
+    @Getter
+    @Accessors(prefix = "m")
     protected transient Map<String, String> mFlightParameters;
 
     // TODO private transient InstanceDiscoveryMetadata mInstanceDiscoveryMetadata;
@@ -256,6 +258,12 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         final CommonURIBuilder builder = new CommonURIBuilder(super.getAuthorizationRequestAsHttpRequest());
         builder.addParametersIfAbsent(mFlightParameters);
 
+        // DC passed as request command parameter
+        if (!StringUtil.isNullOrEmpty(getDc())) {
+            builder.addParameterIfAbsent(AzureActiveDirectorySlice.DC_PARAMETER, getDc());
+        }
+
+        // Slice passed as configuration parameter
         if (mSlice != null) {
             if (!StringUtil.isNullOrEmpty(mSlice.getSlice())) {
                 builder.addParameterIfAbsent(AzureActiveDirectorySlice.SLICE_PARAMETER, mSlice.getSlice());
