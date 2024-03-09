@@ -142,6 +142,8 @@ public class BrokerMsalController extends BaseController {
     @Nullable
     private final List<IIpcStrategy> ipcStrategies;
 
+    private BrokerOperationExecutor mOperationExecutor;
+
     @VisibleForTesting
     public BrokerMsalController(@NonNull final Context applicationContext,
                                 @NonNull final IPlatformComponents components,
@@ -165,12 +167,15 @@ public class BrokerMsalController extends BaseController {
 
     /** Should only be invoked in Background thread, given that getIpcStrategies could be a long running operation. */
     @WorkerThread
-    private BrokerOperationExecutor getBrokerOperationExecutor(){
-        return new BrokerOperationExecutor(
-                ipcStrategies != null ? ipcStrategies :
-                        OneAuthSharedFunctions.getIpcStrategies(mApplicationContext, mActiveBrokerPackageName),
-                new ActiveBrokerCacheUpdater(mApplicationContext,
-                        ClientActiveBrokerCache.getClientSdkCache(mComponents.getStorageSupplier())));
+    private synchronized BrokerOperationExecutor getBrokerOperationExecutor(){
+        if (mOperationExecutor == null) {
+            mOperationExecutor = new BrokerOperationExecutor(
+                    ipcStrategies != null ? ipcStrategies :
+                            OneAuthSharedFunctions.getIpcStrategies(mApplicationContext, mActiveBrokerPackageName),
+                    new ActiveBrokerCacheUpdater(mApplicationContext,
+                            ClientActiveBrokerCache.getClientSdkCache(mComponents.getStorageSupplier())));
+        }
+        return mOperationExecutor;
     }
 
     @VisibleForTesting
