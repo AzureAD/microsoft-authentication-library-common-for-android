@@ -1,6 +1,7 @@
 V.Next
 ---------
 - [PATCH] Add cache for ContentProviderStrategy.isSupportedByTargetedBroker() (#2338)
+- [PATCH] isSupportedByTargetedBroker should only be invoked in bg thread (#2339)
 - [PATCH] Return status code in errorResponse when server response is not in expected Json format. (#2321)
 - [PATCH] Handle repeated camera requests. (#2332)
 - [MINOR] Clear active broker cache if the (cached) active broker app doesn't support ipc mechanism (#2331)
