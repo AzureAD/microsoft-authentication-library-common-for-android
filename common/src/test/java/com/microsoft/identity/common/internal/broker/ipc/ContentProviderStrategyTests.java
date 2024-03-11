@@ -51,9 +51,9 @@ import lombok.NonNull;
 @Config(sdk = {Build.VERSION_CODES.N}, shadows = {ShadowContentResolverWithSuccessResult.class})
 public class ContentProviderStrategyTests extends IpcStrategyTests {
 
-    static class MockQueryContentProviderLoader implements IQueryContentProviderLoader {
+    static class MockContentProviderStatusLoader implements IContentProviderStatusLoader {
         @Override
-        public boolean getResult(@NonNull String packageName) {
+        public boolean getStatus(@NonNull String packageName) {
             return true;
         }
     }
@@ -61,7 +61,7 @@ public class ContentProviderStrategyTests extends IpcStrategyTests {
     @Override
     protected IIpcStrategy getStrategy() {
         return new ContentProviderStrategy(ApplicationProvider.getApplicationContext(),
-                new MockQueryContentProviderLoader(),
+                new MockContentProviderStatusLoader(),
                 true);
     }
 

@@ -30,17 +30,17 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class QueryContentProviderLoaderTest {
+class ContentProviderStatusLoaderTest {
 
     @Test
     fun testAppNotInstalled(){
-        val loader = QueryContentProviderLoader(
+        val loader = ContentProviderStatusLoader(
             getVersionCode = { throw PackageManager.NameNotFoundException() },
             supportedByContentProvider = { throw IllegalStateException() },
             fileManager = InMemoryStorage()
         )
 
-        Assert.assertFalse(loader.getResult("com.microsoft.test"))
+        Assert.assertFalse(loader.getStatus("com.microsoft.test"))
     }
 
     @Test
@@ -48,17 +48,17 @@ class QueryContentProviderLoaderTest {
         val cache = InMemoryStorage<String>()
         val versionKey = "1.2.3456"
 
-        val loader = QueryContentProviderLoader(
+        val loader = ContentProviderStatusLoader(
             getVersionCode = { pkgName ->
                 if (pkgName == "com.microsoft.test")
-                    return@QueryContentProviderLoader versionKey
+                    return@ContentProviderStatusLoader versionKey
                 throw PackageManager.NameNotFoundException()
             },
             supportedByContentProvider = { true },
             fileManager = cache
         )
 
-        Assert.assertTrue(loader.getResult("com.microsoft.test"))
+        Assert.assertTrue(loader.getStatus("com.microsoft.test"))
         Assert.assertTrue(cache.get("com.microsoft.test:$versionKey").toBoolean())
         Assert.assertEquals(1, cache.size())
     }
@@ -68,17 +68,17 @@ class QueryContentProviderLoaderTest {
         val cache = InMemoryStorage<String>()
         val versionKey = "123.456.789"
 
-        val loader = QueryContentProviderLoader(
+        val loader = ContentProviderStatusLoader(
             getVersionCode = { pkgName ->
                 if (pkgName == "com.microsoft.test")
-                    return@QueryContentProviderLoader versionKey
+                    return@ContentProviderStatusLoader versionKey
                 throw PackageManager.NameNotFoundException()
             },
             supportedByContentProvider = { false },
             fileManager = cache
         )
 
-        Assert.assertFalse(loader.getResult("com.microsoft.test"))
+        Assert.assertFalse(loader.getStatus("com.microsoft.test"))
         Assert.assertFalse(cache.get("com.microsoft.test:$versionKey").toBoolean())
         Assert.assertEquals(1, cache.size())
     }
@@ -89,10 +89,10 @@ class QueryContentProviderLoaderTest {
         val versionKey = "123.456.789"
         cache.put("com.microsoft.test:$versionKey", true.toString())
 
-        val loader = QueryContentProviderLoader(
+        val loader = ContentProviderStatusLoader(
             getVersionCode = { pkgName ->
                 if (pkgName == "com.microsoft.test")
-                    return@QueryContentProviderLoader versionKey
+                    return@ContentProviderStatusLoader versionKey
                 throw PackageManager.NameNotFoundException()
             },
             supportedByContentProvider = {
@@ -100,7 +100,7 @@ class QueryContentProviderLoaderTest {
             fileManager = cache
         )
 
-        Assert.assertTrue(loader.getResult("com.microsoft.test"))
+        Assert.assertTrue(loader.getStatus("com.microsoft.test"))
         Assert.assertEquals(1, cache.size())
     }
 
@@ -111,18 +111,18 @@ class QueryContentProviderLoaderTest {
         cache.put("com.microsoft.test:$versionKey", true.toString())
         val newVersionKey = "1.2.234"
 
-        val loader = QueryContentProviderLoader(
+        val loader = ContentProviderStatusLoader(
             getVersionCode = { pkgName ->
                 if (pkgName == "com.microsoft.test")
                     // Returns a different version
-                    return@QueryContentProviderLoader newVersionKey
+                    return@ContentProviderStatusLoader newVersionKey
                 throw PackageManager.NameNotFoundException()
             },
             supportedByContentProvider = { false },
             fileManager = cache
         )
 
-        Assert.assertFalse(loader.getResult("com.microsoft.test"))
+        Assert.assertFalse(loader.getStatus("com.microsoft.test"))
         Assert.assertFalse(cache.get("com.microsoft.test:$newVersionKey").toBoolean())
         Assert.assertEquals(2, cache.size())
     }

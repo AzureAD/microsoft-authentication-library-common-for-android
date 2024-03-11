@@ -22,7 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker.ipc
 
-interface IQueryContentProviderLoader {
+/**
+ * A wrapper interface around packageManager.queryContentProviders().
+ * */
+interface IContentProviderStatusLoader {
 
-    fun getResult(packageName: String) : Boolean
+    /**
+     * Determine if the targeted app supports (Broker) Content Provider.
+     **/
+    fun getStatus(packageName: String) : Boolean
 }

@@ -50,17 +50,17 @@ public class ContentProviderStrategy extends AbstractIpcStrategyWithServiceValid
 
     private static final String TAG = ContentProviderStrategy.class.getSimpleName();
     private final Context mContext;
-    private final IQueryContentProviderLoader mCache;
+    private final IContentProviderStatusLoader mCache;
 
     public ContentProviderStrategy(final Context context, final IPlatformComponents components) {
         super(false);
         mContext = context;
-        mCache = new QueryContentProviderLoader(context, components);
+        mCache = new ContentProviderStatusLoader(context, components);
     }
 
     @VisibleForTesting
     protected ContentProviderStrategy(final Context context,
-                                      final IQueryContentProviderLoader cache,
+                                      final IContentProviderStatusLoader cache,
                                       final boolean shouldBypassSupportValidation) {
         super(shouldBypassSupportValidation);
         mContext = context;
@@ -153,6 +153,6 @@ public class ContentProviderStrategy extends AbstractIpcStrategyWithServiceValid
      */
     @Override
     public boolean isSupportedByTargetedBroker(final @NonNull String targetedBrokerPackageName) {
-        return mCache.getResult(targetedBrokerPackageName);
+        return mCache.getStatus(targetedBrokerPackageName);
     }
 }

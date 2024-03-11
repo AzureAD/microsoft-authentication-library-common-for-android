@@ -37,14 +37,14 @@ import com.microsoft.identity.common.logging.Logger
  * We'll avoid making unnecessary ipc request by caching them.
  * The content provider support status should remain the same for a given broker version.
  **/
-class QueryContentProviderLoader(
+class ContentProviderStatusLoader(
     private val getVersionCode: (appPackageName: String) -> String,
     private val supportedByContentProvider: (appPackageName: String) -> Boolean,
     private val fileManager: INameValueStorage<String>,
-) : IQueryContentProviderLoader {
+) : IContentProviderStatusLoader {
 
     companion object {
-        private val TAG = QueryContentProviderLoader::class.java.simpleName
+        private val TAG = ContentProviderStatusLoader::class.java.simpleName
         private const val SHARED_PREFERENCE_NAME = "com.microsoft.common.ipc.content.provider.query.cache"
 
         @Throws(PackageManager.NameNotFoundException::class)
@@ -82,11 +82,13 @@ class QueryContentProviderLoader(
         supportedByContentProvider = { pkgName -> supportedByContentProvider(context, pkgName) }
     )
 
-    override fun getResult(packageName: String) : Boolean {
+    override fun getStatus(packageName: String) : Boolean {
         val methodTag = "$TAG:getResult"
         try {
+            // Construct a key for the cache.
             val key = packageName + ":" + getVersionCode(packageName)
 
+            // Try loading from cache, return if the value is found.
             fileManager.get(key)?.let {
                 return it.toBoolean()
             }
