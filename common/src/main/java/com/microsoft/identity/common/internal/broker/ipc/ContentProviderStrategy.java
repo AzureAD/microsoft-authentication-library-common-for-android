@@ -153,6 +153,6 @@ public class ContentProviderStrategy extends AbstractIpcStrategyWithServiceValid
      */
     @Override
     public boolean isSupportedByTargetedBroker(final @NonNull String targetedBrokerPackageName) {
-        return mCache.getStatus(targetedBrokerPackageName);
+        return mCache.supportsContentProvider(targetedBrokerPackageName);
     }
 }

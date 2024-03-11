@@ -30,5 +30,5 @@ interface IContentProviderStatusLoader {
     /**
      * Determine if the targeted app supports (Broker) Content Provider.
      **/
-    fun getStatus(packageName: String) : Boolean
+    fun supportsContentProvider(packageName: String) : Boolean
 }

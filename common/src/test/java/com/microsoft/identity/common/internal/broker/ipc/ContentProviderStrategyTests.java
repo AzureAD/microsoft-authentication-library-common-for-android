@@ -53,7 +53,7 @@ public class ContentProviderStrategyTests extends IpcStrategyTests {
 
     static class MockContentProviderStatusLoader implements IContentProviderStatusLoader {
         @Override
-        public boolean getStatus(@NonNull String packageName) {
+        public boolean supportsContentProvider(@NonNull String packageName) {
             return true;
         }
     }

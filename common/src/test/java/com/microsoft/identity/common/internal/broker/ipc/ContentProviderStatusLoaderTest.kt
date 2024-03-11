@@ -40,7 +40,7 @@ class ContentProviderStatusLoaderTest {
             fileManager = InMemoryStorage()
         )
 
-        Assert.assertFalse(loader.getStatus("com.microsoft.test"))
+        Assert.assertFalse(loader.supportsContentProvider("com.microsoft.test"))
     }
 
     @Test
@@ -58,7 +58,7 @@ class ContentProviderStatusLoaderTest {
             fileManager = cache
         )
 
-        Assert.assertTrue(loader.getStatus("com.microsoft.test"))
+        Assert.assertTrue(loader.supportsContentProvider("com.microsoft.test"))
         Assert.assertTrue(cache.get("com.microsoft.test:$versionKey").toBoolean())
         Assert.assertEquals(1, cache.size())
     }
@@ -78,7 +78,7 @@ class ContentProviderStatusLoaderTest {
             fileManager = cache
         )
 
-        Assert.assertFalse(loader.getStatus("com.microsoft.test"))
+        Assert.assertFalse(loader.supportsContentProvider("com.microsoft.test"))
         Assert.assertFalse(cache.get("com.microsoft.test:$versionKey").toBoolean())
         Assert.assertEquals(1, cache.size())
     }
@@ -100,7 +100,7 @@ class ContentProviderStatusLoaderTest {
             fileManager = cache
         )
 
-        Assert.assertTrue(loader.getStatus("com.microsoft.test"))
+        Assert.assertTrue(loader.supportsContentProvider("com.microsoft.test"))
         Assert.assertEquals(1, cache.size())
     }
 
@@ -122,7 +122,7 @@ class ContentProviderStatusLoaderTest {
             fileManager = cache
         )
 
-        Assert.assertFalse(loader.getStatus("com.microsoft.test"))
+        Assert.assertFalse(loader.supportsContentProvider("com.microsoft.test"))
         Assert.assertFalse(cache.get("com.microsoft.test:$newVersionKey").toBoolean())
         Assert.assertEquals(2, cache.size())
     }

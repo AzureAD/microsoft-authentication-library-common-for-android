@@ -82,7 +82,7 @@ class ContentProviderStatusLoader(
         supportedByContentProvider = { pkgName -> supportedByContentProvider(context, pkgName) }
     )
 
-    override fun getStatus(packageName: String) : Boolean {
+    override fun supportsContentProvider(packageName: String) : Boolean {
         val methodTag = "$TAG:getResult"
         try {
             // Construct a key for the cache.
