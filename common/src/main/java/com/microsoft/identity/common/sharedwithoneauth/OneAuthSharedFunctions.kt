@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.sharedwithoneauth
 
 import android.content.Context
+import androidx.annotation.WorkerThread
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory
 import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient
 import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccountStrategy
 import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy
@@ -30,6 +32,7 @@ import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy
 import com.microsoft.identity.common.internal.util.AccountManagerUtil
 import com.microsoft.identity.common.java.AuthenticationConstants
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.logging.Logger
 
 // Functions to be invoked by both OneAuth and MSAL Android
@@ -51,12 +54,31 @@ class OneAuthSharedFunctions {
             context: Context,
             activeBrokerPackageName: String,
         ): List<IIpcStrategy> {
+            return getIpcStrategies(context,
+                AndroidPlatformComponentsFactory.createFromContext(context),
+                activeBrokerPackageName)
+        }
+
+        /**
+         * Constructs a list of [IIpcStrategy] to communicate from
+         * OneAuth/MSAL to Broker process.
+         *
+         * @param context [Context]
+         * @param components [IPlatformComponents]
+         * @param activeBrokerPackageName name of the app hosting the broker process to communicate to.
+         **/
+        @JvmStatic
+        fun getIpcStrategies(
+            context: Context,
+            components: IPlatformComponents,
+            activeBrokerPackageName: String,
+        ): List<IIpcStrategy> {
             val methodTag = "$TAG:getIpcStrategies"
             val strategies: MutableList<IIpcStrategy> = ArrayList()
 
             val sb = StringBuilder(100)
             sb.append("Broker Strategies added : ")
-            val contentProviderStrategy = ContentProviderStrategy(context)
+            val contentProviderStrategy = ContentProviderStrategy(context, components)
             if (contentProviderStrategy.isSupportedByTargetedBroker(activeBrokerPackageName)) {
                 sb.append("ContentProviderStrategy, ")
                 strategies.add(contentProviderStrategy)
