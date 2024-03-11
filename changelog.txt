@@ -1,5 +1,6 @@
-V.Next
+V.17.1.2
 ---------
+- [PATCH] isSupportedByTargetedBroker should only be invoked in bg thread (#2339)
 
 V.17.1.1
 ---------
