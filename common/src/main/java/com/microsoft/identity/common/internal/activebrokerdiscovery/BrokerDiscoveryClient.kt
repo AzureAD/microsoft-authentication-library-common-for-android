@@ -34,6 +34,7 @@ import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy
 import com.microsoft.identity.common.internal.cache.IClientActiveBrokerCache
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.exception.ClientException.ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.logging.Logger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
@@ -162,12 +163,13 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
     }
 
     constructor(context: Context,
+                components: IPlatformComponents,
                 cache: IClientActiveBrokerCache): this(
         brokerCandidates = BrokerData.getKnownBrokerApps(),
         getActiveBrokerFromAccountManager = {
             AccountManagerBrokerDiscoveryUtil(context).getActiveBrokerFromAccountManager()
         },
-        ipcStrategy = ContentProviderStrategy(context),
+        ipcStrategy = ContentProviderStrategy(context, components),
         cache = cache,
         isPackageInstalled = { brokerData ->
             PackageHelper(context).

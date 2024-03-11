@@ -88,6 +88,7 @@ class BrokerDiscoveryClientFactory {
                     lock.withLock {
                         if (clientSdkInstance == null) {
                             clientSdkInstance = getInstance(context,
+                                platformComponents,
                                 ClientActiveBrokerCache.getClientSdkCache(platformComponents.storageSupplier))
                         }
                     }
@@ -108,6 +109,7 @@ class BrokerDiscoveryClientFactory {
                     lock.withLock {
                         if (brokerSdkInstance == null) {
                             brokerSdkInstance = getInstance(context,
+                                platformComponents,
                                 ClientActiveBrokerCache.getBrokerSdkCache(platformComponents.storageSupplier))
                         }
                     }
@@ -122,11 +124,12 @@ class BrokerDiscoveryClientFactory {
          **/
         @JvmStatic
         private fun getInstance(context: Context,
+                                platformComponents: IPlatformComponents,
                                 cache: IClientActiveBrokerCache) : IBrokerDiscoveryClient{
             val methodTag = "$TAG:getInstance"
             return if (isNewBrokerDiscoveryEnabled()) {
                 Logger.info(methodTag, "Broker Discovery is enabled. Use the new logic on the SDK side")
-                BrokerDiscoveryClient(context, cache)
+                BrokerDiscoveryClient(context, platformComponents, cache)
             } else {
                 Logger.info(methodTag, "Broker Discovery is disabled. Use AccountManager on the SDK side.")
                 LegacyBrokerDiscoveryClient(context)
