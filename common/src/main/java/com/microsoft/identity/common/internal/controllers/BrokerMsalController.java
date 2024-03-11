@@ -797,7 +797,7 @@ public class BrokerMsalController extends BaseController {
     @Override
     public boolean isQrPinAvailable() throws BaseException {
         final String methodTag = TAG + ":isQrPinAvailable";
-        return mBrokerOperationExecutor.execute(
+        return getBrokerOperationExecutor().execute(
                 null,
                 new BrokerOperation<Boolean>() {
 
