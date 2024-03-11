@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.activebrokerdiscovery
 
 import com.microsoft.identity.common.internal.broker.BrokerData
-import com.microsoft.identity.common.internal.cache.ClientActiveBrokerCache.Companion.isNotExpired
+import com.microsoft.identity.common.internal.cache.BaseActiveBrokerCache.Companion.isNotExpired
 import com.microsoft.identity.common.internal.cache.IActiveBrokerCache
 import com.microsoft.identity.common.internal.cache.IClientActiveBrokerCache
 import java.time.Instant

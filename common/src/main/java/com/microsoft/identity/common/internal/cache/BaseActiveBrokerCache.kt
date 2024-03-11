@@ -47,6 +47,22 @@ open class BaseActiveBrokerCache
          * Key of the broker signature hash in the cache.
          **/
         const val ACTIVE_BROKER_CACHE_SIGHASH_KEY = "ACTIVE_BROKER_CACHE_SIGHASH_KEY"
+
+        /**
+         * Returns true if the time has NOT passed the given expiry date.
+         */
+        fun isNotExpired(expiryDate: Long?): Boolean{
+            if (expiryDate == null) {
+                return false
+            }
+            return System.currentTimeMillis() < expiryDate
+        }
+
+        /**
+         * Key for storing time which the client discovery should use AccountManager.
+         **/
+        const val SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY =
+            "SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY"
     }
 
     override fun getCachedActiveBroker(): BrokerData? {
@@ -63,6 +79,29 @@ open class BaseActiveBrokerCache
         }
     }
 
+    override fun shouldUseAccountManager(): Boolean {
+        return runBlocking {
+            lock.withLock {
+                storage.get(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY)?.let { rawValue ->
+                    rawValue.toLongOrNull()?.let { expiryDate ->
+                        return@runBlocking isNotExpired(expiryDate)
+                    }
+                }
+
+                return@runBlocking false
+            }
+        }
+    }
+
+    override fun setShouldUseAccountManagerForTheNextMilliseconds(timeInMillis: Long) {
+        return runBlocking {
+            lock.withLock {
+                val timeStamp = System.currentTimeMillis() + timeInMillis
+                storage.put(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY, timeStamp.toString())
+            }
+        }
+    }
+
     override fun setCachedActiveBroker(brokerData: BrokerData) {
         return runBlocking {
             lock.withLock {
@@ -74,7 +113,9 @@ open class BaseActiveBrokerCache
     override fun clearCachedActiveBroker() {
         return runBlocking {
             lock.withLock {
-                clearCachedActiveBrokerWithoutLock()
+                storage.remove(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY)
+                storage.remove(ACTIVE_BROKER_CACHE_SIGHASH_KEY)
+                storage.remove(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY)
             }
         }
     }
@@ -82,10 +123,6 @@ open class BaseActiveBrokerCache
     protected open fun setCachedActiveBrokerWithoutLock(brokerData: BrokerData){
         storage.put(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY, brokerData.packageName)
         storage.put(ACTIVE_BROKER_CACHE_SIGHASH_KEY, brokerData.signingCertificateThumbprint)
-    }
-
-    protected fun clearCachedActiveBrokerWithoutLock(){
-        storage.remove(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY)
-        storage.remove(ACTIVE_BROKER_CACHE_SIGHASH_KEY)
+        storage.remove(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY)
     }
 }
