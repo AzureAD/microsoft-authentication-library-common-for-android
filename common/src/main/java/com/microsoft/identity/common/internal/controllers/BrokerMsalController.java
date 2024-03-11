@@ -167,6 +167,7 @@ public class BrokerMsalController extends BaseController {
 
     /** Should only be invoked in Background thread, given that getIpcStrategies could be a long running operation. */
     @WorkerThread
+    @NonNull
     private synchronized BrokerOperationExecutor getBrokerOperationExecutor(){
         if (mOperationExecutor == null) {
             mOperationExecutor = new BrokerOperationExecutor(
