@@ -292,8 +292,10 @@ public class MicrosoftStsAccountCredentialAdapter
         final String methodTag = TAG + ":createAccountRecord";
         final ClientInfo clientInfo = new ClientInfo(microsoftStsTokenResponse.getClientInfo());
         AccountRecord accountRecord;
-
+         Logger.info(methodTag, "In createAccountRecord");
+             Logger.info(methodTag, "SDK type is "+ sdkType);
         if (sdkType.equals(SdkType.ADAL)) {
+               
             final AzureActiveDirectoryAccount azureActiveDirectoryAccount =
                     new AzureActiveDirectoryAccount(
                             new IDToken(microsoftStsTokenResponse.getIdToken()),
@@ -307,7 +309,7 @@ public class MicrosoftStsAccountCredentialAdapter
             );
             accountRecord = new AccountRecord(microsoftStsAccount);
         }
-
+ Logger.info(methodTag, "homeAccount Id of accountRecord is "+ accountRecord.getHomeAccountId() + " clientInfo uid : "+ clientInfo.getUid() + ",utid :" + clientInfo.getUtid());
         URL authority = parameters.getAuthority().getAuthorityURL();
 
         // If token response has authority set it, else fallback to request authority
