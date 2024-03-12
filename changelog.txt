@@ -1,9 +1,12 @@
+V.Next
+---------
+- [PATCH] Return status code in errorResponse when server response is not in expected Json format. (#2321)
+
 V.17.2.0
 ---------
 - [PATCH] Move SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY to BaseActiveBrokerCache (#2340)
 - [PATCH] Add cache for ContentProviderStrategy.isSupportedByTargetedBroker() (#2338)
 - [PATCH] isSupportedByTargetedBroker should only be invoked in bg thread (#2339)
-- [PATCH] Return status code in errorResponse when server response is not in expected Json format. (#2321)
 - [PATCH] Handle repeated camera requests. (#2332)
 - [MINOR] Clear active broker cache if the (cached) active broker app doesn't support ipc mechanism (#2331)
 - [MINOR] Add support for CIAM custom domain (#2314)
