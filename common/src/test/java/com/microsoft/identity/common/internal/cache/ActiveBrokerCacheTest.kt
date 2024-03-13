@@ -120,6 +120,10 @@ class BaseActiveBrokerCacheTest {
             }
 
             override fun remove(name: String) {
+                if (name == BaseActiveBrokerCache.SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY) {
+                    return
+                }
+
                 throw UnsupportedOperationException()
             }
 
@@ -210,5 +214,57 @@ class BaseActiveBrokerCacheTest {
 
         cache.clearCachedActiveBroker()
         Assert.assertNull(cache.getCachedActiveBroker())
+    }
+
+    @Test
+    fun testSetSkipToAccountManager(){
+        val cache = BaseActiveBrokerCache(InMemoryStorage(), Mutex())
+        Assert.assertNull(cache.getCachedActiveBroker())
+
+        Assert.assertFalse(cache.shouldUseAccountManager())
+
+        cache.setShouldUseAccountManagerForTheNextMilliseconds(
+            TimeUnit.SECONDS.toMillis(2)
+        )
+        Assert.assertTrue(cache.shouldUseAccountManager())
+
+        Thread.sleep(TimeUnit.SECONDS.toMillis(2))
+
+        Assert.assertFalse(cache.shouldUseAccountManager())
+    }
+
+    @Test
+    fun testSetSkipToAccountManager_ClearValue(){
+        val cache = BaseActiveBrokerCache(InMemoryStorage(), Mutex())
+        Assert.assertNull(cache.getCachedActiveBroker())
+
+        Assert.assertFalse(cache.shouldUseAccountManager())
+
+        cache.setShouldUseAccountManagerForTheNextMilliseconds(
+            TimeUnit.SECONDS.toMillis(2)
+        )
+        Assert.assertTrue(cache.shouldUseAccountManager())
+
+        cache.clearCachedActiveBroker()
+
+        Assert.assertFalse(cache.shouldUseAccountManager())
+    }
+
+    @Test
+    fun testSetSkipToAccountManager_ForceSetBroker(){
+        val cache = BaseActiveBrokerCache(InMemoryStorage(), Mutex())
+        Assert.assertNull(cache.getCachedActiveBroker())
+
+        Assert.assertFalse(cache.shouldUseAccountManager())
+
+        cache.setShouldUseAccountManagerForTheNextMilliseconds(
+            TimeUnit.SECONDS.toMillis(60)
+        )
+        Assert.assertTrue(cache.shouldUseAccountManager())
+
+        val mockData = BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH)
+        cache.setCachedActiveBroker(mockData)
+
+        Assert.assertFalse(cache.shouldUseAccountManager())
     }
 }

@@ -20,10 +20,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache
+package com.microsoft.identity.common.internal.broker.ipc
 
 /**
- * An extension of [IActiveBrokerCache].
+ * A wrapper interface around packageManager.queryContentProviders().
  * */
-interface IClientActiveBrokerCache: IActiveBrokerCache {
+interface IContentProviderStatusLoader {
+
+    /**
+     * Determine if the targeted app supports (Broker) Content Provider.
+     **/
+    fun supportsContentProvider(packageName: String) : Boolean
 }
