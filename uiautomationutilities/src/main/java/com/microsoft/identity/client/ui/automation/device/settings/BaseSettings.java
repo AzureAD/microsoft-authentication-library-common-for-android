@@ -58,12 +58,12 @@ public abstract class BaseSettings implements ISettings {
         context.startActivity(intent);
 
         final UiObject deviceAdminPage;
-//        if (android.os.Build.VERSION.SDK_INT == 32) {
+        if (android.os.Build.VERSION.SDK_INT == 32) {
             // This is needed for higher API levels. So far have confirmed this for API 32, but API 30 will use the one above
             deviceAdminPage = UiAutomatorUtils.obtainUiObjectWithDescription("Device admin apps");
-//        } else {
-//            deviceAdminPage = UiAutomatorUtils.obtainUiObjectWithText("device admin");
-//        }
+        } else {
+            deviceAdminPage = UiAutomatorUtils.obtainUiObjectWithText("device admin");
+        }
         Assert.assertTrue("Device Admin Settings Page appears", deviceAdminPage.exists());
     }
 
