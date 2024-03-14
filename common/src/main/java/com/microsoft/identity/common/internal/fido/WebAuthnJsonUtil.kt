@@ -25,7 +25,11 @@ package com.microsoft.identity.common.internal.fido
 import android.util.Base64
 import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter
 import com.microsoft.identity.common.java.constants.FidoConstants
+import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_RESPONSE_AUTHENTICATOR_DATA_JSON_KEY
+import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_RESPONSE_CLIENT_DATA_JSON_KEY
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_RESPONSE_ID_JSON_KEY
+import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_RESPONSE_SIGNATURE_JSON_KEY
+import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY
 import org.json.JSONObject
 
 /**
@@ -67,17 +71,25 @@ class WebAuthnJsonUtil {
         /**
          * Extracts the AuthenticatorAssertionResponse from the overall AuthenticationResponse string received from the authenticator.
          * @param fullResponseJson AuthenticationResponse Json string.
+         * @throws JSONException if a value is not present that should be.
          */
         fun extractAuthenticatorAssertionResponseJson(fullResponseJson : String): String {
             val fullResponseJsonObject = JSONObject(fullResponseJson);
-            var authResponseJsonObject = fullResponseJsonObject
+            val authResponseJsonObject = fullResponseJsonObject
                 .getJSONObject(FidoConstants.WEBAUTHN_AUTHENTICATION_ASSERTION_RESPONSE_JSON_KEY)
-            // Making sure that Id is here because ESTS expects it.
-            // I've noticed that GPM will sometimes not include the id in the response object.
-            if (!authResponseJsonObject.has(WEBAUTHN_RESPONSE_ID_JSON_KEY)) {
-                authResponseJsonObject = authResponseJsonObject.put(WEBAUTHN_RESPONSE_ID_JSON_KEY, fullResponseJsonObject.get(WEBAUTHN_RESPONSE_ID_JSON_KEY))
-            }
-            return authResponseJsonObject.toString()
+            // ESTS expects a custom object with clientDataJSON, authenticatorData, signature, userHandle, and id.
+            val assertionResult = JSONObject();
+            assertionResult.put(WEBAUTHN_RESPONSE_ID_JSON_KEY, fullResponseJsonObject.get(
+                WEBAUTHN_RESPONSE_ID_JSON_KEY))
+            assertionResult.put(WEBAUTHN_RESPONSE_AUTHENTICATOR_DATA_JSON_KEY, authResponseJsonObject.get(
+                WEBAUTHN_RESPONSE_AUTHENTICATOR_DATA_JSON_KEY))
+            assertionResult.put(WEBAUTHN_RESPONSE_CLIENT_DATA_JSON_KEY, authResponseJsonObject.get(
+                WEBAUTHN_RESPONSE_CLIENT_DATA_JSON_KEY))
+            assertionResult.put(WEBAUTHN_RESPONSE_SIGNATURE_JSON_KEY, authResponseJsonObject.get(
+                WEBAUTHN_RESPONSE_SIGNATURE_JSON_KEY))
+            assertionResult.put(WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY, authResponseJsonObject.get(
+                WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY))
+            return assertionResult.toString()
         }
 
         /**

@@ -106,18 +106,38 @@ class FidoConstants {
         const val PASSKEY_PROTOCOL_HEADER_VALUE = "$PASSKEY_PROTOCOL_VERSION/$PASSKEY_PROTOCOL_KEY_TYPES_SUPPORTED"
 
         /**
+         * Error messages sent to ESTS via the protocol should have a prefix attached.
+         */
+        const val PASSKEY_PROTOCOL_ERROR_PREFIX_STRING = "ERROR: "
+
+        /**
          * JSON key value of assertion response of authentication response JSON object.
          */
         const val WEBAUTHN_AUTHENTICATION_ASSERTION_RESPONSE_JSON_KEY = "response"
 
         /**
+         * JSON key value of clientDataJSON in Webauthn response JSON object.
+         */
+        const val WEBAUTHN_RESPONSE_CLIENT_DATA_JSON_KEY = "clientDataJSON"
+
+        /**
+         * JSON key value of authenticatorData in Webauthn response JSON object.
+         */
+        const val WEBAUTHN_RESPONSE_AUTHENTICATOR_DATA_JSON_KEY = "authenticatorData"
+
+        /**
+         * JSON key value of signature in Webauthn response JSON object.
+         */
+        const val WEBAUTHN_RESPONSE_SIGNATURE_JSON_KEY = "signature"
+
+        /**
+         * JSON key value of userHandle in Webauthn response JSON object.
+         */
+        const val WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY = "userHandle"
+
+        /**
          * JSON key value of id in response of Webauthn JSON object.
          */
         const val WEBAUTHN_RESPONSE_ID_JSON_KEY = "id"
-
-        /**
-         * Used to disable passkey logic until the feature is ready.
-         */
-        const val IS_PASSKEY_SUPPORT_READY = false
     }
 }

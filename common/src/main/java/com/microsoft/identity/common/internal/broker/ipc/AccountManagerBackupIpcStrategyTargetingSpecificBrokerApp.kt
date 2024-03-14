@@ -144,7 +144,7 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp
         val accountType = accountTypeForEachPackage.getOrElse(targetPackageName) {
             throw BrokerCommunicationException(
                 BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
-                type,
+                getType(),
                 "AccountManagerBackupIpcStrategy doesn't recognize $targetPackageName as a broker",
                 null
             )
@@ -178,10 +178,28 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp
             // It also has no error code. The only difference would be in the error message.
             throw BrokerCommunicationException(
                 BrokerCommunicationException.Category.CONNECTION_ERROR,
-                type,
+                getType(),
                 "AccountManager failed to respond - $errorMessage",
                 e
             )
+        }
+    }
+
+    override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+        val methodTag = "$TAG:isSupportedByTargetedBroker"
+
+        return try {
+            val accountType = accountTypeForEachPackage.getOrElse(targetedBrokerPackageName) {
+                Logger.info(methodTag,
+                    "AccountManagerBackupIpcStrategy doesn't recognize $targetedBrokerPackageName as a broker",)
+                return false
+            }
+
+            validateTargetApp(targetedBrokerPackageName, accountType)
+            true
+        } catch (t: Throwable){
+            Logger.error(methodTag, t.message, t)
+            false
         }
     }
 
@@ -192,7 +210,7 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp
     @Throws(BrokerCommunicationException::class)
     private fun validateTargetApp(
         targetPackageName: String,
-        accountType: String,
+        accountType: String
     ) {
         val targetAppInfo = try {
             getAccountManagerApps().first {
@@ -201,7 +219,7 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp
         } catch (t: Throwable) {
             throw BrokerCommunicationException(
                 BrokerCommunicationException.Category.VALIDATION_ERROR,
-                type,
+                getType(),
                 "$targetPackageName doesn't support account manager backup ipc.",
                 null)
         }
@@ -209,7 +227,7 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp
         if (!brokerValidator.isValidBrokerPackage(targetAppInfo.packageName)) {
             throw BrokerCommunicationException(
                 BrokerCommunicationException.Category.VALIDATION_ERROR,
-                type,
+                getType(),
                 "${targetAppInfo.packageName} is not a valid broker app.",
                 null
             )

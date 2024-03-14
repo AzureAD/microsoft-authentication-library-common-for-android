@@ -57,6 +57,8 @@ import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWeb
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.constants.FidoConstants;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightManager;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
@@ -252,31 +254,58 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         "Permission requested from:" +request.getOrigin() +
                                 " for resources:" + Arrays.toString(request.getResources())
                 );
-
-                if (mCameraPermissionRequest != null) {
-                    // There is a issue in ESTS UX where it sends multiple camera permission requests.
-                    // So, if there is already a camera permission request in progress we deny the new request.
-                    Logger.info(methodTag, "Camera permission request already exists.");
+                // We can only grant or deny permissions for video capture/camera.
+                // To avoid unintentionally granting requests for not defined permissions
+                // we check if the request is for camera.
+                if (!isPermissionRequestForCamera(request)) {
+                    Logger.warn(methodTag, "Permission request is not for camera.");
                     request.deny();
                     return;
                 }
-                // We can only grant or deny permissions for video capture/camera.
-                // To avoid unintentionally granting requests for not defined permissions.
-                if (isPermissionRequestForCamera(request)) {
-                    Logger.info(methodTag, "Camera request received.");
-                    mCameraPermissionRequest = request;
-                    if (isCameraPermissionGranted()) {
-                        Logger.info(methodTag, "Camera permission already granted.");
-                        acceptCameraRequest();
-                    } else if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
-                        Logger.info(methodTag, "Show camera rationale.");
-                        showCameraRationale();
-                    } else {
-                        requestCameraPermissionFromUser();
-                    }
+                // There is a issue in ESTS UX where it sends multiple camera permission requests.
+                // So, if there is already a camera permission request in progress we handle it here.
+                if (mCameraPermissionRequest != null) {
+                    handleRepeatedRequests(request);
+                    return;
                 }
+                Logger.info(methodTag, "New camera request.");
+                mCameraPermissionRequest = request;
+                if (isCameraPermissionGranted()) {
+                    Logger.info(methodTag, "Camera permission already granted.");
+                    acceptCameraRequest();
+                } else if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+                    Logger.info(methodTag, "Show camera rationale.");
+                    showCameraRationale();
+                } else {
+                    requestCameraPermissionFromUser();
+                }
+
             }
         });
+    }
+
+    /**
+     * Handles repeated camera permission requests.
+     * if the camera permission has been granted, it will grant the permission to the request.
+     * Otherwise, it will deny the permission to the request.
+     * <p>
+     * Note: This method is only available on API level 21 or higher.
+     *
+     * @param request The permission request.
+     */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private void handleRepeatedRequests(@NonNull final PermissionRequest request) {
+        final String methodTag = TAG + ":handleRepeatedRequests";
+        if (isCameraPermissionGranted()) {
+            Logger.info(methodTag, "Repeated request, granting the permission.");
+            final String[] cameraPermission = new String[] {
+                    PermissionRequest.RESOURCE_VIDEO_CAPTURE
+            };
+            request.grant(cameraPermission);
+        } else {
+            Logger.info(methodTag, "Repeated request, denying the permission");
+            request.deny();
+        }
     }
 
     /**
@@ -421,7 +450,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             HashMap<String, String> requestHeaders = (HashMap<String, String>) state.getSerializable(REQUEST_HEADERS);
             // In cases of WebView as an auth agent, we want to always add the passkey protocol header.
             // (Not going to add passkey protocol header until full feature is ready.)
-            if (FidoConstants.IS_PASSKEY_SUPPORT_READY) {
+            if (CommonFlightManager.isFlightEnabled(CommonFlight.ENABLE_PASSKEY_FEATURE)) {
                 if (requestHeaders == null) {
                     requestHeaders = new HashMap<>();
                 }
