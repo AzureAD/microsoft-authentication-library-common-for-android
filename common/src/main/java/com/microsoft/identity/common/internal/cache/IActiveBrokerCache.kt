@@ -49,4 +49,16 @@ interface IActiveBrokerCache {
      * Clears the active broker from the cache.
      */
     fun clearCachedActiveBroker()
+
+    /**
+     * Returns true if AccountManager should still be used.
+     **/
+    fun shouldUseAccountManager(): Boolean
+
+    /**
+     * Set the time span when AccountManager should still be used.
+     *
+     * @param timeInMillis Time in milliseconds (from now)
+     **/
+    fun setShouldUseAccountManagerForTheNextMilliseconds(timeInMillis: Long)
 }
