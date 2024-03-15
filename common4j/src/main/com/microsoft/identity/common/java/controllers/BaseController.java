@@ -1166,4 +1166,26 @@ public abstract class BaseController {
             );
         }
     }
+
+    /**
+     * Returns this controller as a controller factory.
+     **/
+    public IControllerFactory asControllerFactory(){
+        final BaseController thisController = this;
+        return new IControllerFactory() {
+            @NonNull
+            @Override
+            public BaseController getDefaultController() {
+                return thisController;
+            }
+
+            @NonNull
+            @Override
+            public List<BaseController> getAllControllers() {
+                final List<BaseController> list = new ArrayList<>();
+                list.add(thisController);
+                return list;
+            }
+        };
+    }
 }

@@ -26,6 +26,7 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
+import com.microsoft.identity.common.java.controllers.IControllerFactory;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
@@ -50,11 +51,11 @@ public class DeviceCodeFlowAuthResultCommand extends BaseCommand<AuthorizationRe
 
     public static final String DEVICE_ID_CLAIM = "deviceid";
 
-    public DeviceCodeFlowAuthResultCommand(@NonNull DeviceCodeFlowCommandParameters parameters,
-                                 @NonNull BaseController controller,
-                                 @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                                 @NonNull String publicApiId) {
-        super(parameters, controller, callback, publicApiId);
+    public DeviceCodeFlowAuthResultCommand(@NonNull final DeviceCodeFlowCommandParameters parameters,
+                                 @NonNull final IControllerFactory controllerFactory,
+                                 @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
+                                 @NonNull final String publicApiId) {
+        super(parameters, controllerFactory, callback, publicApiId);
     }
 
     @Override
@@ -73,7 +74,7 @@ public class DeviceCodeFlowAuthResultCommand extends BaseCommand<AuthorizationRe
 
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             // Get the controller used to execute the command
-            final BaseController controller = getDefaultController();
+            final BaseController controller = getControllerFactory().getDefaultController();
 
             span.setAttribute(AttributeName.controller_name.name(), controller.getClass().getSimpleName());
 

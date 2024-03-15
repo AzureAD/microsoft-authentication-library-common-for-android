@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.commands
 import com.microsoft.identity.common.java.commands.BaseCommand
 import com.microsoft.identity.common.java.commands.CommandCallback
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters
-import com.microsoft.identity.common.java.controllers.BaseController
+import com.microsoft.identity.common.java.controllers.IControllerFactory
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod
 import lombok.EqualsAndHashCode
 
@@ -36,13 +36,13 @@ import lombok.EqualsAndHashCode
 @EqualsAndHashCode(callSuper = true)
 class GetPreferredAuthMethodFromAuthenticator(
     parameters: CommandParameters,
-    controller: BaseController,
+    controllerFactory: IControllerFactory,
     callback: CommandCallback<*, *>,
     publicApiId: String
-) : BaseCommand<PreferredAuthMethod?>(parameters, controller, callback, publicApiId) {
+) : BaseCommand<PreferredAuthMethod?>(parameters, controllerFactory, callback, publicApiId) {
 
     override fun execute(): PreferredAuthMethod {
-        return defaultController.preferredAuthMethod
+        return controllerFactory.getDefaultController().preferredAuthMethod
     }
 
     override fun isEligibleForEstsTelemetry(): Boolean {
