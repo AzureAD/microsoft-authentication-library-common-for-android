@@ -37,6 +37,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.opentelemetry.sdk.logs.export.ConsoleLogRecordExporter;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -69,6 +70,9 @@ public class Logger {
     private static final Map<String, ILoggerCallback> sLoggers = new HashMap<>();
 
     private static final SimpleDateFormat sDateTimeFormatter;
+
+    private static final IAppender sAppender = new OtelAppender();
+
     static {
         sDateTimeFormatter = new SimpleDateFormat(DATE_FORMAT, Locale.getDefault());
         sDateTimeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -129,6 +133,7 @@ public class Logger {
 
     public static boolean setLogger(@NonNull String identifier,
                                     ILoggerCallback callback) {
+        ConsoleLogRecordExporter.setCallback2(callback);
         sLoggersLock.writeLock().lock();
         try {
             if (callback == null) {
@@ -375,6 +380,36 @@ public class Logger {
                                   final String message) {
         log(tag, LogLevel.VERBOSE, correlationID, message, null, true);
     }
+
+    public static void log(final String tag,
+                           final int logLevel,
+                           @Nullable final String message,
+                           @Nullable final Throwable throwable,
+                           final Map<String, Object> attributes) {
+
+        sLogExecutor.execute(new Runnable() {
+            @Override
+            @SuppressFBWarnings(value = "DE_MIGHT_IGNORE",
+                    justification = "If logging throws, there is nothing left to do but swallow the exception and move on.")
+            public void run() {
+
+                sLoggersLock.readLock().lock();
+                try {
+                    final LogRecord logRecord = new LogRecord(tag, logLevel,new Date() ,message, attributes);
+                        try {
+                            sAppender.append(logRecord);
+                        } catch (final Exception e) {
+                            // Do nothing.
+                        }
+
+                } finally {
+                    sLoggersLock.readLock().unlock();
+                }
+            }
+        });
+
+    }
+
 
     private static void log(final String tag,
                             @NonNull final LogLevel logLevel,

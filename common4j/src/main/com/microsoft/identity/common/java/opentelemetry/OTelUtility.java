@@ -24,8 +24,11 @@ package com.microsoft.identity.common.java.opentelemetry;
 
 import com.microsoft.identity.common.java.logging.Logger;
 
+
 import javax.annotation.Nullable;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Span;
@@ -123,5 +126,11 @@ public class OTelUtility {
                 .setDescription(description)
                 .setUnit("count")
                 .build();
+    }
+
+
+    public static LogRecordBuilder createLogBuilder() {
+        final io.opentelemetry.api.logs.Logger logger = OpenTelemetryHolder.getLogger(TAG);
+        return logger.logRecordBuilder();
     }
 }

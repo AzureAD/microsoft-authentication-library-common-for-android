@@ -236,6 +236,7 @@ dependencies {
     resolvableTestFixturesImplementation "org.robolectric:junit:$rootProject.ext.robolectricVersion"
 
     implementation("io.opentelemetry:opentelemetry-api:$rootProject.ext.openTelemetryVersion")
+    implementation("io.opentelemetry:opentelemetry-sdk-logs:$rootProject.ext.openTelemetryVersion")
 }
 
 sourceCompatibility = "1.8"

@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.opentelemetry;
 
 import io.opentelemetry.api.NoopOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.api.metrics.NoopMeterProvider;
@@ -79,6 +80,10 @@ public class OpenTelemetryHolder {
         } catch (final AbstractMethodError error) {
             return NOOP_METER_PROVIDER.get(instrumentationScopeName);
         }
+    }
+
+    public static Logger getLogger(final String instrumentationScopeName) {
+        return sOpenTelemetry.getLogsBridge().get(instrumentationScopeName);
     }
 
 }

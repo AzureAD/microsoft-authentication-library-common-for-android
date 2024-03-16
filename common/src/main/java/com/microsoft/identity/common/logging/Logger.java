@@ -28,6 +28,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.Map;
+
 
 /**
  * Android's Logger. Wraps around common4j's logger (with an addition of Logcat).
@@ -211,6 +213,7 @@ public class Logger {
      *                       output the logs to the designated places.
      */
     public void setExternalLogger(final ILoggerCallback externalLogger) {
+
         com.microsoft.identity.common.java.logging.Logger.setLogger(
                 ANDROID_EXTERNAL_LOGGER_IDENTIFIER,
                 new com.microsoft.identity.common.java.logging.ILoggerCallback() {
@@ -507,4 +510,12 @@ public class Logger {
                 message
         );
     }
+
+    public static void log(final String tag,
+                           final int logLevel,
+                           final String message,
+                           final Map<String,Object> attr){
+        com.microsoft.identity.common.java.logging.Logger.log(tag, logLevel, message, null, attr);
+    }
+
 }

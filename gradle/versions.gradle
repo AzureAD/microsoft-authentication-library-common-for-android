@@ -75,7 +75,7 @@ ext {
     androidxAnnotationVersion = "1.4.0"
     spotBugsAnnotationVersion = "4.3.0"
     jcipAnnotationVersion = "1.0-1"
-    openTelemetryVersion = "1.18.0"
+    openTelemetryVersion = "1.35.0"
     jetpackDataStoreVersion = "1.0.0"
     lifecycleKtxVersion="2.5.1"
     AndroidCredentialsVersion="1.2.0"
