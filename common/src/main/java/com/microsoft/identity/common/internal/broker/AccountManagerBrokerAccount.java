@@ -103,40 +103,33 @@ public class AccountManagerBrokerAccount implements IBrokerAccount {
             accountManager.addAccountExplicitly(account, null, null);
         }
 
-        // On Android O and above, GET_ACCOUNTS permission is being replaced by accountVisibility.
-        // This change is to make the account visible to both Authenticator App and Company Portal.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            accountManager.setAccountVisibility(
-                    account,
-                    AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
-                    AccountManager.VISIBILITY_VISIBLE
-            );
-            accountManager.setAccountVisibility(
-                    account,
-                    COMPANY_PORTAL_APP_PACKAGE_NAME,
-                    AccountManager.VISIBILITY_VISIBLE
-            );
+        setVisibility(accountManager, account, AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+        setVisibility(accountManager, account, COMPANY_PORTAL_APP_PACKAGE_NAME);
 
-            if (BrokerData.getShouldTrustDebugBrokers()){
+        if (BrokerData.getShouldTrustDebugBrokers()){
+            setVisibility(accountManager, account, BrokerData.getDebugMockCp().getPackageName());
+            setVisibility(accountManager, account, BrokerData.getDebugMockAuthApp().getPackageName());
+            setVisibility(accountManager, account, BrokerData.getDebugBrokerHost().getPackageName());
+        }
+
+        return adapt(account);
+    }
+
+    // On Android O and above, GET_ACCOUNTS permission is being replaced by accountVisibility.
+    // This change is to make the account visible to both Authenticator App and Company Portal.
+    private static void setVisibility(@NonNull final AccountManager accountManager,
+                                      @NonNull final Account account,
+                                      @NonNull final String packageName) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (accountManager.getAccountVisibility(account, packageName)
+                    != AccountManager.VISIBILITY_VISIBLE) {
                 accountManager.setAccountVisibility(
                         account,
-                        BrokerData.getDebugMockCp().getPackageName(),
-                        AccountManager.VISIBILITY_VISIBLE
-                );
-                accountManager.setAccountVisibility(
-                        account,
-                        BrokerData.getDebugMockAuthApp().getPackageName(),
-                        AccountManager.VISIBILITY_VISIBLE
-                );
-                accountManager.setAccountVisibility(
-                        account,
-                        BrokerData.getDebugBrokerHost().getPackageName(),
+                        packageName,
                         AccountManager.VISIBILITY_VISIBLE
                 );
             }
         }
-
-        return adapt(account);
     }
 
     @Nullable
