@@ -120,15 +120,13 @@ public class AccountManagerBrokerAccount implements IBrokerAccount {
     private static void setVisibility(@NonNull final AccountManager accountManager,
                                       @NonNull final Account account,
                                       @NonNull final String packageName) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (accountManager.getAccountVisibility(account, packageName)
-                    != AccountManager.VISIBILITY_VISIBLE) {
-                accountManager.setAccountVisibility(
-                        account,
-                        packageName,
-                        AccountManager.VISIBILITY_VISIBLE
-                );
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                accountManager.getAccountVisibility(account, packageName) != AccountManager.VISIBILITY_VISIBLE) {
+            accountManager.setAccountVisibility(
+                    account,
+                    packageName,
+                    AccountManager.VISIBILITY_VISIBLE
+            );
         }
     }
 
