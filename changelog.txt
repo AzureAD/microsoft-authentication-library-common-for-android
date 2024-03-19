@@ -1,5 +1,6 @@
 V.17.2.0
 ---------
+- [PATCH] Reduce the amount of setAccountVisibility() call. (#2355)
 - [PATCH] Move SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY to BaseActiveBrokerCache (#2340)
 - [PATCH] Add cache for ContentProviderStrategy.isSupportedByTargetedBroker() (#2338)
 - [PATCH] isSupportedByTargetedBroker should only be invoked in bg thread (#2339)
