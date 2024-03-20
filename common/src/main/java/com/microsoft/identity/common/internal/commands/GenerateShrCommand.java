@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 
 import java.util.List;
@@ -106,6 +107,15 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
                 } else {
                     throw new ClientException(errorCode, errorMessage);
                 }
+            } else {
+                Logger.verbose(
+                        methodTag,
+                        "Executing with controller: "
+                                + controller.getClass().getSimpleName()
+                                + ": Succeeded"
+                );
+
+                return result;
             }
         }
 
