@@ -33,6 +33,7 @@ import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
 import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
 
+import com.google.gson.JsonParseException;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
@@ -62,6 +63,7 @@ import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthoriza
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
@@ -138,9 +140,31 @@ public class MicrosoftStsOAuth2Strategy
     public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config,
                                       @NonNull final OAuth2StrategyParameters parameters) throws ClientException {
         super(config, parameters);
-        setTokenEndpoint(config.getTokenEndpoint().toString());
-        if (parameters.isUsingOpenIdConfiguration()){
-            loadOpenIdProviderConfiguration();
+
+        if (parameters.isUsingOpenIdConfiguration()) {
+            try {
+                if (config.getSlice() != null && config.getSlice().getDataCenter() != null) {
+                    String extraParams = "?" + AzureActiveDirectorySlice.DC_PARAMETER + "=" + config.getSlice().getDataCenter();
+                    loadOpenIdProviderConfiguration(extraParams);
+                } else {
+                    loadOpenIdProviderConfiguration();
+                }
+                String openIdConnectTokenEndpoint = mOpenIdProviderConfiguration.getTokenEndpoint();
+                if (!StringUtil.isNullOrEmpty(openIdConnectTokenEndpoint)) {
+                    setTokenEndpoint(openIdConnectTokenEndpoint);
+                } else {
+                    setTokenEndpoint(config.getTokenEndpoint().toString());
+                }
+            }  catch (ServiceException e) {
+                Logger.error(
+                        TAG,
+                        "There was a problem with loading the openIdConfiguration",
+                        e
+                );
+                setTokenEndpoint(config.getTokenEndpoint().toString());
+            }
+        } else {
+            setTokenEndpoint(config.getTokenEndpoint().toString());
         }
     }
 
@@ -584,10 +608,17 @@ public class MicrosoftStsOAuth2Strategy
 
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
             //An error occurred
-            tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(
-                    getBodyFromUnsuccessfulResponse(response.getBody()),
-                    MicrosoftTokenErrorResponse.class
-            );
+            try {
+                tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(
+                        getBodyFromUnsuccessfulResponse(response.getBody()),
+                        MicrosoftTokenErrorResponse.class
+                );
+            } catch (final JsonParseException ex) {
+                tokenErrorResponse = new MicrosoftTokenErrorResponse();
+                final String statusCode = String.valueOf(response.getStatusCode());
+                tokenErrorResponse.setError(statusCode);
+                tokenErrorResponse.setErrorDescription("Received " + statusCode + " status code from Server ");
+            }
             tokenErrorResponse.setStatusCode(response.getStatusCode());
 
             if (null != response.getHeaders()) {
@@ -850,18 +881,11 @@ public class MicrosoftStsOAuth2Strategy
      * This will cause the strategy to fetch the authorization endpoint from OpenId Configuration rather
      * than generating one with the default authorization endpoint
      */
-    private void loadOpenIdProviderConfiguration() {
-        try {
-            final OpenIdProviderConfigurationClient client =
-                    new OpenIdProviderConfigurationClient();
-            mOpenIdProviderConfiguration = client.loadOpenIdProviderConfigurationFromAuthority(mConfig.getAuthorityUrl().toString());
-        } catch (ServiceException e) {
-            Logger.error(
-                    TAG,
-                    "There was a problem with loading the openIdConfiguration",
-                    e
-            );
-        }
+    private void loadOpenIdProviderConfiguration() throws ServiceException {
+        final OpenIdProviderConfigurationClient client =
+                new OpenIdProviderConfigurationClient();
+        mOpenIdProviderConfiguration = client.loadOpenIdProviderConfigurationFromAuthority(mConfig.getAuthorityUrl().toString());
+
     }
 
     /**
@@ -870,17 +894,9 @@ public class MicrosoftStsOAuth2Strategy
      * than generating one with the default authorization endpoint
      */
     @SuppressFBWarnings
-    private void loadOpenIdProviderConfiguration(@NonNull final String extraParams) {
-        try {
-            final OpenIdProviderConfigurationClient client =
-                    new OpenIdProviderConfigurationClient();
-            mOpenIdProviderConfiguration = client.loadOpenIdProviderConfigurationFromAuthorityWithExtraParams(mConfig.getAuthorityUrl().toString(), extraParams);
-        } catch (ServiceException e) {
-            Logger.error(
-                    TAG,
-                    "There was a problem with loading the openIdConfiguration",
-                    e
-            );
-        }
+    private void loadOpenIdProviderConfiguration(@NonNull final String extraParams) throws ServiceException {
+        final OpenIdProviderConfigurationClient client =
+                new OpenIdProviderConfigurationClient();
+        mOpenIdProviderConfiguration = client.loadOpenIdProviderConfigurationFromAuthorityWithExtraParams(mConfig.getAuthorityUrl().toString(), extraParams);
     }
 }

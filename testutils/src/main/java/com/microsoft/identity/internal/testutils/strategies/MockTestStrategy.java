@@ -52,7 +52,7 @@ public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrate
      * @param config Microsoft Sts OAuth2 configuration
      */
     public MockTestStrategy(MicrosoftStsOAuth2Configuration config) throws ClientException {
-        super(config);
+        super(config, false);
     }
 
     /**

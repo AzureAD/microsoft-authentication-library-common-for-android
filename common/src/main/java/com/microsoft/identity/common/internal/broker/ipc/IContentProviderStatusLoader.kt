@@ -1,3 +1,4 @@
+// Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
 // This code is licensed under the MIT License.
@@ -19,25 +20,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.telemetry.relay;
-
-import javax.annotation.Nullable;
-
-import lombok.NonNull;
+package com.microsoft.identity.common.internal.broker.ipc
 
 /**
- * An interface that describes an event filter for a telemetry relay client {@link AbstractTelemetryRelayClient}
- * @param <T> the event data
- */
-@Deprecated
-public interface ITelemetryEventFilter<T> {
+ * A wrapper interface around packageManager.queryContentProviders().
+ * */
+interface IContentProviderStatusLoader {
 
     /**
-     * Invoked when a new event is captured by the telemetry.
-     * @param telemetryEvent the telemetry event data
-     *
-     * @return an event with filtered fields. Return null if the event is to be ignored completely.
-     */
-    @Nullable
-    T apply(@NonNull final T telemetryEvent);
+     * Determine if the targeted app supports (Broker) Content Provider.
+     **/
+    fun supportsContentProvider(packageName: String) : Boolean
 }

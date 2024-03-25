@@ -34,6 +34,7 @@ import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy
 import com.microsoft.identity.common.internal.cache.IClientActiveBrokerCache
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.exception.ClientException.ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.logging.Logger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
@@ -162,16 +163,17 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
     }
 
     constructor(context: Context,
+                components: IPlatformComponents,
                 cache: IClientActiveBrokerCache): this(
         brokerCandidates = BrokerData.getKnownBrokerApps(),
         getActiveBrokerFromAccountManager = {
             AccountManagerBrokerDiscoveryUtil(context).getActiveBrokerFromAccountManager()
         },
-        ipcStrategy = ContentProviderStrategy(context),
+        ipcStrategy = ContentProviderStrategy(context, components),
         cache = cache,
         isPackageInstalled = { brokerData ->
             PackageHelper(context).
-                isPackageInstalledAndEnabled(brokerData.packageName)
+            isPackageInstalledAndEnabled(brokerData.packageName)
         },
         isValidBroker = { brokerData ->
             BrokerValidator(context).isSignedByKnownKeys(brokerData)
@@ -204,6 +206,15 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                         Logger.info(
                             methodTag,
                             "Clearing cache as the installed app does not have a matching signature hash."
+                        )
+                        cache.clearCachedActiveBroker()
+                        return@let
+                    }
+
+                    if(!ipcStrategy.isSupportedByTargetedBroker(it.packageName)){
+                        Logger.info(
+                            methodTag,
+                            "Clearing cache as the installed app does not provide any IPC mechanism to communicate to. (e.g. the broker code isn't shipped with this apk)"
                         )
                         cache.clearCachedActiveBroker()
                         return@let

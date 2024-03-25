@@ -26,6 +26,7 @@ import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 
+@Deprecated
 public class CacheStartEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
     public CacheStartEvent() {
         super();

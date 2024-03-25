@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">U kunt nu uw smartcard verwijderen</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Begrepen</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Deze app toegang geven tot uw camera?</string>
+    <string name="qr_code_rationale_message">U kunt zich vervolgens aanmelden met een QR-code.</string>
+    <string name="qr_code_rationale_allow">Toestaan</string>
+    <string name="qr_code_rationale_block">Blokkeren</string>
 </resources>

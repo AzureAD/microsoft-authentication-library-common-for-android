@@ -59,6 +59,7 @@ public class BoundServiceStrategy<T extends IInterface> extends AbstractIpcStrat
     }
 
     @Override
+    @NonNull
     public Type getType() {
         return Type.BOUND_SERVICE;
     }

@@ -29,6 +29,7 @@ import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings
 /** This event is used in telemetry to check if UI was visible to the end user.
  *  The value is set in case UI is visible, even if it is for a brief second.
 */
+@Deprecated
 public class UiShownEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
     public UiShownEvent() {
         super();

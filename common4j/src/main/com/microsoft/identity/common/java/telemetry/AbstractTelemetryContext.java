@@ -34,6 +34,7 @@ import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings
  * TelemetryContext is a dictionary of information about the state of the device.
  * It is attached to every outgoing telemetry calls.
  */
+@Deprecated
 public abstract class AbstractTelemetryContext extends Properties {
     private TelemetryPropertiesCache mTelemetryPropsCache;
 

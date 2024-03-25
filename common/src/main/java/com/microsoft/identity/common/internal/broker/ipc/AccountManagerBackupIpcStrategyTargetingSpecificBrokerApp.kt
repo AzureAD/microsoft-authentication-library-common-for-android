@@ -33,6 +33,7 @@ import com.microsoft.identity.common.internal.broker.IBrokerValidator
 import com.microsoft.identity.common.internal.util.AccountManagerUtil
 import com.microsoft.identity.common.internal.util.ProcessUtil
 import com.microsoft.identity.common.logging.Logger
+import java.util.concurrent.TimeUnit
 
 /**
  * An IPC strategy that utilizes AccountManager.addAccount().
@@ -126,7 +127,7 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp
                         null,
                         null,
                         ProcessUtil.getPreferredHandler()
-                    ).result
+                    ).getResult(5, TimeUnit.SECONDS)
                 },
                 getAccountManagerApps = {
                     accountManager.authenticatorTypes
@@ -143,7 +144,7 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp
         val accountType = accountTypeForEachPackage.getOrElse(targetPackageName) {
             throw BrokerCommunicationException(
                 BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
-                type,
+                getType(),
                 "AccountManagerBackupIpcStrategy doesn't recognize $targetPackageName as a broker",
                 null
             )
@@ -164,17 +165,41 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp
             val result = sendRequestViaAccountManager(accountType, requestBundle)
             result
         } catch (e: Throwable) {
-            Logger.error(methodTag, e.message, e)
+            val errorMessage =
+                if (e.message.isNullOrEmpty())
+                    "${e.javaClass.simpleName} is thrown"
+                else
+                    e.message
+
+            Logger.error(methodTag, errorMessage, e)
             // Technically... this might NOT be a connection error.
             // AccountManager returns both connection error and legit failure
             // (i.e. not supported, bad request) as AuthenticatorException...
             // It also has no error code. The only difference would be in the error message.
             throw BrokerCommunicationException(
                 BrokerCommunicationException.Category.CONNECTION_ERROR,
-                type,
-                "AccountManager failed to respond - ${e.message}",
+                getType(),
+                "AccountManager failed to respond - $errorMessage",
                 e
             )
+        }
+    }
+
+    override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+        val methodTag = "$TAG:isSupportedByTargetedBroker"
+
+        return try {
+            val accountType = accountTypeForEachPackage.getOrElse(targetedBrokerPackageName) {
+                Logger.info(methodTag,
+                    "AccountManagerBackupIpcStrategy doesn't recognize $targetedBrokerPackageName as a broker",)
+                return false
+            }
+
+            validateTargetApp(targetedBrokerPackageName, accountType)
+            true
+        } catch (t: Throwable){
+            Logger.error(methodTag, t.message, t)
+            false
         }
     }
 
@@ -185,7 +210,7 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp
     @Throws(BrokerCommunicationException::class)
     private fun validateTargetApp(
         targetPackageName: String,
-        accountType: String,
+        accountType: String
     ) {
         val targetAppInfo = try {
             getAccountManagerApps().first {
@@ -194,7 +219,7 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp
         } catch (t: Throwable) {
             throw BrokerCommunicationException(
                 BrokerCommunicationException.Category.VALIDATION_ERROR,
-                type,
+                getType(),
                 "$targetPackageName doesn't support account manager backup ipc.",
                 null)
         }
@@ -202,7 +227,7 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp
         if (!brokerValidator.isValidBrokerPackage(targetAppInfo.packageName)) {
             throw BrokerCommunicationException(
                 BrokerCommunicationException.Category.VALIDATION_ERROR,
-                type,
+                getType(),
                 "${targetAppInfo.packageName} is not a valid broker app.",
                 null
             )

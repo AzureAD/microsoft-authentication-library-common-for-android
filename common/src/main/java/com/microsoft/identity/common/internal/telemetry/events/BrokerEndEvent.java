@@ -32,6 +32,7 @@ import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Value;
 
+@Deprecated
 public class BrokerEndEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
     public BrokerEndEvent() {
         super();

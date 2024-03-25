@@ -28,6 +28,7 @@ import java.util.Map;
  * Telemetry observer interface for MATS (Microsoft Authentication Telemetry Service) format.
  * The calling application need to implement the interface for further data processing.
  */
+@Deprecated
 public interface ITelemetryAggregatedObserver extends ITelemetryObserver<Map<String, String>> {
     @Override
     void onReceived(Map<String, String> telemetryData);

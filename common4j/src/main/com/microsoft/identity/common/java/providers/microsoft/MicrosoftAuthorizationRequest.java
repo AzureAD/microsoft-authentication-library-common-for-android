@@ -30,14 +30,12 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.DefaultStateGenerator;
 import com.microsoft.identity.common.java.providers.oauth2.PkceChallenge;
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
-import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.net.URL;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import cz.msebera.android.httpclient.extras.Base64;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;

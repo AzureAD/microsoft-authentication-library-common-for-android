@@ -22,24 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache
 
-import com.microsoft.identity.common.internal.activebrokerdiscovery.BrokerDiscoveryClient
-
 /**
  * An extension of [IActiveBrokerCache].
- * This will allow [BrokerDiscoveryClient] to fall back to AccountManager immediately if it's aware that the broker side
- * Does not support account manager (as opposed to trying to make unnecessary IPC call every time).
  * */
 interface IClientActiveBrokerCache: IActiveBrokerCache {
-
-    /**
-     * Returns true if [BrokerDiscoveryClient] should still use AccountManager.
-     **/
-    fun shouldUseAccountManager(): Boolean
-
-    /**
-     * Set the time span when [BrokerDiscoveryClient] should just rely on AccountManager.
-     *
-     * @param timeInMillis Time in milliseconds (from now)
-     **/
-    fun setShouldUseAccountManagerForTheNextMilliseconds(timeInMillis: Long)
 }

@@ -195,7 +195,9 @@ public class HelloCacheTests {
         class MockStrategy implements IIpcStrategy {
             int triggered = 0;
 
-            @Nullable @Override public Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
+            @Override
+            @Nullable
+            public Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
                 triggered += 1;
                 if (triggered == 2) {
                     Assert.fail("Should never be triggered");
@@ -206,8 +208,15 @@ public class HelloCacheTests {
                 return resultBundle;
             }
 
-            @Override public Type getType() {
+            @Override
+            @NonNull
+            public Type getType() {
                 return Type.CONTENT_PROVIDER;
+            }
+
+            @Override
+            public boolean isSupportedByTargetedBroker(@lombok.NonNull String targetedBrokerPackageName) {
+                return true;
             }
         }
 
@@ -308,7 +317,14 @@ public class HelloCacheTests {
                 return resultBundle;
             }
 
-            @Override public Type getType() {
+            @Override
+            public boolean isSupportedByTargetedBroker(@NonNull final String targetedBrokerPackageName) {
+                return true;
+            }
+
+            @Override
+            @NonNull
+            public Type getType() {
                 return Type.CONTENT_PROVIDER;
             }
         }
@@ -389,7 +405,14 @@ public class HelloCacheTests {
                 return resultBundle;
             }
 
-            @Override public Type getType() {
+            @Override
+            public boolean isSupportedByTargetedBroker(@NonNull final String targetedBrokerPackageName) {
+                return true;
+            }
+
+            @Override
+            @NonNull
+            public Type getType() {
                 return Type.CONTENT_PROVIDER;
             }
         }
