@@ -189,8 +189,11 @@ public class TeamsApp extends App implements IFirstPartyApp {
         Logger.i(TAG, "Handling UI to sign out an account from Teams in shared device mode");
         launch();
         handleLaunchWhileSignedIn();
+        // Press profile icon (on top left). Should display a menu on left.
         UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/avatarView");
+        // Press "sign out". Seen at the bottom of the menu.
         UiAutomatorUtils.handleButtonClickForObjectWithText("Sign out");
+        // Confirm sign out on the dialog box.
         UiAutomatorUtils.handleButtonClick("android:id/button1");
     }
 }
