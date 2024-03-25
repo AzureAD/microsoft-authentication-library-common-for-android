@@ -136,13 +136,10 @@ android {
     }
 
     publishing {
-        singleVariant('distRelease') {
-            withSourcesJar()
+        multipleVariants('dist') {
+            includeBuildTypeValues("debug", "release")
             withJavadocJar()
-        }
-        singleVariant('distDebug') {
             withSourcesJar()
-            withJavadocJar()
         }
     }
 }
@@ -376,9 +373,6 @@ tasks.configureEach { task ->
     }
     if (task.name == 'assembleDistRelease') {
         task.dependsOn 'sourcesJar'
-    }
-    if (task.name == 'publishDistDebugPublicationToVsts-maven-adal-androidRepository') {
-        task.dependsOn 'generatePomFileForDistReleasePublication'
     }
 }
 
