@@ -26,22 +26,23 @@ import com.microsoft.identity.common.java.commands.BaseCommand
 import com.microsoft.identity.common.java.commands.CommandCallback
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters
 import com.microsoft.identity.common.java.controllers.BaseController
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod
 import lombok.EqualsAndHashCode
 
 /**
- * Command class to call controllers to check if QR code + PIN authorization is available.
+ * Command class to call controllers to get the preferred authentication method from the authenticator app.
  * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
  */
 @EqualsAndHashCode(callSuper = true)
-class IsQrPinAvailableCommand(
+class GetPreferredAuthMethodFromAuthenticator(
     parameters: CommandParameters,
     controller: BaseController,
     callback: CommandCallback<*, *>,
     publicApiId: String
-) : BaseCommand<Boolean?>(parameters, controller, callback, publicApiId) {
+) : BaseCommand<PreferredAuthMethod?>(parameters, controller, callback, publicApiId) {
 
-    override fun execute(): Boolean {
-        return defaultController.isQrPinAvailable
+    override fun execute(): PreferredAuthMethod {
+        return defaultController.preferredAuthMethod
     }
 
     override fun isEligibleForEstsTelemetry(): Boolean {
