@@ -382,14 +382,10 @@ class NativeAuthResponseHandler {
             return apiResponse.toErrorResult()
         } else {
             val apiResponse = ObjectMapper.deserializeJsonStringToObject(
-                                response.body,
-                                MicrosoftStsTokenResponse::class.java
-                            )
-            Logger.info(TAG, "MicrosoftStsTokenResponse authority:$apiResponse.authority" +
-                    " cloud_instance_host_name:${apiResponse.refreshTokenExpiresIn}" +
-                    " isMsaAccount:$apiResponse.isMsaAccount() tenantId $apiResponse.tenantId" +
-                    " cloudInstanceHostName $apiResponse.cloudInstanceHostName")
-
+                response.body,
+                MicrosoftStsTokenResponse::class.java
+            )
+            // TODO add safe logging
             return SignInTokenApiResult.Success(
                 tokenResponse = apiResponse,
                 correlationId = correlationId
