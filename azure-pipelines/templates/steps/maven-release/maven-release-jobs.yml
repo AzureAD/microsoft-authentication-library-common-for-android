@@ -175,4 +175,9 @@ jobs:
       ServiceEndpointUrl: '$(esrpServiceEndpointUrl)'
       MainPublisher: '$(esrpMainPublisher)'
       DomainTenantId: '$(esrpDomainTenantId)'
+  - task: ComponentGovernanceComponentDetection@0
+    inputs:
+      scanType: 'Register'
+      verbosity: 'Verbose'
+      alertWarningLevel: 'High'
 ...
