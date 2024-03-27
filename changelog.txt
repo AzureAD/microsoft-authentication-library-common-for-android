@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [MINOR] Add field in BrokerInteractiveTokenCommandParameters for ATv2. (#2363)
 - [PATCH] Return status code in errorResponse when server response is not in expected Json format. (#2321)
 - [PATCH] Reduce the amount of setAccountVisibility() call. (#2355)
 
