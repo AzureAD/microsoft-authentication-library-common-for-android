@@ -129,17 +129,20 @@ android {
         }
     }
 
-    libraryVariants.all { variant ->
-        variant.outputs.all {
-            outputFileName = "${archivesBaseName}-${version}.aar"
-        }
-    }
+//    libraryVariants.all { variant ->
+//        variant.outputs.all {
+//            outputFileName = "${archivesBaseName}-${version}.aar"
+//        }
+//    }
 
     publishing {
-        multipleVariants('dist') {
-            includeBuildTypeValues("debug", "release")
-            withJavadocJar()
+        singleVariant('distRelease') {
             withSourcesJar()
+            withJavadocJar()
+        }
+        singleVariant('distDebug') {
+            withSourcesJar()
+            withJavadocJar()
         }
     }
 }
@@ -228,38 +231,38 @@ dependencies {
 }
 
 // Create tasks to generate javadoc
-android.libraryVariants.all { variant ->
-    task("${variant.name}Javadoc", type: Javadoc, dependsOn: "assemble${variant.name.capitalize()}") {
-        source = variant.javaCompileProvider.get().source
-
-        title = "Microsoft Identity Android Common"
-
-        // First add all of your dependencies to the classpath, then add the android jars
-        doFirst { classpath += files(variant.javaCompiler.classpath.files) }
-        classpath += files(android.getBootClasspath())
-
-        options.memberLevel = JavadocMemberLevel.PUBLIC
-        options.addStringOption('Xdoclint:none', '-quiet')
-
-        // We're excluding these generated files
-        exclude '**/R.java'
-    }
-}
-
-// Create tasks to generate javadoc jar
-android.libraryVariants.all { variant ->
-    task("${variant.name}JavadocJar", type: Jar, dependsOn: "${variant.name}Javadoc") {
-        archiveClassifier.set("javadoc")
-        from tasks["${variant.name}Javadoc"].destinationDir
-    }
-}
-
-
-tasks.register('sourcesJar', Jar) {
-    from android.sourceSets.main.java.srcDirs
-    archiveClassifier.set("sources")
-    destinationDirectory = reporting.file("$project.buildDir/outputs/jar/")
-}
+//android.libraryVariants.all { variant ->
+//    task("${variant.name}Javadoc", type: Javadoc, dependsOn: "assemble${variant.name.capitalize()}") {
+//        source = variant.javaCompileProvider.get().source
+//
+//        title = "Microsoft Identity Android Common"
+//
+//        // First add all of your dependencies to the classpath, then add the android jars
+//        doFirst { classpath += files(variant.javaCompiler.classpath.files) }
+//        classpath += files(android.getBootClasspath())
+//
+//        options.memberLevel = JavadocMemberLevel.PUBLIC
+//        options.addStringOption('Xdoclint:none', '-quiet')
+//
+//        // We're excluding these generated files
+//        exclude '**/R.java'
+//    }
+//}
+//
+//// Create tasks to generate javadoc jar
+//android.libraryVariants.all { variant ->
+//    task("${variant.name}JavadocJar", type: Jar, dependsOn: "${variant.name}Javadoc") {
+//        archiveClassifier.set("javadoc")
+//        from tasks["${variant.name}Javadoc"].destinationDir
+//    }
+//}
+//
+//
+//tasks.register('sourcesJar', Jar) {
+//    from android.sourceSets.main.java.srcDirs
+//    archiveClassifier.set("sources")
+//    destinationDirectory = reporting.file("$project.buildDir/outputs/jar/")
+//}
 
 def configDir = new File(buildscript.sourceFile.parentFile.parentFile, 'config')
 ext.checkstyleConfigDir = "$configDir/checkstyle"
@@ -345,7 +348,6 @@ afterEvaluate {
                 artifactId 'common-debug'
                 //Edit the 'version' here for VSTS RC build
                 version = project.version
-                generateMetadataFileForDistDebugPublication.dependsOn bundleDistReleaseAar
             }
         }
 
@@ -363,23 +365,23 @@ afterEvaluate {
     }
 }
 
-tasks.configureEach { task ->
-//    if (task.name.contains("assemble")) {
-//        task.dependsOn 'pmd'
+//tasks.configureEach { task ->
+////    if (task.name.contains("assemble")) {
+////        task.dependsOn 'pmd'
+////    }
+//
+//    if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
+//        task.dependsOn 'lint', 'sourcesJar'
 //    }
-
-    if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
-        task.dependsOn 'lint', 'sourcesJar'
-    }
-    if (task.name == 'assembleDistRelease') {
-        task.dependsOn 'sourcesJar'
-    }
-}
+//    if (task.name == 'assembleDistRelease') {
+//        task.dependsOn 'sourcesJar'
+//    }
+//}
 
 // This is used to generate the pom file for publishing to external maven in maven-release-jobs.yml
-tasks.withType(GenerateMavenPom).all {
-    destination = layout.buildDirectory.file("poms/${project.name}-${project.version}.pom").get().asFile
-}
+//tasks.withType(GenerateMavenPom).all {
+//    destination = layout.buildDirectory.file("poms/${project.name}-${project.version}.pom").get().asFile
+//}
 
 def dependenciesSizeInMb = project.hasProperty("dependenciesSizeMb") ? project.dependenciesSizeMb : "14"
 String configToCheck = project.hasProperty("dependenciesSizeCheckConfig") ? project.dependenciesSizeCheckConfig : "distReleaseRuntimeClasspath"
