@@ -30,6 +30,7 @@ import com.microsoft.identity.common.java.commands.BaseCommand;
 import com.microsoft.identity.common.java.commands.CommandCallback;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.controllers.IControllerFactory;
 import com.microsoft.identity.common.java.util.ClockSkewManager;
 import com.microsoft.identity.common.java.util.UrlUtil;
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
@@ -41,7 +42,10 @@ import org.robolectric.RobolectricTestRunner;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import lombok.NonNull;
 
 @RunWith(RobolectricTestRunner.class)
 public class GenerateShrCommandTest {
@@ -50,6 +54,21 @@ public class GenerateShrCommandTest {
         @Override public void onCancel() {  }
         @Override public void onError(Object error) {  }
         @Override public void onTaskCompleted(Object o) {  }
+    };
+
+    private static final IControllerFactory emptyControllerFactory = new IControllerFactory() {
+
+        @NonNull
+        @Override
+        public List<BaseController> getAllControllers() {
+            return Collections.<BaseController>emptyList();
+        }
+
+        @NonNull
+        @Override
+        public BaseController getDefaultController() {
+            throw new IllegalStateException("Thins shouldn't be invoked in this flow.");
+        }
     };
 
     public static final GenerateShrCommandParameters PARAMS_ONE = GenerateShrCommandParameters.builder()
@@ -67,7 +86,7 @@ public class GenerateShrCommandTest {
             .parameters(PARAMS_ONE)
             .callback(EMPTY_CALLBACK)
             .publicApiId("ID")
-            .controllers(Collections.<BaseController>emptyList())
+            .controllerFactory(emptyControllerFactory)
             .build();
     public static final GenerateShrCommandParameters PARAMS_ONE_CLONE = GenerateShrCommandParameters.builder()
             .platformComponents(AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext()))
@@ -84,7 +103,7 @@ public class GenerateShrCommandTest {
             .parameters(PARAMS_ONE_CLONE)
             .callback(EMPTY_CALLBACK)
             .publicApiId("ID")
-            .controllers(Collections.<BaseController>emptyList())
+            .controllerFactory(emptyControllerFactory)
             .build();
     public static final GenerateShrCommandParameters PARAMS_TWO = GenerateShrCommandParameters.builder()
             .platformComponents(AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext()))
@@ -101,7 +120,7 @@ public class GenerateShrCommandTest {
             .parameters(PARAMS_TWO)
             .callback(EMPTY_CALLBACK)
             .publicApiId("ID")
-            .controllers(Collections.<BaseController>emptyList())
+            .controllerFactory(emptyControllerFactory)
             .build();
 
     @Test
@@ -111,7 +130,7 @@ public class GenerateShrCommandTest {
                 .parameters(paramsOne)
                 .callback(EMPTY_CALLBACK)
                 .publicApiId("ID")
-                .controllers(Collections.<BaseController>emptyList())
+                .controllerFactory(emptyControllerFactory)
                 .build();
 
         GenerateShrCommandParameters paramsTwo = GenerateShrCommandParameters.builder()
@@ -129,7 +148,7 @@ public class GenerateShrCommandTest {
                 .parameters(paramsTwo)
                 .callback(EMPTY_CALLBACK)
                 .publicApiId("ID")
-                .controllers(Collections.<BaseController>emptyList())
+                .controllerFactory(emptyControllerFactory)
                 .build();
         Map<BaseCommand, Boolean> map = new HashMap<>();
         map.put(commandOne, true);

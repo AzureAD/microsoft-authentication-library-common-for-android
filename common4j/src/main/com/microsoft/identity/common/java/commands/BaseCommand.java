@@ -27,6 +27,7 @@ import lombok.NonNull;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.controllers.IControllerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,37 +55,24 @@ public abstract class BaseCommand<T> implements ICommand<T> {
     private final CommandCallback callback;
 
     @NonNull
-    private final List<BaseController> controllers;
-
-    @NonNull
     @EqualsAndHashCode.Exclude
     private final String publicApiId;
 
-    public BaseCommand(@NonNull final CommandParameters parameters,
-                       @NonNull final BaseController controller,
-                       @NonNull final CommandCallback callback,
-                       @NonNull final String publicApiId) {
-        this.parameters = parameters;
-        this.callback = callback;
-        controllers = Collections.unmodifiableList(Arrays.asList(controller));
-        this.publicApiId = publicApiId;
-    }
+    @NonNull
+    @EqualsAndHashCode.Exclude
+    private final IControllerFactory controllerFactory;
 
     public BaseCommand(@NonNull final CommandParameters parameters,
-                       @NonNull final List<BaseController> controllers,
+                       @NonNull final IControllerFactory controllerFactory,
                        @NonNull final CommandCallback callback,
                        @NonNull final String publicApiId) {
         this.parameters = parameters;
-        this.controllers = Collections.unmodifiableList(new ArrayList<BaseController>(controllers));
         this.callback = callback;
+        this.controllerFactory = controllerFactory;
         this.publicApiId = publicApiId;
     }
 
     public abstract T execute() throws Exception;
-
-    public BaseController getDefaultController() {
-        return controllers.get(0);
-    }
 
     @Override
     public boolean isEligibleForCaching() {

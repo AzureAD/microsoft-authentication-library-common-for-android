@@ -29,6 +29,8 @@ import com.microsoft.identity.common.java.commands.BaseCommand;
 import com.microsoft.identity.common.java.commands.CommandCallback;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.controllers.IControllerFactory;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.List;
 
@@ -44,25 +46,18 @@ public class RemoveCurrentAccountCommand extends BaseCommand<Boolean> {
     private static final String TAG = RemoveCurrentAccountCommand.class.getSimpleName();
 
     public RemoveCurrentAccountCommand(@NonNull RemoveAccountCommandParameters parameters,
-                                       @NonNull BaseController controller,
+                                       @NonNull IControllerFactory controllerFactory,
                                        @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
                                        @NonNull String publicApiId) {
-        super(parameters, controller, callback, publicApiId);
-    }
-
-    public RemoveCurrentAccountCommand(@NonNull RemoveAccountCommandParameters parameters,
-                                       @NonNull List<BaseController> controllers,
-                                       @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                                       @NonNull String publicApiId) {
-        super(parameters, controllers, callback, publicApiId);
+        super(parameters, controllerFactory, callback, publicApiId);
     }
 
     @Override
     public Boolean execute() throws Exception {
         final String methodTag = TAG + ":execute";
 
-        for (final BaseController controller : getControllers()) {
-            com.microsoft.identity.common.internal.logging.Logger.verbose(
+        for (final BaseController controller : getControllerFactory().getAllControllers()) {
+            Logger.verbose(
                     methodTag,
                     "Executing with controller: "
                             + controller.getClass().getSimpleName()

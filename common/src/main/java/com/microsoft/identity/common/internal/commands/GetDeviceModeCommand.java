@@ -29,6 +29,7 @@ import com.microsoft.identity.common.java.commands.BaseCommand;
 import com.microsoft.identity.common.java.commands.CommandCallback;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.controllers.IControllerFactory;
 
 import java.util.List;
 
@@ -42,22 +43,15 @@ import lombok.EqualsAndHashCode;
 public class GetDeviceModeCommand extends BaseCommand<Boolean> {
 
     public GetDeviceModeCommand(@NonNull CommandParameters parameters,
-                                @NonNull BaseController controller,
+                                @NonNull IControllerFactory controllerFactory,
                                 @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
                                 @NonNull String publicApiId) {
-        super(parameters, controller, callback, publicApiId);
-    }
-
-    public GetDeviceModeCommand(@NonNull CommandParameters parameters,
-                                @NonNull List<BaseController> controllers,
-                                @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                                @NonNull String publicApiId) {
-        super(parameters, controllers, callback, publicApiId);
+        super(parameters, controllerFactory, callback, publicApiId);
     }
 
     @Override
     public Boolean execute() throws Exception {
-        return getDefaultController().getDeviceMode(getParameters());
+        return getControllerFactory().getDefaultController().getDeviceMode(getParameters());
     }
 
     @Override

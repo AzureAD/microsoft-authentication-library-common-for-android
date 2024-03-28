@@ -26,6 +26,7 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
+import com.microsoft.identity.common.java.controllers.IControllerFactory;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -51,12 +52,12 @@ public class DeviceCodeFlowTokenResultCommand extends TokenCommand{
 
     private final AuthorizationResult mAuthorizationResult;
 
-    public DeviceCodeFlowTokenResultCommand(@NonNull DeviceCodeFlowCommandParameters parameters,
-                                @NonNull AuthorizationResult authorizationResult,
-                                @NonNull BaseController controller,
-                                @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                                @NonNull String publicApiId) {
-        super(parameters, controller, callback, publicApiId);
+    public DeviceCodeFlowTokenResultCommand(@NonNull final DeviceCodeFlowCommandParameters parameters,
+                                @NonNull final AuthorizationResult authorizationResult,
+                                @NonNull final IControllerFactory controllerFactory,
+                                @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
+                                @NonNull final String publicApiId) {
+        super(parameters, controllerFactory, callback, publicApiId);
 
         mAuthorizationResult = authorizationResult;
     }
@@ -77,7 +78,7 @@ public class DeviceCodeFlowTokenResultCommand extends TokenCommand{
 
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             // Get the controller used to execute the command
-            final BaseController controller = getDefaultController();
+            final BaseController controller = getControllerFactory().getDefaultController();
 
             // Fetch the parameters
             final DeviceCodeFlowCommandParameters commandParameters = (DeviceCodeFlowCommandParameters) getParameters();

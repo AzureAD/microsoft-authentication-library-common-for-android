@@ -27,6 +27,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.controllers.IControllerFactory;
 import com.microsoft.identity.common.java.result.VoidResult;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
@@ -42,15 +43,17 @@ public class RefreshOnCommand extends BaseCommand<VoidResult>{
 
     private static final String TAG = RefreshOnCommand.class.getSimpleName();
 
-    public RefreshOnCommand(@NonNull CommandParameters parameters, @NonNull BaseController controller, @NonNull String publicApiId) {
-        super(parameters, controller, new RefreshOnCallback(), publicApiId);
+    public RefreshOnCommand(@NonNull final CommandParameters parameters,
+                            @NonNull final IControllerFactory controllerFactory,
+                            @NonNull final String publicApiId) {
+        super(parameters, controllerFactory, new RefreshOnCallback(), publicApiId);
     }
 
     @Override
     public VoidResult execute() throws IOException, ClientException, ServiceException {
         final String methodTag = TAG + ":execute";
 
-        final BaseController controller = getDefaultController();
+        final BaseController controller = getControllerFactory().getDefaultController();
         Logger.verbose(
                 methodTag,
                 "Executing with controller: "
