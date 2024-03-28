@@ -1,0 +1,29 @@
+{
+    "tool": "Credential Scanner",
+    "suppressions": [
+    {
+        "file": "common/src/main/res/values-da/strings.xml", 
+        "_justification": "Credential used on testapps"
+    },
+    {
+        "file": "common/src/main/res/values-de/strings.xml", 
+        "_justification": "Credential used on testapps"
+    },
+    {
+        "file": "common/src/main/res/values-et/strings.xml", 
+        "_justification": "Credential used on testapps"
+    },
+    {
+        "file": "common/src/main/res/values-eu/strings.xml", 
+        "_justification": "Credential used on testapps"
+    },
+    {
+        "file": "common/src/main/res/values-nb/strings.xml", 
+        "_justification": "Credential used on testapps"
+    },
+    {
+        "file": "common/src/main/res/values-nl/strings.xml", 
+        "_justification": "Credential used on testapps"
+    }
+    ]
+}   
