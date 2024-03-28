@@ -6,8 +6,9 @@ import io.opentelemetry.api.common.AttributeKey
 class LogAttribute {
 
     companion object {
-        const val AUTHORITY = "authority"
         @JvmStatic
-        val authority: AttributeKey<String> = AttributeKey.stringKey(AUTHORITY)
+        val authority: AttributeKey<String> = AttributeKey.stringKey("authority")
+        @JvmStatic
+        val error: AttributeKey<String> = AttributeKey.stringKey("error")
     }
 }
