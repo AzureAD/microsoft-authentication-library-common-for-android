@@ -82,12 +82,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
     public static final String STRONG_BOX_UNAVAILABLE_EXCEPTION = "StrongBoxUnavailableException";
 
     /**
-     * Seeing this on android 14, we think it's being caused by the new IAR requirement
-     * <a href="https://android.googlesource.com/platform/compatibility/cdd/+/e2fee2f/9_security-model/9_11_keys-and-credentials.md">...</a>
-     */
-    public static final String NEGATIVE_THOUSAND_INTERNAL_ERROR = "internal Keystore code: -1000";
-
-    /**
      * Error message from underlying KeyStore that an attestation certificate could not be
      * generated, typically due to lack of API support via {@link KeyGenParameterSpec.Builder#setAttestationChallenge(byte[])}.
      */
