@@ -32,6 +32,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 
 import java.util.List;
@@ -77,9 +78,8 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
         final List<BaseController> controllers = getControllerFactory().getAllControllers();
 
         // Iterate over our controllers, to service the request either locally or via the broker...
-        // if the local (embedded) cache contains tokens for the supplied user, we will sign using
-        // the embedded PoP keys. If no local user-state exists, the broker will be delegated to
-        // where the same check is performed.
+        // If the broker cache contains tokens for the supplied user, we will sign using
+        // broker PoP keys. If not, check if local user-state exists.
         BaseController controller;
         for (int ii = 0; ii < controllers.size(); ii++) {
             controller = controllers.get(ii);
@@ -109,6 +109,15 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
                 } else {
                     throw new ClientException(errorCode, errorMessage);
                 }
+            } else {
+                Logger.verbose(
+                        methodTag,
+                        "Executing with controller: "
+                                + controller.getClass().getSimpleName()
+                                + ": Succeeded"
+                );
+
+                return result;
             }
         }
 
