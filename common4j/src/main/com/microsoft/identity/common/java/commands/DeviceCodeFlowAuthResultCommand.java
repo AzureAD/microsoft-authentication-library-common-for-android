@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.commands;
 
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
@@ -82,6 +83,12 @@ public class DeviceCodeFlowAuthResultCommand extends BaseCommand<AuthorizationRe
 
             boolean isDeviceIdClaimsRequested =  (commandParameters.getClaimsRequestJson() != null && commandParameters.getClaimsRequestJson().contains(DEVICE_ID_CLAIM))? true: false;
             span.setAttribute(AttributeName.is_device_id_claims_requested.name(), isDeviceIdClaimsRequested);
+            final Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(commandParameters.getAuthority());
+
+            // If not known throw resulting exception
+            if (!authorityResult.getKnown()) {
+                throw authorityResult.getClientException();
+            }
 
             // Call deviceCodeFlowAuthRequest to get authorization result (Part 1 of DCF)
             @SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult authorizationResult = controller.deviceCodeFlowAuthRequest(commandParameters);
