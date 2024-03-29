@@ -192,6 +192,7 @@ public class AzureActiveDirectoryAuthority extends Authority {
         }
 
         if (cloudOfThisAuthority != null && cloudOfAuthorityToCheck != null) {
+            // Depending upon the caller of this method, home_cloud_name may or may not be a PRT's home cloud.
             SpanExtension.current().setAttribute(AttributeName.home_cloud_name.name(), cloudOfAuthorityToCheck.getPreferredCacheHostName());
             SpanExtension.current().setAttribute(AttributeName.requested_cloud_name.name(), cloudOfThisAuthority.getPreferredCacheHostName());
         }
