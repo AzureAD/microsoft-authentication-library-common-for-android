@@ -26,6 +26,8 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
@@ -187,6 +189,12 @@ public class AzureActiveDirectoryAuthority extends Authority {
         // Can't verify, return false.
         if (cloudOfThisAuthority == null && cloudOfAuthorityToCheck == null) {
             return false;
+        }
+
+        if (cloudOfThisAuthority != null && cloudOfAuthorityToCheck != null) {
+            // Depending upon the caller of this method, home_cloud_name may or may not be a PRT's home cloud.
+            SpanExtension.current().setAttribute(AttributeName.home_cloud_name.name(), cloudOfAuthorityToCheck.getPreferredCacheHostName());
+            SpanExtension.current().setAttribute(AttributeName.requested_cloud_name.name(), cloudOfThisAuthority.getPreferredCacheHostName());
         }
 
         return Objects.equals(cloudOfThisAuthority, cloudOfAuthorityToCheck);
