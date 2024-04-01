@@ -24,13 +24,21 @@ package com.microsoft.identity.common.nativeauth.internal.controllers
 
 import androidx.annotation.VisibleForTesting
 import com.microsoft.identity.common.internal.commands.RefreshOnCommand
-import com.microsoft.identity.common.nativeauth.internal.commands.ResetPasswordSubmitNewPasswordCommand
 import com.microsoft.identity.common.internal.telemetry.Telemetry
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent
-import com.microsoft.identity.common.nativeauth.internal.util.CommandUtil
 import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.cache.ICacheRecord
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters
+import com.microsoft.identity.common.java.configuration.LibraryConfiguration
+import com.microsoft.identity.common.java.controllers.CommandDispatcher
+import com.microsoft.identity.common.java.dto.AccountRecord
+import com.microsoft.identity.common.java.eststelemetry.PublicApiId
+import com.microsoft.identity.common.java.exception.ArgumentException
+import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.exception.ErrorStrings
+import com.microsoft.identity.common.java.exception.ServiceException
+import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.AcquireTokenNoFixedScopesCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseNativeAuthCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseSignInTokenCommandParameters
@@ -48,8 +56,6 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
-import com.microsoft.identity.common.java.configuration.LibraryConfiguration
-import com.microsoft.identity.common.java.controllers.CommandDispatcher
 import com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.ResetPasswordCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.ResetPasswordResendCodeCommandResult
@@ -68,16 +74,6 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpS
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpSubmitCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpSubmitPasswordCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpSubmitUserAttributesCommandResult
-import com.microsoft.identity.common.java.dto.AccountRecord
-import com.microsoft.identity.common.java.eststelemetry.PublicApiId
-import com.microsoft.identity.common.java.exception.ArgumentException
-import com.microsoft.identity.common.java.exception.ClientException
-import com.microsoft.identity.common.java.exception.ErrorStrings
-import com.microsoft.identity.common.java.exception.ServiceException
-import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.logging.Logger
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordChallengeApiResult
@@ -91,6 +87,8 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpContinueApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResult
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache
@@ -100,10 +98,11 @@ import com.microsoft.identity.common.java.result.LocalAuthenticationResult
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings
 import com.microsoft.identity.common.java.util.StringUtil
 import com.microsoft.identity.common.java.util.ThreadUtils
+import com.microsoft.identity.common.nativeauth.internal.commands.ResetPasswordSubmitNewPasswordCommand
+import com.microsoft.identity.common.nativeauth.internal.util.CommandUtil
 import lombok.EqualsAndHashCode
 import java.io.IOException
 import java.net.URL
-import kotlin.coroutines.coroutineContext
 
 /**
  * The implementation of MSAL Controller for Native Authentication.
@@ -724,7 +723,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             if (!fullCacheRecord.accessToken.isExpired) {
                 setAcquireTokenResult(acquireTokenSilentResult, silentTokenCommandParameters, cacheRecords)
                 val refreshOnCommand =
-                    RefreshOnCommand(parameters, this, PublicApiId.MSAL_REFRESH_ON)
+                    RefreshOnCommand(parameters, this.asControllerFactory(), PublicApiId.MSAL_REFRESH_ON)
                 CommandDispatcher.submitAndForget(refreshOnCommand)
             } else {
                 Logger.warn(
