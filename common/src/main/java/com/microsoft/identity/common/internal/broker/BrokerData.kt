@@ -227,17 +227,20 @@ data class BrokerData(val packageName : String,
          * Returns a [BrokerData] object matching the owner of the [Context].
          **/
         @JvmStatic
-        fun getFromContext(context: Context): BrokerData {
+        fun getFromContext(context: Context): BrokerData? {
             val signingCertificateThumbprint = PackageHelper(context).getSha512SignatureForPackage(context.packageName)
 
-            // If it's in the list of known brokers, return the one in the list since it has a log-friendly "nickName"
+            if (BuildConfig.DEBUG &&
+                context.packageName == debugBrokerHost.packageName &&
+                signingCertificateThumbprint.isNullOrEmpty()) {
+                // If invoked by unit test, signingCertificateThumbprint would be null.
+                return debugBrokerHost
+            }
+
             return allBrokers.firstOrNull {
                 it.packageName == context.packageName &&
                         it.signingCertificateThumbprint == signingCertificateThumbprint
-            } ?: BrokerData(
-                context.packageName,
-                signingCertificateThumbprint
-            )
+            }
         }
     }
 }
