@@ -419,6 +419,13 @@ public class BrokerMsalController extends BaseController {
 
     @Override
     public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters) throws BaseException, ExecutionException, InterruptedException {
+        final String methodTag = TAG + ":acquireToken";
+
+        Telemetry.emit(
+                new ApiStartEvent()
+                        .putProperties(parameters)
+                        .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
+        );
         final ATv2TokenCommandParameters atv2Parameters = (ATv2TokenCommandParameters) parameters;
         return acquireTokenForATv2(atv2Parameters);
     }
