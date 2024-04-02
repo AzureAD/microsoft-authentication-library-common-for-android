@@ -429,6 +429,43 @@ public abstract class BaseController {
         return tokenResult;
     }
 
+    /**
+     * Performs token request for device code flow parameters.
+     * @param oAuth2Strategy An {@link OAuth2Strategy} object.
+     * @param authorizationRequest An {@link AuthorizationRequest} using which device code was obtained.
+     * @param authorizationResponse An {@link AuthorizationResponse} containing the device code.
+     * @param parameters A {@link DeviceCodeFlowCommandParameters} used to acquire device code.
+     * @return A {@link TokenResult} containing the result of the token request.
+     */
+    protected TokenResult performTokenRequest(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy oAuth2Strategy,
+                                              @NonNull final AuthorizationRequest authorizationRequest,
+                                              @NonNull final AuthorizationResponse authorizationResponse,
+                                              @NonNull final DeviceCodeFlowCommandParameters parameters
+    )
+            throws IOException, ClientException, ServiceException {
+        final String methodTag = TAG + ":performTokenRequest";
+
+        parameters.getPlatformComponents()
+                .getPlatformUtil()
+                .throwIfNetworkNotAvailable(parameters.isPowerOptCheckEnabled());
+
+        final TokenRequest tokenRequest = oAuth2Strategy.createTokenRequest(
+                authorizationRequest,
+                authorizationResponse,
+                parameters.getAuthenticationScheme()
+        );
+        ResultUtil.logExposedFieldsOfObject(methodTag, tokenRequest);
+        // Execute Token Request
+        TokenResult tokenResult = oAuth2Strategy.requestToken(tokenRequest);
+
+        // Validate request success, may throw MsalServiceException
+        validateDeviceCodeFlowServiceResult(tokenResult);
+
+        ResultUtil.logResult(TAG, tokenResult);
+
+        return tokenResult;
+    }
+
     protected void renewAccessToken(@NonNull final SilentTokenCommandParameters parameters,
                                     @NonNull final AcquireTokenResult acquireTokenSilentResult,
                                     @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache,
@@ -1171,5 +1208,27 @@ public abstract class BaseController {
                     null
             );
         }
+    }
+
+    /**
+     * Returns this controller as a controller factory.
+     **/
+    public IControllerFactory asControllerFactory(){
+        final BaseController thisController = this;
+        return new IControllerFactory() {
+            @NonNull
+            @Override
+            public BaseController getDefaultController() {
+                return thisController;
+            }
+
+            @NonNull
+            @Override
+            public List<BaseController> getAllControllers() {
+                final List<BaseController> list = new ArrayList<>();
+                list.add(thisController);
+                return list;
+            }
+        };
     }
 }
