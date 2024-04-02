@@ -39,6 +39,7 @@ import com.microsoft.identity.common.java.cache.CacheRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
+import com.microsoft.identity.common.java.commands.parameters.ATv2TokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
@@ -55,6 +56,7 @@ import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
@@ -122,6 +124,10 @@ public abstract class BaseController {
 
     public abstract AcquireTokenResult acquireToken(final InteractiveTokenCommandParameters request)
             throws Exception;
+
+    public AcquireTokenResult acquireTokenForATv2(final ATv2TokenCommandParameters request) throws Exception {
+        throw new UnsupportedOperationException("ATv2 is initiated from OneAuth, should only be called from BrokerMsalController.");
+    }
 
     public abstract void onFinishAuthorizationSession(
             final int requestCode,

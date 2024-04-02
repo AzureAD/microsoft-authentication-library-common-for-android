@@ -66,6 +66,11 @@ public class ShadowBoundServiceClientWithCurrentBroker<T extends IInterface> {
                 return IpcStrategyTests.getMockInteractiveRequestResultIntent();
             }
 
+            @Override
+            public Intent getIntentForATv2InteractiveRequest() throws RemoteException {
+                throw new RemoteException("Not Implemented");
+            }
+
             @Override public Bundle removeAccount(Bundle bundle) throws RemoteException {
                 throw new RemoteException("Not Implemented");
             }

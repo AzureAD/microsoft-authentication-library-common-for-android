@@ -98,6 +98,20 @@ public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthServic
 
                 return bundle;
 
+            case MSAL_GET_INTENT_FOR_ATV2_INTERACTIVE_REQUEST:
+                final Intent atv2Intent = microsoftAuthService.getIntentForATv2InteractiveRequest();
+                final Bundle atv2Bundle = atv2Intent.getExtras();
+
+                //older brokers (pre-ContentProvider) are ONLY sending these values in the intent itself.
+                if (atv2Intent.getComponent() != null &&
+                        !TextUtils.isEmpty(atv2Intent.getPackage()) &&
+                        !TextUtils.isEmpty(atv2Intent.getComponent().getClassName())){
+                    atv2Bundle.putString(BROKER_PACKAGE_NAME, atv2Intent.getPackage());
+                    atv2Bundle.putString(BROKER_ACTIVITY_NAME, atv2Intent.getComponent().getClassName());
+                }
+
+                return atv2Bundle;
+
             case MSAL_ACQUIRE_TOKEN_SILENT:
                 return microsoftAuthService.acquireTokenSilently(inputBundle);
 

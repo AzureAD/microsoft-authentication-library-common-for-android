@@ -13,40 +13,27 @@
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OsR
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.java.commands.parameters;
 
-package com.microsoft.identity.client;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
 /**
- * Broker Account service APIs provided by the broker app. Those APIs will be responsible for interacting with the
- * account manager API. Calling app does not need to request for contacts permission if the broker installed on the
- * device has the support for the bound service.
+ * Command parameters class for ATv2 requests. Extends {@link InteractiveTokenCommandParameters} since ATv2
+ * can use the same set of parameters as a regular acquire token request. No additional parameters for ATv2 are
+ * required at this time, however.
  */
-interface IMicrosoftAuthService {
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
+public class ATv2TokenCommandParameters extends InteractiveTokenCommandParameters {
 
-    Bundle hello(in Bundle bundle);
-
-    Bundle getAccounts(in Bundle bundle);
-
-    Bundle acquireTokenSilently(in Bundle requestBundle);
-
-    Intent getIntentForInteractiveRequest();
-
-    Intent getIntentForATv2InteractiveRequest();
-
-    Bundle removeAccount(in Bundle bundle);
-
-    Bundle getDeviceMode();
-
-    Bundle getCurrentAccount(in Bundle bundle);
-
-    Bundle removeAccountFromSharedDevice(in Bundle bundle);
-
-    Bundle generateSignedHttpRequest(in Bundle bundle);
 }

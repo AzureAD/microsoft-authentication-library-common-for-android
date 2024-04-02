@@ -67,6 +67,11 @@ public class ShadowBoundServiceClientWithSuccessResult<T extends IInterface> {
                 return intent;
             }
 
+            @Override
+            public Intent getIntentForATv2InteractiveRequest() throws RemoteException {
+                throw new RemoteException("Not Implemented");
+            }
+
             @Override public Bundle removeAccount(Bundle bundle) throws RemoteException {
                 return IpcStrategyTests.getMockIpcResultBundle();
             }

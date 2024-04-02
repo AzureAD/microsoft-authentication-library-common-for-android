@@ -31,9 +31,7 @@ import java.nio.charset.Charset;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
 
 /**
  * {@link AuthenticationConstants} contains all the constant value the SDK is using.
@@ -1491,6 +1489,8 @@ public final class AuthenticationConstants {
 
         public static final String GET_INTENT_FOR_INTERACTIVE_REQUEST = "GET_INTENT_FOR_INTERACTIVE_REQUEST";
 
+        public static final String GET_INTENT_FOR_ATV2_INTERACTIVE_REQUEST = "GET_INTENT_FOR_ATV2_INTERACTIVE_REQUEST";
+
         public static final String REMOVE_ACCOUNT = "REMOVE_ACCOUNT";
 
         public static final String GET_DEVICE_MODE = "GET_DEVICE_MODE";
@@ -1536,6 +1536,7 @@ public final class AuthenticationConstants {
         public enum API {
             MSAL_HELLO(MSAL_HELLO_PATH, null, VERSION_3),
             ACQUIRE_TOKEN_INTERACTIVE(MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH, null, VERSION_3),
+            ACQUIRE_TOKEN_ATV2_INTERACTIVE(MSAL_ACQUIRE_TOKEN_ATV2_INTERACTIVE_PATH, null, VERSION_3),
             ACQUIRE_TOKEN_SILENT(MSAL_ACQUIRE_TOKEN_SILENT_PATH, null, VERSION_3),
             GET_ACCOUNTS(MSAL_GET_ACCOUNTS_PATH, null, VERSION_3),
             REMOVE_ACCOUNT(MSAL_REMOVE_ACCOUNT_PATH, null, VERSION_3),
@@ -1598,6 +1599,12 @@ public final class AuthenticationConstants {
          * URI Path constant for MSAL-to-Broker acquireTokenInteractive request using ContentProvider.
          */
         public static final String MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH = "/acquireTokenInteractive";
+
+        /**
+         * URI Path constant for MSAL-to-Broker acquireTokenInteractive (for ATv2) request using ContentProvider.
+         *  TODO: Not sure if the URI path needs to change here for ATv2
+         */
+        public static final String MSAL_ACQUIRE_TOKEN_ATV2_INTERACTIVE_PATH = "/acquireTokenInteractive";
 
         /**
          * URI Path constant for MSAL-to-Broker acquireTokenSilent request using ContentProvider.

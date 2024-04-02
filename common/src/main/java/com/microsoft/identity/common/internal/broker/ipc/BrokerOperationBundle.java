@@ -40,7 +40,6 @@ import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.logging.Logger;
 
 import lombok.Getter;
-import lombok.experimental.Accessors;
 
 
 public class BrokerOperationBundle {
@@ -49,6 +48,7 @@ public class BrokerOperationBundle {
     public enum Operation {
         MSAL_HELLO(API.MSAL_HELLO, BrokerAccountManagerOperation.HELLO),
         MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST(API.ACQUIRE_TOKEN_INTERACTIVE, BrokerAccountManagerOperation.GET_INTENT_FOR_INTERACTIVE_REQUEST),
+        MSAL_GET_INTENT_FOR_ATV2_INTERACTIVE_REQUEST(API.ACQUIRE_TOKEN_ATV2_INTERACTIVE, BrokerAccountManagerOperation.GET_INTENT_FOR_ATV2_INTERACTIVE_REQUEST),
         MSAL_ACQUIRE_TOKEN_SILENT(API.ACQUIRE_TOKEN_SILENT, BrokerAccountManagerOperation.ACQUIRE_TOKEN_SILENT),
         MSAL_GET_ACCOUNTS(API.GET_ACCOUNTS, BrokerAccountManagerOperation.GET_ACCOUNTS),
         MSAL_REMOVE_ACCOUNT(API.REMOVE_ACCOUNT, BrokerAccountManagerOperation.REMOVE_ACCOUNT),

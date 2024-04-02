@@ -49,6 +49,7 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
+import com.microsoft.identity.common.java.commands.parameters.ATv2TokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
@@ -129,6 +130,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 )
                 .preferredBrowser(parameters.getPreferredBrowser())
                 .preferredAuthMethod(parameters.getPreferredAuthMethod())
+                .isATv2Request(getIsATv2Request(parameters))
                 .build();
 
         return brokerRequest;
@@ -522,4 +524,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         }
     }
 
+    /**
+     * If the parameters passed are of type {@link ATv2TokenCommandParameters}, this is an ATv2 request,
+     * return true. Otherwise, return false.
+     */
+    private boolean getIsATv2Request(@NonNull final TokenCommandParameters parameters) {
+        return parameters instanceof ATv2TokenCommandParameters;
+    }
 }
