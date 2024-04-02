@@ -311,10 +311,10 @@ public class BrokerMsalController extends BaseController {
      * @param parameters a {@link InteractiveTokenCommandParameters}
      * @return an {@link AcquireTokenResult}.
      */
-//    @Override
-//    public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters)
-//            throws BaseException, InterruptedException, ExecutionException {
-//        final String methodTag = TAG + ":acquireToken";
+    @Override
+    public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters)
+            throws BaseException, InterruptedException, ExecutionException {
+        final String methodTag = TAG + ":acquireToken";
 //
 //        Telemetry.emit(
 //                new ApiStartEvent()
@@ -416,10 +416,9 @@ public class BrokerMsalController extends BaseController {
 //
 //        return result;
 //    }
-
-    @Override
-    public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters) throws BaseException, ExecutionException, InterruptedException {
-        final String methodTag = TAG + ":acquireToken";
+//    @Override
+//    public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters) throws BaseException, ExecutionException, InterruptedException {
+//        final String methodTag = TAG + ":acquireToken";
 
         Telemetry.emit(
                 new ApiStartEvent()
