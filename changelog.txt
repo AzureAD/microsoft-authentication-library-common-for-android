@@ -1,9 +1,12 @@
-V.Next
+V.17.3.0
 ---------
 - [MINOR] Move the getActiveBroker() invocation to background thread (#2352)
 - [PATCH] Return status code in errorResponse when server response is not in expected Json format. (#2321)
-- [PATCH] Reduce the amount of setAccountVisibility() call. (#2355)
 - [MINOR] Added telemetry for cross cloud and MSA passthrough requests (#2367)
+
+V.17.2.1
+---------
+- [PATCH] Reduce the amount of setAccountVisibility() call. (#2355)
 
 V.17.2.0
 ---------
