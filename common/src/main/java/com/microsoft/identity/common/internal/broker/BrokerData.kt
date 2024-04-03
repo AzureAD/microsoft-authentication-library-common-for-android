@@ -225,14 +225,17 @@ data class BrokerData(val packageName : String,
 
         /**
          * Returns a [BrokerData] object matching the owner of the [Context].
+         * 
+         * NOTE: This method does NOT perform any validation.
+         * If you want to make sure that the context owner is not a malicious app, use [BrokerValidator]
          **/
         @JvmStatic
         fun getFromContext(context: Context): BrokerData? {
             val signingCertificateThumbprint = PackageHelper(context).getSha512SignatureForPackage(context.packageName)
 
+            // If invoked by unit test, signingCertificateThumbprint would be null.
             if (context.packageName == debugBrokerHost.packageName &&
                 signingCertificateThumbprint.isNullOrEmpty()) {
-                // If invoked by unit test, signingCertificateThumbprint would be null.
                 return debugBrokerHost
             }
 
