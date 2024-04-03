@@ -1,5 +1,6 @@
 V.17.3.0
 ---------
+- [PATCH] Fix mAuthorizationStrategy is null in LocalMsalController (due to #2352) (#2370)
 - [MINOR] Move the getActiveBroker() invocation to background thread (#2352)
 - [PATCH] Return status code in errorResponse when server response is not in expected Json format. (#2321)
 - [MINOR] Added telemetry for cross cloud and MSA passthrough requests (#2367)
