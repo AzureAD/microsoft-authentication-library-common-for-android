@@ -318,6 +318,7 @@ public class BrokerMsalController extends BaseController {
     @Override
     public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters)
             throws BaseException, InterruptedException, ExecutionException {
+        final String methodTag = TAG + ":acquireToken";
 
         if (checkForSlk(parameters)) {
             final ATv2TokenCommandParameters atv2Parameters = ATv2TokenCommandParameters.builder()
