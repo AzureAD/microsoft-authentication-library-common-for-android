@@ -230,8 +230,7 @@ data class BrokerData(val packageName : String,
         fun getFromContext(context: Context): BrokerData? {
             val signingCertificateThumbprint = PackageHelper(context).getSha512SignatureForPackage(context.packageName)
 
-            if (BuildConfig.DEBUG &&
-                context.packageName == debugBrokerHost.packageName &&
+            if (context.packageName == debugBrokerHost.packageName &&
                 signingCertificateThumbprint.isNullOrEmpty()) {
                 // If invoked by unit test, signingCertificateThumbprint would be null.
                 return debugBrokerHost
