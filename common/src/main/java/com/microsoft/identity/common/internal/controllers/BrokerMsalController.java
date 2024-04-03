@@ -120,6 +120,7 @@ import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.sharedwithoneauth.OneAuthSharedFunctions;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -317,131 +318,142 @@ public class BrokerMsalController extends BaseController {
     @Override
     public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters)
             throws BaseException, InterruptedException, ExecutionException {
-//        Telemetry.emit(
-//                new ApiStartEvent()
-//                        .putProperties(parameters)
-//                        .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
-//        );
+
+        if (checkForSlk(parameters)) {
+            final ATv2TokenCommandParameters atv2Parameters = ATv2TokenCommandParameters.builder()
+                    .platformComponents(parameters.getPlatformComponents())
+                    .requiredBrokerProtocolVersion(parameters.getRequiredBrokerProtocolVersion())
+                    .applicationName(parameters.getApplicationName())
+                    .applicationVersion(parameters.getApplicationVersion())
+                    .clientId(parameters.getClientId())
+                    .redirectUri(parameters.getRedirectUri())
+                    .sdkType(parameters.getSdkType())
+                    .sdkVersion(parameters.getSdkVersion())
+                    .authority(parameters.getAuthority())
+                    .claimsRequestJson(parameters.getClaimsRequestJson())
+                    .forceRefresh(parameters.isForceRefresh())
+                    .scopes(parameters.getScopes())
+                    .extraQueryStringParameters(parameters.getExtraQueryStringParameters())
+                    .loginHint(parameters.getLoginHint())
+                    .authenticationScheme(parameters.getAuthenticationScheme())
+                    .prompt(parameters.getPrompt())
+                    .correlationId(parameters.getCorrelationId())
+                    .childClientId(parameters.getChildClientId())
+                    .childRedirectUri(parameters.getChildRedirectUri())
+                    .build();;
+
+            return acquireTokenForATv2(atv2Parameters);
+        }
+
+        Telemetry.emit(
+                new ApiStartEvent()
+                        .putProperties(parameters)
+                        .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
+        );
 
         //Create BrokerResultFuture to block on response from the broker... response will be return as an activity result
         //BrokerActivity will receive the result and ask the API dispatcher to complete the request
         //In completeAcquireToken below we will set the result on the future and unblock the flow.
-//        mBrokerResultFuture = new ResultFuture<>();
+        mBrokerResultFuture = new ResultFuture<>();
 
         //Get the broker interactive parameters intent
-//        final Intent interactiveRequestIntent = getBrokerAuthorizationIntent(parameters);
-//
-//        Activity activity = null;
-//        if (parameters instanceof AndroidActivityInteractiveTokenCommandParameters) {
-//            activity = ((AndroidActivityInteractiveTokenCommandParameters) parameters).getActivity();
-//        }
+        final Intent interactiveRequestIntent = getBrokerAuthorizationIntent(parameters);
+
+        Activity activity = null;
+        if (parameters instanceof AndroidActivityInteractiveTokenCommandParameters) {
+            activity = ((AndroidActivityInteractiveTokenCommandParameters) parameters).getActivity();
+        }
 
         //Pass this intent to the BrokerActivity which will be used to start this activity
-//        final Intent brokerActivityIntent = new Intent(mApplicationContext, BrokerActivity.class);
-//        brokerActivityIntent.putExtra(BrokerActivity.BROKER_INTENT, interactiveRequestIntent);
-//
-//        LocalBroadcaster.INSTANCE.registerCallback(RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT,
-//                new LocalBroadcaster.IReceiverCallback() {
-//                    @Override
-//                    public void onReceive(@NonNull PropertyBag propertyBag) {
-//                        /**
-//                         * Get the response from the Broker captured by BrokerActivity.
-//                         * BrokerActivity will pass along the response to the broker controller.
-//                         * The Broker controller will map the response into the broker result
-//                         * and signal the future with the broker result to unblock the request.
-//                         */
-//
-//                        Logger.verbose(
-//                                methodTag,
-//                                "Received result from Broker..."
-//                        );
-//
-//                        Telemetry.emit(
-//                                new ApiStartEvent()
-//                                        .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE)
-//                                        .put(TelemetryEventStrings.Key.REQUEST_CODE, propertyBag.<Integer>getOrDefault(REQUEST_CODE, -1).toString())
-//                                        .put(TelemetryEventStrings.Key.RESULT_CODE, propertyBag.<Integer>getOrDefault(RESULT_CODE, -1).toString())
-//                        );
-//
-//                        mBrokerResultFuture.setResult(PropertyBagUtil.toBundle(propertyBag));
-//
-//                        Telemetry.emit(
-//                                new ApiEndEvent()
-//                                        .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE)
-//                        );
-//
-//                        LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT);
-//                    }
-//                });
-//
-//        if (null == activity) {
-//            // To support calling from OneAuth-MSAL, which may be initialized without an Activity
-//            // add Flags to start as a NEW_TASK if we are launching from an application Context
-//            brokerActivityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//            mApplicationContext.startActivity(brokerActivityIntent);
-//        } else {
-//            // Start the BrokerActivity using our existing Activity
-//            activity.startActivity(brokerActivityIntent);
-//        }
+        final Intent brokerActivityIntent = new Intent(mApplicationContext, BrokerActivity.class);
+        brokerActivityIntent.putExtra(BrokerActivity.BROKER_INTENT, interactiveRequestIntent);
 
-//        final AcquireTokenResult result;
-//        try {
-//            //Wait to be notified of the result being returned... we could add a timeout here if we want to
-//            final Bundle resultBundle = mBrokerResultFuture.get();
-//
-//            final String negotiatedBrokerProtocolVersion = interactiveRequestIntent.getStringExtra(NEGOTIATED_BP_VERSION_KEY);
-//            // For MSA Accounts Broker doesn't save the accounts, instead it just passes the result along,
-//            // MSAL needs to save this account locally for future token calls.
-//            // parameters.getOAuth2TokenCache() will be non-null only in case of MSAL native
-//            // If the request is from MSALCPP , OAuth2TokenCache will be null.
-//            if (parameters.getOAuth2TokenCache() != null && !BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker(negotiatedBrokerProtocolVersion)) {
-//                saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
-//            }
-//
-//            verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
-//            result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
-//        } catch (final BaseException | ExecutionException e) {
-//            Telemetry.emit(
-//                    new ApiEndEvent()
-//                            .putException(e)
-//                            .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
-//            );
-//            throw e;
-//        }
+        LocalBroadcaster.INSTANCE.registerCallback(RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT,
+                new LocalBroadcaster.IReceiverCallback() {
+                    @Override
+                    public void onReceive(@NonNull PropertyBag propertyBag) {
+                        /**
+                         * Get the response from the Broker captured by BrokerActivity.
+                         * BrokerActivity will pass along the response to the broker controller.
+                         * The Broker controller will map the response into the broker result
+                         * and signal the future with the broker result to unblock the request.
+                         */
 
-//        Telemetry.emit(
-//                new ApiEndEvent()
-//                        .putResult(result)
-//                        .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
-//        );
+                        Logger.verbose(
+                                methodTag,
+                                "Received result from Broker..."
+                        );
 
-//        return result;
+                        Telemetry.emit(
+                                new ApiStartEvent()
+                                        .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE)
+                                        .put(TelemetryEventStrings.Key.REQUEST_CODE, propertyBag.<Integer>getOrDefault(REQUEST_CODE, -1).toString())
+                                        .put(TelemetryEventStrings.Key.RESULT_CODE, propertyBag.<Integer>getOrDefault(RESULT_CODE, -1).toString())
+                        );
 
+                        mBrokerResultFuture.setResult(PropertyBagUtil.toBundle(propertyBag));
 
+                        Telemetry.emit(
+                                new ApiEndEvent()
+                                        .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE)
+                        );
 
-        final ATv2TokenCommandParameters atv2Parameters = ATv2TokenCommandParameters.builder()
-                .platformComponents(parameters.getPlatformComponents())
-                .requiredBrokerProtocolVersion(parameters.getRequiredBrokerProtocolVersion())
-                .applicationName(parameters.getApplicationName())
-                .applicationVersion(parameters.getApplicationVersion())
-                .clientId(parameters.getClientId())
-                .redirectUri(parameters.getRedirectUri())
-                .sdkType(parameters.getSdkType())
-                .sdkVersion(parameters.getSdkVersion())
-                .authority(parameters.getAuthority())
-                .claimsRequestJson(parameters.getClaimsRequestJson())
-                .forceRefresh(parameters.isForceRefresh())
-                .scopes(parameters.getScopes())
-                .extraQueryStringParameters(parameters.getExtraQueryStringParameters())
-                .loginHint(parameters.getLoginHint())
-                .authenticationScheme(parameters.getAuthenticationScheme())
-                .prompt(parameters.getPrompt())
-                .correlationId(parameters.getCorrelationId())
-                .childClientId(parameters.getChildClientId())
-                .childRedirectUri(parameters.getChildRedirectUri())
-                .build();;
+                        LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT);
+                    }
+                });
 
-        return acquireTokenForATv2(atv2Parameters);
+        if (null == activity) {
+            // To support calling from OneAuth-MSAL, which may be initialized without an Activity
+            // add Flags to start as a NEW_TASK if we are launching from an application Context
+            brokerActivityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            mApplicationContext.startActivity(brokerActivityIntent);
+        } else {
+            // Start the BrokerActivity using our existing Activity
+            activity.startActivity(brokerActivityIntent);
+        }
+
+        final AcquireTokenResult result;
+        try {
+            //Wait to be notified of the result being returned... we could add a timeout here if we want to
+            final Bundle resultBundle = mBrokerResultFuture.get();
+
+            final String negotiatedBrokerProtocolVersion = interactiveRequestIntent.getStringExtra(NEGOTIATED_BP_VERSION_KEY);
+            // For MSA Accounts Broker doesn't save the accounts, instead it just passes the result along,
+            // MSAL needs to save this account locally for future token calls.
+            // parameters.getOAuth2TokenCache() will be non-null only in case of MSAL native
+            // If the request is from MSALCPP , OAuth2TokenCache will be null.
+            if (parameters.getOAuth2TokenCache() != null && !BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker(negotiatedBrokerProtocolVersion)) {
+                saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
+            }
+
+            verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
+            result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
+        } catch (final BaseException | ExecutionException e) {
+            Telemetry.emit(
+                    new ApiEndEvent()
+                            .putException(e)
+                            .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
+            );
+            throw e;
+        }
+
+        Telemetry.emit(
+                new ApiEndEvent()
+                        .putResult(result)
+                        .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
+        );
+
+        return result;
+    }
+
+    private boolean checkForSlk(final @NonNull InteractiveTokenCommandParameters parameters) {
+        for (Map.Entry<String, String> entry : parameters.getExtraQueryStringParameters()){
+            if (entry.getKey().equals("slk")) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
