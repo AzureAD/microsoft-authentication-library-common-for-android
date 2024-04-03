@@ -573,61 +573,61 @@ public class BrokerMsalController extends BaseController {
      * @param parameters a {@link InteractiveTokenCommandParameters}
      * @return an {@link Intent} for initiating Broker interactive activity.
      */
-//    private @NonNull
-//    Intent getBrokerAuthorizationIntent(
-//            final @NonNull InteractiveTokenCommandParameters parameters) throws BaseException {
-//        return getBrokerOperationExecutor().execute(parameters,
-//                new BrokerOperation<Intent>() {
-//                    private String negotiatedBrokerProtocolVersion;
-//
-//                    @Override
-//                    public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
-//                        verifyTokenParametersAreSupported(parameters);
-//                        negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
-//                    }
-//
-//                    @Override
-//                    public @NonNull
-//                    BrokerOperationBundle getBundle() {
-//                        return new BrokerOperationBundle(
-//                                MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST,
-//                                mActiveBrokerPackageName,
-//                                null);
-//                    }
-//
-//                    @Override
-//                    public @NonNull
-//                    Intent extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
-//                        if (resultBundle == null) {
-//                            throw mResultAdapter.getExceptionForEmptyResultBundle();
-//                        }
-//
-//                        final Intent intent = mResultAdapter.getIntentForInteractiveRequestFromResultBundle(
-//                                resultBundle,
-//                                negotiatedBrokerProtocolVersion);
-//                        intent.putExtras(
-//                                mRequestAdapter.getRequestBundleForAcquireTokenInteractive(parameters, negotiatedBrokerProtocolVersion)
-//                        );
-//                        return intent;
-//                    }
-//
-//                    @Override
-//                    public @NonNull
-//                    String getMethodName() {
-//                        return ":getBrokerAuthorizationIntent";
-//                    }
-//
-//                    @Override
-//                    public @Nullable
-//                    String getTelemetryApiId() {
-//                        return null;
-//                    }
-//
-//                    @Override
-//                    public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull Intent result) {
-//                    }
-//                });
-//    }
+    private @NonNull
+    Intent getBrokerAuthorizationIntent(
+            final @NonNull InteractiveTokenCommandParameters parameters) throws BaseException {
+        return getBrokerOperationExecutor().execute(parameters,
+                new BrokerOperation<Intent>() {
+                    private String negotiatedBrokerProtocolVersion;
+
+                    @Override
+                    public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                        verifyTokenParametersAreSupported(parameters);
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+                    }
+
+                    @Override
+                    public @NonNull
+                    BrokerOperationBundle getBundle() {
+                        return new BrokerOperationBundle(
+                                MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST,
+                                mActiveBrokerPackageName,
+                                null);
+                    }
+
+                    @Override
+                    public @NonNull
+                    Intent extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
+                        }
+
+                        final Intent intent = mResultAdapter.getIntentForInteractiveRequestFromResultBundle(
+                                resultBundle,
+                                negotiatedBrokerProtocolVersion);
+                        intent.putExtras(
+                                mRequestAdapter.getRequestBundleForAcquireTokenInteractive(parameters, negotiatedBrokerProtocolVersion)
+                        );
+                        return intent;
+                    }
+
+                    @Override
+                    public @NonNull
+                    String getMethodName() {
+                        return ":getBrokerAuthorizationIntent";
+                    }
+
+                    @Override
+                    public @Nullable
+                    String getTelemetryApiId() {
+                        return null;
+                    }
+
+                    @Override
+                    public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull Intent result) {
+                    }
+                });
+    }
 
     /**
      * Get the intent for the broker ATv2 request
