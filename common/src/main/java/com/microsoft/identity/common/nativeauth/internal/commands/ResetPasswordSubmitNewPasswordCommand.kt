@@ -25,8 +25,6 @@ package com.microsoft.identity.common.nativeauth.internal.commands
 import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.ResetPasswordSubmitNewPasswordCommandResult
-import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.logging.Logger
 
 /**
  * Command class to call controllers to submit the user's new password to the server in the self service password reset flow
@@ -54,19 +52,8 @@ class ResetPasswordSubmitNewPasswordCommand(
      * It calls the resetPasswordSubmitNewPassword method of the native auth MSAL controller with the given parameters.
      */
     override fun execute(): ResetPasswordSubmitNewPasswordCommandResult {
-        LogSession.logMethodCall(
-            tag = TAG,
-            correlationId = parameters.getCorrelationId(),
-            methodName = "${TAG}.execute"
-        )
-
         val result = controller.resetPasswordSubmitNewPassword(
             parameters = parameters
-        )
-
-        Logger.info(
-            TAG,
-            "Returning result: $result"
         )
         return result
     }

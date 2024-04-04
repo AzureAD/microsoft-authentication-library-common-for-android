@@ -25,8 +25,6 @@ package com.microsoft.identity.common.nativeauth.internal.commands
 import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignInWithContinuationTokenCommandResult
-import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.logging.Logger
 
 /**
  * Command class to call controllers to use continuation token generated from sign in/self-service-password-reset flow to get the user authenticated.
@@ -51,19 +49,8 @@ class SignInWithContinuationTokenCommand(
      * It calls the signInWithContinuationToken method of the native auth MSAL controller with the given parameters.
      */
     override fun execute(): SignInWithContinuationTokenCommandResult {
-        LogSession.logMethodCall(
-            tag = TAG,
-            correlationId = parameters.getCorrelationId(),
-            methodName = "${TAG}.execute"
-        )
-
         val result = controller.signInWithContinuationToken(
             parameters = parameters
-        )
-
-        Logger.info(
-            TAG,
-            "Returning result: $result"
         )
         return result
     }

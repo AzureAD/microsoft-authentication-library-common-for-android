@@ -24,8 +24,6 @@ package com.microsoft.identity.common.nativeauth.internal.commands
 
 import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpStartCommandResult
-import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
 
 /**
@@ -51,19 +49,8 @@ class SignUpStartCommand(
      * It calls the signUpStart method of the native auth MSAL controller with the given parameters.
      */
     override fun execute(): SignUpStartCommandResult {
-        LogSession.logMethodCall(
-            tag = TAG,
-            correlationId = parameters.getCorrelationId(),
-            methodName = "${TAG}.execute"
-        )
-
         val result = controller.signUpStart(
             parameters = parameters
-        )
-
-        Logger.info(
-            TAG,
-            "Returning result: $result"
         )
         return result
     }

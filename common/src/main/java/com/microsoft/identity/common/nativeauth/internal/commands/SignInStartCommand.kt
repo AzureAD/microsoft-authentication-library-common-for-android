@@ -25,8 +25,6 @@ package com.microsoft.identity.common.nativeauth.internal.commands
 import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignInStartCommandResult
-import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.logging.Logger
 
 /**
  * Command class to call controllers to trigger user sign in start flow.
@@ -51,18 +49,8 @@ class SignInStartCommand(
      * It calls the signInStart method of the native auth MSAL controller with the given parameters.
      */
     override fun execute(): SignInStartCommandResult {
-        LogSession.logMethodCall(
-            tag = TAG,
-            correlationId = parameters.getCorrelationId(),
-            methodName = "${TAG}.execute"
-        )
         val result = controller.signInStart(
             parameters = parameters
-        )
-
-        Logger.info(
-            TAG,
-            "Returning result: $result"
         )
         return result
     }
