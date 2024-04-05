@@ -22,13 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication;
 
-import com.microsoft.identity.internal.test.keyvault.ApiException;
-import com.microsoft.identity.internal.test.keyvault.Configuration;
-import com.microsoft.identity.internal.test.keyvault.api.SecretsApi;
 import com.microsoft.identity.labapi.utilities.authentication.client.ConfidentialAuthClientFactory;
 import com.microsoft.identity.labapi.utilities.authentication.client.IConfidentialAuthClient;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
-import com.microsoft.identity.labapi.utilities.exception.LabError;
 
 import lombok.NonNull;
 
@@ -50,15 +46,20 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
     private final IConfidentialAuthClient mConfidentialAuthClient;
     private final KeyVaultAuthenticationClient mKeyVaultAuthenticationClient;
 
+    private final static String CLIENT_ID = "f62c5ae3-bf3a-4af5-afa8-a68b800396e9";
+    private final String mClientSecret;
+
     public LabApiAuthenticationClient(@NonNull final IConfidentialAuthClient confidentialAuthClient) {
         mConfidentialAuthClient = confidentialAuthClient;
         mKeyVaultAuthenticationClient = new KeyVaultAuthenticationClient(confidentialAuthClient);
+        mClientSecret = "";
     }
 
     public LabApiAuthenticationClient(@NonNull final IConfidentialAuthClient confidentialAuthClient,
                                       @NonNull final String clientSecret) {
         mConfidentialAuthClient = confidentialAuthClient;
         mKeyVaultAuthenticationClient = new KeyVaultAuthenticationClient(confidentialAuthClient, clientSecret);
+        mClientSecret = clientSecret;
     }
 
     public LabApiAuthenticationClient() {
@@ -71,37 +72,16 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
 
     @Override
     public String getAccessToken() throws LabApiException {
-        // first get token for KeyVault...because we find lab app id and secret from there
-        final String accessTokenForKeyVault = mKeyVaultAuthenticationClient.getAccessToken();
-        Configuration.getDefaultApiClient().setAccessToken(accessTokenForKeyVault);
-
-        final String labAppId, labAppSecret;
-
-        try {
-            // we are going to use the KeyVault API to obtain the Lab App client id and
-            // client secret
-            final SecretsApi secretsApi = new SecretsApi();
-            labAppId = secretsApi.getSecret(
-                    SECRET_NAME_LAB_APP_ID, SECRET_VERSION, KEY_VAULT_API_VERSION
-            ).getValue();
-
-            labAppSecret = secretsApi.getSecret(
-                    SECRET_NAME_LAB_APP_SECRET, SECRET_VERSION, KEY_VAULT_API_VERSION
-            ).getValue();
-        } catch (final ApiException e) {
-            throw new LabApiException(LabError.FAILED_TO_GET_SECRET_FROM_KEYVAULT, e);
-        }
-
         final TokenParameters tokenParameters = TokenParameters
                 .builder()
-                .clientId(labAppId)
+                .clientId(CLIENT_ID)
                 .authority(AUTHORITY)
                 .scope(SCOPE)
                 .build();
 
         // obtain token for Lab Api using the client secret retrieved from KeyVault
         final IAuthenticationResult authenticationResult = mConfidentialAuthClient.acquireToken(
-                labAppSecret, tokenParameters
+                mClientSecret, tokenParameters
         );
 
         return authenticationResult.getAccessToken();
