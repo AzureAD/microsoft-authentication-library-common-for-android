@@ -25,7 +25,6 @@ package com.microsoft.identity.common.java.nativeauth.providers.interactors
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
-import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
@@ -60,18 +59,12 @@ class SignUpInteractor(
     fun performSignUpStart(
         commandParameters: SignUpStartCommandParameters
     ): SignUpStartApiResult {
-        LogSession.logMethodCall(
-            tag = TAG,
-            correlationId = commandParameters.getCorrelationId(),
-            methodName = "${TAG}.performSignUpStart"
-        )
-
         val request = nativeAuthRequestProvider.createSignUpStartRequest(
             commandParameters = commandParameters
         )
         try {
             return performSignUpStart(
-                requestCorrelationId = commandParameters.getCorrelationId(),
+                requestCorrelationId = commandParameters.correlationId,
                 request = request
             )
         } finally {
@@ -83,12 +76,6 @@ class SignUpInteractor(
         requestCorrelationId: String,
         request: SignUpStartRequest
     ): SignUpStartApiResult {
-        LogSession.logMethodCall(
-            tag = TAG,
-            correlationId = null,
-            methodName = "${TAG}.performSignUpStart"
-        )
-
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -111,12 +98,6 @@ class SignUpInteractor(
         continuationToken: String,
         correlationId: String
     ): SignUpChallengeApiResult {
-        LogSession.logMethodCall(
-            tag = TAG,
-            correlationId = correlationId,
-            methodName = "${TAG}.performSignUpChallenge"
-        )
-
         val request = nativeAuthRequestProvider.createSignUpChallengeRequest(
             continuationToken = continuationToken,
             correlationId = correlationId
@@ -131,12 +112,6 @@ class SignUpInteractor(
         requestCorrelationId: String,
         request: SignUpChallengeRequest
     ): SignUpChallengeApiResult {
-        LogSession.logMethodCall(
-            tag = TAG,
-            correlationId = null,
-            methodName = "${TAG}.performSignUpChallenge"
-        )
-
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
