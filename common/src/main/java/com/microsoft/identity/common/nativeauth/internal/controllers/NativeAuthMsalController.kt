@@ -126,7 +126,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     fun signInStart(parameters: SignInStartCommandParameters): SignInStartCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.signInStart"
         )
 
@@ -142,7 +142,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             {
                 Logger.verbose(
                     TAG,
-                    parameters.getCorrelationId(),
+                    parameters.correlationId,
                     "Parameters has password"
                 )
                 val mergedScopes = addDefaultScopes(parameters.scopes)
@@ -165,7 +165,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             {
                 Logger.verbose(
                     TAG,
-                    parameters.getCorrelationId(),
+                    parameters.correlationId,
                     "Parameters doesn't have password"
                 )
                 return processSignInInitiateApiResult(
@@ -175,7 +175,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         } catch (e: Exception) {
             Logger.error(
                 TAG,
-                parameters.getCorrelationId(),
+                parameters.correlationId,
                 "Exception thrown in signInStart",
                 e
             )
@@ -190,7 +190,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     fun signInWithContinuationToken(parameters: SignInWithContinuationTokenCommandParameters): SignInWithContinuationTokenCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.signInWithContinuationToken"
         )
 
@@ -253,7 +253,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     fun signInSubmitCode(parameters: SignInSubmitCodeCommandParameters): SignInSubmitCodeCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.signInSubmitCode"
         )
 
@@ -325,7 +325,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     fun signInResendCode(parameters: SignInResendCodeCommandParameters): SignInResendCodeCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.signInResendCode"
         )
 
@@ -394,7 +394,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     fun signInSubmitPassword(parameters: SignInSubmitPasswordCommandParameters): SignInSubmitPasswordCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.signInSubmitPassword"
         )
 
@@ -405,7 +405,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             val parametersWithScopes =
                 CommandUtil.createSignInSubmitPasswordCommandParametersWithScopes(
                     parameters,
-                    parameters.getCorrelationId(),
+                    parameters.correlationId,
                     mergedScopes
                 )
 
@@ -438,7 +438,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     fun signUpStart(parameters: SignUpStartCommandParameters): SignUpStartCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.signUpStart"
         )
         try {
@@ -529,7 +529,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     fun signUpSubmitCode(parameters: SignUpSubmitCodeCommandParameters): SignUpSubmitCodeCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.signUpSubmitCode"
         )
 
@@ -544,7 +544,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         } catch (e: Exception) {
             Logger.error(
                 TAG,
-                parameters.getCorrelationId(),
+                parameters.correlationId,
                 "Exception thrown in signUpSubmitCode",
                 e
             )
@@ -558,7 +558,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     fun signUpResendCode(parameters: SignUpResendCodeCommandParameters): SignUpResendCodeCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.signUpResendCode"
         )
 
@@ -573,7 +573,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         } catch (e: Exception) {
             Logger.error(
                 TAG,
-                parameters.getCorrelationId(),
+                parameters.correlationId,
                 "Exception thrown in signUpResendCode",
                 e
             )
@@ -587,7 +587,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     fun signUpSubmitUserAttributes(parameters: SignUpSubmitUserAttributesCommandParameters): SignUpSubmitUserAttributesCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.signUpSubmitUserAttributes"
         )
 
@@ -602,7 +602,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         } catch (e: Exception) {
             Logger.error(
                 TAG,
-                parameters.getCorrelationId(),
+                parameters.correlationId,
                 "Exception thrown in signUpSubmitUserAttributes",
                 e
             )
@@ -616,7 +616,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     fun signUpSubmitPassword(parameters: SignUpSubmitPasswordCommandParameters): SignUpSubmitPasswordCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.signUpSubmitPassword"
         )
 
@@ -630,7 +630,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         } catch (e: Exception) {
             Logger.error(
                 TAG,
-                parameters.getCorrelationId(),
+                parameters.correlationId,
                 "Exception thrown in signUpSubmitPassword",
                 e
             )
@@ -656,7 +656,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     ): AcquireTokenResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.acquireTokenSilent"
         )
 
@@ -670,7 +670,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         val silentTokenCommandParameters =
             CommandUtil.convertAcquireTokenNoFixedScopesCommandParameters(
                 parameters,
-                parameters.getCorrelationId()
+                parameters.correlationId
             )
 
         // We want to retrieve all tokens from the cache, regardless of their scopes. Since in the
@@ -713,7 +713,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         ) {
             Logger.info(
                 TAG,
-                parameters.getCorrelationId(),
+                parameters.correlationId,
                 "RefreshOn is active. This will extend your token usage in the rare case servers are not available."
             )
         }
@@ -728,7 +728,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             } else {
                 Logger.warn(
                     TAG,
-                    parameters.getCorrelationId(),
+                    parameters.correlationId,
                     "Access token is expired. Removing from cache..."
                 )
 
@@ -775,7 +775,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         } else if (fullCacheRecord.accessToken.isExpired) {
             Logger.warn(
                 TAG,
-                parameters.getCorrelationId(),
+                parameters.correlationId,
                 "Access token is expired. Removing from cache..."
             )
 
@@ -789,7 +789,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         } else {
             Logger.verbose(
                 TAG,
-                parameters.getCorrelationId(),
+                parameters.correlationId,
                 "Returning silent result"
             )
             setAcquireTokenResult(acquireTokenSilentResult, silentTokenCommandParameters, cacheRecords)
@@ -827,7 +827,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     fun resetPasswordStart(parameters: ResetPasswordStartCommandParameters): ResetPasswordStartCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.resetPasswordStart"
         )
 
@@ -862,7 +862,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 is ResetPasswordStartApiResult.UnsupportedChallengeType, is ResetPasswordStartApiResult.UnknownError -> {
                     Logger.warn(
                         TAG,
-                        parameters.getCorrelationId(),
+                        parameters.correlationId,
                         "Unexpected result: $resetPasswordStartApiResult"
                     )
                     resetPasswordStartApiResult as ApiErrorResult
@@ -876,7 +876,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         } catch (e: Exception) {
             Logger.error(
                 TAG,
-                parameters.getCorrelationId(),
+                parameters.correlationId,
                 "Exception thrown in resetPasswordStart",
                 e
             )
@@ -890,7 +890,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     fun resetPasswordSubmitCode(parameters: ResetPasswordSubmitCodeCommandParameters): ResetPasswordSubmitCodeCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.resetPasswordSubmitCode"
         )
 
@@ -938,7 +938,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         } catch (e: Exception) {
             Logger.error(
                 TAG,
-                parameters.getCorrelationId(),
+                parameters.correlationId,
                 "Exception thrown in resetPasswordSubmitCode",
                 e
             )
@@ -952,7 +952,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     fun resetPasswordResendCode(parameters: ResetPasswordResendCodeCommandParameters): ResetPasswordResendCodeCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.resetPasswordResendCode"
         )
 
@@ -999,7 +999,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         } catch (e: Exception) {
             Logger.error(
                 TAG,
-                parameters.getCorrelationId(),
+                parameters.correlationId,
                 "Exception thrown in resetPasswordResendCode",
                 e
             )
@@ -1014,7 +1014,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     fun resetPasswordSubmitNewPassword(parameters: ResetPasswordSubmitNewPasswordCommandParameters): ResetPasswordSubmitNewPasswordCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.resetPasswordSubmitNewPassword"
         )
 
@@ -1062,7 +1062,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         } catch (e: Exception) {
             Logger.error(
                 TAG,
-                parameters.getCorrelationId(),
+                parameters.correlationId,
                 "Exception thrown in resetPasswordSubmitNewPassword",
                 e
             )
@@ -1192,7 +1192,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     ): SignInTokenApiResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.performContinuationTokenTokenRequest"
         )
         return oAuth2Strategy.performContinuationTokenTokenRequest(
@@ -1206,7 +1206,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     ): SignInTokenApiResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.performOOBTokenRequest"
         )
         return oAuth2Strategy.performOOBTokenRequest(
@@ -1221,7 +1221,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     ): SignInTokenApiResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.performPasswordTokenCall"
         )
         return oAuth2Strategy.performPasswordTokenRequest(
@@ -1235,7 +1235,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     ): SignInInitiateApiResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.performSignInInitiateCall"
         )
         return oAuth2Strategy.performSignInInitiate(
@@ -1265,7 +1265,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     ): ResetPasswordStartApiResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.performResetPasswordStartCall"
         )
         return oAuth2Strategy.performResetPasswordStart(
@@ -1295,7 +1295,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     ): ResetPasswordContinueApiResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.performResetPasswordContinueCall"
         )
         return oAuth2Strategy.performResetPasswordContinue(
@@ -1309,7 +1309,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     ): ResetPasswordSubmitApiResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.getCorrelationId(),
+            correlationId = parameters.correlationId,
             methodName = "${TAG}.performResetPasswordSubmitCall"
         )
         return oAuth2Strategy.performResetPasswordSubmit(
@@ -1340,7 +1340,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     ): SignInCommandResult.Complete {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parametersWithScopes.getCorrelationId(),
+            correlationId = parametersWithScopes.correlationId,
             methodName = "${TAG}.saveAndReturnTokens"
         )
         val records: List<ICacheRecord> = saveTokens(
@@ -1480,7 +1480,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     ) {
         Logger.verbose(
             TAG,
-            parameters.getCorrelationId(),
+            parameters.correlationId,
             "Renewing access token..."
         )
 
@@ -1507,6 +1507,11 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignUpStartCommandParameters
     ): SignUpStartApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.correlationId,
+            methodName = "${TAG}.performSignUpStartUsingPasswordRequest"
+        )
         return oAuth2Strategy.performSignUpStart(
             commandParameters = parameters
         )
@@ -1517,6 +1522,11 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         continuationToken: String,
         correlationId: String
     ): SignUpChallengeApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            methodName = "${TAG}.performSignUpChallengeCall"
+        )
         return oAuth2Strategy.performSignUpChallenge(
             continuationToken = continuationToken,
             correlationId = correlationId
@@ -1527,12 +1537,22 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignUpSubmitCodeCommandParameters
     ): SignUpContinueApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.correlationId,
+            methodName = "${TAG}.performSignUpSubmitCode"
+        )
         return oAuth2Strategy.performSignUpSubmitCode(commandParameters = parameters)
     }
     private fun performSignUpSubmitPassword(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignUpSubmitPasswordCommandParameters
     ): SignUpContinueApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.correlationId,
+            methodName = "${TAG}.performSignUpSubmitPassword"
+        )
         return oAuth2Strategy.performSignUpSubmitPassword(commandParameters = parameters)
     }
 
@@ -1541,6 +1561,11 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignUpSubmitUserAttributesCommandParameters
     ): SignUpContinueApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.correlationId,
+            methodName = "${TAG}.performSignUpSubmitUserAttributes"
+        )
         return oAuth2Strategy.performSignUpSubmitUserAttributes(commandParameters = parameters)
     }
 
