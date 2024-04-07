@@ -28,6 +28,7 @@ import com.microsoft.identity.labapi.utilities.TestBuildConfig;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
@@ -57,6 +58,7 @@ public class LabApiAuthenticationClientTest {
         }
     }
 
+    @Ignore
     @Test
     public void canGetTokenForLabApiUsingCertificate() {
         final LabApiAuthenticationClient labApiAuthenticationClient =

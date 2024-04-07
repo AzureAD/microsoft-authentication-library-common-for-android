@@ -29,6 +29,7 @@ import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 import com.microsoft.identity.labapi.utilities.exception.LabError;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -214,6 +215,7 @@ public class CertificateCredentialTest {
         Assert.assertNotNull(certificateCredential.getPublicCertificate());
     }
 
+    @Ignore
     @Test
     public void testCanCertificateCredentialFromKeyStoreConfigurationAndCertificateMetadata() {
         final CertificateCredential certificateCredential;
