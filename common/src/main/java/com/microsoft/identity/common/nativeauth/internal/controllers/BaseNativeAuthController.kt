@@ -33,7 +33,6 @@ import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommand
 import com.microsoft.identity.common.java.controllers.BaseController
 import com.microsoft.identity.common.java.dto.AccountRecord
 import com.microsoft.identity.common.java.exception.ClientException
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult
