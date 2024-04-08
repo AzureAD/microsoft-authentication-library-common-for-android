@@ -385,7 +385,18 @@ class NativeAuthResponseHandler {
                 response.body,
                 MicrosoftStsTokenResponse::class.java
             )
-            // TODO add safe logging
+
+            Logger.info(TAG, String.format("MicrosoftStsTokenResponse authority:%s " +
+                    "cloud_instance_host_name:%s" +
+                    " isMsaAccount:%s tenantId %s" +
+                    " cloudInstanceHostName %s",
+                {apiResponse.authority},
+                {apiResponse.refreshTokenExpiresIn},
+                {apiResponse.isMsaAccount},
+                {apiResponse.tenantId},
+                {apiResponse.cloudInstanceHostName})
+            )
+
             return SignInTokenApiResult.Success(
                 tokenResponse = apiResponse,
                 correlationId = correlationId
