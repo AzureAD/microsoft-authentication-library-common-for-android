@@ -1507,6 +1507,11 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignUpStartCommandParameters
     ): SignUpStartApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.performSignUpStartUsingPasswordRequest"
+        )
         return oAuth2Strategy.performSignUpStart(
             commandParameters = parameters
         )
@@ -1517,6 +1522,11 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         continuationToken: String,
         correlationId: String
     ): SignUpChallengeApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            methodName = "${TAG}.performSignUpChallengeCall"
+        )
         return oAuth2Strategy.performSignUpChallenge(
             continuationToken = continuationToken,
             correlationId = correlationId
@@ -1527,12 +1537,22 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignUpSubmitCodeCommandParameters
     ): SignUpContinueApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.performSignUpSubmitCode"
+        )
         return oAuth2Strategy.performSignUpSubmitCode(commandParameters = parameters)
     }
     private fun performSignUpSubmitPassword(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignUpSubmitPasswordCommandParameters
     ): SignUpContinueApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.performSignUpSubmitPassword"
+        )
         return oAuth2Strategy.performSignUpSubmitPassword(commandParameters = parameters)
     }
 
@@ -1541,6 +1561,11 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignUpSubmitUserAttributesCommandParameters
     ): SignUpContinueApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.performSignUpSubmitUserAttributes"
+        )
         return oAuth2Strategy.performSignUpSubmitUserAttributes(commandParameters = parameters)
     }
 
