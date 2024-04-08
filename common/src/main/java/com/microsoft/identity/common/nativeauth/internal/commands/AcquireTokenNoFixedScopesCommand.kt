@@ -24,6 +24,8 @@ package com.microsoft.identity.common.nativeauth.internal.commands
 
 import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.AcquireTokenNoFixedScopesCommandParameters
+import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.result.AcquireTokenResult
 
 /**
@@ -45,8 +47,19 @@ class AcquireTokenNoFixedScopesCommand(
     }
 
     override fun execute(): AcquireTokenResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.execute"
+        )
+
         val result = controller.acquireTokenSilent(
             parameters
+        )
+
+        Logger.info(
+            TAG,
+            "Returning result: $result"
         )
         return result
     }

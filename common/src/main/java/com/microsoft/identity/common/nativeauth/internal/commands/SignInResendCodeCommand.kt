@@ -25,6 +25,8 @@ package com.microsoft.identity.common.nativeauth.internal.commands
 import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInResendCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignInResendCodeCommandResult
+import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
 
 /**
  * Command class to call controllers to resend otp code request in the sign in flow.
@@ -50,8 +52,19 @@ class SignInResendCodeCommand(
      * It calls the signInResendCode method of the native auth MSAL controller with the given parameters.
      */
     override fun execute(): SignInResendCodeCommandResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.execute"
+        )
+
         val result = controller.signInResendCode(
             parameters = parameters
+        )
+
+        Logger.info(
+            TAG,
+            "Returning result: $result"
         )
         return result
     }

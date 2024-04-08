@@ -25,6 +25,8 @@ package com.microsoft.identity.common.nativeauth.internal.commands
 import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.ResetPasswordStartCommandResult
+import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
 
 /**
  * Command class to call controllers to trigger user self service password reset start flow.
@@ -49,8 +51,19 @@ class ResetPasswordStartCommand(
      * It calls the resetPasswordStart method of the native auth MSAL controller with the given parameters.
      */
     override fun execute(): ResetPasswordStartCommandResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.execute"
+        )
+
         val result = controller.resetPasswordStart(
             parameters = parameters
+        )
+
+        Logger.info(
+            TAG,
+            "Returning result: $result"
         )
         return result
     }
