@@ -515,7 +515,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         } catch (e: Exception) {
             Logger.error(
                 TAG,
-                parameters.correlationId,
+                parameters.getCorrelationId(),
                 "Exception thrown in signUpStart",
                 e
             )
