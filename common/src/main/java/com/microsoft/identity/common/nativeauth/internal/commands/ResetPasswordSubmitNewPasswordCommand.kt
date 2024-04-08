@@ -66,6 +66,7 @@ class ResetPasswordSubmitNewPasswordCommand(
 
         Logger.info(
             TAG,
+            parameters.getCorrelationId(),
             "Returning result: $result"
         )
         return result
