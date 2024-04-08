@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.interactors
 
+import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
@@ -61,7 +63,16 @@ class ResetPasswordInteractor(
     fun performResetPasswordStart(
         parameters: ResetPasswordStartCommandParameters
     ): ResetPasswordStartApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.performResetPasswordStart(parameters: ResetPasswordStartCommandParameters)"
+        )
+
         val request = nativeAuthRequestProvider.createResetPasswordStartRequest(commandParameters = parameters)
+
+        Logger.info("${TAG}.performResetPasswordStart", "performResetPasswordStart: request = $request")
+
         return performResetPasswordStart(
             requestCorrelationId = parameters.getCorrelationId(),
             request = request
@@ -72,6 +83,12 @@ class ResetPasswordInteractor(
         requestCorrelationId: String,
         request: ResetPasswordStartRequest
     ): ResetPasswordStartApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = requestCorrelationId,
+            methodName = "${TAG}.performResetPasswordStart"
+        )
+
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -94,10 +111,19 @@ class ResetPasswordInteractor(
         continuationToken: String,
         correlationId: String
     ): ResetPasswordChallengeApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            methodName = "${TAG}.performResetPasswordChallenge(continuationToken: String, correlationId: String)"
+        )
+
         val request = nativeAuthRequestProvider.createResetPasswordChallengeRequest(
             continuationToken = continuationToken,
             correlationId = correlationId
         )
+
+        Logger.info("${TAG}.performResetPasswordChallenge", "performResetPasswordChallenge: request = $request")
+
         return performResetPasswordChallenge(
             requestCorrelationId = correlationId,
             request = request
@@ -108,6 +134,12 @@ class ResetPasswordInteractor(
         requestCorrelationId: String,
         request: ResetPasswordChallengeRequest
     ): ResetPasswordChallengeApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = requestCorrelationId,
+            methodName = "${TAG}.performResetPasswordChallenge"
+        )
+
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -129,9 +161,17 @@ class ResetPasswordInteractor(
     fun performResetPasswordContinue(
         parameters: ResetPasswordSubmitCodeCommandParameters
     ): ResetPasswordContinueApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.performResetPasswordContinue(parameters: ResetPasswordSubmitCodeCommandParameters)"
+        )
         val request = nativeAuthRequestProvider.createResetPasswordContinueRequest(
             commandParameters = parameters
         )
+
+        Logger.info("${TAG}.performResetPasswordContinue", "performResetPasswordContinue: request = $request")
+
         return performResetPasswordContinue(
             requestCorrelationId = parameters.getCorrelationId(),
             request = request
@@ -142,6 +182,11 @@ class ResetPasswordInteractor(
         requestCorrelationId: String,
         request: ResetPasswordContinueRequest
     ): ResetPasswordContinueApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = requestCorrelationId,
+            methodName = "${TAG}.performResetPasswordContinue"
+        )
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -163,9 +208,17 @@ class ResetPasswordInteractor(
     fun performResetPasswordSubmit(
         commandParameters: ResetPasswordSubmitNewPasswordCommandParameters
     ): ResetPasswordSubmitApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = commandParameters.getCorrelationId(),
+            methodName = "${TAG}.performResetPasswordSubmit(commandParameters: ResetPasswordSubmitNewPasswordCommandParameters)"
+        )
+
         val request = nativeAuthRequestProvider.createResetPasswordSubmitRequest(
             commandParameters = commandParameters
         )
+
+        Logger.info("${TAG}.performResetPasswordSubmit", "performResetPasswordSubmit: request = $request")
 
         try {
             return performResetPasswordSubmit(
@@ -182,6 +235,12 @@ class ResetPasswordInteractor(
         requestCorrelationId: String,
         request: ResetPasswordSubmitRequest
     ): ResetPasswordSubmitApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = requestCorrelationId,
+            methodName = "${TAG}.performResetPasswordSubmit"
+        )
+
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -204,10 +263,19 @@ class ResetPasswordInteractor(
         continuationToken: String,
         correlationId: String
     ): ResetPasswordPollCompletionApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            methodName = "${TAG}.performResetPasswordPollCompletion(continuationToken: String, correlationId: String)"
+        )
+
         val request = nativeAuthRequestProvider.createResetPasswordPollCompletionRequest(
             continuationToken = continuationToken,
             correlationId = correlationId
         )
+
+        Logger.info("${TAG}.performResetPasswordPollCompletion", "performResetPasswordPollCompletion: request = $request")
+
         return performResetPasswordPollCompletion(
             requestCorrelationId = correlationId,
             request = request
@@ -218,6 +286,12 @@ class ResetPasswordInteractor(
         requestCorrelationId: String,
         request: ResetPasswordPollCompletionRequest
     ): ResetPasswordPollCompletionApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = requestCorrelationId,
+            methodName = "${TAG}.performResetPasswordPollCompletion"
+        )
+
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
