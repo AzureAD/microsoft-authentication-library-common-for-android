@@ -71,7 +71,11 @@ class SignInInteractor(
             commandParameters = parameters
         )
 
-        Logger.info("${TAG}.performSignInInitiate", "performSignInInitiate: request = $request")
+        Logger.verbose(
+            "${TAG}.performSignInInitiate",
+            parameters.getCorrelationId(),
+            "performSignInInitiate: request = $request"
+        )
 
         return performSignInInitiate(
             requestCorrelationId = parameters.getCorrelationId(),
@@ -102,7 +106,16 @@ class SignInInteractor(
             requestCorrelationId = requestCorrelationId,
             response = response
         )
-        return rawApiResponse.toResult()
+        val result = rawApiResponse.toResult()
+
+        Logger.verbose(
+            "${TAG}.rawResponseToSignInInitiateApiResult",
+            requestCorrelationId,
+            "rawApiResponse = $result " +
+                    "result = $result"
+        )
+
+        return result
     }
     //endregion
 
@@ -122,7 +135,11 @@ class SignInInteractor(
             correlationId = correlationId
         )
 
-        Logger.info("${TAG}.performSignInChallenge", "performSignInChallenge: request = $request")
+        Logger.verbose(
+            "${TAG}.performSignInChallenge",
+            correlationId,
+            "performSignInChallenge: request = $request"
+        )
 
         return performSignInChallenge(
             requestCorrelationId = correlationId,
@@ -149,11 +166,20 @@ class SignInInteractor(
             headers,
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
-        val result = nativeAuthResponseHandler.getSignInChallengeResultFromHttpResponse(
+        val rawApiResponse = nativeAuthResponseHandler.getSignInChallengeResultFromHttpResponse(
             requestCorrelationId = requestCorrelationId,
             response = response
         )
-        return result.toResult()
+        val result = rawApiResponse.toResult()
+
+        Logger.verbose(
+            "${TAG}.rawResponseToSignInChallengeApiResult",
+            requestCorrelationId,
+            "rawApiResponse = $result " +
+                    "result = $result"
+        )
+
+        return result
     }
     //endregion
 
@@ -171,7 +197,11 @@ class SignInInteractor(
             commandParameters = parameters
         )
 
-        Logger.info("${TAG}.performOOBTokenRequest", "performOOBTokenRequest: request = $request")
+        Logger.verbose(
+            "${TAG}.performOOBTokenRequest",
+            parameters.getCorrelationId(),
+            "performOOBTokenRequest: request = $request"
+        )
 
         return performGetToken(
             requestCorrelationId = parameters.getCorrelationId(),
@@ -192,7 +222,11 @@ class SignInInteractor(
             commandParameters = parameters
         )
 
-        Logger.info("${TAG}.performContinuationTokenTokenRequest", "performContinuationTokenTokenRequest: request = $request")
+        Logger.verbose(
+            "${TAG}.performContinuationTokenTokenRequest",
+            parameters.getCorrelationId(),
+            "performContinuationTokenTokenRequest: request = $request"
+        )
 
         return performGetToken(
             requestCorrelationId = parameters.getCorrelationId(),
@@ -213,7 +247,11 @@ class SignInInteractor(
             commandParameters = parameters
         )
 
-        Logger.info("${TAG}.performPasswordTokenRequest", "performPasswordTokenRequest: request = $request")
+        Logger.verbose(
+            "${TAG}.performPasswordTokenRequest",
+            parameters.getCorrelationId(),
+            "performPasswordTokenRequest: request = $request"
+        )
 
         try {
             return performGetToken(

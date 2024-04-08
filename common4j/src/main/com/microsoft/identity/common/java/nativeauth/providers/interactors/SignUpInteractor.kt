@@ -71,7 +71,11 @@ class SignUpInteractor(
             commandParameters = commandParameters
         )
 
-        Logger.info("${TAG}.performSignUpStart", "performSignUpStart: request = $request")
+        Logger.verbose(
+            "${TAG}.performSignUpStart",
+            commandParameters.getCorrelationId(),
+            "performSignUpStart: request = $request"
+        )
 
         try {
             return performSignUpStart(
@@ -106,7 +110,16 @@ class SignUpInteractor(
             response = response,
             requestCorrelationId = requestCorrelationId
         )
-        return rawApiResponse.toResult()
+        val result = rawApiResponse.toResult()
+
+        Logger.verbose(
+            "${TAG}.rawResponseToSignUpStartApiResult",
+            requestCorrelationId,
+            "rawApiResponse = $result " +
+                    "result = $result"
+        )
+
+        return result
     }
     //endregion
 
@@ -126,7 +139,11 @@ class SignUpInteractor(
             correlationId = correlationId
         )
 
-        Logger.info("${TAG}.performSignUpChallenge", "performSignUpChallenge: request = $request")
+        Logger.verbose(
+            "${TAG}.performSignUpChallenge",
+            correlationId,
+            "performSignUpChallenge: request = $request"
+        )
 
         return performSignUpChallenge(
             requestCorrelationId = correlationId,
@@ -157,7 +174,16 @@ class SignUpInteractor(
             response = response,
             requestCorrelationId = requestCorrelationId
         )
-        return rawApiResponse.toResult()
+        val result = rawApiResponse.toResult()
+
+        Logger.verbose(
+            "${TAG}.rawResponseToSignUpChallengeApiResult",
+            requestCorrelationId,
+            "rawApiResponse = $result " +
+                    "result = $result"
+        )
+
+        return result
     }
     //endregion
 
@@ -173,7 +199,11 @@ class SignUpInteractor(
             commandParameters = commandParameters
         )
 
-        Logger.info("${TAG}.performSignUpSubmitCode", "performSignUpSubmitCode: request = $request")
+        Logger.verbose(
+            "${TAG}.performSignUpSubmitCode",
+            commandParameters.getCorrelationId(),
+            "performSignUpSubmitCode: request = $request"
+        )
 
         return performSignUpContinue(
             requestCorrelationId = commandParameters.getCorrelationId(),
@@ -192,7 +222,11 @@ class SignUpInteractor(
             commandParameters = commandParameters
         )
 
-        Logger.info("${TAG}.performSignUpSubmitPassword", "performSignUpSubmitPassword: request = $request")
+        Logger.verbose(
+            "${TAG}.performSignUpSubmitPassword",
+            commandParameters.getCorrelationId(),
+            "performSignUpSubmitPassword: request = $request"
+        )
 
         try {
             return performSignUpContinue(
@@ -215,7 +249,11 @@ class SignUpInteractor(
             commandParameters = commandParameters
         )
 
-        Logger.info("${TAG}.performSignUpSubmitUserAttributes", "performSignUpSubmitUserAttributes: request = $request")
+        Logger.verbose(
+            "${TAG}.performSignUpSubmitUserAttributes",
+            commandParameters.getCorrelationId(),
+            "performSignUpSubmitUserAttributes: request = $request"
+        )
 
         return performSignUpContinue(
             requestCorrelationId = commandParameters.getCorrelationId(),
@@ -246,7 +284,16 @@ class SignUpInteractor(
             response = response,
             requestCorrelationId = requestCorrelationId
         )
-        return rawApiResponse.toResult()
+        val result = rawApiResponse.toResult()
+
+        Logger.verbose(
+            "${TAG}.rawResponseToSignUpContinueApiResult",
+            requestCorrelationId,
+            "rawApiResponse = $result " +
+                    "result = $result"
+        )
+
+        return result
     }
     //endregion
 }
