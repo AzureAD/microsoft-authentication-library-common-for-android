@@ -33,10 +33,6 @@ import lombok.NonNull;
  */
 public class LabApiAuthenticationClient implements IAccessTokenSupplier {
 
-    private final static String SECRET_NAME_LAB_APP_ID = "LabVaultAppID";
-    private final static String SECRET_NAME_LAB_APP_SECRET = "LabVaultAppSecret";
-    private final static String SECRET_VERSION = "";
-    private final static String KEY_VAULT_API_VERSION = "2016-10-01";
     private final static String SCOPE = "https://msidlab.com/.default";
 
     private final static String TENANT_ID = "72f988bf-86f1-41af-91ab-2d7cd011db47";
@@ -44,21 +40,17 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
     private final static String AUTHORITY = "https://login.microsoftonline.com/" + TENANT_ID;
 
     private final IConfidentialAuthClient mConfidentialAuthClient;
-    private final KeyVaultAuthenticationClient mKeyVaultAuthenticationClient;
-
     private final static String CLIENT_ID = "f62c5ae3-bf3a-4af5-afa8-a68b800396e9";
     private final String mClientSecret;
 
     public LabApiAuthenticationClient(@NonNull final IConfidentialAuthClient confidentialAuthClient) {
         mConfidentialAuthClient = confidentialAuthClient;
-        mKeyVaultAuthenticationClient = new KeyVaultAuthenticationClient(confidentialAuthClient);
         mClientSecret = "";
     }
 
     public LabApiAuthenticationClient(@NonNull final IConfidentialAuthClient confidentialAuthClient,
                                       @NonNull final String clientSecret) {
         mConfidentialAuthClient = confidentialAuthClient;
-        mKeyVaultAuthenticationClient = new KeyVaultAuthenticationClient(confidentialAuthClient, clientSecret);
         mClientSecret = clientSecret;
     }
 
