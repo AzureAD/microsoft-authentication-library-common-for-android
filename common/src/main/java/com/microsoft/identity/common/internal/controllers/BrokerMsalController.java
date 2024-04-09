@@ -320,32 +320,6 @@ public class BrokerMsalController extends BaseController {
             throws BaseException, InterruptedException, ExecutionException {
         final String methodTag = TAG + ":acquireToken";
 
-        if (checkForSlk(parameters)) {
-            final ATv2TokenCommandParameters atv2Parameters = ATv2TokenCommandParameters.builder()
-                    .platformComponents(parameters.getPlatformComponents())
-                    .requiredBrokerProtocolVersion(parameters.getRequiredBrokerProtocolVersion())
-                    .applicationName(parameters.getApplicationName())
-                    .applicationVersion(parameters.getApplicationVersion())
-                    .clientId(parameters.getClientId())
-                    .redirectUri(parameters.getRedirectUri())
-                    .sdkType(parameters.getSdkType())
-                    .sdkVersion(parameters.getSdkVersion())
-                    .authority(parameters.getAuthority())
-                    .claimsRequestJson(parameters.getClaimsRequestJson())
-                    .forceRefresh(parameters.isForceRefresh())
-                    .scopes(parameters.getScopes())
-                    .extraQueryStringParameters(parameters.getExtraQueryStringParameters())
-                    .loginHint(parameters.getLoginHint())
-                    .authenticationScheme(parameters.getAuthenticationScheme())
-                    .prompt(parameters.getPrompt())
-                    .correlationId(parameters.getCorrelationId())
-                    .childClientId(parameters.getChildClientId())
-                    .childRedirectUri(parameters.getChildRedirectUri())
-                    .build();;
-
-            return acquireTokenForATv2(atv2Parameters);
-        }
-
         Telemetry.emit(
                 new ApiStartEvent()
                         .putProperties(parameters)
@@ -445,16 +419,6 @@ public class BrokerMsalController extends BaseController {
         );
 
         return result;
-    }
-
-    private boolean checkForSlk(final @NonNull InteractiveTokenCommandParameters parameters) {
-        for (Map.Entry<String, String> entry : parameters.getExtraQueryStringParameters()){
-            if (entry.getKey().equals("slk")) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**
