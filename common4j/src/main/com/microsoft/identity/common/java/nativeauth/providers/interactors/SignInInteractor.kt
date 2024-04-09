@@ -39,7 +39,6 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.util.ObjectMapper
 import com.microsoft.identity.common.java.util.StringUtil
-import sun.jvm.hotspot.code.CompressedStream.L
 
 /**
  * Acts as a binding layer between the request providers and response handlers for a given request.

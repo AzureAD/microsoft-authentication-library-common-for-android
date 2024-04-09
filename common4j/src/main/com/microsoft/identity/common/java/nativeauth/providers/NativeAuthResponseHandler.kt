@@ -386,10 +386,13 @@ class NativeAuthResponseHandler {
                 MicrosoftStsTokenResponse::class.java
             )
 
-            Logger.info(TAG, "MicrosoftStsTokenResponse authority:${apiResponse.authority} " +
-                    "cloud_instance_host_name:${apiResponse.refreshTokenExpiresIn}" +
-                    " isMsaAccount:${apiResponse.isMsaAccount} tenantId ${apiResponse.tenantId}" +
-                    " cloudInstanceHostName ${apiResponse.cloudInstanceHostName}")
+            Logger.info(TAG, "MicrosoftStsTokenResponse authority:${apiResponse.authority}, " +
+                    "expiresIn:${apiResponse.expiresIn}, " +
+                    "extExpiresIn:${apiResponse.extExpiresIn}, " +
+                    "responseReceivedTime:${apiResponse.responseReceivedTime}, " +
+                    "scope:${apiResponse.scope}, " +
+                    "tokenType:${apiResponse.tokenType}"
+            )
 
             return SignInTokenApiResult.Success(
                 tokenResponse = apiResponse,
