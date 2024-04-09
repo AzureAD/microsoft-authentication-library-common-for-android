@@ -354,7 +354,7 @@ public class LocalMSALController extends BaseController {
                 && fullCacheRecord.getAccessToken().shouldRefresh()) {
             if (!fullCacheRecord.getAccessToken().isExpired()) {
                 setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
-                final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, PublicApiId.MSAL_REFRESH_ON);
+                final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this.asControllerFactory(), PublicApiId.MSAL_REFRESH_ON);
                 CommandDispatcher.submitAndForget(refreshOnCommand);
             } else {
                 Logger.warn(

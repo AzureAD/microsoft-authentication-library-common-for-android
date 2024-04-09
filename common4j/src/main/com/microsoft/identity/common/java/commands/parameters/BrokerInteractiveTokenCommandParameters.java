@@ -77,7 +77,7 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     @Expose
     private final String homeTenantId;
 
-    // Parameter representing if this broker request is an ATv2 request
+    // Parameter representing if this broker request is an ATv2 (Account Transfer V2) request
     private final boolean isATv2Request;
 
     @Override

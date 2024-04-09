@@ -23,9 +23,11 @@
 package com.microsoft.identity.common.java.commands;
 
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
+import com.microsoft.identity.common.java.controllers.IControllerFactory;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
@@ -50,11 +52,11 @@ public class DeviceCodeFlowAuthResultCommand extends BaseCommand<AuthorizationRe
 
     public static final String DEVICE_ID_CLAIM = "deviceid";
 
-    public DeviceCodeFlowAuthResultCommand(@NonNull DeviceCodeFlowCommandParameters parameters,
-                                 @NonNull BaseController controller,
-                                 @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                                 @NonNull String publicApiId) {
-        super(parameters, controller, callback, publicApiId);
+    public DeviceCodeFlowAuthResultCommand(@NonNull final DeviceCodeFlowCommandParameters parameters,
+                                 @NonNull final IControllerFactory controllerFactory,
+                                 @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
+                                 @NonNull final String publicApiId) {
+        super(parameters, controllerFactory, callback, publicApiId);
     }
 
     @Override
@@ -73,7 +75,7 @@ public class DeviceCodeFlowAuthResultCommand extends BaseCommand<AuthorizationRe
 
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             // Get the controller used to execute the command
-            final BaseController controller = getDefaultController();
+            final BaseController controller = getControllerFactory().getDefaultController();
 
             span.setAttribute(AttributeName.controller_name.name(), controller.getClass().getSimpleName());
 
@@ -82,6 +84,12 @@ public class DeviceCodeFlowAuthResultCommand extends BaseCommand<AuthorizationRe
 
             boolean isDeviceIdClaimsRequested =  (commandParameters.getClaimsRequestJson() != null && commandParameters.getClaimsRequestJson().contains(DEVICE_ID_CLAIM))? true: false;
             span.setAttribute(AttributeName.is_device_id_claims_requested.name(), isDeviceIdClaimsRequested);
+            final Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(commandParameters.getAuthority());
+
+            // If not known throw resulting exception
+            if (!authorityResult.getKnown()) {
+                throw authorityResult.getClientException();
+            }
 
             // Call deviceCodeFlowAuthRequest to get authorization result (Part 1 of DCF)
             @SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult authorizationResult = controller.deviceCodeFlowAuthRequest(commandParameters);
