@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [MAJOR] Support a new API Path for Account Transfer V2 in Broker (#2375)
 - [MINOR] Add field in BrokerInteractiveTokenCommandParameters for ATv2. (#2363)
 - [PATCH] Fix mAuthorizationStrategy is null in LocalMsalController (due to #2352) (#2370)
 - [MINOR] Move the getActiveBroker() invocation to background thread (#2352)
