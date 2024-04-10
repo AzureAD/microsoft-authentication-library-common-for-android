@@ -193,6 +193,12 @@ stages:
         clean: true
         submodules: recursive
         persistCredentials: True
+      - task: AzureKeyVault@2
+        displayName: 'Get Key vault LabVaultAppSecret'
+        inputs:
+          azureSubscription: 'AuthSdkResourceManager'
+          KeyVaultName: 'MSIDLABS'
+          SecretsFilter: 'LabVaultAppSecret'
       - task: CmdLine@1
         displayName: Set MVN Access Token in Environment
         inputs:
@@ -227,7 +233,7 @@ stages:
             eval $(dbus-launch --sh-syntax)
             sudo apt install gnome-keyring
             /usr/bin/gnome-keyring-daemon --start --components=secrets
-            ./gradlew LinuxBroker:linuxBrokerUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PlabSecret=$(AndroidAutomationRunnerAppSecret) -PcodeCoverageEnabled=true -Psystemd_mode_enabled=false
+            ./gradlew LinuxBroker:linuxBrokerUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PlabSecret=$(LabVaultAppSecret) -PcodeCoverageEnabled=true -Psystemd_mode_enabled=false
       - task: PublishTestResults@2
         condition: succeededOrFailed()
         inputs:
