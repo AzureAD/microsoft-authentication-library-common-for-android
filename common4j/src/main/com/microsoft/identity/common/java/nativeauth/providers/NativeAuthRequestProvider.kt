@@ -77,7 +77,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
      * Creates request object for /oauth/v2.0/initiate API call from [SignInStartCommandParameters]
      * @param commandParameters: command parameters object
      */
-    internal fun createSignInInitiateRequest(
+    fun createSignInInitiateRequest(
         commandParameters: SignInStartCommandParameters
     ): SignInInitiateRequest {
         LogSession.logMethodCall(

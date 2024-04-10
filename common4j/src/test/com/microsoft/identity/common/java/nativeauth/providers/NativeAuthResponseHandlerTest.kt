@@ -2958,6 +2958,8 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignInInitiateNullResponse() {
+        val nullHttpResponse = HttpResponse(400, null, null)
+
         val response = handler.getSignInInitiateResultFromHttpResponse(
             requestCorrelationId = correlationId,
             response = nullHttpResponse
