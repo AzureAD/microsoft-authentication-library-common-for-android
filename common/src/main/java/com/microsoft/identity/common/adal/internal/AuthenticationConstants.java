@@ -1602,9 +1602,9 @@ public final class AuthenticationConstants {
 
         /**
          * URI Path constant for MSAL-to-Broker acquireTokenInteractive (for ATv2) request using ContentProvider.
-         *  TODO: Not sure if the URI path needs to change here for ATv2
+         *  TODO: Not really sure how this works, this seems right
          */
-        public static final String MSAL_ACQUIRE_TOKEN_ATV2_INTERACTIVE_PATH = "/acquireTokenInteractive";
+        public static final String MSAL_ACQUIRE_TOKEN_ATV2_INTERACTIVE_PATH = "/acquireTokenInteractiveForATv2";
 
         /**
          * URI Path constant for MSAL-to-Broker acquireTokenSilent request using ContentProvider.
