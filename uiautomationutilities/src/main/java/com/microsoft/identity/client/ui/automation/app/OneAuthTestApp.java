@@ -165,7 +165,13 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     }
 
     public void handleUserNameInput(@NonNull final String input) {
-        UiAutomatorUtils.handleInput("com.msft.oneauth.testapp:id/account_hints_edittext", input);
+        final UiObject accountHint = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/account_hints_edittext");
+        try {
+            scrollToElement(accountHint);
+            UiAutomatorUtils.handleInput("com.msft.oneauth.testapp:id/account_hints_edittext", input);
+        } catch (UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
     }
 
     public void handlePreferBrokerSwitchButton() {
