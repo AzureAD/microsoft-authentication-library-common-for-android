@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [MINOR] Add field in BrokerInteractiveTokenCommandParameters for ATv2. (#2363)
 - [PATCH] Fix mAuthorizationStrategy is null in LocalMsalController (due to #2352) (#2370)
 - [MINOR] Move the getActiveBroker() invocation to background thread (#2352)
 - [PATCH] Return status code in errorResponse when server response is not in expected Json format. (#2321)
