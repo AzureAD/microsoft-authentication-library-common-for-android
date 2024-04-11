@@ -106,27 +106,19 @@ public class SilentTokenCommand extends TokenCommand {
                         return result;
                     }
                 } catch (final UiRequiredException | ClientException e) {
+                    if (ii == 0 ) {
+                        exceptionFromFirstController = e;
+                    }
                     // if this isn't the last controller and
                     // error code was invalid_grant or if no token or account for this silent call
                     // continue with next controller.
-                    if (controllers.size() > ii + 1
-                            && (e.getErrorCode().equals(OAuth2ErrorCode.INVALID_GRANT)
-                            || e.getErrorCode().equals(ErrorStrings.NO_TOKENS_FOUND)
-                            || e.getErrorCode().equals(ErrorStrings.NO_ACCOUNT_FOUND))) {
-                        if (ii == 0) {
-                            exceptionFromFirstController = e;
-                        }
-                    } else {
-                        if (exceptionFromFirstController != null) {
-                            // throw exception from the first controller
-                            throw exceptionFromFirstController;
-                        } else {
-                            throw e;
-                        }
+                    if (ii >= controllers.size() || !(OAuth2ErrorCode.INVALID_GRANT.equals(e.getErrorCode())
+                            || ErrorStrings.NO_TOKENS_FOUND.equals(e.getErrorCode())
+                            || ErrorStrings.NO_ACCOUNT_FOUND.equals(e.getErrorCode()))) {
+                        throw exceptionFromFirstController;
                     }
                 } catch (final Throwable e) {
                     if (exceptionFromFirstController != null) {
-                        // throw exception from the first controller
                         throw exceptionFromFirstController;
                     } else {
                         throw e;
