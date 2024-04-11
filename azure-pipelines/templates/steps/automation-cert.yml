@@ -15,13 +15,13 @@ steps:
   inputs:
     azureSubscription: 'AuthSdkResourceManager'
     KeyVaultName: 'buildautomation'
-    SecretsFilter: 'AzureADIdentityDivisionTestAgentCert'
+    SecretsFilter: 'LabVaultAccessCert'
 - task: PowerShell@2
   displayName: Install Automation Cert
   inputs:
     targetType: inline
     script: >
-      $kvSecretBytes = [System.Convert]::FromBase64String('$(AzureADIdentityDivisionTestAgentCert)')
+      $kvSecretBytes = [System.Convert]::FromBase64String('$(LabVaultAccessCert)')
 
       $certCollection = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
 

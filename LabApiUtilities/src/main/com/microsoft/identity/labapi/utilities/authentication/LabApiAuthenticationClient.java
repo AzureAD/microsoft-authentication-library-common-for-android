@@ -64,18 +64,23 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
 
     @Override
     public String getAccessToken() throws LabApiException {
-        final TokenParameters tokenParameters = TokenParameters
-                .builder()
-                .clientId(CLIENT_ID)
-                .authority(AUTHORITY)
-                .scope(SCOPE)
-                .build();
+        if (mClientSecret != null && mClientSecret.trim().length() > 0) {
+            final TokenParameters tokenParameters = TokenParameters
+                    .builder()
+                    .clientId(CLIENT_ID)
+                    .authority(AUTHORITY)
+                    .scope(SCOPE)
+                    .build();
 
-        // obtain token for Lab Api using the client secret retrieved from KeyVault
-        final IAuthenticationResult authenticationResult = mConfidentialAuthClient.acquireToken(
-                mClientSecret, tokenParameters
-        );
+            // obtain token for Lab Api using the client secret retrieved from KeyVault
+            final IAuthenticationResult authenticationResult = mConfidentialAuthClient.acquireToken(
+                    mClientSecret, tokenParameters
+            );
 
-        return authenticationResult.getAccessToken();
+            return authenticationResult.getAccessToken();
+        } else {
+            final KeyVaultAuthenticationClient keyVaultAuthenticationClient = new KeyVaultAuthenticationClient(mConfidentialAuthClient);
+            return keyVaultAuthenticationClient.getAccessToken();
+        }
     }
 }
