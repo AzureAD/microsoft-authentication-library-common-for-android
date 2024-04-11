@@ -123,6 +123,12 @@ public class SilentTokenCommand extends TokenCommand {
                             throw e;
                         }
                     }
+                } catch (final Exception e) {
+                    if (exceptionFromFirstController != null) {
+                        throw exceptionFromFirstController;
+                    } else {
+                        throw e;
+                    }
                 }
             }
 
