@@ -34,9 +34,7 @@ import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
-import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
-import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 
 import java.util.List;
@@ -74,6 +72,7 @@ public class SilentTokenCommand extends TokenCommand {
         final List<BaseController> controllers = getControllerFactory().getAllControllers();
 
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            Exception exceptionFromFirstController = null;
             for (int ii = 0; ii < controllers.size(); ii++) {
                 final BaseController controller = controllers.get(ii);
 
@@ -109,14 +108,20 @@ public class SilentTokenCommand extends TokenCommand {
                 } catch (UiRequiredException | ClientException e) {
                     if (e.getErrorCode().equals(OAuth2ErrorCode.INVALID_GRANT) // was invalid_grant
                             && controllers.size() > ii + 1) { // isn't the last controller we can try
+                        exceptionFromFirstController = exceptionFromFirstController == null ? e : exceptionFromFirstController;
                         continue;
                     } else if ((e.getErrorCode().equals(ErrorStrings.NO_TOKENS_FOUND)
                             || e.getErrorCode().equals(ErrorStrings.NO_ACCOUNT_FOUND))
                             && controllers.size() > ii + 1) {
+                        exceptionFromFirstController = exceptionFromFirstController == null ? e : exceptionFromFirstController;
                         //if no token or account for this silent call, we should continue to the next silent call.
                         continue;
                     } else {
-                        throw e;
+                        if (exceptionFromFirstController != null) {
+                            throw exceptionFromFirstController;
+                        } else {
+                            throw e;
+                        }
                     }
                 }
             }
