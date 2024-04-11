@@ -105,26 +105,28 @@ public class SilentTokenCommand extends TokenCommand {
                         span.setStatus(StatusCode.OK);
                         return result;
                     }
-                } catch (UiRequiredException | ClientException e) {
-                    if (e.getErrorCode().equals(OAuth2ErrorCode.INVALID_GRANT) // was invalid_grant
-                            && controllers.size() > ii + 1) { // isn't the last controller we can try
-                        exceptionFromFirstController = exceptionFromFirstController == null ? e : exceptionFromFirstController;
-                        continue;
-                    } else if ((e.getErrorCode().equals(ErrorStrings.NO_TOKENS_FOUND)
-                            || e.getErrorCode().equals(ErrorStrings.NO_ACCOUNT_FOUND))
-                            && controllers.size() > ii + 1) {
-                        exceptionFromFirstController = exceptionFromFirstController == null ? e : exceptionFromFirstController;
-                        //if no token or account for this silent call, we should continue to the next silent call.
-                        continue;
+                } catch (final UiRequiredException | ClientException e) {
+                    // if this isn't the last controller and
+                    // error code was invalid_grant or if no token or account for this silent call
+                    // continue with next controller.
+                    if (controllers.size() > ii + 1
+                            && (e.getErrorCode().equals(OAuth2ErrorCode.INVALID_GRANT)
+                            || e.getErrorCode().equals(ErrorStrings.NO_TOKENS_FOUND)
+                            || e.getErrorCode().equals(ErrorStrings.NO_ACCOUNT_FOUND))) {
+                        if (ii == 0) {
+                            exceptionFromFirstController = e;
+                        }
                     } else {
                         if (exceptionFromFirstController != null) {
+                            // throw exception from the first controller
                             throw exceptionFromFirstController;
                         } else {
                             throw e;
                         }
                     }
-                } catch (final Exception e) {
+                } catch (final Throwable e) {
                     if (exceptionFromFirstController != null) {
+                        // throw exception from the first controller
                         throw exceptionFromFirstController;
                     } else {
                         throw e;
