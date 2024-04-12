@@ -500,9 +500,8 @@ public abstract class BaseController {
             );
             List<ICacheRecord> acquireTokenResultRecords = getAcquireTokenResultRecords(tokenResponse, (MicrosoftStsOAuth2Strategy) strategy,
                     (MicrosoftStsAuthorizationRequest) getAuthorizationRequest(strategy, parameters));
-            // 2.
-            //
-            // qUsing above cache record with hub app's FRT, we will renew AT for nested app.
+            
+            // 2. Using above cache record with hub app's FRT, we will renew AT for nested app.
             if (!acquireTokenResultRecords.isEmpty()) {
                 renewAccessToken(
                         parameters,
