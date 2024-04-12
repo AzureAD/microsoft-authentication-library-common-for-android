@@ -462,70 +462,6 @@ public abstract class BaseController {
         return tokenResult;
     }
 
-    /**
-     * Renewing AT of nested app.
-     */
-    protected synchronized void renewAccessTokenForNestedApp(@NonNull final SilentTokenCommandParameters parameters,
-                                    @NonNull final AcquireTokenResult acquireTokenSilentResult,
-                                    @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache,
-                                    @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
-                                    @NonNull final ICacheRecord cacheRecord)
-            throws IOException, ClientException, ServiceException {
-        final String methodTag = TAG + ":renewAccessTokenForNestedApp";
-        Logger.info(
-                methodTag,
-                "Renewing access token for nested app..."
-        );
-
-        RefreshTokenRecord refreshTokenRecord = cacheRecord.getRefreshToken();
-
-        logParameters(methodTag, parameters);
-
-        // 1. First get RT of hub app using FRT. Only a hub app's RT can be used to renew AT of nested app
-        // Create a correlation_id for the request
-        final UUID correlationId = UUID.randomUUID();
-        Logger.verbose(methodTag,
-                "Create the token request with correlationId ["
-                        + correlationId
-                        + "]");
-        final MicrosoftStsTokenRequest tokenRequest = FociQueryUtilities.createTokenRequest(parameters.getClientId(), getDelimitedDefaultScopeString(),
-                refreshTokenRecord.getSecret(), parameters.getRedirectUri(), (MicrosoftStsOAuth2Strategy) strategy, correlationId, "2");
-        final TokenResult tokenResult = strategy.requestToken(tokenRequest);
-
-        if (tokenResult.getSuccess()) {
-            final MicrosoftStsTokenResponse tokenResponse = (MicrosoftStsTokenResponse) tokenResult.getTokenResponse();
-            Logger.info(
-                    methodTag,
-                    "Token request was successful"
-            );
-            List<ICacheRecord> acquireTokenResultRecords = getAcquireTokenResultRecords(tokenResponse, (MicrosoftStsOAuth2Strategy) strategy,
-                    (MicrosoftStsAuthorizationRequest) getAuthorizationRequest(strategy, parameters));
-            
-            // 2. Using above cache record with hub app's FRT, we will renew AT for nested app.
-            if (!acquireTokenResultRecords.isEmpty()) {
-                renewAccessToken(
-                        parameters,
-                        acquireTokenSilentResult,
-                        tokenCache,
-                        strategy,
-                        acquireTokenResultRecords.get(0)
-                );
-            }
-        } else {
-            if (tokenResult.getErrorResponse() != null) {
-                final String errorCode = tokenResult.getErrorResponse().getError();
-                Logger.info(methodTag, "Fetching Hub app RT with FRT failed with Error: " + errorCode + " SubError: " + tokenResult.getErrorResponse().getSubError());
-                if (SERVICE_NOT_AVAILABLE.equals(errorCode)) {
-                    throw new ServiceException(SERVICE_NOT_AVAILABLE, "AAD is not available.", tokenResult.getErrorResponse().getStatusCode(), null);
-                } else {
-                    throw new ClientException(ErrorStrings.NO_TOKENS_FOUND, "No valid RT found for hub app");
-                }
-            } else {
-                Logger.warn(methodTag, "Invalid state, No token success or error response on the token result");
-            }
-        }
-    }
-
     protected void renewAccessToken(@NonNull final SilentTokenCommandParameters parameters,
                                     @NonNull final AcquireTokenResult acquireTokenSilentResult,
                                     @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache,
@@ -736,7 +672,7 @@ public abstract class BaseController {
         return tokenResult;
     }
 
-    private List<ICacheRecord> getAcquireTokenResultRecords(@NonNull final MicrosoftStsTokenResponse microsoftStsTokenResponse,
+    protected List<ICacheRecord> getAcquireTokenResultRecords(@NonNull final MicrosoftStsTokenResponse microsoftStsTokenResponse,
                                                             @NonNull final MicrosoftStsOAuth2Strategy oAuth2Strategy,
                                                             @NonNull final MicrosoftStsAuthorizationRequest authorizationRequest) {
         final MicrosoftStsAccountCredentialAdapter credentialAdapter = new MicrosoftStsAccountCredentialAdapter();
