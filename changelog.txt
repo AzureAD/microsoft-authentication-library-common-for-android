@@ -6,6 +6,8 @@ V.Next
 - [PATCH] Return status code in errorResponse when server response is not in expected Json format. (#2321)
 - [PATCH] Reduce the amount of setAccountVisibility() call. (#2355)
 - [MINOR] Added telemetry for cross cloud and MSA passthrough requests (#2367)
+- [MINOR] [Bug fix] Use hub app's FRT to get nested app's AT (#2379)
+
 
 V.17.2.0
 ---------
