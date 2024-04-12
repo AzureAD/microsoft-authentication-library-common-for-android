@@ -67,7 +67,7 @@ public class ShadowBoundServiceClientWithCurrentBroker<T extends IInterface> {
             }
 
             @Override
-            public Intent getIntentForATv2InteractiveRequest() throws RemoteException {
+            public Intent getIntentForAccountTransferV2InteractiveRequest() throws RemoteException {
                 throw new RemoteException("Not Implemented");
             }
 

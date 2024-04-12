@@ -80,7 +80,7 @@ public final class PublicApiId {
     public static final String BROKER_ACQUIRE_TOKEN_WITH_PARAMETERS_CALLBACK = "127";
     public static final String BROKER_ADD_ACCOUNT_WITH_ACTIVITY = "128";
     public static final String BROKER_CHOOSE_ACCOUNT_WITH_ACTIVITY_ACCOUNTNAME = "129";
-    public static final String BROKER_ADD_ACCOUNT_FOR_ATV2 = "301";
+    public static final String BROKER_ADD_ACCOUNT_FOR_ACCOUNT_TRANSFER_V2 = "301";
 
     //endregion
 

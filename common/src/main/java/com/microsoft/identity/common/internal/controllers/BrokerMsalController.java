@@ -34,7 +34,7 @@ import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationB
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_ACCOUNTS;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_DEVICE_MODE;
-import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_INTENT_FOR_ATV2_INTERACTIVE_REQUEST;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_INTENT_FOR_ACCOUNT_TRANSFER_V2_INTERACTIVE_REQUEST;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_PREFERRED_AUTH_METHOD;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_REMOVE_ACCOUNT;
@@ -57,7 +57,6 @@ import androidx.annotation.WorkerThread;
 
 import com.microsoft.identity.common.PropertyBagUtil;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.BrokerActivity;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
@@ -77,13 +76,12 @@ import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
-import com.microsoft.identity.common.java.commands.parameters.ATv2TokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.AccountTransferV2TokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
@@ -105,7 +103,6 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
-import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
@@ -120,7 +117,6 @@ import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.sharedwithoneauth.OneAuthSharedFunctions;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -424,11 +420,11 @@ public class BrokerMsalController extends BaseController {
     /**
      * Performs ATv2 request with Broker.
      *
-     * @param parameters a {@link ATv2TokenCommandParameters}
+     * @param parameters a {@link AccountTransferV2TokenCommandParameters}
      * @return an {@link AcquireTokenResult}.
      */
     @Override
-    public AcquireTokenResult acquireTokenForATv2(final @NonNull ATv2TokenCommandParameters parameters) throws BaseException, ExecutionException, InterruptedException {
+    public AcquireTokenResult acquireTokenForATv2(final @NonNull AccountTransferV2TokenCommandParameters parameters) throws BaseException, ExecutionException, InterruptedException {
         final String methodTag = TAG + ":acquireTokenForATv2";
 
         Telemetry.emit(
@@ -596,12 +592,12 @@ public class BrokerMsalController extends BaseController {
     /**
      * Get the intent for the broker ATv2 request
      *
-     * @param parameters a {@link ATv2TokenCommandParameters}
+     * @param parameters a {@link AccountTransferV2TokenCommandParameters}
      * @return an {@link Intent} for initiating Broker ATv2 interactive activity.
      */
     private @NonNull
     Intent getBrokerAuthorizationIntentForATv2(
-            final @NonNull ATv2TokenCommandParameters parameters) throws BaseException {
+            final @NonNull AccountTransferV2TokenCommandParameters parameters) throws BaseException {
         return getBrokerOperationExecutor().execute(parameters,
                 new BrokerOperation<Intent>() {
                     private String negotiatedBrokerProtocolVersion;
@@ -616,7 +612,7 @@ public class BrokerMsalController extends BaseController {
                     public @NonNull
                     BrokerOperationBundle getBundle() {
                         return new BrokerOperationBundle(
-                                MSAL_GET_INTENT_FOR_ATV2_INTERACTIVE_REQUEST,
+                                MSAL_GET_INTENT_FOR_ACCOUNT_TRANSFER_V2_INTERACTIVE_REQUEST,
                                 mActiveBrokerPackageName,
                                 null);
                     }

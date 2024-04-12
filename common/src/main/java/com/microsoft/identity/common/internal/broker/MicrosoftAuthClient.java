@@ -98,8 +98,8 @@ public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthServic
 
                 return bundle;
 
-            case MSAL_GET_INTENT_FOR_ATV2_INTERACTIVE_REQUEST:
-                final Intent atv2Intent = microsoftAuthService.getIntentForATv2InteractiveRequest();
+            case MSAL_GET_INTENT_FOR_ACCOUNT_TRANSFER_V2_INTERACTIVE_REQUEST:
+                final Intent atv2Intent = microsoftAuthService.getIntentForAccountTransferV2InteractiveRequest();
                 final Bundle atv2Bundle = atv2Intent.getExtras();
 
                 //older brokers (pre-ContentProvider) are ONLY sending these values in the intent itself.

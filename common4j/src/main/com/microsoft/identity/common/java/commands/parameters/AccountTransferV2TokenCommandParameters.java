@@ -27,13 +27,13 @@ import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
 /**
- * Command parameters class for ATv2 requests. Extends {@link InteractiveTokenCommandParameters} since ATv2
- * can use the same set of parameters as a regular acquire token request. No additional parameters for ATv2 are
+ * Command parameters class for Account Transfer V2 requests. Extends {@link InteractiveTokenCommandParameters} since Account Transfer V2
+ * can use the same set of parameters as a regular acquire token request. No additional parameters for Account Transfer V2 are
  * required at this time, however.
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
-public class ATv2TokenCommandParameters extends InteractiveTokenCommandParameters {
+public class AccountTransferV2TokenCommandParameters extends InteractiveTokenCommandParameters {
 
 }

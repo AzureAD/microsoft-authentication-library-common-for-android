@@ -1489,7 +1489,7 @@ public final class AuthenticationConstants {
 
         public static final String GET_INTENT_FOR_INTERACTIVE_REQUEST = "GET_INTENT_FOR_INTERACTIVE_REQUEST";
 
-        public static final String GET_INTENT_FOR_ATV2_INTERACTIVE_REQUEST = "GET_INTENT_FOR_ATV2_INTERACTIVE_REQUEST";
+        public static final String GET_INTENT_FOR_ACCOUNT_TRANSFER_V2_INTERACTIVE_REQUEST = "GET_INTENT_FOR_ACCOUNT_TRANSFER_V2_INTERACTIVE_REQUEST";
 
         public static final String REMOVE_ACCOUNT = "REMOVE_ACCOUNT";
 
@@ -1536,7 +1536,7 @@ public final class AuthenticationConstants {
         public enum API {
             MSAL_HELLO(MSAL_HELLO_PATH, null, VERSION_3),
             ACQUIRE_TOKEN_INTERACTIVE(MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH, null, VERSION_3),
-            ACQUIRE_TOKEN_ATV2_INTERACTIVE(MSAL_ACQUIRE_TOKEN_ATV2_INTERACTIVE_PATH, null, VERSION_3),
+            ACQUIRE_TOKEN_ACCOUNT_TRANSFER_V2_INTERACTIVE(MSAL_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_V2_INTERACTIVE_PATH, null, VERSION_3),
             ACQUIRE_TOKEN_SILENT(MSAL_ACQUIRE_TOKEN_SILENT_PATH, null, VERSION_3),
             GET_ACCOUNTS(MSAL_GET_ACCOUNTS_PATH, null, VERSION_3),
             REMOVE_ACCOUNT(MSAL_REMOVE_ACCOUNT_PATH, null, VERSION_3),
@@ -1601,10 +1601,10 @@ public final class AuthenticationConstants {
         public static final String MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH = "/acquireTokenInteractive";
 
         /**
-         * URI Path constant for MSAL-to-Broker acquireTokenInteractive (for ATv2) request using ContentProvider.
+         * URI Path constant for MSAL-to-Broker Account Transfer V2 request using ContentProvider.
          *  TODO: Not really sure how this works, this seems right
          */
-        public static final String MSAL_ACQUIRE_TOKEN_ATV2_INTERACTIVE_PATH = "/acquireTokenInteractiveForATv2";
+        public static final String MSAL_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_V2_INTERACTIVE_PATH = "/acquireTokenInteractiveForAccountTransferV2";
 
         /**
          * URI Path constant for MSAL-to-Broker acquireTokenSilent request using ContentProvider.

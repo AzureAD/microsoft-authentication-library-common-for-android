@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.java.commands.parameters;
 
 import com.google.gson.annotations.Expose;
-import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.exception.ArgumentException;
@@ -77,8 +76,8 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     @Expose
     private final String homeTenantId;
 
-    // Parameter representing if this broker request is an ATv2 (Account Transfer V2) request
-    private final boolean isATv2Request;
+    // Parameter representing if this broker request is an Account Transfer V2 request
+    private final boolean isAccountTransferV2Request;
 
     @Override
     public void validate() throws ArgumentException {
