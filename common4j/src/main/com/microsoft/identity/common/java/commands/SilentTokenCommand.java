@@ -112,7 +112,7 @@ public class SilentTokenCommand extends TokenCommand {
                     // if this isn't the last controller and
                     // error code was invalid_grant or if no token or account for this silent call
                     // continue with next controller.
-                    if (ii >= controllers.size() || !(OAuth2ErrorCode.INVALID_GRANT.equals(e.getErrorCode())
+                    if (ii + 1 >= controllers.size() || !(OAuth2ErrorCode.INVALID_GRANT.equals(e.getErrorCode())
                             || ErrorStrings.NO_TOKENS_FOUND.equals(e.getErrorCode())
                             || ErrorStrings.NO_ACCOUNT_FOUND.equals(e.getErrorCode()))) {
                         throw exceptionFromFirstController;
