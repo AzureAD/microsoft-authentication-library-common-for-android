@@ -47,12 +47,11 @@ jobs:
     parameters:
       envVstsMvnAt: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
   - task: AzureKeyVault@2
-    displayName: 'Get Key vault AndroidAutomationRunnerAppSecret'
+    displayName: 'Get Key vault LabVaultAppSecret'
     inputs:
       azureSubscription: 'AuthSdkResourceManager'
       KeyVaultName: 'MSIDLABS'
       SecretsFilter: 'LabVaultAppSecret'
-      RunAsPreJob: false
   - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
     parameters:
       project: LabApiUtilities
