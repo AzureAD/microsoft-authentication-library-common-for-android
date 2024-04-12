@@ -50,7 +50,7 @@ jobs:
     inputs:
       javaHomeSelection: JDKVersion
       jdkVersionOption: "1.11"
-      tasks: common:testLocalDebugUnitTest -PlabSecret=$(LabVaultAppSecret)
+      tasks: common:testLocalDebugUnitTest
   - task: Gradle@3
     displayName: Check Dependencies size
     condition: eq(variables['system.pullRequest.targetBranch'], 'dev')
