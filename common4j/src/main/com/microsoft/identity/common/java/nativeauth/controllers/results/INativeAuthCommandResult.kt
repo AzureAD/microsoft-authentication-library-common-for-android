@@ -23,14 +23,21 @@
 
 package com.microsoft.identity.common.java.nativeauth.controllers.results
 
+import com.google.gson.annotations.Expose
 import com.microsoft.identity.common.java.logging.DiagnosticContext
+import com.microsoft.identity.common.java.util.ObjectMapper
+
+interface BaseNativeAuthClass {
+    override fun toString(): String
+}
 
 /**
  * INativeAuthCommandResult interface defines the base class for errors used in Native Auth.
  */
-interface INativeAuthCommandResult {
+abstract interface INativeAuthCommandResult: BaseNativeAuthClass {
     val correlationId: String
     data class Redirect(
+        @Expose
         override val correlationId: String,
     ) : Error(error = BROWSER_REQUIRED_ERROR, errorDescription = BROWSER_REQUIRED_ERROR_DESCRIPTION, correlationId = correlationId),
         SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInSubmitCodeCommandResult, SignInResendCodeCommandResult,
@@ -42,6 +49,10 @@ interface INativeAuthCommandResult {
             companion object {
                 private const val BROWSER_REQUIRED_ERROR: String = "browser_required"
                 private const val BROWSER_REQUIRED_ERROR_DESCRIPTION: String = "The client's authentication capabilities are insufficient. Please redirect to the browser to complete authentication"
+            }
+
+            override fun toString(): String {
+                return ObjectMapper.serializeExposedFieldsOfObjectToJsonString(this)
             }
         }
 
