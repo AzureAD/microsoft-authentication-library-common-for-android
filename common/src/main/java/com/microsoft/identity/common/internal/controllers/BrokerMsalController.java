@@ -418,33 +418,33 @@ public class BrokerMsalController extends BaseController {
     }
 
     /**
-     * Performs ATv2 request with Broker.
+     * Performs Account Transfer V2 request with Broker.
      *
      * @param parameters a {@link AccountTransferV2TokenCommandParameters}
      * @return an {@link AcquireTokenResult}.
      */
     @Override
-    public AcquireTokenResult acquireTokenForATv2(final @NonNull AccountTransferV2TokenCommandParameters parameters) throws BaseException, ExecutionException, InterruptedException {
-        final String methodTag = TAG + ":acquireTokenForATv2";
+    public AcquireTokenResult acquireTokenForAccountTransferV2(final @NonNull AccountTransferV2TokenCommandParameters parameters) throws BaseException, ExecutionException, InterruptedException {
+        final String methodTag = TAG + ":acquireTokenForAccountTransferV2";
 
         Telemetry.emit(
                 new ApiStartEvent()
                         .putProperties(parameters)
-                        .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_ATV2_INTERACTIVE)
+                        .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_V2_INTERACTIVE)
         );
 
         // Same as in regular acquire token, let's create a result future to block on the broker request, it will
         // be unblocked in the onReceive function of the callback
         mBrokerResultFuture = new ResultFuture<>();
 
-        // Get the broker interactive parameters intent for ATv2
-        final Intent interactiveATv2RequestIntent = getBrokerAuthorizationIntentForATv2(parameters);
+        // Get the broker interactive parameters intent for Account Transfer V2
+        final Intent interactiveAccountTransferV2RequestIntent = getBrokerAuthorizationIntentForAccountTransferV2(parameters);
 
         // Pass this intent to the BrokerActivity which will be used to start this activity
         final Intent brokerActivityIntent = new Intent(mApplicationContext, BrokerActivity.class);
-        brokerActivityIntent.putExtra(BrokerActivity.BROKER_INTENT, interactiveATv2RequestIntent);
+        brokerActivityIntent.putExtra(BrokerActivity.BROKER_INTENT, interactiveAccountTransferV2RequestIntent);
 
-        // Callback alias can stay the same in ATv2 case.
+        // Callback alias can stay the same in Account Transfer V2 case.
         LocalBroadcaster.INSTANCE.registerCallback(RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT,
                 new LocalBroadcaster.IReceiverCallback() {
                     @Override
@@ -458,12 +458,12 @@ public class BrokerMsalController extends BaseController {
 
                         Logger.verbose(
                                 methodTag,
-                                "Received result (for ATv2 request) from Broker..."
+                                "Received result (for Account Transfer V2 request) from Broker..."
                         );
 
                         Telemetry.emit(
                                 new ApiStartEvent()
-                                        .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_ATV2_INTERACTIVE)
+                                        .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_V2_INTERACTIVE)
                                         .put(TelemetryEventStrings.Key.REQUEST_CODE, propertyBag.<Integer>getOrDefault(REQUEST_CODE, -1).toString())
                                         .put(TelemetryEventStrings.Key.RESULT_CODE, propertyBag.<Integer>getOrDefault(RESULT_CODE, -1).toString())
                         );
@@ -472,7 +472,7 @@ public class BrokerMsalController extends BaseController {
 
                         Telemetry.emit(
                                 new ApiEndEvent()
-                                        .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_ATV2_INTERACTIVE)
+                                        .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_V2_INTERACTIVE)
                         );
 
                         LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT);
@@ -489,7 +489,7 @@ public class BrokerMsalController extends BaseController {
             // Wait to be notified of the result being returned... we could add a timeout here if we want to
             final Bundle resultBundle = mBrokerResultFuture.get();
 
-            final String negotiatedBrokerProtocolVersion = interactiveATv2RequestIntent.getStringExtra(NEGOTIATED_BP_VERSION_KEY);
+            final String negotiatedBrokerProtocolVersion = interactiveAccountTransferV2RequestIntent.getStringExtra(NEGOTIATED_BP_VERSION_KEY);
 
             // TODO: Is this accurate? BrokerAccountDataManager contains MSA accounts
             // For MSA Accounts Broker doesn't save the accounts, instead it just passes the result along,
@@ -506,7 +506,7 @@ public class BrokerMsalController extends BaseController {
             Telemetry.emit(
                     new ApiEndEvent()
                             .putException(e)
-                            .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_ATV2_INTERACTIVE)
+                            .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_V2_INTERACTIVE)
             );
             throw e;
         }
@@ -514,7 +514,7 @@ public class BrokerMsalController extends BaseController {
         Telemetry.emit(
                 new ApiEndEvent()
                         .putResult(result)
-                        .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_ATV2_INTERACTIVE)
+                        .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_V2_INTERACTIVE)
         );
 
         return result;
@@ -590,13 +590,13 @@ public class BrokerMsalController extends BaseController {
     }
 
     /**
-     * Get the intent for the broker ATv2 request
+     * Get the intent for the broker Account Transfer V2 request
      *
      * @param parameters a {@link AccountTransferV2TokenCommandParameters}
-     * @return an {@link Intent} for initiating Broker ATv2 interactive activity.
+     * @return an {@link Intent} for initiating Broker Account Transfer V2 interactive activity.
      */
-    private @NonNull
-    Intent getBrokerAuthorizationIntentForATv2(
+    @NonNull
+    private Intent getBrokerAuthorizationIntentForAccountTransferV2(
             final @NonNull AccountTransferV2TokenCommandParameters parameters) throws BaseException {
         return getBrokerOperationExecutor().execute(parameters,
                 new BrokerOperation<Intent>() {
@@ -627,12 +627,12 @@ public class BrokerMsalController extends BaseController {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
 
-                        // Looked through this, i think we can keep it as is for ATv2
+                        // Looked through this, i think we can keep it as is for Account Transfer V2
                         final Intent intent = mResultAdapter.getIntentForInteractiveRequestFromResultBundle(
                                 resultBundle,
                                 negotiatedBrokerProtocolVersion);
 
-                        // Added check for ATv2CommandParameters in MsalBrokerRequestAdapter, we can use
+                        // Added check for AccountTransferV2CommandParameters in MsalBrokerRequestAdapter, we can use
                         // the same method here
                         intent.putExtras(
                                 mRequestAdapter.getRequestBundleForAcquireTokenInteractive(parameters, negotiatedBrokerProtocolVersion)
@@ -643,7 +643,7 @@ public class BrokerMsalController extends BaseController {
                     @Override
                     public @NonNull
                     String getMethodName() {
-                        return ":getBrokerAuthorizationIntentForATv2";
+                        return ":getBrokerAuthorizationIntentForAccountTransferV2";
                     }
 
                     @Override

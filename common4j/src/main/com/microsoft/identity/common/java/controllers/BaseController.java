@@ -124,8 +124,8 @@ public abstract class BaseController {
     public abstract AcquireTokenResult acquireToken(final InteractiveTokenCommandParameters request)
             throws Exception;
 
-    public AcquireTokenResult acquireTokenForATv2(final AccountTransferV2TokenCommandParameters request) throws Exception {
-        throw new UnsupportedOperationException("ATv2 is initiated from OneAuth, should only be called from BrokerMsalController.");
+    public AcquireTokenResult acquireTokenForAccountTransferV2(final AccountTransferV2TokenCommandParameters request) throws Exception {
+        throw new UnsupportedOperationException("Account Transfer V2 is initiated from OneAuth, should only be called from BrokerMsalController.");
     }
 
     public abstract void onFinishAuthorizationSession(
