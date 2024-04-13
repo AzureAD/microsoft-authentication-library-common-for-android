@@ -47,18 +47,17 @@ jobs:
     parameters:
       envVstsMvnAt: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
   - task: AzureKeyVault@2
-    displayName: 'Get Key vault AndroidAutomationRunnerAppSecret'
+    displayName: 'Get Key vault LabVaultAppSecret'
     inputs:
-      azureSubscription: 'MSIDLABS_ANDROID_KV'
-      KeyVaultName: 'ADALTestInfo'
-      SecretsFilter: 'AndroidAutomationRunnerAppSecret'
-      RunAsPreJob: false
+      azureSubscription: 'AuthSdkResourceManager'
+      KeyVaultName: 'MSIDLABS'
+      SecretsFilter: 'LabVaultAppSecret'
   - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
     parameters:
       project: LabApiUtilities
       buildArguments: '-PprojVersion=$(versionNumber)'
       artifactFolder: 'LabApiUtilities/build/libs'
-      testArguments: "-PlabSecret=$(AndroidAutomationRunnerAppSecret)"
+      testArguments: "-PlabSecret=$(LabVaultAppSecret)"
 # Test utils
 - job: testutils_phase
   displayName: 'Test utils: Build, Test and Publish'
