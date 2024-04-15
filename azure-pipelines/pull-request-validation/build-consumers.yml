@@ -183,7 +183,9 @@ stages:
     dependsOn:
       - setupBranch
     variables:
-      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+      - group: MSIDLABVARS
+      - name: commonBranch
+        value: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     pool:
       vmImage: 'ubuntu-latest'
@@ -193,12 +195,6 @@ stages:
         clean: true
         submodules: recursive
         persistCredentials: True
-      - task: AzureKeyVault@2
-        displayName: 'Get Key vault LabVaultAppSecret'
-        inputs:
-          azureSubscription: 'AuthSdkResourceManager'
-          KeyVaultName: 'MSIDLABS'
-          SecretsFilter: 'LabVaultAppSecret'
       - task: CmdLine@1
         displayName: Set MVN Access Token in Environment
         inputs:
