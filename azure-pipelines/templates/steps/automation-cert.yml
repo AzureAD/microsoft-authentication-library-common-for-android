@@ -10,18 +10,18 @@ steps:
   inputs:
     filename: echo
     arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAt }}]$(System.AccessToken)'
-- task: AzureKeyVault@2
+- task: AzureKeyVault@1
   displayName: 'Azure Key Vault: Download Cert for Automation'
   inputs:
-    azureSubscription: 'AuthSdkResourceManager'
-    KeyVaultName: 'buildautomation'
-    SecretsFilter: 'LabVaultAccessCert'
+    ConnectedServiceName: 9a9308ae-59b4-475f-b49c-3e828c508d8b
+    KeyVaultName: ADALTestInfo
+    SecretsFilter: AndroidAutomationRunner
 - task: PowerShell@2
   displayName: Install Automation Cert
   inputs:
     targetType: inline
     script: >
-      $kvSecretBytes = [System.Convert]::FromBase64String('$(LabVaultAccessCert)')
+      $kvSecretBytes = [System.Convert]::FromBase64String('$(AndroidAutomationRunner)')
 
       $certCollection = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
 
