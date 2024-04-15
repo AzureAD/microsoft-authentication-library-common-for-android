@@ -1,3 +1,7 @@
+V.Next
+---------
+- [MINOR] Add field in BrokerInteractiveTokenCommandParameters for ATv2. (#2363)
+
 V.17.3.0
 ---------
 - [PATCH] Return exception from first controller in SilentTokenCommand in case all controllers throw exceptions. (#2377)
