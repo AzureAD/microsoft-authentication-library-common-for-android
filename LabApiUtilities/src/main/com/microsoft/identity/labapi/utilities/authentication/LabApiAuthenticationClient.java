@@ -43,19 +43,11 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
     private final static String CLIENT_ID = "f62c5ae3-bf3a-4af5-afa8-a68b800396e9";
     private final String mClientSecret;
 
-    public LabApiAuthenticationClient(@NonNull final IConfidentialAuthClient confidentialAuthClient) {
-        mConfidentialAuthClient = confidentialAuthClient;
-        mClientSecret = "";
-    }
 
     public LabApiAuthenticationClient(@NonNull final IConfidentialAuthClient confidentialAuthClient,
                                       @NonNull final String clientSecret) {
         mConfidentialAuthClient = confidentialAuthClient;
         mClientSecret = clientSecret;
-    }
-
-    public LabApiAuthenticationClient() {
-        this(ConfidentialAuthClientFactory.INSTANCE.getConfidentialAuthClient());
     }
 
     public LabApiAuthenticationClient(@NonNull final String clientSecret) {
@@ -64,23 +56,18 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
 
     @Override
     public String getAccessToken() throws LabApiException {
-        if (mClientSecret != null && mClientSecret.trim().length() > 0) {
-            final TokenParameters tokenParameters = TokenParameters
-                    .builder()
-                    .clientId(CLIENT_ID)
-                    .authority(AUTHORITY)
-                    .scope(SCOPE)
-                    .build();
+        final TokenParameters tokenParameters = TokenParameters
+                .builder()
+                .clientId(CLIENT_ID)
+                .authority(AUTHORITY)
+                .scope(SCOPE)
+                .build();
 
-            // obtain token for Lab Api using the client secret retrieved from KeyVault
-            final IAuthenticationResult authenticationResult = mConfidentialAuthClient.acquireToken(
-                    mClientSecret, tokenParameters
-            );
+        // obtain token for Lab Api using the client secret retrieved from KeyVault
+        final IAuthenticationResult authenticationResult = mConfidentialAuthClient.acquireToken(
+                mClientSecret, tokenParameters
+        );
 
-            return authenticationResult.getAccessToken();
-        } else {
-            final KeyVaultAuthenticationClient keyVaultAuthenticationClient = new KeyVaultAuthenticationClient(mConfidentialAuthClient);
-            return keyVaultAuthenticationClient.getAccessToken();
-        }
+        return authenticationResult.getAccessToken();
     }
 }

@@ -29,7 +29,6 @@ import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 import com.microsoft.identity.labapi.utilities.exception.LabError;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -54,7 +53,7 @@ import java.util.Set;
 public class CertificateCredentialTest {
 
     private final static String CERTIFICATE_ALIAS_INVALID = "SomeRandomCertThatShouldNotExist";
-    private final static String CERTIFICATE_ALIAS_VALID = "AutomationRunner";
+    private final static String CERTIFICATE_ALIAS_VALID = "LabVaultAccessCert";
     private final static String KEYSTORE_TYPE = "Windows-MY";
     private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
 
@@ -215,7 +214,6 @@ public class CertificateCredentialTest {
         Assert.assertNotNull(certificateCredential.getPublicCertificate());
     }
 
-    @Ignore
     @Test
     public void testCanCertificateCredentialFromKeyStoreConfigurationAndCertificateMetadata() {
         final CertificateCredential certificateCredential;

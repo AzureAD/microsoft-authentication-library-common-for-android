@@ -29,7 +29,6 @@ import com.microsoft.identity.labapi.utilities.authentication.common.MicrosoftCl
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -38,12 +37,11 @@ import org.junit.Test;
 public class MicrosoftClientAssertionTest {
 
     private final static String CLIENT_ID = "some_client_id";
-    private final static String CERTIFICATE_ALIAS = "AutomationRunner";
+    private final static String CERTIFICATE_ALIAS = "LabVaultAccessCert";
     private final static String KEYSTORE_TYPE = "Windows-MY";
     private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
     private final static String AUDIENCE = "some_audience";
 
-    @Ignore
     @Test
     public void testCanCreateMicrosoftClientAssertionWithValidCertificate() {
         final MicrosoftClientAssertion microsoftClientAssertion;
