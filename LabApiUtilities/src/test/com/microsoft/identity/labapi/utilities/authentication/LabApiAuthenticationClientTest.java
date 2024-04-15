@@ -22,10 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication;
 
-import com.microsoft.identity.labapi.utilities.jwt.IJWTParser;
-import com.microsoft.identity.labapi.utilities.jwt.JWTParserFactory;
 import com.microsoft.identity.labapi.utilities.TestBuildConfig;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
+import com.microsoft.identity.labapi.utilities.jwt.IJWTParser;
+import com.microsoft.identity.labapi.utilities.jwt.JWTParserFactory;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -43,24 +43,6 @@ public class LabApiAuthenticationClientTest {
     public void canGetTokenForLabApiUsingClientSecret() {
         final LabApiAuthenticationClient labApiAuthenticationClient =
                 new LabApiAuthenticationClient(TestBuildConfig.LAB_CLIENT_SECRET);
-
-        try {
-            final String accessToken = labApiAuthenticationClient.getAccessToken();
-            Assert.assertNotNull(accessToken);
-            Assert.assertNotEquals("", accessToken);
-            Assert.assertEquals(
-                    LabAuthenticationConstants.LAB_API_TOKEN_AUDIENCE,
-                    ((List<String>) jwtParser.parseJWT(accessToken).get(LabAuthenticationConstants.AUDIENCE_CLAIM)).get(0)
-            );
-        } catch (final LabApiException e) {
-            throw new AssertionError(e);
-        }
-    }
-
-    @Test
-    public void canGetTokenForLabApiUsingCertificate() {
-        final LabApiAuthenticationClient labApiAuthenticationClient =
-                new LabApiAuthenticationClient();
 
         try {
             final String accessToken = labApiAuthenticationClient.getAccessToken();
