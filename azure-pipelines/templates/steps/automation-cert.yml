@@ -10,12 +10,6 @@ steps:
   inputs:
     filename: echo
     arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAt }}]$(System.AccessToken)'
-- task: AzureKeyVault@2
-  displayName: 'Get Key vault LabVaultAppSecret'
-  inputs:
-    azureSubscription: 'AuthSdkResourceManager'
-    KeyVaultName: 'MSIDLABS'
-    SecretsFilter: 'LabVaultAppSecret'
 - task: AzureKeyVault@1
   displayName: 'Azure Key Vault: Download Cert for Automation'
   inputs:
