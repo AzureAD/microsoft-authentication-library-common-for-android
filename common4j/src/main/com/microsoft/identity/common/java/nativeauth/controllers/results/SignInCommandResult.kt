@@ -22,7 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.controllers.results
 
-import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 
 sealed interface SignInStartCommandResult: INativeAuthCommandResult

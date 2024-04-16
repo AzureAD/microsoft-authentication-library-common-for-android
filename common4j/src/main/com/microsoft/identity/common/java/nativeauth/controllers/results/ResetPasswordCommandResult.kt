@@ -22,10 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.controllers.results
 
-import com.microsoft.identity.common.java.logging.DiagnosticContext
+import com.microsoft.identity.common.java.nativeauth.util.Logging
 
 
-sealed interface ResetPasswordStartCommandResult: INativeAuthCommandResult
+sealed interface ResetPasswordStartCommandResult: INativeAuthCommandResult, Logging
 sealed interface ResetPasswordSubmitCodeCommandResult: INativeAuthCommandResult
 sealed interface ResetPasswordResendCodeCommandResult: INativeAuthCommandResult
 sealed interface ResetPasswordSubmitNewPasswordCommandResult: INativeAuthCommandResult
@@ -46,28 +46,73 @@ interface ResetPasswordCommandResult {
         val codeLength: Int,
         val challengeTargetLabel: String,
         val challengeChannel: String,
-    ) : ResetPasswordStartCommandResult, ResetPasswordResendCodeCommandResult
+    ) : ResetPasswordStartCommandResult, ResetPasswordResendCodeCommandResult {
+        override fun toSafeString(mayContainPii: Boolean): String {
+            return if (mayContainPii) {
+                "CodeRequired(correlationId=$correlationId, codeLength=$codeLength, challengeTargetLabel=$challengeTargetLabel, challengeChannel=$challengeChannel)"
+            } else {
+                "CodeRequired(correlationId=$correlationId, codeLength=$codeLength, challengeChannel=$challengeChannel)"
+            }
+        }
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = toSafeString(false)
+    }
 
     data class EmailNotVerified(
         val error: String,
         val errorDescription: String,
         override val correlationId: String
-    ) :
-        ResetPasswordStartCommandResult
+    ) : ResetPasswordStartCommandResult {
+        override fun toSafeString(mayContainPii: Boolean): String {
+            return if (mayContainPii) {
+                "EmailNotVerified(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
+            } else {
+                "EmailNotVerified(correlationId=$correlationId)"
+            }
+        }
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = toSafeString(false)
+    }
 
     data class PasswordNotSet(
         val error: String,
         val errorDescription: String,
         override val correlationId: String
-    ) :
-        ResetPasswordStartCommandResult
+    ) : ResetPasswordStartCommandResult {
+        override fun toSafeString(mayContainPii: Boolean): String {
+            return if (mayContainPii) {
+                "PasswordNotSet(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
+            } else {
+                "PasswordNotSet(correlationId=$correlationId)"
+            }
+        }
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = toSafeString(false)
+    }
 
     data class UserNotFound(
         val error: String,
         val errorDescription: String,
         override val correlationId: String
-    ) :
-        ResetPasswordStartCommandResult, ResetPasswordSubmitNewPasswordCommandResult
+    ) : ResetPasswordStartCommandResult, ResetPasswordSubmitNewPasswordCommandResult {
+        override fun toSafeString(mayContainPii: Boolean): String {
+            return if (mayContainPii) {
+                "UserNotFound(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
+            } else {
+                "UserNotFound(correlationId=$correlationId)"
+            }
+        }
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = toSafeString(false)
+    }
 
     data class PasswordRequired(
         override val correlationId: String,

@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.logging;
 
+import com.microsoft.identity.common.java.nativeauth.util.Logging;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ThrowableUtil;
 
@@ -125,6 +126,10 @@ public class Logger {
         } finally {
             sLoggersLock.writeLock().unlock();
         }
+    }
+
+    public static void setAllowPii(@NonNull boolean allowPii) {
+        sAllowPii = allowPii;
     }
 
     public static boolean setLogger(@NonNull String identifier,
@@ -285,6 +290,24 @@ public class Logger {
     }
 
     /**
+     * Send a {@link Logger.LogLevel#INFO} log message without PII.
+     *
+     * @param tag     Used to identify the source of a log message. It usually identifies the class
+     *                or activity where the log call occurs.
+     * @param message The message to log.
+     * @param object The object to be printed.
+     */
+    public static void infoWithObject(final String tag,
+                            final String message,
+                            final Logging object) {
+        if (isAllowPii()) {
+            log(tag, Logger.LogLevel.INFO, null, message, object.toSafeString(true), null, object.containsPii());
+        } else {
+            log(tag, Logger.LogLevel.INFO, null, message, object.toSafeString(false), null, false);
+        }
+    }
+
+    /**
      * * Send a {@link Logger.LogLevel#INFO} log message without PII.
      *
      * @param tag           Used to identify the source of a log message. It usually identifies the
@@ -418,6 +441,51 @@ public class Logger {
     }
 
     /**
+     * Temporary method to allow the project to compile, without having to make changes everywhere
+     */
+    private static void log(final String tag,
+                            @NonNull final LogLevel logLevel,
+                            final String correlationId,
+                            final String message,
+                            @Nullable final String objectToLog,
+                            final Throwable throwable,
+                            final boolean containsPII) {
+        if ((sLogLevel == LogLevel.NO_LOG) || logLevel.compareTo(sLogLevel) > 0 || (!sAllowPii && containsPII)) {
+            return;
+        }
+
+        final Date now = new Date();
+        final String diagnosticMetadata = getDiagnosticContextMetadata(correlationId);
+
+        sLogExecutor.execute(new Runnable() {
+            @Override
+            @SuppressFBWarnings(value = "DE_MIGHT_IGNORE",
+                    justification = "If logging throws, there is nothing left to do but swallow the exception and move on.")
+            public void run() {
+                final String dateTimeStamp = sDateTimeFormatter.format(now);
+                //Format the log message.
+                final String logMessage = formatMessage(diagnosticMetadata, sPlatformString, message, objectToLog, dateTimeStamp, throwable);
+
+                sLoggersLock.readLock().lock();
+                try {
+                    for (final String loggerCallbackKey : sLoggers.keySet()) {
+                        try {
+                            final ILoggerCallback callback = sLoggers.get(loggerCallbackKey);
+                            if (callback != null) {
+                                callback.log(tag, logLevel, logMessage, containsPII);
+                            }
+                        } catch (final Exception e) {
+                            // Do nothing.
+                        }
+                    }
+                } finally {
+                    sLoggersLock.readLock().unlock();
+                }
+            }
+        });
+    }
+
+    /**
      * Wrap the log message.
      * If diagnosticMetadata (diagnosticMetadata contains thread name and correlationId) exists:
      * <library_version> [<timestamp> - <diagnosticMetadata>] <log_message>
@@ -430,10 +498,31 @@ public class Logger {
                                         @NonNull final String dateTimeStamp,
                                         @Nullable final Throwable throwable) {
         final String logMessage = StringUtil.isNullOrEmpty(message) ? "N/A" : message;
+
         return "[" + dateTimeStamp
                 + (StringUtil.isNullOrEmpty(diagnosticMetadata) ? " " : " - " + diagnosticMetadata + " ")
                 + "- " + platformString + "] "
                 + logMessage
+                + (throwable == null ? "" : '\n' + ThrowableUtil.getStackTraceAsString(throwable));
+    }
+
+    /**
+     * Temporary method to allow the project to compile, without having to make changes everywhere
+     */
+    private static String formatMessage(@Nullable final String diagnosticMetadata,
+                                        @Nullable final String platformString,
+                                        @Nullable final String message,
+                                        @Nullable final String objectToLog,
+                                        @NonNull final String dateTimeStamp,
+                                        @Nullable final Throwable throwable) {
+        final String logMessage = StringUtil.isNullOrEmpty(message) ? "N/A" : message;
+        final String logObject = StringUtil.isNullOrEmpty(objectToLog) ? "N/A" : objectToLog;
+
+        return "[" + dateTimeStamp
+                + (StringUtil.isNullOrEmpty(diagnosticMetadata) ? " " : " - " + diagnosticMetadata + " ")
+                + "- " + platformString + "] "
+                + logMessage
+                + logObject
                 + (throwable == null ? "" : '\n' + ThrowableUtil.getStackTraceAsString(throwable));
     }
 

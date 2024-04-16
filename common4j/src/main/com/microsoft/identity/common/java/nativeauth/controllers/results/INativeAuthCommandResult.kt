@@ -23,21 +23,14 @@
 
 package com.microsoft.identity.common.java.nativeauth.controllers.results
 
-import com.google.gson.annotations.Expose
 import com.microsoft.identity.common.java.logging.DiagnosticContext
-import com.microsoft.identity.common.java.util.ObjectMapper
-
-interface BaseNativeAuthClass {
-    override fun toString(): String
-}
 
 /**
  * INativeAuthCommandResult interface defines the base class for errors used in Native Auth.
  */
-abstract interface INativeAuthCommandResult: BaseNativeAuthClass {
+interface INativeAuthCommandResult {
     val correlationId: String
     data class Redirect(
-        @Expose
         override val correlationId: String,
     ) : Error(error = BROWSER_REQUIRED_ERROR, errorDescription = BROWSER_REQUIRED_ERROR_DESCRIPTION, correlationId = correlationId),
         SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInSubmitCodeCommandResult, SignInResendCodeCommandResult,
@@ -51,10 +44,14 @@ abstract interface INativeAuthCommandResult: BaseNativeAuthClass {
                 private const val BROWSER_REQUIRED_ERROR_DESCRIPTION: String = "The client's authentication capabilities are insufficient. Please redirect to the browser to complete authentication"
             }
 
-            override fun toString(): String {
-                return ObjectMapper.serializeExposedFieldsOfObjectToJsonString(this)
-            }
+        override fun toSafeString(mayContainPii: Boolean): String {
+            return "Redirect(correlationId=$correlationId"
         }
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = toSafeString(false)
+    }
 
     /**
      * UnknownError is base class to represent various kinds of errors in NativeAuth.
@@ -73,7 +70,19 @@ abstract interface INativeAuthCommandResult: BaseNativeAuthClass {
         SignUpSubmitCodeCommandResult, SignUpResendCodeCommandResult,
         SignUpSubmitPasswordCommandResult,
         ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,
-        ResetPasswordResendCodeCommandResult, ResetPasswordSubmitNewPasswordCommandResult
+        ResetPasswordResendCodeCommandResult, ResetPasswordSubmitNewPasswordCommandResult {
+        override fun toSafeString(mayContainPii: Boolean): String {
+            return if (mayContainPii) {
+                "UnknownError(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes"
+            } else {
+                "UnknownError(correlationId=$correlationId)"
+            }
+        }
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = toSafeString(false)
+        }
 
     open class Error(
         open val error: String?,
@@ -91,5 +100,17 @@ abstract interface INativeAuthCommandResult: BaseNativeAuthClass {
         override val errorCodes: List<Int>? = null,
         val exception: Exception? = null
     ) : Error(error, errorDescription, details, correlationId, errorCodes),
-        INativeAuthCommandResult, SignInStartCommandResult, SignUpStartCommandResult, SignUpSubmitPasswordCommandResult, ResetPasswordStartCommandResult
+        INativeAuthCommandResult, SignInStartCommandResult, SignUpStartCommandResult, SignUpSubmitPasswordCommandResult, ResetPasswordStartCommandResult {
+        override fun toSafeString(mayContainPii: Boolean): String {
+            return if (mayContainPii) {
+                "UnknownError(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes"
+            } else {
+                "UnknownError(correlationId=$correlationId)"
+            }
+        }
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = toSafeString(false)
+    }
 }

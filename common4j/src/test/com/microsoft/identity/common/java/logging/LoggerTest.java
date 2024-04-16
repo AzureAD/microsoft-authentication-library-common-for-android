@@ -23,6 +23,9 @@
 
 package com.microsoft.identity.common.java.logging;
 
+import com.microsoft.identity.common.java.nativeauth.controllers.results.ResetPasswordCommandResult;
+import com.microsoft.identity.common.java.nativeauth.controllers.results.ResetPasswordStartCommandResult;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,6 +47,65 @@ public class LoggerTest {
     public void setUp() {
         Logger.resetLogger();
         DiagnosticContext.INSTANCE.clear();
+    }
+
+    @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
+    public void testWithContainingPiiAndPiiDisabled() throws InterruptedException {
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        final String[] result_tag = {null};
+        final Logger.LogLevel[] result_logLevel = {Logger.LogLevel.UNDEFINED};
+        final String[] result_logMessage = {null};
+        final Boolean[] result_containsPII = {null};
+
+        Logger.setLogger("TEST", new ILoggerCallback() {
+            @Override
+            public void log(String tag, Logger.LogLevel logLevel, String message, boolean containsPII) {
+                result_tag[0] = tag;
+                result_logLevel[0] = logLevel;
+                result_logMessage[0] = message;
+                result_containsPII[0] = containsPII;
+                countDownLatch.countDown();
+            }
+        });
+        Logger.setAllowPii(false);
+
+        String correlationId = "12345";
+        String continuationToken = "ABCDEFG";
+        int codeLength = 6;
+        String challengeTargetLabel = "s******n@g*****m";
+        String challengeChannel = "email";
+
+        final ResetPasswordCommandResult.CodeRequired result = new ResetPasswordCommandResult.CodeRequired(
+                correlationId,
+                continuationToken,
+                codeLength,
+                challengeTargetLabel,
+                challengeChannel
+        );
+
+        Logger.infoWithObject(
+                tag,
+                "Returning result: ",
+                result
+        );
+
+        // Logs like this should never be discarded, as Logger will produce a non-Pii-containing string
+        final boolean shouldLogBeDiscarded = false;
+
+        final Boolean timedOut = !countDownLatch.await(DISCARDED_TIME_IN_MILLISECONDS, TimeUnit.MILLISECONDS);
+        Assert.assertEquals(shouldLogBeDiscarded, timedOut);
+
+        if (shouldLogBeDiscarded) {
+            Assert.assertEquals(result_tag[0], null);
+            Assert.assertEquals(result_logLevel[0], Logger.LogLevel.UNDEFINED);
+        } else {
+            Assert.assertEquals(result_tag[0], tag);
+            Assert.assertEquals(result_logLevel[0], Logger.LogLevel.INFO);
+            Assert.assertTrue(result_logMessage[0].contains("Returning result: "));
+            Assert.assertTrue(result_logMessage[0].contains(result.toSafeString(false)));
+            Assert.assertTrue(result_logMessage[0].contains("12345"));
+            Assert.assertEquals(result_containsPII[0], false);
+        }
     }
 
     @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
