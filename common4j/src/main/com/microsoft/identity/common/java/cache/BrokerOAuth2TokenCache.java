@@ -1286,7 +1286,6 @@ public class BrokerOAuth2TokenCache
      * @param homeAccountId The homeAccountId of the Account targeted for deletion.
      * @param realm         The tenant id of the targeted Account (if applicable).
      * @return An {@link AccountDeletionRecord}, containing the deleted {@link AccountDeletionRecord}s.
-     * @see BrokerOAuth2TokenCache#removeAccountFromDevice(AccountRecord).
      */
     @Override
     public AccountDeletionRecord removeAccount(@Nullable final String environment,

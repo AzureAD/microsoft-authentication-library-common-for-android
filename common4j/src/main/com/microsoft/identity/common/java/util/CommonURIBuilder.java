@@ -36,7 +36,7 @@ import lombok.NonNull;
  * We want to make sure we never send duplicated parameters to the server.
  * This is done by
  * 1. disabling {@link cz.msebera.android.httpclient.client.utils.URIBuilder#addParameter(String, String)} and
- * {@link cz.msebera.android.httpclient.client.utils.URIBuilder#addParameters(List))}
+ * {@link cz.msebera.android.httpclient.client.utils.URIBuilder#addParameters(List)}
  * 2. adding {@link CommonURIBuilder#addParametersIfAbsent}
  */
 public class CommonURIBuilder extends cz.msebera.android.httpclient.client.utils.URIBuilder {
