@@ -24,6 +24,7 @@ variables:
   value: 28
 - group: AndroidAuthClientVariables
 - group: AndroidAuthClientAutomationSecrets
+- group: MSIDLABVARS
 
 resources:
   repositories:
@@ -132,7 +133,7 @@ stages:
     - task: Gradle@3
       displayName: Run msal Unit tests
       inputs:
-        tasks: msal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+        tasks: msal:testLocalDebugUnitTest -Plabtest -PlabSecret=$(LabVaultAppSecret) -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
         jdkArchitecture: x64
         jdkVersionOption: "1.11"
   # broker
@@ -174,7 +175,7 @@ stages:
     - task: Gradle@3
       displayName: Run broker Unit tests
       inputs:
-        tasks: AADAuthenticator:localDebugAADAuthenticatorUnitTestCoverageReport --build-cache --info -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PpowerLiftApiKey=$(powerliftApiKey) -PcodeCoverageEnabled=true ${{variables.shouldSkipLongRunningTest}}
+        tasks: AADAuthenticator:localDebugAADAuthenticatorUnitTestCoverageReport --build-cache --info -Plabtest -PlabSecret=$(LabVaultAppSecret) -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PpowerLiftApiKey=$(powerliftApiKey) -PcodeCoverageEnabled=true ${{variables.shouldSkipLongRunningTest}}
         jdkArchitecture: x64
         jdkVersionOption: "1.11"
   # Linux broker
@@ -183,7 +184,8 @@ stages:
     dependsOn:
       - setupBranch
     variables:
-      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+      - name: commonBranch
+        value: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     pool:
       vmImage: 'ubuntu-latest'
@@ -193,12 +195,6 @@ stages:
         clean: true
         submodules: recursive
         persistCredentials: True
-      - task: AzureKeyVault@2
-        displayName: 'Get Key vault LabVaultAppSecret'
-        inputs:
-          azureSubscription: 'AuthSdkResourceManager'
-          KeyVaultName: 'MSIDLABS'
-          SecretsFilter: 'LabVaultAppSecret'
       - task: CmdLine@1
         displayName: Set MVN Access Token in Environment
         inputs:
@@ -233,7 +229,7 @@ stages:
             eval $(dbus-launch --sh-syntax)
             sudo apt install gnome-keyring
             /usr/bin/gnome-keyring-daemon --start --components=secrets
-            ./gradlew LinuxBroker:linuxBrokerUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PlabSecret=$(LabVaultAppSecret) -PcodeCoverageEnabled=true -Psystemd_mode_enabled=false
+            ./gradlew LinuxBroker:linuxBrokerUnitTestCoverageReport -Plabtest -PlabSecret=$(LabVaultAppSecret) -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PcodeCoverageEnabled=true -Psystemd_mode_enabled=false
       - task: PublishTestResults@2
         condition: succeededOrFailed()
         inputs:

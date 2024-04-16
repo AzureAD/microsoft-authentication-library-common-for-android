@@ -1,12 +1,20 @@
 V.Next
 ---------
 - [MAJOR] Support a new API Path for Account Transfer V2 in Broker (#2375)
-- [MINOR] Add field in BrokerInteractiveTokenCommandParameters for Account Transfer V2. (#2363)
+- [MINOR] Update flow to get token for labapi to not require automationrunnerapp (#2376)
+- [MINOR] Add field in BrokerInteractiveTokenCommandParameters for ATv2. (#2363)
+
+V.17.3.0
+---------
+- [PATCH] Return exception from first controller in SilentTokenCommand in case all controllers throw exceptions. (#2377)
 - [PATCH] Fix mAuthorizationStrategy is null in LocalMsalController (due to #2352) (#2370)
 - [MINOR] Move the getActiveBroker() invocation to background thread (#2352)
 - [PATCH] Return status code in errorResponse when server response is not in expected Json format. (#2321)
-- [PATCH] Reduce the amount of setAccountVisibility() call. (#2355)
 - [MINOR] Added telemetry for cross cloud and MSA passthrough requests (#2367)
+
+V.17.2.1
+---------
+- [PATCH] Reduce the amount of setAccountVisibility() call. (#2355)
 
 V.17.2.0
 ---------

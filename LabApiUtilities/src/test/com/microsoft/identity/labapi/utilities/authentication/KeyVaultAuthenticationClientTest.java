@@ -30,6 +30,7 @@ import com.microsoft.identity.labapi.utilities.TestBuildConfig;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
@@ -43,6 +44,7 @@ public class KeyVaultAuthenticationClientTest {
     final IConfidentialAuthClient confidentialAuthClient =
             ConfidentialAuthClientFactory.INSTANCE.getConfidentialAuthClient();
 
+    @Ignore
     @Test
     public void canGetTokenForKeyVaultUsingClientSecret() {
         final KeyVaultAuthenticationClient keyVaultAuthenticationClient =
@@ -64,6 +66,7 @@ public class KeyVaultAuthenticationClientTest {
         }
     }
 
+    @Ignore
     @Test
     public void canGetTokenForKeyVaultUsingCertificate() {
         final KeyVaultAuthenticationClient keyVaultAuthenticationClient =
