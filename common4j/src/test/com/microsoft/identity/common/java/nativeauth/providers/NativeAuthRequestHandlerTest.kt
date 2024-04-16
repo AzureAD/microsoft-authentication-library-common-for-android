@@ -158,6 +158,21 @@ class NativeAuthRequestHandlerTest {
         )
     }
 
+    @Test(expected = ClientException::class)
+    fun testSignUpStartWithEmptyUsernameShouldThrowException() {
+        val commandParameters = SignUpStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(emptyString)
+            .clientId(clientId)
+            .correlationId(correlationId)
+            .build()
+
+        nativeAuthRequestProvider.createSignUpStartRequest(
+            commandParameters = commandParameters
+        )
+    }
+
+
     @Test
     fun testSignUpStartSuccess() {
         val commandParameters = SignUpStartCommandParameters.builder()
