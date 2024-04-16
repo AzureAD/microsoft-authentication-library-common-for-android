@@ -242,7 +242,7 @@ public class BrokerOAuth2TokenCache
     }
 
     /**
-     * Broker-only API to persist WPJ's Accounts & their associated credentials.
+     * Broker-only API to persist WPJ's Accounts and their associated credentials.
      *
      * @param accountRecord      The {@link AccountRecord} to store.
      * @param idTokenRecord      The {@link IdTokenRecord} to store.

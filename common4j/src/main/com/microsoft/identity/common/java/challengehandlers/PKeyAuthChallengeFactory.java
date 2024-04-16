@@ -64,7 +64,7 @@ public class PKeyAuthChallengeFactory {
      *
      * @param redirectUri Location: urn:http-auth:CertAuth?
      *                    Nonce=[nonce value]
-     *                    {@literal &}CertAuthorities=[distinguished names of CAs>
+     *                    {@literal &}CertAuthorities=[distinguished names of CAs]
      *                    {@literal &}Version=1.0
      *                    {@literal &}SubmitUrl=[URL to submit response]
      *                    {@literal &}Context=[server state thatclient must convey back]

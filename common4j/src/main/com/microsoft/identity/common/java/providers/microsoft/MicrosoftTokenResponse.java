@@ -91,7 +91,6 @@ public class MicrosoftTokenResponse extends TokenResponse {
      * Set the session key JWE associated with this result, or null if none.
      *
      * @param sessionKeyJwe the session key JWE associated with this result, or null if none.
-     * @return
      */
     public void setSessionKeyJwe(final String sessionKeyJwe) {
         mSessionKeyJwe = sessionKeyJwe;

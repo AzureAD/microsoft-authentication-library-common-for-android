@@ -124,9 +124,8 @@ public class MsalCppOAuth2TokenCache
     }
 
     /**
-     * @param accountRecord : AccountRecord associated with the input credentials, can be null.
-     * @param credentials   : list of Credential which can include AccessTokenRecord, IdTokenRecord and RefreshTokenRecord.
-     * @throws ClientException : If the supplied Account or Credential are null or schema invalid.
+     * @param credentials       list of Credential which can include AccessTokenRecord, IdTokenRecord and RefreshTokenRecord.
+     * @throws ClientException  If the supplied Account or Credential are null or schema invalid.
      */
     public synchronized void saveCredentials(@NonNull final Credential... credentials) throws ClientException {
         if (credentials.length == 0) {

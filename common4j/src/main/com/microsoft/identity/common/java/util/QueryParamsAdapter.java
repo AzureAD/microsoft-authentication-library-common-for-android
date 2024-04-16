@@ -42,7 +42,7 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 
 /**
- * Class to serialize and deserialize query parameters from List<Map.Entry<String, String>> to json String
+ * Class to serialize and deserialize query parameters from List to json String
  * and vice versa.
  *
  * NOTE: Even we no longer use Pair (Since it's android-only), we are keeping this the same
