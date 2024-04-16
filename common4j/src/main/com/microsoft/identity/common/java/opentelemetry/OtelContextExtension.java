@@ -47,7 +47,7 @@ public class OtelContextExtension {
 
     /**
      * Returns a Runnable that makes this the current context and then invokes the input Runnable.
-     * See {@link Context#current()#wrap(Runnable)}
+     * See {@link Context#wrap(Runnable)}
      *
      * @param runnable the runnable to wrap
      * @return the wrapped runnable

@@ -62,10 +62,12 @@ public class PKeyAuthChallengeFactory {
      * This is retrieved from response from auth endpoint
      * (read: it would be triggered in interactive flow only).
      *
-     * @param redirectUri Location: urn:http-auth:CertAuth?Nonce=<noncevalue>
-     *                    &CertAuthorities=<distinguished names of CAs>&Version=1.0
-     *                    &SubmitUrl=<URL to submit response>&Context=<server state that
-     *                    client must convey back>
+     * @param redirectUri Location: urn:http-auth:CertAuth?
+     *                    Nonce=[nonce value]
+     *                    &CertAuthorities=[distinguished names of CAs>
+     *                    &Version=1.0
+     *                    &SubmitUrl=[URL to submit response]
+     *                    &Context=[server state thatclient must convey back]
      * @return Return PKeyAuth challenge object
      */
     public PKeyAuthChallenge getPKeyAuthChallengeFromWebViewRedirect(@NonNull final String redirectUri) throws ClientException {

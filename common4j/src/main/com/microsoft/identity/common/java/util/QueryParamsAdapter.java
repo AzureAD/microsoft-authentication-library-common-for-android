@@ -202,7 +202,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
     /**
      * Create a Type for the List of query params.
      *
-     * @return a Type object representing the type of the query params in this case List<Map.Entry<String, String>>
+     * @return a Type object representing the type of the query params.
      */
     public static Type getListType() {
         return TypeToken.getParameterized(List.class, TypeToken.getParameterized(Map.Entry.class, String.class, String.class).getRawType()).getType();

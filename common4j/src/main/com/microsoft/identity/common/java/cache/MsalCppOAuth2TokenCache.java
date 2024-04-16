@@ -291,8 +291,6 @@ public class MsalCppOAuth2TokenCache
 
     /**
      * Gets an immutable {@link List} of {@link AccountRecord} objects.
-     *
-     * @return {@link List<AccountRecord>}
      */
     public List<AccountRecord> getAllAccounts() {
         return Collections.unmodifiableList(

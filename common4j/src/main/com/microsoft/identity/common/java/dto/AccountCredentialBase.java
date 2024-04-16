@@ -46,8 +46,6 @@ public abstract class AccountCredentialBase implements Cloneable {
 
     /**
      * Setter of additional fields.
-     *
-     * @param additionalFields Map<String, JsonElement>
      */
     public void setAdditionalFields(@NonNull final Map<String, JsonElement> additionalFields) {
         mAdditionalFields = Collections.synchronizedMap(additionalFields);
