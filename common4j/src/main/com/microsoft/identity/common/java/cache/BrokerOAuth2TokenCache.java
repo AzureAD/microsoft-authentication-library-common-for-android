@@ -170,7 +170,7 @@ public class BrokerOAuth2TokenCache
     }
 
     /**
-     * Broker-only API to persist WPJ's Accounts & their associated credentials.
+     * Broker-only API to persist WPJ's Accounts and their associated credentials.
      *
      * @param accountRecord     The {@link AccountRecord} to store.
      * @param idTokenRecord     The {@link IdTokenRecord} to store.
@@ -611,7 +611,7 @@ public class BrokerOAuth2TokenCache
     /**
      * The caller of this method should inspect the result carefully.
      * <p>
-     * If the result contains >1 element: tokens were found for the provided filter criteria and
+     * If the result contains {@literal >} 1 element: tokens were found for the provided filter criteria and
      * additionally, tokens were found for this Account relative to a guest tenant.
      * <p>
      * If the result contains exactly 1 element, you may receive 1 of a few different
