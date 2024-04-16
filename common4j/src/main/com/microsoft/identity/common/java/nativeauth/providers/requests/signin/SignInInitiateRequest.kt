@@ -53,6 +53,7 @@ data class SignInInitiateRequest private constructor(
             headers: Map<String, String?>
         ): SignInInitiateRequest {
             // Check for empty Strings and empty Maps
+            ArgUtils.validateNonNullArg(username, "username")
             ArgUtils.validateNonNullArg(clientId, "clientId")
             ArgUtils.validateNonNullArg(challengeType, "challengeType")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
