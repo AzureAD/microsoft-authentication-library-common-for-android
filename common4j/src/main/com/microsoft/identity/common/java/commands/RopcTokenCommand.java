@@ -26,6 +26,7 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.controllers.IControllerFactory;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 
@@ -42,17 +43,10 @@ public class RopcTokenCommand extends TokenCommand {
     private static final String TAG = RopcTokenCommand.class.getSimpleName();
 
     public RopcTokenCommand(@NonNull final RopcTokenCommandParameters parameters,
-                            @NonNull final BaseController controller,
+                            @NonNull final IControllerFactory controllerFactory,
                             @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
                             @NonNull final String publicApiId) {
-        super(parameters, controller, callback, publicApiId);
-    }
-
-    public RopcTokenCommand(@NonNull final RopcTokenCommandParameters parameters,
-                            @NonNull final List<BaseController> controllers,
-                            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
-                            @NonNull final String publicApiId) {
-        super(parameters, controllers, callback, publicApiId);
+        super(parameters, controllerFactory, callback, publicApiId);
     }
 
     @Override
@@ -64,7 +58,7 @@ public class RopcTokenCommand extends TokenCommand {
                     "Executing ROPC token command..."
             );
 
-            return getDefaultController()
+            return getControllerFactory().getDefaultController()
                     .acquireTokenWithPassword(
                             (RopcTokenCommandParameters) getParameters()
                     );

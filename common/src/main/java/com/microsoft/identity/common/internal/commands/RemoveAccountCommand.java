@@ -29,6 +29,8 @@ import com.microsoft.identity.common.java.commands.BaseCommand;
 import com.microsoft.identity.common.java.commands.CommandCallback;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.controllers.IControllerFactory;
+import com.microsoft.identity.common.java.logging.Logger;
 
 import java.util.List;
 
@@ -42,29 +44,23 @@ import lombok.EqualsAndHashCode;
 public class RemoveAccountCommand extends BaseCommand<Boolean> {
     private static final String TAG = RemoveAccountCommand.class.getSimpleName();
 
-    public RemoveAccountCommand(@NonNull RemoveAccountCommandParameters parameters,
-                                @NonNull BaseController controller,
-                                @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                                @NonNull String publicApiId) {
-        super(parameters, controller, callback, publicApiId);
-    }
-
-    public RemoveAccountCommand(@NonNull RemoveAccountCommandParameters parameters,
-                                @NonNull List<BaseController> controllers,
-                                @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                                @NonNull String publicApiId) {
-        super(parameters, controllers, callback, publicApiId);
+    public RemoveAccountCommand(@NonNull final RemoveAccountCommandParameters parameters,
+                                @NonNull final IControllerFactory controllerFactory,
+                                @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
+                                @NonNull final String publicApiId) {
+        super(parameters, controllerFactory, callback, publicApiId);
     }
 
     @Override
     public Boolean execute() throws Exception {
         final String methodTag = TAG + ":execute";
 
-        boolean result = false;
+        final List<BaseController> controllers = getControllerFactory().getAllControllers();
 
-        for (int ii = 0; ii < getControllers().size(); ii++) {
-            final BaseController controller = getControllers().get(ii);
-            com.microsoft.identity.common.internal.logging.Logger.verbose(
+        boolean result = false;
+        for (int ii = 0; ii < controllers.size(); ii++) {
+            final BaseController controller = controllers.get(ii);
+            Logger.verbose(
                     methodTag,
                     "Executing with controller: "
                             + controller.getClass().getSimpleName()

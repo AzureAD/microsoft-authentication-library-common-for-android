@@ -740,7 +740,7 @@ public class CommandDispatcherTest {
 
         public ExceptionCommand(@NonNull final CommandParameters parameters,
                                 @NonNull final CommandCallback callback) {
-            super(parameters, getTestController(), callback, "test_id");
+            super(parameters, getTestController().asControllerFactory(), callback, "test_id");
         }
 
         @Override
@@ -759,7 +759,7 @@ public class CommandDispatcherTest {
 
         public CommandThrowingIErrorInformationException(@NonNull final CommandParameters parameters,
                                                          @NonNull final CommandCallback callback, String errorCode) {
-            super(parameters, getTestController(), callback, "test_id");
+            super(parameters, getTestController().asControllerFactory(), callback, "test_id");
             mErrorCode = errorCode;
         }
 
@@ -780,7 +780,7 @@ public class CommandDispatcherTest {
 
         public TestCommand(@NonNull final CommandParameters parameters,
                            @NonNull final CommandCallback callback, int value) {
-            super(parameters, getTestController(), callback, "test_id");
+            super(parameters, getTestController().asControllerFactory(), callback, "test_id");
             this.value = value;
         }
 
@@ -865,7 +865,7 @@ public class CommandDispatcherTest {
                                                         acquireTokenSilentCallCount,
                                                         controllerLatch,
                                                         shouldRefresh,
-                                                        throwRenewAccessTokenError),
+                                                        throwRenewAccessTokenError).asControllerFactory(),
                     callback,
                     "");
             this.tryLatch = tryLatch;
@@ -880,7 +880,7 @@ public class CommandDispatcherTest {
             executeMethodEntranceVerifierLatch.countDown();
             try {
                 tryLatch.await();
-                result = getDefaultController().acquireTokenSilent((SilentTokenCommandParameters) getParameters());
+                result = getControllerFactory().getDefaultController().acquireTokenSilent((SilentTokenCommandParameters) getParameters());
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
@@ -911,7 +911,7 @@ public class CommandDispatcherTest {
     public static class LongRunningTestCommand extends BaseCommand {
         public LongRunningTestCommand(@NonNull final CommandParameters parameters,
                            @NonNull final CommandCallback callback) {
-            super(parameters, getTestController(), callback, "test_id");
+            super(parameters, getTestController().asControllerFactory(), callback, "test_id");
         }
 
         @Override
@@ -942,7 +942,7 @@ public class CommandDispatcherTest {
                 controllerLatch.countDown();
                 acquireTokenSilentCallCount.getAndIncrement();
                 if(shouldRefresh){
-                    final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, "LocalMSALControllerMockPubId");
+                    final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this.asControllerFactory(), "LocalMSALControllerMockPubId");
                     CommandDispatcher.submitAndForgetReturningFuture(refreshOnCommand);
                 }
 
