@@ -28,7 +28,7 @@ import io.opentelemetry.context.Context;
 /**
  * Extension methods for {@link Context}.
  * <p>
- * This basically provides a custom, safe implementation of {@link Context#current()#wrap(Runnable)}
+ * This basically provides a custom, safe implementation of {@link Context#wrap(Runnable)}
  * to be used in MSAL for scenarios where minSdkVersion of calling application < 24. The reason for
  * this is because the default implementation uses "static interface methods" and these get left out
  * of the APK for applications whose MIN SDK is < 24 and minification through R8 is DISABLED because

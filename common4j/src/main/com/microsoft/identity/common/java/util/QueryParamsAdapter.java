@@ -167,7 +167,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
     }
 
     /**
-     * Serializes a List<Map.Entry<String, String>>.
+     * Serializes a query string parameter map.
      *
      * @param extraQueryStringParameters an object to serialize.
      * @return a serialized string.
@@ -177,7 +177,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
     }
 
     /**
-     * Deerializes a string into a List<Map.Entry<String, String>>.
+     * Deserializes a string into a query string parameter map.
      *
      * @param jsonString a string to deserialize.
      * @return a deserialized object.

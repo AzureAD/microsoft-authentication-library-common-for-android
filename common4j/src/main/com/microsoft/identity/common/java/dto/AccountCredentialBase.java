@@ -39,8 +39,6 @@ public abstract class AccountCredentialBase implements Cloneable {
 
     /**
      * Getter of additional fields.
-     *
-     * @return additional fields in Map<String, JsonElement>
      */
     public Map<String, JsonElement> getAdditionalFields() {
         return mAdditionalFields;

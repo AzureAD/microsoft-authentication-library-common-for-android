@@ -35,6 +35,7 @@ import static com.microsoft.identity.common.java.dto.AccessTokenRecord.Serialize
 import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.TOKEN_TYPE;
 
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -48,7 +49,7 @@ public class AccessTokenRecord extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {
         /**
-         * <strong>Deprecated<strong> string of access token type.  Prefer @link{#TOKEN_TYPE} instead.
+         * <strong>Deprecated</strong> string of access token type.  Prefer @link{#TOKEN_TYPE} instead.
          */
         @Deprecated
         public static final String ACCESS_TOKEN_TYPE = "access_token_type";

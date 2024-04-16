@@ -115,7 +115,7 @@ public interface IPlatformUtil {
      * We use KeyManagerFactory to construct an {@link javax.net.ssl.SSLContext} object
      * with a WPJ certificate - to authenticate into DRS (via TLS challenge).
      *
-     * @link https://developer.android.com/reference/javax/net/ssl/KeyManagerFactory
+     * @link <a href="https://developer.android.com/reference/javax/net/ssl/KeyManagerFactory">KeyManagerFactory</a>
      **/
     KeyManagerFactory getSslContextKeyManagerFactory() throws NoSuchAlgorithmException;
 

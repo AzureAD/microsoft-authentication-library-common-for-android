@@ -52,7 +52,7 @@ public class MicrosoftTokenErrorResponse extends TokenErrorResponse {
     }
 
     /**
-     * @param errorCodes error codes of the Microsoft token error response in type List<Long>.
+     * @param errorCodes error codes of the Microsoft token error response.
      */
     public void setErrorCodes(final List<Long> errorCodes) {
         mErrorCodes = errorCodes;
