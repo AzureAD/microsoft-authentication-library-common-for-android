@@ -33,9 +33,9 @@ import lombok.AllArgsConstructor;
 
 /**
  * A custom noop implementation of {@link Span} to be used in MSAL for scenarios where
- * minSdkVersion of calling application < 24. The reason for this is because the default no-op
+ * minSdkVersion of calling application {@literal <} 24. The reason for this is because the default no-op
  * implementation uses "static interface methods" and these get left out of the APK for applications
- * whose MIN SDK is < 24 and minification through R8 is DISABLED because the consumers-rules are NOT
+ * whose MIN SDK is {@literal <} 24 and minification through R8 is DISABLED because the consumers-rules are NOT
  * honored when minification is disabled and R8 applies some default proguard rules that leaves
  * static interface methods out of the APK. This causes a "NoSuchMethodError" when such methods are
  * invoked.

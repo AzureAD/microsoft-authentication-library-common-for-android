@@ -75,11 +75,6 @@ public abstract class AzureActiveDirectoryAudience {
      * <p>
      * Method which queries the {@link OpenIdProviderConfiguration}
      * to get tenant UUID for the authority with tenant alias.
-     *
-     * @return : tenant UUID
-     * @throws ServiceException
-     * @throws ClientException
-     * @throws URISyntaxException
      */
     //@WorkerThread
     public String getTenantUuidForAlias(@NonNull final String authority)
