@@ -231,10 +231,6 @@ android.libraryVariants.all { variant ->
 
         // We're excluding these generated files
         exclude '**/R.java'
-
-        // Javadoc doesn't support kotlin.
-        // TODO: Migrate to Dokka
-        exclude '**/*.kt'
     }
 }
 
