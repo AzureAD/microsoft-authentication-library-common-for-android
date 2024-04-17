@@ -27,15 +27,15 @@
     },
         {
         "file": "common4j/src/test/com/microsoft/identity/common/java/platform/JweResponseTests.java", 
-        "_justification": "Test case"
+         "_justification": "Mock data for test case"
     },
     {
         "file": "common4j/src/test/com/microsoft/identity/common/java/crypto/SP800108KeyGenTests.java", 
-        "_justification": "Test case"
+         "_justification": "Mock data for test case"
     },
     {
         "file": "common4j/src/test/com/microsoft/identity/common/java/crypto/SP800108KeyGenTests.java", 
-        "_justification": "Test case"
+         "_justification": "Mock data for test case"
     }
     ]
 }   
