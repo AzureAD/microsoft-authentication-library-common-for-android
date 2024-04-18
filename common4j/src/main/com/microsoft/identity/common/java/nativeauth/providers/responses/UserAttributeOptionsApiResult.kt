@@ -23,10 +23,15 @@
 package com.microsoft.identity.common.java.nativeauth.providers.responses
 
 import com.google.gson.annotations.SerializedName
+import com.microsoft.identity.common.java.nativeauth.util.ILoggable
 
 /**
  *  The required user attribute for Signup should match the specified regular expression.
  */
 data class UserAttributeOptionsApiResult(
     @SerializedName("regex") val regex: String?
-)
+) : ILoggable {
+    override fun toUnsanitizedString() = "UserAttributeOptionsApiResult(regex=$regex)"
+
+    override fun toString(): String = toUnsanitizedString()
+}

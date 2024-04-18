@@ -48,6 +48,17 @@ class ResetPasswordContinueApiResponse(
     @SerializedName("suberror") val subError: String?
 ): IApiResponse(statusCode, correlationId) {
 
+    override fun toUnsanitizedString(): String {
+        return "ResetPasswordContinueApiResponse(statusCode=$statusCode, " +
+                "correlationId=$correlationId, challengeType=$challengeType, expiresIn=$expiresIn " +
+                "error=$error, errorUri=$errorUri, errorDescription=$errorDescription, subError=$subError)"
+    }
+
+    override fun containsPii(): Boolean = true
+
+    override fun toString(): String = "ResetPasswordContinueApiResponse(statusCode=$statusCode, " +
+            "correlationId=$correlationId"
+
     companion object {
         private val TAG = ResetPasswordContinueApiResponse::class.java.simpleName
     }

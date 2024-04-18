@@ -37,8 +37,6 @@ sealed interface ResetPasswordContinueApiResult: ApiResult {
             return "Redirect(correlationId=$correlationId)"
         }
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = toUnsanitizedString()
     }
 
@@ -49,8 +47,6 @@ sealed interface ResetPasswordContinueApiResult: ApiResult {
     ) : ResetPasswordContinueApiResult {
         override fun toUnsanitizedString() = "PasswordRequired(correlationId=$correlationId, " +
                 "expiresIn=$expiresIn)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = toUnsanitizedString()
     }
@@ -68,8 +64,6 @@ sealed interface ResetPasswordContinueApiResult: ApiResult {
         override fun toUnsanitizedString() = "CodeIncorrect(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription, subError=$subError)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "CodeIncorrect(correlationId=$correlationId)"
     }
 
@@ -85,8 +79,6 @@ sealed interface ResetPasswordContinueApiResult: ApiResult {
         override fun toUnsanitizedString() = "ExpiredToken(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "ExpiredToken(correlationId=$correlationId)"
     }
 
@@ -101,8 +93,6 @@ sealed interface ResetPasswordContinueApiResult: ApiResult {
     ), ResetPasswordContinueApiResult {
         override fun toUnsanitizedString() = "UnknownError(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = "UnknownError(correlationId=$correlationId)"
     }

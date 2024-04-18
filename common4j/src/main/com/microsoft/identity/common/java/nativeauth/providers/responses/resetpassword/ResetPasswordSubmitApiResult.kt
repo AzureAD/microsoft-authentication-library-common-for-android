@@ -38,8 +38,6 @@ sealed interface ResetPasswordSubmitApiResult: ApiResult {
         override fun toUnsanitizedString() = "SubmitSuccess(correlationId=$correlationId, " +
                 "pollInterval=$pollInterval)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "SubmitSuccess(correlationId=$correlationId)"
     }
 
@@ -56,8 +54,6 @@ sealed interface ResetPasswordSubmitApiResult: ApiResult {
         override fun toUnsanitizedString() = "PasswordInvalid(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription, subError=$subError)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "PasswordInvalid(correlationId=$correlationId)"
     }
 
@@ -73,8 +69,6 @@ sealed interface ResetPasswordSubmitApiResult: ApiResult {
         override fun toUnsanitizedString() = "ExpiredToken(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "ExpiredToken(correlationId=$correlationId)"
     }
 
@@ -89,8 +83,6 @@ sealed interface ResetPasswordSubmitApiResult: ApiResult {
     ), ResetPasswordSubmitApiResult {
         override fun toUnsanitizedString() = "UnknownError(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = "UnknownError(correlationId=$correlationId)"
     }

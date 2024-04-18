@@ -35,8 +35,6 @@ sealed interface ResetPasswordStartApiResult: ApiResult {
     ): ResetPasswordStartApiResult {
         override fun toUnsanitizedString() = "Redirect(correlationId=$correlationId)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "Redirect(correlationId=$correlationId)"
     }
 
@@ -45,8 +43,6 @@ sealed interface ResetPasswordStartApiResult: ApiResult {
         override val correlationId: String,
     ) : ResetPasswordStartApiResult {
         override fun toUnsanitizedString() = "Success(correlationId=$correlationId)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = "Success(correlationId=$correlationId)"
     }
@@ -63,8 +59,6 @@ sealed interface ResetPasswordStartApiResult: ApiResult {
         override fun toUnsanitizedString() = "UserNotFound(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "UserNotFound(correlationId=$correlationId)"
     }
 
@@ -80,8 +74,6 @@ sealed interface ResetPasswordStartApiResult: ApiResult {
         override fun toUnsanitizedString() = "UnsupportedChallengeType(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "UnsupportedChallengeType(correlationId=$correlationId)"
     }
 
@@ -96,8 +88,6 @@ sealed interface ResetPasswordStartApiResult: ApiResult {
     ), ResetPasswordStartApiResult {
         override fun toUnsanitizedString() = "UnknownError(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = "UnknownError(correlationId=$correlationId)"
     }

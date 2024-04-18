@@ -41,16 +41,29 @@ import java.net.HttpURLConnection
 class SignUpChallengeApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
+    @SerializedName("continuation_token") val continuationToken: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String?,
     @SerializedName("challenge_target_label") val challengeTargetLabel: String?,
     @Expose @SerializedName("code_length") val codeLength: Int?,
     @Expose @SerializedName("binding_method") val bindingMethod: String?,
     @Expose @SerializedName("interval") val interval: Int?,
     @Expose @SerializedName("challenge_channel") val challengeChannel: String?,
-    @SerializedName("continuation_token") val continuationToken: String?,
     @SerializedName("error") val error: String?,
     @SerializedName("error_description") val errorDescription: String?,
 ) : IApiResponse(statusCode, correlationId) {
+
+    override fun toUnsanitizedString(): String {
+        return "SignInChallengeApiResponse(statusCode=$statusCode, " +
+                "correlationId=$correlationId, challengeType=$challengeType, " +
+                "bindingMethod=$bindingMethod, challengeTargetLabel=$challengeTargetLabel, " +
+                "challengeChannel=$challengeChannel, codeLength=$codeLength, interval=$interval, " +
+                "error=$error, errorDescription=$errorDescription)"
+    }
+
+    override fun containsPii(): Boolean = true
+
+    override fun toString(): String = "SignInChallengeApiResponse(statusCode=$statusCode, " +
+            "correlationId=$correlationId"
 
     companion object {
         private val TAG = SignUpChallengeApiResponse::class.java.simpleName

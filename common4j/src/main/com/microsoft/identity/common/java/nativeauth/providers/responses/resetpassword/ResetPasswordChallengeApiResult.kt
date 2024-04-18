@@ -37,8 +37,6 @@ sealed interface ResetPasswordChallengeApiResult: ApiResult {
             return "Redirect(correlationId=$correlationId)"
         }
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = toUnsanitizedString()
     }
 
@@ -52,8 +50,6 @@ sealed interface ResetPasswordChallengeApiResult: ApiResult {
         override fun toUnsanitizedString() = "CodeRequired(correlationId=$correlationId, " +
                 "challengeTargetLabel=$challengeTargetLabel, challengeChannel=$challengeChannel, " +
                 "codeLength=$codeLength)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = "CodeRequired(correlationId=$correlationId, " +
                 "challengeChannel=$challengeChannel, " +
@@ -72,8 +68,6 @@ sealed interface ResetPasswordChallengeApiResult: ApiResult {
         override fun toUnsanitizedString() = "UnsupportedChallengeType(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "UnsupportedChallengeType(correlationId=$correlationId)"
     }
 
@@ -89,8 +83,6 @@ sealed interface ResetPasswordChallengeApiResult: ApiResult {
         override fun toUnsanitizedString() = "ExpiredToken(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "ExpiredToken(correlationId=$correlationId)"
     }
 
@@ -105,8 +97,6 @@ sealed interface ResetPasswordChallengeApiResult: ApiResult {
     ), ResetPasswordChallengeApiResult {
         override fun toUnsanitizedString() = "UnknownError(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = "UnknownError(correlationId=$correlationId)"
     }

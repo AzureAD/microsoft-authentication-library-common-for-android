@@ -35,8 +35,6 @@ sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
     ) : ResetPasswordPollCompletionApiResult {
         override fun toUnsanitizedString() = "InProgress(correlationId=$correlationId)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = toUnsanitizedString()
     }
 
@@ -51,8 +49,6 @@ sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
     ), ResetPasswordPollCompletionApiResult {
         override fun toUnsanitizedString() = "PollingFailed(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = "PollingFailed(correlationId=$correlationId)"
     }
@@ -70,8 +66,6 @@ sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
         override fun toUnsanitizedString() = "PasswordInvalid(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription, subError=$subError)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "PasswordInvalid(correlationId=$correlationId)"
     }
 
@@ -82,8 +76,6 @@ sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
         ) : ResetPasswordPollCompletionApiResult {
         override fun toUnsanitizedString() = "PollingSucceeded(correlationId=$correlationId, " +
                 "expiresIn=$expiresIn)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = "PollingSucceeded(correlationId=$correlationId)"
         }
@@ -100,8 +92,6 @@ sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
         override fun toUnsanitizedString() = "UserNotFound(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "UserNotFound(correlationId=$correlationId)"
     }
 
@@ -117,8 +107,6 @@ sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
         override fun toUnsanitizedString() = "ExpiredToken(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "ExpiredToken(correlationId=$correlationId)"
     }
 
@@ -133,8 +121,6 @@ sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
     ), ResetPasswordPollCompletionApiResult {
         override fun toUnsanitizedString() = "UnknownError(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = "UnknownError(correlationId=$correlationId)"
     }

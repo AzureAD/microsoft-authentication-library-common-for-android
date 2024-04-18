@@ -22,7 +22,7 @@ interface ILoggable {
      * PII (Personally identifiable information). If this method returns true, then the value of
      * toSafeString(true) will return a String that contains PII.
      */
-    fun containsPii(): Boolean
+    fun containsPii(): Boolean = toString() != toUnsanitizedString()
 
     /**
      * While we can't enforce this method to be overwritten, the intention is that every class that

@@ -56,7 +56,7 @@ class ResetPasswordChallengeApiResponse(
                 "correlationId=$correlationId, challengeType=$challengeType, " +
                 "bindingMethod=$bindingMethod, challengeTargetLabel=$challengeTargetLabel, " +
                 "challengeChannel=$challengeChannel, codeLength=$codeLength, interval=$interval, " +
-                "error=$error, errorDescription=$errorDescription, errorUri=$errorUri"
+                "error=$error, errorDescription=$errorDescription, errorUri=$errorUri)"
     }
 
     override fun containsPii(): Boolean = true

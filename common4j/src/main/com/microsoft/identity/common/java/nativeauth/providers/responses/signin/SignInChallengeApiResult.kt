@@ -32,19 +32,37 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
 sealed interface SignInChallengeApiResult: ApiResult {
     data class Redirect(
         override val correlationId: String
-    ) : SignInChallengeApiResult
+    ) : SignInChallengeApiResult {
+        override fun toUnsanitizedString(): String {
+            return "Redirect(correlationId=$correlationId)"
+        }
+
+        override fun toString(): String = toUnsanitizedString()
+    }
+
     data class OOBRequired(
         override val correlationId: String,
         val continuationToken: String,
         val challengeTargetLabel: String,
         val challengeChannel: String,
         val codeLength: Int
-    ) : SignInChallengeApiResult
+    ) : SignInChallengeApiResult {
+        override fun toUnsanitizedString(): String = "OOBRequired(correlationId=$correlationId, " +
+                "challengeTargetLabel=$challengeTargetLabel, challengeChannel=$challengeChannel, " +
+                "codeLength=$codeLength)"
+
+        override fun toString(): String = "OOBRequired(correlationId=$correlationId, " +
+                "challengeChannel=$challengeChannel, codeLength=$codeLength)"
+    }
 
     data class PasswordRequired(
         override val correlationId: String,
         val continuationToken: String
-    ) : SignInChallengeApiResult
+    ) : SignInChallengeApiResult {
+        override fun toUnsanitizedString(): String = "PasswordRequired(correlationId=$correlationId)"
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 
     data class UnknownError(
         override val correlationId: String,
@@ -56,5 +74,10 @@ sealed interface SignInChallengeApiResult: ApiResult {
         errorDescription = errorDescription,
         errorCodes = errorCodes,
         correlationId = correlationId
-    ), SignInChallengeApiResult
+    ), SignInChallengeApiResult {
+        override fun toUnsanitizedString() = "UnknownError(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+
+        override fun toString(): String = "UnknownError(correlationId=$correlationId)"
+    }
 }

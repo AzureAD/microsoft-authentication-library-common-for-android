@@ -49,8 +49,6 @@ interface ResetPasswordCommandResult {
     ) : ResetPasswordStartCommandResult, ResetPasswordResendCodeCommandResult {
         override fun toUnsanitizedString(): String = "CodeRequired(correlationId=$correlationId, codeLength=$codeLength, challengeTargetLabel=$challengeTargetLabel, challengeChannel=$challengeChannel)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "CodeRequired(correlationId=$correlationId, codeLength=$codeLength, challengeChannel=$challengeChannel)"
     }
 
@@ -60,8 +58,6 @@ interface ResetPasswordCommandResult {
         val errorDescription: String,
     ) : ResetPasswordStartCommandResult {
         override fun toUnsanitizedString(): String = "EmailNotVerified(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = "EmailNotVerified(correlationId=$correlationId)"
     }
@@ -73,8 +69,6 @@ interface ResetPasswordCommandResult {
     ) : ResetPasswordStartCommandResult {
         override fun toUnsanitizedString(): String = "PasswordNotSet(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "PasswordNotSet(correlationId=$correlationId)"
     }
 
@@ -85,8 +79,6 @@ interface ResetPasswordCommandResult {
     ) : ResetPasswordStartCommandResult, ResetPasswordSubmitNewPasswordCommandResult {
         override fun toUnsanitizedString(): String = "UserNotFound(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "UserNotFound(correlationId=$correlationId)"
     }
 
@@ -95,8 +87,6 @@ interface ResetPasswordCommandResult {
         val continuationToken: String
     ) : ResetPasswordSubmitCodeCommandResult {
         override fun toUnsanitizedString(): String = "PasswordRequired(correlationId=$correlationId)"
-
-        override fun containsPii(): Boolean = false
 
         override fun toString(): String = toUnsanitizedString()
     }
