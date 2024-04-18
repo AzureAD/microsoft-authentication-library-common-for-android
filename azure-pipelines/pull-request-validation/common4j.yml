@@ -18,7 +18,7 @@ jobs:
 - job: build_test
   displayName: Build & Test
   env:
-    MOCK_API_DOMAIN: https://native-auth-mock-api.azurewebsites.net/
+    MOCK_API_DOMAIN: ${{ secrets.MOCK_API_DOMAIN }}
   steps:
   - checkout: self
     clean: true
