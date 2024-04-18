@@ -62,7 +62,7 @@ class ResetPasswordChallengeRequest private constructor(
             return ResetPasswordChallengeRequest(
                 requestUrl = URL(requestUrl),
                 headers = headers,
-                parameters = NativeAuthResetPasswordChallengeRequestBody(
+                parameters = NativeAuthResetPasswordChallengeRequestParameters(
                     clientId = clientId,
                     continuationToken = continuationToken,
                     challengeType = challengeType
@@ -71,9 +71,21 @@ class ResetPasswordChallengeRequest private constructor(
         }
     }
 
-    data class NativeAuthResetPasswordChallengeRequestBody(
+    override fun toUnsanitizedString(): String = "ResetPasswordChallengeRequest(requestUrl=$requestUrl, headers=$headers, parameters=$parameters)"
+
+    override fun containsPii(): Boolean = true
+
+    override fun toString(): String = "ResetPasswordChallengeRequest()"
+
+    data class NativeAuthResetPasswordChallengeRequestParameters(
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("continuation_token") val continuationToken: String,
         @SerializedName("challenge_type") val challengeType: String?
-    ) : NativeAuthRequestParameters()
+    ) : NativeAuthRequestParameters() {
+        override fun toUnsanitizedString(): String = "NativeAuthResetPasswordChallengeRequestParameters(clientId=$clientId, challengeType=$challengeType)"
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = "NativeAuthResetPasswordChallengeRequestParameters(clientId=$clientId)"
+    }
 }

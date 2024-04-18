@@ -35,7 +35,7 @@ import java.net.URL
 data class SignUpContinueRequest private constructor(
     override var requestUrl: URL,
     override var headers: Map<String, String?>,
-    override val parameters: NativeAuthRequestSignUpContinueParameters
+    override val parameters: NativeAuthRequestSignUpContinueRequestParameters
 ) : NativeAuthRequest() {
 
     companion object {
@@ -75,7 +75,7 @@ data class SignUpContinueRequest private constructor(
             }
 
             return SignUpContinueRequest(
-                parameters = NativeAuthRequestSignUpContinueParameters(
+                parameters = NativeAuthRequestSignUpContinueRequestParameters(
                     password = password,
                     attributes = attributes?.toJsonString(attributes),
                     oob = oob,
@@ -89,16 +89,28 @@ data class SignUpContinueRequest private constructor(
         }
     }
 
+    override fun toUnsanitizedString(): String = "SignUpContinueRequest(requestUrl=$requestUrl, headers=$headers, parameters=$parameters)"
+
+    override fun containsPii(): Boolean = true
+
+    override fun toString(): String = "SignUpContinueRequest()"
+
     /**
      * NativeAuthRequestSignUpContinueParameters represents the request parameters sent as part of
      * /signup/continue API call
      */
-    data class NativeAuthRequestSignUpContinueParameters(
+    data class NativeAuthRequestSignUpContinueRequestParameters(
         @JsonAdapter(CharArrayJsonAdapter::class) val password: CharArray?,
         val attributes: String? = null,
         val oob: String?,
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("continuation_token") val continuationToken: String,
         @SerializedName("grant_type") val grantType: String
-    ) : NativeAuthRequestParameters()
+    ) : NativeAuthRequestParameters() {
+        override fun toUnsanitizedString(): String = "NativeAuthRequestSignUpContinueRequestParameters(clientId=$clientId, grantType=$grantType)"
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = "NativeAuthRequestSignUpContinueRequestParameters(clientId=$clientId)"
+    }
 }

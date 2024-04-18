@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.logging;
 
-import com.microsoft.identity.common.java.nativeauth.util.Logging;
+import com.microsoft.identity.common.java.nativeauth.util.ILoggable;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ThrowableUtil;
 
@@ -299,11 +299,11 @@ public class Logger {
      */
     public static void infoWithObject(final String tag,
                             final String message,
-                            final Logging object) {
+                            final ILoggable object) {
         if (isAllowPii()) {
-            log(tag, Logger.LogLevel.INFO, null, message, object.toSafeString(true), null, object.containsPii());
+            log(tag, Logger.LogLevel.INFO, null, message, object.toUnsanitizedString(), null, object.containsPii());
         } else {
-            log(tag, Logger.LogLevel.INFO, null, message, object.toSafeString(false), null, false);
+            log(tag, Logger.LogLevel.INFO, null, message, object.toString(), null, false);
         }
     }
 

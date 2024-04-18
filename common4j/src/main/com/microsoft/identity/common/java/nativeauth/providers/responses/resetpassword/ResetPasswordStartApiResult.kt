@@ -32,12 +32,24 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
 sealed interface ResetPasswordStartApiResult: ApiResult {
     data class Redirect(
         override val correlationId: String,
-    ): ResetPasswordStartApiResult
+    ): ResetPasswordStartApiResult {
+        override fun toUnsanitizedString() = "Redirect(correlationId=$correlationId)"
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = "Redirect(correlationId=$correlationId)"
+    }
 
     data class Success(
         val continuationToken: String,
         override val correlationId: String,
-    ) : ResetPasswordStartApiResult
+    ) : ResetPasswordStartApiResult {
+        override fun toUnsanitizedString() = "Success(correlationId=$correlationId)"
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = "Success(correlationId=$correlationId)"
+    }
 
     data class UserNotFound(
         override val correlationId: String,
@@ -47,7 +59,14 @@ sealed interface ResetPasswordStartApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), ResetPasswordStartApiResult
+    ), ResetPasswordStartApiResult {
+        override fun toUnsanitizedString() = "UserNotFound(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription)"
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = "UserNotFound(correlationId=$correlationId)"
+    }
 
     data class UnsupportedChallengeType(
         override val correlationId: String,
@@ -57,7 +76,14 @@ sealed interface ResetPasswordStartApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), ResetPasswordStartApiResult
+    ), ResetPasswordStartApiResult {
+        override fun toUnsanitizedString() = "UnsupportedChallengeType(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription)"
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = "UnsupportedChallengeType(correlationId=$correlationId)"
+    }
 
     data class UnknownError(
         override val correlationId: String,
@@ -67,5 +93,12 @@ sealed interface ResetPasswordStartApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), ResetPasswordStartApiResult
+    ), ResetPasswordStartApiResult {
+        override fun toUnsanitizedString() = "UnknownError(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription)"
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = "UnknownError(correlationId=$correlationId)"
+    }
 }

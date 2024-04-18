@@ -32,13 +32,28 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
 sealed interface ResetPasswordContinueApiResult: ApiResult {
     data class Redirect(
         override val correlationId: String,
-    ) : ResetPasswordContinueApiResult
+    ) : ResetPasswordContinueApiResult {
+        override fun toUnsanitizedString(): String {
+            return "Redirect(correlationId=$correlationId)"
+        }
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 
     data class PasswordRequired(
         override val correlationId: String,
         val continuationToken: String,
         val expiresIn: Int?
-    ) : ResetPasswordContinueApiResult
+    ) : ResetPasswordContinueApiResult {
+        override fun toUnsanitizedString() = "PasswordRequired(correlationId=$correlationId, " +
+                "expiresIn=$expiresIn)"
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 
     data class CodeIncorrect(
         override val correlationId: String,
@@ -49,7 +64,14 @@ sealed interface ResetPasswordContinueApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), ResetPasswordContinueApiResult
+    ), ResetPasswordContinueApiResult {
+        override fun toUnsanitizedString() = "CodeIncorrect(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, subError=$subError)"
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = "CodeIncorrect(correlationId=$correlationId)"
+    }
 
     data class ExpiredToken(
         override val correlationId: String,
@@ -59,7 +81,14 @@ sealed interface ResetPasswordContinueApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), ResetPasswordContinueApiResult
+    ), ResetPasswordContinueApiResult {
+        override fun toUnsanitizedString() = "ExpiredToken(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription)"
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = "ExpiredToken(correlationId=$correlationId)"
+    }
 
     data class UnknownError(
         override val correlationId: String,
@@ -69,5 +98,12 @@ sealed interface ResetPasswordContinueApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), ResetPasswordContinueApiResult
+    ), ResetPasswordContinueApiResult {
+        override fun toUnsanitizedString() = "UnknownError(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription)"
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = "UnknownError(correlationId=$correlationId)"
+    }
 }

@@ -22,9 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.responses
 
+import com.microsoft.identity.common.java.nativeauth.util.ILoggable
+
 /**
  * Base class to encapsulate Native Auth API responses
  */
-interface ApiResult {
+interface ApiResult: ILoggable {
     val correlationId: String
 }

@@ -24,11 +24,12 @@
 package com.microsoft.identity.common.java.nativeauth.controllers.results
 
 import com.microsoft.identity.common.java.logging.DiagnosticContext
+import com.microsoft.identity.common.java.nativeauth.util.ILoggable
 
 /**
  * INativeAuthCommandResult interface defines the base class for errors used in Native Auth.
  */
-interface INativeAuthCommandResult {
+interface INativeAuthCommandResult : ILoggable {
     val correlationId: String
     data class Redirect(
         override val correlationId: String,
@@ -44,13 +45,12 @@ interface INativeAuthCommandResult {
                 private const val BROWSER_REQUIRED_ERROR_DESCRIPTION: String = "The client's authentication capabilities are insufficient. Please redirect to the browser to complete authentication"
             }
 
-        override fun toSafeString(mayContainPii: Boolean): String {
-            return "Redirect(correlationId=$correlationId"
-        }
+
+        override fun toUnsanitizedString(): String = "Redirect(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
 
         override fun containsPii(): Boolean = true
 
-        override fun toString(): String = toSafeString(false)
+        override fun toString(): String = "Redirect(correlationId=$correlationId"
     }
 
     /**
@@ -71,26 +71,20 @@ interface INativeAuthCommandResult {
         SignUpSubmitPasswordCommandResult,
         ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,
         ResetPasswordResendCodeCommandResult, ResetPasswordSubmitNewPasswordCommandResult {
-        override fun toSafeString(mayContainPii: Boolean): String {
-            return if (mayContainPii) {
-                "UnknownError(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes"
-            } else {
-                "UnknownError(correlationId=$correlationId)"
-            }
-        }
+        override fun toUnsanitizedString(): String = "UnknownError(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes"
 
         override fun containsPii(): Boolean = true
 
-        override fun toString(): String = toSafeString(false)
+        override fun toString(): String =  "UnknownError(correlationId=$correlationId)"
         }
 
-    open class Error(
+    abstract class Error(
         open val error: String?,
         open val errorDescription: String?,
         open val details: List<Map<String, String>>? = null,
         open val correlationId: String,
         open val errorCodes: List<Int>? = null
-    )
+    ) : ILoggable
 
     data class InvalidUsername(
         override val error: String?,
@@ -101,16 +95,10 @@ interface INativeAuthCommandResult {
         val exception: Exception? = null
     ) : Error(error, errorDescription, details, correlationId, errorCodes),
         INativeAuthCommandResult, SignInStartCommandResult, SignUpStartCommandResult, SignUpSubmitPasswordCommandResult, ResetPasswordStartCommandResult {
-        override fun toSafeString(mayContainPii: Boolean): String {
-            return if (mayContainPii) {
-                "UnknownError(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes"
-            } else {
-                "UnknownError(correlationId=$correlationId)"
-            }
-        }
+        override fun toUnsanitizedString(): String = "UnknownError(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes"
 
         override fun containsPii(): Boolean = true
 
-        override fun toString(): String = toSafeString(false)
+        override fun toString(): String = "UnknownError(correlationId=$correlationId)"
     }
 }

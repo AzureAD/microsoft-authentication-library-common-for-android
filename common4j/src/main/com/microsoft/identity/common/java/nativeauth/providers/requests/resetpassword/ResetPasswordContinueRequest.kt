@@ -63,7 +63,7 @@ class ResetPasswordContinueRequest private constructor(
             return ResetPasswordContinueRequest(
                 requestUrl = URL(requestUrl),
                 headers = headers,
-                parameters = NativeAuthResetPasswordContinueRequestBody(
+                parameters = NativeAuthResetPasswordContinueRequestParameters(
                     clientId = clientId,
                     grantType = NativeAuthConstants.GrantType.OOB,
                     continuationToken = continuationToken,
@@ -73,14 +73,26 @@ class ResetPasswordContinueRequest private constructor(
         }
     }
 
+    override fun toUnsanitizedString(): String = "ResetPasswordContinueRequest(requestUrl=$requestUrl, headers=$headers, parameters=$parameters)"
+
+    override fun containsPii(): Boolean = true
+
+    override fun toString(): String = "ResetPasswordContinueRequest()"
+
     /**
      * NativeAuthResetPasswordContinueRequestBody represents the request parameters sent as part of
      * /resetpassword/continue API call
      */
-    data class NativeAuthResetPasswordContinueRequestBody(
+    data class NativeAuthResetPasswordContinueRequestParameters(
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("grant_type") val grantType: String,
         @SerializedName("continuation_token") val continuationToken: String,
         @SerializedName("oob") val oob: String
-    ) : NativeAuthRequestParameters()
+    ) : NativeAuthRequestParameters() {
+        override fun toUnsanitizedString(): String = "NativeAuthResetPasswordContinueRequestParameters(clientId=$clientId, grant_type=$grantType)"
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = "NativeAuthResetPasswordContinueRequestParameters(clientId=$clientId)"
+    }
 }

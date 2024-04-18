@@ -33,7 +33,7 @@ import java.net.URL
 data class SignInInitiateRequest private constructor(
     override var requestUrl: URL,
     override var headers: Map<String, String?>,
-    override val parameters: NativeAuthRequestSignInInitiateParameters
+    override val parameters: NativeAuthRequestSignInInitiateRequestParameters
 ) : NativeAuthRequest() {
 
     /**
@@ -59,7 +59,7 @@ data class SignInInitiateRequest private constructor(
             ArgUtils.validateNonNullArg(headers, "headers")
 
             return SignInInitiateRequest(
-                parameters = NativeAuthRequestSignInInitiateParameters(
+                parameters = NativeAuthRequestSignInInitiateRequestParameters(
                     username = username,
                     challengeType = challengeType,
                     clientId = clientId
@@ -70,9 +70,21 @@ data class SignInInitiateRequest private constructor(
         }
     }
 
-    data class NativeAuthRequestSignInInitiateParameters(
+    override fun toUnsanitizedString(): String = "SignInInitiateRequest(requestUrl=$requestUrl, headers=$headers, parameters=$parameters)"
+
+    override fun containsPii(): Boolean = true
+
+    override fun toString(): String = "SignInInitiateRequest()"
+
+    data class NativeAuthRequestSignInInitiateRequestParameters(
         val username: String,
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("challenge_type") val challengeType: String
-    ) : NativeAuthRequestParameters()
+    ) : NativeAuthRequestParameters() {
+        override fun toUnsanitizedString(): String = "NativeAuthRequestSignInInitiateRequestParameters(clientId=$clientId, challengeType=$challengeType)"
+
+        override fun containsPii(): Boolean = true
+
+        override fun toString(): String = "NativeAuthRequestSignInInitiateRequestParameters(clientId=$clientId)"
+    }
 }
