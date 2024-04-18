@@ -17,6 +17,8 @@ pool:
 jobs:
 - job: build_test
   displayName: Build & Test
+  env:
+    MOCK_API_DOMAIN: https://native-auth-mock-api.azurewebsites.net/
   steps:
   - checkout: self
     clean: true
