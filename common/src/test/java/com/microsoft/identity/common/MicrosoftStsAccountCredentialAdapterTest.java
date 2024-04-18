@@ -22,23 +22,30 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import com.microsoft.identity.common.java.AuthenticationConstants;
+import static com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount.AUTHORITY_TYPE_MS_STS;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
-import com.microsoft.identity.common.java.dto.CredentialType;
-import com.microsoft.identity.common.java.dto.IdTokenRecord;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ServiceException;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.dto.CredentialType;
+import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.java.request.SdkType;
+import com.microsoft.identity.common.java.util.Base64;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.base64.Base64Flags;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -49,27 +56,15 @@ import com.nimbusds.jwt.SignedJWT;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.GregorianCalendar;
-import java.util.HashSet;
-import java.util.Set;
-
-import cz.msebera.android.httpclient.extras.Base64;
-
-import static com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount.AUTHORITY_TYPE_MS_STS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 public class MicrosoftStsAccountCredentialAdapterTest {
 
@@ -292,6 +287,6 @@ public class MicrosoftStsAccountCredentialAdapterTest {
 
     static String createRawClientInfo(final String uid, final String utid) {
         final String claims = "{\"uid\":\"" + uid + "\",\"utid\":\"" + utid + "\"}";
-        return Base64.encodeToString(StringUtil.toByteArray(claims), Base64.URL_SAFE);
+        return Base64.encodeToString(StringUtil.toByteArray(claims), EnumSet.of(Base64Flags.URL_SAFE));
     }
 }

@@ -33,7 +33,6 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-import cz.msebera.android.httpclient.extras.Base64;
 import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
@@ -125,19 +124,5 @@ public abstract class AbstractSecretKeyLoader {
     @NonNull
     protected SecretKey generateKeyFromRawBytes(@NonNull final byte[] rawBytes) {
         return new SecretKeySpec(rawBytes, getKeySpecAlgorithm());
-    }
-
-    /**
-     * Serializes a {@link SecretKey} into a {@link String}.
-     */
-    public String serializeSecretKey(@NonNull final SecretKey key) {
-        return Base64.encodeToString(key.getEncoded(), Base64.DEFAULT);
-    }
-
-    /**
-     * Deserializes a {@link String} into a {@link SecretKey}.
-     */
-    public SecretKey deserializeSecretKey(@NonNull final String serializedKey) {
-        return generateKeyFromRawBytes(Base64.decode(serializedKey, Base64.DEFAULT));
     }
 }

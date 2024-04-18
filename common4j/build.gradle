@@ -212,7 +212,8 @@ dependencies {
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "org.json:json:$rootProject.ext.jsonVersion"
     implementation "com.github.stephenc.jcip:jcip-annotations:$rootProject.ext.jcipAnnotationVersion"
-    implementation "cz.msebera.android:httpclient:$rootProject.ext.mseberaApacheHttpClientVersion"
+
+    implementation "org.apache.httpcomponents.core5:httpcore5:$rootProject.ext.apacheHttpCoreVersion"
 
     testCompileOnly "com.github.spotbugs:spotbugs-annotations:$rootProject.ext.spotBugsAnnotationVersion"
     testCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"

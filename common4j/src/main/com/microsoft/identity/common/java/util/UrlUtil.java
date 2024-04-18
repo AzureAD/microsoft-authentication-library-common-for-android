@@ -100,7 +100,7 @@ public class UrlUtil {
 
         builder.setPathSegments(pathSegments);
         if (queryParam != null && !queryParam.isEmpty()) {
-            builder.setQuery(queryParam);
+            builder.setCustomQuery(queryParam);
         }
         return builder.build().toURL();
     }

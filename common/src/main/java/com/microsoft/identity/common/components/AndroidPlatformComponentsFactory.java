@@ -35,11 +35,13 @@ import com.microsoft.identity.common.internal.platform.AndroidDeviceMetadata;
 import com.microsoft.identity.common.internal.platform.AndroidPlatformUtil;
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidTaskStateGenerator;
 import com.microsoft.identity.common.internal.ui.AndroidAuthorizationStrategyFactory;
+import com.microsoft.identity.common.internal.util.PreAndroidOBase64;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.PlatformComponents;
 import com.microsoft.identity.common.java.net.DefaultHttpClientWrapper;
 import com.microsoft.identity.common.java.platform.Device;
+import com.microsoft.identity.common.java.util.Base64;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.File;
@@ -67,6 +69,10 @@ public class AndroidPlatformComponentsFactory {
             HttpCache.initialize(context);
             Device.setDeviceMetadata(new AndroidDeviceMetadata());
             Logger.setAndroidLogger();
+
+            if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) {
+                Base64.setInstance(new PreAndroidOBase64());
+            }
 
             final File cacheDir = context.getCacheDir();
             if (cacheDir != null) {

@@ -22,12 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.net.URIBuilder;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 
-import cz.msebera.android.httpclient.NameValuePair;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
@@ -35,11 +37,11 @@ import lombok.NonNull;
  * Our URIBuilder.
  * We want to make sure we never send duplicated parameters to the server.
  * This is done by
- * 1. disabling {@link cz.msebera.android.httpclient.client.utils.URIBuilder#addParameter(String, String)} and
- * {@link cz.msebera.android.httpclient.client.utils.URIBuilder#addParameters(List))}
+ * 1. disabling {@link org.apache.hc.core5.net.URIBuilder#addParameter(String, String)} and
+ * {@link org.apache.hc.core5.net.URIBuilder#addParameters(List)}
  * 2. adding {@link CommonURIBuilder#addParametersIfAbsent}
  */
-public class CommonURIBuilder extends cz.msebera.android.httpclient.client.utils.URIBuilder {
+public class CommonURIBuilder extends URIBuilder {
 
     public CommonURIBuilder() {
         super();

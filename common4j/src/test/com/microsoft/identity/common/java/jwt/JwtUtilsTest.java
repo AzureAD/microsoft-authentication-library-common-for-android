@@ -27,6 +27,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODIN
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.java.util.Base64;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import org.junit.Assert;
@@ -54,7 +55,7 @@ public class JwtUtilsTest {
         final String headerJson = new Gson().toJson(jwtRequestHeader);
         final String bodyJson = new Gson().toJson(jwtRequestBody);
         final String expectedJwt =
-                StringUtil.encodeUrlSafeString(headerJson.getBytes(ENCODING_UTF8)) + "." + StringUtil.encodeUrlSafeString(bodyJson.getBytes(ENCODING_UTF8));
+                Base64.encodeUrlSafeString(headerJson) + "." + Base64.encodeUrlSafeString(bodyJson);
 
         final String encodedJwt = JwtUtils.generateJWT(jwtRequestHeader, jwtRequestBody);
         Assert.assertEquals(expectedJwt, encodedJwt);;

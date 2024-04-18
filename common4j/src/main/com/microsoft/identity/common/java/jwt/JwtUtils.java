@@ -27,6 +27,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODIN
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.Base64;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import lombok.NonNull;
@@ -55,9 +56,7 @@ public final class JwtUtils {
         Logger.verbose(methodTag, "Generating JWT.");
         final String headerJson = new Gson().toJson(header);
         final String bodyJson = new Gson().toJson(body);
-        final String encodedJwt =
-                StringUtil.encodeUrlSafeString(headerJson.getBytes(ENCODING_UTF8)) + "." + StringUtil.encodeUrlSafeString(bodyJson.getBytes(ENCODING_UTF8));
-        return encodedJwt;
+        return Base64.encodeUrlSafeString(headerJson) + "." + Base64.encodeUrlSafeString(bodyJson);
     }
 }
 

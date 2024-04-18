@@ -22,19 +22,20 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
-import cz.msebera.android.httpclient.extras.Base64;
-import lombok.NonNull;
-
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.util.Base64;
 import com.microsoft.identity.common.java.util.JsonUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.base64.Base64Flags;
 
 import org.json.JSONException;
 
 import java.io.Serializable;
-import java.nio.charset.Charset;
+import java.util.EnumSet;
 import java.util.Map;
+
+import lombok.NonNull;
 
 /**
  * Object representation of client_info returned by AAD's Token Endpoint.
@@ -69,7 +70,8 @@ public class ClientInfo implements Serializable {
         }
 
         // decode the client info first
-        final String decodedClientInfo = StringUtil.fromByteArray(Base64.decode(rawClientInfo, Base64.URL_SAFE));
+        final String decodedClientInfo = StringUtil.fromByteArray(
+                Base64.decode(rawClientInfo, EnumSet.of(Base64Flags.URL_SAFE)));
         final Map<String, String> clientInfoItems;
         try {
             clientInfoItems = JsonUtil.extractJsonObjectIntoMap(decodedClientInfo);
