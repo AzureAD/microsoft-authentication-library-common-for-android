@@ -51,17 +51,6 @@ sourceSets {
 }
 
 dependencies {
-    // keyvault per product flavor
-    if (findProject(":keyvault") != null) {
-        //Use project reference if available
-        implementation(project(":keyvault")) {
-            transitive = true
-        }
-    } else {
-        //Always use the latest release
-        implementation(group: 'com.microsoft.identity', name: 'keyvault', version: '0.0.+')
-    }
-
     // labapi per product flavor
     if (findProject(":labapi") != null) {
         //Use project reference if available

@@ -272,5 +272,15 @@ public enum AttributeName {
     /**
      * Indicates the package name of the app making the request to the broker.
      */
-    calling_package_name;
+    calling_package_name,
+
+    /**
+     * Indicates the requested cloud in the request made to broker.
+     */
+    requested_cloud_name,
+
+    /**
+     * Indicates the prt's home authority.
+     */
+    home_cloud_name;
 }

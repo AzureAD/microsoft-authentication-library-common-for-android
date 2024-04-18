@@ -26,6 +26,7 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
+import com.microsoft.identity.common.java.controllers.IControllerFactory;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
@@ -47,18 +48,13 @@ import lombok.NonNull;
 public class InteractiveTokenCommand extends TokenCommand {
     private static final String TAG = InteractiveTokenCommand.class.getSimpleName();
 
+    private  BaseController mController;
+
     public InteractiveTokenCommand(@NonNull final InteractiveTokenCommandParameters parameters,
-                                   @NonNull final BaseController controller,
+                                   @NonNull final IControllerFactory controllerFactory,
                                    @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
                                    @NonNull final String publicApiId) {
-        super(parameters, controller, callback, publicApiId);
-    }
-
-    public InteractiveTokenCommand(@NonNull InteractiveTokenCommandParameters parameters,
-                                   @NonNull List<BaseController> controllers,
-                                   @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                                   @NonNull final String publicApiId) {
-        super(parameters, controllers, callback, publicApiId);
+        super(parameters, controllerFactory, callback, publicApiId);
     }
 
     @Override
@@ -77,11 +73,11 @@ public class InteractiveTokenCommand extends TokenCommand {
                         "Executing interactive token command..."
                 );
 
-                final BaseController controller = getDefaultController();
+                mController = getControllerFactory().getDefaultController();
 
-                span.setAttribute(AttributeName.controller_name.name(), controller.getClass().getSimpleName());
+                span.setAttribute(AttributeName.controller_name.name(), mController.getClass().getSimpleName());
 
-                final AcquireTokenResult result = controller.acquireToken((InteractiveTokenCommandParameters) getParameters());
+                final AcquireTokenResult result = mController.acquireToken((InteractiveTokenCommandParameters) getParameters());
 
                 if (result == null) {
                     span.setStatus(StatusCode.ERROR, "empty result");
@@ -111,7 +107,7 @@ public class InteractiveTokenCommand extends TokenCommand {
     public void onFinishAuthorizationSession(int requestCode,
                                              int resultCode,
                                              @NonNull final PropertyBag data) {
-        getDefaultController().onFinishAuthorizationSession(requestCode, resultCode, data);
+        mController.onFinishAuthorizationSession(requestCode, resultCode, data);
     }
 
     @Override
