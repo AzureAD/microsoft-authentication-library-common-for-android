@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import cz.msebera.httpclient.android.BuildConfig;
 import lombok.NonNull;
 
 /**
@@ -103,7 +102,7 @@ public class Device {
         final String version = DiagnosticContext.INSTANCE.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.VERSION);
         if (StringUtil.isNullOrEmpty(version)) {
             Logger.warn(TAG + methodName, "Product version is not set.", null);
-            return StringUtil.isNullOrEmpty(BuildConfig.VERSION_NAME) ? "1.5.9-default" : BuildConfig.VERSION_NAME + "-default";
+            return "1.5.9-default";
         } else {
             return version;
         }

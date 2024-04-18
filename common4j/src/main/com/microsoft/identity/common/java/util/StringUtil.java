@@ -26,6 +26,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODIN
 import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8_STRING;
 
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.base64.Base64Flags;
 import com.microsoft.identity.common.java.util.ported.ObjectUtils;
 
 import java.io.PrintWriter;
@@ -40,6 +41,7 @@ import java.text.SimpleDateFormat;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -49,7 +51,6 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import cz.msebera.android.httpclient.extras.Base64;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
@@ -332,14 +333,6 @@ public class StringUtil {
         }
     }
 
-    public static String encodeUrlSafeString(@NonNull final byte[] bytesToEncode) {
-        return Base64.encodeToString(bytesToEncode, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE);
-    }
-
-    public static String encodeUrlSafeString(@NonNull final String stringToEncode) {
-        return Base64.encodeToString(toByteArray(stringToEncode), Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE);
-    }
-
     /**
      * Create the Hash string of the message.
      *
@@ -351,8 +344,9 @@ public class StringUtil {
         if (!isNullOrEmpty(msg)) {
             final MessageDigest digester = MessageDigest.getInstance(TOKEN_HASH_ALGORITHM);
             final byte[] msgInBytes = msg.getBytes(ENCODING_UTF8);
-            return new String(Base64.encode(digester.digest(msgInBytes), Base64.NO_WRAP),
-                    ENCODING_UTF8);
+            return Base64.encodeToString(
+                    digester.digest(msgInBytes),
+                    EnumSet.of(Base64Flags.NO_WRAP));
         }
         return msg;
     }
@@ -417,30 +411,6 @@ public class StringUtil {
     }
 
     /**
-     * Given a byte array, return a base64-encoded String representing that byte array.
-     *
-     * @param bytes the bytes to encode.
-     * @return the Base64 representation of those bytes, without line-wrapping.
-     */
-    public static String base64Encode(final byte[] bytes) {
-        return Base64.encodeToString(bytes, Base64.NO_WRAP);
-    }
-
-    /**
-     * Converts the given String into a rawData byte array, and Base64-decode it.
-     */
-    public static byte[] base64Decode(@NonNull final String encodedString) {
-        return Base64.decode(encodedString, Base64.NO_WRAP);
-    }
-
-    /**
-     * Converts the given String into a rawData byte array, and Base64-decode it with the url-safe flag.
-     */
-    public static byte[] base64DecodeUrlSafeString(@NonNull final String encodedString) {
-        return Base64.decode(encodedString, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE);
-    }
-
-    /**
      * This is a reimplementation of String.join for the android platform.  Possibly this should
      * shift into PlatformUtils, which could rely on String.join dependent on the android API level.
      *
@@ -481,22 +451,6 @@ public class StringUtil {
         if (isNullOrEmpty(argument)) {
             Logger.error(TAG + methodName, argumentName + " is null or empty.", null);
             throw new NullPointerException(argumentName + " is null or empty.");
-        }
-    }
-
-    /***
-     * Helper to perform base64 decoding with logging.
-     * @param input Input string
-     * @param flags
-     * @param failureMessage The message to log in case of failure.
-     */
-    public static byte[] base64Decode(@NonNull final String input, int flags, @NonNull final String failureMessage) {
-        final String methodTag = TAG + ":base64Decode";
-        try {
-            return Base64.decode(input, flags);
-        } catch (IllegalArgumentException e) {
-            Logger.error(methodTag, failureMessage + " " + e.getMessage(), null);
-            throw e;
         }
     }
 

@@ -34,8 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import cz.msebera.android.httpclient.NameValuePair;
-
 @RunWith(JUnit4.class)
 public class CommonURIBuilderTest {
 
@@ -48,7 +46,7 @@ public class CommonURIBuilderTest {
     @Test(expected = UnsupportedOperationException.class)
     public void testCallingAddParameters(){
         final CommonURIBuilder builder = new CommonURIBuilder()
-                .addParameters(new ArrayList<NameValuePair>());
+                .addParameters(new ArrayList<>());
     }
 
     @Test

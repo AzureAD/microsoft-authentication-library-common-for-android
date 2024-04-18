@@ -22,30 +22,30 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft;
 
-import cz.msebera.android.httpclient.extras.Base64;
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
-
 import com.microsoft.identity.common.java.BaseAccount;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryIdToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
-import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.Base64;
 import com.microsoft.identity.common.java.util.CopyUtil;
 import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.base64.Base64Flags;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 @EqualsAndHashCode(callSuper = true)
@@ -254,10 +254,9 @@ public abstract class MicrosoftAccount extends BaseAccount {
      */
     @Override
     public synchronized String getUniqueIdentifier() {
-
-        return Base64.encodeToString(StringUtil.toByteArray(mUid), Base64.URL_SAFE | Base64.NO_WRAP)
+        return Base64.encodeToString(mUid, EnumSet.of(Base64Flags.URL_SAFE, Base64Flags.NO_WRAP))
                 + "." +
-                Base64.encodeToString(StringUtil.toByteArray(mUtid), Base64.URL_SAFE | Base64.NO_WRAP);
+                Base64.encodeToString(mUtid, EnumSet.of(Base64Flags.URL_SAFE, Base64Flags.NO_WRAP));
     }
 
     @Override

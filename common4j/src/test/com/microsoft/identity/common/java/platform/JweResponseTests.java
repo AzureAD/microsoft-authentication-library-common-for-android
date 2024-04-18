@@ -67,7 +67,7 @@ public class JweResponseTests {
         final JweResponse jweResponse = JweResponse.parseJwe(jwe);
     }
 
-    @Test(expected = JSONException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testParseJweJson() {
         final String json = "{\"refresh_token\":\"ab.cd.ef.gh\"}";
         final JweResponse jweResponse = JweResponse.parseJwe(json);

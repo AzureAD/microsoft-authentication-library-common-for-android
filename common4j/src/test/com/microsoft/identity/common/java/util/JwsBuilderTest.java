@@ -28,6 +28,7 @@ import static org.mockito.Mockito.when;
 import com.microsoft.identity.common.java.challengehandlers.IDeviceCertificate;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.util.base64.Base64Flags;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -36,6 +37,7 @@ import org.junit.runners.JUnit4;
 
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
+import java.util.EnumSet;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -154,7 +156,7 @@ public class JwsBuilderTest {
         when(
                 x509.getEncoded()
         ).thenReturn(
-                StringUtil.base64Decode(encodedCertValue)
+                Base64.decode(encodedCertValue, EnumSet.of(Base64Flags.NO_WRAP))
         );
 
         return getMockCertificate(x509, signature);
