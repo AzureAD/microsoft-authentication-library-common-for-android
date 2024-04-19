@@ -1,16 +1,6 @@
 package com.microsoft.identity.common.java.nativeauth.util
 
 interface ILoggable {
-//    /**
-//     * This method produces a PII-safe String (PII = Personally identifiable information).
-//     * If mayContainPii is false, the String value that is returned will not contain PII. If
-//     * mayContainPii is true, the String value that is returned that may contain PII (the value of
-//     * containsPii() will determine if the String actually does contain PII).
-//     *
-//     * @param mayContainPii indicates whether the String that is returned is allowed to contain PII.
-//     */
-//    fun toSafeString(mayContainPii: Boolean): String
-
     /**
      * This method produces a String that may contain PII (PII = Personally identifiable information).
      * The value of containsPii() will indicate whether the value actually contains PII.
