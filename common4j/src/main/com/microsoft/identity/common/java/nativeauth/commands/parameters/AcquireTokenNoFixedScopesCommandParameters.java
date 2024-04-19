@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -63,6 +64,8 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
 
     @Expose()
     private final boolean forceRefresh;
+
+    private Set<String> scopes;
 
     private final String loginHint;
 

@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.nativeauth.internal.controllers
 
+import android.text.TextUtils
 import androidx.annotation.VisibleForTesting
 import com.microsoft.identity.common.internal.commands.RefreshOnCommand
 import com.microsoft.identity.common.internal.telemetry.Telemetry
@@ -667,7 +668,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
         // Convert AcquireTokenNoScopesCommandParameters into SilentTokenCommandParameters,
         // so we can use it in BaseController.getCachedAccountRecord()
-        val silentTokenCommandParameters =
+        var silentTokenCommandParameters =
             CommandUtil.convertAcquireTokenNoFixedScopesCommandParameters(
                 parameters,
                 parameters.getCorrelationId()
@@ -689,11 +690,15 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         val strategy = silentTokenCommandParameters.authority.createOAuth2Strategy(strategyParameters)
 
         val tokenCache = silentTokenCommandParameters.oAuth2TokenCache
+        var target: String? = null
+        if (silentTokenCommandParameters.scopes != null) {
+            target = TextUtils.join(" ", silentTokenCommandParameters.scopes)
+        }
         val cacheRecords = tokenCache.loadWithAggregatedAccountData(
             silentTokenCommandParameters.clientId,
             parameters.applicationIdentifier,
             null,
-            null,
+            target,
             targetAccount,
             authScheme
         ) as List<ICacheRecord>
@@ -704,8 +709,17 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         // other tenants. Those tokens will be 'sparse', meaning that their AT/RT will not be loaded
         val fullCacheRecord = cacheRecords[0]
 
-        if (accessTokenIsNull(fullCacheRecord)) {
-            throw ServiceException(ErrorStrings.NATIVE_AUTH_NO_ACCESS_TOKEN_FOUND, "No access token found during refresh - user must be signed out.", null)
+        if (!accessTokenIsNull(fullCacheRecord) && silentTokenCommandParameters.scopes == null) {
+            //throw ServiceException(ErrorStrings.NATIVE_AUTH_NO_ACCESS_TOKEN_FOUND, "No access token found during refresh - user must be signed out.", null)
+
+            // Add the AT's scopes to the parameters so that they can be used to perform the refresh
+            // token call.
+            val accessTokenScopes = fullCacheRecord.accessToken
+                .target?.split(" ".toRegex())?.dropLastWhile { it.isEmpty() }?.toSet()
+
+            silentTokenCommandParameters = silentTokenCommandParameters.toBuilder()
+                .scopes(accessTokenScopes)
+                .build()
         }
 
         if (LibraryConfiguration.getInstance().isRefreshInEnabled &&
@@ -732,7 +746,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     "Access token is expired. Removing from cache..."
                 )
 
-                renewAT(
+                renewAccessToken(
                     silentTokenCommandParameters,
                     acquireTokenSilentResult,
                     tokenCache,
@@ -751,7 +765,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         ) {
             if (!refreshTokenIsNull(fullCacheRecord)) {
                 // No AT found, but the RT checks out, so we'll use it
-                renewAT(
+                renewAccessToken(
                     silentTokenCommandParameters,
                     acquireTokenSilentResult,
                     tokenCache,
@@ -779,7 +793,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 "Access token is expired. Removing from cache..."
             )
 
-            renewAT(
+            renewAccessToken(
                 silentTokenCommandParameters,
                 acquireTokenSilentResult,
                 tokenCache,
@@ -1464,42 +1478,6 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 )
             }
         }
-    }
-
-    @Throws(
-        IOException::class,
-        ClientException::class,
-        ServiceException::class
-    )
-    private fun renewAT(
-        parameters: SilentTokenCommandParameters,
-        acquireTokenSilentResult: AcquireTokenResult,
-        tokenCache: OAuth2TokenCache<*, *, *>,
-        strategy: OAuth2Strategy<*, *, *, *, *, *, *, *, *, *, *, *, *>,
-        cacheRecord: ICacheRecord
-    ) {
-        Logger.verbose(
-            TAG,
-            parameters.getCorrelationId(),
-            "Renewing access token..."
-        )
-
-        // Add the AT's scopes to the parameters so that they can be used to perform the refresh
-        // token call.
-        val accessTokenScopes = cacheRecord.accessToken
-            .target?.split(" ".toRegex())?.dropLastWhile { it.isEmpty() }?.toSet()
-
-        val parametersWithScopes = parameters.toBuilder()
-            .scopes(accessTokenScopes)
-            .build()
-
-        renewAccessToken(
-            parametersWithScopes,
-            acquireTokenSilentResult,
-            tokenCache,
-            strategy,
-            cacheRecord
-        )
     }
 
     @VisibleForTesting

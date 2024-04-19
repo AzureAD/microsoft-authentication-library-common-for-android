@@ -170,6 +170,7 @@ public class CommandUtil {
                 .sdkVersion(parameters.getSdkVersion())
                 .authority(parameters.authority)
                 .forceRefresh(parameters.isForceRefresh())
+                .scopes(parameters.getScopes())
                 .account(parameters.getAccount())
                 .authenticationScheme(parameters.getAuthenticationScheme())
                 .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
