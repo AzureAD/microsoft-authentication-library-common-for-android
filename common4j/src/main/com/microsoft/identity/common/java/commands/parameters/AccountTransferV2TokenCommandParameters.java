@@ -24,16 +24,21 @@ package com.microsoft.identity.common.java.commands.parameters;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 /**
  * Command parameters class for Account Transfer V2 requests. Extends {@link InteractiveTokenCommandParameters} since Account Transfer V2
- * can use the same set of parameters as a regular acquire token request. No additional parameters for Account Transfer V2 are
- * required at this time, however.
+ * can use the same set of parameters as a regular acquire token request. Includes an additional parameter to hold the SLK Token.
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 public class AccountTransferV2TokenCommandParameters extends InteractiveTokenCommandParameters {
 
+    /**
+     * Slk token to be used in the Account Transfer V2 request.
+     */
+    @NonNull
+    private final String slkToken;
 }

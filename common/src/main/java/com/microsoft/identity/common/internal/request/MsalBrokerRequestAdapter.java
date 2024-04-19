@@ -91,12 +91,33 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final String methodTag = TAG + ":brokerRequestFromAcquireTokenParameters";
         Logger.info(methodTag, "Constructing result bundle from AcquireTokenOperationParameters.");
 
+        final BrokerRequest.BrokerRequestBuilder brokerRequestBuilder =
+                getBrokerRequestBuilderForInteractiveTokenCommandParameters(parameters);
+
+        return brokerRequestBuilder.build();
+    }
+
+    public BrokerRequest brokerRequestFromAccountTransferV2Parameters(@NonNull final AccountTransferV2TokenCommandParameters parameters) {
+        final String methodTag = TAG + ":brokerRequestFromAccountTransferV2Parameters";
+        Logger.info(methodTag, "Constructing result bundle from AccountTransferV2TokenCommandParameters.");
+
+        final BrokerRequest.BrokerRequestBuilder brokerRequestBuilder =
+                getBrokerRequestBuilderForInteractiveTokenCommandParameters(parameters);
+
+        // Also add the slk token parameter
+        brokerRequestBuilder.accountTransferV2SlkToken(parameters.getSlkToken());
+
+        return brokerRequestBuilder.build();
+    }
+
+    private @NonNull BrokerRequest.BrokerRequestBuilder getBrokerRequestBuilderForInteractiveTokenCommandParameters(@NonNull final InteractiveTokenCommandParameters parameters) {
         final String extraQueryStringParameter = parameters.getExtraQueryStringParameters() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraQueryStringParameters())
                 : null;
         final String extraOptions = parameters.getExtraOptions() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
-        final BrokerRequest brokerRequest = BrokerRequest.builder()
+
+        final BrokerRequest.BrokerRequestBuilder brokerRequest = BrokerRequest.builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
                 .scope(TextUtils.join(" ", parameters.getScopes()))
                 .redirect(parameters.getRedirectUri())
@@ -129,9 +150,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         .build()
                 )
                 .preferredBrowser(parameters.getPreferredBrowser())
-                .preferredAuthMethod(parameters.getPreferredAuthMethod())
-                .isAccountTransferV2Request(getIsAccountTransferV2Request(parameters))
-                .build();
+                .preferredAuthMethod(parameters.getPreferredAuthMethod());
 
         return brokerRequest;
     }
@@ -255,6 +274,23 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public Bundle getRequestBundleForAcquireTokenInteractive(@NonNull final InteractiveTokenCommandParameters parameters,
                                                              @Nullable final String negotiatedBrokerProtocolVersion) {
         final BrokerRequest brokerRequest = brokerRequestFromAcquireTokenParameters(parameters);
+        return getRequestBundleFromBrokerRequest(
+                brokerRequest,
+                negotiatedBrokerProtocolVersion,
+                parameters.getRequiredBrokerProtocolVersion()
+        );
+    }
+
+    /**
+     * Method to construct a request bundle for a brokered Account Transfer V2 request.
+     *
+     * @param parameters                      input parameters
+     * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
+     * @return request Bundle
+     */
+    public Bundle getRequestBundleForAccountTransferV2(@NonNull final AccountTransferV2TokenCommandParameters parameters,
+                                                             @Nullable final String negotiatedBrokerProtocolVersion) {
+        final BrokerRequest brokerRequest = brokerRequestFromAccountTransferV2Parameters(parameters);
         return getRequestBundleFromBrokerRequest(
                 brokerRequest,
                 negotiatedBrokerProtocolVersion,

@@ -632,10 +632,8 @@ public class BrokerMsalController extends BaseController {
                                 resultBundle,
                                 negotiatedBrokerProtocolVersion);
 
-                        // Added check for AccountTransferV2CommandParameters in MsalBrokerRequestAdapter, we can use
-                        // the same method here
                         intent.putExtras(
-                                mRequestAdapter.getRequestBundleForAcquireTokenInteractive(parameters, negotiatedBrokerProtocolVersion)
+                                mRequestAdapter.getRequestBundleForAccountTransferV2(parameters, negotiatedBrokerProtocolVersion)
                         );
                         return intent;
                     }
