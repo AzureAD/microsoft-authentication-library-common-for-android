@@ -219,7 +219,7 @@ public class IDToken {
     }
 
     /**
-     * @return Token claims in Map<String, String>.
+     * @return Token claims
      */
     public Map<String, ?> getTokenClaims() {
         return mTokenClaims == null ? Collections.<String, Object>emptyMap() : Collections.unmodifiableMap(mTokenClaims);

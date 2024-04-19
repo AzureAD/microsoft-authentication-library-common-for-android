@@ -33,8 +33,7 @@ import lombok.NonNull;
 
 /**
  * Acquire token strategy for Microsoft STS
- *  * @param <T> is expected to be either {@link InteractiveTokenCommandParameters}
- *  *           or {@link SilentTokenCommandParameters}
+ * T is expected to be either {@link InteractiveTokenCommandParameters} or {@link SilentTokenCommandParameters}
  */
 public interface IAcquireMicrosoftStsTokenStrategy<T extends TokenCommandParameters> {
 
