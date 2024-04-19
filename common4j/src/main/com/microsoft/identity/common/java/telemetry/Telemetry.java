@@ -220,7 +220,6 @@ public class Telemetry {
      * Emit the event into the telemetry raw data map.
      *
      * @param event BaseEvent object
-     * @return the event reference for future properties modification.
      */
     public static void emit(final BaseEvent event) {
         final Telemetry instance = getInstance();
