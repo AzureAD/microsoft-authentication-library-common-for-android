@@ -939,9 +939,6 @@ public abstract class BaseController {
 
     /**
      * Helper method to get a cached account
-     *
-     * @param parameters
-     * @return
      */
     protected AccountRecord getCachedAccountRecord(
             @NonNull final SilentTokenCommandParameters parameters) throws ClientException {
