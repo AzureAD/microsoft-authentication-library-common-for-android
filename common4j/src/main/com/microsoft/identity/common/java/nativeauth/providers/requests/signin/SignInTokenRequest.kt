@@ -179,6 +179,6 @@ data class SignInTokenRequest private constructor(
     ) : NativeAuthRequestParameters() {
         override fun toUnsanitizedString(): String = "NativeAuthRequestSignInTokenRequestParameters(nca=$nca, clientInfo=$clientInfo, clientId=$clientId, grantType=$grantType, scope=$scope, challengeType=$challengeType)"
 
-        override fun toString(): String = "NativeAuthRequestSignInTokenRequestParameters((nca=$nca, clientInfo=$clientInfo, clientId=$clientId)"
+        override fun toString(): String = "NativeAuthRequestSignInTokenRequestParameters(nca=$nca, clientInfo=$clientInfo, clientId=$clientId)"
     }
 }

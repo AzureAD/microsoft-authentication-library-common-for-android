@@ -154,9 +154,9 @@ interface SignUpCommandResult {
         val errorDescription: String,
         val invalidAttributes: List<String>,
     ) : SignUpStartCommandResult, SignUpSubmitUserAttributesCommandResult {
-        override fun toUnsanitizedString(): String = "InvalidAttributes(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
+        override fun toUnsanitizedString(): String = "InvalidAttributes(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, invalidAttributes=$invalidAttributes)"
 
-        override fun toString(): String = "InvalidAttributes(correlationId=$correlationId, invalidAttributes=$invalidAttributes)"
+        override fun toString(): String = "InvalidAttributes(correlationId=$correlationId)"
     }
 
     /**
@@ -169,6 +169,6 @@ interface SignUpCommandResult {
     ) : SignUpStartCommandResult {
         override fun toUnsanitizedString(): String = "AuthNotSupported(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
 
-        override fun toString(): String = "AuthNotSupported(correlationId=$correlationId"
+        override fun toString(): String = "AuthNotSupported(correlationId=$correlationId)"
     }
 }

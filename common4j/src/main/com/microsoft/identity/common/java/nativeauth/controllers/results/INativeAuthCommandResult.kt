@@ -48,7 +48,7 @@ interface INativeAuthCommandResult : ILoggable {
 
         override fun toUnsanitizedString(): String = "Redirect(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
 
-        override fun toString(): String = "Redirect(correlationId=$correlationId"
+        override fun toString(): String = "Redirect(correlationId=$correlationId)"
     }
 
     /**
@@ -69,7 +69,7 @@ interface INativeAuthCommandResult : ILoggable {
         SignUpSubmitPasswordCommandResult,
         ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,
         ResetPasswordResendCodeCommandResult, ResetPasswordSubmitNewPasswordCommandResult {
-        override fun toUnsanitizedString(): String = "UnknownError(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes"
+        override fun toUnsanitizedString(): String = "UnknownError(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes)"
 
         override fun toString(): String =  "UnknownError(correlationId=$correlationId)"
         }
@@ -91,8 +91,8 @@ interface INativeAuthCommandResult : ILoggable {
         val exception: Exception? = null
     ) : Error(error, errorDescription, details, correlationId, errorCodes),
         INativeAuthCommandResult, SignInStartCommandResult, SignUpStartCommandResult, SignUpSubmitPasswordCommandResult, ResetPasswordStartCommandResult {
-        override fun toUnsanitizedString(): String = "UnknownError(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes"
+        override fun toUnsanitizedString(): String = "InvalidUsername(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes)"
 
-        override fun toString(): String = "UnknownError(correlationId=$correlationId)"
+        override fun toString(): String = "InvalidUsername(correlationId=$correlationId)"
     }
 }

@@ -176,7 +176,7 @@ public class Logger {
     public static void error(final String tag,
                              final String errorMessage,
                              final Throwable exception) {
-        log(tag, LogLevel.ERROR, null, errorMessage, exception, false);
+        log(tag, LogLevel.ERROR, null, errorMessage, null, exception, false);
     }
 
     /**
@@ -192,7 +192,7 @@ public class Logger {
                              final String correlationID,
                              final String errorMessage,
                              final Throwable exception) {
-        log(tag, LogLevel.ERROR, correlationID, errorMessage, exception, false);
+        log(tag, LogLevel.ERROR, correlationID, errorMessage, null, exception, false);
     }
 
     /**
@@ -206,7 +206,7 @@ public class Logger {
     public static void errorPII(final String tag,
                                 final String errorMessage,
                                 final Throwable exception) {
-        log(tag, LogLevel.ERROR, null, errorMessage, exception, true);
+        log(tag, LogLevel.ERROR, null, errorMessage, null, exception, true);
     }
 
     /**
@@ -222,7 +222,7 @@ public class Logger {
                                 final String correlationID,
                                 final String errorMessage,
                                 final Throwable exception) {
-        log(tag, LogLevel.ERROR, correlationID, errorMessage, exception, true);
+        log(tag, LogLevel.ERROR, correlationID, errorMessage, null, exception, true);
     }
 
     /**
@@ -234,7 +234,7 @@ public class Logger {
      */
     public static void warn(final String tag,
                             final String message) {
-        log(tag, LogLevel.WARN, null, message, null, false);
+        log(tag, LogLevel.WARN, null, message, null, null, false);
     }
 
     /**
@@ -248,7 +248,7 @@ public class Logger {
     public static void warn(final String tag,
                             final String correlationID,
                             final String message) {
-        log(tag, LogLevel.WARN, correlationID, message, null, false);
+        log(tag, LogLevel.WARN, correlationID, message, null, null, false);
     }
 
     /**
@@ -304,7 +304,7 @@ public class Logger {
      */
     public static void warnPII(final String tag,
                                final String message) {
-        log(tag, LogLevel.WARN, null, message, null, true);
+        log(tag, LogLevel.WARN, null, message, null, null, true);
     }
 
     /**
@@ -318,7 +318,7 @@ public class Logger {
     public static void warnPII(final String tag,
                                final String correlationID,
                                final String message) {
-        log(tag, LogLevel.WARN, correlationID, message, null, true);
+        log(tag, LogLevel.WARN, correlationID, message, null, null, true);
     }
 
     /**
@@ -330,7 +330,7 @@ public class Logger {
      */
     public static void info(final String tag,
                             final String message) {
-        log(tag, Logger.LogLevel.INFO, null, message, null, false);
+        log(tag, Logger.LogLevel.INFO, null, message, null, null, false);
     }
 
     /**
@@ -365,7 +365,7 @@ public class Logger {
     public static void info(final String tag,
                             final String correlationID,
                             final String message) {
-        log(tag, LogLevel.INFO, correlationID, message, null, false);
+        log(tag, LogLevel.INFO, correlationID, message, null, null, false);
     }
 
     /**
@@ -377,7 +377,7 @@ public class Logger {
      */
     public static void infoPII(final String tag,
                                final String message) {
-        log(tag, LogLevel.INFO, null, message, null, true);
+        log(tag, LogLevel.INFO, null, message, null, null, true);
     }
 
     /**
@@ -391,7 +391,7 @@ public class Logger {
     public static void infoPII(final String tag,
                                final String correlationID,
                                final String message) {
-        log(tag, LogLevel.INFO, correlationID, message, null, true);
+        log(tag, LogLevel.INFO, correlationID, message, null, null, true);
     }
 
     /**
@@ -403,7 +403,7 @@ public class Logger {
      */
     public static void verbose(final String tag,
                                final String message) {
-        log(tag, LogLevel.VERBOSE, null, message, null, false);
+        log(tag, LogLevel.VERBOSE, null, message, null, null, false);
     }
 
     /**
@@ -417,7 +417,7 @@ public class Logger {
     public static void verbose(final String tag,
                                final String correlationID,
                                final String message) {
-        log(tag, LogLevel.VERBOSE, correlationID, message, null, false);
+        log(tag, LogLevel.VERBOSE, correlationID, message, null, null, false);
     }
 
     /**
@@ -429,7 +429,7 @@ public class Logger {
      */
     public static void verbosePII(final String tag,
                                   final String message) {
-        log(tag, LogLevel.VERBOSE, null, message, null, true);
+        log(tag, LogLevel.VERBOSE, null, message, null, null, true);
     }
 
     /**
@@ -443,53 +443,9 @@ public class Logger {
     public static void verbosePII(final String tag,
                                   final String correlationID,
                                   final String message) {
-        log(tag, LogLevel.VERBOSE, correlationID, message, null, true);
+        log(tag, LogLevel.VERBOSE, correlationID, message, null, null, true);
     }
 
-    private static void log(final String tag,
-                            @NonNull final LogLevel logLevel,
-                            final String correlationId,
-                            final String message,
-                            final Throwable throwable,
-                            final boolean containsPII) {
-        if ((sLogLevel == LogLevel.NO_LOG) || logLevel.compareTo(sLogLevel) > 0 || (!sAllowPii && containsPII)) {
-            return;
-        }
-
-        final Date now = new Date();
-        final String diagnosticMetadata = getDiagnosticContextMetadata(correlationId);
-
-        sLogExecutor.execute(new Runnable() {
-            @Override
-            @SuppressFBWarnings(value = "DE_MIGHT_IGNORE",
-                    justification = "If logging throws, there is nothing left to do but swallow the exception and move on.")
-            public void run() {
-                final String dateTimeStamp = sDateTimeFormatter.format(now);
-                //Format the log message.
-                final String logMessage = formatMessage(diagnosticMetadata, sPlatformString, message, dateTimeStamp, throwable);
-
-                sLoggersLock.readLock().lock();
-                try {
-                    for (final String loggerCallbackKey : sLoggers.keySet()) {
-                        try {
-                            final ILoggerCallback callback = sLoggers.get(loggerCallbackKey);
-                            if (callback != null) {
-                                callback.log(tag, logLevel, logMessage, containsPII);
-                            }
-                        } catch (final Exception e) {
-                            // Do nothing.
-                        }
-                    }
-                } finally {
-                    sLoggersLock.readLock().unlock();
-                }
-            }
-        });
-    }
-
-    /**
-     * Temporary method to allow the project to compile, without having to make changes everywhere
-     */
     private static void log(final String tag,
                             @NonNull final LogLevel logLevel,
                             final String correlationId,

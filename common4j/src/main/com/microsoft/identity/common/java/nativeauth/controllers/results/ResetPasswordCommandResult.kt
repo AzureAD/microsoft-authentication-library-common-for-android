@@ -22,10 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.controllers.results
 
-import com.microsoft.identity.common.java.nativeauth.util.ILoggable
 
-
-sealed interface ResetPasswordStartCommandResult: INativeAuthCommandResult, ILoggable
+sealed interface ResetPasswordStartCommandResult: INativeAuthCommandResult
 sealed interface ResetPasswordSubmitCodeCommandResult: INativeAuthCommandResult
 sealed interface ResetPasswordResendCodeCommandResult: INativeAuthCommandResult
 sealed interface ResetPasswordSubmitNewPasswordCommandResult: INativeAuthCommandResult
@@ -120,7 +118,7 @@ interface ResetPasswordCommandResult {
     ) : ResetPasswordSubmitNewPasswordCommandResult {
         override fun toUnsanitizedString(): String = "PasswordResetFailed(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
 
-        override fun toString(): String = "PasswordResetFailed(correlationId=$correlationId"
+        override fun toString(): String = "PasswordResetFailed(correlationId=$correlationId)"
     }
 
     data class Complete (

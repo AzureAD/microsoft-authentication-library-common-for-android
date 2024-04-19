@@ -55,7 +55,7 @@ interface SignInCommandResult {
     ) : SignInStartCommandResult {
         override fun toUnsanitizedString(): String = "PasswordRequired(correlationId=$correlationId)"
 
-        override fun toString(): String = "PasswordRequired(correlationId=$correlationId)"
+        override fun toString(): String = toUnsanitizedString()
     }
 
     data class CodeRequired(
