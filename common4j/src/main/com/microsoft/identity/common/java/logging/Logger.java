@@ -128,7 +128,7 @@ public class Logger {
         }
     }
 
-    public static void setAllowPii(@NonNull boolean allowPii) {
+    public static void setAllowPii(boolean allowPii) {
         sAllowPii = allowPii;
     }
 

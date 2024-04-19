@@ -1441,7 +1441,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 Logger.warnWithObject(
                     TAG,
                     this.correlationId,
-                    "Expire token result: "
+                    "Expire token result: ",
                     this
                 )
                 INativeAuthCommandResult.UnknownError(
