@@ -72,8 +72,6 @@ data class SignInInitiateRequest private constructor(
 
     override fun toUnsanitizedString(): String = "SignInInitiateRequest(requestUrl=$requestUrl, headers=$headers, parameters=$parameters)"
 
-    override fun containsPii(): Boolean = true
-
     override fun toString(): String = "SignInInitiateRequest()"
 
     data class NativeAuthRequestSignInInitiateRequestParameters(
@@ -82,8 +80,6 @@ data class SignInInitiateRequest private constructor(
         @SerializedName("challenge_type") val challengeType: String
     ) : NativeAuthRequestParameters() {
         override fun toUnsanitizedString(): String = "NativeAuthRequestSignInInitiateRequestParameters(clientId=$clientId, challengeType=$challengeType)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = "NativeAuthRequestSignInInitiateRequestParameters(clientId=$clientId)"
     }

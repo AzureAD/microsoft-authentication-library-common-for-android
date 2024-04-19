@@ -57,8 +57,6 @@ class SignInTokenApiResponse(
                 "errorCodes=$errorCodes, errorUri=$errorUri, subError=$subError)"
     }
 
-    override fun containsPii(): Boolean = true
-
     override fun toString(): String = "SignInTokenApiResponse(statusCode=$statusCode, " +
             "correlationId=$correlationId"
 

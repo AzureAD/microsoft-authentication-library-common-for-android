@@ -53,8 +53,6 @@ class SignInInitiateApiResponse(
                 "errorUri=$errorUri)"
     }
 
-    override fun containsPii(): Boolean = true
-
     override fun toString(): String = "SignInInitiateApiResponse(statusCode=$statusCode, " +
             "correlationId=$correlationId"
 

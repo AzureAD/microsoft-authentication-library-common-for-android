@@ -60,8 +60,6 @@ class SignUpChallengeApiResponse(
                 "error=$error, errorDescription=$errorDescription)"
     }
 
-    override fun containsPii(): Boolean = true
-
     override fun toString(): String = "SignInChallengeApiResponse(statusCode=$statusCode, " +
             "correlationId=$correlationId"
 

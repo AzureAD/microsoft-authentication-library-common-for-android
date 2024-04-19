@@ -46,8 +46,6 @@ interface SignInCommandResult {
         SignInSubmitPasswordCommandResult {
         override fun toUnsanitizedString(): String = "Complete(correlationId=$correlationId)"
 
-        override fun containsPii(): Boolean = false
-
         override fun toString(): String = toUnsanitizedString()
     }
 
@@ -56,8 +54,6 @@ interface SignInCommandResult {
         val continuationToken: String
     ) : SignInStartCommandResult {
         override fun toUnsanitizedString(): String = "PasswordRequired(correlationId=$correlationId)"
-
-        override fun containsPii(): Boolean = false
 
         override fun toString(): String = "PasswordRequired(correlationId=$correlationId)"
     }
@@ -71,8 +67,6 @@ interface SignInCommandResult {
     ) : SignInStartCommandResult, SignInResendCodeCommandResult {
         override fun toUnsanitizedString(): String = "CodeRequired(correlationId=$correlationId, codeLength=$codeLength, challengeTargetLabel=$challengeTargetLabel, challengeChannel=$challengeChannel)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "CodeRequired(correlationId=$correlationId, codeLength=$codeLength, challengeChannel=$challengeChannel)"
     }
 
@@ -83,8 +77,6 @@ interface SignInCommandResult {
         val errorCodes: List<Int>
     ) : SignInStartCommandResult {
         override fun toUnsanitizedString(): String = "UserNotFound(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = "UserNotFound(correlationId=$correlationId)"
     }
@@ -97,8 +89,6 @@ interface SignInCommandResult {
     ) : SignInStartCommandResult, SignInSubmitPasswordCommandResult {
         override fun toUnsanitizedString(): String = "InvalidCredentials(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "InvalidCredentials(correlationId=$correlationId)"
     }
 
@@ -110,8 +100,6 @@ interface SignInCommandResult {
         val subError: String
     ) : SignInSubmitCodeCommandResult {
         override fun toUnsanitizedString(): String = "IncorrectCode(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes, subError=$subError)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = "IncorrectCode(correlationId=$correlationId)"
     }

@@ -75,8 +75,6 @@ class ResetPasswordSubmitRequest private constructor(
 
     override fun toUnsanitizedString(): String = "ResetPasswordSubmitRequest(requestUrl=$requestUrl, headers=$headers, parameters=$parameters)"
 
-    override fun containsPii(): Boolean = true
-
     override fun toString(): String = "ResetPasswordSubmitRequest()"
 
     /**
@@ -89,8 +87,6 @@ class ResetPasswordSubmitRequest private constructor(
         @JsonAdapter(CharArrayJsonAdapter::class) @SerializedName("new_password") val newPassword: CharArray
     ) : NativeAuthRequestParameters() {
         override fun toUnsanitizedString(): String = "NativeAuthResetPasswordSubmitRequestParameters(clientId=$clientId)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = toUnsanitizedString()
     }

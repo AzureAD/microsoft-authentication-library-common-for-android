@@ -48,8 +48,6 @@ interface INativeAuthCommandResult : ILoggable {
 
         override fun toUnsanitizedString(): String = "Redirect(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "Redirect(correlationId=$correlationId"
     }
 
@@ -73,8 +71,6 @@ interface INativeAuthCommandResult : ILoggable {
         ResetPasswordResendCodeCommandResult, ResetPasswordSubmitNewPasswordCommandResult {
         override fun toUnsanitizedString(): String = "UnknownError(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String =  "UnknownError(correlationId=$correlationId)"
         }
 
@@ -96,8 +92,6 @@ interface INativeAuthCommandResult : ILoggable {
     ) : Error(error, errorDescription, details, correlationId, errorCodes),
         INativeAuthCommandResult, SignInStartCommandResult, SignUpStartCommandResult, SignUpSubmitPasswordCommandResult, ResetPasswordStartCommandResult {
         override fun toUnsanitizedString(): String = "UnknownError(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = "UnknownError(correlationId=$correlationId)"
     }

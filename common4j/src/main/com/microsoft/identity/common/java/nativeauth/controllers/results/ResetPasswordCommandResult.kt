@@ -99,8 +99,6 @@ interface ResetPasswordCommandResult {
     ) : ResetPasswordSubmitCodeCommandResult {
         override fun toUnsanitizedString(): String = "IncorrectCode(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "IncorrectCode(correlationId=$correlationId)"
     }
 
@@ -112,8 +110,6 @@ interface ResetPasswordCommandResult {
     ) : ResetPasswordSubmitNewPasswordCommandResult {
         override fun toUnsanitizedString(): String = "PasswordNotAccepted(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
 
-        override fun containsPii(): Boolean = false
-
         override fun toString(): String = "PasswordNotAccepted(correlationId=$correlationId)"
     }
 
@@ -124,8 +120,6 @@ interface ResetPasswordCommandResult {
     ) : ResetPasswordSubmitNewPasswordCommandResult {
         override fun toUnsanitizedString(): String = "PasswordResetFailed(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
 
-        override fun containsPii(): Boolean = false
-
         override fun toString(): String = "PasswordResetFailed(correlationId=$correlationId"
     }
 
@@ -135,8 +129,6 @@ interface ResetPasswordCommandResult {
         val expiresIn: Int?,
     ) : ResetPasswordSubmitNewPasswordCommandResult {
         override fun toUnsanitizedString(): String = "Complete(correlationId=$correlationId, expiresIn=$expiresIn)"
-
-        override fun containsPii(): Boolean = false
 
         override fun toString(): String = toUnsanitizedString()
     }

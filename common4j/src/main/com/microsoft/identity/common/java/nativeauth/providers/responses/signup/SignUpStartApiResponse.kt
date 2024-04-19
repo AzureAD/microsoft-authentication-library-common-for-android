@@ -66,8 +66,6 @@ class SignUpStartApiResponse(
                 "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription, subError=$subError)"
     }
 
-    override fun containsPii(): Boolean = true
-
     override fun toString(): String = "SignUpContinueApiResponse(statusCode=$statusCode, " +
             "correlationId=$correlationId"
 

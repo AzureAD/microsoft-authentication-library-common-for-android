@@ -70,8 +70,6 @@ class ResetPasswordPollCompletionRequest private constructor(
 
     override fun toUnsanitizedString(): String = "ResetPasswordPollCompletionRequest(requestUrl=$requestUrl, headers=$headers, parameters=$parameters)"
 
-    override fun containsPii(): Boolean = true
-
     override fun toString(): String = "ResetPasswordPollCompletionRequest()"
 
     /**
@@ -83,8 +81,6 @@ class ResetPasswordPollCompletionRequest private constructor(
         @SerializedName("continuation_token") val continuationToken: String
     ) : NativeAuthRequestParameters() {
         override fun toUnsanitizedString(): String = "NativeAuthResetPasswordPollCompletionRequestParameters(clientId=$clientId)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = toUnsanitizedString()
     }

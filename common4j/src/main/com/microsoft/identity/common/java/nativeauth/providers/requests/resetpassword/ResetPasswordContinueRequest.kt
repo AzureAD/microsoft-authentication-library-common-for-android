@@ -75,8 +75,6 @@ class ResetPasswordContinueRequest private constructor(
 
     override fun toUnsanitizedString(): String = "ResetPasswordContinueRequest(requestUrl=$requestUrl, headers=$headers, parameters=$parameters)"
 
-    override fun containsPii(): Boolean = true
-
     override fun toString(): String = "ResetPasswordContinueRequest()"
 
     /**
@@ -90,8 +88,6 @@ class ResetPasswordContinueRequest private constructor(
         @SerializedName("oob") val oob: String
     ) : NativeAuthRequestParameters() {
         override fun toUnsanitizedString(): String = "NativeAuthResetPasswordContinueRequestParameters(clientId=$clientId, grant_type=$grantType)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = "NativeAuthResetPasswordContinueRequestParameters(clientId=$clientId)"
     }

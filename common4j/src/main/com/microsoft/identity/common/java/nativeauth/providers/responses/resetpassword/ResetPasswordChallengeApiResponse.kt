@@ -59,8 +59,6 @@ class ResetPasswordChallengeApiResponse(
                 "error=$error, errorDescription=$errorDescription, errorUri=$errorUri)"
     }
 
-    override fun containsPii(): Boolean = true
-
     override fun toString(): String = "ResetPasswordChallengeApiResponse(statusCode=$statusCode, " +
             "correlationId=$correlationId"
 

@@ -81,14 +81,10 @@ data class ResetPasswordStartRequest private constructor(
     ) : NativeAuthRequestParameters() {
         override fun toUnsanitizedString(): String = "ResetPasswordStartRequest(clientId=$clientId, challengeType=$challengeType)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "ResetPasswordStartRequest(clientId=$clientId)"
     }
 
     override fun toUnsanitizedString(): String = "ResetPasswordStartRequest(requestUrl=$requestUrl, headers=$headers, parameters=$parameters)"
-
-    override fun containsPii(): Boolean = true
 
     override fun toString(): String = "ResetPasswordStartRequest()"
 }

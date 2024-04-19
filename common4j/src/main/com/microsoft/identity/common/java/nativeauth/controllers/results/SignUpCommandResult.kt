@@ -50,8 +50,6 @@ interface SignUpCommandResult {
         SignUpSubmitUserAttributesCommandResult, SignUpSubmitPasswordCommandResult {
         override fun toUnsanitizedString(): String = "UsernameAlreadyExists(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "UsernameAlreadyExists(correlationId=$correlationId)"
     }
 
@@ -66,8 +64,6 @@ interface SignUpCommandResult {
         SignUpSubmitCodeCommandResult, SignUpSubmitPasswordCommandResult,
         SignUpSubmitUserAttributesCommandResult {
         override fun toUnsanitizedString(): String = "Complete(correlationId=$correlationId, expiresIn=$expiresIn)"
-
-        override fun containsPii(): Boolean = false
 
         override fun toString(): String = toUnsanitizedString()
     }
@@ -85,8 +81,6 @@ interface SignUpCommandResult {
         SignUpResendCodeCommandResult {
         override fun toUnsanitizedString(): String = "CodeRequired(correlationId=$correlationId, codeLength=$codeLength, challengeTargetLabel=$challengeTargetLabel, challengeChannel=$challengeChannel)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "CodeRequired(correlationId=$correlationId, codeLength=$codeLength, challengeChannel=$challengeChannel)"
     }
 
@@ -100,8 +94,6 @@ interface SignUpCommandResult {
     ) : SignUpStartCommandResult,
         SignUpSubmitCodeCommandResult {
         override fun toUnsanitizedString(): String = "PasswordRequired(correlationId=$correlationId)"
-
-        override fun containsPii(): Boolean = false
 
         override fun toString(): String = toUnsanitizedString()
     }
@@ -121,8 +113,6 @@ interface SignUpCommandResult {
         SignUpSubmitCodeCommandResult {
         override fun toUnsanitizedString(): String = "AttributesRequired(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, requiredAttributes=$requiredAttributes)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "AttributesRequired(correlationId=$correlationId, requiredAttributes=$requiredAttributes)"
     }
 
@@ -137,8 +127,6 @@ interface SignUpCommandResult {
     ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult {
         override fun toUnsanitizedString(): String = "InvalidPassword(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "InvalidPassword(correlationId=$correlationId)"
     }
 
@@ -152,8 +140,6 @@ interface SignUpCommandResult {
         val subError: String
     ) : SignUpSubmitCodeCommandResult {
         override fun toUnsanitizedString(): String = "InvalidCode(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = "InvalidCode(correlationId=$correlationId)"
     }
@@ -170,8 +156,6 @@ interface SignUpCommandResult {
     ) : SignUpStartCommandResult, SignUpSubmitUserAttributesCommandResult {
         override fun toUnsanitizedString(): String = "InvalidAttributes(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
 
-        override fun containsPii(): Boolean = true
-
         override fun toString(): String = "InvalidAttributes(correlationId=$correlationId, invalidAttributes=$invalidAttributes)"
     }
 
@@ -184,8 +168,6 @@ interface SignUpCommandResult {
         val errorDescription: String,
     ) : SignUpStartCommandResult {
         override fun toUnsanitizedString(): String = "AuthNotSupported(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = "AuthNotSupported(correlationId=$correlationId"
     }

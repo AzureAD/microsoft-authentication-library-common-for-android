@@ -91,8 +91,6 @@ data class SignUpContinueRequest private constructor(
 
     override fun toUnsanitizedString(): String = "SignUpContinueRequest(requestUrl=$requestUrl, headers=$headers, parameters=$parameters)"
 
-    override fun containsPii(): Boolean = true
-
     override fun toString(): String = "SignUpContinueRequest()"
 
     /**
@@ -108,8 +106,6 @@ data class SignUpContinueRequest private constructor(
         @SerializedName("grant_type") val grantType: String
     ) : NativeAuthRequestParameters() {
         override fun toUnsanitizedString(): String = "NativeAuthRequestSignUpContinueRequestParameters(clientId=$clientId, grantType=$grantType)"
-
-        override fun containsPii(): Boolean = true
 
         override fun toString(): String = "NativeAuthRequestSignUpContinueRequestParameters(clientId=$clientId)"
     }

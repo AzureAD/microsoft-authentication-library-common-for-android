@@ -61,8 +61,6 @@ class ResetPasswordPollCompletionApiResponse(
                 "error=$error, errorUri=$errorUri, errorDescription=$errorDescription, subError=$subError)"
     }
 
-    override fun containsPii(): Boolean = true
-
     override fun toString(): String = "ResetPasswordPollCompletionApiResponse(statusCode=$statusCode, " +
             "correlationId=$correlationId"
 
