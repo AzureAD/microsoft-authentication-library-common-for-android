@@ -22,15 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.responses.signin
 
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResult
+import com.microsoft.identity.common.java.nativeauth.util.ILoggable
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 
 /**
  * Represents the potential result types returned from the OAuth /token endpoint,
  * including a case for unexpected errors received from the server.
  */
-sealed interface SignInTokenApiResult: ApiResult {
+sealed interface SignInTokenApiResult: ApiResult, ILoggable {
     data class Success(
         override val correlationId: String,
         val tokenResponse: MicrosoftStsTokenResponse

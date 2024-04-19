@@ -63,9 +63,10 @@ class SignUpResendCodeCommand(
             parameters = parameters
         )
 
-        Logger.info(
+        Logger.infoWithObject(
             TAG,
-            "Returning result: $result"
+            "Returning result: ",
+            result
         )
         return result
     }
