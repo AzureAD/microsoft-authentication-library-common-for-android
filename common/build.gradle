@@ -241,7 +241,7 @@ android.libraryVariants.all { variant ->
 // Create tasks to generate javadoc jar
 android.libraryVariants.all { variant ->
     task("${variant.name}JavadocJar", type: Jar, dependsOn: "${variant.name}Javadoc") {
-        classifier 'javadoc'
+        archiveClassifier = 'javadoc'
         from tasks["${variant.name}Javadoc"].destinationDir
     }
 }
