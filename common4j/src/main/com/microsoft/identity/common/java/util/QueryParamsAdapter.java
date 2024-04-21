@@ -42,7 +42,7 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 
 /**
- * Class to serialize and deserialize query parameters from List<Map.Entry<String, String>> to json String
+ * Class to serialize and deserialize query parameters from List to json String
  * and vice versa.
  *
  * NOTE: Even we no longer use Pair (Since it's android-only), we are keeping this the same
@@ -167,7 +167,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
     }
 
     /**
-     * Serializes a List<Map.Entry<String, String>>.
+     * Serializes a query string parameter map.
      *
      * @param extraQueryStringParameters an object to serialize.
      * @return a serialized string.
@@ -177,7 +177,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
     }
 
     /**
-     * Deerializes a string into a List<Map.Entry<String, String>>.
+     * Deserializes a string into a query string parameter map.
      *
      * @param jsonString a string to deserialize.
      * @return a deserialized object.
@@ -202,7 +202,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
     /**
      * Create a Type for the List of query params.
      *
-     * @return a Type object representing the type of the query params in this case List<Map.Entry<String, String>>
+     * @return a Type object representing the type of the query params.
      */
     public static Type getListType() {
         return TypeToken.getParameterized(List.class, TypeToken.getParameterized(Map.Entry.class, String.class, String.class).getRawType()).getType();

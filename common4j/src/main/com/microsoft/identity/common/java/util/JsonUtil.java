@@ -35,7 +35,7 @@ import java.util.Map;
 public class JsonUtil {
 
     /**
-     * Extract JSON Object into Map<String, String>.
+     * Extract JSON Object into a String Map
      *
      * @param jsonString String
      * @return Map
