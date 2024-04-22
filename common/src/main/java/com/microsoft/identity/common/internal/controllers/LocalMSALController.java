@@ -55,6 +55,11 @@ import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.platform.DevicePoPUtils;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.result.GenerateShrResult;
+import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
+import com.microsoft.identity.common.java.util.ThreadUtils;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
@@ -68,13 +73,9 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParamet
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.request.SdkType;
-import com.microsoft.identity.common.java.result.AcquireTokenResult;
-import com.microsoft.identity.common.java.result.GenerateShrResult;
-import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.java.util.ResultUtil;
-import com.microsoft.identity.common.java.util.ThreadUtils;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -353,7 +354,7 @@ public class LocalMSALController extends BaseController {
                 && fullCacheRecord.getAccessToken().shouldRefresh()) {
             if (!fullCacheRecord.getAccessToken().isExpired()) {
                 setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
-                final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, PublicApiId.MSAL_REFRESH_ON);
+                final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this.asControllerFactory(), PublicApiId.MSAL_REFRESH_ON);
                 CommandDispatcher.submitAndForget(refreshOnCommand);
             } else {
                 Logger.warn(
@@ -532,20 +533,19 @@ public class LocalMSALController extends BaseController {
     }
 
     /**
-     * Checks if QR + PIN auth is available.
+     * Get the preferred auth method from the broker.
      * LocalMSALController is not eligible to use the broker.
-     * Do not check if QR + PIN is available and return false immediately.
+     * Because broker is not installed return false immediately.
      *
-     * @return true false
      */
     @Override
-    public boolean isQrPinAvailable() throws BrokerRequiredException {
-        final String methodTag = TAG + ":isQrPinAvailable";
+    public PreferredAuthMethod getPreferredAuthMethod() throws BrokerRequiredException {
+        final String methodTag = TAG + ":getPreferredAuthMethod";
         final BrokerRequiredException exception = new BrokerRequiredException(
                 BrokerData.getProdMicrosoftAuthenticator().getPackageName(),
                 null
         );
-        Logger.error(methodTag, "QR + PIN not available. Requires broker.", exception);
+        Logger.error(methodTag, "Broker required.", exception);
         throw exception;
     }
 

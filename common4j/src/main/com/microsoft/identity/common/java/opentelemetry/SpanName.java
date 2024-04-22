@@ -56,5 +56,6 @@ public enum SpanName {
     BrokerDiscoveryMetadataAggregator,
     BrokerSelectionProtocolManager,
     BrokerDiscoveryV1ProtocolBroadcastResult,
-    Fido
+    Fido,
+    BrokerAccountServiceRemoveAccounts
 }

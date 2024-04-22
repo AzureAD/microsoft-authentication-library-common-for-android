@@ -49,7 +49,6 @@ import com.microsoft.identity.common.java.commands.parameters.RemoveAccountComma
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
-import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
@@ -85,7 +84,7 @@ import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
-import com.microsoft.identity.common.java.ui.AuthorizationAgent;
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ResultUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -145,11 +144,11 @@ public abstract class BaseController {
             throws Exception;
 
     /**
-     * This method is used to determine if the QR + PIN auth flow is available on the device.
+     * This method is used to read the preferred authentication method from the broker.
      *
-     * @return true if if QR + PIN authorization is available. False otherwise.
+     * @return The preferred authentication method.
      */
-    public abstract boolean isQrPinAvailable() throws Exception;
+    public abstract PreferredAuthMethod getPreferredAuthMethod() throws Exception;
 
     public abstract List<ICacheRecord> getCurrentAccount(final CommandParameters parameters)
             throws Exception;
@@ -418,6 +417,43 @@ public abstract class BaseController {
 
         // Suppressing unchecked warnings due to casting of type TokenRequest to GenericTokenRequest in argument of method call to requestToken
         @SuppressWarnings(WarningType.unchecked_warning) final TokenResult tokenResult = strategy.requestToken(tokenRequest);
+
+        ResultUtil.logResult(TAG, tokenResult);
+
+        return tokenResult;
+    }
+
+    /**
+     * Performs token request for device code flow parameters.
+     * @param oAuth2Strategy An {@link OAuth2Strategy} object.
+     * @param authorizationRequest An {@link AuthorizationRequest} using which device code was obtained.
+     * @param authorizationResponse An {@link AuthorizationResponse} containing the device code.
+     * @param parameters A {@link DeviceCodeFlowCommandParameters} used to acquire device code.
+     * @return A {@link TokenResult} containing the result of the token request.
+     */
+    protected TokenResult performTokenRequest(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy oAuth2Strategy,
+                                              @NonNull final AuthorizationRequest authorizationRequest,
+                                              @NonNull final AuthorizationResponse authorizationResponse,
+                                              @NonNull final DeviceCodeFlowCommandParameters parameters
+    )
+            throws IOException, ClientException, ServiceException {
+        final String methodTag = TAG + ":performTokenRequest";
+
+        parameters.getPlatformComponents()
+                .getPlatformUtil()
+                .throwIfNetworkNotAvailable(parameters.isPowerOptCheckEnabled());
+
+        final TokenRequest tokenRequest = oAuth2Strategy.createTokenRequest(
+                authorizationRequest,
+                authorizationResponse,
+                parameters.getAuthenticationScheme()
+        );
+        ResultUtil.logExposedFieldsOfObject(methodTag, tokenRequest);
+        // Execute Token Request
+        TokenResult tokenResult = oAuth2Strategy.requestToken(tokenRequest);
+
+        // Validate request success, may throw MsalServiceException
+        validateDeviceCodeFlowServiceResult(tokenResult);
 
         ResultUtil.logResult(TAG, tokenResult);
 
@@ -903,9 +939,6 @@ public abstract class BaseController {
 
     /**
      * Helper method to get a cached account
-     *
-     * @param parameters
-     * @return
      */
     protected AccountRecord getCachedAccountRecord(
             @NonNull final SilentTokenCommandParameters parameters) throws ClientException {
@@ -1166,5 +1199,27 @@ public abstract class BaseController {
                     null
             );
         }
+    }
+
+    /**
+     * Returns this controller as a controller factory.
+     **/
+    public IControllerFactory asControllerFactory(){
+        final BaseController thisController = this;
+        return new IControllerFactory() {
+            @NonNull
+            @Override
+            public BaseController getDefaultController() {
+                return thisController;
+            }
+
+            @NonNull
+            @Override
+            public List<BaseController> getAllControllers() {
+                final List<BaseController> list = new ArrayList<>();
+                list.add(thisController);
+                return list;
+            }
+        };
     }
 }

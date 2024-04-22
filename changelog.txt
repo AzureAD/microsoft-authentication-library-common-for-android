@@ -1,7 +1,40 @@
 V.Next
 ---------
-- [PATCH] Update nimbus-jose-jwt 9.37.3 (#2326)
+- [PATCH] Update nimbus-jose-jwt 9.37.3 (#2392)
+- [MINOR] Update flow to get token for labapi to not require automationrunnerapp (#2376)
+- [MINOR] Add field in BrokerInteractiveTokenCommandParameters for ATv2. (#2363)
+
+V.17.3.0
+---------
+- [PATCH] Return exception from first controller in SilentTokenCommand in case all controllers throw exceptions. (#2377)
+- [PATCH] Fix mAuthorizationStrategy is null in LocalMsalController (due to #2352) (#2370)
+- [MINOR] Move the getActiveBroker() invocation to background thread (#2352)
+- [PATCH] Return status code in errorResponse when server response is not in expected Json format. (#2321)
+- [MINOR] Added telemetry for cross cloud and MSA passthrough requests (#2367)
+
+V.17.2.1
+---------
+- [PATCH] Reduce the amount of setAccountVisibility() call. (#2355)
+
+V.17.2.0
+---------
+- [PATCH] Move SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY to BaseActiveBrokerCache (#2340)
+- [PATCH] Add cache for ContentProviderStrategy.isSupportedByTargetedBroker() (#2338)
+- [PATCH] isSupportedByTargetedBroker should only be invoked in bg thread (#2339)
+- [PATCH] Handle repeated camera requests. (#2332)
+- [MINOR] Clear active broker cache if the (cached) active broker app doesn't support ipc mechanism (#2331)
+- [MINOR] Add support for CIAM custom domain (#2314)
+- [MINOR] Rename "is QR + PIN available" API to "get preferred auth method". (#2288)
+- [MINOR] Changes to support safe deserialization of KeyPair in Linux (#2319)
+- [MINOR] Request camera permission on the WebViewAuthorizationFragment (#2258)
+- [MINOR] Deprecate legacy telemetry code (#2327)
 - [MINOR] Gracefully handles unexpected error in encryption layer (#2318)
+- [MINOR] Add flight to passkey feature for rollback purposes (#2329)
+- [MINOR] Minor updates to passkey response logic (#2334)
+
+V.17.1.1
+---------
+- [PATCH] Add timeout to backup IPC mechanism (#2323)
 
 V.17.1.0
 ---------

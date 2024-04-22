@@ -24,9 +24,7 @@ package com.microsoft.identity.common.internal.cache
 
 import com.microsoft.identity.common.java.interfaces.INameValueStorage
 import com.microsoft.identity.common.java.interfaces.IStorageSupplier
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 
 class ClientActiveBrokerCache
 internal constructor(private val storage: INameValueStorage<String>,
@@ -83,54 +81,6 @@ internal constructor(private val storage: INameValueStorage<String>,
                     BROKER_METADATA_CACHE_STORE_ON_CLIENT_SDK_SIDE_STORAGE_NAME, String::class.java),
                 lock = sClientSdkSideLock
             )
-        }
-
-        /**
-         * Returns true if the time has NOT passed the given expiry date.
-         */
-        fun isNotExpired(expiryDate: Long?): Boolean{
-            if (expiryDate == null) {
-                return false
-            }
-            return System.currentTimeMillis() < expiryDate
-        }
-
-        /**
-         * Key for storing time which the client discovery should use AccountManager.
-         **/
-        const val SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY =
-            "SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY"
-    }
-
-    override fun shouldUseAccountManager(): Boolean {
-        return runBlocking {
-            lock.withLock {
-                storage.get(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY)?.let { rawValue ->
-                    rawValue.toLongOrNull()?.let { expiryDate ->
-                        return@runBlocking isNotExpired(expiryDate)
-                    }
-                }
-
-                return@runBlocking false
-            }
-        }
-    }
-
-    override fun setShouldUseAccountManagerForTheNextMilliseconds(timeInMillis: Long) {
-        return runBlocking {
-            lock.withLock {
-                val timeStamp = System.currentTimeMillis() + timeInMillis
-                storage.put(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY, timeStamp.toString())
-            }
-        }
-    }
-
-    override fun clearCachedActiveBroker() {
-        return runBlocking {
-            lock.withLock {
-                clearCachedActiveBrokerWithoutLock()
-                storage.remove(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY)
-            }
         }
     }
 }

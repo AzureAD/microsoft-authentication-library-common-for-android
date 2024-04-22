@@ -1,5 +1,5 @@
 # File: azure-pipelines/continuous-delivery/common-cd.yml
-# Description: Assemble & publish latest common4j, common, keyvault, labapi, labapiutilities, testutil release to internal vsts feed
+# Description: Assemble & publish latest keyvault, labapi, labapiutilities, testutil release to internal vsts feed
 # Variable: 'ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME' was defined in the Variables tab
 # Variable: 'customVersion' overrides the version number of the published libraries
 
@@ -42,23 +42,19 @@ jobs:
   dependsOn:
   - keyvault_phase
   - labapi_phase
+  variables:
+    - group: AndroidAuthClientAutomationSecrets
+    - group: MSIDLABVARS
   steps:
   - template: ../templates/steps/automation-cert.yml
     parameters:
       envVstsMvnAt: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
-  - task: AzureKeyVault@2
-    displayName: 'Get Key vault AndroidAutomationRunnerAppSecret'
-    inputs:
-      azureSubscription: 'MSIDLABS_ANDROID_KV'
-      KeyVaultName: 'ADALTestInfo'
-      SecretsFilter: 'AndroidAutomationRunnerAppSecret'
-      RunAsPreJob: false
   - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
     parameters:
       project: LabApiUtilities
       buildArguments: '-PprojVersion=$(versionNumber)'
       artifactFolder: 'LabApiUtilities/build/libs'
-      testArguments: "-PlabSecret=$(AndroidAutomationRunnerAppSecret)"
+      testArguments: "-PlabSecret=$(LabVaultAppSecret)"
 # Test utils
 - job: testutils_phase
   displayName: 'Test utils: Build, Test and Publish'

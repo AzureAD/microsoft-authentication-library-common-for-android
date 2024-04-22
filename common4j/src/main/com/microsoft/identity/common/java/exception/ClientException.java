@@ -98,6 +98,11 @@ public class ClientException extends BaseException {
     public static final String IO_ERROR = "io_error";
 
     /**
+     * Indicates a msal client update is required.
+     */
+    public static final String CLIENT_UPDATE_REQUIRED = "client_update_required";
+
+    /**
      * Emitted when a particular padding mechanism is requested but is not available in the environment.
      */
     public static final String NO_SUCH_PADDING = "no_such_padding";
@@ -181,6 +186,11 @@ public class ClientException extends BaseException {
      * Extra query parameters set by the client app is already sent by the sdk.
      */
     public static final String DUPLICATE_QUERY_PARAMETER = "duplicate_query_parameter";
+
+    /**
+     * An Account Transfer V2 request did not contain an Slk.
+     */
+    public static final String MISSING_SLK = "missing_slk";
 
     /**
      * Extra query parameters set by the client app is already sent by the sdk.

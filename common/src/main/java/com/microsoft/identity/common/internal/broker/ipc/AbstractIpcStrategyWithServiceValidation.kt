@@ -49,20 +49,17 @@ abstract class AbstractIpcStrategyWithServiceValidation(
     @Throws(BrokerCommunicationException::class)
     protected abstract fun communicateToBrokerAfterValidation(bundle: BrokerOperationBundle): Bundle?
 
-    /**
-     * Returns true if the target package name supports this strategy.
-     */
-    abstract fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean
-
     @Throws(BrokerCommunicationException::class)
     override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle? {
         val methodTag = "$TAG:communicateToBroker"
         if (!shouldBypassSupportValidation && !isSupportedByTargetedBroker(bundle.targetBrokerAppPackageName)) {
-            val message = "Operation $type is not supported on ${bundle.targetBrokerAppPackageName}"
+            val message = "Operation ${getType()} is not supported on ${bundle.targetBrokerAppPackageName}"
             Logger.info(methodTag, message)
             throw BrokerCommunicationException(
                 BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE,
-                type, message, null
+                getType(),
+                message,
+                null
             )
         }
 

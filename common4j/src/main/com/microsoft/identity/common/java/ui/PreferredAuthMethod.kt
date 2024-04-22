@@ -22,14 +22,34 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.ui
 
+import kotlin.jvm.Throws
+
 /**
- * Preferred authentication method for the user.
+ *  Authentication methods for the user.
  * This code will be sent to eSTS as a hint to what authentication method the user prefers.
  * If not specified, eSTS will use the default authentication method.
  */
-enum class PreferredAuthMethod(@JvmField val code: Int) {
+enum class PreferredAuthMethod(@JvmField val code: Int, @JvmField val value: String?) {
+    /**
+     * No preferred authentication method.
+     */
+    NONE(0, null),
+
     /**
      * QR code + PIN authentication.
+     * QR + PIN Authentication, is possible in MSAL only and MSAL with Broker flows.
+     * By default broker flows will have the capability to use QR code + PIN authentication.
+     * If is only MSAL, the user will have to add the camera permission to the app manifest
+     * to use QR code + PIN authentication, i.e. <uses-permission android:name="android.permission.CAMERA" />
+     * 18 is the code for QR code + PIN authentication on ESTS.
      */
-    QR(18)
+    QR(18, "qrpin");
+    companion object {
+        @JvmStatic
+        @Throws(NoSuchElementException::class)
+        fun fromCode(code: Int) = PreferredAuthMethod.values().first { it.code == code }
+        @JvmStatic
+        @Throws(NoSuchElementException::class)
+        fun fromValue(value: String?) = PreferredAuthMethod.values().first { it.value == value }
+    }
 }

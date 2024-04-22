@@ -26,11 +26,13 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.commands.BaseCommand;
 import com.microsoft.identity.common.java.commands.CommandCallback;
+import com.microsoft.identity.common.java.controllers.IControllerFactory;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 
 import java.util.List;
@@ -60,10 +62,10 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
      * @param publicApiId The public API ID of this command.
      */
     public GenerateShrCommand(@NonNull final GenerateShrCommandParameters parameters,
-                              @NonNull final List<BaseController> controllers,
+                              @NonNull final IControllerFactory controllerFactory,
                               @NonNull final CommandCallback<GenerateShrResult, BaseException> callback,
                               @NonNull final String publicApiId) {
-        super(parameters, controllers, callback, publicApiId);
+        super(parameters, controllerFactory, callback, publicApiId);
     }
 
     @Override
@@ -73,13 +75,14 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
         GenerateShrResult result = null;
         final GenerateShrCommandParameters parameters = (GenerateShrCommandParameters) getParameters();
 
+        final List<BaseController> controllers = getControllerFactory().getAllControllers();
+
         // Iterate over our controllers, to service the request either locally or via the broker...
-        // if the local (embedded) cache contains tokens for the supplied user, we will sign using
-        // the embedded PoP keys. If no local user-state exists, the broker will be delegated to
-        // where the same check is performed.
+        // If the broker cache contains tokens for the supplied user, we will sign using
+        // broker PoP keys. If not, check if local user-state exists.
         BaseController controller;
-        for (int ii = 0; ii < getControllers().size(); ii++) {
-            controller = getControllers().get(ii);
+        for (int ii = 0; ii < controllers.size(); ii++) {
+            controller = controllers.get(ii);
 
             com.microsoft.identity.common.internal.logging.Logger.verbose(
                     methodTag,
@@ -97,7 +100,7 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
                 // broker flow, errors will be returned as properties of the result, instead
                 // of as thrown Exceptions
                 if (NO_ACCOUNT_FOUND.equalsIgnoreCase(errorCode)) {
-                    if (getControllers().size() > ii + 1) {
+                    if (controllers.size() > ii + 1) {
                         // Try our next controller
                         continue;
                     } else {
@@ -106,6 +109,15 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
                 } else {
                     throw new ClientException(errorCode, errorMessage);
                 }
+            } else {
+                Logger.verbose(
+                        methodTag,
+                        "Executing with controller: "
+                                + controller.getClass().getSimpleName()
+                                + ": Succeeded"
+                );
+
+                return result;
             }
         }
 

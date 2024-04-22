@@ -227,7 +227,7 @@ android.libraryVariants.all { variant ->
         classpath += files(android.getBootClasspath())
 
         options.memberLevel = JavadocMemberLevel.PUBLIC
-        options.addStringOption('Xdoclint:none', '-quiet')
+        options.addBooleanOption('Xdoclint:none', true)
 
         // We're excluding these generated files
         exclude '**/R.java'

@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Zdaj lahko odstranite pametno kartico</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Razumem</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Ali želite tej aplikaciji dovoliti dostop do kamere?</string>
+    <string name="qr_code_rationale_message">Nato se lahko vpišete s kodo QR.</string>
+    <string name="qr_code_rationale_allow">Dovoli</string>
+    <string name="qr_code_rationale_block">Blokiraj</string>
 </resources>

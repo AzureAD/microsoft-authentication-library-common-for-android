@@ -27,6 +27,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler
 import com.microsoft.identity.common.java.constants.FidoConstants
+import com.microsoft.identity.common.java.constants.FidoConstants.Companion.PASSKEY_PROTOCOL_ERROR_PREFIX_STRING
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility
 import com.microsoft.identity.common.java.opentelemetry.SpanName
@@ -178,6 +179,7 @@ class AuthFidoChallengeHandler (
      * @param errorMessage  Error message string.
      * @param exception     Exception associated with error. Default null.
      * @param assertion     String representing response with signed challenge.
+     * @param methodTag     methodTag of method where exception occurred.
      */
     fun respondToChallengeWithError(submitUrl: String,
                                     context: String,
@@ -193,6 +195,29 @@ class AuthFidoChallengeHandler (
         } else {
             span.setStatus(StatusCode.ERROR, errorMessage)
         }
-        respondToChallenge(submitUrl, errorMessage, context, span)
+        respondToChallenge(
+            submitUrl,
+            getErrorAssertion(
+                errorMessage,
+                exception
+            ),
+            context,
+            span
+        )
+    }
+
+    /**
+     * Formats the exception/error message to be sent via the assertion header of the passkey protocol.
+     *
+     * @param errorMessage  Error message string.
+     * @param exception     Exception associated with error. Default null.
+     */
+    private fun getErrorAssertion(errorMessage: String,
+                                  exception: Exception? = null
+    ): String {
+        if (exception != null) {
+            return PASSKEY_PROTOCOL_ERROR_PREFIX_STRING + exception.javaClass.name + ": " + exception.message
+        }
+        return PASSKEY_PROTOCOL_ERROR_PREFIX_STRING + errorMessage
     }
 }

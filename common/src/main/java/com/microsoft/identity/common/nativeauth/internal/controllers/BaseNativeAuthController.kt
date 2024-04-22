@@ -44,6 +44,7 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenResult
 import com.microsoft.identity.common.java.request.SdkType
 import com.microsoft.identity.common.java.result.AcquireTokenResult
 import com.microsoft.identity.common.java.result.GenerateShrResult
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod
 import com.microsoft.identity.common.java.util.ported.PropertyBag
 import lombok.EqualsAndHashCode
 
@@ -250,9 +251,9 @@ abstract class BaseNativeAuthController : BaseController() {
     @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
-        message = "isQrPinAvailable() not supported in NativeAuthController"
+        message = "getPreferredAuthMethod() not supported in NativeAuthController"
     )
-    override fun isQrPinAvailable(): Boolean {
-        throw ClientException("isQrPinAvailable() not supported in NativeAuthController")
+    override fun getPreferredAuthMethod(): PreferredAuthMethod {
+        throw ClientException("getPreferredAuthMethod() not supported in NativeAuthController")
     }
 }

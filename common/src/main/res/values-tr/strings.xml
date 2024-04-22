@@ -62,4 +62,10 @@
 
     <string name="smartcard_removal_prompt_dialog_title">Şimdi akıllı kartınızı kaldırabilirsiniz</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Anladım</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Bu uygulamanın kameranıza erişmesine izin verilsin mi?</string>
+    <string name="qr_code_rationale_message">Sonra QR koduyla oturum açabilirsiniz.</string>
+    <string name="qr_code_rationale_allow">İzin ver</string>
+    <string name="qr_code_rationale_block">Engelle</string>
 </resources>

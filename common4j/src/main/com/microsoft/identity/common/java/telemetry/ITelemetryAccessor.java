@@ -29,13 +29,11 @@ import java.util.Map;
  * An interface describing a telemetry accessor i.e. anyone that has the ability to return a
  * telemetry object.
  */
+@Deprecated
 public interface ITelemetryAccessor {
 
     /**
      * Obtain telemetry data.
-     *
-     * @return a {@link List<Map<String, String>>} containing telemetry data. Generally this would
-     * be the data produced from {@link Telemetry} class.
      */
     List<Map<String, String>> getTelemetry();
 

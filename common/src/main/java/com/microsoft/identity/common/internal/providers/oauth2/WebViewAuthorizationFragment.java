@@ -22,21 +22,30 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.PermissionRequest;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ProgressBar;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
@@ -48,10 +57,13 @@ import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWeb
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.constants.FidoConstants;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightManager;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -96,6 +108,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private boolean webViewZoomControlsEnabled;
 
     private boolean webViewZoomEnabled;
+
+    private PermissionRequest mCameraPermissionRequest;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -149,6 +163,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 new OnPageLoadedCallback() {
                     @Override
                     public void onPageLoaded(final String url) {
+                        // Reset the camera permission request when a new page is loaded.
+                        mCameraPermissionRequest = null;
                         final String[] javascriptToExecute = new String[1];
                         mProgressBar.setVisibility(View.INVISIBLE);
                         try {
@@ -200,6 +216,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @SuppressLint({"SetJavaScriptEnabled", "ClickableViewAccessibility"})
     private void setUpWebView(@NonNull final View view,
                               @NonNull final AzureActiveDirectoryWebViewClient webViewClient) {
+        final String methodTag = TAG + ":setUpWebView";
+
         // Create the Web View to show the page
         mWebView = view.findViewById(R.id.common_auth_webview);
         WebSettings userAgentSetting = mWebView.getSettings();
@@ -228,7 +246,164 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
+        mWebView.setWebChromeClient(new WebChromeClient() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+            @Override
+            public void onPermissionRequest(final PermissionRequest request) {
+                Logger.info(methodTag,
+                        "Permission requested from:" +request.getOrigin() +
+                                " for resources:" + Arrays.toString(request.getResources())
+                );
+                // We can only grant or deny permissions for video capture/camera.
+                // To avoid unintentionally granting requests for not defined permissions
+                // we check if the request is for camera.
+                if (!isPermissionRequestForCamera(request)) {
+                    Logger.warn(methodTag, "Permission request is not for camera.");
+                    request.deny();
+                    return;
+                }
+                // There is a issue in ESTS UX where it sends multiple camera permission requests.
+                // So, if there is already a camera permission request in progress we handle it here.
+                if (mCameraPermissionRequest != null) {
+                    handleRepeatedRequests(request);
+                    return;
+                }
+                Logger.info(methodTag, "New camera request.");
+                mCameraPermissionRequest = request;
+                if (isCameraPermissionGranted()) {
+                    Logger.info(methodTag, "Camera permission already granted.");
+                    acceptCameraRequest();
+                } else if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+                    Logger.info(methodTag, "Show camera rationale.");
+                    showCameraRationale();
+                } else {
+                    requestCameraPermissionFromUser();
+                }
+
+            }
+        });
     }
+
+    /**
+     * Handles repeated camera permission requests.
+     * if the camera permission has been granted, it will grant the permission to the request.
+     * Otherwise, it will deny the permission to the request.
+     * <p>
+     * Note: This method is only available on API level 21 or higher.
+     *
+     * @param request The permission request.
+     */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private void handleRepeatedRequests(@NonNull final PermissionRequest request) {
+        final String methodTag = TAG + ":handleRepeatedRequests";
+        if (isCameraPermissionGranted()) {
+            Logger.info(methodTag, "Repeated request, granting the permission.");
+            final String[] cameraPermission = new String[] {
+                    PermissionRequest.RESOURCE_VIDEO_CAPTURE
+            };
+            request.grant(cameraPermission);
+        } else {
+            Logger.info(methodTag, "Repeated request, denying the permission");
+            request.deny();
+        }
+    }
+
+    /**
+     * Call this method to grant the permission to access the camera resource.
+     * The granted permission is only valid for the current WebView.
+     * <p>
+     * Note: This method is only available on API level 21 or higher.
+     */
+    private void acceptCameraRequest() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            final String[] cameraPermission = new String[] {
+                    PermissionRequest.RESOURCE_VIDEO_CAPTURE
+            };
+            if (mCameraPermissionRequest != null) {
+                mCameraPermissionRequest.grant(cameraPermission);
+            }
+        }
+    }
+
+    /**
+     * Call this method to deny the permission to access the camera resource.
+     * <p>
+     * Note: This method is only available on API level 21 or higher.
+     */
+    private void denyCameraRequest() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &&
+                mCameraPermissionRequest != null) {
+            mCameraPermissionRequest.deny();
+        }
+    }
+
+    /**
+     * Determines whatever if the camera permission has been granted.
+     *
+     * @return true if the camera permission has been granted, false otherwise.
+     */
+    private boolean isCameraPermissionGranted() {
+        return ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /**
+     * Determines whatever if the given permission request is for the camera resource.
+     * <p>
+     * Note: This method is only available on API level 21 or higher.
+     * Devices running on lower API levels will not be able to grant or deny camera permission requests.
+     * getResources() method is only available on API level 21 or higher.
+     *
+     * @param request The permission request.
+     * @return true if the given permission request is for camera, false otherwise.
+     */
+    private boolean isPermissionRequestForCamera(final PermissionRequest request) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            return request.getResources().length == 1 &&
+                    PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(request.getResources()[0]);
+        }
+        Logger.warn(TAG, "PermissionRequest.getResources() method is not available on API:"
+                + Build.VERSION.SDK_INT + ". We cannot determine if the request is for camera.");
+        return false;
+    }
+
+    private final ActivityResultLauncher<String> cameraRequestActivity = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(),
+            permissionGranted   -> {
+                Logger.info(TAG, "Camera permission granted: " + permissionGranted);
+                if (permissionGranted) {
+                    acceptCameraRequest();
+                }
+                else {
+                    denyCameraRequest();
+                }
+            }
+    );
+
+    /**
+     * Launches the camera permission request for the app.
+     */
+    private void requestCameraPermissionFromUser() {
+        final String methodTAG = TAG + ":requestCameraPermissionFromUser";
+        Logger.info(methodTAG, "Requesting camera permission.");
+        cameraRequestActivity.launch(Manifest.permission.CAMERA);
+    }
+
+    /**
+     * Shows a dialog to the user explaining why the camera permission is required.
+     * If the user accepts the dialog, the camera permission request will be launched.
+     * If the user denies the dialog, the camera permission request will be denied.
+     */
+    private void showCameraRationale() {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setMessage(R.string.qr_code_rationale_message)
+                .setTitle(R.string.qr_code_rationale_header)
+                .setCancelable(false)
+                .setPositiveButton(R.string.qr_code_rationale_allow, (dialog, id) -> requestCameraPermissionFromUser())
+                .setNegativeButton(R.string.qr_code_rationale_block, (dialog, id) -> denyCameraRequest());
+        builder.show();
+    }
+
 
     /**
      * Loads starting authorization request url into WebView.
@@ -275,7 +450,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             HashMap<String, String> requestHeaders = (HashMap<String, String>) state.getSerializable(REQUEST_HEADERS);
             // In cases of WebView as an auth agent, we want to always add the passkey protocol header.
             // (Not going to add passkey protocol header until full feature is ready.)
-            if (FidoConstants.IS_PASSKEY_SUPPORT_READY) {
+            if (CommonFlightManager.isFlightEnabled(CommonFlight.ENABLE_PASSKEY_FEATURE)) {
                 if (requestHeaders == null) {
                     requestHeaders = new HashMap<>();
                 }

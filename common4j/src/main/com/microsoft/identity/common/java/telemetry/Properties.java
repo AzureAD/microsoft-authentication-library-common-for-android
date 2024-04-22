@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * The base class for the event properties.
  */
+@Deprecated
 public class Properties {
     private ConcurrentHashMap<String, String> mProperties;
 

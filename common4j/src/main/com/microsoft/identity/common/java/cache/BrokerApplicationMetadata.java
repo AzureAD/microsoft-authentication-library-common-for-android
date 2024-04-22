@@ -29,7 +29,7 @@ import com.google.gson.annotations.SerializedName;
  * defined on {@link AbstractApplicationMetadata}.
  * <p>
  * Please note that two applications are "the same" if their client_id, environment, and app UID
- * (user) are the same. An app may not simultaneously be both FoCI & non-FoCI.
+ * (user) are the same. An app may not simultaneously be both FoCI and non-FoCI.
  */
 public class BrokerApplicationMetadata extends AbstractApplicationMetadata {
 

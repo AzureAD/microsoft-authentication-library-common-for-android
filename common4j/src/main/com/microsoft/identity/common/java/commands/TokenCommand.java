@@ -27,6 +27,7 @@ import lombok.NonNull;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.controllers.IControllerFactory;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
@@ -37,18 +38,11 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public abstract class TokenCommand extends BaseCommand<AcquireTokenResult> {
 
-    public TokenCommand(@NonNull TokenCommandParameters parameters,
-                        @NonNull BaseController controller,
-                        @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                        @NonNull String publicApiId) {
-        super(parameters, controller, callback, publicApiId);
-    }
-
-    public TokenCommand(@NonNull TokenCommandParameters parameters,
-                        @NonNull List<BaseController> controllers,
-                        @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                        @NonNull String publicApiId) {
-        super(parameters, controllers, callback, publicApiId);
+    public TokenCommand(@NonNull final TokenCommandParameters parameters,
+                        @NonNull final IControllerFactory controllerFactory,
+                        @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
+                        @NonNull final String publicApiId) {
+        super(parameters, controllerFactory, callback, publicApiId);
     }
 
     @Override

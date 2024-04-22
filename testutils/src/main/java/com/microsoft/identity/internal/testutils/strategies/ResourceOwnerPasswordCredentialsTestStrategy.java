@@ -54,8 +54,11 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
      *
      * @param config Microsoft Sts OAuth2 configuration
      */
-    public ResourceOwnerPasswordCredentialsTestStrategy(final MicrosoftStsOAuth2Configuration config) throws ClientException {
-        super(config, OAuth2StrategyParameters.builder().build());
+    public ResourceOwnerPasswordCredentialsTestStrategy(final MicrosoftStsOAuth2Configuration config, final boolean useOpenIdConnectConfig) throws ClientException {
+        super(config, OAuth2StrategyParameters.builder()
+                .usingOpenIdConfiguration(useOpenIdConnectConfig)
+                .build()
+        );
     }
 
     /**

@@ -63,7 +63,7 @@ import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.Cac
 import edu.umd.cs.findbugs.annotations.Nullable;
 
 /**
- * Uses Gson to serialize instances of <T> into {@link String}s.
+ * Uses Gson to serialize instances into {@link String}s.
  */
 public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
 

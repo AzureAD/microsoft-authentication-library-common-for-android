@@ -30,6 +30,7 @@ import com.microsoft.identity.common.java.util.StringUtil;
 
 import lombok.NonNull;
 
+@Deprecated
 public class BaseEvent extends Properties {
     public BaseEvent() {
         super();
