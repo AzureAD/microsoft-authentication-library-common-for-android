@@ -559,12 +559,4 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             );
         }
     }
-
-    /**
-     * If the parameters passed are of type {@link AccountTransferV2TokenCommandParameters}, this is an Account Transfer V2 request,
-     * return true. Otherwise, return false.
-     */
-    private boolean getIsAccountTransferV2Request(@NonNull final TokenCommandParameters parameters) {
-        return parameters instanceof AccountTransferV2TokenCommandParameters;
-    }
 }
