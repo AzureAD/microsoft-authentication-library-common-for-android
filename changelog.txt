@@ -1,6 +1,6 @@
 V.Next
 ---------
-- [PATCH] Update nimbus-jose-jwt 9.37.3 (#2392)
+- [PATCH] Update nimbus-jose-jwt 9.37.3 and junit 4.13.2 (#2392)
 - [MINOR] Update flow to get token for labapi to not require automationrunnerapp (#2376)
 - [MINOR] Add field in BrokerInteractiveTokenCommandParameters for ATv2. (#2363)
 
