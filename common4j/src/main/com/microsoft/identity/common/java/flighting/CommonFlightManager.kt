@@ -20,22 +20,39 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.flighting;
-
-import lombok.NonNull;
+package com.microsoft.identity.common.java.flighting
 
 /**
  * Class to set Flight Provider for Common Flights
- * Consumer of commons needs to implement {@link IFlightsProvider} interface
- * and set it using CommonFlightManager.setFlightProvider(@NonNull IFlightsProvider flightProvider)
+ * Consumer of commons needs to implement [IFlightsManager] interface
+ * and set it using CommonFlightManager.setFlightsManager(@NonNull IFlightsManager flightsManager)
  * to provide Flight Values for CommonFlights
  * If no Flight Provider is set, default value of the flight will be used
  */
-public class CommonFlightManager {
-    private static IFlightsProvider mFlightProvider;
+object CommonFlightManager : IFlightsManager {
 
-    public static void setFlightProvider(@NonNull IFlightsProvider flightProvider) {
-        mFlightProvider = flightProvider;
+    private var mFlightProvider: IFlightsProvider? = null
+    private var sFlightsManager: IFlightsManager? = null
+
+    fun initializeCommonFlightsManager(flightsManager: IFlightsManager) {
+        sFlightsManager = flightsManager
+    }
+
+    override fun getFlightsProvider(): IFlightsProvider {
+        return sFlightsManager!!.getFlightsProvider()
+    }
+
+    override fun getFlightsProviderForTenant(tenantId: String): IFlightsProvider {
+        return sFlightsManager!!.getFlightsProviderForTenant(tenantId)
+    }
+
+    /**
+     * For testing only.
+     * @param flightProvider
+     */
+    @JvmStatic
+    fun setFlightProvider(flightProvider: IFlightsProvider) {
+        mFlightProvider = flightProvider
     }
 
     /**
@@ -43,25 +60,25 @@ public class CommonFlightManager {
      * @param flightConfig flight to check
      * @return true if the flight is enabled otherwise returns the defaultValue
      */
-    public static boolean isFlightEnabled(@NonNull IFlightConfig flightConfig) {
-        if (mFlightProvider == null) {
-            return (Boolean) flightConfig.getDefaultValue();
-        }
-
-        return mFlightProvider.isFlightEnabled(flightConfig);
+    @JvmStatic
+    fun isFlightEnabled(flightConfig: IFlightConfig): Boolean {
+        return if (mFlightProvider == null) {
+            flightConfig.getDefaultValue() as Boolean
+        } else mFlightProvider!!.isFlightEnabled(
+            flightConfig
+        )
     }
 
     /**
      * Gets the value of an integer flight.
      *
-     * @param flightConfig {@link IFlightConfig} to check
+     * @param flightConfig [IFlightConfig] to check
      * @return the flight value if set otherwise returns the defaultValue
      */
-    public static int getIntValue(@NonNull IFlightConfig flightConfig) {
-        if (mFlightProvider == null) {
-            return (int) flightConfig.getDefaultValue();
-        }
-
-        return mFlightProvider.getIntValue(flightConfig);
+    @JvmStatic
+    fun getIntValue(flightConfig: IFlightConfig): Int {
+        return if (mFlightProvider == null) {
+            flightConfig.getDefaultValue() as Int
+        } else mFlightProvider!!.getIntValue(flightConfig)
     }
 }
