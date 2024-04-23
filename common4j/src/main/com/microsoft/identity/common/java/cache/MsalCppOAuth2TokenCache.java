@@ -67,7 +67,7 @@ public class MsalCppOAuth2TokenCache
         GenericAccount,
         GenericRefreshToken> {
 
-    private static final String TAG = MsalCppOAuth2TokenCache.class.getName();
+    private static final String TAG = MsalCppOAuth2TokenCache.class.getSimpleName();
 
     /**
      * Constructor of MsalOAuth2TokenCache.
@@ -85,9 +85,7 @@ public class MsalCppOAuth2TokenCache
     }
 
     /**
-     * Factory method for creating an instance of MsalCppOAuth2TokenCache
-     * <p>
-     * NOTE: Currently this is configured for AAD v2 as the only IDP
+     * Factory method for creating an instance of MsalCppOAuth2TokenCache.
      *
      * @param platformComponents The Application Context
      * @return An instance of the MsalCppOAuth2TokenCache.
@@ -95,7 +93,20 @@ public class MsalCppOAuth2TokenCache
     // Suppressing unchecked warning as the return type requiring generic parameter which is not provided
     @SuppressWarnings(WarningType.unchecked_warning)
     public static MsalCppOAuth2TokenCache create(@NonNull final IPlatformComponents platformComponents) {
-        final MsalOAuth2TokenCache msalOAuth2TokenCache = MsalOAuth2TokenCache.create(platformComponents);
+        return create(platformComponents, false);
+    }
+
+    /**
+     * Factory method for creating an instance of MsalCppOAuth2TokenCache.
+     *
+     * @param platformComponents The Application Context
+     * @param useInMemoryCache Opt-in to caching layer that holds account and credential objects in memory
+     * @return An instance of the MsalCppOAuth2TokenCache.
+     */
+    // Suppressing unchecked warning as the return type requiring generic parameter which is not provided
+    @SuppressWarnings(WarningType.unchecked_warning)
+    public static MsalCppOAuth2TokenCache create(@NonNull final IPlatformComponents platformComponents, boolean useInMemoryCache) {
+        final MsalOAuth2TokenCache msalOAuth2TokenCache = MsalOAuth2TokenCache.create(platformComponents, useInMemoryCache);
 
         // Suppressing unchecked warnings due to the generic types not provided while creating object of MsalCppOAuth2TokenCache
         @SuppressWarnings(WarningType.unchecked_warning)
@@ -113,9 +124,8 @@ public class MsalCppOAuth2TokenCache
     }
 
     /**
-     * @param accountRecord : AccountRecord associated with the input credentials, can be null.
-     * @param credentials   : list of Credential which can include AccessTokenRecord, IdTokenRecord and RefreshTokenRecord.
-     * @throws ClientException : If the supplied Account or Credential are null or schema invalid.
+     * @param credentials       list of Credential which can include AccessTokenRecord, IdTokenRecord and RefreshTokenRecord.
+     * @throws ClientException  If the supplied Account or Credential are null or schema invalid.
      */
     public synchronized void saveCredentials(@NonNull final Credential... credentials) throws ClientException {
         if (credentials.length == 0) {
@@ -146,7 +156,7 @@ public class MsalCppOAuth2TokenCache
      *
      * @param accountRecord : accountRecord to be saved.
      */
-    public synchronized void saveAccountRecord(@NonNull final AccountRecord accountRecord) {
+    public void saveAccountRecord(@NonNull final AccountRecord accountRecord) {
         getAccountCredentialCache().saveAccount(accountRecord);
     }
 
@@ -155,7 +165,7 @@ public class MsalCppOAuth2TokenCache
      * Note: This method is intended to be only used for testing purposes.
      */
     //@VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    public synchronized void clearCache() {
+    public void clearCache() {
         getAccountCredentialCache().clearAll();
     }
 
@@ -166,7 +176,7 @@ public class MsalCppOAuth2TokenCache
      * @return A immutable List of Credentials contained in this cache.
      */
     //@VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    public synchronized List<Credential> getCredentials() {
+    public List<Credential> getCredentials() {
         return Collections.unmodifiableList(
                 getAccountCredentialCache().getCredentials()
         );
@@ -249,9 +259,11 @@ public class MsalCppOAuth2TokenCache
                 homeAccountId,
                 normalizedEnvironment,
                 CredentialType.RefreshToken,
-                null,
+                null, //wildcard (*)
+                null, //wildcard (*)
+                null, //wildcard (*)
                 normalizedRealm,
-                null,
+                null, //wildcard (*)
                 SCHEME_BEARER
         );
 
@@ -278,8 +290,6 @@ public class MsalCppOAuth2TokenCache
 
     /**
      * Gets an immutable {@link List} of {@link AccountRecord} objects.
-     *
-     * @return {@link List<AccountRecord>}
      */
     public List<AccountRecord> getAllAccounts() {
         return Collections.unmodifiableList(

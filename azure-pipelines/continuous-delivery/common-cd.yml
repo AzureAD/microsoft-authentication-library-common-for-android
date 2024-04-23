@@ -1,7 +1,6 @@
 # File: azure-pipelines/continuous-delivery/common-cd.yml
-# Description: Assemble & publish latest common4j, common, keyvault, labapi, labapiutilities, testutil release to internal vsts feed
+# Description: Assemble & publish latest keyvault, labapi, labapiutilities, testutil release to internal vsts feed
 # Variable: 'ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME' was defined in the Variables tab
-# Variable: 'mvnAccessToken' access token to access internal vsts feed
 # Variable: 'customVersion' overrides the version number of the published libraries
 
 name: 0.0.$(Date:yyyyMMdd)$(Rev:.r) # $(Build.BuildNumber) = name
@@ -19,29 +18,6 @@ variables:
 pool:
   name: Hosted Windows 2019 with VS2019
 jobs:
-# common4j
-- job: common4j_phase
-  displayName: 'common4j: Build, Test and Publish'
-  steps:
-  - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
-    parameters:
-      project: common4j
-      buildArguments: '-PprojVersion=$(versionNumber)'
-      artifactFolder: 'common4j/build/outputs'
-# common
-- job: common_phase
-  displayName: 'common: Build, Test and Publish'
-  dependsOn:
-  - common4j_phase
-  steps:
-  - template: ../templates/steps/automation-cert.yml
-    parameters:
-      envVstsMvnAt: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
-  - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
-    parameters:
-      project: common
-      buildArguments: '-PprojVersion=$(versionNumber) -PdistCommon4jVersion=$(versionNumber)'
-      artifactFolder: 'common/build/outputs'
 # Key Vault
 - job: keyvault_phase
   displayName: 'Key Vault: Build, Test and Publish'
@@ -66,30 +42,25 @@ jobs:
   dependsOn:
   - keyvault_phase
   - labapi_phase
+  variables:
+    - group: AndroidAuthClientAutomationSecrets
+    - group: MSIDLABVARS
   steps:
   - template: ../templates/steps/automation-cert.yml
     parameters:
       envVstsMvnAt: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
-  - task: AzureKeyVault@2
-    displayName: 'Get Key vault AndroidAutomationRunnerAppSecret'
-    inputs:
-      azureSubscription: 'MSIDLABS_ANDROID_KV'
-      KeyVaultName: 'ADALTestInfo'
-      SecretsFilter: 'AndroidAutomationRunnerAppSecret'
-      RunAsPreJob: false
   - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
     parameters:
       project: LabApiUtilities
       buildArguments: '-PprojVersion=$(versionNumber)'
       artifactFolder: 'LabApiUtilities/build/libs'
-      testArguments: "-PlabSecret=$(AndroidAutomationRunnerAppSecret)"
+      testArguments: "-PlabSecret=$(LabVaultAppSecret)"
 # Test utils
 - job: testutils_phase
   displayName: 'Test utils: Build, Test and Publish'
   dependsOn:
   - keyvault_phase
   - labapi_phase
-  - common_phase
   steps:
   - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
     parameters:
@@ -101,7 +72,6 @@ jobs:
   displayName: 'UI Automation utilities: Build, Test and Publish'
   dependsOn:
   - testutils_phase
-  - common_phase
   steps:
   - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
     parameters:

@@ -26,13 +26,14 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
-import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
+import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -54,6 +55,8 @@ public abstract class Authority {
     private static final String ADFS_PATH_SEGMENT = "adfs";
     private static final String B2C_PATH_SEGMENT = "tfp";
     public static final String B2C = "B2C";
+    public static final String CIAM = "CIAM";
+    public static final String AAD_NA = "AAD_NA";
 
     @SerializedName("default")
     protected boolean mIsDefault = false;
@@ -134,7 +137,12 @@ public abstract class Authority {
 
         final List<String> pathSegments = authorityCommonUriBuilder.getPathSegments();
 
-        if (pathSegments.size() == 0) {
+        // Adding check in case we have a trailing "/" at the end of the authority
+        if (pathSegments.size() == 0 || (pathSegments.size() == 1 && pathSegments.get(0).equals(""))) {
+            if (authorityUrl.contains(CIAMAuthority.CIAM_LOGIN_URL_SEGMENT)){
+                // This is a CIAM authority, return CIAMAuthority
+                return new CIAMAuthority(CIAMAuthority.getTenantNameVariantUrlFromAuthorityWithoutPath(authorityUrl));
+            }
             return new UnknownAuthority();
         }
 
@@ -146,36 +154,46 @@ public abstract class Authority {
 
             if (B2C.equalsIgnoreCase(authorityTypeStr)) {
                 authority = new AzureActiveDirectoryB2CAuthority(authorityUrl);
+            } else if (CIAM.equalsIgnoreCase(authorityTypeStr)) {
+                authority = new CIAMAuthority(authorityUrl);
+            } else if (AAD_NA.equalsIgnoreCase(authorityTypeStr) && configuredAuthority instanceof NativeAuthCIAMAuthority) {
+                authority = new NativeAuthCIAMAuthority(
+                        authorityUrl,
+                        ((NativeAuthCIAMAuthority) configuredAuthority).getClientId());
             } else {
                 authority = createAadAuthority(authorityCommonUriBuilder, pathSegments);
             }
         } else {
-            String authorityType = pathSegments.get(0);
+            String authorityType = pathSegments.get(0).toLowerCase(Locale.ROOT);
 
-            switch (authorityType.toLowerCase(Locale.ROOT)) {
-                case ADFS_PATH_SEGMENT:
-                    //Return new Azure Active Directory Federation Services Authority
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Authority type is ADFS"
-                    );
-                    authority = new ActiveDirectoryFederationServicesAuthority(authorityUrl);
-                    break;
-                case B2C_PATH_SEGMENT:
-                    //Return new B2C Authority
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Authority type is B2C"
-                    );
-                    authority = new AzureActiveDirectoryB2CAuthority(authorityUrl);
-                    break;
-                default:
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Authority type default: AAD"
-                    );
-                    authority = createAadAuthority(authorityCommonUriBuilder, pathSegments);
-                    break;
+            if (authorityType.equals(ADFS_PATH_SEGMENT)) {
+                //Return new Azure Active Directory Federation Services Authority
+                Logger.verbose(
+                        TAG + methodName,
+                        "Authority type is ADFS"
+                );
+                authority = new ActiveDirectoryFederationServicesAuthority(authorityUrl);
+            } else if (authorityType.equals(B2C_PATH_SEGMENT)) {
+                //Return new B2C Authority
+                Logger.verbose(
+                        TAG + methodName,
+                        "Authority type is B2C"
+                );
+                authority = new AzureActiveDirectoryB2CAuthority(authorityUrl);
+            } else if (authorityUrl.contains(CIAMAuthority.CIAM_LOGIN_URL_SEGMENT)) {
+                //Return new CIAM Authority
+                Logger.verbose(
+                        TAG + methodName,
+                        "Authority type is CIAM"
+                );
+                authority = new CIAMAuthority(authorityUrl);
+            } else {
+                //Return new AAD Authority
+                Logger.verbose(
+                        TAG + methodName,
+                        "Authority type default: AAD"
+                );
+                authority = createAadAuthority(authorityCommonUriBuilder, pathSegments);
             }
         }
 

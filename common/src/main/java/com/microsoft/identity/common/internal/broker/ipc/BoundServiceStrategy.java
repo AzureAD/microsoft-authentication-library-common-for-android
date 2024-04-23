@@ -6,6 +6,7 @@ import android.os.RemoteException;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.BoundServiceClient;
@@ -19,18 +20,26 @@ import static com.microsoft.identity.common.exception.BrokerCommunicationExcepti
 /**
  * A strategy for communicating with the targeted broker via Bound Service.
  */
-public class BoundServiceStrategy<T extends IInterface> implements IIpcStrategy {
+public class BoundServiceStrategy<T extends IInterface> extends AbstractIpcStrategyWithServiceValidation {
     private static final String TAG = BoundServiceStrategy.class.getSimpleName();
 
     private final BoundServiceClient<T> mClient;
 
     public BoundServiceStrategy(final @NonNull BoundServiceClient<T> boundServiceClient) {
+        super(false);
+        mClient = boundServiceClient;
+    }
+
+    @VisibleForTesting
+    protected BoundServiceStrategy(final @NonNull BoundServiceClient<T> boundServiceClient,
+                                   final boolean shouldBypassSupportValidation) {
+        super(shouldBypassSupportValidation);
         mClient = boundServiceClient;
     }
 
     @Override
-    public @Nullable
-    Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
+    @Nullable
+    protected Bundle communicateToBrokerAfterValidation(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
         final String methodTag = TAG + ":communicateToBroker";
         final String operationName = brokerOperationBundle.getOperation().name();
@@ -50,7 +59,13 @@ public class BoundServiceStrategy<T extends IInterface> implements IIpcStrategy 
     }
 
     @Override
+    @NonNull
     public Type getType() {
         return Type.BOUND_SERVICE;
+    }
+
+    @Override
+    public boolean isSupportedByTargetedBroker(@NonNull final String targetedBrokerPackageName) {
+        return mClient.isBoundServiceSupported(targetedBrokerPackageName);
     }
 }

@@ -29,10 +29,10 @@ import java.util.concurrent.TimeUnit;
  */
 public enum TokenRequestTimeout {
 
-    SILENT(15, TimeUnit.SECONDS),
-    SHORT(30, TimeUnit.SECONDS),
-    MEDIUM(1, TimeUnit.MINUTES),
-    LONG(2, TimeUnit.MINUTES);
+    SILENT(10, TimeUnit.SECONDS),
+    SHORT(20, TimeUnit.SECONDS),
+    MEDIUM(30, TimeUnit.SECONDS),
+    LONG(1, TimeUnit.MINUTES);
 
     private final long time;
     private final TimeUnit timeUnit;

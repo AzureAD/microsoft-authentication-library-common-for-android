@@ -29,17 +29,17 @@ import com.microsoft.identity.common.java.crypto.StorageEncryptionManager;
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
 import com.microsoft.identity.common.java.crypto.key.AbstractSecretKeyLoader;
 import com.microsoft.identity.common.java.crypto.key.PredefinedKeyLoader;
-import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Collections;
 import java.util.List;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 /**
  * Key Encryption Manager for ADAL & MSAL.
+ * Which supports both predefined key (if provided by the calling app),
+ * and KeyStore-wrapped key.
  * */
 public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionManager {
     private static final String TAG = AndroidAuthSdkStorageEncryptionManager.class.getSimpleName();
@@ -47,13 +47,17 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
     /**
      * Alias persisting the keypair in AndroidKeyStore.
      */
-    /* package */ static final String KEY_STORE_ALIAS = "AdalKey";
+    public static final String WRAPPING_KEY_ALIAS = "AdalKey";
+
+    /**
+     * Name of the file contains the symmetric key used for encryption/decryption.
+     */
+    public static final String WRAPPED_KEY_FILE_NAME = "adalks";
 
     private final PredefinedKeyLoader mPredefinedKeyLoader;
     private final AndroidWrappedKeyLoader mKeyStoreKeyLoader;
 
-    public AndroidAuthSdkStorageEncryptionManager(@NonNull final Context context,
-                                                  @Nullable final ITelemetryCallback telemetryCallback) {
+    public AndroidAuthSdkStorageEncryptionManager(@NonNull final Context context) {
         if (AuthenticationSettings.INSTANCE.getSecretKeyData() == null) {
             mPredefinedKeyLoader = null;
         } else {
@@ -61,11 +65,15 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
                     AuthenticationSettings.INSTANCE.getSecretKeyData());
         }
 
-        mKeyStoreKeyLoader = new AndroidWrappedKeyLoader(KEY_STORE_ALIAS, context, telemetryCallback);
+        mKeyStoreKeyLoader = new AndroidWrappedKeyLoader(
+                WRAPPING_KEY_ALIAS,
+                WRAPPED_KEY_FILE_NAME,
+                context);
     }
 
     @Override
-    public @NonNull AES256KeyLoader getKeyLoaderForEncryption() {
+    @NonNull
+    public AES256KeyLoader getKeyLoaderForEncryption() {
         if (mPredefinedKeyLoader != null) {
             return mPredefinedKeyLoader;
         }
@@ -74,7 +82,8 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
     }
 
     @Override
-    public @NonNull List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(@NonNull byte[] cipherText) {
+    @NonNull
+    public List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(byte[] cipherText) {
         final String methodTag = TAG + ":getKeyLoaderForDecryption";
 
         final String keyIdentifier = getKeyIdentifierFromCipherText(cipherText);
@@ -86,11 +95,12 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
                         "Cipher Text is encrypted by USER_PROVIDED_KEY_IDENTIFIER, " +
                                 "but mPredefinedKeyLoader is null.");
             }
-        } else if (AndroidWrappedKeyLoader.KEY_IDENTIFIER.equalsIgnoreCase(keyIdentifier)) {
+        } else if (AndroidWrappedKeyLoader.WRAPPED_KEY_KEY_IDENTIFIER.equalsIgnoreCase(keyIdentifier)) {
             return Collections.<AbstractSecretKeyLoader>singletonList(mKeyStoreKeyLoader);
         }
 
-        Logger.warn(methodTag, "Cannot find a matching key to decrypt the given blob");
+        Logger.warn(methodTag,
+                "Cannot find a matching key to decrypt the given blob. Key Identifier = " + keyIdentifier);
         return Collections.emptyList();
     }
 }

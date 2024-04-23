@@ -30,6 +30,8 @@ import com.microsoft.identity.common.java.commands.BaseCommand;
 import com.microsoft.identity.common.java.commands.CommandCallback;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.controllers.IControllerFactory;
+import com.microsoft.identity.common.java.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,29 +46,23 @@ import lombok.EqualsAndHashCode;
 public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>> {
     private static final String TAG = LoadAccountCommand.class.getSimpleName();
 
-    public LoadAccountCommand(@NonNull CommandParameters parameters,
-                              @NonNull BaseController controller,
-                              @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                              @NonNull String publicApiId) {
-        super(parameters, controller, callback, publicApiId);
-    }
-
-    public LoadAccountCommand(@NonNull CommandParameters parameters,
-                              @NonNull List<BaseController> controllers,
-                              @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                              @NonNull String publicApiId) {
-        super(parameters, controllers, callback, publicApiId);
+    public LoadAccountCommand(@NonNull final CommandParameters parameters,
+                              @NonNull final IControllerFactory controllerFactory,
+                              @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
+                              @NonNull final String publicApiId) {
+        super(parameters, controllerFactory, callback, publicApiId);
     }
 
     @Override
     public List<ICacheRecord> execute() throws Exception {
         final String methodTag = TAG + ":execute";
 
-        List<ICacheRecord> result = new ArrayList<>();
+        final List<ICacheRecord> result = new ArrayList<>();
+        final List<BaseController> controllers = getControllerFactory().getAllControllers();
 
-        for (int ii = 0; ii < getControllers().size(); ii++) {
-            final BaseController controller = getControllers().get(ii);
-            com.microsoft.identity.common.internal.logging.Logger.verbose(
+        for (int ii = 0; ii < controllers.size(); ii++) {
+            final BaseController controller = controllers.get(ii);
+            Logger.verbose(
                     methodTag,
                     "Executing with controller: "
                             + controller.getClass().getSimpleName()

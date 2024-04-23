@@ -174,11 +174,6 @@ public class JwsBuilderTest {
             }
 
             @Override
-            public String getThumbPrint() {
-                return "mock_thumbprint";
-            }
-
-            @Override
             public byte[] sign(@NonNull final String algorithm, final byte[] dataToBeSigned) throws ClientException {
                 // Do nothing.
                 return StringUtil.toByteArray(signature);

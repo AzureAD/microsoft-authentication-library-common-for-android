@@ -24,246 +24,147 @@ package com.microsoft.identity.client.ui.automation.broker;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.uiautomator.UiDevice;
-import androidx.test.uiautomator.UiObject;
-import androidx.test.uiautomator.UiObjectNotFoundException;
-import androidx.test.uiautomator.UiSelector;
 
-import com.google.gson.Gson;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
+import com.microsoft.identity.client.ui.automation.interaction.IPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
-import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
-import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+import com.microsoft.identity.common.java.util.ThreadUtils;
 
 import org.junit.Assert;
 
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
-
-import android.util.Base64;
-
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
+import lombok.Getter;
+
+/**
+ * A model for interacting with the BrokerHost app during UI Test.
+ * <p>
+ * By default all the {@link ITestBroker} operations are performed using the {@link SingleWpjApiFragment} class.
+ * if you want to perform specif broker host operations, you need to call the corresponding fragment class
+ * and then call the corresponding method.
+ * <p>
+ * Legacy WPJ operations are contained in the {@link SingleWpjApiFragment} class.
+ * Multiple WPJ operations are contained in the {@link MultipleWpjApiFragment} class.
+ * Broker API operations are contained in the {@link BrokerApiFragment} class.
+ * Broker Flights operations are contained in the {@link BrokerFlightsFragment} class.
+ *
+ */
 public class BrokerHost extends AbstractTestBroker {
-
     private final static String TAG = BrokerHost.class.getSimpleName();
-    public final static String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
-    public final static String BROKER_HOST_APP_NAME = "Broker Host App";
+
+    // flight to enable/disable the multiple wpj feature
+    private final static String FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER = "ENABLE_MULTIPLE_WORKPLACE_JOIN_PP";
+    private final static String FLIGHT_PRT_V3 = "EnablePrtV3";
+
+    // name for broker host APKs
     public final static String BROKER_HOST_APK = "BrokerHost.apk";
     public final static String OLD_BROKER_HOST_APK = "OldBrokerHost.apk";
+    public final static String BROKER_HOST_WITHOUT_BROKER_SELECTION_APK = "BrokerHostWithoutBrokerSelection.apk";
     public final static String BROKER_HOST_APK_PROD = "BrokerHostProd.apk";
     public final static String BROKER_HOST_APK_RC = "BrokerHostRC.apk";
+    // Fragments for BrokerHost
+    public final BrokerFlightsFragment brokerFlightsFragment;
+    public final BrokerApiFragment brokerApiFragment;
+    @Getter
+    public final SingleWpjApiFragment singleWpjApiFragment;
+    // If you're writing test specifically for MWPJ, use this fragment
+    // the default behavior for brokerHost app is to use the SingleWpjApiFragment
+    @Getter
+    public final MultipleWpjApiFragment multipleWpjApiFragment;
 
     public BrokerHost() {
-        super(BROKER_HOST_APP_PACKAGE_NAME, BROKER_HOST_APP_NAME,
-                new LocalApkInstaller(), new LocalApkInstaller());
-        localApkFileName = BROKER_HOST_APK;
-        localUpdateApkFileName = BROKER_HOST_APK;
+        this(BROKER_HOST_APK, BROKER_HOST_APK);
     }
 
     public BrokerHost(@NonNull final String brokerHostApkName) {
-        super(BROKER_HOST_APP_PACKAGE_NAME, BROKER_HOST_APP_NAME,
-                new LocalApkInstaller(), new LocalApkInstaller());
-        localApkFileName = brokerHostApkName;
-        localUpdateApkFileName = brokerHostApkName;
+        this(brokerHostApkName, brokerHostApkName);
     }
 
     public BrokerHost(@NonNull final String brokerHostApkName,
                       @NonNull final String updateBrokerHostApkName) {
-        super(BROKER_HOST_APP_PACKAGE_NAME, BROKER_HOST_APP_NAME,
-                new LocalApkInstaller(), new LocalApkInstaller());
+        super(
+                AbstractBrokerHost.BROKER_HOST_APP_PACKAGE_NAME,
+                AbstractBrokerHost.BROKER_HOST_APP_NAME,
+                new LocalApkInstaller(),
+                new LocalApkInstaller()
+        );
         localApkFileName = brokerHostApkName;
         localUpdateApkFileName = updateBrokerHostApkName;
+        brokerFlightsFragment = new BrokerFlightsFragment();
+        brokerApiFragment = new BrokerApiFragment();
+        singleWpjApiFragment = new SingleWpjApiFragment();
+        multipleWpjApiFragment = new MultipleWpjApiFragment(this);
     }
 
     @Override
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password) {
-        performDeviceRegistration(username, password, false);
+        singleWpjApiFragment.launch();
+        singleWpjApiFragment.performDeviceRegistration(
+                username,
+                password,
+                false,
+                false,
+                getDefaultBrokerPromptHandlerParameters(username)
+        );
+        final String joinedUpn = singleWpjApiFragment.getWpjAccount();
+        Assert.assertTrue("Assert that the joined account is the expected account", username.equalsIgnoreCase(joinedUpn));
     }
 
     @Override
-    public void performDeviceRegistration(String username, String password, boolean isFederatedUser) {
-        Logger.i(TAG, "Performing Device Registration for the given account..");
-        performDeviceRegistrationHelper(username);
-
-        // Click the join btn
-        final UiObject joinBtn = UiAutomatorUtils.obtainUiObjectWithResourceIdAndEnabledFlag(
-                CommonUtils.getResourceId(
-                        getPackageName(), "buttonJoin"
-                ), true
+    public void performDeviceRegistration(@NonNull String username,
+                                          @NonNull String password,
+                                          boolean isFederatedUser) {
+        singleWpjApiFragment.launch();
+        singleWpjApiFragment.performDeviceRegistration(
+                username,
+                password,
+                isFederatedUser,
+                false,
+                getDefaultBrokerPromptHandlerParameters(username)
         );
-
-        try {
-            joinBtn.click();
-        } catch (final UiObjectNotFoundException e) {
-            throw new AssertionError(e);
-        }
-        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
-                .prompt(PromptParameter.LOGIN)
-                .broker(this)
-                .consentPageExpected(false)
-                .expectingBrokerAccountChooserActivity(false)
-                .expectingLoginPageAccountPicker(false)
-                .sessionExpected(false)
-                .loginHint(username)
-                .build();
-
-        if (isFederatedUser) {
-            final AdfsPromptHandler adfsPromptHandler = new AdfsPromptHandler(promptHandlerParameters);
-            Logger.i(TAG, "Handle prompt of ADFS login page for Device Registration..");
-            // handle ADFS login page
-            adfsPromptHandler.handlePrompt(username, password);
-        } else {
-            final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
-            Logger.i(TAG, "Handle prompt of AAD login page for Device Registration..");
-            // handle AAD login page
-            aadPromptHandler.handlePrompt(username, password);
-        }
-
-        try {
-            postJoinConfirmHelper(username);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        final String joinedUpn = singleWpjApiFragment.getWpjAccount();
+        Assert.assertTrue("Assert that the joined account is the expected account", username.equalsIgnoreCase(joinedUpn));
     }
 
     @Override
     public void performSharedDeviceRegistration(String username, String password) {
         Logger.i(TAG, "Performing Shared Device Registration for the given account..");
-        performDeviceRegistrationHelper(username);
-
-        // Click the join shared device btn
-        UiObject joinBtn = UiAutomatorUtils.obtainUiObjectWithResourceIdAndEnabledFlag(
-                "com.microsoft.identity.testuserapp:id/buttonJoinSharedDevice", true
+        singleWpjApiFragment.launch();
+        singleWpjApiFragment.performDeviceRegistration(
+                username,
+                password,
+                false,
+                true,
+                getDefaultBrokerPromptHandlerParameters(username)
         );
-
-        try {
-            joinBtn.click();
-        } catch (final UiObjectNotFoundException e) {
-            throw new AssertionError(e);
-        }
-
-
-        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
-                .prompt(PromptParameter.LOGIN)
-                .broker(this)
-                .consentPageExpected(false)
-                .expectingBrokerAccountChooserActivity(false)
-                .expectingLoginPageAccountPicker(false)
-                .sessionExpected(false)
-                .loginHint(username)
-                .build();
-
-        final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
-
-        Logger.i(TAG, "Handle prompt of AAD login page for Shared Device Registration..");
-        // handle AAD login page
-        aadPromptHandler.handlePrompt(username, password);
-
-        try {
-            postJoinConfirmHelper(username);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        final String joinedUpn = singleWpjApiFragment.getWpjAccount();
+        Assert.assertTrue("Assert that the joined account is the expected account", username.equalsIgnoreCase(joinedUpn));
     }
 
-    private void performDeviceRegistrationHelper(@NonNull final String username) {
-        Logger.i(TAG, "Execution of Helper for Device Registration..");
-        launch(); // launch Broker Host app
-
-        if (shouldHandleFirstRun) {
-            handleFirstRun(); // handle first run experience
-        }
-
-        // enter upn in text box
-        UiAutomatorUtils.handleInput(
-                "com.microsoft.identity.testuserapp:id/editTextUsername",
-                username
-        );
-
-        try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(4));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void postJoinConfirmHelper(@NonNull final String expectedUpn) throws InterruptedException {
-        Logger.i(TAG, "Confirming that Shared Device Registration is successfull or not..");
-
-        // Look for join op completion dialog
-        final UiObject joinFinishDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "android:id/message"
-        );
-
-        Assert.assertTrue("Assert join finish dialog", joinFinishDialog.waitForExists(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG));
-
-        try {
-            // Obtain the text from the dialog box
-            final String joinFinishDialogText = joinFinishDialog.getText();
-            final String joinStatus = joinFinishDialogText.split(":")[1];
-            // The status should be successful
-            Assert.assertTrue("Assert the status is successful", "SUCCESSFUL".equalsIgnoreCase(joinStatus));
-
-            // dismiss the dialog
-            UiAutomatorUtils.handleButtonClick("android:id/button1");
-
-            // Adding brief wait to increase reliability of test
-            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
-
-            // compare the UPN to make sure joined with the expected account
-            final String joinedUpn = getAccountUpn();
-            Assert.assertTrue("Assert that the joined account is the expected account", expectedUpn.equalsIgnoreCase(joinedUpn));
-        } catch (final UiObjectNotFoundException e) {
-            throw new AssertionError(e);
-        }
+    @Override
+    public void performSharedDeviceRegistrationDontValidate(@NonNull final String username,
+                                                            @NonNull final String password) {
+        throw new UnsupportedOperationException("This method is not supported in BrokerHost");
     }
 
     @Nullable
     @Override
     public String obtainDeviceId() {
-        Logger.i(TAG, "Obtain Device Id..");
-        final String resourceButtonId = "com.microsoft.identity.testuserapp:id/buttonDeviceId";
-        final String textId = "DeviceId";
-        return basicButtonHandler(resourceButtonId, textId);
+        singleWpjApiFragment.launch();
+        return singleWpjApiFragment.getDeviceId();
     }
 
     @Override
     public void enableBrowserAccess() {
         Logger.i(TAG, "Enable Browser Access..");
-        launch();
-
-        if (shouldHandleFirstRun) {
-            handleFirstRun();
-        }
-
-        // Click enable browser access
-        UiAutomatorUtils.handleButtonClick(
-                "com.microsoft.identity.testuserapp:id/buttonInstallCert"
-        );
-
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-        // Install cert
-        final UiObject certInstaller = device.findObject(new UiSelector().packageName("com.android.certinstaller"));
-        certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        Assert.assertTrue(
-                "Microsoft Authenticator - cert installer dialog appears.",
-                certInstaller.exists()
-        );
-
-        UiAutomatorUtils.handleButtonClick("android:id/button1");
+        singleWpjApiFragment.launch();
+        singleWpjApiFragment.installCertificate();
     }
 
     @Override
@@ -284,251 +185,170 @@ public class BrokerHost extends AbstractTestBroker {
 
     @Nullable
     public String getAccountUpn() {
-        Logger.i(TAG, "Get Account Upn..");
-        final String resourceButtonId = "com.microsoft.identity.testuserapp:id/buttonGetWpjUpn";
-        final String textId = "UPN";
-        return basicButtonHandler(resourceButtonId, textId);
+        singleWpjApiFragment.launch();
+        return singleWpjApiFragment.getWpjAccount();
     }
 
     @Nullable
     public String getDeviceState() {
-        Logger.i(TAG, "Get Device State ..");
-        final String resourceButtonId = "com.microsoft.identity.testuserapp:id/buttonDeviceState";
-        final String textId = "DeviceState";
-        return basicButtonHandler(resourceButtonId, textId);
+        singleWpjApiFragment.launch();
+        return singleWpjApiFragment.getDeviceState();
     }
 
     @Nullable
-    public boolean isDeviceShared() {
-        Logger.i(TAG, "Check if device is shared..");
-        final String resourceButtonId = "com.microsoft.identity.testuserapp:id/buttonIsDeviceShared";
-        final String textId = "DeviceShared";
-        final String isDeviceSharedText = basicButtonHandler(resourceButtonId, textId);
-        return "Device is shared".equalsIgnoreCase(isDeviceSharedText);
+    public String getBlob(@NonNull final String tenantId) {
+        Logger.i(TAG, "Get Blob..");
+        singleWpjApiFragment.launch();
+        return singleWpjApiFragment.getBlob(tenantId);
     }
 
-    @Nullable
-    public String wpjLeave() {
-        Logger.i(TAG, "Wpj Leave ..");
-        final String resourceButtonId = "com.microsoft.identity.testuserapp:id/buttonLeave";
-        final String textId = "wpjLeave";
-        return basicButtonHandler(resourceButtonId, textId);
-    }
-
-    @Nullable
-    private final String basicButtonHandler(@NonNull final String resourceButtonId,
-                                            @NonNull final String textId) {
-        launch(); // launch Broker Host app
-
-        if (shouldHandleFirstRun) {
-            handleFirstRun(); // handle first run experience
-        }
-
-        UiAutomatorUtils.handleButtonClick(resourceButtonId);
-
-        // Look for the dialog box
-        final UiObject dialogBox = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "android:id/message"
-        );
-        Assert.assertTrue("Assert dialog box after button click", dialogBox.exists());
-        return getDialogBoxText(dialogBox, textId);
+    @NonNull
+    public String getDeviceToken() {
+        Logger.i(TAG, "Get Device Token..");
+        singleWpjApiFragment.launch();
+        return singleWpjApiFragment.getDeviceToken();
     }
 
     @Override
-    public void overwriteFlights(@Nullable final String flightsJson) {
+    public void overwriteFlights(@NonNull final String flightsJson) {
         Logger.i(TAG, "Overwrite Flights..");
-        launch();
-
-        // Sleep for a bit to finish launching brokerHost before scrolling to set Flights
-        try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        // scroll to find the overwrite flights button
-        UiAutomatorUtils.obtainChildInScrollable("Overwrite flights (When BrokerHost is the active broker)");
-        // input flights string in flights input box
-        UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
-        // Click Set Flights button
-        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/overwriteFlightsButton");
+        brokerFlightsFragment.launch();
+        brokerFlightsFragment.overWriteLocalFlights(flightsJson);
     }
 
     @Override
-    public void setFlights(@Nullable final String flightsJson) {
+    public void setFlights(@NonNull final String key, @NonNull final String value) {
         Logger.i(TAG, "Set Flights..");
-        launch();
-
-        // Sleep for a bit to finish launching brokerHost before scrolling to set Flights
-        try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        // scroll to find the set flights button
-        UiAutomatorUtils.obtainChildInScrollable("Set Flights");
-        // input flights string in flights input box
-        UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
-        // Click Set Flights button
-        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/setFlightsButton");
+        brokerFlightsFragment.launch();
+        brokerFlightsFragment.setLocalFlight(key, value);
     }
-
 
     @Override
     public String getFlights() {
         Logger.i(TAG, "Get Flights..");
-        final String resourceButtonId = "com.microsoft.identity.testuserapp:id/getFlightsButton";
-        final String text = "Get Flights";
-        launch();
-
-        try {
-            // scroll to find the get flights button and click
-            final UiObject getFlightsButton = UiAutomatorUtils.obtainChildInScrollable(text);
-            getFlightsButton.click();
-            final UiObject flightsObj = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.identity.testuserapp:id/editTextFlights");
-            return flightsObj.getText();
-        } catch (final UiObjectNotFoundException e) {
-            throw new AssertionError(e);
-        }
+        brokerFlightsFragment.launch();
+        return brokerFlightsFragment.getFlights();
     }
 
-    private String getDialogBoxText(@NonNull final UiObject dialogBox,
-                                    @NonNull final String textId) {
-        try {
-            // get the textId if it is there, else return null (in case of error)
-            final String[] dialogBoxText = dialogBox.getText().split(":");
-            // look for the textId if present
-            if (textId.equalsIgnoreCase(dialogBoxText[0])) {
-                return dialogBoxText[1];
-            } else {
-                return null;
-            }
-        } catch (final UiObjectNotFoundException e) {
-            throw new AssertionError(e);
-        } finally {
-            // dismiss dialog
-            UiAutomatorUtils.handleButtonClick("android:id/button1");
-        }
+    public void performDeviceRegistration(@NonNull final String username,
+                                          @NonNull final String password,
+                                          @NonNull final PromptHandlerParameters promptHandlerParameters) {
+        singleWpjApiFragment.launch();
+        singleWpjApiFragment.performDeviceRegistration(
+                username,
+                password,
+                false,
+                false,
+                promptHandlerParameters
+        );
+        final String joinedUpn = singleWpjApiFragment.getWpjAccount();
+        Assert.assertTrue("Assert that the joined account is the expected account", username.equalsIgnoreCase(joinedUpn));
+    }
+
+    public void performDeviceRegistrationLegacyApp(@NonNull final String username,
+                                          @NonNull final String password) {
+        final String inputResourceId = CommonUtils.getResourceId(
+                AbstractBrokerHost.BROKER_HOST_APP_PACKAGE_NAME,
+                "editTextUsername"
+        );
+        UiAutomatorUtils.handleInput(inputResourceId, username);
+
+        final String buttonResourceId = CommonUtils.getResourceId(
+                AbstractBrokerHost.BROKER_HOST_APP_PACKAGE_NAME,
+                "buttonJoin"
+        );
+        UiAutomatorUtils.handleButtonClick(buttonResourceId);
+
+        final IPromptHandler promptHandler = new AadPromptHandler(getDefaultBrokerPromptHandlerParameters(username));
+        promptHandler.handlePrompt(username, password);
+
+        final String dialogMessage = AbstractBrokerHost.dismissDialogBoxAndGetText();
+        Assert.assertTrue("Assert that the joined account is the expected account", dialogMessage.contains("SUCCESS"));
+    }
+
+    public String obtainDeviceIdLegacyApp() {
+        final String buttonGetDeviceId = CommonUtils.getResourceId(
+                AbstractBrokerHost.BROKER_HOST_APP_PACKAGE_NAME,
+                "buttonDeviceId"
+        );
+        UiAutomatorUtils.handleButtonClick(buttonGetDeviceId);
+        final String dialogMessage = AbstractBrokerHost.dismissDialogBoxAndGetText();
+        return dialogMessage.replace("DeviceId:", "");
+    }
+
+
+    public void wpjLeave() {
+        singleWpjApiFragment.launch();
+        singleWpjApiFragment.wpjLeave();
+    }
+
+    public void clickJoinTenant(@NonNull final String tenantId) {
+        singleWpjApiFragment.launch();
+        singleWpjApiFragment.clickJoinTenant(tenantId);
     }
 
     /**
      * Gets all the accounts added
      */
-    public List<String> getAllAccounts(final boolean expectingMultipleAccounts) {
-        launch();
-
-        final String resourceButtonId = "com.microsoft.identity.testuserapp:id/buttonGetAccounts";
-        final String textId = "AccountName";
-        if (shouldHandleFirstRun) {
-            handleFirstRun(); // handle first run experience
-        }
-        UiAutomatorUtils.handleButtonClick(resourceButtonId);
-        // Look for the dialog box
-        final UiObject dialogBox = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "android:id/message"
-        );
-        Assert.assertTrue("Assert get all accounts dialog box exists", dialogBox.exists());
-
-        // As of now we are testing only for 2 accounts.
-        List<String> accounts = new ArrayList<>();
-        final String accountName = getDialogBoxText(dialogBox, textId);
-        if (accountName != null) {
-            accounts.add(accountName);
-        }
-        if (expectingMultipleAccounts) {
-            final String accountName2 = getDialogBoxText(dialogBox, textId);
-            if (accountName2 != null)
-                accounts.add(accountName2);
-        }
-        return accounts;
+    public List<String> getAllAccounts() {
+        brokerApiFragment.launch();
+        return brokerApiFragment.getAccounts();
     }
 
     /**
      * Removes the added account
      */
     public void removeAccount(@NonNull final String username) {
-        try {
-            final UiObject removeAccount = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                    "com.microsoft.identity.testuserapp:id/buttonRemoveAccount"
-            );
-            final UiObject accountNameTxtBox = UiAutomatorUtils.obtainChildInScrollable("someone@contoso.com");
-            accountNameTxtBox.setText(username);
-            removeAccount.click();
-        } catch (final UiObjectNotFoundException e) {
-            throw new AssertionError(e);
-        }
+        brokerApiFragment.launch();
+        brokerApiFragment.removeAccounts(username);
     }
 
     /**
      * Acquire SSO token with provided nonce
      */
     public String acquireSSOToken(@NonNull final String nonce) {
-        try {
-            // Fill the nonce
-            final UiObject nonceTxtBox = UiAutomatorUtils.obtainChildInScrollable("nonce for SSO Token");
-            nonceTxtBox.setText(nonce);
+        brokerApiFragment.launch();
+        final String ssoToken = brokerApiFragment.acquireSsoToken(nonce);
+        Assert.assertNotEquals("Assert sso token is not empty", ssoToken, "");
+        return ssoToken;
+    }
 
-            // Click on sso token button
-            UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/buttonGetSsoToken");
+    public String dismissDialog() {
+        return AbstractBrokerHost.dismissDialogBoxAndGetText();
+    }
 
-            // Get SSOToken
-            final UiObject ssoToken = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                    "com.microsoft.identity.testuserapp:id/sso_token"
-            );
-            final String ssoTokenTxt = ssoToken.getText();
-            Assert.assertNotEquals("Assert sso token is not empty", ssoTokenTxt, "");
-            return ssoTokenTxt;
-        } catch (final UiObjectNotFoundException e) {
-            throw new AssertionError(e);
-        }
+    public void enableMultipleWpj() {
+        Logger.i(TAG, "Enable Multiple WPJ..");
+        setLocalFlight(FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER, "true");
+    }
+
+    public void disableMultipleWpj() {
+        Logger.i(TAG, "Disable Multiple WPJ..");
+        setLocalFlight(FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER, "false");
     }
 
     /**
-     * Decode SSO token and verify the expected nonce
+     * Changes flight provider to local flights provider and sets
+     * PRTv3 flight flag to true.
      */
-    public void decodeSSOTokenAndVerifyNonce(@NonNull final String ssoToken,
-                                             @NonNull final String nonce) {
-        String token = new String(Base64.decode(ssoToken.split("\\.")[1], Base64.NO_WRAP));
-        final Map<Object, Object> map = new Gson().fromJson(token, Map.class);
-        StringBuilder sb = new StringBuilder();
-        final Set<Map.Entry<Object, Object>> set = map.entrySet();
-        for (Map.Entry<Object, Object> e : set) {
-            sb.append(e.getKey()).append(" => ")
-                    .append(e.getValue())
-                    .append('\n');
-        }
-        final String decodedToken = sb.toString();
-        if (decodedToken.contains("request_nonce")) {
-            final String[] str = decodedToken.split("request_nonce => ");
-            if (str.length > 1) {
-                Assert.assertEquals(str[1].trim(), nonce);
-            } else {
-                Assert.fail("decoded token does not contain correct nonce");
-            }
-        } else {
-            Assert.fail("decoded token does not contain correct nonce");
-        }
+    public void enablePrtV3() {
+        Logger.i(TAG, "Enable PRTv3");
+        setLocalFlight(FLIGHT_PRT_V3, Boolean.toString(true));
     }
 
     /**
-     * Confirm that the calling app is not verified
+     * Ensures flight provider as LocalFlightsProvider
+     * @param key The flight parameter name as string.
+     * @param value The flight parameter value as string
      */
-    public void confirmCallingAppNotVerified() {
-        // Look for the dialog box
-        final UiObject dialogBox = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "android:id/message"
-        );
-        Assert.assertTrue("Assert not verified dialog box", dialogBox.exists());
-        try {
-            if (!dialogBox.getText().contains("Calling app could not be verified")) {
-                Assert.fail("Could not find the string 'calling app could not be verified' in the msg displayed in the dialog");
-            }
-        } catch (final UiObjectNotFoundException e) {
-            throw new AssertionError(e);
-        } finally {
-            // dismiss dialog
-            UiAutomatorUtils.handleButtonClick("android:id/button1");
-        }
+    public void setLocalFlight(@NonNull final String key, @NonNull final String value) {
+        final String methodTag = TAG + ":setLocalFlight";
+        brokerFlightsFragment.launch();
+        brokerFlightsFragment.selectLocalProvider();
+        brokerFlightsFragment.setLocalFlight(key, value);
+        ThreadUtils.sleepSafely(500, methodTag, "Wait before force stop.");
+        forceStop();
+        ThreadUtils.sleepSafely(500, methodTag, "Wait before launch.");
+        launch();
     }
 }

@@ -31,6 +31,7 @@ import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerPara
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.UiResponse;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.common.java.util.ThreadUtils;
 
 /**
  * A Prompt Handler for Microsoft STS login flows.
@@ -62,6 +63,9 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
     public void handlePrompt(@NonNull final String username, @NonNull final String password) {
         final boolean loginHintProvided = !TextUtils.isEmpty(parameters.getLoginHint());
 
+        final IMicrosoftStsLoginComponentHandler aadLoginComponentHandler =
+                (IMicrosoftStsLoginComponentHandler) loginComponentHandler;
+
         // if login hint was not provided, then we need to handle either account picker or email
         // field. If it was provided, then we expect to go straight to password field.
         if (!loginHintProvided) {
@@ -76,8 +80,20 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
             loginComponentHandler.handleEmailField(username);
         }
 
+        if (parameters.isHowWouldYouLikeToSignInExpected()) {
+            aadLoginComponentHandler.handleHowWouldYouLikeToSignIn();
+        }
+
+        if (parameters.isChooseCertificateExpected()) {
+            aadLoginComponentHandler.handleChooseCertificate();
+        }
+
         if (parameters.isPasswordPageExpected() || parameters.getPrompt() == PromptParameter.LOGIN || !parameters.isSessionExpected()) {
             loginComponentHandler.handlePasswordField(password);
+        }
+
+        if (parameters.isVerifyYourIdentityPageExpected()) {
+            aadLoginComponentHandler.handleVerifyYourIdentity();
         }
 
         if (parameters.isConsentPageExpected() || parameters.getPrompt() == PromptParameter.CONSENT) {
@@ -89,9 +105,6 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
             }
         }
 
-        final IMicrosoftStsLoginComponentHandler aadLoginComponentHandler =
-                (IMicrosoftStsLoginComponentHandler) loginComponentHandler;
-
         if (parameters.isStaySignedInPageExpected()) {
             aadLoginComponentHandler.handleStaySignedIn(parameters.getStaySignedInResponse());
         }
@@ -100,8 +113,18 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
             aadLoginComponentHandler.handleSpeedBump();
         }
 
+        if (parameters.isSecondSpeedBumpExpected()) {
+            // Need to wait between button presses, or we might press the same button twice
+            ThreadUtils.sleepSafely(6000, TAG, "Sleep Interrupted");
+            aadLoginComponentHandler.handleSpeedBump();
+        }
+
         if (parameters.isRegisterPageExpected()) {
             aadLoginComponentHandler.handleRegistration();
+        }
+
+        if (parameters.isGetTheAppExpected()) {
+            aadLoginComponentHandler.handleGetTheAppPage();
         }
 
         if (parameters.isEnrollPageExpected()) {
@@ -110,6 +133,14 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
                 aadLoginComponentHandler.acceptEnroll();
             } else {
                 aadLoginComponentHandler.declineEnroll();
+            }
+        }
+
+        if (parameters.isSecondPasswordPageExpected()) {
+            try {
+                loginComponentHandler.handlePasswordField(password);
+            } catch (AssertionError e) {
+                throw new AssertionError("Prompt handler failed to handle second password prompt...", e);
             }
         }
     }

@@ -91,9 +91,10 @@ public class LabConstants {
         public static final String B2C = "b2c";
         public static final String PING = "ping";
         public static final String SHIBBOLETH = "shibboleth";
+        public static final String CIAM = "ciam";
     }
 
-    static final class AzureEnvironment {
+    public static final class AzureEnvironment {
         public static final String AZURE_B2C_CLOUD = "azureb2ccloud";
         public static final String AZURE_CHINA_CLOUD = "azurechinacloud";
         public static final String AZURE_CLOUD = "azurecloud";

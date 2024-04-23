@@ -29,7 +29,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.AndroidPlatformComponents;
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
+import com.microsoft.identity.common.internal.activebrokerdiscovery.InMemoryActiveBrokerCache;
+import com.microsoft.identity.common.internal.broker.BrokerData;
+import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
+import com.microsoft.identity.common.internal.cache.IActiveBrokerCache;
+import com.microsoft.identity.common.internal.cache.IClientActiveBrokerCache;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -53,6 +58,8 @@ import java.util.List;
 
 import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.CONNECTION_ERROR;
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.BOUND_SERVICE;
+
+import lombok.SneakyThrows;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = {Build.VERSION_CODES.N})
@@ -163,9 +170,80 @@ public class BrokerOperationExecutorTests {
         expectValidResult(strategyList);
     }
 
+    // For the new broker election mechanism...
+    // If the new active broker is returned with the result,
+    // The cache must be updated.
+    @SneakyThrows
+    @Test
+    public void testActiveBrokerCacheUpdatedFromResultBundle(){
+        final BrokerData newActiveBroker = new BrokerData(
+                "com.microsoft.newActiveBroker",
+                "SOME_SIG_HASH");
+
+        final IClientActiveBrokerCache cache = new InMemoryActiveBrokerCache();
+        final ActiveBrokerCacheUpdater mCacheUpdater = new ActiveBrokerCacheUpdater(
+                (brokerData) -> brokerData.equals(newActiveBroker),
+                cache
+        );
+
+        final IIpcStrategy strategy = new IIpcStrategy() {
+            @Override
+            public @NonNull Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
+                final Bundle result = new Bundle();
+                result.putBoolean(SUCCESS_BUNDLE_KEY, true);
+                ActiveBrokerCacheUpdater.appendActiveBrokerToResultBundle(result, newActiveBroker);
+                return result;
+            }
+
+            @Override
+            public boolean isSupportedByTargetedBroker(@NonNull final String targetedBrokerPackageName) {
+                return true;
+            }
+            @Override
+            public Type getType() {
+                return MOCK_TYPE;
+            }
+        };
+
+        final List<IIpcStrategy> strategyList = new ArrayList<>();
+        strategyList.add(strategy);
+
+        final BrokerOperationExecutor executor = new BrokerOperationExecutor(strategyList, mCacheUpdater);
+
+        Assert.assertTrue(executor.execute(getMockParameter(), getBrokerOperation()));
+        Assert.assertEquals(newActiveBroker, cache.getCachedActiveBroker());
+    }
+
+    // For the new broker election mechanism...
+    // If the new active broker is NOT returned with the result,
+    // The cache must remain unchanged.
+    @SneakyThrows
+    @Test
+    public void testActiveBrokerCacheNotUpdatedFromResultBundle(){
+        final BrokerData currentActiveBroker = new BrokerData(
+                "com.microsoft.currentActiveBroker",
+                "SOME_SIG_HASH");
+
+        final List<IIpcStrategy> strategyList = new ArrayList<>();
+        strategyList.add(getStrategyWithValidResult());
+
+        final IClientActiveBrokerCache cache = new InMemoryActiveBrokerCache();
+        cache.setCachedActiveBroker(currentActiveBroker);
+
+        expectValidResult(strategyList, cache);
+        Assert.assertEquals(currentActiveBroker, cache.getCachedActiveBroker());
+    }
+
     private void expectValidResult(final List<IIpcStrategy> strategyList) {
+        expectValidResult(strategyList, new InMemoryActiveBrokerCache());
+    }
+
+    private void expectValidResult(final List<IIpcStrategy> strategyList,
+                                   final IClientActiveBrokerCache cache) {
         try {
-            final BrokerOperationExecutor executor = new BrokerOperationExecutor(strategyList);
+            final BrokerOperationExecutor executor = new BrokerOperationExecutor(
+                    strategyList,
+                    new ActiveBrokerCacheUpdater((brokerData) -> true, cache));
             Assert.assertTrue(executor.execute(getMockParameter(), getBrokerOperation()));
         } catch (final BaseException e) {
             Assert.fail("Unexpected exception.");
@@ -174,7 +252,10 @@ public class BrokerOperationExecutorTests {
 
     private void expectBindFailureException(final List<IIpcStrategy> strategyList) {
         try {
-            final BrokerOperationExecutor executor = new BrokerOperationExecutor(strategyList);
+            final BrokerOperationExecutor executor = new BrokerOperationExecutor(
+                    strategyList,
+                    new ActiveBrokerCacheUpdater((brokerData) -> true,
+                            new InMemoryActiveBrokerCache()));
             executor.execute(getMockParameter(), getBrokerOperation());
             Assert.fail("Failure is expected.");
         } catch (final BaseException e) {
@@ -186,7 +267,10 @@ public class BrokerOperationExecutorTests {
 
     private void expectCorruptedBundleException(final List<IIpcStrategy> strategyList) {
         try {
-            final BrokerOperationExecutor executor = new BrokerOperationExecutor(strategyList);
+            final BrokerOperationExecutor executor = new BrokerOperationExecutor(
+                    strategyList,
+                    new ActiveBrokerCacheUpdater((brokerData) -> true,
+                            new InMemoryActiveBrokerCache()));
             executor.execute(getMockParameter(), getBrokerOperation());
             Assert.fail("Failure is expected.");
         } catch (final BaseException e) {
@@ -197,7 +281,10 @@ public class BrokerOperationExecutorTests {
 
     private void expectServiceException(final List<IIpcStrategy> strategyList) {
         try {
-            final BrokerOperationExecutor executor = new BrokerOperationExecutor(strategyList);
+            final BrokerOperationExecutor executor = new BrokerOperationExecutor(
+                    strategyList,
+                    new ActiveBrokerCacheUpdater((brokerData) -> true,
+                            new InMemoryActiveBrokerCache()));
             executor.execute(getMockParameter(), getBrokerOperation());
             Assert.fail("Failure is expected.");
         } catch (final BaseException e) {
@@ -208,7 +295,10 @@ public class BrokerOperationExecutorTests {
 
     private void expectUserCancelledException(final List<IIpcStrategy> strategyList) {
         try {
-            final BrokerOperationExecutor executor = new BrokerOperationExecutor(strategyList);
+            final BrokerOperationExecutor executor = new BrokerOperationExecutor(
+                    strategyList,
+                    new ActiveBrokerCacheUpdater((brokerData) -> true,
+                            new InMemoryActiveBrokerCache()));
             executor.execute(getMockParameter(), getBrokerOperation());
             Assert.fail("Failure is expected.");
         } catch (final BaseException e) {
@@ -218,7 +308,7 @@ public class BrokerOperationExecutorTests {
 
     private CommandParameters getMockParameter() {
         return CommandParameters.builder()
-                .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
+                .platformComponents(AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext()))
                 .build();
     }
 
@@ -231,6 +321,10 @@ public class BrokerOperationExecutorTests {
                 return result;
             }
 
+            @Override
+            public boolean isSupportedByTargetedBroker(@NonNull final String targetedBrokerPackageName) {
+                return true;
+            }
             @Override
             public Type getType() {
                 return MOCK_TYPE;
@@ -246,6 +340,10 @@ public class BrokerOperationExecutorTests {
                 return new Bundle();
             }
 
+            @Override
+            public boolean isSupportedByTargetedBroker(@NonNull final String targetedBrokerPackageName) {
+                return true;
+            }
             @Override
             public Type getType() {
                 return MOCK_TYPE;
@@ -264,6 +362,10 @@ public class BrokerOperationExecutorTests {
             }
 
             @Override
+            public boolean isSupportedByTargetedBroker(@NonNull final String targetedBrokerPackageName) {
+                return true;
+            }
+            @Override
             public Type getType() {
                 return MOCK_TYPE;
             }
@@ -281,6 +383,10 @@ public class BrokerOperationExecutorTests {
             }
 
             @Override
+            public boolean isSupportedByTargetedBroker(@NonNull final String targetedBrokerPackageName) {
+                return true;
+            }
+            @Override
             public Type getType() {
                 return MOCK_TYPE;
             }
@@ -295,6 +401,10 @@ public class BrokerOperationExecutorTests {
                 throw new BrokerCommunicationException(CONNECTION_ERROR, BOUND_SERVICE, "Some connection error", null);
             }
 
+            @Override
+            public boolean isSupportedByTargetedBroker(@NonNull final String targetedBrokerPackageName) {
+                return true;
+            }
             @Override
             public Type getType() {
                 return MOCK_TYPE;

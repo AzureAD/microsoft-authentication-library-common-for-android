@@ -10,12 +10,12 @@
     <string name="http_auth_dialog_cancel">Atšaukti</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Pasirinkite išmaniosios kortelės sertifikatą, kad prisijungtumėte</string>
+    <string name="smartcard_cert_dialog_title">Pasirinkite sertifikatą, kad galėtumėte prisijungti.</string>
     <string name="smartcard_cert_dialog_positive_button">Tęsti</string>
     <string name="smartcard_cert_dialog_negative_button">Atšaukti</string>
 
-    <string name="smartcard_pin_dialog_title">Atrakinti išmaniąją kortelę</string>
-    <string name="smartcard_pin_dialog_message">Įveskite išmaniosios kortelės PIN kodą, kad gautumėte prieigą prie sertifikato ir prisijungtumėte</string>
+    <string name="smartcard_pin_dialog_title">Atrakinti intelektualiąją kortelę</string>
+    <string name="smartcard_pin_dialog_message">Įveskite intelektualiosios kortelės PIN kodą, kad pasiektumėte sertifikatą ir prisijungtumėte</string>
     <string name="smartcard_pin_dialog_positive_button">Atrakinti</string>
     <string name="smartcard_pin_dialog_negative_button">Atšaukti</string>
     <string name="smartcard_pin_dialog_error_message">Įvestas PIN kodas yra neteisingas.</string>
@@ -27,11 +27,45 @@
     <string name="smartcard_max_attempt_dialog_message">Per daug nesėkmingų bandymų, bandykite dar kartą vėliau.</string>
 
     <string name="smartcard_early_unplug_dialog_title">Bandykite dar kartą</string>
-    <string name="smartcard_early_unplug_dialog_message">Išmaniosios kortelės įrenginys pašalintas. Prieš bandydami prisijungti dar kartą, iš naujo įdėkite įrenginį.</string>
+    <string name="smartcard_early_unplug_dialog_message">Intelektualiosios kortelės įrenginys buvo pašalintas. Prieš bandydami prisijungti dar kartą, iš naujo įdėkite įrenginį.</string>
 
     <string name="smartcard_no_cert_dialog_title">Tinkamų sertifikatų nerasta.</string>
-    <string name="smartcard_no_cert_dialog_message">Patikrinkite, ar jūsų sertifikatas teisingai įdiegtas į jūsų išmaniosios kortelės įrenginį.</string>
+    <string name="smartcard_no_cert_dialog_message">Patvirtinkite, kad jūsų sertifikatas tinkamai parengtas intelektualiosios kortelės įrenginyje.</string>
+
+    <string name="smartcard_nfc_diff_connected_title">Vienu metu galite naudoti tik vieną intelektualiąją kortelę</string>
+    <string name="smartcard_nfc_diff_connected_message">Naudokite intelektualiąją kortelę, su kuria iš pradžių prisijungėte.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Supratau</string>
 
     <string name="smartcard_general_error_dialog_title">Bandykite dar kartą vėliau</string>
     <string name="smartcard_general_error_dialog_message">Įvyko nenumatyta klaida. Bandykite dar kartą vėliau.</string>
+
+    <string name="user_choice_dialog_title">Kaip norėtumėte prisijungti?</string>
+    <string name="user_choice_dialog_on_device_name">Sertifikatas šiame įrenginyje</string>
+    <string name="user_choice_dialog_smartcard_name">Fizinė intelektualioji kortelė</string>
+    <string name="user_choice_dialog_positive_button">Tęsti</string>
+    <string name="user_choice_dialog_negative_button">Atšaukti</string>
+
+    <string name="smartcard_prompt_dialog_title">Paruoškite savo intelektualiąją kortelę</string>
+    <string name="smartcard_prompt_dialog_message">Prijunkite arba laikykite intelektualiąją kortelę prie telefono galinės dalies.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Atšaukti</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Skaitoma jūsų intelektualioji kortelė</string>
+    <string name="smartcard_nfc_loading_dialog_message">Laikykite intelektualiąją kortelę vietoje.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Paruoškite savo intelektualiąją kortelę</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Laikykite intelektualiąją kortelę prie telefono galinės dalies.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Atšaukti</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Įjungti NFC įrenginio parametruose</string>
+    <string name="smartcard_nfc_reminder_dialog_message">Norėdami prisijungti naudodami NFC, įrenginio parametruose įjunkite NFC. Tada prisijunkite dar kartą.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">Supratau</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Dabar galite pašalinti savo intelektualiąją kortelę</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Supratau</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Leisti šiai programėlei pasiekti jūsų fotoaparatą?</string>
+    <string name="qr_code_rationale_message">Tada galėsite prisijungti naudodami QR kodą.</string>
+    <string name="qr_code_rationale_allow">Leisti</string>
+    <string name="qr_code_rationale_block">Blokuoti</string>
 </resources>

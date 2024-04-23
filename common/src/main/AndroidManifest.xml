@@ -1,11 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.microsoft.identity.common">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!-- Min Sdk version for YubiKit is 19, so override is needed to avoid build errors with Common's min sdk version -->
-    <uses-sdk tools:overrideLibrary="com.yubico.yubikit.android" />
+    <!-- Min Sdk version for YubiKit is 19, as well as for various libraries within CredMan, so override is needed to avoid build errors with Common's min sdk version -->
+    <uses-sdk tools:overrideLibrary="com.yubico.yubikit.android, androidx.credentials.play.services.auth, com.google.android.libraries.identity.googleid" />
 
     <application>
         <!-- Because Android detects plugged in YubiKeys as keyboard config changes, configChanges must have `keyboardHidden` and `keyboard` -->
@@ -21,6 +20,12 @@
         <activity
             android:name="com.microsoft.identity.common.internal.broker.BrokerActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|screenLayout|keyboard" />
+        <!-- Activity to launch a install WPJ certificate activity and get the result -->
+        <activity
+            android:name="com.microsoft.identity.common.internal.broker.InstallCertActivityLauncher"
+            android:theme="@style/Theme.AppCompat.Light"
+            android:configChanges="orientation|keyboardHidden|screenSize|screenLayout|keyboard" />
+
     </application>
 
     <!-- Required for API Level 30 to make sure we can detect browsers and other apps we want to
@@ -30,6 +35,10 @@
         <package android:name="com.azure.authenticator" />
         <package android:name="com.microsoft.identity.testuserapp" />
         <package android:name="com.microsoft.windowsintune.companyportal" />
+        <package android:name="com.microsoft.mockauthapp" />
+        <package android:name="com.microsoft.mockcp" />
+        <package android:name="com.microsoft.mockltw" />
+        <package android:name="com.microsoft.appmanager" />
         <!-- Required for API Level 30 to make sure we can detect browsers
         (that don't support custom tabs) -->
         <intent>

@@ -29,18 +29,24 @@ steps:
   displayName: Set MVN Access Token in Environment
   inputs:
     filename: echo
-    arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAt }}]$(mvnAccessToken)'
+    arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAt }}]$(System.AccessToken)'
 - task: Gradle@2
   displayName: Assemble ${{ parameters.project }} ${{ parameters.variant }}
   inputs:
+    javaHomeSelection: JDKVersion
+    jdkVersionOption: "1.11"
     tasks: '${{ parameters.project }}:clean ${{ parameters.project }}:assemble${{ parameters.variant }} ${{ parameters.buildArguments }}'
 - task: Gradle@2
   displayName: Run unit tests
   inputs:
+    javaHomeSelection: JDKVersion
+    jdkVersionOption: "1.11"
     tasks: '${{ parameters.project }}:test${{ parameters.variant }} ${{ parameters.testArguments }}'
 - task: Gradle@2
   displayName: Publish
   inputs:
+    javaHomeSelection: JDKVersion
+    jdkVersionOption: "1.11"
     tasks: '${{ parameters.project }}:publish${{ parameters.variant }} ${{ parameters.buildArguments }}'
 - ${{ if ne(parameters.artifactFolder, '') }}:
   - task: CopyFiles@2

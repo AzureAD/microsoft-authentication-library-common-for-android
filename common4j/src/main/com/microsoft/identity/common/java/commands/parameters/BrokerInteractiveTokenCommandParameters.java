@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.commands.parameters;
 
 import com.google.gson.annotations.Expose;
+import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.exception.ArgumentException;
@@ -40,9 +41,6 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCommandParameters
         implements IHasExtraParameters, IBrokerTokenCommandParameters {
-
-    @Expose
-    private final String callerPackageName;
 
     @Expose
     private final int callerUid;
@@ -79,6 +77,9 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     @Expose
     private final String homeTenantId;
 
+    // Parameter representing if this broker request is an ATv2 (Account Transfer V2) request
+    private final boolean isATv2Request;
+
     @Override
     public void validate() throws ArgumentException {
         super.validate();
@@ -111,12 +112,6 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
                         "mCallerUId", "Caller Uid is not set"
                 );
             }
-            if (StringUtil.isNullOrEmpty(callerPackageName)) {
-                throw new ArgumentException(
-                        ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
-                        "mCallerPackageName", "Caller package name is not set"
-                );
-            }
             if (!(getOAuth2TokenCache() instanceof BrokerOAuth2TokenCache)) {
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
@@ -124,11 +119,10 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
                         "OAuth2Cache not an instance of BrokerOAuth2TokenCache"
                 );
             }
-            if (getSdkType().isCapableOfMSA() &&
-                    !getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
+            if (!getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
-                        "mRedirectUri", "The redirect URI doesn't match the uri" +
+                        ArgumentException.REDIRECT_URI_ARGUMENT_NAME, "The redirect URI doesn't match the uri" +
                         " generated with caller package name and signature"
                 );
             }

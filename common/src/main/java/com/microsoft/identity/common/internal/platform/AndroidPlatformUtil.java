@@ -35,18 +35,22 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 
+import com.microsoft.identity.common.BuildConfig;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.DefaultConnectionService;
-import com.microsoft.identity.common.internal.broker.BrokerValidator;
+import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.IntuneMAMEnrollmentIdGateway;
-import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
+import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.commands.ICommand;
+import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -131,7 +135,40 @@ public class AndroidPlatformUtil implements IPlatformUtil {
 
     @Override
     public boolean isValidCallingApp(@NonNull String redirectUri, @NonNull String packageName) {
-        return BrokerValidator.isValidBrokerRedirect(redirectUri, mContext, packageName);
+        final String methodTag = TAG + ":isValidCallingApp";
+
+        if (BuildConfig.bypassRedirectUriCheck || isValidHubRedirectURIForNAATests(redirectUri)) {
+            Logger.warn(methodTag, "Bypassing RedirectUri Check. This should not be enabled in PROD. "+ redirectUri);
+            return true;
+        }
+
+        final String expectedBrokerRedirectUri = PackageHelper.getBrokerRedirectUri(mContext, packageName);
+        boolean isValidBrokerRedirect = StringUtil.equalsIgnoreCase(redirectUri, expectedBrokerRedirectUri);
+        if (packageName.equals(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)) {
+            final PackageHelper info = new PackageHelper(mContext.getPackageManager());
+            //For merely verifying that the app is AuthApp, use a 512 hash.
+            final String signatureDigest = info.getSha512SignatureForPackage(packageName);
+            if (BrokerData.getProdMicrosoftAuthenticator().getSigningCertificateThumbprint().equals(signatureDigest)
+                    || BrokerData.getDebugMicrosoftAuthenticator().getSigningCertificateThumbprint().equals(signatureDigest)) {
+                // If the caller is the Authenticator, check if the redirect uri matches with either
+                // the one generated with package name and signature or broker redirect uri.
+                isValidBrokerRedirect |= StringUtil.equalsIgnoreCase(redirectUri, AuthenticationConstants.Broker.BROKER_REDIRECT_URI);
+            }
+        }
+
+        if (!isValidBrokerRedirect) {
+            com.microsoft.identity.common.logging.Logger.error(
+                    methodTag,
+                    "Broker redirect uri is invalid. Expected: "
+                            + expectedBrokerRedirectUri
+                            + " Actual: "
+                            + redirectUri
+                    ,
+                    null
+            );
+        }
+
+        return isValidBrokerRedirect;
     }
 
     @Override
@@ -170,6 +207,12 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         return KeyManagerFactory.getInstance("X509");
     }
 
+    @Nullable
+    @Override
+    public String getPackageNameFromUid(int uid) {
+        return mContext.getPackageManager().getNameForUid(uid);
+    }
+
     /**
      * This method optionally re-orders tasks to bring the task that launched
      * the interactive activity to the foreground. This is useful when the activity provided
@@ -182,7 +225,7 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     private void optionallyReorderTasks(@NonNull final ICommand<?> command) {
         final String methodTag = TAG + ":optionallyReorderTasks";
         if (command instanceof InteractiveTokenCommand) {
-            if (mActivity == null){
+            if (mActivity == null) {
                 throw new IllegalStateException("Activity cannot be null in an interactive session.");
             }
 
@@ -223,5 +266,13 @@ public class AndroidPlatformUtil implements IPlatformUtil {
             //Normally all tasks have an affinity unless configured explicitly for multi-window support to not have one
             return true;
         }
+    }
+
+    private boolean isValidHubRedirectURIForNAATests(String redirectUri) {
+        // The only allow-listed hub app on ESTS is Teams app. We cannot use our test app's clientId/redirecrURI for testing NAA scenarios
+        // Below redirectURI is being used in our automation tests and also by OneAuth tests for NAA
+        return BuildConfig.DEBUG && (redirectUri.equals("msauth://com.microsoft.teams/VCpKgbYCXucoq1mZ4BZPsh5taNE=")
+                || redirectUri.equals("msauth://com.microsoft.teams/fcg80qvoM1YMKJZibjBwQcDfOno=")
+                || redirectUri.equals("https://login.microsoftonline.com/common/oauth2/nativeclient"));
     }
 }

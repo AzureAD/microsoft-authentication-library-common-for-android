@@ -29,12 +29,15 @@ import androidx.test.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
+import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
+import com.microsoft.identity.common.java.crypto.IKeyAccessorStringAdapter;
+import com.microsoft.identity.common.java.crypto.KeyAccessorStringAdapter;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.util.TaskCompletedCallback;
 import com.microsoft.identity.common.migration.DefaultMultiTypeNameValueStorageReencrypter;
-import com.microsoft.identity.common.migration.IMultiTypeNameValueStorageReencrypter;
 import com.microsoft.identity.common.migration.IMigrationOperationResult;
+import com.microsoft.identity.common.migration.IMultiTypeNameValueStorageReencrypter;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -89,15 +92,19 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         public String encrypt(@NonNull final String input) throws Exception {
             // Ensure the global keys are cleared, so we don't use them...
             AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases();
-            final StorageHelper storageHelper = new StorageHelper(mContext);
-            return storageHelper.encrypt(input);
+            final IKeyAccessorStringAdapter encryptionManager =
+                    new KeyAccessorStringAdapter(
+                            new AndroidAuthSdkStorageEncryptionManager(mContext));
+            return encryptionManager.encrypt(input);
         }
 
         public String encryptWithLegacyKey(@NonNull final String input) throws Exception {
             try {
                 AuthenticationSettings.INSTANCE.setSecretKey(mMockLegacyKey);
-                final StorageHelper storageHelper = new StorageHelper(mContext);
-                return storageHelper.encrypt(input);
+                final IKeyAccessorStringAdapter encryptionManager =
+                        new KeyAccessorStringAdapter(
+                                new AndroidAuthSdkStorageEncryptionManager(mContext));
+                return encryptionManager.encrypt(input);
             } finally {
                 AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases();
             }
@@ -106,10 +113,11 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         @Override
         public String decrypt(@NonNull final String input) throws Exception {
             try {
-                // This is a workaround for some really clunky global state management
                 AuthenticationSettings.INSTANCE.setSecretKey(mMockLegacyKey);
-                final StorageHelper storageHelper = new StorageHelper(mContext);
-                return storageHelper.decrypt(input);
+                final IKeyAccessorStringAdapter encryptionManager =
+                        new KeyAccessorStringAdapter(
+                                new AndroidAuthSdkStorageEncryptionManager(mContext));
+                return encryptionManager.decrypt(input);
             } finally {
                 // TODO You may need to rename this API! Not just tests anymore!
                 AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases();
@@ -120,7 +128,9 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
     @Before
     public void setUp() {
         mContext = InstrumentationRegistry.getTargetContext();
-        mTestCacheFile = AndroidPlatformComponents.createFromContext(mContext).getNameValueStore(TEST_CACHE_FILENAME, String.class);
+        mTestCacheFile = AndroidPlatformComponentsFactory.createFromContext(mContext)
+                .getStorageSupplier()
+                .getUnencryptedNameValueStore(TEST_CACHE_FILENAME, String.class);
         mFileManagerReencrypter = new DefaultMultiTypeNameValueStorageReencrypter();
         try {
             final byte[] mockKey = generateLegacyFormatKey("abcdedfdfd");

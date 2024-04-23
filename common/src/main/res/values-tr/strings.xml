@@ -10,12 +10,12 @@
     <string name="http_auth_dialog_cancel">İptal</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Oturum açmak için bir akıllı kart sertifikası seçin</string>
+    <string name="smartcard_cert_dialog_title">Oturum açmak için bir sertifika seçin</string>
     <string name="smartcard_cert_dialog_positive_button">Devam</string>
     <string name="smartcard_cert_dialog_negative_button">İptal</string>
 
-    <string name="smartcard_pin_dialog_title">Akıllı kartın kilidini aç</string>
-    <string name="smartcard_pin_dialog_message">Sertifikaya erişmek ve oturum açmak için akıllı kart PIN\'ini girin</string>
+    <string name="smartcard_pin_dialog_title">Akıllı kartın kilidini açın</string>
+    <string name="smartcard_pin_dialog_message">Sertifikaya erişmek ve oturum açmak için akıllı kart PIN kodunu girin</string>
     <string name="smartcard_pin_dialog_positive_button">Kilidi aç</string>
     <string name="smartcard_pin_dialog_negative_button">İptal</string>
     <string name="smartcard_pin_dialog_error_message">Girdiğiniz PIN yanlıştı</string>
@@ -27,11 +27,45 @@
     <string name="smartcard_max_attempt_dialog_message">Çok fazla başarısız girişimde bulunuldu, daha sonra yeniden deneyin.</string>
 
     <string name="smartcard_early_unplug_dialog_title">Yeniden deneyin</string>
-    <string name="smartcard_early_unplug_dialog_message">Akıllı kart cihazı kaldırıldı. Yeniden oturum açmaya çalışmadan önce lütfen cihazı yeniden ekleyin.</string>
+    <string name="smartcard_early_unplug_dialog_message">Akıllı kart cihazı kaldırıldı. Yeniden oturum açmaya çalışmadan önce lütfen cihazı yeniden takın.</string>
 
     <string name="smartcard_no_cert_dialog_title">Uygulanabilir sertifika bulunamadı.</string>
-    <string name="smartcard_no_cert_dialog_message">Lütfen sertifikanızın akıllı kart cihazınıza doğru şekilde sağlanmış olduğunu onaylayın.</string>
+    <string name="smartcard_no_cert_dialog_message">Sertifikanızın akıllı kart cihazınıza doğru şekilde sağlandığını onaylayın.</string>
+
+    <string name="smartcard_nfc_diff_connected_title">Aynı anda yalnızca bir akıllı kart kullanabilirsiniz</string>
+    <string name="smartcard_nfc_diff_connected_message">İlk olarak oturum açtığınız akıllı kartı kullanın.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Anladım</string>
 
     <string name="smartcard_general_error_dialog_title">Daha sonra tekrar deneyin</string>
     <string name="smartcard_general_error_dialog_message">Beklenmeyen bir hata oluştu. Lütfen daha sonra yeniden deneyin.</string>
+
+    <string name="user_choice_dialog_title">Nasıl oturum açmak istersiniz?</string>
+    <string name="user_choice_dialog_on_device_name">Bu cihazdaki sertifika</string>
+    <string name="user_choice_dialog_smartcard_name">Fiziksel akıllı kart</string>
+    <string name="user_choice_dialog_positive_button">Devam</string>
+    <string name="user_choice_dialog_negative_button">İptal</string>
+
+    <string name="smartcard_prompt_dialog_title">Akıllı kartınızı hazırlayın</string>
+    <string name="smartcard_prompt_dialog_message">Telefonunuzun arkasına bir akıllı kart takın veya akıllı kartı telefonunuza yakın tutun.</string>
+    <string name="smartcard_prompt_dialog_negative_button">İptal</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Akıllı kartınız okunuyor</string>
+    <string name="smartcard_nfc_loading_dialog_message">Akıllı kartınızı yerine yerleştirin.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Akıllı kartınızı hazırlayın</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Bir akıllı kartı telefonunuzun arkasına yakın tutun.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">İptal</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Cihaz ayarlarında NFC’yi etkinleştirin</string>
+    <string name="smartcard_nfc_reminder_dialog_message">NFC ile oturum açmak için cihaz ayarlarınızda NFC’yi etkinleştirin. Ardından yeniden oturum açın.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">Anladım</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Şimdi akıllı kartınızı kaldırabilirsiniz</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Anladım</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Bu uygulamanın kameranıza erişmesine izin verilsin mi?</string>
+    <string name="qr_code_rationale_message">Sonra QR koduyla oturum açabilirsiniz.</string>
+    <string name="qr_code_rationale_allow">İzin ver</string>
+    <string name="qr_code_rationale_block">Engelle</string>
 </resources>

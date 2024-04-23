@@ -22,25 +22,21 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.authorities;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
-import lombok.experimental.Accessors;
-
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
-import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -51,6 +47,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
 @Accessors(prefix = "m")
 public class AzureActiveDirectoryAuthority extends Authority {
@@ -189,6 +191,32 @@ public class AzureActiveDirectoryAuthority extends Authority {
             return false;
         }
 
+        if (cloudOfThisAuthority != null && cloudOfAuthorityToCheck != null) {
+            // Depending upon the caller of this method, home_cloud_name may or may not be a PRT's home cloud.
+            SpanExtension.current().setAttribute(AttributeName.home_cloud_name.name(), cloudOfAuthorityToCheck.getPreferredCacheHostName());
+            SpanExtension.current().setAttribute(AttributeName.requested_cloud_name.name(), cloudOfThisAuthority.getPreferredCacheHostName());
+        }
+
         return Objects.equals(cloudOfThisAuthority, cloudOfAuthorityToCheck);
+    }
+
+    /**
+     * Convert the given authority URL to a default authority (common).
+     *
+     * @param authorityUrl authority url
+     * @return a common authority.
+     */
+    @NonNull
+    public static String convertToDefaultAuthority(@NonNull final String authorityUrl)
+            throws ClientException {
+
+        try {
+            final CommonURIBuilder builder = new CommonURIBuilder(authorityUrl);
+            builder.setPath(AzureActiveDirectoryAudience.ALL);
+            return builder.toString();
+        } catch (final URISyntaxException e) {
+            throw new ClientException(ClientException.MALFORMED_URL,
+                    "Cannot construct common authority URL", e);
+        }
     }
 }

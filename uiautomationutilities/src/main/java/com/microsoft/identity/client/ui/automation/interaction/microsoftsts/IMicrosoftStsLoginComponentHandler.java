@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.interaction.microsoftsts;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.client.ui.automation.interaction.IOAuth2LoginComponentHandler;
 import com.microsoft.identity.client.ui.automation.interaction.UiResponse;
 
@@ -56,9 +58,42 @@ public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponen
     void handleRegistration();
 
     /**
+     * Respond to the Get the app page.
+     */
+    void handleGetTheAppPage();
+
+    /**
      * Clicks yes or no on the "Stay signed in?" screen that gets shown after user signs in.
      *
      * @param staySignedInResponse denotes whether to accept or decline the staySignedIn prompt.
      */
     void handleStaySignedIn(UiResponse staySignedInResponse);
+
+    /**
+     * Clicks the call option in the verify your identity page to allow auto mfa account to proceed with
+     * interactive request.
+     */
+    void handleVerifyYourIdentity();
+
+    /**
+     * Clickes "Select" when prompted with the choose certificate prompt.
+     */
+    void handleChooseCertificate();
+
+    /**
+     * Handle the How would you like to sign in page.
+     */
+    void handleHowWouldYouLikeToSignIn();
+
+    /**
+     * Handle interaction for "Sign in from other device".
+     * @param expectedDeviceLoginUrl the expected remote login url when "Sign in from other device" option is
+     *                               exercised.
+     */
+    void handleSignInFromOtherDevice(@NonNull final String expectedDeviceLoginUrl);
+
+    /**
+     * Handle interaction with "Sign in options".
+     */
+    void handleSignInOptions();
 }

@@ -33,14 +33,12 @@ import lombok.NonNull;
 /**
  * Base class for Objects to support the [de]/serialization of extra fields.
  */
-public abstract class AccountCredentialBase {
+public abstract class AccountCredentialBase implements Cloneable {
 
     private transient Map<String, JsonElement> mAdditionalFields = Collections.synchronizedMap(new HashMap<String, JsonElement>());
 
     /**
      * Getter of additional fields.
-     *
-     * @return additional fields in Map<String, JsonElement>
      */
     public Map<String, JsonElement> getAdditionalFields() {
         return mAdditionalFields;
@@ -48,8 +46,6 @@ public abstract class AccountCredentialBase {
 
     /**
      * Setter of additional fields.
-     *
-     * @param additionalFields Map<String, JsonElement>
      */
     public void setAdditionalFields(@NonNull final Map<String, JsonElement> additionalFields) {
         mAdditionalFields = Collections.synchronizedMap(additionalFields);
@@ -76,6 +72,13 @@ public abstract class AccountCredentialBase {
                 mAdditionalFields.put(entry.getKey(), entry.getValue());
             }
         }
+    }
+
+    @Override
+    public AccountCredentialBase clone() throws CloneNotSupportedException {
+        final AccountCredentialBase other = (AccountCredentialBase) super.clone();
+        other.setAdditionalFields(new HashMap<>(mAdditionalFields));
+        return other;
     }
 
     //CHECKSTYLE:OFF

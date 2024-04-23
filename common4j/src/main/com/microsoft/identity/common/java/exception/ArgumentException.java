@@ -34,14 +34,18 @@ public class ArgumentException extends BaseException {
 
     public final static String ACQUIRE_TOKEN_OPERATION_NAME = "acquireToken";
     public final static String ACQUIRE_TOKEN_SILENT_OPERATION_NAME = "acquireTokenSilent";
+    public final static String ACQUIRE_TOKEN_NO_FIXED_SCOPE_OPERATION_NAME = "acquireTokenNoFixedScope";
+    public final static String ACQUIRE_TOKEN_WITH_DEVICE_CODE_OPERATION_NAME = "acquireTokenWithDeviceCode";
     public final static String ACQUIRE_TOKEN_WITH_PASSWORD_OPERATION_NAME = "acquireTokenWithPassword";
     public final static String BROKER_TOKEN_REQUEST_OPERATION_NAME = "brokerTokenRequest";
     public final static String GET_ACCOUNTS_OPERATION_NAME = "getAllAccounts";
     public final static String REMOVE_ACCOUNT_OPERATION_NAME = "removeAccount";
     public final static String GENERATE_SHR_OPERATION_NAME = "generateShr";
+    public final static String LINUX_BROKER_VERSION_NAME = "linuxBrokerVersion";
     public final static String ACQUIRE_PRT_SSO_COOKIE_OPERATION_NAME = "acquirePrtSsoCookie";
 
     public final static String SCOPE_ARGUMENT_NAME = "scopes";
+    public final static String REDIRECT_URI_ARGUMENT_NAME = "redirect_uri";
     public final static String AUTHORITY_ARGUMENT_NAME = "authority";
     public final static String IACCOUNT_ARGUMENT_NAME = "account";
     public final static String AUTHENTICATION_SCHEME_ARGUMENT_NAME = "authentication_scheme";

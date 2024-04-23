@@ -67,8 +67,10 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     public final static String AUTHENTICATOR_APP_NAME = "Microsoft Authenticator";
     public final static String AUTHENTICATOR_APK = "Authenticator.apk";
     public final static String OLD_AUTHENTICATOR_APK = "OldAuthenticator.apk";
+    public final static boolean AUTHENTICATOR_IS_REGISTER_EXPECTED = true;
+    public final static boolean AUTHENTICATOR_IS_REGISTER_EXPECTED_SHARED = false;
 
-    private final static String UPDATE_VERSION_NUMBER = "6.2206.3949";
+    private final static String UPDATE_VERSION_NUMBER = "6.2204.2470";
     private final static String OLD_VERSION_NUMBER = "6.2203.1651";
 
     private final static String INCIDENT_MSG = "Broker Automation Incident";
@@ -122,12 +124,27 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                                           @NonNull final String password,
                                           final boolean isFederatedUser) {
         brokerMicrosoftAuthenticatorImpl.performDeviceRegistration(username, password, isFederatedUser);
+
+        // This value was not being updated from the above performSharedDeviceRegistration method since
+        // brokerMicrosoftAuthenticatorImpl is actually a completely separate object.
+        shouldHandleFirstRun = brokerMicrosoftAuthenticatorImpl.shouldHandleFirstRun;
     }
 
     @Override
     public void performSharedDeviceRegistration(@NonNull final String username,
                                                 @NonNull final String password) {
         brokerMicrosoftAuthenticatorImpl.performSharedDeviceRegistration(username, password);
+
+        // These values were not being updated from the above performSharedDeviceRegistration method since
+        // brokerMicrosoftAuthenticatorImpl is actually a completely separate object.
+        isInSharedDeviceMode = brokerMicrosoftAuthenticatorImpl.isInSharedDeviceMode;
+        shouldHandleFirstRun = brokerMicrosoftAuthenticatorImpl.shouldHandleFirstRun;
+    }
+
+    @Override
+    public void performSharedDeviceRegistrationDontValidate(@NonNull final String username,
+                                                @NonNull final String password) {
+        brokerMicrosoftAuthenticatorImpl.performSharedDeviceRegistrationDontValidate(username, password);
     }
 
 
@@ -153,15 +170,17 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     @Override
     public void enableBrowserAccess() {
         brokerMicrosoftAuthenticatorImpl.enableBrowserAccess();
+
+        // This value was not being updated from the above performSharedDeviceRegistration method since
+        // brokerMicrosoftAuthenticatorImpl is actually a completely separate object.
+        shouldHandleFirstRun = brokerMicrosoftAuthenticatorImpl.shouldHandleFirstRun;
     }
 
     @Override
     public String createPowerLiftIncident() {
         Logger.i(TAG, "Creating Power Lift Incident..");
         launch();
-        if (shouldHandleFirstRun) {
-            handleFirstRun();
-        }
+        handleFirstRun();
 
         if (isInSharedDeviceMode) {
             return createPowerLiftIncidentInSharedDeviceMode();
@@ -266,9 +285,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         Logger.i(TAG, "Open the device registration page in the Authenticator App..");
         launch(); // launch Authenticator app
 
-        if (shouldHandleFirstRun) {
-            handleFirstRun(); // handle first run experience
-        }
+        handleFirstRun(); // handle first run experience
         goToDeviceRegistrationPage();
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
@@ -285,7 +302,8 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                                                    @NonNull final String password,
                                                    @NonNull final String emailInputResourceId,
                                                    @NonNull final String registerBtnResourceId,
-                                                   final boolean isFederatedUser) {
+                                                   final boolean isFederatedUser,
+                                                   final boolean isRegistrationPageExpected) {
         Logger.i(TAG, "Execution of Helper for Device Registration..");
         // open device registration page
         openDeviceRegistrationPage();
@@ -306,6 +324,50 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                 .expectingBrokerAccountChooserActivity(false)
                 .expectingLoginPageAccountPicker(false)
                 .sessionExpected(false)
+                .registerPageExpected(isRegistrationPageExpected)
+                .loginHint(username)
+                .build();
+
+        if (isFederatedUser) {
+            final AdfsPromptHandler adfsPromptHandler = new AdfsPromptHandler(promptHandlerParameters);
+            Logger.i(TAG, "Handle prompt of ADFS login page for Device Registration..");
+            // handle ADFS login page
+            adfsPromptHandler.handlePrompt(username, password);
+        } else {
+            final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
+
+            Logger.i(TAG, "Handle AAD Login page prompt for Device Registration..");
+            // handle AAD login page
+            aadPromptHandler.handlePrompt(username, password);
+        }
+    }
+    protected void performDeviceRegistrationHelperWithButtonText(@NonNull final String username,
+                                                   @NonNull final String password,
+                                                   @NonNull final String emailInputResourceId,
+                                                   @NonNull final String registerBtnText,
+                                                   final boolean isFederatedUser,
+                                                   final boolean isRegistrationPageExpected) {
+        Logger.i(TAG, "Execution of Helper for Device Registration..");
+        // open device registration page
+        openDeviceRegistrationPage();
+
+        // enter email
+        UiAutomatorUtils.handleInput(
+                emailInputResourceId,
+                username
+        );
+
+        // click register
+        UiAutomatorUtils.handleButtonClickForObjectWithText(registerBtnText);
+
+        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
+                .prompt(PromptParameter.LOGIN)
+                .broker(this)
+                .consentPageExpected(false)
+                .expectingBrokerAccountChooserActivity(false)
+                .expectingLoginPageAccountPicker(false)
+                .sessionExpected(false)
+                .registerPageExpected(isRegistrationPageExpected)
                 .loginHint(username)
                 .build();
 
@@ -323,14 +385,25 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         }
     }
 
+    public void setShouldUseDeviceSettingsPage(final boolean shouldUseDeviceSettingsPage) {
+        Assert.assertTrue("Cannot set shouldUseDeviceSettingsPage for BrokerAuthenticatorPreviousVersionImpl", brokerMicrosoftAuthenticatorImpl instanceof BrokerAuthenticatorUpdatedVersionImpl);
+        ((BrokerAuthenticatorUpdatedVersionImpl) brokerMicrosoftAuthenticatorImpl).shouldUseDeviceSettingsPage = shouldUseDeviceSettingsPage;
+    }
+
     @Override
     public void handleFirstRun() {
-        Logger.i(TAG, "Handle First Run of the APP..");
-        // privacy dialog
-        UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/privacy_consent_button");
-        // the skip button
-        UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/frx_skip_button");
-        shouldHandleFirstRun = false;
+        if (shouldHandleFirstRun) {
+            Logger.i(TAG, "Handle First Run of the APP..");
+            // privacy dialog
+            UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/privacy_consent_button");
+            // Continue button
+            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Continue");
+            // the skip button
+            UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/frx_skip_button");
+            // This is required for auth app as it has increased the compile sdk version to 34
+            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("NOT NOW");
+            shouldHandleFirstRun = false;
+        }
     }
 
     @Override

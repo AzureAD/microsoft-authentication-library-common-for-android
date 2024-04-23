@@ -10,11 +10,11 @@
     <string name="http_auth_dialog_cancel">Annuler</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Choisir un certificat de carte à puce pour se connecter</string>
+    <string name="smartcard_cert_dialog_title">Sélectionner un certificat avec la connexion</string>
     <string name="smartcard_cert_dialog_positive_button">Continuer</string>
     <string name="smartcard_cert_dialog_negative_button">Annuler</string>
 
-    <string name="smartcard_pin_dialog_title">Déverrouiller la carte à puce</string>
+    <string name="smartcard_pin_dialog_title">Déverrouiller une carte à puce</string>
     <string name="smartcard_pin_dialog_message">Entrez le code PIN de la carte à puce pour accéder au certificat et vous connecter</string>
     <string name="smartcard_pin_dialog_positive_button">Déverrouiller</string>
     <string name="smartcard_pin_dialog_negative_button">Annuler</string>
@@ -30,8 +30,42 @@
     <string name="smartcard_early_unplug_dialog_message">Le périphérique de carte à puce a été supprimé. Réinsérez l’appareil avant de tenter de vous reconnecter.</string>
 
     <string name="smartcard_no_cert_dialog_title">Aucun certificat applicable trouvé.</string>
-    <string name="smartcard_no_cert_dialog_message">Vérifiez que votre certificat a été correctement configuré sur votre appareil de carte à puce.</string>
+    <string name="smartcard_no_cert_dialog_message">Vérifiez que votre certificat a été correctement configuré sur votre périphérique de carte à puce.</string>
+
+    <string name="smartcard_nfc_diff_connected_title">Vous ne pouvez utiliser qu’une seule carte à puce à la fois</string>
+    <string name="smartcard_nfc_diff_connected_message">Utilisez la carte à puce avec laquelle vous vous êtes connecté à l’origine.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">OK</string>
 
     <string name="smartcard_general_error_dialog_title">Réessayez ultérieurement</string>
     <string name="smartcard_general_error_dialog_message">Une erreur inattendue s’est produite. Réessayez plus tard.</string>
+
+    <string name="user_choice_dialog_title">Comment voulez-vous vous connecter ?</string>
+    <string name="user_choice_dialog_on_device_name">Certificat sur cet appareil</string>
+    <string name="user_choice_dialog_smartcard_name">Carte à puce physique</string>
+    <string name="user_choice_dialog_positive_button">Continuer</string>
+    <string name="user_choice_dialog_negative_button">Annuler</string>
+
+    <string name="smartcard_prompt_dialog_title">Préparez votre carte à puce</string>
+    <string name="smartcard_prompt_dialog_message">Branchez ou maintenez une carte à puce au dos de votre téléphone.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Annuler</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Lecture de votre carte à puce</string>
+    <string name="smartcard_nfc_loading_dialog_message">Gardez votre carte à puce en place.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Préparez votre carte à puce</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Maintenez une carte à puce au dos de votre téléphone.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Annuler</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Activer NFC dans les paramètres de l’appareil</string>
+    <string name="smartcard_nfc_reminder_dialog_message">Pour vous connecter avec NFC, activez NFC dans les paramètres de votre appareil. Puis reconnectez-vous.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">OK</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Vous pouvez maintenant supprimer votre carte à puce</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">OK</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Autoriser cette application à accéder à votre caméra ?</string>
+    <string name="qr_code_rationale_message">Vous pouvez ensuite vous connecter avec un code QR.</string>
+    <string name="qr_code_rationale_allow">Autoriser</string>
+    <string name="qr_code_rationale_block">Bloquer</string>
 </resources>

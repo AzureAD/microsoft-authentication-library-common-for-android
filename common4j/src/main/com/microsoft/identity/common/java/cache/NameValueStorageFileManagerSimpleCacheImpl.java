@@ -40,13 +40,12 @@ import java.util.concurrent.TimeUnit;
  * A simple metadata store definition that uses INameValueStorage to persist, read,
  * update, and delete data. Please note that all CRUD actions return success, as the underlying
  * store's API does not surface a success indicator. If you need stronger guarantees that an
- * operation was successful, use {@link SharedPreferencesSimpleCacheImpl} which is less performance
+ * operation was successful, use SharedPreferencesSimpleCacheImpl which is less performance
  * oriented.
  * <p>
  * Data serializes as JSON.
  *
  * @param <T> The type of metadata that will be persisted.
- * @see SharedPreferencesSimpleCacheImpl
  */
 public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements ISimpleCache<T>, IListTypeToken {
 
@@ -91,7 +90,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
 
         Logger.verbose(TAG + "::ctor", "Init");
         mComponents = components;
-        mStorage = components.getNameValueStore(name, String.class);
+        mStorage = components.getStorageSupplier().getUnencryptedNameValueStore(name, String.class);
         mKeySingleEntry = singleKey;
         mForceReinsertionOfDuplicates = forceReinsertionOfDuplicates;
     }

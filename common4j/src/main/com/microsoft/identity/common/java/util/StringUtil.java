@@ -135,8 +135,8 @@ public class StringUtil {
 
     /**
      * Helper method to get uid from home account id
-     * V2 home account format : <uid>.<utid>
-     * V1 : it's stored as <uid>
+     * V2 home account format : [uid].[utid]
+     * V1 : it's stored as [uid]
      *
      * @param homeAccountId
      * @return valid uid or null if it's not in either of the format.
@@ -190,7 +190,7 @@ public class StringUtil {
      *
      * @param items     String
      * @param delimiter String
-     * @return List<String>
+     * @return a List of string tokens.
      */
     public static List<String> getStringTokens(final String items, final String delimiter) {
         final StringTokenizer tokenizer = new StringTokenizer(items, delimiter);
@@ -210,7 +210,7 @@ public class StringUtil {
      *
      * @param input     String
      * @param delimiter char
-     * @return ArrayList<String>
+     * @return the splitted input in ArrayList
      */
     public static ArrayList<String> splitWithQuotes(String input, char delimiter) {
         final ArrayList<String> items = new ArrayList<>();
@@ -312,8 +312,6 @@ public class StringUtil {
      */
     @NonNull
     public static Date RFC3339StringToDate(@NonNull String dateStr) throws ParseException {
-        final String methodName = "RFC3339StringToDate";
-        Logger.verbose(TAG + methodName, "RFC3339StringToDate is called.");
         final SimpleDateFormat RFC3339DateFormat = new SimpleDateFormat(RFC3339_DATE_FORMAT, Locale.US);
         RFC3339DateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         return RFC3339DateFormat.parse(dateStr);
@@ -483,6 +481,33 @@ public class StringUtil {
         if (isNullOrEmpty(argument)) {
             Logger.error(TAG + methodName, argumentName + " is null or empty.", null);
             throw new NullPointerException(argumentName + " is null or empty.");
+        }
+    }
+
+    /***
+     * Helper to perform base64 decoding with logging.
+     * @param input Input string
+     * @param flags
+     * @param failureMessage The message to log in case of failure.
+     */
+    public static byte[] base64Decode(@NonNull final String input, int flags, @NonNull final String failureMessage) {
+        final String methodTag = TAG + ":base64Decode";
+        try {
+            return Base64.decode(input, flags);
+        } catch (IllegalArgumentException e) {
+            Logger.error(methodTag, failureMessage + " " + e.getMessage(), null);
+            throw e;
+        }
+    }
+
+    /**
+     * Helper function to overwrite all characters in an array with null values
+     * @param chars
+     */
+    public static void overwriteWithNull(final char[] chars) {
+        final int length = chars == null ? 0: chars.length;
+        for (int i =0; i < length; i++) {
+            chars[i] = '\0';
         }
     }
 }

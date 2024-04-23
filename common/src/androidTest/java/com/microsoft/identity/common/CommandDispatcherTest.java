@@ -22,23 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import android.content.Intent;
+import static com.microsoft.identity.common.java.exception.ServiceException.SERVICE_NOT_AVAILABLE;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
-import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
+import com.microsoft.identity.common.internal.commands.RefreshOnCommand;
 import com.microsoft.identity.common.java.cache.CacheRecord;
-import com.microsoft.identity.common.java.exception.TerminalException;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.commands.BaseCommand;
 import com.microsoft.identity.common.java.commands.CommandCallback;
+import com.microsoft.identity.common.java.commands.EmptyCommandCallback;
+import com.microsoft.identity.common.java.commands.ICommandResult;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
-import com.microsoft.identity.common.internal.commands.RefreshOnCommand;
-import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
@@ -47,19 +45,23 @@ import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommand
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.controllers.CommandDispatcher;
 import com.microsoft.identity.common.java.controllers.CommandResult;
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.dto.IdTokenRecord;
+import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.exception.TerminalException;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.FinalizableResultFuture;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ServiceException;
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
-import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.java.dto.AccessTokenRecord;
-import com.microsoft.identity.common.java.dto.IdTokenRecord;
-import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
-import com.microsoft.identity.common.java.dto.AccountRecord;
-import com.microsoft.identity.common.java.request.SdkType;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -73,12 +75,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-
-import static com.microsoft.identity.common.java.exception.ServiceException.SERVICE_NOT_AVAILABLE;
 
 
 @RunWith(AndroidJUnit4.class)
@@ -365,6 +366,48 @@ public class CommandDispatcherTest {
         f.isCleanedUp();
         f2.isCleanedUp();
         Assert.assertFalse(CommandDispatcher.isCommandOutstanding(testCommand));
+    }
+
+    @Test
+    public void testStopSilentRequestExecutor() throws Exception {
+        LongRunningTestCommand testCommand = new LongRunningTestCommand(getEmptyTestParams(), new EmptyCommandCallback());
+        // schedule a long running test command
+        FinalizableResultFuture<CommandResult> future1 = CommandDispatcher.submitSilentReturningFuture(testCommand);
+
+        // Stop the silent executor
+        CommandDispatcher.stopSilentRequestExecutor();
+
+        // verify that the previous command results in error
+        CommandResult result = future1.get();
+        Assert.assertEquals(ICommandResult.ResultStatus.ERROR, result.getStatus());
+
+        // try scheduling a new command
+        try {
+            CommandDispatcher.submitSilentReturningFuture(new LongRunningTestCommand(getEmptyTestParams(), new EmptyCommandCallback()));
+            Assert.fail("Should not reach here");
+        } catch (final Exception e) {
+            // Should be rejected to get scheduled
+            Assert.assertTrue(e instanceof RejectedExecutionException);
+        }
+        // Restart the silentRequestExecutor again
+        CommandDispatcher.resetSilentRequestExecutor();
+    }
+
+    @Test
+    public void testResetSilentRequestExecutor() throws Exception {
+        LongRunningTestCommand testCommand = new LongRunningTestCommand(getEmptyTestParams(), new EmptyCommandCallback());
+        // schedule a long running test command
+        CommandDispatcher.submitSilentReturningFuture(testCommand);
+        // Stop the silent executor
+        CommandDispatcher.stopSilentRequestExecutor();
+        // reset the silent executor
+        CommandDispatcher.resetSilentRequestExecutor();
+        // schedule a test command
+        FinalizableResultFuture<CommandResult> future = CommandDispatcher.submitSilentReturningFuture(new TestCommand(getEmptyTestParams(), new EmptyCommandCallback(), 1));
+        // verify command is executed and result is returned
+        CommandResult result = future.get();
+        Assert.assertEquals(ICommandResult.ResultStatus.COMPLETED, result.getStatus());
+        Assert.assertEquals(TEST_RESULT_STR, result.getResult());
     }
 
     private TestCommand getTestCommand(final CountDownLatch testLatch) {
@@ -697,7 +740,7 @@ public class CommandDispatcherTest {
 
         public ExceptionCommand(@NonNull final CommandParameters parameters,
                                 @NonNull final CommandCallback callback) {
-            super(parameters, getTestController(), callback, "test_id");
+            super(parameters, getTestController().asControllerFactory(), callback, "test_id");
         }
 
         @Override
@@ -716,7 +759,7 @@ public class CommandDispatcherTest {
 
         public CommandThrowingIErrorInformationException(@NonNull final CommandParameters parameters,
                                                          @NonNull final CommandCallback callback, String errorCode) {
-            super(parameters, getTestController(), callback, "test_id");
+            super(parameters, getTestController().asControllerFactory(), callback, "test_id");
             mErrorCode = errorCode;
         }
 
@@ -737,7 +780,7 @@ public class CommandDispatcherTest {
 
         public TestCommand(@NonNull final CommandParameters parameters,
                            @NonNull final CommandCallback callback, int value) {
-            super(parameters, getTestController(), callback, "test_id");
+            super(parameters, getTestController().asControllerFactory(), callback, "test_id");
             this.value = value;
         }
 
@@ -822,7 +865,7 @@ public class CommandDispatcherTest {
                                                         acquireTokenSilentCallCount,
                                                         controllerLatch,
                                                         shouldRefresh,
-                                                        throwRenewAccessTokenError),
+                                                        throwRenewAccessTokenError).asControllerFactory(),
                     callback,
                     "");
             this.tryLatch = tryLatch;
@@ -837,7 +880,7 @@ public class CommandDispatcherTest {
             executeMethodEntranceVerifierLatch.countDown();
             try {
                 tryLatch.await();
-                result = getDefaultController().acquireTokenSilent((SilentTokenCommandParameters) getParameters());
+                result = getControllerFactory().getDefaultController().acquireTokenSilent((SilentTokenCommandParameters) getParameters());
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
@@ -865,6 +908,23 @@ public class CommandDispatcherTest {
 
     }
 
+    public static class LongRunningTestCommand extends BaseCommand {
+        public LongRunningTestCommand(@NonNull final CommandParameters parameters,
+                           @NonNull final CommandCallback callback) {
+            super(parameters, getTestController().asControllerFactory(), callback, "test_id");
+        }
+
+        @Override
+        public Object execute() throws Exception {
+            Thread.sleep(10000);
+            return null;
+        }
+
+        @Override
+        public boolean isEligibleForEstsTelemetry() {
+            return false;
+        }
+    }
     private static BaseController getTestController() {
         return new TestBaseController() {
         };
@@ -882,7 +942,7 @@ public class CommandDispatcherTest {
                 controllerLatch.countDown();
                 acquireTokenSilentCallCount.getAndIncrement();
                 if(shouldRefresh){
-                    final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, "LocalMSALControllerMockPubId");
+                    final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this.asControllerFactory(), "LocalMSALControllerMockPubId");
                     CommandDispatcher.submitAndForgetReturningFuture(refreshOnCommand);
                 }
 
@@ -1004,17 +1064,21 @@ public class CommandDispatcherTest {
             return null;
         }
 
+        @Override
+        public PreferredAuthMethod getPreferredAuthMethod() throws Exception {
+            return PreferredAuthMethod.NONE;
+        }
     }
 
     private static CommandParameters getEmptyTestParams() {
         return CommandParameters.builder()
-                .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
+                .platformComponents(AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext()))
                 .build();
     }
 
     private static SilentTokenCommandParameters getEmptySilentTokenParameters() {
         return SilentTokenCommandParameters.builder()
-                .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
+                .platformComponents(AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext()))
                 .build();
     }
 

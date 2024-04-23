@@ -29,9 +29,11 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2S
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_ID;
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_SEQUENCE;
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
 import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
 
+import com.google.gson.JsonParseException;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
@@ -46,6 +48,8 @@ import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightManager;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpClient;
@@ -53,11 +57,13 @@ import com.microsoft.identity.common.java.net.HttpConstants;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResponse;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
@@ -65,6 +71,8 @@ import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrateg
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration;
+import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfigurationClient;
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
@@ -81,6 +89,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -88,7 +97,6 @@ import java.util.UUID;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.opentelemetry.api.trace.Span;
 import lombok.NonNull;
 
 // Suppressing rawtype warnings due to the generic type AuthorizationStrategy, AuthorizationResult, AuthorizationResultFactory and MicrosoftAuthorizationRequest
@@ -120,6 +128,7 @@ public class MicrosoftStsOAuth2Strategy
     private static final String RESOURCE_DEFAULT_SCOPE = "/.default";
 
     private final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
+    private OpenIdProviderConfiguration mOpenIdProviderConfiguration;
 
     /**
      * Constructor of MicrosoftStsOAuth2Strategy.
@@ -131,7 +140,32 @@ public class MicrosoftStsOAuth2Strategy
     public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config,
                                       @NonNull final OAuth2StrategyParameters parameters) throws ClientException {
         super(config, parameters);
-        setTokenEndpoint(config.getTokenEndpoint().toString());
+
+        if (parameters.isUsingOpenIdConfiguration()) {
+            try {
+                if (config.getSlice() != null && config.getSlice().getDataCenter() != null) {
+                    String extraParams = "?" + AzureActiveDirectorySlice.DC_PARAMETER + "=" + config.getSlice().getDataCenter();
+                    loadOpenIdProviderConfiguration(extraParams);
+                } else {
+                    loadOpenIdProviderConfiguration();
+                }
+                String openIdConnectTokenEndpoint = mOpenIdProviderConfiguration.getTokenEndpoint();
+                if (!StringUtil.isNullOrEmpty(openIdConnectTokenEndpoint)) {
+                    setTokenEndpoint(openIdConnectTokenEndpoint);
+                } else {
+                    setTokenEndpoint(config.getTokenEndpoint().toString());
+                }
+            }  catch (ServiceException e) {
+                Logger.error(
+                        TAG,
+                        "There was a problem with loading the openIdConfiguration",
+                        e
+                );
+                setTokenEndpoint(config.getTokenEndpoint().toString());
+            }
+        } else {
+            setTokenEndpoint(config.getTokenEndpoint().toString());
+        }
     }
 
     /**
@@ -163,11 +197,11 @@ public class MicrosoftStsOAuth2Strategy
         // If the host has a hardcoded trust, we can just use the hostname.
         if (null != cloudEnv) {
             final String preferredCacheHostName = cloudEnv.getPreferredCacheHostName();
-            Logger.info(
+            Logger.verbose(
                     TAG + methodName,
                     "Using preferred cache host name..."
             );
-            Logger.infoPII(
+            Logger.verbose(
                     TAG + methodName,
                     "Preferred cache hostname: [" + preferredCacheHostName + "]"
             );
@@ -306,11 +340,11 @@ public class MicrosoftStsOAuth2Strategy
             builder.setSlice(mConfig.getSlice());
         }
 
-
         builder.setLibraryName(DiagnosticContext.INSTANCE.getRequestContext().get(PRODUCT));
         builder.setLibraryVersion(Device.getProductVersion());
         builder.setFlightParameters(mConfig.getFlightParameters());
         builder.setMultipleCloudAware(mConfig.getMultipleCloudsSupported());
+        builder.setOpenIdProviderConfiguration(mOpenIdProviderConfiguration);
 
         return builder;
     }
@@ -574,10 +608,17 @@ public class MicrosoftStsOAuth2Strategy
 
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
             //An error occurred
-            tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(
-                    getBodyFromUnsuccessfulResponse(response.getBody()),
-                    MicrosoftTokenErrorResponse.class
-            );
+            try {
+                tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(
+                        getBodyFromUnsuccessfulResponse(response.getBody()),
+                        MicrosoftTokenErrorResponse.class
+                );
+            } catch (final JsonParseException ex) {
+                tokenErrorResponse = new MicrosoftTokenErrorResponse();
+                final String statusCode = String.valueOf(response.getStatusCode());
+                tokenErrorResponse.setError(statusCode);
+                tokenErrorResponse.setErrorDescription("Received " + statusCode + " status code from Server ");
+            }
             tokenErrorResponse.setStatusCode(response.getStatusCode());
 
             if (null != response.getHeaders()) {
@@ -619,9 +660,35 @@ public class MicrosoftStsOAuth2Strategy
                 }
             }
 
-            Span.current().setAttribute(
-                    AttributeName.ccs_request_id.name(),
-                    response.getHeaderValue(XMS_CCS_REQUEST_ID, 0));
+            final Map<String, String> mapWithAdditionalEntry = new HashMap<String, String>();
+
+            final String ccsRequestId = response.getHeaderValue(XMS_CCS_REQUEST_ID, 0);
+            if (null != ccsRequestId){
+                SpanExtension.current().setAttribute(AttributeName.ccs_request_id.name(), ccsRequestId);
+
+                if (CommonFlightManager.isFlightEnabled(CommonFlight.EXPOSE_CCS_REQUEST_ID_IN_TOKENRESPONSE)){
+                    mapWithAdditionalEntry.put(XMS_CCS_REQUEST_ID, ccsRequestId);
+                }
+            }
+
+            final String ccsRequestSequence = response.getHeaderValue(XMS_CCS_REQUEST_SEQUENCE, 0);
+            if (null != ccsRequestSequence){
+                SpanExtension.current().setAttribute(AttributeName.ccs_request_sequence.name(), ccsRequestSequence);
+
+                if (CommonFlightManager.isFlightEnabled(CommonFlight.EXPOSE_CCS_REQUEST_SEQUENCE_IN_TOKENRESPONSE)){
+                    mapWithAdditionalEntry.put(XMS_CCS_REQUEST_SEQUENCE, ccsRequestSequence);
+                }
+            }
+
+            if (null != tokenResponse){
+                if (null != tokenResponse.getExtraParameters()){
+                    for (final Map.Entry<String, String> entry : tokenResponse.getExtraParameters()){
+                        mapWithAdditionalEntry.put(entry.getKey(), entry.getValue());
+                    }
+                }
+
+                tokenResponse.setExtraParameters(mapWithAdditionalEntry.entrySet());
+            }
         }
 
         return result;
@@ -680,7 +747,7 @@ public class MicrosoftStsOAuth2Strategy
 
         String clientException = null;
         String tokens = "";
-        final String tokensMissingMessage = "Missing required tokens of type: {0}";
+        final String tokensMissingMessage = "Missing required tokens of type: %s";
 
         // PRT interrupt flow do not return AT.
         if (!StringUtil.containsSubString(request.getScope(), CLAIMS_UPDATE_RESOURCE) &&
@@ -807,5 +874,29 @@ public class MicrosoftStsOAuth2Strategy
         }
 
         return deviceKid.equals(atKid);
+    }
+
+    /**
+     * Using this method to load the {@link OpenIdProviderConfiguration}
+     * This will cause the strategy to fetch the authorization endpoint from OpenId Configuration rather
+     * than generating one with the default authorization endpoint
+     */
+    private void loadOpenIdProviderConfiguration() throws ServiceException {
+        final OpenIdProviderConfigurationClient client =
+                new OpenIdProviderConfigurationClient();
+        mOpenIdProviderConfiguration = client.loadOpenIdProviderConfigurationFromAuthority(mConfig.getAuthorityUrl().toString());
+
+    }
+
+    /**
+     * Using this method to load the {@link OpenIdProviderConfiguration} with extra parameters
+     * This will cause the strategy to fetch the authorization endpoint from OpenId Configuration rather
+     * than generating one with the default authorization endpoint
+     */
+    @SuppressFBWarnings
+    private void loadOpenIdProviderConfiguration(@NonNull final String extraParams) throws ServiceException {
+        final OpenIdProviderConfigurationClient client =
+                new OpenIdProviderConfigurationClient();
+        mOpenIdProviderConfiguration = client.loadOpenIdProviderConfigurationFromAuthorityWithExtraParams(mConfig.getAuthorityUrl().toString(), extraParams);
     }
 }

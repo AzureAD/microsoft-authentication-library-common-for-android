@@ -61,6 +61,11 @@ public final class ErrorStrings {
     public static final String JSON_PARSE_FAILURE = "json_parse_failure";
 
     /**
+     * Error occurred while deserializing JSON string.
+     */
+    public static final String JSON_DESERIALIZATION_FAILURE = "json_deserialization_failure";
+
+    /**
      * IOException happened, could be the device/network errors.
      */
     public static final String IO_ERROR = "io_error";
@@ -159,6 +164,11 @@ public final class ErrorStrings {
      * once, or is otherwise malformed.
      */
     public static final String INVALID_REQUEST = "invalid_request";
+
+    /**
+     * The request's Redirect URI is not matching the Redirect URI configured for the application.
+     */
+    public static final String INVALID_CLIENT = "invalid_client";
 
     /**
      * The client is not authorized to request an authorization code.
@@ -268,7 +278,7 @@ public final class ErrorStrings {
     /**
      * App package name is not found in the package manager.
      */
-    public static final String APP_PACKAGE_NAME_NOT_FOUND = "App package name is not found in the package manager";
+    public static final String APP_PACKAGE_NAME_NOT_FOUND = "App package name is not found in the package manager.";
 
     /**
      * Signature could not be verified.
@@ -409,6 +419,12 @@ public final class ErrorStrings {
     public static final String SINGLE_ACCOUNT_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_MESSAGE = "A single account public client application could not be created for unknown reasons.";
 
     /**
+     * A Native Auth public client application could not be created for unknown reasons.
+     */
+    public static final String NATIVE_AUTH_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_CODE = "native_auth_pca_init_fail_unknown_reason";
+    public static final String NATIVE_AUTH_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_MESSAGE = "A native auth public client application could not be created for unknown reasons.";
+
+    /**
      * Some or all requested scopes where declined by the server. Developer should decide whether to continue
      * authentication with the granted scopes or end the authentication process.
      */
@@ -441,11 +457,20 @@ public final class ErrorStrings {
                     "Please make sure to use your organizational account. " +
                     "If that doesn’t help, please return the device to your administrator.";
 
+    public static final String MISSING_SLK_ERROR_MESSAGE =
+            "During an Account Transfer V2 request, an slk transfer token was not passed in with the request.";
+
     /**
      * Home tenant of the BRT acccount doesn't match with WPJ account's UPN.
      */
     public static final String BRT_USER_MISMATCH_ERROR_MESSAGE =
             "The signed in user doesn't match with the user this device is registered to.";
+
+    /**
+     * Device Code Flow only.
+     * Device Code Flow (DCF) is not supported in broker exception
+     */
+    public static final String DEVICE_CODE_FLOW_NOT_SUPPORTED = "dcf_not_supported";
 
     /**
      * Device Code Flow only.
@@ -492,4 +517,9 @@ public final class ErrorStrings {
      * Use this message for when Device Code Flow fails with an error code that doesn't match any of the pre-defined Device Code Flow codes.
      */
     public final static String DEVICE_CODE_FLOW_DEFAULT_ERROR_MESSAGE = "Device Code Flow has failed with an unexpected error. The error code shown was received from the result object.";
+
+    /**
+     * Access token doesn't exist and is required for NativeAuth token refresh
+     */
+    public static final String NATIVE_AUTH_NO_ACCESS_TOKEN_FOUND = "native_auth_no_access_token_found";
 }

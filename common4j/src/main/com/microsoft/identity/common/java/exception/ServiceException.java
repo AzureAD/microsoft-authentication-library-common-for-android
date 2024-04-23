@@ -73,6 +73,11 @@ public class ServiceException extends BaseException {
     public static final String SERVICE_NOT_AVAILABLE = "service_not_available";
 
     /**
+     * Represents 429 error codes.
+     */
+    public static final String REQUEST_THROTTLED_AT_ESTS_GATEWAY = "request_throttled_at_ESTS_gateway";
+
+    /**
      * Represents {@link java.net.SocketTimeoutException}.
      */
     public static final String REQUEST_TIMEOUT = "request_timeout";
@@ -87,6 +92,11 @@ public class ServiceException extends BaseException {
      * service.
      */
     public static final String UNKNOWN_ERROR = "unknown_error";
+
+    /**
+     * When service response contains <a href="https://msazure.visualstudio.com/One/_git/ESTS-Main?path=/src/Product/Microsoft.AzureAD.Common/Diagnostics/ErrrorCodes/StsErrorCode.xml&version=GBmaster&line=16896&lineEnd=16897&lineStartColumn=1&lineEndColumn=1&lineStyle=plain&_a=contents">MsaGrantedRefreshTokenNotSupportedOnAadTenant</a>
+     */
+    public static final String MsaGrantedRefreshTokenNotSupportedOnAadTenantErrorCode = "1000030";
 
     private String mOauthSubErrorCode;
 

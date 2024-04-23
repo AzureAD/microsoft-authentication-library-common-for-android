@@ -49,7 +49,8 @@ import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationB
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = {Build.VERSION_CODES.N}, shadows = {ShadowAccountManagerAddAccountWithSuccessResult.class})
 public class AccountManagerAddAccountStrategyTest extends IpcStrategyTests {
-    @Override IIpcStrategy getStrategy() {
+    @Override
+    protected IIpcStrategy getStrategy() {
         return new AccountManagerAddAccountStrategy(ApplicationProvider.getApplicationContext());
     }
 

@@ -2,6 +2,7 @@
 # Description: Assemble and run unit test
 name: $(date:yyyyMMdd)$(rev:.r)
 
+
 trigger:
   branches:
     include:
@@ -16,21 +17,27 @@ resources:
     type: git
     ref: dev
 
+pool:
+  name: Hosted Windows 2019 with VS2019
+
 jobs:
 - job: build_test
   displayName: Build & Test
   cancelTimeoutInMinutes: 1
-  pool:
-    name: Hosted Windows 2019 with VS2019
   steps:
   - checkout: self
     clean: true
     submodules: recursive
     persistCredentials: True
   - template: ../templates/steps/automation-cert.yml
+  - task: CmdLine@1
+    displayName: Set Office MVN Access Token in Environment
+    inputs:
+      filename: echo
+      arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)'
   - task: Gradle@3
     name: Gradle3   
-    displayName: Assemble Release
+    displayName: Assemble Local
     inputs:
       javaHomeSelection: JDKVersion
       jdkVersionOption: "1.11"
@@ -38,13 +45,83 @@ jobs:
       publishJUnitResults: false
       jdkArchitecture: x64
       sqAnalysisEnabled: false
-  - template: ../templates/steps/spotbugs.yml
-    parameters:
-      project: common
   - task: Gradle@2
     displayName: Run Unit tests
     inputs:
       javaHomeSelection: JDKVersion
       jdkVersionOption: "1.11"
       tasks: common:testLocalDebugUnitTest
+  - task: Gradle@3
+    displayName: Check Dependencies size
+    condition: eq(variables['system.pullRequest.targetBranch'], 'dev')
+    inputs:
+      tasks: common:dependenciesSizeCheck -PdependenciesSizeCheckConfig=distReleaseRuntimeClasspath
+      jdkVersionOption: "1.11"
+
+- job: spotbugs
+  displayName: SpotBugs
+  cancelTimeoutInMinutes: 1
+  steps:
+  - checkout: self
+    clean: true
+    submodules: recursive
+    persistCredentials: True
+  - template: ../templates/steps/spotbugs.yml
+    parameters:
+      project: common
+- job: lint
+  displayName: Lint
+  cancelTimeoutInMinutes: 1
+  steps:
+  - checkout: self
+    clean: true
+    submodules: recursive
+    persistCredentials: True
+  - task: CmdLine@1
+    displayName: Set Office MVN Access Token in Environment
+    inputs:
+      filename: echo
+      arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)'
+  - task: Gradle@3
+    displayName: Lint
+    inputs:
+      tasks: clean common:lintLocalDebug
+      publishJUnitResults: false
+      javaHomeSelection: JDKVersion
+      jdkVersionOption: "1.11"
+- job: codeql
+  displayName: CodeQL
+  cancelTimeoutInMinutes: 1
+  steps:
+  - checkout: self
+    clean: true
+    submodules: recursive
+    persistCredentials: True
+  - task: JavaToolInstaller@0
+    inputs:
+        versionSpec: '11'
+        jdkArchitectureOption: 'x64'
+        jdkSourceOption: 'PreInstalled'
+  - task: CmdLine@1
+    displayName: Set Office MVN Access Token in Environment
+    inputs:
+      filename: echo
+      arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)'
+  # https://semmleportal.azurewebsites.net/codeql/guardian
+  - task: Semmle@1
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+    inputs:
+      sourceCodeDirectory: '$(Build.SourcesDirectory)'
+      language: 'java'
+      buildCommandsString: 'gradlew.bat clean common:assembleLocal'
+      querySuite: 'Recommended'
+      timeout: '1800'
+      jdkVersionOption: "1.11"
+  - task: PublishPipelineArtifact@1
+    displayName: 'Publish code analysis artifacts'
+    inputs:
+      targetPath: '$(Build.SourcesDirectory)\build\outputs\'
+      ArtifactName: 'outputs'
+    condition: failed()
 ...

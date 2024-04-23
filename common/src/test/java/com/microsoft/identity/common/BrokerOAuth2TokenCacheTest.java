@@ -23,6 +23,7 @@
 package com.microsoft.identity.common;
 
 import static com.microsoft.identity.common.MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.APPLICATION_IDENTIFIER_SHA512;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.BEARER_AUTHENTICATION_SCHEME;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CACHED_AT;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CLIENT_ID;
@@ -30,6 +31,7 @@ import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCa
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.EXPIRES_ON;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.LOCAL_ACCOUNT_ID;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.MAM_ENROLLMENT_IDENTIFIER;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.REALM;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SECRET;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SESSION_KEY;
@@ -49,6 +51,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.java.cache.BrokerApplicationMetadata;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.cache.CacheKeyValueDelegate;
@@ -125,7 +128,7 @@ public class BrokerOAuth2TokenCacheTest {
         mMockCredentialAdapter = PowerMockito.mock(IAccountCredentialAdapter.class);
 
         mContext = ApplicationProvider.getApplicationContext();
-        mPlatformComponents = AndroidPlatformComponents.createFromContext(mContext);
+        mPlatformComponents = AndroidPlatformComponentsFactory.createFromContext(mContext);
 
         mApplicationMetadataCache = new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents);
 
@@ -158,6 +161,8 @@ public class BrokerOAuth2TokenCacheTest {
                 EXPIRES_ON,
                 SECRET,
                 CLIENT_ID,
+                APPLICATION_IDENTIFIER_SHA512,
+                MAM_ENROLLMENT_IDENTIFIER,
                 SECRET,
                 MOCK_ID_TOKEN_WITH_CLAIMS,
                 "1",
@@ -177,6 +182,8 @@ public class BrokerOAuth2TokenCacheTest {
                 EXPIRES_ON,
                 SECRET,
                 CLIENT_ID,
+                APPLICATION_IDENTIFIER_SHA512,
+                MAM_ENROLLMENT_IDENTIFIER,
                 SECRET,
                 MOCK_ID_TOKEN_WITH_CLAIMS,
                 null,
@@ -200,6 +207,8 @@ public class BrokerOAuth2TokenCacheTest {
                             EXPIRES_ON,
                             SECRET,
                             UUID.randomUUID().toString(),
+                            APPLICATION_IDENTIFIER_SHA512,
+                            MAM_ENROLLMENT_IDENTIFIER,
                             SECRET,
                             MOCK_ID_TOKEN_WITH_CLAIMS,
                             null,
@@ -287,22 +296,14 @@ public class BrokerOAuth2TokenCacheTest {
 
     private INameValueStorage<String> getAppUidFileManager(final IPlatformComponents components,
                                                            final int appUid) {
-        if (!(components instanceof AndroidPlatformComponents)) {
-            throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
-        }
-        return components.getEncryptedNameValueStore(
+        return components.getStorageSupplier().getEncryptedNameValueStore(
                 getBrokerUidSequesteredFilename(appUid),
-                components.getStorageEncryptionManager(),
                 String.class);
     }
 
     private INameValueStorage<String> getFociFileManager(final IPlatformComponents components) {
-        if (!(components instanceof AndroidPlatformComponents)) {
-            throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
-        }
-        return components.getEncryptedNameValueStore(
+        return components.getStorageSupplier().getEncryptedNameValueStore(
                 BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                components.getStorageEncryptionManager(),
                 String.class
         );
     }
@@ -335,10 +336,6 @@ public class BrokerOAuth2TokenCacheTest {
 
 
     private MsalOAuth2TokenCache initAppUidCache(final IPlatformComponents components, final int uid) {
-        if (!(components instanceof AndroidPlatformComponents)) {
-            throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
-        }
-
         final INameValueStorage<String> appUidCacheFileManager = getAppUidFileManager(
                 components,
                 uid
@@ -350,9 +347,6 @@ public class BrokerOAuth2TokenCacheTest {
     }
 
     private void initFociCache(final IPlatformComponents components) {
-        if (!(components instanceof AndroidPlatformComponents)) {
-            throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
-        }
         @SuppressWarnings("unchecked")
         final INameValueStorage<String> fociCacheFileManager = getFociFileManager(components);
 
@@ -558,6 +552,8 @@ public class BrokerOAuth2TokenCacheTest {
     public void testCacheMiss() {
         final ICacheRecord cacheRecord = mBrokerOAuth2TokenCache.load(
                 CLIENT_ID,
+                APPLICATION_IDENTIFIER_SHA512,
+                MAM_ENROLLMENT_IDENTIFIER,
                 TARGET,
                 mDefaultAppUidTestBundle.mGeneratedAccount,
                 BEARER_AUTHENTICATION_SCHEME
@@ -582,6 +578,8 @@ public class BrokerOAuth2TokenCacheTest {
 
         final ICacheRecord cacheRecord = mBrokerOAuth2TokenCache.load(
                 CLIENT_ID,
+                APPLICATION_IDENTIFIER_SHA512,
+                MAM_ENROLLMENT_IDENTIFIER,
                 TARGET,
                 mDefaultAppUidTestBundle.mGeneratedAccount,
                 BEARER_AUTHENTICATION_SCHEME
@@ -606,6 +604,8 @@ public class BrokerOAuth2TokenCacheTest {
 
         final ICacheRecord cacheRecord = mBrokerOAuth2TokenCache.load(
                 CLIENT_ID,
+                APPLICATION_IDENTIFIER_SHA512,
+                MAM_ENROLLMENT_IDENTIFIER,
                 TARGET,
                 mDefaultFociTestBundle.mGeneratedAccount,
                 BEARER_AUTHENTICATION_SCHEME
@@ -790,7 +790,7 @@ public class BrokerOAuth2TokenCacheTest {
         for (final int testUid : testAppUids) {
             // Create the cache to query...
             mBrokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
-                    AndroidPlatformComponents.createFromContext(mContext),
+                    AndroidPlatformComponentsFactory.createFromContext(mContext),
                     testUid,
                     mApplicationMetadataCache,
                     new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {
@@ -860,7 +860,7 @@ public class BrokerOAuth2TokenCacheTest {
         for (final int testUid : testAppUids) {
             // Create the cache to query...
             mBrokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
-                    AndroidPlatformComponents.createFromContext(mContext),
+                    AndroidPlatformComponentsFactory.createFromContext(mContext),
                     testUid,
                     mApplicationMetadataCache,
                     new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {
@@ -948,6 +948,8 @@ public class BrokerOAuth2TokenCacheTest {
 
         final ICacheRecord retrievedResult = mBrokerOAuth2TokenCache.load(
                 mDefaultAppUidTestBundle.mGeneratedIdToken.getClientId(),
+                mDefaultAppUidTestBundle.mGeneratedAccessToken.getApplicationIdentifier(),
+                mDefaultAppUidTestBundle.mGeneratedAccessToken.getMamEnrollmentIdentifier(),
                 mDefaultAppUidTestBundle.mGeneratedAccessToken.getTarget(),
                 mDefaultAppUidTestBundle.mGeneratedAccount,
                 BEARER_AUTHENTICATION_SCHEME
@@ -1013,6 +1015,8 @@ public class BrokerOAuth2TokenCacheTest {
 
         final ICacheRecord retrievedResult = mBrokerOAuth2TokenCache.load(
                 mDefaultAppUidTestBundle.mGeneratedIdToken.getClientId(),
+                mDefaultAppUidTestBundle.mGeneratedAccessToken.getApplicationIdentifier(),
+                mDefaultAppUidTestBundle.mGeneratedAccessToken.getMamEnrollmentIdentifier(),
                 mDefaultAppUidTestBundle.mGeneratedAccessToken.getTarget(),
                 mDefaultAppUidTestBundle.mGeneratedAccount,
                 BEARER_AUTHENTICATION_SCHEME
@@ -1078,6 +1082,8 @@ public class BrokerOAuth2TokenCacheTest {
 
         final ICacheRecord retrievedResult = mBrokerOAuth2TokenCache.load(
                 mDefaultFociTestBundle.mGeneratedIdToken.getClientId(),
+                mDefaultFociTestBundle.mGeneratedAccessToken.getApplicationIdentifier(),
+                mDefaultFociTestBundle.mGeneratedAccessToken.getMamEnrollmentIdentifier(),
                 mDefaultFociTestBundle.mGeneratedAccessToken.getTarget(),
                 mDefaultFociTestBundle.mGeneratedAccount,
                 BEARER_AUTHENTICATION_SCHEME
@@ -1143,6 +1149,8 @@ public class BrokerOAuth2TokenCacheTest {
 
         final ICacheRecord retrievedResult = mBrokerOAuth2TokenCache.load(
                 mDefaultFociTestBundle.mGeneratedIdToken.getClientId(),
+                mDefaultFociTestBundle.mGeneratedAccessToken.getApplicationIdentifier(),
+                mDefaultFociTestBundle.mGeneratedAccessToken.getAccessTokenType(),
                 mDefaultFociTestBundle.mGeneratedAccessToken.getTarget(),
                 mDefaultFociTestBundle.mGeneratedAccount,
                 BEARER_AUTHENTICATION_SCHEME

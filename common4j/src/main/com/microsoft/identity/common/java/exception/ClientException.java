@@ -83,6 +83,11 @@ public class ClientException extends BaseException {
     public static final String SCOPE_EMPTY_OR_NULL = "scope_empty_or_null";
 
     /**
+     * Emitted when the device Token is not present in successful response.
+     */
+    public static final String DEVICE_TOKEN_EMPTY_OR_NULL = "device_token_empty_or_null";
+
+    /**
      * The sdk failed to parse the Json format.
      */
     public static final String JSON_PARSE_FAILURE = "json_parse_failure";
@@ -91,6 +96,11 @@ public class ClientException extends BaseException {
      * IOException happened, could be the device/network errors.
      */
     public static final String IO_ERROR = "io_error";
+
+    /**
+     * Indicates a msal client update is required.
+     */
+    public static final String CLIENT_UPDATE_REQUIRED = "client_update_required";
 
     /**
      * Emitted when a particular padding mechanism is requested but is not available in the environment.
@@ -178,9 +188,19 @@ public class ClientException extends BaseException {
     public static final String DUPLICATE_QUERY_PARAMETER = "duplicate_query_parameter";
 
     /**
+     * An Account Transfer V2 request did not contain an Slk.
+     */
+    public static final String MISSING_SLK = "missing_slk";
+
+    /**
      * Extra query parameters set by the client app is already sent by the sdk.
      */
     public static final String UNKNOWN_ERROR = "unknown_error";
+
+    /**
+     * An unknown error that happens in the crypto layer.
+     */
+    public static final String UNKNOWN_CRYPTO_ERROR = "unknown_crypto_error";
 
     /**
      * Temporary non-exposed error code to indicate that ADFS authority validation fails. ADFS as authority is not supported
@@ -216,6 +236,11 @@ public class ClientException extends BaseException {
      * Emitted when the target KeyStore has not been initialized (loaded).
      */
     public static final String KEYSTORE_NOT_INITIALIZED = "keystore_not_initialized";
+
+    /**
+     * Emitted when failure occurs accessing the key from supplied Key managers for SSLContext.
+     */
+    public static final String KEY_MANAGEMENT_FAILURE = "key_management_failure";
 
     /**
      * Emitted if any of the certificates in the keystore fail to load.
@@ -289,6 +314,17 @@ public class ClientException extends BaseException {
     public static final String AUTH_SCHEME_NOT_SUPPORTED = "auth_scheme_not_supported";
 
     /**
+     * The requested nested app auth request is not supported
+     * by the required broker protocol version.
+     */
+    public static final String NESTED_APP_AUTH_NOT_SUPPORTED = "nested_app_auth_not_supported";
+
+    /**
+     * The requested nested app auth request does not have valid parameters
+     */
+    public static final String NESTED_APP_INVALID_PARAMETERS = "nested_app_invalid_parameters";
+
+    /**
      * Bound service is unavailable or not supported.
      */
     public static final String BOUND_SERVICE_UNAVAILABLE_OR_NOT_SUPPORTED = "bound_service_unavaliable_or_not_supported";
@@ -297,6 +333,21 @@ public class ClientException extends BaseException {
      * The returned bundle does not contain the expected data.
      */
     public static final String INVALID_BROKER_BUNDLE = "invalid_broker_bundle";
+
+    /**
+     * A valid broker was not found using account manager.
+     */
+    public static final String NOT_VALID_BROKER_FOUND = "not_valid_broker_found";
+
+    /**
+     * The broker verification failed.
+     */
+    public static final String BROKER_VERIFICATION_FAILED_ERROR = "broker_app_verification_failed";
+
+    /**
+     * Account manager failed to query for the Authenticator types.
+     */
+    public static final String ACCOUNT_MANAGER_FAILED = "account_manager_failed";
 
     /**
      * An account manager operation failed.
@@ -337,6 +388,57 @@ public class ClientException extends BaseException {
      * The data is malformed.
      */
     public static final String DATA_MALFORMED = "data_malformed";
+
+    /**
+     * The Keyring write operation failed.
+     */
+    public static final String KEY_RING_WRITE_FAILURE = "storage_keyring_write_failure";
+
+    /**
+     * The Keyring read operation failed.
+     */
+    public static final String KEY_RING_READ_FAILURE = "storage_keyring_read_failure";
+
+    /**
+     * The powerLift log upload operation failed.
+     */
+    public static final String LOG_UPLOAD_FAILURE = "log_upload_failure";
+
+    /**
+     * The powerLift api key is invalid (empty/null).
+     */
+    public static final String INVALID_POWERLIFT_API_KEY = "invalid_powerlift_api_key";
+
+    /**
+     * The broker log upload feature is disabled.
+     */
+    public static final String LOG_UPLOAD_TO_POWERLIFT_FEATURE_DISABLED = "log_upload_to_powerlift_feature_disabled";
+
+    /**
+     * The android version used does not support the operation.
+     */
+    public static final String UNSUPPORTED_ANDROID_API_VERSION = "unsupported_android_api_version";
+
+    /**
+     * Invalid CIAM Authority used when creative Native Auth Authority.
+     */
+    public static final String NATIVE_AUTH_INVALID_CIAM_AUTHORITY = "native_auth_invalid_ciam_authority";
+
+    /**
+     * The workplacejoin data is null.
+     */
+    public static final String WORKPLACE_JOIN_DATA_NULL = "workplace_join_data_null";
+
+    /**
+     * Error code to be returned when the broker determines that only account manager can be used
+     * in the Broker Discovery process.
+     **/
+    public static final String ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE = "ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE";
+
+    /**
+     * An error was encountered while parsing query parameters related to the passkey protocol.
+     */
+    public static final String PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR = "passkey_protocol_request_parsing_error";
 
     /**
      * Constructor of ClientException.

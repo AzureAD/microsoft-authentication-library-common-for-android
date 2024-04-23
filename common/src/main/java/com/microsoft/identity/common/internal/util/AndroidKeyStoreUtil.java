@@ -53,6 +53,7 @@ import javax.crypto.SecretKey;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
+import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_CRYPTO_ERROR;
 import static com.microsoft.identity.common.java.util.ported.DateUtilities.LOCALE_CHANGE_LOCK;
 import static com.microsoft.identity.common.java.util.ported.DateUtilities.isLocaleCalendarNonGregorian;
 import static com.microsoft.identity.common.java.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
@@ -107,7 +108,7 @@ public class AndroidKeyStoreUtil {
         final String methodTag = TAG + ":generateKeyPair";
 
         synchronized (isLocaleCalendarNonGregorian(Locale.getDefault()) ? LOCALE_CHANGE_LOCK : new Object()) {
-            final Exception exception;
+            final Throwable exception;
             final String errCode;
 
             // Due to the following bug in lower API versions of keystore, locale workarounds may
@@ -150,6 +151,10 @@ public class AndroidKeyStoreUtil {
                 exception = e;
             } catch (final NoSuchProviderException e) {
                 errCode = NO_SUCH_PROVIDER;
+                exception = e;
+            } catch (final Throwable e) {
+                // For catching any unknown crypto error that might be thrown by the keystore layer.
+                errCode = UNKNOWN_CRYPTO_ERROR;
                 exception = e;
             } finally {
                 // Reset to our default locale after generating keys
@@ -196,20 +201,33 @@ public class AndroidKeyStoreUtil {
     public static synchronized KeyPair readKey(@NonNull final String keyAlias)
             throws ClientException {
         final String methodTag = TAG + ":readKeyPair";
-        Logger.verbose(methodTag, "Reading Key from KeyStore");
 
-        final Exception exception;
+        final Throwable exception;
         final String errCode;
         try {
             final KeyStore keyStore = getKeyStore();
-            final Certificate cert = keyStore.getCertificate(keyAlias);
-            final Key privateKey = keyStore.getKey(keyAlias, null);
-            if (cert == null || privateKey == null) {
-                Logger.verbose(methodTag, "Key entry doesn't exist.");
+
+            if (!keyStore.containsAlias(keyAlias)) {
+                Logger.verbose(methodTag, "Alias doesn't exist.");
                 return null;
             }
 
-            Logger.verbose(methodTag, "Key read from KeyStore");
+            // We intentionally check the private key first, due to crash stacks hit in the wild
+            // when checking for the public certificate when it does not exist.
+            // `KeyStore exception android.os.ServiceSpecificException: (code 7)`
+            // https://stackoverflow.com/questions/52024752/android-9-keystore-exception-android-os-servicespecificexception
+            final Key privateKey = keyStore.getKey(keyAlias, null);
+            if (privateKey == null) {
+                Logger.verbose(methodTag, "Private key entry doesn't exist.");
+                return null;
+            }
+
+            final Certificate cert = keyStore.getCertificate(keyAlias);
+            if (cert == null) {
+                Logger.verbose(methodTag, "Public key entry doesn't exist.");
+                return null;
+            }
+
             return new KeyPair(cert.getPublicKey(), (PrivateKey) privateKey);
         } catch (final RuntimeException e) {
             // There is an issue in android keystore that resets keystore
@@ -235,6 +253,10 @@ public class AndroidKeyStoreUtil {
         } catch (final UnrecoverableKeyException e) {
             errCode = INVALID_KEY_MISSING;
             exception = e;
+        } catch (final Throwable e) {
+            // For catching any unknown crypto error that might be thrown by the keystore layer.
+            errCode = UNKNOWN_CRYPTO_ERROR;
+            exception = e;
         }
 
         final ClientException clientException = new ClientException(
@@ -255,7 +277,7 @@ public class AndroidKeyStoreUtil {
     /**
      * See: https://issuetracker.google.com/issues/37095309
      */
-    private static synchronized void applyKeyStoreLocaleWorkarounds(@NonNull final Locale currentLocale) {
+    public static synchronized void applyKeyStoreLocaleWorkarounds(@NonNull final Locale currentLocale) {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M
                 && DateUtilities.isLocaleCalendarNonGregorian(currentLocale)) {
             Locale.setDefault(Locale.ENGLISH);
@@ -272,7 +294,7 @@ public class AndroidKeyStoreUtil {
             throws ClientException {
         final String methodTag = TAG + ":deleteKeyFromKeyStore";
 
-        final Exception exception;
+        final Throwable exception;
         final String errCode;
         try {
             final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE_TYPE);
@@ -290,6 +312,10 @@ public class AndroidKeyStoreUtil {
             exception = e;
         } catch (final IOException e) {
             errCode = IO_ERROR;
+            exception = e;
+        } catch (final Throwable e) {
+            // For catching any unknown crypto error that might be thrown by the keystore layer.
+            errCode = UNKNOWN_CRYPTO_ERROR;
             exception = e;
         }
 
@@ -322,7 +348,7 @@ public class AndroidKeyStoreUtil {
             throws ClientException {
         final String methodTag = TAG + ":wrap";
 
-        final Exception exception;
+        final Throwable exception;
         final String errCode;
         try {
             Logger.verbose(methodTag, "Wrap secret key with a KeyPair.");
@@ -340,6 +366,10 @@ public class AndroidKeyStoreUtil {
             exception = e;
         } catch (final IllegalBlockSizeException e) {
             errCode = INVALID_BLOCK_SIZE;
+            exception = e;
+        } catch (final Throwable e) {
+            // For catching any unknown crypto error that might be thrown by the keystore layer.
+            errCode = UNKNOWN_CRYPTO_ERROR;
             exception = e;
         }
 
@@ -372,7 +402,7 @@ public class AndroidKeyStoreUtil {
                                    @NonNull final KeyPair keyPairForUnwrapping,
                                    @NonNull final String wrapAlgorithm) throws ClientException {
         final String methodTag = TAG + ":unwrap";
-        final Exception exception;
+        final Throwable exception;
         final String errCode;
         try {
             final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm);
@@ -398,6 +428,10 @@ public class AndroidKeyStoreUtil {
             exception = e;
         } catch (final InvalidKeyException e) {
             errCode = INVALID_KEY;
+            exception = e;
+        } catch (final Throwable e) {
+            // For catching any unknown crypto error that might be thrown by the keystore layer.
+            errCode = UNKNOWN_CRYPTO_ERROR;
             exception = e;
         }
 

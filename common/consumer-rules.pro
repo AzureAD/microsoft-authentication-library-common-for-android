@@ -47,7 +47,16 @@
 -keep class * implements com.google.gson.JsonSerializer
 -keep class * implements com.google.gson.JsonDeserializer
 
+# keep everything in this package from being removed or renamed
+-keep class io.opentelemetry.** { *; }
+
 # Prevent R8 from leaving Data object members always null
 -keepclassmembers,allowobfuscation class * {
   @com.google.gson.annotations.SerializedName <fields>;
+}
+
+#For Android Credential Manager: https://developer.android.com/training/sign-in/passkeys#proguard
+-if class androidx.credentials.CredentialManager
+-keep class androidx.credentials.playservices.** {
+  *;
 }

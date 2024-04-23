@@ -4,6 +4,7 @@ plugins {
     id 'pmd'
     id 'checkstyle'
     id 'maven-publish'
+    id 'kotlin-android'
 }
 
 apply from: '../versioning/version_tasks.gradle'
@@ -28,18 +29,21 @@ codeCoverageReport {
     coverage.enabled = enableCodeCoverage
 }
 
-// In dev, we want to keep the dependencies(common4j, broker4j, common) to 0.0.+ to be able to be consumed by daily dev pipeline.
+// In dev, we want to keep the dependencies(common4j, broker4j, common) to 1.0.+ to be able to be consumed by daily dev pipeline.
 // In release/*, we change these to specific versions being consumed.
-def common4jVersion = "0.0.+"
+def common4jVersion = "1.0.+"
 if (project.hasProperty("distCommon4jVersion") && project.distCommon4jVersion != '') {
     common4jVersion = project.distCommon4jVersion
 }
 
+boolean newBrokerDiscoveryEnabledFlag = project.hasProperty("newBrokerDiscoveryEnabledFlag")
+boolean trustDebugBrokerFlag = project.hasProperty("trustDebugBrokerFlag")
+boolean bypassRedirectUriCheck = project.hasProperty("bypassRedirectUriCheck")
+
 android {
-
-    compileSdkVersion rootProject.ext.compileSdkVersion
-
+    compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
+        namespace 'com.microsoft.identity.common'
         multiDexEnabled true
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
@@ -53,6 +57,9 @@ android {
                 "eu", "fi", "fr", "gl", "he", "hi", "hr", "hu", "in", "it", "iw", "ja",
                 "kk", "ko", "lt", "lv", "ms", "nb", "nl", "pl", "pt-rBR", "pt-rPT", "ro",
                 "ru", "sk", "sl", "sr", "sv", "th", "tr", "uk", "vi", "zh-rCN", "zh-rTW"
+        buildConfigField("boolean", "newBrokerDiscoveryEnabledFlag", "$newBrokerDiscoveryEnabledFlag")
+        buildConfigField("boolean", "trustDebugBrokerFlag", "$trustDebugBrokerFlag")
+        buildConfigField("boolean", "bypassRedirectUriCheck", "$bypassRedirectUriCheck")
     }
 
     buildTypes {
@@ -113,7 +120,7 @@ android {
             manifest.srcFile 'src/main/AndroidManifest.xml'
 
             // Also load source from common-java
-            java.srcDirs = ['src/main/java']
+            java.srcDirs = ['src/main/java', 'src/main/kotlin']
             res.srcDirs = ['src/main/res']
         }
     }
@@ -137,28 +144,52 @@ dependencies {
         transitive = false
     }
 
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$rootProject.ext.kotlinVersion"
+    testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$rootProject.ext.kotlinVersion"
+    androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:$rootProject.ext.kotlinVersion"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$rootProject.ext.kotlinXCoroutinesVersion"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$rootProject.ext.lifecycleKtxVersion"
+
+    implementation "androidx.datastore:datastore-preferences:$rootProject.ext.jetpackDataStoreVersion"
+
     implementation(group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
     implementation "cz.msebera.android:httpclient:$rootProject.ext.mseberaApacheHttpClientVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation "androidx.appcompat:appcompat:$rootProject.ext.appCompatVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
+    implementation "com.squareup.moshi:moshi:$rootProject.ext.moshiVersion"
     implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintLayoutVersion"
     //For Executive Order work
     implementation "com.yubico.yubikit:android:$rootProject.ext.yubikitAndroidVersion"
     implementation "com.yubico.yubikit:piv:$rootProject.ext.yubikitPivVersion"
+    //For passkeys
+    implementation "androidx.credentials:credentials:$rootProject.ext.AndroidCredentialsVersion"
+    //needed for credentials support from play services, for devices running
+    implementation "androidx.credentials:credentials-play-services-auth:$rootProject.ext.AndroidCredentialsVersion"
 
-    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.3.0'
+    constraints {
+        implementation ("com.squareup.okio:okio:3.4.0") {
+            because "Versions previous to 3.4.0 are associated with a signed to unsigned conversion error vulnerability. See this CVE: https://github.com/advisories/GHSA-w33c-445m-f8w7"
+        }
+    }
+
+    compileOnly "com.github.spotbugs:spotbugs-annotations:$rootProject.ext.spotBugsAnnotationVersion"
 
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
 
     // Test dependencies
     // Needed to resolve JSONObject inside of non-instrumented tests
-    testImplementation 'org.json:json:20160810'
+    testImplementation "org.json:json:$rootProject.ext.jsonVersion"
+    testImplementation "org.skyscreamer:jsonassert:$rootProject.ext.jsonAssertVersion"
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
+    testImplementation "org.mockito.kotlin:mockito-kotlin:$rootProject.ext.mockitoKotlinVersion"
+    testImplementation "org.mockito:mockito-inline:$rootProject.ext.mockitoCoreVersion"
+    testImplementation "io.mockk:mockk:1.11.0"
+
     testImplementation "org.powermock:powermock-module-junit4:$rootProject.ext.powerMockVersion"
     testImplementation "org.powermock:powermock-module-junit4-rule:$rootProject.ext.powerMockVersion"
     testImplementation "org.powermock:powermock-api-mockito2:$rootProject.ext.powerMockVersion"
@@ -166,6 +197,9 @@ dependencies {
     testImplementation "org.robolectric:robolectric:$rootProject.ext.robolectricVersion"
     testImplementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
     testImplementation project(":LabApiUtilities")
+
+    testImplementation(testFixtures(project(":common4j")))
+    testImplementation "androidx.lifecycle:lifecycle-runtime-testing:$rootProject.ext.lifecycleKtxVersion"
 
     testCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     testAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
@@ -176,6 +210,9 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:$rootProject.ext.espressoCoreVersion", {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
+
+    implementation "io.opentelemetry:opentelemetry-api:$rootProject.ext.openTelemetryVersion"
+    implementation "androidx.fragment:fragment:1.3.2"
 }
 
 // Create tasks to generate javadoc
@@ -190,7 +227,7 @@ android.libraryVariants.all { variant ->
         classpath += files(android.getBootClasspath())
 
         options.memberLevel = JavadocMemberLevel.PUBLIC
-        options.addStringOption('Xdoclint:none', '-quiet')
+        options.addBooleanOption('Xdoclint:none', true)
 
         // We're excluding these generated files
         exclude '**/R.java'
@@ -200,15 +237,15 @@ android.libraryVariants.all { variant ->
 // Create tasks to generate javadoc jar
 android.libraryVariants.all { variant ->
     task("${variant.name}JavadocJar", type: Jar, dependsOn: "${variant.name}Javadoc") {
-        classifier = 'javadoc'
+        classifier 'javadoc'
         from tasks["${variant.name}Javadoc"].destinationDir
     }
 }
 
 
-task sourcesJar(type: Jar) {
+tasks.register('sourcesJar', Jar) {
     from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
+    classifier 'sources'
     destinationDirectory = reporting.file("$project.buildDir/outputs/jar/")
 }
 
@@ -220,7 +257,7 @@ checkstyle {
     reportsDir = file("$project.buildDir/outputs/")
 }
 
-task checkstyle(type: Checkstyle) {
+tasks.register('checkstyle', Checkstyle) {
     configFile file("${project.rootDir}/config/checkstyle/checkstyle.xml")
 
     configProperties.checkstyleConfigDir = checkstyleConfigDir
@@ -236,7 +273,7 @@ pmd {
     reportsDir = file("$project.buildDir/outputs/")
 }
 
-task pmd(type: Pmd) {
+tasks.register('pmd', Pmd) {
     description 'Run pmd'
     group 'verification'
 
@@ -309,19 +346,11 @@ afterEvaluate {
                     password System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
                 }
             }
-            maven {
-                name "vsts-maven-android"
-                url 'https://identitydivision.pkgs.visualstudio.com/IDDP/_packaging/Android/maven/v1'
-                credentials {
-                    username System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
-                    password System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
-                }
-            }
         }
     }
 }
 
-tasks.whenTaskAdded { task ->
+tasks.configureEach { task ->
     if (task.name.contains("assemble")) {
         task.dependsOn 'pmd'
     }
@@ -329,4 +358,35 @@ tasks.whenTaskAdded { task ->
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
         task.dependsOn 'lint', 'sourcesJar', 'pmd'
     }
+    if (task.name == 'assembleDistRelease') {
+        task.dependsOn 'sourcesJar'
+    }
 }
+
+// This is used to generate the pom file for publishing to external maven in maven-release-jobs.yml
+tasks.withType(GenerateMavenPom).all {
+    destination = layout.buildDirectory.file("poms/${project.name}-${project.version}.pom").get().asFile
+}
+
+def dependenciesSizeInMb = project.hasProperty("dependenciesSizeMb") ? project.dependenciesSizeMb : "14"
+String configToCheck = project.hasProperty("dependenciesSizeCheckConfig") ? project.dependenciesSizeCheckConfig : "distReleaseRuntimeClasspath"
+tasks.register("dependenciesSizeCheck") {
+    doLast() {
+        def size = configurations.getByName(configToCheck).collect { it.length() / (1024 * 1024) }.sum()
+        def formatStr = "%,10.2f"
+        def out = new StringBuffer()
+        out << 'Total dependencies size:'.padRight(65)
+        out << "${String.format(formatStr, size)} Mb\n\n"
+        configurations.getByName(configToCheck).sort { -it.length() }
+                .each {
+                    out << "${it.name}".padRight(65)
+                    out << "${String.format(formatStr, (it.length() / 1024))} kb\n"
+                }
+        println(out)
+        if (size > dependenciesSizeInMb.toDouble()) {
+            throw new GradleException("Total dependencies size is $size Mb. " +
+                    "It should be less than ${dependenciesSizeInMb} Mb")
+        }
+    }
+}
+

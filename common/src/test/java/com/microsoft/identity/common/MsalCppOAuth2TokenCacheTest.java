@@ -26,6 +26,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
@@ -46,12 +47,14 @@ import org.robolectric.RobolectricTestRunner;
 import java.util.List;
 import static com.microsoft.identity.common.MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS;
 import static com.microsoft.identity.common.MsalOAuth2TokenCacheTest.AccountCredentialTestBundle;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.APPLICATION_IDENTIFIER_SHA512;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CACHED_AT;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CLIENT_ID;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.ENVIRONMENT;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.EXPIRES_ON;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.LOCAL_ACCOUNT_ID;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.MAM_ENROLLMENT_IDENTIFIER;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.REALM;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.REALM2;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SECRET;
@@ -73,7 +76,7 @@ public class MsalCppOAuth2TokenCacheTest {
     public void setUp() throws Exception {
         // Context and related init
         mContext = ApplicationProvider.getApplicationContext();
-        mCppCache = MsalCppOAuth2TokenCache.create(AndroidPlatformComponents.createFromContext(mContext));
+        mCppCache = MsalCppOAuth2TokenCache.create(AndroidPlatformComponentsFactory.createFromContext(mContext));
 
         // Credentials for testing
         mTestBundle = new AccountCredentialTestBundle(
@@ -88,6 +91,8 @@ public class MsalCppOAuth2TokenCacheTest {
                 EXPIRES_ON,
                 SECRET,
                 CLIENT_ID,
+                APPLICATION_IDENTIFIER_SHA512,
+                MAM_ENROLLMENT_IDENTIFIER,
                 SECRET,
                 MOCK_ID_TOKEN_WITH_CLAIMS,
                 null,
@@ -410,6 +415,8 @@ public class MsalCppOAuth2TokenCacheTest {
 
         final ICacheRecord cacheRecord = mCppCache.load(
                 mTestBundle.mGeneratedIdToken.getClientId(),
+                mTestBundle.mGeneratedAccessToken.getApplicationIdentifier(),
+                mTestBundle.mGeneratedAccessToken.getMamEnrollmentIdentifier(),
                 mTestBundle.mGeneratedAccessToken.getTarget(),
                 generatedAccount,
                 new BearerAuthenticationSchemeInternal()
@@ -446,6 +453,8 @@ public class MsalCppOAuth2TokenCacheTest {
 
         final ICacheRecord cacheRecord = mCppCache.load(
                 mTestBundle.mGeneratedIdToken.getClientId(),
+                mTestBundle.mGeneratedAccessToken.getApplicationIdentifier(),
+                mTestBundle.mGeneratedAccessToken.getMamEnrollmentIdentifier(),
                 mTestBundle.mGeneratedAccessToken.getTarget(),
                 generatedAccount,
                 new BearerAuthenticationSchemeInternal()

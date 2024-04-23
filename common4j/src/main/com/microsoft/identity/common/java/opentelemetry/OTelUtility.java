@@ -22,42 +22,106 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.opentelemetry;
 
-import static com.microsoft.identity.common.java.opentelemetry.AttributeName.parent_span_name;
+import com.microsoft.identity.common.java.logging.Logger;
 
 import javax.annotation.Nullable;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.sdk.trace.ReadableSpan;
+import io.opentelemetry.context.Context;
 import lombok.NonNull;
 
 public class OTelUtility {
     private static final String TAG = OTelUtility.class.getSimpleName();
-    
+
     /**
      * Creates a span (with shared basic attributes).
      **/
     @NonNull
-    public static Span createSpan(@NonNull final String name){
-        final Tracer tracer = GlobalOpenTelemetry.getTracer(TAG);
-        final Span span = tracer.spanBuilder(name).startSpan();
-
-        // Current span is the parent of span just created.
-        span.setAttribute(parent_span_name.name(), getCurrentSpanName());
-        return span;
+    public static Span createSpan(@NonNull final String name) {
+        final Tracer tracer = OpenTelemetryHolder.getTracer(TAG);
+        return tracer.spanBuilder(name).startSpan();
     }
 
     /**
-     * Get name of the current span, if possible.
+     * Creates a span from a parent Span Context (with shared basic attributes) and caller pkg name
+     * pre-populated on the span upon creation.
      **/
-    @Nullable
-    private static String getCurrentSpanName(){
-        final Span span = Span.current();
-        if (span instanceof ReadableSpan) {
-            return ((ReadableSpan) span).getName();
-        }
-        return null;
+    @NonNull
+    public static Span createSpan(@NonNull final String name, @NonNull final String callingPackageName) {
+        final Tracer tracer = OpenTelemetryHolder.getTracer(TAG);
+        return tracer.spanBuilder(name)
+                .setAttribute(AttributeName.calling_package_name.name(), callingPackageName)
+                .startSpan();
     }
 
+    /**
+     * Creates a span from a parent Span Context (with shared basic attributes).
+     **/
+    @NonNull
+    public static Span createSpanFromParent(@NonNull final String name,
+                                            @Nullable final SpanContext parentSpanContext) {
+        final String methodTag = TAG + ":createSpanFromParent";
+
+        if (parentSpanContext == null) {
+            Logger.verbose(methodTag, "parentSpanContext is NULL. Creating span without parent.");
+            return createSpan(name);
+        }
+
+        if (!parentSpanContext.isValid()) {
+            Logger.warn(methodTag, "parentSpanContext is INVALID. Creating span without parent.");
+            return createSpan(name);
+        }
+
+        final Tracer tracer = OpenTelemetryHolder.getTracer(TAG);
+
+        return tracer.spanBuilder(name)
+                .setParent(Context.current().with(Span.wrap(parentSpanContext)))
+                .startSpan();
+    }
+
+    /**
+     * Creates a span from a parent Span Context (with shared basic attributes) and caller pkg name
+     * pre-populated on the span upon creation.
+     **/
+    @NonNull
+    public static Span createSpanFromParent(@NonNull final String name,
+                                            @Nullable final SpanContext parentSpanContext,
+                                            @NonNull final String callingPackageName) {
+        final String methodTag = TAG + ":createSpanFromParent";
+
+        if (parentSpanContext == null) {
+            Logger.verbose(methodTag, "parentSpanContext is NULL. Creating span without parent.");
+            return createSpan(name, callingPackageName);
+        }
+
+        if (!parentSpanContext.isValid()) {
+            Logger.warn(methodTag, "parentSpanContext is INVALID. Creating span without parent.");
+            return createSpan(name, callingPackageName);
+        }
+
+        final Tracer tracer = OpenTelemetryHolder.getTracer(TAG);
+
+        return tracer.spanBuilder(name)
+                .setParent(Context.current().with(Span.wrap(parentSpanContext)))
+                .setAttribute(AttributeName.calling_package_name.name(), callingPackageName)
+                .startSpan();
+    }
+
+    /**
+     * Creates a span (with shared basic attributes).
+     **/
+    @NonNull
+    public static LongCounter createLongCounter(@NonNull final String name, @NonNull final String description) {
+        final Meter meter = OpenTelemetryHolder.getMeter(TAG);
+
+        return meter
+                .counterBuilder(name)
+                .setDescription(description)
+                .setUnit("count")
+                .build();
+    }
 }

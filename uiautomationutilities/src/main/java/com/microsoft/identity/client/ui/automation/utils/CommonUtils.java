@@ -35,6 +35,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
 import com.microsoft.identity.client.ui.automation.broker.BrokerHost;
+import com.microsoft.identity.client.ui.automation.broker.BrokerLTW;
 import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthenticator;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
@@ -47,8 +48,8 @@ import java.util.concurrent.TimeUnit;
 public class CommonUtils {
 
     private final static String TAG = CommonUtils.class.getSimpleName();
-    public final static long FIND_UI_ELEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(25);
-    public final static long FIND_UI_ELEMENT_TIMEOUT_LONG = TimeUnit.SECONDS.toMillis(50);
+    public final static long FIND_UI_ELEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(15);
+    public final static long FIND_UI_ELEMENT_TIMEOUT_LONG = TimeUnit.SECONDS.toMillis(30);
 
     private final static String SD_CARD = "/sdcard";
 
@@ -152,7 +153,8 @@ public class CommonUtils {
                 new ITestBroker[]{
                         new BrokerCompanyPortal(),
                         new BrokerMicrosoftAuthenticator(),
-                        new BrokerHost()
+                        new BrokerHost(),
+                        new BrokerLTW()
                 }
         );
     }

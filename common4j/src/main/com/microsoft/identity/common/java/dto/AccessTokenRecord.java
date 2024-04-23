@@ -22,7 +22,20 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.dto;
 
+import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.ACCESS_TOKEN_TYPE;
+import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.APPLICATION_IDENTIFIER;
+import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.AUTHORITY;
+import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.EXTENDED_EXPIRES_ON;
+import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.KID;
+import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.MAM_ENROLLMENT_IDENTIFIER;
+import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.REALM;
+import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.REFRESH_ON;
+import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.REQUESTED_CLAIMS;
+import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.TARGET;
+import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.TOKEN_TYPE;
+
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -31,22 +44,12 @@ import java.util.concurrent.TimeUnit;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.EqualsAndHashCode;
 
-import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.ACCESS_TOKEN_TYPE;
-import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.AUTHORITY;
-import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.EXTENDED_EXPIRES_ON;
-import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.KID;
-import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.REALM;
-import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.REFRESH_ON;
-import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.REQUESTED_CLAIMS;
-import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.TARGET;
-import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.TOKEN_TYPE;
-
 @EqualsAndHashCode(callSuper = true)
 public class AccessTokenRecord extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {
         /**
-         * <strong>Deprecated<strong> string of access token type.  Prefer @link{#TOKEN_TYPE} instead.
+         * <strong>Deprecated</strong> string of access token type.  Prefer @link{#TOKEN_TYPE} instead.
          */
         @Deprecated
         public static final String ACCESS_TOKEN_TYPE = "access_token_type";
@@ -91,6 +94,22 @@ public class AccessTokenRecord extends Credential {
          * refresh_on is an epoch time, and is calculated based on the refresh_in interval.
          */
         public static final String REFRESH_ON = "refresh_on";
+
+        /**
+         * The packagename/signature tuple of the application to which the access token was issued
+         * This is required for True MAM scenarios to ensure that applications that might share a client id
+         * can be correctly differentiated from one another relative to True MAM Policy status
+         */
+        public static final String APPLICATION_IDENTIFIER = "application_identifier";
+
+        /**
+         * In order to get an access token to some resources the client application must demonstrate to Intune App Protection
+         * or MAM (Legacy name Mobile application Management)
+         * That it's complied with the client application policies (MAM Policies) prior to being issued.
+         * We record the enrollment id on the access token in order to verify that the client in question
+         * Is still enrolled prior to returning the access token
+         */
+        public static final String MAM_ENROLLMENT_IDENTIFIER = "mam_enrollment_identifier";
     }
 
     /**
@@ -158,6 +177,24 @@ public class AccessTokenRecord extends Credential {
      */
     @SerializedName(REFRESH_ON)
     private String mRefreshOn;
+
+    /**
+     * The packagename/signature tuple of the application to which the access token was issued
+     * This is required for True MAM scenarios to ensure that applications that might share a client id
+     * can be correctly differentiated from one another relative to True MAM Policy status
+     */
+    @SerializedName(APPLICATION_IDENTIFIER)
+    private String mApplicationIdentifier;
+
+    /**
+     * In order to get an access token to some resources the client application must demonstrate to Intune App Protection
+     * or MAM (Legacy name Mobile application Management)
+     * That it's complied with the client application policies (MAM Policies) prior to being issued.
+     * We record the enrollment id on the access token in order to verify that the client in question
+     * Is still enrolled prior to returning the access token
+     */
+    @SerializedName(MAM_ENROLLMENT_IDENTIFIER)
+    private String mMamEnrollmentIdentifier;
 
     /**
      * Gets the kid.
@@ -334,6 +371,30 @@ public class AccessTokenRecord extends Credential {
     public void setRefreshOn(final String refreshOn) {
         mRefreshOn = refreshOn;
     }
+
+    /**
+     * Gets the application identifier of the application to which the token was issued.
+     * @return String applicationIdentifier
+     */
+    public String getApplicationIdentifier() { return mApplicationIdentifier; }
+
+    /**
+     * Gets the MAM enrollment identifier associated with the client application to which the token was issued.
+     * @return String MamEnrollmentIdentifier
+     */
+    public String getMamEnrollmentIdentifier() { return mMamEnrollmentIdentifier; }
+
+    /**
+     * Sets the application identifier of the application to which the token was issued.
+     * @param applicationIdentifier
+     */
+    public void setApplicationIdentifier(final String applicationIdentifier) { mApplicationIdentifier = applicationIdentifier; }
+
+    /**
+     * Sets the MAM enrollment identifier associated with the application to which the token was issued.
+     * @param mamEnrollmentIdentifier
+     */
+    public void setMamEnrollmentIdentifier(final String mamEnrollmentIdentifier) { mMamEnrollmentIdentifier = mamEnrollmentIdentifier; }
 
     private boolean isExpired(final String expires) {
         // Init a Calendar for the current time/date

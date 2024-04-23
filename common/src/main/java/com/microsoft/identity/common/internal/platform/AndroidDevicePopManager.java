@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import static com.microsoft.identity.common.adal.internal.cache.StorageHelper.applyKeyStoreLocaleWorkarounds;
+import static com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil.applyKeyStoreLocaleWorkarounds;
 import static com.microsoft.identity.common.java.WarningType.NewApi;
 import static com.microsoft.identity.common.java.util.ported.DateUtilities.LOCALE_CHANGE_LOCK;
 import static com.microsoft.identity.common.java.util.ported.DateUtilities.isLocaleCalendarNonGregorian;
@@ -82,6 +82,12 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
     public static final String STRONG_BOX_UNAVAILABLE_EXCEPTION = "StrongBoxUnavailableException";
 
     /**
+     * Seeing this on android 14, we think it's being caused by the new IAR requirement
+     * <a href="https://android.googlesource.com/platform/compatibility/cdd/+/e2fee2f/9_security-model/9_11_keys-and-credentials.md">...</a>
+     */
+    public static final String NEGATIVE_THOUSAND_INTERNAL_ERROR = "internal Keystore code: -1000";
+
+    /**
      * Error message from underlying KeyStore that an attestation certificate could not be
      * generated, typically due to lack of API support via {@link KeyGenParameterSpec.Builder#setAttestationChallenge(byte[])}.
      */
@@ -133,7 +139,8 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                 return isInsideSecureHardware
                         ? SecureHardwareState.TRUE_UNATTESTED
                         : SecureHardwareState.FALSE;
-            } catch (final NoSuchAlgorithmException | NoSuchProviderException | InvalidKeySpecException e) {
+            } catch (final NoSuchAlgorithmException | NoSuchProviderException |
+                           InvalidKeySpecException e) {
                 Logger.error(methodTag, "Failed to query secure hardware state.", e);
                 return SecureHardwareState.UNKNOWN_QUERY_ERROR;
             }
@@ -146,9 +153,10 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
 
     @Override
     protected void performCleanupIfMintShrFails(@NonNull final Exception e) {
+        final String methodTag = TAG + ":performCleanupIfMintShrFails";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                 && e.getCause() instanceof KeyPermanentlyInvalidatedException) {
-            Logger.warn(TAG, "Unable to access asymmetric key - clearing.");
+            Logger.warn(methodTag, "Unable to access asymmetric key - clearing.");
             clearAsymmetricKey();
         }
     }
@@ -179,6 +187,11 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                 try {
                     kp = generateNewKeyPair(context, tryStrongBox, tryImport, trySetAttestationChallenge);
                     generated = true;
+
+                    // Log success (with flags used)
+                    final String successMessage = String.format("Key pair generated successfully (StrongBox [%b], Import [%b], Attestation Challenge [%b])",
+                            tryStrongBox, tryImport, trySetAttestationChallenge);
+                    Logger.info(TAG, successMessage);
                 } catch (final ProviderException e) {
                     // This mechanism is terrible.  But there are stern warnings that even attempting to
                     // mention these classes in a catch clause might cause failures. So we're going to look
@@ -186,13 +199,14 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
 
 
                     if (tryStrongBox && isStrongBoxUnavailableException(e)) {
+                        Logger.error(TAG, "StrongBox unavailable. Skipping StrongBox then retry.", e);
                         tryStrongBox = false;
                         continue;
                     } else if (tryImport && e.getClass().getSimpleName().equals("SecureKeyImportUnavailableException")) {
-                        Logger.error(TAG, "Import unsupported - skipping import flags.", e);
+                        Logger.error(TAG, "Import unsupported. Skipping import flag then retry.", e);
                         tryImport = false;
 
-                        if (tryStrongBox && null != e.getCause() && isStrongBoxUnavailableException(e.getCause())) {
+                        if (tryStrongBox && null != e.getCause() && (isStrongBoxUnavailableException(e.getCause()) || isNegativeInternalError(e.getCause()))) {
                             // On some devices (notably, Huawei Mate 9 Pro), StrongBox errors are
                             // the cause of the surfaced SecureKeyImportUnavailableException.
                             tryStrongBox = false;
@@ -200,9 +214,18 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
 
                         continue;
                     } else if (trySetAttestationChallenge && FAILED_TO_GENERATE_ATTESTATION_CERTIFICATE_CHAIN.equalsIgnoreCase(e.getMessage())) {
-                        Logger.error(TAG, "Failed to generate attestation cert - skipping flag.", e);
+                        Logger.error(TAG, "Failed to generate attestation cert. Skipping attestation then retry.", e);
                         trySetAttestationChallenge = false;
 
+                        continue;
+                    } else if (tryStrongBox && (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+                            && (null != e.getCause()) && isNegativeInternalError(e.getCause())) {
+                        // Android 14 specific error where strong box is failing, most likely because of IAR requirement in android 14
+                        // https://android.googlesource.com/platform/compatibility/cdd/+/e2fee2f/9_security-model/9_11_keys-and-credentials.md
+                        // Had to check code name, as android 14 device in beta seems to still show 33 as SDK int
+                        // TO-DO : https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2574078
+                        Logger.error(TAG, "Android 14 Internal Key store error with StrongBox. Skipping strongbox then retry.", e);
+                        tryStrongBox = false;
                         continue;
                     }
 
@@ -247,11 +270,21 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
         return isStrongBoxException;
     }
 
+    private static boolean isNegativeInternalError(@androidx.annotation.NonNull final Throwable t) {
+        final boolean isNegativeInternalError = t.getMessage() != null && t.getMessage().contains(NEGATIVE_THOUSAND_INTERNAL_ERROR);
+
+        if (isNegativeInternalError) {
+            Logger.error(TAG, "StrongBox not supported. internal Keystore code: -1000", t);
+        }
+
+        return isNegativeInternalError;
+    }
+
     /**
      * Generates a new {@link KeyPair}.
      *
-     * @param context      The application Context.
-     * @param useStrongbox True if StrongBox should be used, false otherwise.
+     * @param context                    The application Context.
+     * @param useStrongbox               True if StrongBox should be used, false otherwise.
      * @param trySetAttestationChallenge
      * @return The newly generated KeyPair.
      * @throws InvalidAlgorithmParameterException If the designated crypto algorithm is not
@@ -310,12 +343,12 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
     /**
      * Initialize the provided {@link KeyPairGenerator}.
      *
-     * @param context          The current application Context.
-     * @param keyPairGenerator The KeyPairGenerator to initialize.
-     * @param keySize          The RSA keysize.
-     * @param useStrongbox     True if StrongBox should be used, false otherwise. Please note that
-     *                         StrongBox may not be supported on all devices.
-     * @param enableImport     True if imports to the underlying KeyStore are allowed.
+     * @param context                    The current application Context.
+     * @param keyPairGenerator           The KeyPairGenerator to initialize.
+     * @param keySize                    The RSA keysize.
+     * @param useStrongbox               True if StrongBox should be used, false otherwise. Please note that
+     *                                   StrongBox may not be supported on all devices.
+     * @param enableImport               True if imports to the underlying KeyStore are allowed.
      * @param trySetAttestationChallenge True if we should attempt to generate an attestation challenge cert.
      * @throws InvalidAlgorithmParameterException
      */

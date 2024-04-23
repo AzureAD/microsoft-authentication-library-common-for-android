@@ -58,6 +58,11 @@ public class WordApp extends App implements IFirstPartyApp {
         localApkFileName = WORD_APK;
     }
 
+    public WordApp(@NonNull final IAppInstaller appInstaller) {
+        super(WORD_PACKAGE_NAME, WORD_APP_NAME, appInstaller);
+        localApkFileName = WORD_APK;
+    }
+
     @Override
     public void handleFirstRun() {
         // First run side loaded in automation does not request for access storage permission

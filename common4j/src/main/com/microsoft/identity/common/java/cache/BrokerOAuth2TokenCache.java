@@ -170,7 +170,7 @@ public class BrokerOAuth2TokenCache
     }
 
     /**
-     * Broker-only API to persist WPJ's Accounts & their associated credentials.
+     * Broker-only API to persist WPJ's Accounts and their associated credentials.
      *
      * @param accountRecord     The {@link AccountRecord} to store.
      * @param idTokenRecord     The {@link IdTokenRecord} to store.
@@ -242,7 +242,7 @@ public class BrokerOAuth2TokenCache
     }
 
     /**
-     * Broker-only API to persist WPJ's Accounts & their associated credentials.
+     * Broker-only API to persist WPJ's Accounts and their associated credentials.
      *
      * @param accountRecord      The {@link AccountRecord} to store.
      * @param idTokenRecord      The {@link IdTokenRecord} to store.
@@ -350,6 +350,8 @@ public class BrokerOAuth2TokenCache
         final String clientId = cacheRecord.getAccessToken().getClientId();
         final String target = cacheRecord.getAccessToken().getTarget();
         final String environment = cacheRecord.getAccessToken().getEnvironment();
+        final String applicationIdentifier = cacheRecord.getAccessToken().getApplicationIdentifier();
+        final String mamEnrollmentIdentifier = cacheRecord.getAccessToken().getMamEnrollmentIdentifier();
 
         final MsalOAuth2TokenCache cache = getTokenCacheForClient(
                 clientId,
@@ -366,6 +368,8 @@ public class BrokerOAuth2TokenCache
 
         return cache.loadWithAggregatedAccountData(
                 clientId,
+                applicationIdentifier,
+                mamEnrollmentIdentifier,
                 target,
                 cacheRecord.getAccount(),
                 authScheme
@@ -528,6 +532,8 @@ public class BrokerOAuth2TokenCache
      */
     @Override
     public ICacheRecord load(@NonNull final String clientId,
+                             @NonNull final String applicationIdentifier,
+                             @Nullable final String mamEnrollmentIdentifier,
                              @Nullable final String target,
                              @NonNull final AccountRecord account,
                              @NonNull final AbstractAuthenticationScheme authScheme) {
@@ -582,6 +588,8 @@ public class BrokerOAuth2TokenCache
         } else {
             resultRecord = targetCache.load(
                     clientId,
+                    applicationIdentifier,
+                    mamEnrollmentIdentifier,
                     target,
                     account,
                     authScheme
@@ -603,7 +611,7 @@ public class BrokerOAuth2TokenCache
     /**
      * The caller of this method should inspect the result carefully.
      * <p>
-     * If the result contains >1 element: tokens were found for the provided filter criteria and
+     * If the result contains {@literal >} 1 element: tokens were found for the provided filter criteria and
      * additionally, tokens were found for this Account relative to a guest tenant.
      * <p>
      * If the result contains exactly 1 element, you may receive 1 of a few different
@@ -628,6 +636,8 @@ public class BrokerOAuth2TokenCache
     @SuppressWarnings(UNCHECKED)
     @Override
     public List<ICacheRecord> loadWithAggregatedAccountData(@NonNull final String clientId,
+                                                            @NonNull final String applicationIdentifier,
+                                                            @Nullable final String mamEnrollmentIdentifier,
                                                             @Nullable final String target,
                                                             @NonNull final AccountRecord account,
                                                             @NonNull final AbstractAuthenticationScheme authScheme) {
@@ -690,6 +700,8 @@ public class BrokerOAuth2TokenCache
             } else {
                 resultRecords = targetCache.loadWithAggregatedAccountData(
                         clientId,
+                        applicationIdentifier,
+                        mamEnrollmentIdentifier,
                         target,
                         account,
                         authScheme
@@ -1274,7 +1286,6 @@ public class BrokerOAuth2TokenCache
      * @param homeAccountId The homeAccountId of the Account targeted for deletion.
      * @param realm         The tenant id of the targeted Account (if applicable).
      * @return An {@link AccountDeletionRecord}, containing the deleted {@link AccountDeletionRecord}s.
-     * @see #removeAccountFromDevice(AccountRecord).
      */
     @Override
     public AccountDeletionRecord removeAccount(@Nullable final String environment,
@@ -1378,6 +1389,8 @@ public class BrokerOAuth2TokenCache
                                         environment,
                                         CredentialType.RefreshToken,
                                         clientId,
+                                        null, //wildcard (*)
+                                        null, //wildcard (*)
                                         null, // wildcard (*)
                                         null, // wildcard (*)
                                         null // Not applicable
@@ -1392,6 +1405,8 @@ public class BrokerOAuth2TokenCache
                                         environment,
                                         CredentialType.V1IdToken,
                                         clientId,
+                                        null, //wildcard (*)
+                                        null, //wildcard (*)
                                         realm,
                                         null,
                                         null // Not applicable
@@ -1406,6 +1421,8 @@ public class BrokerOAuth2TokenCache
                                         environment,
                                         CredentialType.IdToken,
                                         clientId,
+                                        null, //wildcard (*)
+                                        null, //wildcard (*)
                                         realm,
                                         null,
                                         null // not applicable
@@ -1591,11 +1608,9 @@ public class BrokerOAuth2TokenCache
         }
 
         final INameValueStorage<String> sharedPreferencesFileManager =
-                components.getEncryptedNameValueStore(
+                components.getStorageSupplier().getEncryptedNameValueStore(
                         SharedPreferencesAccountCredentialCache
                                 .getBrokerUidSequesteredFilename(uid),
-                        components.
-                                getStorageEncryptionManager(),
                         String.class
                 );
 
@@ -1610,9 +1625,8 @@ public class BrokerOAuth2TokenCache
         );
 
         final INameValueStorage<String> sharedPreferencesFileManager =
-                components.getEncryptedNameValueStore(
+                components.getStorageSupplier().getEncryptedNameValueStore(
                         SharedPreferencesAccountCredentialCache.BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                        components.getStorageEncryptionManager(),
                         String.class
                 );
 

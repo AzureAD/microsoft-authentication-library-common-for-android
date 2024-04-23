@@ -17,6 +17,7 @@
         android:clickable="false"
         android:focusable="false"
         android:layout_marginEnd="34dp"
+        android:layout_marginRight="34dp"
         android:buttonTint="@color/dialogRadioButton"
          />
 

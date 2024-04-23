@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.ui.webview;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -35,13 +34,23 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.lifecycle.ViewTreeLifecycleOwner;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CertBasedAuthFactory;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ICertBasedAuthChallengeHandler;
+import com.microsoft.identity.common.internal.fido.CredManFidoManager;
+import com.microsoft.identity.common.internal.fido.FidoChallenge;
+import com.microsoft.identity.common.internal.fido.AuthFidoChallengeHandler;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
+import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
+import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
+import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
+import com.microsoft.identity.common.java.constants.FidoConstants;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightManager;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -54,14 +63,19 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URISyntaxException;
+import java.security.Principal;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AMAZON_APP_REDIRECT_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
+
+import io.opentelemetry.api.trace.SpanContext;
 
 /**
  * For web view client, we do not distinguish V1 from V2.
@@ -77,9 +91,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public static final String ERROR = "error";
     public static final String ERROR_SUBCODE = "error_subcode";
     public static final String ERROR_DESCRIPTION = "error_description";
+    private static final String DEVICE_CERT_ISSUER = "CN=MS-Organization-Access";
     private final String mRedirectUrl;
     private final CertBasedAuthFactory mCertBasedAuthFactory;
-    private ICertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
+    private AbstractCertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
+
+    private HashMap<String, String> mRequestHeaders;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
@@ -124,6 +141,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return handleUrl(view, requestUrl.toString());
     }
 
+    public void setRequestHeaders(final HashMap<String, String> requestHeaders) {
+        mRequestHeaders = requestHeaders;
+    }
+
     /**
      * Interpret and take action on a redirect url.
      * This function will return true in every case save 1.  That is, when the URL is none of:
@@ -150,6 +171,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url);
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
+            } else if (CommonFlightManager.isFlightEnabled(CommonFlight.ENABLE_PASSKEY_FEATURE) && isPasskeyUrl(formattedURL)) {
+                Logger.info(methodTag,"WebView detected request for passkey protocol.");
+                final FidoChallenge challenge = FidoChallenge.createFromRedirectUri(url);
+                final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity)getActivity()).getSpanContext() : null;
+                final AuthFidoChallengeHandler challengeHandler = new AuthFidoChallengeHandler(
+                        new CredManFidoManager(view.getContext()),
+                        view,
+                        spanContext,
+                        ViewTreeLifecycleOwner.get(view));
+                challengeHandler.processChallenge(challenge);
             } else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
                 processRedirectUrl(view, url);
@@ -168,17 +199,23 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (isAuthAppMFAUrl(formattedURL)) {
                 Logger.info(methodTag,"Request to link account with Authenticator.");
                 processAuthAppMFAUrl(url);
+            } else if (isAmazonAppRedirect(formattedURL)) {
+                Logger.info(methodTag, "It is an Amazon app request");
+                processAmazonAppUri(url);
             } else if (isInvalidRedirectUri(url)) {
                 Logger.info(methodTag,"Check for Redirect Uri.");
                 processInvalidRedirectUri(view, url);
             } else if (isBlankPageRequest(formattedURL)) {
                 Logger.info(methodTag,"It is an blank page request");
-            } else if (isUriSSLProtected(formattedURL)) {
+            } else if (!isUriSSLProtected(formattedURL)) {
                 Logger.info(methodTag,"Check for SSL protection");
                 processSSLProtectionCheck(view, url);
+            } else if (isHeaderForwardingRequiredUri(url)) {
+                processHeaderForwardingRequiredUri(view, url);
             } else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
                 processInvalidUrl(url);
+
                 return false;
             }
         } catch (final ClientException exception) {
@@ -191,7 +228,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private boolean isUriSSLProtected(@NonNull final String url) {
-        return !(url.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX));
+        return url.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX);
     }
 
     private boolean isBlankPageRequest(@NonNull final String url) {
@@ -213,6 +250,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isPkeyAuthUrl(@NonNull final String url) {
         return url.startsWith(AuthenticationConstants.Broker.PKEYAUTH_REDIRECT.toLowerCase(Locale.ROOT));
+    }
+
+    private boolean isPasskeyUrl(@NonNull final String url) {
+        return url.startsWith(FidoConstants.PASSKEY_PROTOCOL_REDIRECT.toLowerCase(Locale.ROOT));
     }
 
     private boolean isRedirectUrl(@NonNull final String url) {
@@ -238,6 +279,21 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return url.startsWith(AuthenticationConstants.Broker.BROWSER_EXT_WEB_CP);
     }
 
+    private boolean isAmazonAppRedirect(@NonNull final String url) {
+        return url.startsWith(AMAZON_APP_REDIRECT_PREFIX);
+    }
+
+    private boolean isHeaderForwardingRequiredUri(@NonNull final String url) {
+        // MSAL makes MSA requests first to login.microsoftonline.com, and then gets redirected to login.live.com.
+        // This drops all the headers, which can have credentials useful for SSO and correlationIds useful for
+        // investigations.
+        // Old Chromium versions <88 did this behavior by default, but it was removed in more recent versions.
+        // For now, reproduce this only for MSA, and consider adding more trusted ESTS endpoints in the future.
+        final boolean urlIsTrustedToReceiveHeaders =  url.startsWith("https://login.live.com/");
+        final boolean originalRequestHasHeaders = mRequestHeaders != null && !mRequestHeaders.isEmpty();
+        return urlIsTrustedToReceiveHeaders && originalRequestHasHeaders;
+    }
+
     // This function is only called when the client received a redirect that starts with the apps
     // redirect uri.
     protected void processRedirectUrl(@NonNull final WebView view, @NonNull final String url) {
@@ -258,15 +314,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (url.contains(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER)) {
             Logger.info(methodTag, "This is a device CA request.");
             final PackageHelper packageHelper = new PackageHelper(getActivity().getPackageManager());
-            final Context applicationContext = getActivity().getApplicationContext();
 
             // If CP is installed, redirect to CP.
             // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
             //       CP is currently working on this.
             //       Until that comes, we'll only handle this in ipphone.
-            if (packageHelper.isPackageInstalledAndEnabled(applicationContext, IPPHONE_APP_PACKAGE_NAME) &&
-                    IPPHONE_APP_SIGNATURE.equals(packageHelper.getCurrentSignatureForPackage(IPPHONE_APP_PACKAGE_NAME)) &&
-                    packageHelper.isPackageInstalledAndEnabled(applicationContext, COMPANY_PORTAL_APP_PACKAGE_NAME)) {
+            if (packageHelper.isPackageInstalledAndEnabled(IPPHONE_APP_PACKAGE_NAME) &&
+                    IPPHONE_APP_SIGNATURE.equals(packageHelper.getSha1SignatureForPackage(IPPHONE_APP_PACKAGE_NAME)) &&
+                    packageHelper.isPackageInstalledAndEnabled(COMPANY_PORTAL_APP_PACKAGE_NAME)) {
                 try {
                     launchCompanyPortal();
                     return;
@@ -334,6 +389,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         getActivity().startActivity(intent);
 
         returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
+    }
+
+    private void processAmazonAppUri(@NonNull final String url) {
+        final String methodTag = TAG + ":processAmazonAppUri";
+
+        final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        getActivity().startActivity(intent);
+        Logger.info(methodTag, "Sent Intent to launch Amazon app");
     }
 
     private void openLinkInBrowser(final String url) {
@@ -432,6 +495,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 + removeQueryParametersOrRedact(url) + "' the user's url pattern is '" + mRedirectUrl + "'");
     }
 
+    private void processHeaderForwardingRequiredUri(@NonNull final WebView view, @NonNull final String url) {
+        final String methodTag = TAG + ":processHeaderForwardingRequiredUri";
+
+        Logger.infoPII(methodTag,"We are loading this new URL: '"
+                + removeQueryParametersOrRedact(url) + "' with original requestHeaders appended.");
+
+        view.loadUrl(url, mRequestHeaders);
+    }
+
     private String removeQueryParametersOrRedact(@NonNull final String url) {
         final String methodTag = TAG + ":removeQueryParametersOrRedact";
         try {
@@ -458,11 +530,38 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @Override
     public void onReceivedClientCertRequest(@NonNull final WebView view,
                                             @NonNull final ClientCertRequest clientCertRequest) {
+        final String methodTag = TAG + ":onReceivedClientCertRequest";
+        // When server sends null or empty issuers, we'll continue with CBA.
+        // In the case where ADFS sends a clientTLS device auth request, we don't handle that in CBA.
+        // This type of request will have a particular issuer, so if that issuer is found, we will
+        //  immediately cancel the ClientCertRequest.
+        final Principal[] acceptableCertIssuers = clientCertRequest.getPrincipals();
+        if (acceptableCertIssuers != null) {
+            for (final Principal issuer : acceptableCertIssuers) {
+                if (issuer.getName().contains(DEVICE_CERT_ISSUER)) {
+                    final String message = "Cancelling the TLS request, not responding to TLS challenge triggered by device authentication.";
+                    Logger.info(methodTag, message);
+                    clientCertRequest.cancel();
+                    return;
+                }
+            }
+        }
+
         if (mCertBasedAuthChallengeHandler != null) {
             mCertBasedAuthChallengeHandler.cleanUp();
         }
-        mCertBasedAuthChallengeHandler = mCertBasedAuthFactory.createCertBasedAuthChallengeHandler();
-        mCertBasedAuthChallengeHandler.processChallenge(clientCertRequest);
+        mCertBasedAuthFactory.createCertBasedAuthChallengeHandler(new CertBasedAuthFactory.CertBasedAuthChallengeHandlerCallback() {
+            @Override
+            public void onReceived(@Nullable final AbstractCertBasedAuthChallengeHandler challengeHandler) {
+                mCertBasedAuthChallengeHandler = challengeHandler;
+                if (mCertBasedAuthChallengeHandler == null) {
+                    //User cancelled out of CBA.
+                    clientCertRequest.cancel();
+                    return;
+                }
+                mCertBasedAuthChallengeHandler.processChallenge(clientCertRequest);
+            }
+        });
     }
 
     /**
@@ -476,14 +575,24 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * A wrapper to emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
-     * @param response a RawAuthorizationResult object received upon a challenge response received.
+     * Call methods to be run before sending auth results.
+     * @param response {@link RawAuthorizationResult}
+     * @param callback {@link ISendResultCallback}
      */
-    public void emitTelemetryForCertBasedAuthResult(@NonNull final RawAuthorizationResult response) {
-        if (mCertBasedAuthChallengeHandler != null) {
-            //The challenge handler checks if CBA was proceeded with and emits telemetry.
-            mCertBasedAuthChallengeHandler.emitTelemetryForCertBasedAuthResults(response);
+    public void finalizeBeforeSendingResult(@NonNull final RawAuthorizationResult response,
+                                            @NonNull final ISendResultCallback callback) {
+        if (mCertBasedAuthChallengeHandler == null) {
+            callback.onResultReady();
+            return;
         }
+        //The challenge handler checks if CBA was proceeded with and emits telemetry.
+        mCertBasedAuthChallengeHandler.emitTelemetryForCertBasedAuthResults(response);
+        if (!(mCertBasedAuthChallengeHandler instanceof AbstractSmartcardCertBasedAuthChallengeHandler)) {
+            callback.onResultReady();
+            return;
+        }
+        //The challenge handler will make sure no smartcard is connected before result is sent.
+        ((AbstractSmartcardCertBasedAuthChallengeHandler<?>)mCertBasedAuthChallengeHandler).promptSmartcardRemovalForResult(callback);
     }
 
 }

@@ -23,21 +23,28 @@
 
 package com.microsoft.identity.common.java.platform;
 
+import com.microsoft.identity.common.java.AuthenticationConstants;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import cz.msebera.android.httpclient.extras.Base64;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import io.opentelemetry.api.trace.Span;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
+
 
 public class JweResponse {
 
+    private static final String TAG = JweResponse.class.getSimpleName();
     /**
      * The code defines a valid JWE as one that has at least the header, encryptedKey, IV,
      * and Payload.
@@ -66,41 +73,62 @@ public class JweResponse {
         private final String mContext;
     }
 
-    JweHeader mJweHeader;
+    @NonNull
+    private JweHeader mJweHeader;
 
-    String mEncryptedKey;
+    @NonNull
+    private String mEncryptedKey;
 
-    String mIv;
+    @NonNull
+    private String mIv;
 
-    String mPayload;
+    @NonNull
+    private String mPayload;
 
-    String mAuthenticationTag;
+    /**
+     * Tag may not be present for all algorithms. Hence marked nullable
+     */
+    @Nullable
+    private String mAuthenticationTag;
+
+    /**
+     * Additional Authenticated Data. This is encoded header read as ASCII.
+     */
+    private String mAAD;
 
     public JweHeader getJweHeader() {
         return mJweHeader;
     }
 
-    public String getEncryptedKey() {
-        return mEncryptedKey;
+    public byte[] getEncryptedKey() {
+        return StringUtil.base64Decode(this.mEncryptedKey, Base64.URL_SAFE, "Encrypted key is not base64 url-encoded");
     }
 
-    public String getIV() {
-        return mIv;
+    public byte[] getIv() {
+        return StringUtil.base64Decode(this.mIv, Base64.URL_SAFE, "IV not base64 url-encoded.");
     }
 
-    public String getPayload() {
-        return mPayload;
+    public byte[] getPayload() {
+        return StringUtil.base64Decode(this.mPayload, Base64.URL_SAFE, "Payload is not base64 url-encoded.");
     }
 
-    public String getAuthenticationTag() {
-        return mAuthenticationTag;
+    public byte[] getAuthenticationTag() {
+        if (this.mAuthenticationTag != null) {
+            return StringUtil.base64Decode(this.mAuthenticationTag, Base64.URL_SAFE, "Tag is not base64 url-encoded");
+        }
+
+        return null;
     }
 
-    public static JweResponse parseJwe(String jwe) throws JSONException {
-        final Span span = Span.current();
-        JweResponse response = new JweResponse();
+    public byte[] getAAD() {
+        return this.mAAD.getBytes(AuthenticationConstants.CHARSET_ASCII);
+    }
 
-        String[] split = jwe.split("\\.");
+    public static JweResponse parseJwe(@NonNull final String jwe) throws JSONException {
+        final Span span = SpanExtension.current();
+        final JweResponse response = new JweResponse();
+
+        final String[] split = jwe.split("\\.");
 
         span.setAttribute(AttributeName.jwt_valid.name(), split.length >= LENGTH_OF_VALID_JWE);
 
@@ -108,19 +136,23 @@ public class JweResponse {
             throw new IllegalArgumentException("Invalid JWE");
         }
 
-        String header = split[0];
+        // NOTE: EVOsts sends mIv and mPayload as Base64UrlEncoded
+        final String header = split[0];
         response.mEncryptedKey = split[1];
         response.mIv = split[2];
         response.mPayload = split[3];
+
+        // AAD is header read as ASCII
+        response.mAAD = header;
 
         if (split.length > 4) {
             response.mAuthenticationTag = split[4];
         }
 
-        byte[] headerDecodedBytes = Base64.decode(header, Base64.URL_SAFE);
-        String decodedHeader = StringUtil.fromByteArray(headerDecodedBytes);
+        final byte[] headerDecodedBytes = StringUtil.base64Decode(header, Base64.URL_SAFE, "Header is not base url-encoded");
+        final String decodedHeader = StringUtil.fromByteArray(headerDecodedBytes);
 
-        JSONObject jsonObject = new JSONObject(decodedHeader);
+        final JSONObject jsonObject = new JSONObject(decodedHeader);
 
         span.setAttribute(AttributeName.jwt_alg.name(), jsonObject.optString("alg"));
 

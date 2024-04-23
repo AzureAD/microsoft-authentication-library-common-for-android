@@ -41,6 +41,7 @@ import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG;
+import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.handleButtonClick;
 import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
 
 /**
@@ -164,6 +165,11 @@ public class GoogleSettings extends BaseSettings {
 
             // Confirm install cert
             UiAutomatorUtils.handleButtonClick("android:id/button1");
+
+            // Confirm cert name (API 30+ only)
+            if (android.os.Build.VERSION.SDK_INT >= 30) {
+                UiAutomatorUtils.handleButtonClickSafely("android:id/button1");
+            }
 
             // Make sure account appears in Join Activity afterwards
             broker.confirmJoinInJoinActivity(username);
@@ -328,10 +334,33 @@ public class GoogleSettings extends BaseSettings {
         if (android.os.Build.VERSION.SDK_INT == 28) {
             UiAutomatorUtils.handleButtonClick("com.android.settings:id/redaction_done_button");
         } else {
-            final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithExactText("Done");
-            doneButton.click();
+            try {
+                final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithExactText("Done");
+                doneButton.click();
+            } catch (UiObjectNotFoundException e) {
+                Logger.i(TAG, "First Done button attempt failed: " + e.getMessage());
+                final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithExactText("DONE");
+                doneButton.click();
+            }
         }
     }
 
+    @Override
+    public void disableAppThroughSettings(@NonNull final String packageName) {
+        Logger.i(TAG, "Disabling app through settings: " + packageName);
+        launchAppInfoPage(packageName);
+        // This is the id for the disable button
+        handleButtonClick("com.android.settings:id/button2");
+        // Confirm disabling app
+        handleButtonClick("android:id/button1");
+    }
+
+    @Override
+    public void enableAppThroughSettings(@NonNull final String packageName) {
+        Logger.i(TAG, "Enabling app through settings");
+        launchAppInfoPage(packageName);
+        // This is the id for the enable button
+        handleButtonClick("com.android.settings:id/button2");
+    }
 }
 

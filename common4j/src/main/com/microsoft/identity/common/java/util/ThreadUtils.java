@@ -65,7 +65,7 @@ public class ThreadUtils {
      *
      * @param corePool      The smallest number of threads to keep alive in the pool.
      * @param maxPool       The maximum number of threads to allow in the thread pool, after which RejectedExecutionException will occur.
-     * @param queueSize     The number of items to keep in the queue.  If this is < 0, the queue is unbounded.
+     * @param queueSize     The number of items to keep in the queue.  If this is less than 0, the queue is unbounded.
      * @param keepAliveTime The amount of time to keep excess (greater than corePool size) threads alive before terminating them.
      * @param keepAliveUnit The time unit on that time.
      * @param poolName      The name of the thread pool in use.

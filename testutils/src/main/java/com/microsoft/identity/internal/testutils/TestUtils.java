@@ -28,21 +28,18 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.google.gson.Gson;
-import com.microsoft.identity.common.AndroidPlatformComponents;
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.util.ResultFuture;
-import com.microsoft.identity.common.java.util.ported.Function;
 
 import org.junit.Assert;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -74,9 +71,9 @@ public class TestUtils {
     }
 
     public static IMultiTypeNameValueStorage getSharedPreferences(final String sharedPrefName) {
-        final IPlatformComponents components = AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext());
+        final IPlatformComponents components = AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext());
 
-        return components.getFileStore(sharedPrefName);
+        return components.getStorageSupplier().getUnencryptedFileStore(sharedPrefName);
     }
 
     /**
@@ -86,11 +83,9 @@ public class TestUtils {
      * @return A SharedPreferences that decrypts and encrypts the values.
      */
     public static IMultiTypeNameValueStorage getEncryptedSharedPreferences(final String sharedPrefName) {
-        final IPlatformComponents components = AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext());
-        final IMultiTypeNameValueStorage barePreferences = components.getEncryptedFileStore(
-                sharedPrefName,
-                components.
-                        getStorageEncryptionManager());
+        final IPlatformComponents components = AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext());
+        final IMultiTypeNameValueStorage barePreferences = components.getStorageSupplier()
+                .getEncryptedFileStore(sharedPrefName);
         return barePreferences;
     }
 

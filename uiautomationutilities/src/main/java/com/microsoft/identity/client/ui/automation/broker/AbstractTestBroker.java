@@ -40,10 +40,7 @@ import com.microsoft.identity.client.ui.automation.installer.PlayStore;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
-import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsLoginComponentHandler;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsPromptHandler;
-import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
-import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
@@ -195,12 +192,12 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
     }
 
     @Override
-    public void overwriteFlights(@Nullable final String flightsJson) {
+    public void overwriteFlights(@NonNull final String flightsJson) {
         // Default implementation, Do nothing.
     }
 
     @Override
-    public void setFlights(@Nullable final String flightsJson) {
+    public void setFlights(@NonNull final String flightKey, @NonNull final String flightValue) {
         // Default implementation, Do nothing.
     }
 
@@ -208,5 +205,17 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
     public String getFlights() {
         // Default implementation, Do nothing.
         return "";
+    }
+
+    protected PromptHandlerParameters getDefaultBrokerPromptHandlerParameters(@NonNull final String username) {
+        return PromptHandlerParameters.builder()
+                .prompt(PromptParameter.LOGIN)
+                .broker(this)
+                .consentPageExpected(false)
+                .expectingBrokerAccountChooserActivity(false)
+                .expectingLoginPageAccountPicker(false)
+                .sessionExpected(false)
+                .loginHint(username)
+                .build();
     }
 }

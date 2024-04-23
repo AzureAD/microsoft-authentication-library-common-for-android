@@ -28,7 +28,11 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBr
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
-import static com.microsoft.identity.common.java.commands.SilentTokenCommand.ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_DCF_COMMAND_EXECUTION_END;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_DCF_COMMAND_EXECUTION_START;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_DCF_EXECUTOR_START;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_DCF_FUTURE_OBJECT_CREATION_END;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_DCF_START;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_EXECUTOR_START;
@@ -38,6 +42,9 @@ import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarker
 import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.BaseCommand;
+import com.microsoft.identity.common.java.commands.DeviceCodeFlowAuthResultCommand;
+import com.microsoft.identity.common.java.commands.DeviceCodeFlowCommand;
+import com.microsoft.identity.common.java.commands.DeviceCodeFlowTokenResultCommand;
 import com.microsoft.identity.common.java.commands.ICommandResult;
 import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.SilentTokenCommand;
@@ -50,10 +57,16 @@ import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.UserCancelException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightManager;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.OtelContextExtension;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.FinalizableResultFuture;
@@ -87,8 +100,10 @@ public class CommandDispatcher {
 
     private static final String TAG = CommandDispatcher.class.getSimpleName();
     private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
+    private static final int DCF_REQUEST_THREAD_POOL_SIZE = 5;
     private static ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
-    private static final ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
+    private static ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
+    private static final ExecutorService sDCFExecutor = Executors.newFixedThreadPool(DCF_REQUEST_THREAD_POOL_SIZE);
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
@@ -166,6 +181,60 @@ public class CommandDispatcher {
         submitSilentReturningFuture(command);
     }
 
+    /**
+     * submitDcfAuthResultSilent - Run the Device Code Flow command using a DCF thread pool
+     * @param command   {@link DeviceCodeFlowAuthResultCommand}
+     * @return {@link AuthorizationResult}
+     * @throws BaseException
+     */
+    public static AuthorizationResult submitDcfAuthResultSilent(@NonNull final DeviceCodeFlowAuthResultCommand command)
+            throws BaseException {
+        final CommandResult commandResult;
+        try {
+            commandResult = submitSilentReturningFuture(command).get();
+        } catch (final InterruptedException | ExecutionException e) {
+            throw ExceptionAdapter.baseExceptionFromException(e);
+        }
+
+        if (commandResult.getStatus() == ICommandResult.ResultStatus.COMPLETED){
+            return (AuthorizationResult) commandResult.getResult();
+        } else if (commandResult.getStatus() == ICommandResult.ResultStatus.ERROR){
+            throw ExceptionAdapter.baseExceptionFromException((Throwable) commandResult.getResult());
+        } else if (commandResult.getStatus() == ICommandResult.ResultStatus.CANCEL){
+            throw new UserCancelException(ErrorStrings.USER_CANCELLED,
+                    "Request cancelled by user");
+        } else {
+            throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Unexpected CommandResult status");
+        }
+    }
+
+    /**
+     * submitDcfTokenResultSilent - Run the Device Code Flow command using a DCF thread pool
+     * @param command   {@link DeviceCodeFlowTokenResultCommand}
+     * @return {@link ILocalAuthenticationResult}
+     * @throws BaseException
+     */
+    public static ILocalAuthenticationResult submitDcfTokenResultSilent(@NonNull final DeviceCodeFlowTokenResultCommand command)
+            throws BaseException {
+        final CommandResult commandResult;
+        try {
+            commandResult = submitSilentReturningFuture(command).get();
+        } catch (final InterruptedException | ExecutionException e) {
+            throw ExceptionAdapter.baseExceptionFromException(e);
+        }
+
+        if (commandResult.getStatus() == ICommandResult.ResultStatus.COMPLETED){
+            return (ILocalAuthenticationResult) commandResult.getResult();
+        } else if (commandResult.getStatus() == ICommandResult.ResultStatus.ERROR){
+             throw ExceptionAdapter.baseExceptionFromException((Throwable) commandResult.getResult());
+        } else if (commandResult.getStatus() == ICommandResult.ResultStatus.CANCEL){
+            throw new UserCancelException(ErrorStrings.USER_CANCELLED,
+                    "Request cancelled by user");
+        } else {
+            throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Unexpected CommandResult status");
+        }
+    }
+
 
     /**
      * Perform acquireTokenSilent command synchronously.
@@ -183,7 +252,8 @@ public class CommandDispatcher {
             if (BuildConfig.DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT){
                 commandResult = submitSilentReturningFuture(command).get();
             } else {
-                commandResult = submitSilentReturningFuture(command).get(ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS);
+                final int silentTokenTimeOutMs = CommonFlightManager.getIntValue(CommonFlight.ACQUIRE_TOKEN_SILENT_TIMEOUT_MILLISECONDS);
+                commandResult = submitSilentReturningFuture(command).get(silentTokenTimeOutMs, TimeUnit.MILLISECONDS);
             }
         } catch (final InterruptedException | ExecutionException | TimeoutException e) {
             throw ExceptionAdapter.baseExceptionFromException(e);
@@ -210,8 +280,8 @@ public class CommandDispatcher {
     public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@SuppressWarnings(WarningType.rawtype_warning)
                                                                                      @NonNull final BaseCommand command) {
         final CodeMarkerManager codeMarkerManager = CodeMarkerManager.getInstance();
-        codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_START);
-        final String methodName = ":submitSilent";
+        final String methodName;
+        final ExecutorService commandExecutor;
 
         final CommandParameters commandParameters = command.getParameters();
         final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(),
@@ -220,6 +290,19 @@ public class CommandDispatcher {
 
         // set correlation id on parameters as it may not already be set
         commandParameters.setCorrelationId(correlationId);
+
+        final boolean isDeviceCodeFlowRequest = isDeviceCodeFlowRequest(command);
+        // Use DCF thread pool for DCF requests so that in case user chooses to follow interactive sign in,
+        // future silent calls are not blocked
+        if (isDeviceCodeFlowRequest) {
+            commandExecutor = sDCFExecutor;
+            codeMarkerManager.markCode(ACQUIRE_TOKEN_DCF_START);
+            methodName = ":submitDCF";
+        } else {
+            commandExecutor = sSilentExecutor;
+            codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_START);
+            methodName = ":submitSilent";
+        }
 
         logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
 
@@ -251,10 +334,15 @@ public class CommandDispatcher {
                 finalFuture.whenComplete(getCommandResultConsumer(command));
             }
 
-            sSilentExecutor.execute(new Runnable() {
+            SpanExtension.current().setAttribute(
+                    AttributeName.num_concurrent_silent_requests.name(),
+                    sExecutingCommandMap.size()
+            );
+
+            commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
-                    codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_EXECUTOR_START);
+                    codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_EXECUTOR_START : ACQUIRE_TOKEN_SILENT_EXECUTOR_START);
                     try {
                         //initializing again since the request is transferred to a different thread pool
                         initializeDiagnosticContext(correlationId, commandParameters.getSdkType() == null ?
@@ -272,11 +360,11 @@ public class CommandDispatcher {
                             EstsTelemetry.getInstance().emitForceRefresh(((SilentTokenCommandParameters) command.getParameters()).isForceRefresh());
                         }
 
-                        codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START);
+                        codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_COMMAND_EXECUTION_START : ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START);
                         try {
                             commandResult = executeCommand(command);
                         } finally {
-                            codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END);
+                            codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_COMMAND_EXECUTION_END : ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END);
                         }
                         Logger.info(TAG + methodName, "Completed silent request as owner for correlation id : **"
                                 + correlationId + ", with the status : " + commandResult.getStatus().getLogStatus()
@@ -305,9 +393,9 @@ public class CommandDispatcher {
                         }
                         DiagnosticContext.INSTANCE.clear();
                     }
-                    codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);
+                    codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_FUTURE_OBJECT_CREATION_END : ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);
                 }
-            });
+            }));
             return finalFuture;
         }
     }
@@ -338,7 +426,7 @@ public class CommandDispatcher {
         synchronized (mapAccessLock) {
             final FinalizableResultFuture<CommandResult> finalFuture = new FinalizableResultFuture<>();
             finalFuture.whenComplete(getCommandResultConsumer(command));
-            sSilentExecutor.execute(new Runnable() {
+            sSilentExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
 
@@ -364,7 +452,7 @@ public class CommandDispatcher {
                     }
 
                 }
-            });
+            }));
             return finalFuture;
         }
     }
@@ -621,7 +709,7 @@ public class CommandDispatcher {
             }
         }
 
-        public static void beginInteractive ( final InteractiveTokenCommand command){
+        public static void beginInteractive (final InteractiveTokenCommand command) {
             final String methodName = ":beginInteractive";
             synchronized (sLock) {
 
@@ -645,7 +733,7 @@ public class CommandDispatcher {
                     }
                 }
 
-                sInteractiveExecutor.execute(new Runnable() {
+                sInteractiveExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                     @Override
                     public void run() {
                         final CommandParameters commandParameters = command.getParameters();
@@ -665,10 +753,16 @@ public class CommandDispatcher {
 
                             EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
+                            final BaseException[] receiverException = new BaseException[1];
+
                             final LocalBroadcaster.IReceiverCallback resultReceiver = new LocalBroadcaster.IReceiverCallback() {
                                 @Override
                                 public void onReceive(@NonNull PropertyBag dataBag) {
-                                    completeInteractive(dataBag);
+                                    try {
+                                        completeInteractive(dataBag);
+                                    } catch (final Exception e) {
+                                        receiverException[0] = ExceptionAdapter.baseExceptionFromException(e);
+                                    }
                                 }
                             };
 
@@ -685,6 +779,12 @@ public class CommandDispatcher {
 
                             LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_AUTHORIZATION_REQUEST_RESULT);
 
+                            // If we received an exception during the receiver callback execution,
+                            // we should set that as the command result
+                            if (receiverException[0] != null) {
+                                commandResult = CommandResult.of(CommandResult.ResultStatus.ERROR, receiverException[0], correlationId);
+                            }
+
                             Logger.info(TAG + methodName,
                                     "Completed interactive request for correlation id : **" + correlationId +
                                             statusMsg(commandResult.getStatus().getLogStatus()));
@@ -695,7 +795,7 @@ public class CommandDispatcher {
                             DiagnosticContext.INSTANCE.clear();
                         }
                     }
-                });
+                }));
             }
         }
 
@@ -752,7 +852,41 @@ public class CommandDispatcher {
             return ", with the status : " + status;
         }
 
-
-
+        private static boolean isDeviceCodeFlowRequest(BaseCommand command) {
+            return (command instanceof DeviceCodeFlowCommand
+                    || command instanceof DeviceCodeFlowAuthResultCommand
+                    || command instanceof DeviceCodeFlowTokenResultCommand);
+        }
+        
+    /***
+     * Stops the SilentRequestsExecutor.
+     * Waits 1 Sec for existing silent requests to finish, before terminating them.
+     * WARN!! No new silent requests will be processed after this until the executor is reset
+     * This is expected to be called when in Shared Device Mode when global signout is performed.
+     */
+    public static void stopSilentRequestExecutor() {
+        final String methodTag = TAG + ":stopSilentRequestExecutor";
+        Logger.info(methodTag, "shutting down..");
+        sSilentExecutor.shutdown();
+        try {
+            if (!sSilentExecutor.awaitTermination(1000, TimeUnit.MILLISECONDS)) {
+                Logger.warn(methodTag, "terminating now");
+                sSilentExecutor.shutdownNow();
+            }
+        } catch (final InterruptedException e) {
+            Logger.warn(methodTag, "terminating again");
+            sSilentExecutor.shutdownNow();
+        }
+    }
+    /***
+     * Resets the SilentRequestsExecutor.
+     * This creates a new Executor for the silent request.
+     * This is expected to be called after global signout is performed in Shared Device mode.
+     * This should be called if previously the Executor was stopped using 'stopSilentRequestExecutor'
+     */
+    public static void resetSilentRequestExecutor() {
+        Logger.info(TAG + ":resetSilentRequestExecutor", "Resetting silent Executor");
+        sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
+    }
 }
 

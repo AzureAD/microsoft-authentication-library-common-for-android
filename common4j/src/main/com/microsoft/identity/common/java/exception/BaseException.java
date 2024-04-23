@@ -82,9 +82,9 @@ public class BaseException extends Exception implements IErrorInformation, ITele
      */
     @Getter
     @Accessors(prefix = "m")
-    private final List<Exception> mSuppressedException = new ArrayList<>();
+    private final List<Throwable> mSuppressedException = new ArrayList<>();
 
-    public void addSuppressedException(@NonNull final Exception e) {
+    public void addSuppressedException(@NonNull final Throwable e) {
         mSuppressedException.add(e);
     }
 
@@ -219,7 +219,7 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     /**
      * Set the telemetry on base exception.
      *
-     * @param telemetry the {@link List<Map<String, String>>} containing telemetry data
+     * @param telemetry the telemetry data.
      */
     public void setTelemetry(@NonNull final List<Map<String, String>> telemetry) {
         mTelemetry.addAll(telemetry);

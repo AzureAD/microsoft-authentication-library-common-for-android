@@ -10,12 +10,12 @@
     <string name="http_auth_dialog_cancel">Annuller</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Vælg et chipkort-certifikat for at logge på</string>
+    <string name="smartcard_cert_dialog_title">Vælg et certifikat for at logge på</string>
     <string name="smartcard_cert_dialog_positive_button">Fortsæt</string>
     <string name="smartcard_cert_dialog_negative_button">Annuller</string>
 
-    <string name="smartcard_pin_dialog_title">Lås chipkort op</string>
-    <string name="smartcard_pin_dialog_message">Angiv chipkort-pinkoden for at få adgang til certifikatet og logge på</string>
+    <string name="smartcard_pin_dialog_title">Lås chipkortet op</string>
+    <string name="smartcard_pin_dialog_message">Angiv pinkoden til chipkortet for at få adgang til certifikatet og logge på</string>
     <string name="smartcard_pin_dialog_positive_button">Lås op</string>
     <string name="smartcard_pin_dialog_negative_button">Annuller</string>
     <string name="smartcard_pin_dialog_error_message">Den pinkode, du har angivet, var forkert</string>
@@ -27,11 +27,45 @@
     <string name="smartcard_max_attempt_dialog_message">Der er for mange mislykkede forsøg. Prøv igen senere.</string>
 
     <string name="smartcard_early_unplug_dialog_title">Prøv igen</string>
-    <string name="smartcard_early_unplug_dialog_message">Chipkort-enheden blev fjernet. Indsæt enheden igen, før du forsøger at logge på igen.</string>
+    <string name="smartcard_early_unplug_dialog_message">Chipkortenheden blev fjernet. Indsæt enheden igen, før du forsøger at logge på igen.</string>
 
     <string name="smartcard_no_cert_dialog_title">Der blev ikke fundet nogen relevante certifikater.</string>
-    <string name="smartcard_no_cert_dialog_message">Bekræft, at dit certifikat er blevet klargjort korrekt på din chipkort-enhed.</string>
+    <string name="smartcard_no_cert_dialog_message">Bekræft, at dit certifikat er blevet klargjort korrekt på din chipkortenhed.</string>
+
+    <string name="smartcard_nfc_diff_connected_title">Du kan kun bruge ét chipkort ad gangen</string>
+    <string name="smartcard_nfc_diff_connected_message">Brug det chipkort, du oprindeligt loggede på med.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Forstået</string>
 
     <string name="smartcard_general_error_dialog_title">Prøv igen senere</string>
     <string name="smartcard_general_error_dialog_message">Der opstod en uventet fejl. Prøv igen senere.</string>
+
+    <string name="user_choice_dialog_title">Hvordan vil du logge på?</string>
+    <string name="user_choice_dialog_on_device_name">Certifikat på denne enhed</string>
+    <string name="user_choice_dialog_smartcard_name">Fysisk chipkort</string>
+    <string name="user_choice_dialog_positive_button">Fortsæt</string>
+    <string name="user_choice_dialog_negative_button">Annuller</string>
+
+    <string name="smartcard_prompt_dialog_title">Forbered dit chipkort</string>
+    <string name="smartcard_prompt_dialog_message">Tilslut eller hold et chipkort på bagsiden af telefonen.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Annuller</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Læser dit chipkort</string>
+    <string name="smartcard_nfc_loading_dialog_message">Sørg for, at chipkortet er på plads.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Forbered dit chipkort</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Hold et chipkort på bagsiden af telefonen.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Annuller</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Slå NFC til i enhedsindstillinger</string>
+    <string name="smartcard_nfc_reminder_dialog_message">Hvis du vil logge på med NFC, skal du slå NFC til i dine enhedsindstillinger. Log derefter på igen.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">Forstået</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Du kan nu fjerne dit chipkort</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Forstået</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Vil du tillade, at denne app får adgang til dit kamera?</string>
+    <string name="qr_code_rationale_message">Du kan derefter logge på med en QR-kode.</string>
+    <string name="qr_code_rationale_allow">Tillad</string>
+    <string name="qr_code_rationale_block">Bloker</string>
 </resources>

@@ -28,7 +28,10 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-// Android's Logger. Wraps around common4j's logger (with an addition of Logcat).
+
+/**
+ * Android's Logger. Wraps around common4j's logger (with an addition of Logcat).
+ */
 public class Logger {
 
     private static final String ANDROID_LOGCAT_LOGGER_IDENTIFIER = "ANDROID_LOGCAT_LOGGER";
@@ -43,6 +46,10 @@ public class Logger {
      * Enum class for LogLevel that the sdk recognizes.
      */
     public enum LogLevel {
+        /**
+         * Log level to disable logging.
+         */
+        NO_LOG,
         /**
          * Error level logging.
          */
@@ -68,6 +75,8 @@ public class Logger {
                     return com.microsoft.identity.common.java.logging.Logger.LogLevel.WARN;
                 case ERROR:
                     return com.microsoft.identity.common.java.logging.Logger.LogLevel.ERROR;
+                case NO_LOG:
+                    return com.microsoft.identity.common.java.logging.Logger.LogLevel.NO_LOG;
                 default:
                     return com.microsoft.identity.common.java.logging.Logger.LogLevel.VERBOSE;
             }
@@ -82,6 +91,8 @@ public class Logger {
                     return WARN;
                 case ERROR:
                     return ERROR;
+                case NO_LOG:
+                    return NO_LOG;
                 default:
                     return VERBOSE;
             }

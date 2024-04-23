@@ -10,7 +10,7 @@
     <string name="http_auth_dialog_cancel">Άκυρο</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Επιλέξτε ένα πιστοποιητικό έξυπνης κάρτας για είσοδο</string>
+    <string name="smartcard_cert_dialog_title">Επιλέξτε ένα πιστοποιητικό για να εισέλθετε</string>
     <string name="smartcard_cert_dialog_positive_button">Συνέχεια</string>
     <string name="smartcard_cert_dialog_negative_button">Άκυρο</string>
 
@@ -27,11 +27,45 @@
     <string name="smartcard_max_attempt_dialog_message">Πάρα πολλές αποτυχημένες προσπάθειες, δοκιμάστε ξανά αργότερα.</string>
 
     <string name="smartcard_early_unplug_dialog_title">Επανάληψη</string>
-    <string name="smartcard_early_unplug_dialog_message">Η συσκευή έξυπνης κάρτας καταργήθηκε. Τοποθετήστε ξανά τη συσκευή πριν επιχειρήσετε να συνδεθείτε ξανά.</string>
+    <string name="smartcard_early_unplug_dialog_message">Καταργήθηκε η συσκευή έξυπνης κάρτας. Τοποθετήστε ξανά τη συσκευή πριν επιχειρήσετε να συνδεθείτε ξανά.</string>
 
     <string name="smartcard_no_cert_dialog_title">Δεν βρέθηκαν ισχύοντα πιστοποιητικά.</string>
-    <string name="smartcard_no_cert_dialog_message">Επιβεβαιώστε ότι το πιστοποιητικό σας έχει παραχθεί σωστά στη συσκευή έξυπνης κάρτας σας.</string>
+    <string name="smartcard_no_cert_dialog_message">Επιβεβαιώστε ότι το πιστοποιητικό σας έχει εκχωρηθεί σωστά στη συσκευή έξυπνης κάρτας σας.</string>
+
+    <string name="smartcard_nfc_diff_connected_title">Μπορείτε να χρησιμοποιήσετε μόνο μία έξυπνη κάρτα κάθε φορά</string>
+    <string name="smartcard_nfc_diff_connected_message">Χρησιμοποιήστε την έξυπνη κάρτα με την οποία πραγματοποιήσατε είσοδο αρχικά.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Το κατάλαβα</string>
 
     <string name="smartcard_general_error_dialog_title">Δοκιμάστε ξανά αργότερα</string>
     <string name="smartcard_general_error_dialog_message">Δυστυχώς, παρουσιάστηκε ένα απρόσμενο σφάλμα. Δοκιμάστε ξανά αργότερα.</string>
+
+    <string name="user_choice_dialog_title">Πώς θέλετε να εισέλθετε;</string>
+    <string name="user_choice_dialog_on_device_name">Πιστοποιητικό σε αυτήν τη συσκευή</string>
+    <string name="user_choice_dialog_smartcard_name">Φυσική έξυπνη κάρτα</string>
+    <string name="user_choice_dialog_positive_button">Συνέχεια</string>
+    <string name="user_choice_dialog_negative_button">Άκυρο</string>
+
+    <string name="smartcard_prompt_dialog_title">Προετοιμασία της έξυπνης κάρτας σας</string>
+    <string name="smartcard_prompt_dialog_message">Συνδέστε ή κρατήστε μια έξυπνη κάρτα στο πίσω μέρος του τηλεφώνου σας.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Άκυρο</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Ανάγνωση της έξυπνης κάρτας σας</string>
+    <string name="smartcard_nfc_loading_dialog_message">Διατηρήστε την έξυπνη κάρτα σας στη θέση της.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Προετοιμασία της έξυπνης κάρτας σας</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Κρατήστε μια έξυπνη κάρτα στο πίσω μέρος του τηλεφώνου σας.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Άκυρο</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Ενεργοποίηση NFC στις ρυθμίσεις συσκευής</string>
+    <string name="smartcard_nfc_reminder_dialog_message">Για να εισέλθετε με NFC, ενεργοποιήστε το NFC στις ρυθμίσεις της συσκευής σας. Στη συνέχεια, εισέλθετε ξανά.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">Το κατάλαβα</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Τώρα μπορείτε να καταργήσετε την έξυπνη κάρτα σας</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Το κατάλαβα</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Να επιτρέπεται σε αυτήν την εφαρμογή η πρόσβαση στην κάμερά σας;</string>
+    <string name="qr_code_rationale_message">Στη συνέχεια, μπορείτε να εισέλθετε με έναν κωδικό QR.</string>
+    <string name="qr_code_rationale_allow">Επιτρέπεται</string>
+    <string name="qr_code_rationale_block">Αποκλεισμός</string>
 </resources>

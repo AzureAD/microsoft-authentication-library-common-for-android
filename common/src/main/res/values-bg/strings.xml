@@ -10,11 +10,11 @@
     <string name="http_auth_dialog_cancel">Отказ</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Избиране на сертификат за смарт карта за влизане</string>
+    <string name="smartcard_cert_dialog_title">Изберете сертификат за влизане</string>
     <string name="smartcard_cert_dialog_positive_button">Продължи</string>
     <string name="smartcard_cert_dialog_negative_button">Отказ</string>
 
-    <string name="smartcard_pin_dialog_title">Отключване на смарт карта</string>
+    <string name="smartcard_pin_dialog_title">Отключване на смарт картата</string>
     <string name="smartcard_pin_dialog_message">Въведете ПИН кода на смарт картата, за да получите достъп до сертификата и да влезете</string>
     <string name="smartcard_pin_dialog_positive_button">Отключване</string>
     <string name="smartcard_pin_dialog_negative_button">Отказ</string>
@@ -30,8 +30,42 @@
     <string name="smartcard_early_unplug_dialog_message">Устройството със смарт карта е премахнато. Поставете повторно устройството, преди да се опитате да влезете отново.</string>
 
     <string name="smartcard_no_cert_dialog_title">Не са намерени приложими сертификати.</string>
-    <string name="smartcard_no_cert_dialog_message">Потвърдете, че вашият сертификат е бил правилно инсталиран на устройството ви със смарт карта.</string>
+    <string name="smartcard_no_cert_dialog_message">Потвърдете, че вашият сертификат е бил правилно осигурен на устройството ви със смарт карта.</string>
+
+    <string name="smartcard_nfc_diff_connected_title">Можете да използвате само една смарт карта в даден момент</string>
+    <string name="smartcard_nfc_diff_connected_message">Използвайте смарт картата, с която първоначално сте влезли.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Разбрах</string>
 
     <string name="smartcard_general_error_dialog_title">Опитайте отново по-късно</string>
     <string name="smartcard_general_error_dialog_message">Възникна неочаквана грешка. Опитайте отново по-късно.</string>
+
+    <string name="user_choice_dialog_title">Как бихте искали да влезете?</string>
+    <string name="user_choice_dialog_on_device_name">Сертификат на това устройство</string>
+    <string name="user_choice_dialog_smartcard_name">Физическа смарт карта</string>
+    <string name="user_choice_dialog_positive_button">Продължаване</string>
+    <string name="user_choice_dialog_negative_button">Отказ</string>
+
+    <string name="smartcard_prompt_dialog_title">Подготовка на вашата смарт карта</string>
+    <string name="smartcard_prompt_dialog_message">Включете или задръжте смарт карта до задната страна на телефона.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Отказ</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Четене на вашата смарт карта</string>
+    <string name="smartcard_nfc_loading_dialog_message">Съхранявайте смарт картата на място.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Подготовка на вашата смарт карта</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Задръжте смарт карта до задната страна на телефона.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Отказ</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Включете NFC в настройките на устройството</string>
+    <string name="smartcard_nfc_reminder_dialog_message">За да влезете с NFC, включете NFC в настройките на устройството си. След това влезте отново.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">Разбрах</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Сега можете да извадите вашата смарт карта</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Разбрах</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Разрешаване на това приложение да осъществява достъп до камерата?</string>
+    <string name="qr_code_rationale_message">След това можете да влезете с QR код.</string>
+    <string name="qr_code_rationale_allow">Позволяване</string>
+    <string name="qr_code_rationale_block">Блок</string>
 </resources>

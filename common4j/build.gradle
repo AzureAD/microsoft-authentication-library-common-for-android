@@ -24,6 +24,9 @@ plugins {
 
     // This is needed to get Android Studio to resolve test fixtures dependencies
     id 'idea'
+
+    // Add kotlin support
+    id 'org.jetbrains.kotlin.jvm'
 }
 
 def desugarCode = false
@@ -59,7 +62,7 @@ version = getAppVersionName()
 
 task sourcesJar(type: Jar) {
     from sourceSets.main.java.srcDirs
-    classifier = 'sources'
+    classifier 'sources'
     destinationDirectory = reporting.file("$project.buildDir/outputs/jars")
 }
 
@@ -71,7 +74,7 @@ task generateJavadoc(type: Javadoc) {
     classpath += project.sourceSets.main.compileClasspath
 
     options.memberLevel = JavadocMemberLevel.PUBLIC
-    options.addStringOption('Xdoclint:none', '-quiet')
+    options.addBooleanOption('Xdoclint:none', true)
 
     exclude '**/BuildConfig.Java'
     exclude '**/R.java'
@@ -139,19 +142,12 @@ publishing {
                 password project.ext.vstsPassword
             }
         }
-        maven {
-            name "vsts-maven-android"
-            url 'https://identitydivision.pkgs.visualstudio.com/IDDP/_packaging/Android/maven/v1'
-            credentials {
-                username project.vstsUsername
-                password project.vstsPassword
-            }
-        }
     }
 }
 
 def sliceParameter = "" // will be blank unless specified by developer
 def dcParameter = "" // will be blank unless specified by developer
+def useMockApiForNativeAuthParameter = false // will be false unless specified by developer
 def disableAcquireTokenSilentTimeoutParameter = false // will be false unless specified by developer
 
 if (project.hasProperty("slice")) {
@@ -160,6 +156,12 @@ if (project.hasProperty("slice")) {
 
 if (project.hasProperty("dc")) {
     dcParameter = dc
+}
+
+// This flag is set to false to allow running tests against our mock APIs
+// as our mock API is not a 'real' tenant.
+if (project.hasProperty("useMockApiForNativeAuth")) {
+    useMockApiForNativeAuthParameter = useMockApiForNativeAuth
 }
 
 // By adding -PdisableAcquireTokenSilentTimeout in your dev environment, you will no longer subject to the ATS timeout,
@@ -173,6 +175,7 @@ sourceSets {
         java.srcDirs = ['src/main', "$project.buildDir/generated/source/buildConfig/main"]
         buildConfigField("String", "SLICE", "\"$sliceParameter\"")
         buildConfigField("String", "DC", "\"$dcParameter\"")
+        buildConfigField("boolean", "USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY", "${useMockApiForNativeAuthParameter}")
         buildConfigField("boolean", "DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT", "${disableAcquireTokenSilentTimeoutParameter}")
     }
     test {
@@ -199,29 +202,40 @@ idea {
 }
 
 dependencies {
-    compileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
+    testImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
+
+    compileOnly "com.github.spotbugs:spotbugs-annotations:$rootProject.ext.spotBugsAnnotationVersion"
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
-    implementation 'org.json:json:20180813'
-    implementation 'com.github.stephenc.jcip:jcip-annotations:1.0-1'
+    implementation "org.json:json:$rootProject.ext.jsonVersion"
+    implementation "com.github.stephenc.jcip:jcip-annotations:$rootProject.ext.jcipAnnotationVersion"
     implementation "cz.msebera.android:httpclient:$rootProject.ext.mseberaApacheHttpClientVersion"
 
-    testCompileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
+    testCompileOnly "com.github.spotbugs:spotbugs-annotations:$rootProject.ext.spotBugsAnnotationVersion"
     testCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     testAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
+    testImplementation "io.mockk:mockk:$rootProject.ext.mockkVersion"
+    testImplementation "org.mockito:mockito-inline:$rootProject.ext.mockitoCoreVersion"
+    testImplementation "org.mockito.kotlin:mockito-kotlin:$rootProject.ext.mockitoKotlinVersion"
 
-    testFixturesCompileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
+    testFixturesCompileOnly "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
+    testFixturesCompileOnly "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
+    testFixturesCompileOnly "org.mockito.kotlin:mockito-kotlin:$rootProject.ext.mockitoKotlinVersion"
+    testFixturesCompileOnly "org.powermock:powermock-module-junit4:$rootProject.ext.powerMockVersion"
+
+    testFixturesCompileOnly "com.github.spotbugs:spotbugs-annotations:$rootProject.ext.spotBugsAnnotationVersion"
     testFixturesCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    testFixturesCompileOnly "org.mockito:mockito-inline:$rootProject.ext.mockitoCoreVersion"
     testFixturesAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    
     resolvableTestFixturesImplementation "org.robolectric:junit:$rootProject.ext.robolectricVersion"
 
-    implementation platform("io.opentelemetry:opentelemetry-bom:1.18.0")
-    implementation('io.opentelemetry:opentelemetry-api:1.18.0')
-    implementation('io.opentelemetry:opentelemetry-sdk-trace:1.18.0')
+    implementation("io.opentelemetry:opentelemetry-api:$rootProject.ext.openTelemetryVersion")
 }
 
 sourceCompatibility = "1.8"
@@ -239,4 +253,9 @@ afterEvaluate {
     // these tasks are generated by the buildconfig plugin..for more details, read comment about it
     // above in the plugins block.
     compileJava.dependsOn generateBuildConfig, generateTestBuildConfig
+}
+
+// This is used to generate the pom file for publishing to external maven in maven-release-jobs.yml
+tasks.withType(GenerateMavenPom).all {
+    destination = layout.buildDirectory.file("poms/${project.name}-${project.version}.pom").get().asFile
 }

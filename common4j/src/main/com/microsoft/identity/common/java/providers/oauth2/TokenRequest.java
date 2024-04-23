@@ -58,6 +58,23 @@ public class TokenRequest implements IHasExtraParameters {
     @SerializedName("client_id")
     private String mClientId;
 
+    /**
+     * The hub/brk redirectUri for the request.
+     * <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview/pullrequest/7876">...</a>
+     */
+    @Expose()
+    @SerializedName("brk_redirect_uri")
+    private String mBrkRedirectUri;
+
+    /**
+     * The hub/brk clientId for the request.
+     * <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview/pullrequest/7876">...</a>
+     */
+    @Expose()
+    @SerializedName("brk_client_id")
+
+    private String mBrkClientId;
+
     @SerializedName("client_secret")
     private String mClientSecret;
 
@@ -163,6 +180,34 @@ public class TokenRequest implements IHasExtraParameters {
     }
 
     /**
+     * @return mBrkRedirectUri of the token request.
+     */
+    public String getBrkRedirectUri() {
+        return mBrkRedirectUri;
+    }
+
+    /**
+     * @param brkRedirectUri brk redirect URI of the token request.
+     */
+    public void setBrkRedirectUri(final String brkRedirectUri) {
+        mBrkRedirectUri = brkRedirectUri;
+    }
+
+    /**
+     * @return mBrkClientId of the token request.
+     */
+    public String getBrkClientId() {
+        return mBrkClientId;
+    }
+
+    /**
+     * @param brkClientId brk client ID of the token request.
+     */
+    public void setBrkClientId(final String brkClientId) {
+        mBrkClientId = brkClientId;
+    }
+
+    /**
      * @return mGrantType string of the token request.
      */
     public String getGrantType() {
@@ -256,6 +301,9 @@ public class TokenRequest implements IHasExtraParameters {
         public static final String PASSWORD = "password";
         public static final String DEVICE_CODE = "urn:ietf:params:oauth:grant-type:device_code";
         public final static String CLIENT_CREDENTIALS = "client_credentials";
+        // The grant type is used when token request contains a JWT
+        // e.g. used in Primary Refresh Token acquisition flows
+        public static final String JWT_BEARER = "urn:ietf:params:oauth:grant-type:jwt-bearer";
     }
 
     public static class TokenType {

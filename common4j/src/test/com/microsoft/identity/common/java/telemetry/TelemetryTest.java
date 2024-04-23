@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry;
 
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.telemetry.events.HttpStartEvent;
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryAggregatedObserver;
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryDefaultObserver;
@@ -46,6 +48,14 @@ public class TelemetryTest {
                 .isDebugging(false)
                 .defaultConfiguration(new TelemetryConfiguration())
                 .build();
+
+        if (DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID) == null) {
+            final RequestContext defaultRequestContext = new RequestContext();
+            defaultRequestContext.put(DiagnosticContext.THREAD_ID, String.valueOf(Thread.currentThread().getId()));
+            defaultRequestContext.put(DiagnosticContext.CORRELATION_ID, "UNSET");
+            DiagnosticContext.INSTANCE.setRequestContext(defaultRequestContext);
+
+        }
     }
 
     @After

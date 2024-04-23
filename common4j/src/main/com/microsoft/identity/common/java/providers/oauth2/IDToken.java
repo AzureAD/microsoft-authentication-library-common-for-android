@@ -47,7 +47,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode
 public class IDToken {
 
-    private static final String TAG = IDToken.class.getName();
+    private static final String TAG = IDToken.class.getSimpleName();
 
     /**
      * Subject - Identifier for the End-User at the Issuer.
@@ -219,7 +219,7 @@ public class IDToken {
     }
 
     /**
-     * @return Token claims in Map<String, String>.
+     * @return Token claims
      */
     public Map<String, ?> getTokenClaims() {
         return mTokenClaims == null ? Collections.<String, Object>emptyMap() : Collections.unmodifiableMap(mTokenClaims);
@@ -247,4 +247,7 @@ public class IDToken {
         return result;
     }
 
+    public String getStringClaim(@NonNull final String claimName) {
+        return mTokenClaims != null ? (String) this.mTokenClaims.get(claimName) : null;
+    }
 }

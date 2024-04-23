@@ -10,7 +10,7 @@
     <string name="http_auth_dialog_cancel">ביטול</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">בחר אישור כרטיס חכם כדי להיכנס</string>
+    <string name="smartcard_cert_dialog_title">בחר אישור כדי להיכנס</string>
     <string name="smartcard_cert_dialog_positive_button">המשך</string>
     <string name="smartcard_cert_dialog_negative_button">ביטול</string>
 
@@ -27,11 +27,45 @@
     <string name="smartcard_max_attempt_dialog_message">ניסיונות כושלים רבים מדי. נסה שוב מאוחר יותר.</string>
 
     <string name="smartcard_early_unplug_dialog_title">נסה שוב</string>
-    <string name="smartcard_early_unplug_dialog_message">התקן כרטיס חכם הוסר. הכנס מחדש את המכשיר לפני שתנסה להיכנס שוב.</string>
+    <string name="smartcard_early_unplug_dialog_message">התקן כרטיס חכם הוסר. הכנס מחדש את ההתקן לפני שתנסה להיכנס שוב.</string>
 
     <string name="smartcard_no_cert_dialog_title">לא נמצאו אישורים ישימים.</string>
     <string name="smartcard_no_cert_dialog_message">ודא שהאישור שלך הוקצה כראוי להתקן הכרטיס החכם שלך.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">ניתן להשתמש בכרטיס חכם אחד בלבד בכל פעם</string>
+    <string name="smartcard_nfc_diff_connected_message">השתמש בכרטיס החכם שאיתו נכנסת במקור.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">הבנתי</string>
+
     <string name="smartcard_general_error_dialog_title">נסה שוב מאוחר יותר</string>
     <string name="smartcard_general_error_dialog_message">‏‏אירעה שגיאה בלתי צפויה. נסה שוב מאוחר יותר.</string>
+
+    <string name="user_choice_dialog_title">כיצד ברצונך להיכנס?</string>
+    <string name="user_choice_dialog_on_device_name">אישור במכשיר זה</string>
+    <string name="user_choice_dialog_smartcard_name">כרטיס חכם פיזי</string>
+    <string name="user_choice_dialog_positive_button">המשך</string>
+    <string name="user_choice_dialog_negative_button">ביטול</string>
+
+    <string name="smartcard_prompt_dialog_title">הכן את הכרטיס החכם שלך</string>
+    <string name="smartcard_prompt_dialog_message">חבר או הצמד כרטיס חכם בגב הטלפון.</string>
+    <string name="smartcard_prompt_dialog_negative_button">ביטול</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">קורא את הכרטיס החכם שלך</string>
+    <string name="smartcard_nfc_loading_dialog_message">השאר את הכרטיס החכם שלך במקומו.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">הכן את הכרטיס החכם שלך</string>
+    <string name="smartcard_nfc_prompt_dialog_message">הצמד כרטיס חכם לגב הטלפון.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">ביטול</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">הפעל את NFC בהגדרות ההתקן</string>
+    <string name="smartcard_nfc_reminder_dialog_message">כדי להיכנס באמצעות NFC, הפעל את NFC בהגדרות המכשיר שלך. לאחר מכן היכנס שוב.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">הבנתי</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">כעת באפשרותך להסיר את הכרטיס החכם שלך</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">הבנתי</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">האם לאפשר לאפליקציה זו לגשת למצלמה שלך?</string>
+    <string name="qr_code_rationale_message">לאחר מכן תוכל להיכנס באמצעות קוד QR.</string>
+    <string name="qr_code_rationale_allow">אפשר</string>
+    <string name="qr_code_rationale_block">חסום</string>
 </resources>

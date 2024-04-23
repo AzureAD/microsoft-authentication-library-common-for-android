@@ -37,6 +37,22 @@ public class BrokerProtocolVersionUtil {
     public static final String MSAL_TO_BROKER_PROTOCOL_ACCOUNT_FROM_PRT_CHANGES_MINIMUM_VERSION = "8.0";
     public static final String MSAL_TO_BROKER_PROTOCOL_PKEYAUTH_HEADER_CHANGES_MINIMUM_VERSION = "9.0";
     public static final String MSAL_TO_BROKER_PROTOCOL_POP_SCHEME_WITH_CLIENT_KEY_MINIMUM_VERSION = "11.0";
+    public static final String MSAL_TO_BROKER_PROTOCOL_BROKER_MSA_SUPPORT_MINIMUM_VERSION = "14.0";
+
+    public static final String MSAL_TO_BROKER_PROTOCOL_NAA_MINIMUM_VERSION = "15.0";
+
+    /**
+     * Verifies if negotiated broker protocol version allows to support MSA accounts in the broker.
+     *
+     * @param negotiatedBrokerProtocol negotiated protocol version, result of hello handshake.
+     * @return true if the negotiated protocol version is larger or equal than
+     * the {@link BrokerProtocolVersionUtil#MSAL_TO_BROKER_PROTOCOL_BROKER_MSA_SUPPORT_MINIMUM_VERSION}.
+     */
+    public static boolean canSupportMsaAccountsInBroker(@Nullable String negotiatedBrokerProtocol) {
+        return isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+                negotiatedBrokerProtocol,
+                MSAL_TO_BROKER_PROTOCOL_BROKER_MSA_SUPPORT_MINIMUM_VERSION);
+    }
 
     /**
      * Verifies if negotiated broker protocol version allows to decompressing/compressing broker payloads.
@@ -91,13 +107,26 @@ public class BrokerProtocolVersionUtil {
     }
 
     /**
+     * Verifies if client required broker protocol version supports NestedApp parameters.
+     *
+     * @param clientRequiredBrokerProtocolVersion broker protocol version of the calling app.
+     * @return true if the broker protocol version of the calling app is larger or equal to
+     * the {@link BrokerProtocolVersionUtil#MSAL_TO_BROKER_PROTOCOL_NAA_MINIMUM_VERSION}.
+     */
+    public static boolean canSupportNestedAppAuthentication(@Nullable final String clientRequiredBrokerProtocolVersion) {
+        return isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+                clientRequiredBrokerProtocolVersion,
+                MSAL_TO_BROKER_PROTOCOL_NAA_MINIMUM_VERSION);
+    }
+
+    /**
      * Verifies if the provided broker protocol is larger or equal than the required protocol.
      *
      * @param providedBrokerProtocol provided protocol version.
      * @param requiredBrokerProtocol minimum required protocol version for the feature.
      * @return true if the provided protocol is larger or equal than required protocol, false otherwise.
      */
-    protected static final boolean isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+    public static boolean isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
             @Nullable final String providedBrokerProtocol,
             @NonNull final String requiredBrokerProtocol) {
 

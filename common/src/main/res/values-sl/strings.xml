@@ -10,11 +10,11 @@
     <string name="http_auth_dialog_cancel">Prekliči</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Izberite potrdilo pametne kartice za vpis</string>
+    <string name="smartcard_cert_dialog_title">Izberite potrdilo za vpis</string>
     <string name="smartcard_cert_dialog_positive_button">Nadaljuj</string>
     <string name="smartcard_cert_dialog_negative_button">Prekliči</string>
 
-    <string name="smartcard_pin_dialog_title">Odkleni pametno kartico</string>
+    <string name="smartcard_pin_dialog_title">Odklenite pametno kartico</string>
     <string name="smartcard_pin_dialog_message">Če želite dostopati do potrdila in se vpisati, vnesite kodo PIN pametne kartice</string>
     <string name="smartcard_pin_dialog_positive_button">Odkleni</string>
     <string name="smartcard_pin_dialog_negative_button">Prekliči</string>
@@ -27,11 +27,45 @@
     <string name="smartcard_max_attempt_dialog_message">Preveč neuspelih poskusov. Poskusite znova pozneje.</string>
 
     <string name="smartcard_early_unplug_dialog_title">Poskusi znova</string>
-    <string name="smartcard_early_unplug_dialog_message">Naprava s pametno kartico je bila odstranjena. Znova vstavite napravo, preden se poskusite znova prijaviti.</string>
+    <string name="smartcard_early_unplug_dialog_message">Naprava s pametno kartico je bila odstranjena. Preden se poskusite znova prijaviti, znova vstavite napravo.</string>
 
     <string name="smartcard_no_cert_dialog_title">Ustreznih potrdil ni bilo mogoče najti.</string>
     <string name="smartcard_no_cert_dialog_message">Preverite, ali je bilo potrdilo pravilno nastavljeno in omogočeno v napravi s pametno kartico.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Hkrati lahko uporabljate le eno pametno kartico</string>
+    <string name="smartcard_nfc_diff_connected_message">Uporabite pametno kartico, s katero ste se prvotno vpisali.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Razumem</string>
+
     <string name="smartcard_general_error_dialog_title">Poskusite znova pozneje</string>
     <string name="smartcard_general_error_dialog_message">Prišlo je do nepričakovane napake. Poskusite znova pozneje.</string>
+
+    <string name="user_choice_dialog_title">Kako se želite vpisati?</string>
+    <string name="user_choice_dialog_on_device_name">Potrdilo v tej napravi</string>
+    <string name="user_choice_dialog_smartcard_name">Fizična pametna kartica</string>
+    <string name="user_choice_dialog_positive_button">Nadaljuj</string>
+    <string name="user_choice_dialog_negative_button">Prekliči</string>
+
+    <string name="smartcard_prompt_dialog_title">Pripravite pametno kartico</string>
+    <string name="smartcard_prompt_dialog_message">Vstavite ali pridržite pametno kartico na zadnji strani telefona.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Prekliči</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Branje pametne kartice</string>
+    <string name="smartcard_nfc_loading_dialog_message">Pridržite pametno kartico na mestu.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Pripravite pametno kartico</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Pridržite pametno kartico na zadnji strani telefona.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Prekliči</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Vklopite NFC v nastavitvah naprave</string>
+    <string name="smartcard_nfc_reminder_dialog_message">Če se želite vpisati s tehnologijo NFC, v nastavitvah naprave vklopite NFC. Nato se znova vpišite.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">Razumem</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Zdaj lahko odstranite pametno kartico</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Razumem</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Ali želite tej aplikaciji dovoliti dostop do kamere?</string>
+    <string name="qr_code_rationale_message">Nato se lahko vpišete s kodo QR.</string>
+    <string name="qr_code_rationale_allow">Dovoli</string>
+    <string name="qr_code_rationale_block">Blokiraj</string>
 </resources>

@@ -10,7 +10,7 @@
     <string name="http_auth_dialog_cancel">Anulare</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Alegeți un certificat de smart card pentru a vă conecta</string>
+    <string name="smartcard_cert_dialog_title">Selectați un certificat pentru a vă conecta</string>
     <string name="smartcard_cert_dialog_positive_button">Continuați</string>
     <string name="smartcard_cert_dialog_negative_button">Anulați</string>
 
@@ -30,8 +30,42 @@
     <string name="smartcard_early_unplug_dialog_message">Dispozitivul smart card a fost eliminat. Reintroduceți dispozitivul înainte de a încerca să vă conectați din nou.</string>
 
     <string name="smartcard_no_cert_dialog_title">Nu s-au găsit certificate aplicabile.</string>
-    <string name="smartcard_no_cert_dialog_message">Confirmați că s-a asigurat corect accesul certificatului pe dispozitivul smart cardului.</string>
+    <string name="smartcard_no_cert_dialog_message">Confirmați că s-a asigurat corect accesul certificatului pe dispozitivul smart card.</string>
+
+    <string name="smartcard_nfc_diff_connected_title">Puteți utiliza un singur smart card odată</string>
+    <string name="smartcard_nfc_diff_connected_message">Utilizați smart card-ul cu care v-ați conectat inițial.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Am înțeles</string>
 
     <string name="smartcard_general_error_dialog_title">Încercați din nou mai târziu</string>
     <string name="smartcard_general_error_dialog_message">A apărut o eroare neașteptată. Încercați din nou mai târziu.</string>
+
+    <string name="user_choice_dialog_title">Cum doriți să vă conectați?</string>
+    <string name="user_choice_dialog_on_device_name">Certificat pe acest dispozitiv</string>
+    <string name="user_choice_dialog_smartcard_name">Smart card fizic</string>
+    <string name="user_choice_dialog_positive_button">Continuați</string>
+    <string name="user_choice_dialog_negative_button">Anulați</string>
+
+    <string name="smartcard_prompt_dialog_title">Pregătiți-vă smart cardul</string>
+    <string name="smartcard_prompt_dialog_message">Inserați un smart card sau apropiați-l de spatele telefonului.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Anulați</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Se citește smart cardul</string>
+    <string name="smartcard_nfc_loading_dialog_message">Țineți-vă smart cardul nemișcat.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Pregătiți-vă smart cardul</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Apropiați un smart card de spatele telefonului.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Anulați</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Activați NFC în setările dispozitivului</string>
+    <string name="smartcard_nfc_reminder_dialog_message">Pentru a vă conecta cu NFC, activați NFC în setările dispozitivului. Apoi conectați-vă din nou.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">Am înțeles</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Acum vă puteți elimina smart card-ul</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Am înțeles</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Permiteți acestei aplicații să vă acceseze camera?</string>
+    <string name="qr_code_rationale_message">Apoi vă puteți conecta cu un cod QR.</string>
+    <string name="qr_code_rationale_allow">Permiteți</string>
+    <string name="qr_code_rationale_block">Blocați</string>
 </resources>

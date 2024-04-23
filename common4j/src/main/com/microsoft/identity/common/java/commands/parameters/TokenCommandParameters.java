@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -61,6 +62,9 @@ public class TokenCommandParameters extends CommandParameters {
     private final AbstractAuthenticationScheme authenticationScheme;
 
     @Expose()
+    private final String mamEnrollmentId;
+
+    @Expose()
     private final boolean forceRefresh;
 
     private final String loginHint;
@@ -69,6 +73,10 @@ public class TokenCommandParameters extends CommandParameters {
 
     public Set<String> getScopes() {
         return this.scopes == null ? null : new HashSet<>(this.scopes);
+    }
+
+    public String getMamEnrollmentId(){
+        return mamEnrollmentId;
     }
 
     public void validate() throws ArgumentException {
@@ -96,9 +104,17 @@ public class TokenCommandParameters extends CommandParameters {
                         "scope is empty or null"
                 );
             }
+
             if (this instanceof InteractiveTokenCommandParameters) {
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
+                        ArgumentException.SCOPE_ARGUMENT_NAME,
+                        "scope is empty or null");
+            }
+
+            if (this instanceof DeviceCodeFlowCommandParameters) {
+                throw new ArgumentException(
+                        ArgumentException.ACQUIRE_TOKEN_WITH_DEVICE_CODE_OPERATION_NAME,
                         ArgumentException.SCOPE_ARGUMENT_NAME,
                         "scope is empty or null");
             }
@@ -117,6 +133,14 @@ public class TokenCommandParameters extends CommandParameters {
             if (this instanceof InteractiveTokenCommandParameters) {
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
+                        ArgumentException.AUTHENTICATION_SCHEME_ARGUMENT_NAME,
+                        "authentication scheme is undefined"
+                );
+            }
+
+            if (this instanceof DeviceCodeFlowCommandParameters) {
+                throw new ArgumentException(
+                        ArgumentException.ACQUIRE_TOKEN_WITH_DEVICE_CODE_OPERATION_NAME,
                         ArgumentException.AUTHENTICATION_SCHEME_ARGUMENT_NAME,
                         "authentication scheme is undefined"
                 );

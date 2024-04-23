@@ -22,52 +22,30 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.interfaces;
 
-import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
-import com.microsoft.identity.common.java.crypto.IDevicePopManager;
-import com.microsoft.identity.common.java.crypto.IKeyAccessor;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
+import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
 import com.microsoft.identity.common.java.util.IBroadcaster;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
-import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 /**
- * Common components for each platforms.
+ * An interface for providing components for each platforms.
+ *
+ * TODO: make getPopManagerLoader() and getStorageLoader() part of this interface.
+ *       will do that in a separate PR to minimize PR size.
  */
-public interface IPlatformComponents {
-
-    /**
-     * Get an encryption manager for storage layer.
-     */
-    @NonNull
-    IKeyAccessor getStorageEncryptionManager();
+public interface IPlatformComponents extends IPopManagerSupplier {
 
     /**
      * Gets clock skew manager.
      */
     @NonNull
     IClockSkewManager getClockSkewManager();
-
-    /**
-     * Gets the default {@link IDevicePopManager}
-     *
-     * @throws ClientException if it fails to initialize, or if the operation is not supported by the platform.
-     */
-    @NonNull
-    IDevicePopManager getDefaultDevicePopManager() throws ClientException;
-
-    /**
-     * Gets a {@link IDevicePopManager} associated to the alias.
-     *
-     * @throws ClientException if it fails to initialize, or if the operation is not supported by the platform.
-     */
-    @NonNull
-    IDevicePopManager getDevicePopManager(@Nullable final String alias) throws ClientException;
 
     /**
      * Gets a {@link com.microsoft.identity.common.java.util.IBroadcaster} associated to the alias.
@@ -78,59 +56,19 @@ public interface IPlatformComponents {
     IBroadcaster getBroadcaster() throws ClientException;
 
     /**
-     * Retrieve a name-value store with a given identifier.
-     *
-     * @param storeName The name of a new KeyValue store.
-     * @param clazz     The class of values in the name value store.
-     * @return a INameValueStorage instance based around data stored with the same storeName.
-     */
-    <T> INameValueStorage<T> getNameValueStore(String storeName, Class<T> clazz);
-
-    /**
-     * Retrieve a name-value store with a given identifier.
-     *
-     * @param storeName The name of a new KeyValue store. May not be null.
-     * @param helper    The key manager for the encryption.  May be null.
-     * @param clazz     The class of values in the name value store. May not be null.
-     * @return a INameValueStorage instance based around data stored with the same storeName.
-     */
-    <T> INameValueStorage<T> getEncryptedNameValueStore(String storeName, IKeyAccessor helper, Class<T> clazz);
-
-    /**
-     * Get a generic encrypted IMultiTypeNameValueStorage with a given identifier.
-     *
-     * @param storeName The name of a new KeyValue store. May not be null.
-     * @param helper    The key manager for the encryption.  May not be null.
-     */
-    IMultiTypeNameValueStorage getEncryptedFileStore(String storeName, IKeyAccessor helper);
-
-    /**
-     * Get a generic IMultiTypeNameValueStorage with a given identifier.
-     *
-     * @param storeName The name of a new KeyValue store. May not be null.
-     */
-    IMultiTypeNameValueStorage getFileStore(String storeName);
-
-    /**
-     * Retrieve a multi-process safe name-value store with a given identifier.
-     *
-     * @param storeName The name of a new KeyValue store. May not be null.
-     * @return a INameValueStorage instance based around data stored with the same storeName.
-     */
-    INameValueStorage<String> getMultiProcessStringStore(@NonNull String storeName);
-
-    /**
      * Gets {@link IAuthorizationStrategyFactory} of each platform.
+     * Might be null for silent flow.
      */
     @SuppressWarnings(WarningType.rawtype_warning)
-    @NonNull
+    @Nullable
     IAuthorizationStrategyFactory getAuthorizationStrategyFactory();
 
     /**
      * This generates a non-guessable value for the state parameter in an authorization request per the specification:
      * https://tools.ietf.org/html/rfc6749#section-10.10
+     * Might be null for silent flow.
      */
-    @NonNull
+    @Nullable
     IStateGenerator getStateGenerator();
 
     /**
@@ -145,4 +83,7 @@ public interface IPlatformComponents {
      * */
     @NonNull
     IHttpClientWrapper getHttpClientWrapper();
+
+    @NonNull
+    IStorageSupplier getStorageSupplier();
 }

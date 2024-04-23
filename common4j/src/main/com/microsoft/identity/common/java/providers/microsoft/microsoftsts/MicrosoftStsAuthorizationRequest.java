@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
+import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.UrlUtil;
@@ -70,6 +71,24 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     @Accessors(prefix = "m")
     @SerializedName("domain_req")
     private final String mUtid;
+
+    /**
+     * Since some physical application packages share client ids we want to be able to distinguish between
+     * these relative to access tokens in the cache.
+     */
+    @SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
+    @Getter
+    @Accessors(prefix = "m")
+    private final transient String mApplicationIdentifier;
+
+    /**
+     * Since some physical application packages share client ids we want to be able to distinguish between
+     * these relative to access tokens in the cache.
+     */
+    @SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
+    @Getter
+    @Accessors(prefix = "m")
+    private final transient String mMamEnrollmentIdentifier;
 
     /**
      * Version name of the installed Company Portal app.
@@ -130,6 +149,13 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
      */
     public static final String HIDE_SWITCH_USER_QUERY_PARAMETER = "hsu";
 
+    /**
+     * Store the openIdConfiguration passed as part of the builder.
+     * This will be used to fetch the authorization endpoint from OpenID Configuration rather than
+     * generating a default endpoint.
+     */
+    private transient final OpenIdProviderConfiguration mOpenIdProviderConfiguration;
+
     protected MicrosoftStsAuthorizationRequest(final Builder builder) {
         super(builder);
 
@@ -141,6 +167,9 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         mTokenScope = builder.mTokenScope;
         mSlice = builder.mSlice;
         mFlightParameters = builder.mFlightParameters;
+        mApplicationIdentifier = builder.mApplicationIdentifier;
+        mMamEnrollmentIdentifier = builder.mMamEnrollmentIdentifier;
+        mOpenIdProviderConfiguration = builder.mOpenIdProviderConfiguration;
     }
 
     public static class Builder extends MicrosoftAuthorizationRequest.Builder<MicrosoftStsAuthorizationRequest.Builder> {
@@ -148,11 +177,14 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         private String mUid;
         private String mUtid;
         private String mDisplayableId;
+        private String mApplicationIdentifier;
+        private String mMamEnrollmentIdentifier;
         private String mTokenScope;
         private String mCompanyPortalVersion;
         private String mPrompt;
         private AzureActiveDirectorySlice mSlice;
         private Map<String, String> mFlightParameters = new HashMap<>();
+        private OpenIdProviderConfiguration mOpenIdProviderConfiguration;
 
         public MicrosoftStsAuthorizationRequest.Builder setUid(String uid) {
             mUid = uid;
@@ -161,6 +193,16 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
         public MicrosoftStsAuthorizationRequest.Builder setUtid(String utid) {
             mUtid = utid;
+            return self();
+        }
+
+        public MicrosoftStsAuthorizationRequest.Builder setApplicationIdentifier(String appliationIdentifier) {
+            mApplicationIdentifier = appliationIdentifier;
+            return self();
+        }
+
+        public MicrosoftStsAuthorizationRequest.Builder setMamEnrollmentIdentifier(String mamEnrollmentIdentifier) {
+            mMamEnrollmentIdentifier = mamEnrollmentIdentifier;
             return self();
         }
 
@@ -191,6 +233,11 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
         public MicrosoftStsAuthorizationRequest.Builder setFlightParameters(Map<String, String> flightParameters) {
             mFlightParameters = flightParameters;
+            return self();
+        }
+
+        public MicrosoftStsAuthorizationRequest.Builder setOpenIdProviderConfiguration(OpenIdProviderConfiguration config) {
+            mOpenIdProviderConfiguration = config;
             return self();
         }
 
@@ -234,6 +281,11 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     @Override
     public String getAuthorizationEndpoint() throws ClientException {
         final String methodName = ":getAuthorizationEndpoint";
+
+        // If the openid configuration was passed, use it to fetch the authorization endpoint
+        if (mOpenIdProviderConfiguration != null) {
+            return mOpenIdProviderConfiguration.getAuthorizationEndpoint();
+        }
 
         if (this.getAuthority() == null) {
             Logger.error(TAG + methodName, "Authority is null. " +

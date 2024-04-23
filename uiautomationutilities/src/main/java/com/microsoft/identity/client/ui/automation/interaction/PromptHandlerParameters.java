@@ -99,10 +99,22 @@ public class PromptHandlerParameters {
     private final boolean passwordPageExpected;
 
     /**
+     * Denotes whether or not a second password page is expected to appear during an interactive
+     * token request.
+     */
+    private final boolean secondPasswordPageExpected;
+
+    /**
      * Denotes whether or not the speed bump page is expected to appear during an interactive token
      * request.
      */
     private final boolean speedBumpExpected;
+
+    /**
+     * Denotes whether or not a second speed bump page is expected to appear during an interactive token
+     * request.
+     */
+    private final boolean secondSpeedBumpExpected;
 
     /**
      * Denotes whether or not the register page is expected to appear during an interactive token
@@ -118,9 +130,30 @@ public class PromptHandlerParameters {
 
     /**
      * Denotes whether or not the Stay signed in page is expected to appear during an interactive
-     * token request
+     * token request.
      */
     private final boolean staySignedInPageExpected;
+
+    /**
+     * Denotes whether or not the Verify Your Identity page is expected to appear during an interactive
+     * token request.
+     */
+    private final boolean verifyYourIdentityPageExpected;
+
+    /**
+     * Denotes whether or not to expect "How would you like to sign in?" Prompt.
+     */
+    private final boolean howWouldYouLikeToSignInExpected;
+
+    /**
+     * Denotes whether or not to expect "Choose certificate" Prompt.
+     */
+    private final boolean chooseCertificateExpected;
+
+    /**
+     * Denotes whether or not to expect the "Get the app" page.
+     */
+    private final boolean getTheAppExpected;
 
     /**
      * Denotes the way in which we want to respond to the enroll page for this request.

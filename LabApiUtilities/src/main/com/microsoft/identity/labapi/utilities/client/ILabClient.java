@@ -44,6 +44,15 @@ public interface ILabClient {
     ILabAccount getLabAccount(LabQuery labQuery) throws LabApiException;
 
     /**
+     * Load an existing account from Lab Api based on the upn given.
+     *
+     * @param upn upn of the desired lab account
+     * @return a {@link LabAccount} object
+     * @throws LabApiException if an error occurs while trying to fetch account from lab
+     */
+    ILabAccount getLabAccount(@NonNull final String upn) throws LabApiException;
+
+    /**
      * Loads existing account(s) from Lab Api based on the provided query.
      *
      * @param labQuery parameters that determine what kind of account(s) to fetch from lab
@@ -102,7 +111,7 @@ public interface ILabClient {
      * Reset the password for the username given, then reset it back to the original password.
      * This method allows for repeated reset attempts if previous attempts fail.
      *
-     * @param upn username of the user that will have their password reset
+     * @param upn           username of the user that will have their password reset
      * @param resetAttempts number of attempts to reset the password
      * @return boolean showing if the reset was successful
      * @throws LabApiException if an error occurs while password is being reset
@@ -128,10 +137,10 @@ public interface ILabClient {
      *
      * @param upn                             the upn of the owner of this device
      * @param deviceId                        the device id of the device to be deleted
-     * @param numDeleteAttempts               the number times Lab Api should attempt to delete the device
+     * @param numDeleteAttemptsRemaining      the number times Lab Api should attempt to delete the device
      * @param waitTimeBeforeEachDeleteAttempt the amount of time to wait before each delete attempt
      * @return a boolean indicated if device has been deleted
      * @throws LabApiException if an error occurs while trying to delete the device
      */
-    boolean deleteDevice(String upn, String deviceId, int numDeleteAttempts, long waitTimeBeforeEachDeleteAttempt) throws LabApiException;
+    boolean deleteDevice(String upn, String deviceId, int numDeleteAttemptsRemaining, long waitTimeBeforeEachDeleteAttempt) throws LabApiException;
 }

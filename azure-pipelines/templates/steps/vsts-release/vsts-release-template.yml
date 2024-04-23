@@ -1,6 +1,5 @@
 # File: azure-pipelines\templates\steps\vsts-release\vsts-release-template.yml
 # Description: Job template to publish to VSTS
-# This templates require mvnAccessToken
 
 parameters:
 - name: project
@@ -30,7 +29,7 @@ jobs:
     displayName: Set MVN AccessToken in Environment
     inputs:
       filename: echo
-      arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAndroidAccessTokenVar }}]$(mvnAccessToken)'
+      arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAndroidAccessTokenVar }}]$(System.AccessToken)'
   - task: Gradle@1
     name: Gradle1
     displayName: Assemble Release

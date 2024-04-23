@@ -10,12 +10,12 @@
     <string name="http_auth_dialog_cancel">Cancelar</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Escolher um certificado de smartcard para entrar</string>
+    <string name="smartcard_cert_dialog_title">Selecionar um certificado para iniciar sessão</string>
     <string name="smartcard_cert_dialog_positive_button">Continuar</string>
     <string name="smartcard_cert_dialog_negative_button">Cancelar</string>
 
-    <string name="smartcard_pin_dialog_title">Desbloquear smartcard</string>
-    <string name="smartcard_pin_dialog_message">Insira o PIN do smartcard para aceder ao certificado e entrar</string>
+    <string name="smartcard_pin_dialog_title">Desbloquear smart card</string>
+    <string name="smartcard_pin_dialog_message">Introduza o PIN do smart card para aceder ao certificado e iniciar sessão</string>
     <string name="smartcard_pin_dialog_positive_button">Desbloquear</string>
     <string name="smartcard_pin_dialog_negative_button">Cancelar</string>
     <string name="smartcard_pin_dialog_error_message">O PIN que inseriu estava incorreto</string>
@@ -27,11 +27,45 @@
     <string name="smartcard_max_attempt_dialog_message">Muitas tentativas falhadas. Tente novamente mais tarde.</string>
 
     <string name="smartcard_early_unplug_dialog_title">Volte a tentar</string>
-    <string name="smartcard_early_unplug_dialog_message">O dispositivo smartcard foi removido. Volte a inserir o dispositivo antes de tentar voltar a tentar entrar.</string>
+    <string name="smartcard_early_unplug_dialog_message">O dispositivo smart card foi removido. Volte a inserir o dispositivo antes de tentar iniciar sessão novamente.</string>
 
     <string name="smartcard_no_cert_dialog_title">Não foram encontrados certificados aplicáveis.</string>
-    <string name="smartcard_no_cert_dialog_message">Confirme que o certificado foi corretamente a provisionado no seu dispositivo smartcard.</string>
+    <string name="smartcard_no_cert_dialog_message">Confirme que o certificado foi corretamente aprovisionado no seu dispositivo smart card.</string>
+
+    <string name="smartcard_nfc_diff_connected_title">Só pode utilizar um smart card de cada vez</string>
+    <string name="smartcard_nfc_diff_connected_message">Utilize o smart card com que iniciou sessão originalmente.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">OK</string>
 
     <string name="smartcard_general_error_dialog_title">Tente novamente mais tarde</string>
     <string name="smartcard_general_error_dialog_message">Ocorreu um erro inesperado. Tente novamente mais tarde.</string>
+
+    <string name="user_choice_dialog_title">Como gostaria de iniciar sessão?</string>
+    <string name="user_choice_dialog_on_device_name">Certificado neste dispositivo</string>
+    <string name="user_choice_dialog_smartcard_name">Smart card físico</string>
+    <string name="user_choice_dialog_positive_button">Continuar</string>
+    <string name="user_choice_dialog_negative_button">Cancelar</string>
+
+    <string name="smartcard_prompt_dialog_title">Preparar o seu smart card</string>
+    <string name="smartcard_prompt_dialog_message">Ligue ou segure um smart card na parte de trás do seu telemóvel.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Cancelar</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">A ler o seu smart card</string>
+    <string name="smartcard_nfc_loading_dialog_message">Mantenha o seu smart card no lugar.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Preparar o seu smart card</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Segure um smart card na parte de trás do seu telemóvel.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Cancelar</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Ligue o NFC nas definições do dispositivo</string>
+    <string name="smartcard_nfc_reminder_dialog_message">Para iniciar sessão com NFC, ligue o NFC nas definições do seu dispositivo. Em seguida, volte a iniciar sessão.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">OK</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Agora pode remover o seu smart card</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">OK</string>
+
+    <!-- QR + PIN Auth Flow Strings-->
+    <string name="qr_code_rationale_header">Permitir que esta aplicação aceda à sua câmara?</string>
+    <string name="qr_code_rationale_message">Pode depois iniciar sessão com um código QR.</string>
+    <string name="qr_code_rationale_allow">Permitir</string>
+    <string name="qr_code_rationale_block">Bloquear</string>
 </resources>

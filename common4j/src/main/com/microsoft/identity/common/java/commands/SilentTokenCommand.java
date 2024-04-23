@@ -26,14 +26,22 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
+import com.microsoft.identity.common.java.controllers.IControllerFactory;
+import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 
 import java.util.List;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Scope;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
@@ -44,18 +52,11 @@ public class SilentTokenCommand extends TokenCommand {
 
     private static final String TAG = SilentTokenCommand.class.getSimpleName();
 
-    public SilentTokenCommand(@NonNull SilentTokenCommandParameters parameters,
-                              @NonNull BaseController controller,
-                              @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                              @NonNull String publicApiId) {
-        super(parameters, controller, callback, publicApiId);
-    }
-
-    public SilentTokenCommand(@NonNull SilentTokenCommandParameters parameters,
-                              @NonNull List<BaseController> controllers,
-                              @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                              @NonNull String publicApiId) {
-        super(parameters, controllers, callback, publicApiId);
+    public SilentTokenCommand(@NonNull final SilentTokenCommandParameters parameters,
+                              @NonNull final IControllerFactory controllerFactory,
+                              @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
+                              @NonNull final String publicApiId) {
+        super(parameters, controllerFactory, callback, publicApiId);
     }
 
     @Override
@@ -63,46 +64,88 @@ public class SilentTokenCommand extends TokenCommand {
         AcquireTokenResult result = null;
         final String methodName = ":execute";
 
-        for (int ii = 0; ii < this.getControllers().size(); ii++) {
-            final BaseController controller = this.getControllers().get(ii);
+        final Span span = SpanExtension.current();
 
-            try {
-                Logger.verbose(
-                        TAG + methodName,
-                        "Executing with controller: "
-                                + controller.getClass().getSimpleName()
-                );
+        span.setAttribute(AttributeName.application_name.name(), getParameters().getApplicationName());
+        span.setAttribute(AttributeName.public_api_id.name(), getPublicApiId());
 
-                result = controller.acquireTokenSilent(
-                        (SilentTokenCommandParameters) getParameters()
-                );
+        final List<BaseController> controllers = getControllerFactory().getAllControllers();
 
-                if (result.getSucceeded()) {
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            Exception exceptionFromFirstController = null;
+            for (int ii = 0; ii < controllers.size(); ii++) {
+                final BaseController controller = controllers.get(ii);
+
+                span.setAttribute(AttributeName.controller_name.name(), controller.getClass().getSimpleName());
+
+                try {
                     Logger.verbose(
                             TAG + methodName,
                             "Executing with controller: "
                                     + controller.getClass().getSimpleName()
-                                    + ": Succeeded"
                     );
 
-                    return result;
-                }
-            } catch (UiRequiredException | ClientException e) {
-                if (e.getErrorCode().equals(OAuth2ErrorCode.INVALID_GRANT) // was invalid_grant
-                        && this.getControllers().size() > ii + 1) { // isn't the last controller we can try
-                    continue;
-                } else if ((e.getErrorCode().equals(ErrorStrings.NO_TOKENS_FOUND)
-                        || e.getErrorCode().equals(ErrorStrings.NO_ACCOUNT_FOUND))
-                        && this.getControllers().size() > ii + 1) {
-                    //if no token or account for this silent call, we should continue to the next silent call.
-                    continue;
-                } else {
-                    throw e;
+                    result = controller.acquireTokenSilent(
+                            (SilentTokenCommandParameters) getParameters()
+                    );
+
+                    if (result.getSucceeded()) {
+                        Logger.verbose(
+                                TAG + methodName,
+                                "Executing with controller: "
+                                        + controller.getClass().getSimpleName()
+                                        + ": Succeeded"
+                        );
+
+                        span.setAttribute(
+                                AttributeName.is_serviced_from_cache.name(),
+                                result.getLocalAuthenticationResult().isServicedFromCache()
+                        );
+
+                        span.setStatus(StatusCode.OK);
+                        return result;
+                    }
+                } catch (final UiRequiredException | ClientException e) {
+                    if (ii == 0 ) {
+                        exceptionFromFirstController = e;
+                    }
+                    // if this isn't the last controller and
+                    // error code was invalid_grant or if no token or account for this silent call
+                    // continue with next controller.
+                    if (ii + 1 >= controllers.size() || !(OAuth2ErrorCode.INVALID_GRANT.equals(e.getErrorCode())
+                            || ErrorStrings.NO_TOKENS_FOUND.equals(e.getErrorCode())
+                            || ErrorStrings.NO_ACCOUNT_FOUND.equals(e.getErrorCode()))) {
+                        throw exceptionFromFirstController;
+                    }
+                } catch (final Throwable e) {
+                    if (exceptionFromFirstController != null) {
+                        throw exceptionFromFirstController;
+                    } else {
+                        throw e;
+                    }
                 }
             }
-        }
 
-        return result;
+            if (result == null) {
+                span.setStatus(StatusCode.ERROR, "empty result");
+            } else if (result.getSucceeded()) {
+                span.setStatus(StatusCode.OK);
+            } else {
+                final BaseException exception = ExceptionAdapter.exceptionFromAcquireTokenResult(result, getParameters());
+                if (exception != null) {
+                    span.recordException(exception);
+                    span.setStatus(StatusCode.ERROR);
+                } else {
+                    span.setStatus(StatusCode.ERROR, "empty exception");
+                }
+            }
+
+            return result;
+        } catch (final Throwable throwable) {
+            span.setStatus(StatusCode.ERROR);
+            span.recordException(throwable);
+            throw throwable;
+        }
     }
 
     @Override

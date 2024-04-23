@@ -27,37 +27,39 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
-import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
-import com.microsoft.identity.common.java.controllers.CommandDispatcher;
-import com.microsoft.identity.common.java.eststelemetry.PublicApiId;
-import com.microsoft.identity.common.java.exception.ArgumentException;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.java.exception.ServiceException;
-import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.commands.RefreshOnCommand;
-import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
-import com.microsoft.identity.common.java.dto.AccountRecord;
-import com.microsoft.identity.common.java.exception.UiRequiredException;
-import com.microsoft.identity.common.java.platform.DevicePoPUtils;
-import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
-import com.microsoft.identity.common.java.controllers.BaseController;
-import com.microsoft.identity.common.java.result.AcquireTokenResult;
-import com.microsoft.identity.common.java.result.GenerateShrResult;
-import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
-import com.microsoft.identity.common.java.util.ThreadUtils;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.IPoPAuthenticationSchemeParams;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
+import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.controllers.CommandDispatcher;
+import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.eststelemetry.PublicApiId;
+import com.microsoft.identity.common.java.exception.ArgumentException;
+import com.microsoft.identity.common.java.exception.BrokerRequiredException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.exception.UiRequiredException;
+import com.microsoft.identity.common.java.platform.DevicePoPUtils;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.result.GenerateShrResult;
+import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
+import com.microsoft.identity.common.java.util.ThreadUtils;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
@@ -66,15 +68,15 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
-import com.microsoft.identity.common.java.providers.oauth2.IResult;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
-import com.microsoft.identity.common.java.util.ported.PropertyBag;
+import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.java.util.ResultUtil;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
@@ -92,6 +94,8 @@ public class LocalMSALController extends BaseController {
 
     @SuppressWarnings(WarningType.rawtype_warning)
     private IAuthorizationStrategy mAuthorizationStrategy = null;
+
+    private Future<AuthorizationResult> mAuthorizationFuture = null;
 
     @SuppressWarnings(WarningType.rawtype_warning)
     private AuthorizationRequest mAuthorizationRequest = null;
@@ -224,18 +228,19 @@ public class LocalMSALController extends BaseController {
                 .getPlatformUtil()
                 .throwIfNetworkNotAvailable(parameters.isPowerOptCheckEnabled());
 
-        parameters.getPlatformComponents().getAuthorizationStrategyFactory();
-
         mAuthorizationStrategy = parameters.getPlatformComponents().getAuthorizationStrategyFactory().getAuthorizationStrategy(parameters);
         mAuthorizationRequest = getAuthorizationRequest(strategy, parameters);
 
         // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and AuthorizationStrategy to GenericAuthorizationStrategy in the arguments of call to requestAuthorization method
-        @SuppressWarnings(WarningType.unchecked_warning) final Future<AuthorizationResult> future = strategy.requestAuthorization(
+        mAuthorizationFuture = strategy.requestAuthorization(
                 mAuthorizationRequest,
                 mAuthorizationStrategy
         );
 
-        final AuthorizationResult result = future.get();
+        AuthorizationResult result = mAuthorizationFuture.get();
+
+        // Once we get the result, null the reference
+        mAuthorizationFuture = null;
 
         return result;
     }
@@ -257,7 +262,21 @@ public class LocalMSALController extends BaseController {
                         .put(TelemetryEventStrings.Key.REQUEST_CODE, String.valueOf(requestCode))
         );
 
-        mAuthorizationStrategy.completeAuthorization(requestCode, RawAuthorizationResult.fromPropertyBag(data));
+        try {
+            mAuthorizationStrategy.completeAuthorization(requestCode, RawAuthorizationResult.fromPropertyBag(data));
+        } catch (Exception e){
+            // Best effort
+            if (mAuthorizationFuture != null
+                    && mAuthorizationFuture instanceof ResultFuture
+                    && !mAuthorizationFuture.isDone()) {
+                // If the future is somehow initialized and waiting, give the future an exception
+                // Adjusting method signatures to get a ResultFuture back seems to have some unintended breaking change in MSAL
+                // so instead will use checked type casting.
+                ((ResultFuture<AuthorizationResult>) mAuthorizationFuture).setException(e);
+            } else {
+                throw e;
+            }
+        }
 
         Telemetry.emit(
                 new ApiEndEvent()
@@ -310,6 +329,8 @@ public class LocalMSALController extends BaseController {
         // Suppressing unchecked warning of converting List<ICacheRecord> to List due to generic type not provided for tokenCache
         @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> cacheRecords = tokenCache.loadWithAggregatedAccountData(
                 parametersWithScopes.getClientId(),
+                parameters.getApplicationIdentifier(),
+                parameters.getMamEnrollmentId(),
                 TextUtils.join(" ", parametersWithScopes.getScopes()),
                 targetAccount,
                 authScheme
@@ -333,7 +354,7 @@ public class LocalMSALController extends BaseController {
                 && fullCacheRecord.getAccessToken().shouldRefresh()) {
             if (!fullCacheRecord.getAccessToken().isExpired()) {
                 setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
-                final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, PublicApiId.MSAL_REFRESH_ON);
+                final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this.asControllerFactory(), PublicApiId.MSAL_REFRESH_ON);
                 CommandDispatcher.submitAndForget(refreshOnCommand);
             } else {
                 Logger.warn(
@@ -511,6 +532,23 @@ public class LocalMSALController extends BaseController {
         return localRemoveAccountSuccess;
     }
 
+    /**
+     * Get the preferred auth method from the broker.
+     * LocalMSALController is not eligible to use the broker.
+     * Because broker is not installed return false immediately.
+     *
+     */
+    @Override
+    public PreferredAuthMethod getPreferredAuthMethod() throws BrokerRequiredException {
+        final String methodTag = TAG + ":getPreferredAuthMethod";
+        final BrokerRequiredException exception = new BrokerRequiredException(
+                BrokerData.getProdMicrosoftAuthenticator().getPackageName(),
+                null
+        );
+        Logger.error(methodTag, "Broker required.", exception);
+        throw exception;
+    }
+
     @Override
     public boolean getDeviceMode(CommandParameters parameters) throws Exception {
         final String methodTag = TAG + ":getDeviceMode";
@@ -593,7 +631,7 @@ public class LocalMSALController extends BaseController {
             // Call method defined in oAuth2Strategy to request authorization
             authorizationResult = oAuth2Strategy.getDeviceCode((MicrosoftStsAuthorizationRequest) mAuthorizationRequest);
 
-            validateServiceResult(authorizationResult);
+            validateDeviceCodeFlowServiceResult(authorizationResult);
 
         } catch (Exception error) {
             Telemetry.emit(
@@ -698,7 +736,7 @@ public class LocalMSALController extends BaseController {
             }
 
             // Validate request success, may throw MsalServiceException
-            validateServiceResult(tokenResult);
+            validateDeviceCodeFlowServiceResult(tokenResult);
 
             // Assign token result
             acquireTokenResult.setTokenResult(tokenResult);
@@ -790,51 +828,5 @@ public class LocalMSALController extends BaseController {
      */
     private boolean authorizationPending(@NonNull final String errorCode) {
         return errorCode.equals(ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE);
-    }
-
-    /**
-     * Helper method to check if a result object is valid (was a success). If not, an exception will be generated and thrown.
-     * This method is called in both parts of the DCF protocol.
-     *
-     * @param result result object to be checked
-     * @throws ServiceException MsalServiceException object reflecting error code returned by the result
-     */
-    private void validateServiceResult(@NonNull final IResult result) throws ServiceException {
-        // If result was unsuccessful, create an exception
-        if (!result.getSuccess()) {
-            // Create ServiceException object
-            // Based on error code, fetch the error message
-            final String errorCode = result.getErrorResponse().getError();
-            final String errorMessage;
-
-            // Check response code against pre-defined error codes
-            switch (errorCode) {
-                case ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_ERROR_CODE:
-                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_ERROR_MESSAGE;
-                    break;
-                case ErrorStrings.DEVICE_CODE_FLOW_EXPIRED_TOKEN_ERROR_CODE:
-                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_EXPIRED_TOKEN_ERROR_MESSAGE;
-                    break;
-                case ErrorStrings.DEVICE_CODE_FLOW_BAD_VERIFICATION_ERROR_CODE:
-                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_BAD_VERIFICATION_ERROR_MESSAGE;
-                    break;
-                case OAuth2ErrorCode.INVALID_GRANT:
-                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_INVALID_GRANT_ERROR_MESSAGE;
-                    break;
-                case ErrorStrings.INVALID_SCOPE:
-                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_INVALID_SCOPE_ERROR_MESSAGE;
-                    break;
-                default:
-                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_DEFAULT_ERROR_MESSAGE;
-            }
-
-            // Create a ServiceException object and throw it
-            throw new ServiceException(
-                    errorCode,
-                    errorMessage,
-                    ServiceException.DEFAULT_STATUS_CODE,
-                    null
-            );
-        }
     }
 }

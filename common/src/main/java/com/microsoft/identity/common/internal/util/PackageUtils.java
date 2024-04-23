@@ -59,6 +59,7 @@ import java.util.regex.Pattern;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+import static com.microsoft.identity.common.java.exception.ClientException.BROKER_VERIFICATION_FAILED_ERROR;
 import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_APP_VERIFICATION_FAILED;
 
 /**
@@ -85,8 +86,7 @@ public final class PackageUtils {
      * @throws GeneralSecurityException if there was a problem with accessing apis.
      */
     @SuppressLint("PackageManagerGetSignatures")
-    @SuppressWarnings("deprecation")
-    public static final List<X509Certificate> readCertDataForApp(final String packageName,
+    public static List<X509Certificate> readCertDataForApp(final String packageName,
                                                            final Context context)
             throws PackageManager.NameNotFoundException, ClientException, IOException,
             GeneralSecurityException {
@@ -105,22 +105,21 @@ public final class PackageUtils {
 
         final List<X509Certificate> certificates = new ArrayList<>(signatures.length);
         for (final Signature signature : signatures) {
-            final byte[] rawCert = signature.toByteArray();
-            final InputStream certStream = new ByteArrayInputStream(rawCert);
-
-            final CertificateFactory certificateFactory;
-            final X509Certificate x509Certificate;
             try {
-                certificateFactory = CertificateFactory.getInstance("X509");
-                x509Certificate = (X509Certificate) certificateFactory.generateCertificate(
-                        certStream);
-                certificates.add(x509Certificate);
+                certificates.add(createCertificateFromByteArray(signature.toByteArray()));
             } catch (final CertificateException e) {
+                //This exception is odd given the name of this function...
                 throw new ClientException(BROKER_APP_VERIFICATION_FAILED);
             }
         }
 
         return certificates;
+    }
+
+    public static X509Certificate createCertificateFromByteArray(byte[] rawCert) throws CertificateException {
+        final InputStream certStream = new ByteArrayInputStream(rawCert);
+        return (X509Certificate) CertificateFactory.getInstance("X509")
+                .generateCertificate(certStream);
     }
 
     /**
@@ -133,21 +132,21 @@ public final class PackageUtils {
      * @throws CertificateEncodingException if a certificate was corrupt.
      * @throws ClientException if no valid hash was found in the list.
      */
-    public static final String verifySignatureHash(final @NonNull List<X509Certificate> certs,
+    public static String verifySignatureHash(final @NonNull List<X509Certificate> certs,
                                              final @NonNull Iterator<String> validHashes)
             throws NoSuchAlgorithmException,
             CertificateEncodingException, ClientException {
-
         final StringBuilder hashListStringBuilder = new StringBuilder();
 
         for (final X509Certificate x509Certificate : certs) {
-            final MessageDigest messageDigest = MessageDigest.getInstance("SHA");
+            final MessageDigest messageDigest = MessageDigest.getInstance("SHA-512");
             messageDigest.update(x509Certificate.getEncoded());
 
             // Check the hash for signer cert is the same as what we hardcoded.
-            final String signatureHash = Base64.encodeToString(messageDigest.digest(), Base64.NO_WRAP);
+            final String sha512SignatureHash = Base64.encodeToString(messageDigest.digest(), Base64.NO_WRAP);
 
-            hashListStringBuilder.append(signatureHash);
+            //Collecting output for logging
+            hashListStringBuilder.append(sha512SignatureHash);
             hashListStringBuilder.append(',');
 
             while (validHashes.hasNext()) {
@@ -160,13 +159,13 @@ public final class PackageUtils {
                 if (HEX_PATTERN.matcher(hash).matches()) {
                     hash = convertToBase64(hash);
                 }
-                if (!TextUtils.isEmpty(hash) && hash.equals(signatureHash)) {
-                    return signatureHash;
+                if (!TextUtils.isEmpty(hash) && hash.equals(sha512SignatureHash)) {
+                    return sha512SignatureHash;
                 }
             }
         }
 
-        throw new ClientException(BROKER_APP_VERIFICATION_FAILED, "SignatureHashes: " + hashListStringBuilder.toString());
+        throw new ClientException(BROKER_VERIFICATION_FAILED_ERROR, BROKER_APP_VERIFICATION_FAILED + " SignatureHashes: " + hashListStringBuilder.toString());
     }
 
     /**
@@ -192,7 +191,7 @@ public final class PackageUtils {
      * @throws GeneralSecurityException if we aren't allowed to access certificates.
      * @throws ClientException if any number other than 1 self signed certificate is found.
      */
-    public static final void verifyCertificateChain(final List<X509Certificate> certificates)
+    public static void verifyCertificateChain(final List<X509Certificate> certificates)
             throws GeneralSecurityException, ClientException {
         // create certificate chain, find the self signed cert first and chain all the way back
         // to the signer cert. Also perform certificate signing validation when chaining them back.

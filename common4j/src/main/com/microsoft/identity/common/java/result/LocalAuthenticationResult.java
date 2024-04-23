@@ -59,7 +59,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
     private String mCorrelationId;
     private final List<Map<String, String>> mTelemetry = new ArrayList<>();
 
-    private static final String TAG = LocalAuthenticationResult.class.getName();
+    private static final String TAG = LocalAuthenticationResult.class.getSimpleName();
 
     public LocalAuthenticationResult(@NonNull final ICacheRecord lastAuthorized,
                                      @NonNull final List<ICacheRecord> completeResultFromCache,
@@ -227,7 +227,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
     /**
      * Set the telemetry on local authentication result.
      *
-     * @param telemetry the {@link List<Map<String, String>>} containing telemetry data
+     * @param telemetry the telemetry data
      */
     public void setTelemetry(@NonNull final List<Map<String, String>> telemetry) {
         mTelemetry.addAll(telemetry);
