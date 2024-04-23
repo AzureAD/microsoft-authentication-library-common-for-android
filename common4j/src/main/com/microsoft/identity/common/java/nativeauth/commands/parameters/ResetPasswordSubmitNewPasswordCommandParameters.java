@@ -30,7 +30,7 @@ import lombok.experimental.SuperBuilder;
 
 /**
  * A set of Reset Password Submit New Password command parameters for submitting the new password of the user.
- * extends from {@link BaseNativeAuthCommandParameters
+ * extends from {@link BaseNativeAuthCommandParameters}
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
