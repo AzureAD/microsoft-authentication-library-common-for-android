@@ -290,7 +290,7 @@ public final class ObjectMapper {
      * Method to serialize the object into a map.
      *
      * @param object Object
-     * @return Map<String, Object>
+     * @return a hash map.
      */
     public static Map<String, Object> serializeObjectHashMap(final Object object) {
         String json = ObjectMapper.serializeObjectToJsonString(object);

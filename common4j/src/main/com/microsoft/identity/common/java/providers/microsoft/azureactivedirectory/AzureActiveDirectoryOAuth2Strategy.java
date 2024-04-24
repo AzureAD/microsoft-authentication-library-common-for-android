@@ -53,18 +53,6 @@ import static com.microsoft.identity.common.java.exception.ErrorStrings.AUTHORIT
 
 /**
  * The Azure Active Directory OAuth 2.0 Strategy.
- * <MicrosoftStsAccessToken,
- * MicrosoftStsAccount,
- * MicrosoftStsAuthorizationRequest,
- * MicrosoftStsAuthorizationRequest.Builder,
- * AuthorizationStrategy,
- * MicrosoftStsOAuth2Configuration,
- * MicrosoftStsAuthorizationResponse,
- * MicrosoftStsRefreshToken,
- * MicrosoftStsTokenRequest,
- * MicrosoftStsTokenResponse,
- * TokenResult,
- * AuthorizationResult>
  */
 // Suppressing rawtype warnings due to the generic types AuthorizationStrategy, AuthorizationResult and AuthorizationResultFactory
 @SuppressWarnings(WarningType.rawtype_warning)

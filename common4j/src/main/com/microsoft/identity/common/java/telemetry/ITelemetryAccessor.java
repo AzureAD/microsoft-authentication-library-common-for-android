@@ -34,9 +34,6 @@ public interface ITelemetryAccessor {
 
     /**
      * Obtain telemetry data.
-     *
-     * @return a {@link List<Map<String, String>>} containing telemetry data. Generally this would
-     * be the data produced from {@link Telemetry} class.
      */
     List<Map<String, String>> getTelemetry();
 

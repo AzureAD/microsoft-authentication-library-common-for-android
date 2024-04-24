@@ -80,8 +80,6 @@ public enum CredentialType {
 
     /**
      * Get the credential type name set.
-     *
-     * @return Set<String>
      */
     public static Set<String> valueSet() {
         final Set<String> strTypes = new HashSet<>();

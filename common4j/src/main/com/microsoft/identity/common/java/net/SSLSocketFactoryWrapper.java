@@ -45,7 +45,7 @@ import lombok.experimental.Accessors;
 
 /**
  * This class is a SSLSocketFactory wrapper that supports Higher TLS by default.
- * In Android, the default socket would return one that only supports up to TLSv1.1 if API<20
+ * In Android, the default socket would return one that only supports up to TLSv1.1 if API {@literal <} 20
  * reference: https://developer.android.com/reference/javax/net/ssl/SSLSocket
  */
 public class SSLSocketFactoryWrapper extends SSLSocketFactory {

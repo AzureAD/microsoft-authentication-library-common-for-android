@@ -110,7 +110,7 @@ public interface IAccountRecord {
 
     /**
      * Gets the client_info as a base64 encoded String of JSON.
-     * Decoded JSON has the format of {"uid":"<UUID>", "utid":"<UUID>"}.
+     * Decoded JSON has the format of {"uid":"[UUID]", "utid":"[UUID]"}.
      *
      * @return The client_info to get.
      */
