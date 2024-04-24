@@ -23,19 +23,26 @@
 package com.microsoft.identity.common.internal.request;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.REQUEST_AUTHORITY;
 
 import android.os.Bundle;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.components.MockPlatformComponentsFactory;
+import com.microsoft.identity.common.internal.broker.BrokerRequest;
+import com.microsoft.identity.common.internal.util.GzipUtil;
+import com.microsoft.identity.common.java.commands.parameters.AccountTransferV2TokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+
+import java.io.IOException;
 
 @RunWith(RobolectricTestRunner.class)
 public class MsalBrokerRequestAdapterTests {
@@ -74,5 +81,33 @@ public class MsalBrokerRequestAdapterTests {
         Assert.assertEquals(ssoUrl, requestBundle.getString(AuthenticationConstants.Broker.BROKER_SSO_URL_KEY));
         Assert.assertEquals(negotiatedBrokerProtocolVersion, requestBundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY));
         Assert.assertEquals(aCorrelationId, requestBundle.getString(ACCOUNT_CORRELATIONID));
+    }
+
+    @Test
+    public void test_getRequestBundleForAccountTransferV2() throws IOException {
+        final String aCorrelationId = "aCorrelationId";
+        final String negotiatedBrokerProtocolVersion = "1.0";
+        final String slkToken = "This is an slk token";
+
+        final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
+        final AccountTransferV2TokenCommandParameters params = AccountTransferV2TokenCommandParameters.builder()
+                .platformComponents(components)
+                .correlationId(aCorrelationId)
+                .slkToken(slkToken)
+                .build();
+
+        MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
+        Bundle requestBundle = msalBrokerRequestAdapter.getRequestBundleForAccountTransferV2(params, negotiatedBrokerProtocolVersion);
+
+        Assert.assertEquals(negotiatedBrokerProtocolVersion, requestBundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY));
+        Assert.assertEquals(aCorrelationId, requestBundle.getString(ACCOUNT_CORRELATIONID));
+
+        final String deCompressedString = GzipUtil.decompressBytesToString(
+                requestBundle.getByteArray(BROKER_REQUEST_V2_COMPRESSED)
+        );
+        final BrokerRequest brokerRequest = AuthenticationSchemeTypeAdapter.getGsonInstance().fromJson(
+                deCompressedString, BrokerRequest.class
+        );
+        Assert.assertEquals(slkToken, requestBundle.getString(brokerRequest.getAccountTransferV2SlkToken()));
     }
 }
