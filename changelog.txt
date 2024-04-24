@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [PATCH] New Flights Manager (#2393)
 - [MINOR] Update flow to get token for labapi to not require automationrunnerapp (#2376)
 - [MINOR] Add field in BrokerInteractiveTokenCommandParameters for ATv2. (#2363)
 
