@@ -32,18 +32,18 @@ package com.microsoft.identity.common.java.flighting
 object CommonFlightManager : IFlightsManager {
 
     private var mFlightProvider: IFlightsProvider? = null
-    private var sFlightsManager: IFlightsManager? = null
+    private lateinit var sFlightsManager: IFlightsManager
 
     fun initializeCommonFlightsManager(flightsManager: IFlightsManager) {
         sFlightsManager = flightsManager
     }
 
     override fun getFlightsProvider(): IFlightsProvider {
-        return sFlightsManager!!.getFlightsProvider()
+        return sFlightsManager.getFlightsProvider()
     }
 
     override fun getFlightsProviderForTenant(tenantId: String): IFlightsProvider {
-        return sFlightsManager!!.getFlightsProviderForTenant(tenantId)
+        return sFlightsManager.getFlightsProviderForTenant(tenantId)
     }
 
     /**
