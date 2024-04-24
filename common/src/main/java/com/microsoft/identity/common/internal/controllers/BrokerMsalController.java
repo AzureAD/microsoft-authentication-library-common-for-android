@@ -389,10 +389,7 @@ public class BrokerMsalController extends BaseController {
             final Bundle resultBundle = mBrokerResultFuture.get();
 
             final String negotiatedBrokerProtocolVersion = interactiveRequestIntent.getStringExtra(NEGOTIATED_BP_VERSION_KEY);
-            // For MSA Accounts Broker doesn't save the accounts, instead it just passes the result along,
-            // MSAL needs to save this account locally for future token calls.
-            // parameters.getOAuth2TokenCache() will be non-null only in case of MSAL native
-            // If the request is from MSALCPP , OAuth2TokenCache will be null.
+
             if (parameters.getOAuth2TokenCache() != null && !BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker(negotiatedBrokerProtocolVersion)) {
                 saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
             }
@@ -491,11 +488,6 @@ public class BrokerMsalController extends BaseController {
 
             final String negotiatedBrokerProtocolVersion = interactiveAccountTransferV2RequestIntent.getStringExtra(NEGOTIATED_BP_VERSION_KEY);
 
-            // TODO: Is this accurate? BrokerAccountDataManager contains MSA accounts
-            // For MSA Accounts Broker doesn't save the accounts, instead it just passes the result along,
-            // MSAL needs to save this account locally for future token calls.
-            // parameters.getOAuth2TokenCache() will be non-null only in case of MSAL native
-            // If the request is from MSALCPP , OAuth2TokenCache will be null.
             if (parameters.getOAuth2TokenCache() != null && !BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker(negotiatedBrokerProtocolVersion)) {
                 saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
             }
@@ -617,9 +609,6 @@ public class BrokerMsalController extends BaseController {
                                 null);
                     }
 
-                    // TODO: Confused, why is this called "extractResultBundle", but we're actually
-                    //  returning an intent where we create the bundle for the request?
-                    //  Is this the result of performPrerequisites with broker?
                     @Override
                     public @NonNull
                     Intent extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
