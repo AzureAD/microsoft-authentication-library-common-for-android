@@ -128,10 +128,6 @@ public class Logger {
         }
     }
 
-    public static void setAllowPii(boolean allowPii) {
-        sAllowPii = allowPii;
-    }
-
     public static boolean setLogger(@NonNull String identifier,
                                     ILoggerCallback callback) {
         sLoggersLock.writeLock().lock();
@@ -486,27 +482,6 @@ public class Logger {
                 }
             }
         });
-    }
-
-    /**
-     * Wrap the log message.
-     * If diagnosticMetadata (diagnosticMetadata contains thread name and correlationId) exists:
-     * <library_version> [<timestamp> - <diagnosticMetadata>] <log_message>
-     * If diagnosticMetadata doesn't exist:
-     * <library_version> [<timestamp>] <log_message>
-     */
-    private static String formatMessage(@Nullable final String diagnosticMetadata,
-                                        @Nullable final String platformString,
-                                        @Nullable final String message,
-                                        @NonNull final String dateTimeStamp,
-                                        @Nullable final Throwable throwable) {
-        final String logMessage = StringUtil.isNullOrEmpty(message) ? "N/A" : message;
-
-        return "[" + dateTimeStamp
-                + (StringUtil.isNullOrEmpty(diagnosticMetadata) ? " " : " - " + diagnosticMetadata + " ")
-                + "- " + platformString + "] "
-                + logMessage
-                + (throwable == null ? "" : '\n' + ThrowableUtil.getStackTraceAsString(throwable));
     }
 
     /**
