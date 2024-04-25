@@ -92,6 +92,8 @@ public class LabConstants {
         public static final String PING = "ping";
         public static final String SHIBBOLETH = "shibboleth";
         public static final String CIAM = "ciam";
+
+        public static final String CIAM_CUD = "ciamcud";
     }
 
     public static final class AzureEnvironment {
