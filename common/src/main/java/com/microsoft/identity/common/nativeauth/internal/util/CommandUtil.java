@@ -144,40 +144,4 @@ public class CommandUtil {
 
         return commandParameters;
     }
-
-    /**
-     * Converts to [AcquireTokenNoFixedScopesCommandParameters] object to a new
-     * [SilentTokenCommandParameters] object.
-     * @param parameters input command parameter
-     * @param correlationId correlationId to be used in the request
-     * @return [SilentTokenCommandParameters] object
-     */
-    public static SilentTokenCommandParameters convertAcquireTokenNoFixedScopesCommandParameters(
-            AcquireTokenNoFixedScopesCommandParameters parameters,
-            String correlationId
-    ) {
-        final SilentTokenCommandParameters commandParameters = SilentTokenCommandParameters
-                .builder()
-                .platformComponents(parameters.getPlatformComponents())
-                .applicationName(parameters.getApplicationName())
-                .applicationVersion(parameters.getApplicationVersion())
-                .clientId(parameters.getClientId())
-                .isSharedDevice(parameters.isSharedDevice())
-                .oAuth2TokenCache(parameters.getOAuth2TokenCache())
-                .redirectUri(parameters.getRedirectUri())
-                .requiredBrokerProtocolVersion(parameters.getRequiredBrokerProtocolVersion())
-                .sdkType(SdkType.MSAL)
-                .sdkVersion(parameters.getSdkVersion())
-                .authority(parameters.authority)
-                .forceRefresh(parameters.isForceRefresh())
-                .scopes(parameters.getScopes())
-                .account(parameters.getAccount())
-                .authenticationScheme(parameters.getAuthenticationScheme())
-                .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
-                .correlationId(correlationId)
-                .correlationId(parameters.getCorrelationId())
-                .build();
-
-        return commandParameters;
-    }
 }

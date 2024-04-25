@@ -40,7 +40,6 @@ import com.microsoft.identity.common.java.exception.ErrorStrings
 import com.microsoft.identity.common.java.exception.ServiceException
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.AcquireTokenNoFixedScopesCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseNativeAuthCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseSignInTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordResendCodeCommandParameters
@@ -652,8 +651,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         ArgumentException::class,
         ServiceException::class
     )
-    fun acquireTokenSilent(
-        parameters: AcquireTokenNoFixedScopesCommandParameters
+    override fun acquireTokenSilent(
+        parameters: SilentTokenCommandParameters
     ): AcquireTokenResult {
         LogSession.logMethodCall(
             tag = TAG,
@@ -666,13 +665,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         // Validate original AcquireTokenNoScopesCommandParameters parameters
         parameters.validate()
 
-        // Convert AcquireTokenNoScopesCommandParameters into SilentTokenCommandParameters,
-        // so we can use it in BaseController.getCachedAccountRecord()
-        var silentTokenCommandParameters =
-            CommandUtil.convertAcquireTokenNoFixedScopesCommandParameters(
-                parameters,
-                parameters.getCorrelationId()
-            )
+        //We need to reassign parameters later in the function
+        var silentTokenCommandParameters = parameters
 
         // We want to retrieve all tokens from the cache, regardless of their scopes. Since in the
         // native auth get token flow the developer doesn't have the ability to specify scopes,
@@ -684,7 +678,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         // Build up params for Strategy construction
         val authScheme = silentTokenCommandParameters.authenticationScheme
         val strategyParameters = OAuth2StrategyParameters.builder()
-            .platformComponents(parameters.platformComponents)
+            .platformComponents(silentTokenCommandParameters.platformComponents)
             .authenticationScheme(authScheme)
             .build()
         val strategy = silentTokenCommandParameters.authority.createOAuth2Strategy(strategyParameters)
@@ -696,7 +690,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         }
         val cacheRecords = tokenCache.loadWithAggregatedAccountData(
             silentTokenCommandParameters.clientId,
-            parameters.applicationIdentifier,
+            silentTokenCommandParameters.applicationIdentifier,
             null,
             target,
             targetAccount,
@@ -737,7 +731,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             if (!fullCacheRecord.accessToken.isExpired) {
                 setAcquireTokenResult(acquireTokenSilentResult, silentTokenCommandParameters, cacheRecords)
                 val refreshOnCommand =
-                    RefreshOnCommand(parameters, this.asControllerFactory(), PublicApiId.MSAL_REFRESH_ON)
+                    RefreshOnCommand(silentTokenCommandParameters, this.asControllerFactory(), PublicApiId.MSAL_REFRESH_ON)
                 CommandDispatcher.submitAndForget(refreshOnCommand)
             } else {
                 Logger.warn(
