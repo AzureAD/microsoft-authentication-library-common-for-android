@@ -227,7 +227,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
     /**
      * Set the telemetry on local authentication result.
      *
-     * @param telemetry the {@link List<Map<String, String>>} containing telemetry data
+     * @param telemetry the telemetry data
      */
     public void setTelemetry(@NonNull final List<Map<String, String>> telemetry) {
         mTelemetry.addAll(telemetry);

@@ -1,9 +1,10 @@
 V.Next
 ---------
+- [PATCH] Update nimbus-jose-jwt 9.37.3 and junit 4.13.2 (#2392)
 - [MINOR] Update flow to get token for labapi to not require automationrunnerapp (#2376)
 - [MINOR] Add field in BrokerInteractiveTokenCommandParameters for ATv2. (#2363)
 
-V.17.3.0
+Version 17.3.0
 ---------
 - [PATCH] Return exception from first controller in SilentTokenCommand in case all controllers throw exceptions. (#2377)
 - [PATCH] Fix mAuthorizationStrategy is null in LocalMsalController (due to #2352) (#2370)
@@ -11,11 +12,11 @@ V.17.3.0
 - [PATCH] Return status code in errorResponse when server response is not in expected Json format. (#2321)
 - [MINOR] Added telemetry for cross cloud and MSA passthrough requests (#2367)
 
-V.17.2.1
+Version 17.2.1
 ---------
 - [PATCH] Reduce the amount of setAccountVisibility() call. (#2355)
 
-V.17.2.0
+Version 17.2.0
 ---------
 - [PATCH] Move SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY to BaseActiveBrokerCache (#2340)
 - [PATCH] Add cache for ContentProviderStrategy.isSupportedByTargetedBroker() (#2338)
@@ -31,11 +32,11 @@ V.17.2.0
 - [MINOR] Add flight to passkey feature for rollback purposes (#2329)
 - [MINOR] Minor updates to passkey response logic (#2334)
 
-V.17.1.1
+Version 17.1.1
 ---------
 - [PATCH] Add timeout to backup IPC mechanism (#2323)
 
-V.17.1.0
+Version 17.1.0
 ---------
 - [MINOR] Add flight to control silent token timeout (#2311)
 - [PATCH] Revert #2305 (#2307)
@@ -55,12 +56,12 @@ V.17.1.0
 - [MINOR] Changes to support app based targeting of telemetry sampling rate (#2302)
 - [MINOR] Adding base64Url encoding method (#2303)
 
-v.17.0.1
+Version 17.0.1
 ---------
 - [PATCH] Update robolectricVersion 4.11.1 (#2292)
 - [PATCH] Removing CredMan (Only for 17.0.1) (#2295)
 
-V.17.0.0
+Version 17.0.0
 ---------
 - [PATCH] Add JWT header field for KDF version (#2220)
 - [MINOR] Catch unknown Keystore errors during decryption (#2255)
@@ -68,11 +69,11 @@ V.17.0.0
 - [MAJOR] Addition of Credential Manager and associated passkey logic (#2267)
 - [PATCH] Pass through ESTS x-ms-srs header field (#2256)
 
-V.16.3.0
+Version 16.3.0
 ----------
 - [MINOR] Changes to launch AEA app from Broker's WebView (#2264)
 
-V.16.2.0
+Version 16.2.0
 ----------
 - [PATCH] always make a copy of bundle before modifying & sending out via ipc (#2239)
 - [PATCH] Use v2.0 url for OpenID Client (#2208)
@@ -86,21 +87,21 @@ V.16.2.0
 - [PATCH] Fix to generate new Asymmetric Key (#2222)
 - [MINOR] Move addition of passkey header from BaseController to WebView fragment (#2237)
 
-V.16.1.1
+Version 16.1.1
 ----------
 - [PATCH] Fix client Discovery (#2213)
 
-V.16.1.0
+Version 16.1.0
 ----------
 - [MINOR] Handle crypto error gracefully (#2190)
 - [MINOR] Stop logging thread name (#2185)
 - [MINOR] Adding Moshi, and WebAuthnJsonUtil (#2189)
 
-V.16.0.1
+Version 16.0.1
 ----------
 - [MINOR] Add LTW as prod broker app (#2179)
 
-V.16.0.0
+Version 16.0.0
 ----------
 - [MINOR] Add MsaGrantedRefreshTokenNotSupportedOnAadTenant error code to ServiceException (#2165)
 - [MAJOR] Separate Broker API and Client SDK Active Broker caches (#2164)
@@ -118,7 +119,7 @@ V.16.0.0
 - [MINOR] Catch strongbox exception on Android 14 (#2158)
 - [MINOR] Nested app auth implementation (#2168)
 
-V.15.0.0
+Version 15.0.0
 ----------
 - [MAJOR] Move Broker side active broker cache to broker repo (#2123)
 - [MINOR] Add span names for the BrokerOperationRequestDispatcher and PassthroughExecutor (#2100)
@@ -138,11 +139,11 @@ V.15.0.0
 - [MINOR] Update TokenRequest.java with NAA params (#2143)
 - [MINOR] Add new apk name to BrokerHost infra (#2152)
 
-V.14.0.1
+Version 14.0.1
 ----------
 - [PATCH] Reverting token removal logic (#2117)
 
-V.14.0.0
+Version 14.0.0
 ----------
 - [PATCH] Make AndroidWrappedKeyLoader return the right alias (#2102)
 - [PATCH] Read private key before public key to avoid OS bug (#2091)
@@ -164,7 +165,7 @@ V.14.0.0
 - [MINOR] Invalid required broker protocol version check in Acquire Token/Acquire Token Silent (#2101)
 - [PATCH] Add UI elemnent wait timeout in AadLoginComponentHandler (#2095)
 
-V.13.0.1
+Version 13.0.1
 ----------
 - [PATCH] Stop caching account manager values. Make BrokerDiscoveryClient coroutine-safe (#2050)
 - [PATCH] Revert "Getting rid of account manager strategy in MSAL/OneAuth (#1988)" (#2041)
@@ -179,7 +180,7 @@ V.13.0.1
 - [MINOR] Clear cache of access tokens with an old application identifier field (#2058)
 - [MINOR] Instrument PRTv3 flows (#2023)
 
-V.12.0.0
+Version 12.0.0
 ----------
 - [MINOR] make getCurrentActiveBrokerPackageName case insensitive and trims the authenticator type (#2026)
 - [PATCH] Update version for org.json:json to 20230227 (#2022)
@@ -195,7 +196,7 @@ V.12.0.0
 - [PATCH] Fix target in token records to fix cache keys (#2027)
 - [PATCH] Moving ClearCertPref to Factory instance (#2035)
 
-V.11.0.0
+Version 11.0.0
 ----------
 - [MINOR] Add CommandDispatcher methods to stop and reset silent request executor. (#2000)
 - [MINOR] Support CIAM Authority Type (#1992)
@@ -210,7 +211,7 @@ V.11.0.0
 - [MINOR] Optional support for in-memory cache of all credentials and accountrecords (#1929)
 - [MINOR] Changes to support MSA accounts in Broker (#2003)
 
-V.10.1.1
+Version 10.1.1
 ----------
 - [PATCH] V10.1.0 was incorrectly built with RC versions, need to increment to V10.1.1
 - [MINOR] Add dialogs to prompt user to remove smartcard within CBA flow (#1966)
@@ -227,12 +228,12 @@ V.10.1.1
 - [MINOR] Move JWT classes to common (#1968)
 - [PATCH] Create a custom safe Global Open Telemetry that doesn't crash (#1977)
 
-V.10.0.1
+Version 10.0.1
 ----------
 - [PATCH] Improve the exception stack trace when a not valid broker is found (#1980)
 - [PATCH] Create a custom safe Global Open Telemetry that doesn't crash (#1977)
 
-V.10.0.0
+Version 10.0.0
 ----------
 - [MINOR] Add activity (InstallCertActivityLauncher) to launch the Install WPJ cert activity (#1924)
 - [MINOR] Format thread+correlationId metadata only once logging is clearly opted-in (#1917)
@@ -248,17 +249,17 @@ V.10.0.0
 - [MINOR] Capture span status and error codes in missing scenarios (#1940)
 - [MINOR] Remove OTel SDK from common and common4j (#1948)
 
-V.9.1.0
+Version 9.1.0
 ----------
 - [MINOR] Convert crypto operation spans into metrics (#1909)
 - [PATCH] Move clearClientCertPreferences to onCreateView only (#1915)
 - [MINOR] Propagate span context from MSAL to Broker (#1926)
 
-V.9.0.1
+Version 9.0.1
 ----------
 - [PATCH] Moving ClearClientCertPreferences back to onCreate and handleBackButtonPressed (#1908)
 
-V.9.0.0
+Version 9.0.0
 ----------
 - [MINOR] Add BrokerContentProvider path and IpcStrategy for new device registration API (#1843)
 - [PATCH] Adding cached credential service request id to telemetry (#1866)
@@ -271,15 +272,15 @@ V.9.0.0
 - [PATCH] Fixes MSAL Issue #1715 (#1894)
 - [MINOR] Add support to reset broadcast Executor service (#1895)
 
-V.8.0.3
+Version 8.0.3
 ----------
 - [PATCH] Add null checks for devices that do not support USB_SERVICE. (#1885)
 
-V.8.0.2
+Version 8.0.2
 ----------
 - [PATCH] Remove java.time.* Java8 APIs (#1868)
 
-V.8.0.1
+Version 8.0.1
 ----------
 - [PATCH] Avoid keystore key overwriting for apps using sharedUserId. (#1864)
 

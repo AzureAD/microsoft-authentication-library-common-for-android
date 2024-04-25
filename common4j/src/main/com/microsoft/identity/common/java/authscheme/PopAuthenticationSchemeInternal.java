@@ -118,7 +118,7 @@ public class PopAuthenticationSchemeInternal
 
     /**
      * This constructor intended to be used when this class is acting as a DTO between
-     * MSAL -> Broker. Because no {@link IClockSkewManager} is supplied, functions related to access
+     * MSAL to Broker. Because no {@link IClockSkewManager} is supplied, functions related to access
      * token signing cannot be used.
      *
      * @param popManager
