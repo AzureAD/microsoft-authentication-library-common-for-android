@@ -4,6 +4,9 @@
 # Uses Java 11
 name: $(date:yyyyMMdd)$(rev:.r)
 
+variables:
+  - group: devex-ciam-test
+
 trigger: none
 
 resources:
