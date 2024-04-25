@@ -59,7 +59,7 @@ class AcquireTokenNoFixedScopesCommand(
 
         Logger.info(
             TAG,
-            "Returning result: $result"
+            "Returning result: AcquireTokenResult()"
         )
         return result
     }
