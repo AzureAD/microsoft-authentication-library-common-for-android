@@ -32,34 +32,56 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
 sealed interface SignInInitiateApiResult: ApiResult {
     data class Redirect(
         override val correlationId: String
-    ) : SignInInitiateApiResult
+    ) : SignInInitiateApiResult {
+        override fun toUnsanitizedString(): String {
+            return "Redirect(correlationId=$correlationId)"
+        }
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 
     data class Success(
         override val correlationId: String,
         val continuationToken: String
-    ) : SignInInitiateApiResult
+    ) : SignInInitiateApiResult {
+        override fun toUnsanitizedString(): String {
+            return "Success(correlationId=$correlationId)"
+        }
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 
     data class UserNotFound(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
-        override val correlationId: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
         errorCodes = errorCodes,
         correlationId = correlationId
-    ), SignInInitiateApiResult
+    ), SignInInitiateApiResult {
+        override fun toUnsanitizedString() = "UserNotFound(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+
+        override fun toString(): String = "UserNotFound(correlationId=$correlationId)"
+    }
 
     data class UnknownError(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
-        override val correlationId: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
         errorCodes = errorCodes,
         correlationId = correlationId
-    ), SignInInitiateApiResult
+    ), SignInInitiateApiResult {
+        override fun toUnsanitizedString() = "UnknownError(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+
+        override fun toString(): String = "UnknownError(correlationId=$correlationId)"
+    }
 }

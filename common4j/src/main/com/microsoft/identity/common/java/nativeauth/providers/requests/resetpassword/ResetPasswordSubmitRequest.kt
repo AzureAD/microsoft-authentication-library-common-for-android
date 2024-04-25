@@ -64,7 +64,7 @@ class ResetPasswordSubmitRequest private constructor(
             return ResetPasswordSubmitRequest(
                 requestUrl = URL(requestUrl),
                 headers = headers,
-                parameters = NativeAuthResetPasswordSubmitRequestBody(
+                parameters = NativeAuthResetPasswordSubmitRequestParameters(
                     clientId = clientId,
                     continuationToken = continuationToken,
                     newPassword = newPassword
@@ -73,13 +73,21 @@ class ResetPasswordSubmitRequest private constructor(
         }
     }
 
+    override fun toUnsanitizedString(): String = "ResetPasswordSubmitRequest(requestUrl=$requestUrl, headers=$headers, parameters=$parameters)"
+
+    override fun toString(): String = "ResetPasswordSubmitRequest()"
+
     /**
      * NativeAuthResetPasswordSubmitRequestBody represents the request parameters sent as part of
      * /resetpassword/submit API call
      */
-    data class NativeAuthResetPasswordSubmitRequestBody(
+    data class NativeAuthResetPasswordSubmitRequestParameters(
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("continuation_token") val continuationToken: String,
         @JsonAdapter(CharArrayJsonAdapter::class) @SerializedName("new_password") val newPassword: CharArray
-    ) : NativeAuthRequestParameters()
+    ) : NativeAuthRequestParameters() {
+        override fun toUnsanitizedString(): String = "NativeAuthResetPasswordSubmitRequestParameters(clientId=$clientId)"
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 }

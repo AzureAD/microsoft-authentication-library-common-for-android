@@ -32,7 +32,13 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
 sealed interface SignUpChallengeApiResult: ApiResult {
     data class Redirect(
         override val correlationId: String
-    ) : SignUpChallengeApiResult
+    ) : SignUpChallengeApiResult {
+        override fun toUnsanitizedString(): String {
+            return "Redirect(correlationId=$correlationId)"
+        }
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 
     data class OOBRequired(
         override val correlationId: String,
@@ -40,13 +46,23 @@ sealed interface SignUpChallengeApiResult: ApiResult {
         val challengeTargetLabel: String,
         val challengeChannel: String,
         val codeLength: Int
-    ) :
-        SignUpChallengeApiResult
+    ) : SignUpChallengeApiResult {
+        override fun toUnsanitizedString(): String = "OOBRequired(correlationId=$correlationId, " +
+                "challengeTargetLabel=$challengeTargetLabel, challengeChannel=$challengeChannel, " +
+                "codeLength=$codeLength)"
+
+        override fun toString(): String = "OOBRequired(correlationId=$correlationId, " +
+                "challengeChannel=$challengeChannel, codeLength=$codeLength)"
+    }
 
     data class PasswordRequired(
         override val correlationId: String,
         val continuationToken: String
-    ) : SignUpChallengeApiResult
+    ) : SignUpChallengeApiResult {
+        override fun toUnsanitizedString(): String = "PasswordRequired(correlationId=$correlationId)"
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 
     data class UnsupportedChallengeType(
         override val correlationId: String,
@@ -56,7 +72,12 @@ sealed interface SignUpChallengeApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), SignUpChallengeApiResult
+    ), SignUpChallengeApiResult {
+        override fun toUnsanitizedString() = "UnsupportedChallengeType(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "UnsupportedChallengeType(correlationId=$correlationId)"
+    }
 
     data class ExpiredToken(
         override val correlationId: String,
@@ -66,7 +87,12 @@ sealed interface SignUpChallengeApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), SignUpChallengeApiResult
+    ), SignUpChallengeApiResult {
+        override fun toUnsanitizedString() = "ExpiredToken(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "ExpiredToken(correlationId=$correlationId)"
+    }
 
     data class UnknownError(
         override val error: String,
@@ -76,5 +102,10 @@ sealed interface SignUpChallengeApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), SignUpChallengeApiResult
+    ), SignUpChallengeApiResult {
+        override fun toUnsanitizedString() = "UnknownError(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+
+        override fun toString(): String = "UnknownError(correlationId=$correlationId)"
+    }
 }

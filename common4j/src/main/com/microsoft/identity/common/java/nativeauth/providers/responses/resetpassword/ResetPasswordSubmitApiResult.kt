@@ -34,7 +34,12 @@ sealed interface ResetPasswordSubmitApiResult: ApiResult {
         val continuationToken: String,
         val pollInterval: Int,
         override val correlationId: String,
-    ) : ResetPasswordSubmitApiResult
+    ) : ResetPasswordSubmitApiResult {
+        override fun toUnsanitizedString() = "SubmitSuccess(correlationId=$correlationId, " +
+                "pollInterval=$pollInterval)"
+
+        override fun toString(): String = "SubmitSuccess(correlationId=$correlationId)"
+    }
 
     data class PasswordInvalid(
         override val correlationId: String,
@@ -45,7 +50,12 @@ sealed interface ResetPasswordSubmitApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), ResetPasswordSubmitApiResult
+    ), ResetPasswordSubmitApiResult {
+        override fun toUnsanitizedString() = "PasswordInvalid(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, subError=$subError)"
+
+        override fun toString(): String = "PasswordInvalid(correlationId=$correlationId)"
+    }
 
     data class ExpiredToken(
         override val correlationId: String,
@@ -55,7 +65,12 @@ sealed interface ResetPasswordSubmitApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), ResetPasswordSubmitApiResult
+    ), ResetPasswordSubmitApiResult {
+        override fun toUnsanitizedString() = "ExpiredToken(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "ExpiredToken(correlationId=$correlationId)"
+    }
 
     data class UnknownError(
         override val correlationId: String,
@@ -65,5 +80,10 @@ sealed interface ResetPasswordSubmitApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), ResetPasswordSubmitApiResult
+    ), ResetPasswordSubmitApiResult {
+        override fun toUnsanitizedString() = "UnknownError(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "UnknownError(correlationId=$correlationId)"
+    }
 }

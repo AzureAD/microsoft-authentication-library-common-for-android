@@ -24,11 +24,12 @@
 package com.microsoft.identity.common.java.nativeauth.controllers.results
 
 import com.microsoft.identity.common.java.logging.DiagnosticContext
+import com.microsoft.identity.common.java.nativeauth.util.ILoggable
 
 /**
  * INativeAuthCommandResult interface defines the base class for errors used in Native Auth.
  */
-interface INativeAuthCommandResult {
+interface INativeAuthCommandResult : ILoggable {
     val correlationId: String
     data class Redirect(
         override val correlationId: String,
@@ -43,7 +44,12 @@ interface INativeAuthCommandResult {
                 private const val BROWSER_REQUIRED_ERROR: String = "browser_required"
                 private const val BROWSER_REQUIRED_ERROR_DESCRIPTION: String = "The client's authentication capabilities are insufficient. Please redirect to the browser to complete authentication"
             }
-        }
+
+
+        override fun toUnsanitizedString(): String = "Redirect(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "Redirect(correlationId=$correlationId)"
+    }
 
     /**
      * UnknownError is base class to represent various kinds of errors in NativeAuth.
@@ -62,15 +68,19 @@ interface INativeAuthCommandResult {
         SignUpSubmitCodeCommandResult, SignUpResendCodeCommandResult,
         SignUpSubmitPasswordCommandResult,
         ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,
-        ResetPasswordResendCodeCommandResult, ResetPasswordSubmitNewPasswordCommandResult
+        ResetPasswordResendCodeCommandResult, ResetPasswordSubmitNewPasswordCommandResult {
+        override fun toUnsanitizedString(): String = "UnknownError(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes)"
 
-    open class Error(
+        override fun toString(): String =  "UnknownError(correlationId=$correlationId)"
+        }
+
+    abstract class Error(
         open val error: String?,
         open val errorDescription: String?,
         open val details: List<Map<String, String>>? = null,
         open val correlationId: String,
         open val errorCodes: List<Int>? = null
-    )
+    ) : ILoggable
 
     data class InvalidUsername(
         override val error: String?,
@@ -80,5 +90,9 @@ interface INativeAuthCommandResult {
         override val errorCodes: List<Int>? = null,
         val exception: Exception? = null
     ) : Error(error, errorDescription, details, correlationId, errorCodes),
-        INativeAuthCommandResult, SignInStartCommandResult, SignUpStartCommandResult, SignUpSubmitPasswordCommandResult, ResetPasswordStartCommandResult
+        INativeAuthCommandResult, SignInStartCommandResult, SignUpStartCommandResult, SignUpSubmitPasswordCommandResult, ResetPasswordStartCommandResult {
+        override fun toUnsanitizedString(): String = "InvalidUsername(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes)"
+
+        override fun toString(): String = "InvalidUsername(correlationId=$correlationId)"
+    }
 }
