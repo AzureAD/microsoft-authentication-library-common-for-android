@@ -26,6 +26,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
@@ -64,9 +65,18 @@ class SignInInteractor(
             correlationId = parameters.correlationId,
             methodName = "${TAG}.performSignInInitiate(parameters: SignInStartCommandParameters)"
         )
+
         val request = nativeAuthRequestProvider.createSignInInitiateRequest(
             commandParameters = parameters
         )
+
+        Logger.infoWithObject(
+            "${TAG}.performSignInInitiate",
+            parameters.getCorrelationId(),
+            "request = ",
+            request
+        )
+
         return performSignInInitiate(
             requestCorrelationId = parameters.getCorrelationId(),
             request = request
@@ -91,11 +101,29 @@ class SignInInteractor(
             headers,
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
+
         val rawApiResponse = nativeAuthResponseHandler.getSignInInitiateResultFromHttpResponse(
             requestCorrelationId = requestCorrelationId,
             response = response
         )
-        return rawApiResponse.toResult()
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToSignInInitiateApiResult",
+            rawApiResponse.correlationId,
+            "rawApiResponse = ",
+            rawApiResponse
+        )
+
+        val result = rawApiResponse.toResult()
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToSignInInitiateApiResult",
+            result.correlationId,
+            "result = ",
+            result
+        )
+
+        return result
     }
     //endregion
 
@@ -109,10 +137,19 @@ class SignInInteractor(
             correlationId = correlationId,
             methodName = "${TAG}.performSignInChallenge(continuationToken: String)"
         )
+
         val request = nativeAuthRequestProvider.createSignInChallengeRequest(
             continuationToken = continuationToken,
             correlationId = correlationId
         )
+
+        Logger.infoWithObject(
+            "${TAG}.performSignInChallenge",
+            correlationId,
+            "request = ",
+            request
+        )
+
         return performSignInChallenge(
             requestCorrelationId = correlationId,
             request = request
@@ -137,11 +174,28 @@ class SignInInteractor(
             headers,
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
-        val result = nativeAuthResponseHandler.getSignInChallengeResultFromHttpResponse(
+        val rawApiResponse = nativeAuthResponseHandler.getSignInChallengeResultFromHttpResponse(
             requestCorrelationId = requestCorrelationId,
             response = response
         )
-        return result.toResult()
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToSignInChallengeApiResult",
+            rawApiResponse.correlationId,
+            "rawApiResponse = ",
+            rawApiResponse
+        )
+
+        val result = rawApiResponse.toResult()
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToSignInChallengeApiResult",
+            result.correlationId,
+            "result = ",
+            result
+        )
+
+        return result
     }
     //endregion
 
@@ -151,12 +205,21 @@ class SignInInteractor(
     ): SignInTokenApiResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.correlationId,
-            methodName = "${TAG}.performOOBTokenRequest"
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.performOOBTokenRequest(parameters: SignInSubmitCodeCommandParameters)"
         )
+
         val request = nativeAuthRequestProvider.createOOBTokenRequest(
             commandParameters = parameters
         )
+
+        Logger.infoWithObject(
+            "${TAG}.performOOBTokenRequest",
+            parameters.getCorrelationId(),
+            "request = ",
+            request
+        )
+
         return performGetToken(
             requestCorrelationId = parameters.getCorrelationId(),
             request = request
@@ -168,12 +231,20 @@ class SignInInteractor(
     ): SignInTokenApiResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.correlationId,
-            methodName = "${TAG}.performContinuationTokenTokenRequest"
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.performContinuationTokenTokenRequest(parameters: SignInWithContinuationTokenCommandParameters)"
         )
         val request = nativeAuthRequestProvider.createContinuationTokenTokenRequest(
             commandParameters = parameters
         )
+
+        Logger.infoWithObject(
+            "${TAG}.performContinuationTokenTokenRequest",
+            parameters.getCorrelationId(),
+            "request = ",
+            request
+        )
+
         return performGetToken(
             requestCorrelationId = parameters.getCorrelationId(),
             request = request
@@ -185,12 +256,21 @@ class SignInInteractor(
     ): SignInTokenApiResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.correlationId,
+            correlationId = parameters.getCorrelationId(),
             methodName = "${TAG}.performPasswordTokenRequest"
         )
+
         val request = nativeAuthRequestProvider.createPasswordTokenRequest(
             commandParameters = parameters
         )
+
+        Logger.infoWithObject(
+            "${TAG}.performPasswordTokenRequest",
+            parameters.getCorrelationId(),
+            "request = ",
+            request
+        )
+
         try {
             return performGetToken(
                 requestCorrelationId = parameters.getCorrelationId(),
@@ -207,9 +287,10 @@ class SignInInteractor(
     ): SignInTokenApiResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = null,
+            correlationId = requestCorrelationId,
             methodName = "${TAG}.performGetToken"
         )
+
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -219,10 +300,20 @@ class SignInInteractor(
             headers,
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
-        return nativeAuthResponseHandler.getSignInTokenApiResultFromHttpResponse(
+
+        val result = nativeAuthResponseHandler.getSignInTokenApiResultFromHttpResponse(
             requestCorrelationId = requestCorrelationId,
             response = response
         )
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToSignInTokenApiResult",
+            result.correlationId,
+            "result = ",
+            result
+        )
+
+        return result
     }
     //endregion
 }

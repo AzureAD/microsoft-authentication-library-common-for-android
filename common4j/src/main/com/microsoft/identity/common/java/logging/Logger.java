@@ -351,6 +351,28 @@ public class Logger {
     }
 
     /**
+     * Send a {@link Logger.LogLevel#INFO} log message. The object to printed may contain PII,
+     * depending on its containsPii() value. If isAllowPii() is set to false, a PII-safe string
+     * representation of the object will be used. If allowPII() is set to true, an un-sanitised
+     * string representation of the object will be used.
+     *
+     * @param tag     Used to identify the source of a log message. It usually identifies the class
+     *                or activity where the log call occurs.
+     * @param message The message to log.
+     * @param object The object to be printed.
+     */
+    public static void infoWithObject(final String tag,
+                                      final String correlationID,
+                                      final String message,
+                                      final ILoggable object) {
+        if (isAllowPii()) {
+            log(tag, Logger.LogLevel.INFO, correlationID, message, object.toUnsanitizedString(), null, object.containsPii());
+        } else {
+            log(tag, Logger.LogLevel.INFO, correlationID, message, object.toString(), null, false);
+        }
+    }
+
+    /**
      * * Send a {@link Logger.LogLevel#INFO} log message without PII.
      *
      * @param tag           Used to identify the source of a log message. It usually identifies the

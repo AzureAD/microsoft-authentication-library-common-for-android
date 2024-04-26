@@ -385,7 +385,15 @@ class NativeAuthResponseHandler {
                 response.body,
                 MicrosoftStsTokenResponse::class.java
             )
-            // TODO add safe logging
+
+            Logger.info(TAG, "MicrosoftStsTokenResponse " +
+                    "expiresIn:${apiResponse.expiresIn}, " +
+                    "extExpiresIn:${apiResponse.extExpiresIn}, " +
+                    "responseReceivedTime:${apiResponse.responseReceivedTime}, " +
+                    "scope:${apiResponse.scope}, " +
+                    "tokenType:${apiResponse.tokenType}"
+            )
+
             return SignInTokenApiResult.Success(
                 tokenResponse = apiResponse,
                 correlationId = correlationId
