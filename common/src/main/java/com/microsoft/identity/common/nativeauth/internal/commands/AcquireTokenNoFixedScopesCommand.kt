@@ -59,6 +59,7 @@ class AcquireTokenNoFixedScopesCommand(
 
         Logger.info(
             TAG,
+            parameters.getCorrelationId(),
             "Returning result: AcquireTokenResult()"
         )
         return result
