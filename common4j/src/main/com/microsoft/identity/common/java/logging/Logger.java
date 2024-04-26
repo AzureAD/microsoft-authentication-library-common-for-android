@@ -358,6 +358,7 @@ public class Logger {
      *
      * @param tag     Used to identify the source of a log message. It usually identifies the class
      *                or activity where the log call occurs.
+     * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message The message to log.
      * @param object The object to be printed.
      */
@@ -516,7 +517,7 @@ public class Logger {
                                         @NonNull final String dateTimeStamp,
                                         @Nullable final Throwable throwable) {
         final String logMessage = StringUtil.isNullOrEmpty(message) ? "N/A" : message;
-        final String logObject = StringUtil.isNullOrEmpty(objectToLog) ? "N/A" : objectToLog;
+        final String logObject = StringUtil.isNullOrEmpty(objectToLog) ? "" : objectToLog;
 
         return "[" + dateTimeStamp
                 + (StringUtil.isNullOrEmpty(diagnosticMetadata) ? " " : " - " + diagnosticMetadata + " ")
