@@ -22,15 +22,17 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication;
 
-import com.azure.core.credential.TokenCredential;
-import com.azure.core.credential.TokenRequestContext;
-import com.azure.identity.ClientCertificateCredentialBuilder;
-import com.azure.identity.ClientSecretCredentialBuilder;
-import com.microsoft.identity.labapi.utilities.authentication.client.ConfidentialAuthClientFactory;
+import com.microsoft.identity.labapi.utilities.authentication.client.IConfidentialAuthClient;
 import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
 import com.microsoft.identity.labapi.utilities.authentication.common.ClientCertificateMetadata;
 import com.microsoft.identity.labapi.utilities.authentication.common.KeyStoreConfiguration;
+import com.microsoft.identity.labapi.utilities.authentication.msal4j.Msal4jAuthClient;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
+import com.microsoft.identity.labapi.utilities.exception.LabError;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 import lombok.NonNull;
 
@@ -45,37 +47,32 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
     private final static String KEYSTORE_TYPE = "Windows-MY";
     private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
     private final static String CERTIFICATE_ALIAS = "LabVaultAccessCert";
-    private final String mLabSecret;
+    private final String mLabCredential;
 
     public LabApiAuthenticationClient(@NonNull final String labSecret) {
-        mLabSecret = labSecret;
+        mLabCredential = labSecret;
     }
 
     @Override
     public String getAccessToken() throws LabApiException {
-        if (mLabSecret != null && mLabSecret.trim().length() > 0) {
-            final TokenCredential tokenCredential;
-            if(mLabSecret.endsWith(".pfx")) {
-                // Create ClientCertificateCredential with provided .pfx file
-                tokenCredential = new ClientCertificateCredentialBuilder()
-                        .pfxCertificate(mLabSecret)
-                        .clientCertificatePassword("")
-                        .clientId(CLIENT_ID)
-                        .tenantId(TENANT_ID)
-                        .authorityHost(AUTHORITY)
-                        .build();
-            } else {
-                // Create ClientSecretCredentialBuilder with provide secret
-                tokenCredential = new ClientSecretCredentialBuilder()
-                        .clientSecret(mLabSecret)
-                        .clientId(CLIENT_ID)
-                        .tenantId(TENANT_ID)
-                        .authorityHost(AUTHORITY)
-                        .build();
-            }
-            final TokenRequestContext tokenRequestContext = new TokenRequestContext().addScopes(SCOPE);
-            return tokenCredential.getTokenSync(tokenRequestContext).getToken();
+        final IConfidentialAuthClient confidentialAuthClient = new Msal4jAuthClient();
+        final TokenParameters tokenParameters = TokenParameters.builder()
+                .clientId(CLIENT_ID)
+                .authority(AUTHORITY)
+                .scope(SCOPE)
+                .build();
 
+        final IAuthenticationResult authenticationResult;
+        if (mLabCredential != null && mLabCredential.trim().length() > 0) {
+            if(mLabCredential.endsWith(".pfx")) {
+                try (final InputStream inputStream = new FileInputStream(mLabCredential)) {
+                    authenticationResult = confidentialAuthClient.acquireToken(inputStream, "", tokenParameters);
+                } catch (final IOException e) {
+                    throw new LabApiException(LabError.FAILED_TO_LOAD_CERTIFICATE);
+                }
+            } else {
+                authenticationResult = confidentialAuthClient.acquireToken(mLabCredential, tokenParameters);
+            }
         } else {
             // Create ClientCertificateCredential from the certificate store on the device
             // Expects the LabVaultAccessCert to be already installed on the device
@@ -83,14 +80,9 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
             final ClientCertificateMetadata certificateMetadata = new ClientCertificateMetadata(CERTIFICATE_ALIAS, null);
 
             final CertificateCredential certificateCredential = CertificateCredential.create(keyStoreConfiguration, certificateMetadata);
-            final TokenParameters tokenParameters = TokenParameters.builder()
-                    .clientId(CLIENT_ID)
-                    .authority(AUTHORITY)
-                    .scope(SCOPE)
-                    .build();
-            IAuthenticationResult authenticationResult =
-                    ConfidentialAuthClientFactory.INSTANCE.getConfidentialAuthClient().acquireToken(certificateCredential, tokenParameters);
-            return authenticationResult.getAccessToken();
+            authenticationResult = confidentialAuthClient.acquireToken(certificateCredential, tokenParameters);
         }
+
+        return authenticationResult.getAccessToken();
     }
 }
