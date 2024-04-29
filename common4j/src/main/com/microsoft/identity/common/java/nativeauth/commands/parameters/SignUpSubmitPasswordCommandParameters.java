@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
+import org.jetbrains.annotations.NotNull;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -44,4 +46,21 @@ public class SignUpSubmitPasswordCommandParameters extends SignUpContinueCommand
      */
     @NonNull
     public final char[] password;
+
+    @NotNull
+    @Override
+    public String toUnsanitizedString() {
+        return "SignUpSubmitPasswordCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
+
+    @Override
+    public boolean containsPii() {
+        return !toString().equals(toUnsanitizedString());
+    }
+
+    @NotNull
+    @Override
+    public String toString() {
+        return toUnsanitizedString();
+    }
 }

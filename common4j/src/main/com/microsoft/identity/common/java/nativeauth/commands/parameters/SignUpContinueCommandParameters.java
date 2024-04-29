@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
+import org.jetbrains.annotations.NotNull;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -44,4 +46,21 @@ public class SignUpContinueCommandParameters extends BaseNativeAuthCommandParame
 	 */
 	@NonNull
 	public final String continuationToken;
+
+	@NotNull
+	@Override
+	public String toUnsanitizedString() {
+		return "SignUpContinueCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+	}
+
+	@Override
+	public boolean containsPii() {
+		return !toString().equals(toUnsanitizedString());
+	}
+
+	@NotNull
+	@Override
+	public String toString() {
+		return toUnsanitizedString();
+	}
 }

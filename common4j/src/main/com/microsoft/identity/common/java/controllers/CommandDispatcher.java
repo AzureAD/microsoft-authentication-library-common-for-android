@@ -63,6 +63,8 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseNativeAuthCommandParameters;
+import com.microsoft.identity.common.java.nativeauth.util.ILoggable;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OtelContextExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
@@ -472,10 +474,14 @@ public class CommandDispatcher {
                         + DiagnosticContext.INSTANCE.getRequestContext().toJsonString()
                         + ", with PublicApiId: " + publicApiId);
 
-        if (Logger.isAllowPii()) {
-            Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
+        if (parameters instanceof BaseNativeAuthCommandParameters) {
+            Logger.infoWithObject(TAG, correlationId, (ILoggable) parameters);
         } else {
-            Logger.info(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
+            if (Logger.isAllowPii()) {
+                Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
+            } else {
+                Logger.info(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
+            }
         }
     }
 

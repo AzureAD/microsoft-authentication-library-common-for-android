@@ -32,6 +32,8 @@ import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -57,16 +59,27 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
 
     private final IAccountRecord account;
 
-    @Expose()
     @NonNull
     private final AbstractAuthenticationScheme authenticationScheme;
 
-    @Expose()
     private final boolean forceRefresh;
 
-    private final String loginHint;
+    @NotNull
+    @Override
+    public String toUnsanitizedString() {
+        return "AcquireTokenNoFixedScopesCommandParameters(account=" + account + ", authenticationScheme=" + getAuthenticationScheme() + ", forceRefresh=" + forceRefresh + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
 
-    private final List<Map.Entry<String, String>> extraOptions;
+    @Override
+    public boolean containsPii() {
+        return !toString().equals(toUnsanitizedString());
+    }
+
+    @NotNull
+    @Override
+    public String toString() {
+        return "AcquireTokenNoFixedScopesCommandParameters(authenticationScheme=" + getAuthenticationScheme() + ", forceRefresh=" + forceRefresh + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
 
     /**
      * Validates the command parameters in this object are consistent and can be used for

@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
+import org.jetbrains.annotations.NotNull;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -42,4 +44,21 @@ public class ResetPasswordStartCommandParameters extends BaseNativeAuthCommandPa
      */
     @NonNull
     public final String username;
+
+    @NotNull
+    @Override
+    public String toUnsanitizedString() {
+        return "ResetPasswordStartCommandParameters(username=" + username + "authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
+
+    @Override
+    public boolean containsPii() {
+        return !toString().equals(toUnsanitizedString());
+    }
+
+    @NotNull
+    @Override
+    public String toString() {
+        return "ResetPasswordStartCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
 }

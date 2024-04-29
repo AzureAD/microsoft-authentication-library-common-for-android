@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Map;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -43,4 +45,21 @@ public class SignUpSubmitUserAttributesCommandParameters extends SignUpContinueC
      */
     @NonNull
     public final Map<String, String> userAttributes;
+
+    @NotNull
+    @Override
+    public String toUnsanitizedString() {
+        return "SignUpSubmitUserAttributesCommandParameters(userAttributes=" + userAttributes + "authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
+
+    @Override
+    public boolean containsPii() {
+        return !toString().equals(toUnsanitizedString());
+    }
+
+    @NotNull
+    @Override
+    public String toString() {
+        return "SignUpSubmitUserAttributesCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
 }

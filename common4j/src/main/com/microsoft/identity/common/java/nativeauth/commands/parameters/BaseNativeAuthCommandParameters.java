@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority;
+import com.microsoft.identity.common.java.nativeauth.util.ILoggable;
 
 import java.util.List;
 
@@ -40,19 +41,17 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
-public class BaseNativeAuthCommandParameters extends CommandParameters {
+public abstract class BaseNativeAuthCommandParameters extends CommandParameters implements ILoggable {
     private static final String TAG = BaseNativeAuthCommandParameters.class.getSimpleName();
 
     /**
      * The authority for the token being fetched.
      */
-    @Expose()
     public final NativeAuthCIAMAuthority authority;
 
     /**
      * The initial challenge type for the user being authenticated.
      */
-    @Expose()
     @Nullable
     public final List<String> challengeType;
 }

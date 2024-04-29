@@ -25,6 +25,8 @@ package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 
 import lombok.EqualsAndHashCode;
@@ -37,7 +39,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
-public class BaseSignInTokenCommandParameters extends BaseNativeAuthCommandParameters {
+public abstract class BaseSignInTokenCommandParameters extends BaseNativeAuthCommandParameters {
    private static final String TAG = BaseSignInTokenCommandParameters.class.getSimpleName();
 
    /**
@@ -45,6 +47,5 @@ public class BaseSignInTokenCommandParameters extends BaseNativeAuthCommandParam
     */
    public final List<String> scopes;
 
-   @Expose()
    private final AbstractAuthenticationScheme authenticationScheme;
 }

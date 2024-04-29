@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -62,4 +64,21 @@ public class SignUpStartCommandParameters extends BaseNativeAuthCommandParameter
      */
     @Nullable
     public final char[] password;
+
+    @NotNull
+    @Override
+    public String toUnsanitizedString() {
+        return "SignUpStartCommandParameters(username=" + username + "userAttributes=" + userAttributes + "authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
+
+    @Override
+    public boolean containsPii() {
+        return !toString().equals(toUnsanitizedString());
+    }
+
+    @NotNull
+    @Override
+    public String toString() {
+        return "SignUpStartCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
 }
