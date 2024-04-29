@@ -50,7 +50,7 @@ public class SignInWithContinuationTokenCommandParameters extends BaseSignInToke
     @NotNull
     @Override
     public String toUnsanitizedString() {
-        return "SignInSubmitPasswordCommandParameters(username=" + username + "authority=" + authority + ", challengeTypes=" + challengeType + ")";
+        return "SignInSubmitPasswordCommandParameters(username=" + username + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
     }
 
     @Override

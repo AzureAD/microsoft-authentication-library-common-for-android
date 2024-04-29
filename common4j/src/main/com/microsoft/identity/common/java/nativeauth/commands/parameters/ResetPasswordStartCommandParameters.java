@@ -48,7 +48,7 @@ public class ResetPasswordStartCommandParameters extends BaseNativeAuthCommandPa
     @NotNull
     @Override
     public String toUnsanitizedString() {
-        return "ResetPasswordStartCommandParameters(username=" + username + "authority=" + authority + ", challengeTypes=" + challengeType + ")";
+        return "ResetPasswordStartCommandParameters(username=" + username + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
     }
 
     @Override

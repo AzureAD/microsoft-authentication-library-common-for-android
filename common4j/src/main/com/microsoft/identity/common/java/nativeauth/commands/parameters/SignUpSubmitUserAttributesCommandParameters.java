@@ -49,7 +49,7 @@ public class SignUpSubmitUserAttributesCommandParameters extends SignUpContinueC
     @NotNull
     @Override
     public String toUnsanitizedString() {
-        return "SignUpSubmitUserAttributesCommandParameters(userAttributes=" + userAttributes + "authority=" + authority + ", challengeTypes=" + challengeType + ")";
+        return "SignUpSubmitUserAttributesCommandParameters(userAttributes=" + userAttributes + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
     }
 
     @Override

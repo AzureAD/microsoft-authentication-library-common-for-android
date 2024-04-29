@@ -68,7 +68,7 @@ public class SignUpStartCommandParameters extends BaseNativeAuthCommandParameter
     @NotNull
     @Override
     public String toUnsanitizedString() {
-        return "SignUpStartCommandParameters(username=" + username + "userAttributes=" + userAttributes + "authority=" + authority + ", challengeTypes=" + challengeType + ")";
+        return "SignUpStartCommandParameters(username=" + username + ", userAttributes=" + userAttributes + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
     }
 
     @Override
