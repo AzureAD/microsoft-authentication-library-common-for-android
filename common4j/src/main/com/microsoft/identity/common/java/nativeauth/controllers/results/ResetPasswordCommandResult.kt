@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.controllers.results
 
-import com.microsoft.identity.common.java.logging.DiagnosticContext
-
 
 sealed interface ResetPasswordStartCommandResult: INativeAuthCommandResult
 sealed interface ResetPasswordSubmitCodeCommandResult: INativeAuthCommandResult
@@ -46,60 +44,90 @@ interface ResetPasswordCommandResult {
         val codeLength: Int,
         val challengeTargetLabel: String,
         val challengeChannel: String,
-    ) : ResetPasswordStartCommandResult, ResetPasswordResendCodeCommandResult
+    ) : ResetPasswordStartCommandResult, ResetPasswordResendCodeCommandResult {
+        override fun toUnsanitizedString(): String = "CodeRequired(correlationId=$correlationId, codeLength=$codeLength, challengeTargetLabel=$challengeTargetLabel, challengeChannel=$challengeChannel)"
+
+        override fun toString(): String = "CodeRequired(correlationId=$correlationId, codeLength=$codeLength, challengeChannel=$challengeChannel)"
+    }
 
     data class EmailNotVerified(
+        override val correlationId: String,
         val error: String,
         val errorDescription: String,
-        override val correlationId: String
-    ) :
-        ResetPasswordStartCommandResult
+    ) : ResetPasswordStartCommandResult {
+        override fun toUnsanitizedString(): String = "EmailNotVerified(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "EmailNotVerified(correlationId=$correlationId)"
+    }
 
     data class PasswordNotSet(
+        override val correlationId: String,
         val error: String,
         val errorDescription: String,
-        override val correlationId: String
-    ) :
-        ResetPasswordStartCommandResult
+    ) : ResetPasswordStartCommandResult {
+        override fun toUnsanitizedString(): String = "PasswordNotSet(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "PasswordNotSet(correlationId=$correlationId)"
+    }
 
     data class UserNotFound(
+        override val correlationId: String,
         val error: String,
         val errorDescription: String,
-        override val correlationId: String
-    ) :
-        ResetPasswordStartCommandResult, ResetPasswordSubmitNewPasswordCommandResult
+    ) : ResetPasswordStartCommandResult, ResetPasswordSubmitNewPasswordCommandResult {
+        override fun toUnsanitizedString(): String = "UserNotFound(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "UserNotFound(correlationId=$correlationId)"
+    }
 
     data class PasswordRequired(
         override val correlationId: String,
         val continuationToken: String
-    ) : ResetPasswordSubmitCodeCommandResult
+    ) : ResetPasswordSubmitCodeCommandResult {
+        override fun toUnsanitizedString(): String = "PasswordRequired(correlationId=$correlationId)"
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 
     data class IncorrectCode(
+        override val correlationId: String,
         val error: String,
         val errorDescription: String,
-        override val correlationId: String,
         val subError: String
-    ) :
-        ResetPasswordSubmitCodeCommandResult
+    ) : ResetPasswordSubmitCodeCommandResult {
+        override fun toUnsanitizedString(): String = "IncorrectCode(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
+
+        override fun toString(): String = "IncorrectCode(correlationId=$correlationId)"
+    }
 
     data class PasswordNotAccepted(
+        override val correlationId: String,
         val error: String,
         val errorDescription: String,
-        override val correlationId: String,
         val subError: String
-    ) :
-        ResetPasswordSubmitNewPasswordCommandResult
+    ) : ResetPasswordSubmitNewPasswordCommandResult {
+        override fun toUnsanitizedString(): String = "PasswordNotAccepted(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
+
+        override fun toString(): String = "PasswordNotAccepted(correlationId=$correlationId)"
+    }
 
     data class PasswordResetFailed(
+        override val correlationId: String,
         val error: String,
         val errorDescription: String,
-        override val correlationId: String
-    ) :
-        ResetPasswordSubmitNewPasswordCommandResult
+    ) : ResetPasswordSubmitNewPasswordCommandResult {
+        override fun toUnsanitizedString(): String = "PasswordResetFailed(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "PasswordResetFailed(correlationId=$correlationId)"
+    }
 
     data class Complete (
+        override val correlationId: String,
         val continuationToken: String?,
         val expiresIn: Int?,
-        override val correlationId: String
-    ) : ResetPasswordSubmitNewPasswordCommandResult
+    ) : ResetPasswordSubmitNewPasswordCommandResult {
+        override fun toUnsanitizedString(): String = "Complete(correlationId=$correlationId, expiresIn=$expiresIn)"
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 }

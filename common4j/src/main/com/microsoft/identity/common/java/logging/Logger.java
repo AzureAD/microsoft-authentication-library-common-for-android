@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.logging;
 
+import com.microsoft.identity.common.java.nativeauth.util.ILoggable;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ThrowableUtil;
 
@@ -171,7 +172,7 @@ public class Logger {
     public static void error(final String tag,
                              final String errorMessage,
                              final Throwable exception) {
-        log(tag, LogLevel.ERROR, null, errorMessage, exception, false);
+        log(tag, LogLevel.ERROR, null, errorMessage, null, exception, false);
     }
 
     /**
@@ -187,7 +188,7 @@ public class Logger {
                              final String correlationID,
                              final String errorMessage,
                              final Throwable exception) {
-        log(tag, LogLevel.ERROR, correlationID, errorMessage, exception, false);
+        log(tag, LogLevel.ERROR, correlationID, errorMessage, null, exception, false);
     }
 
     /**
@@ -201,7 +202,7 @@ public class Logger {
     public static void errorPII(final String tag,
                                 final String errorMessage,
                                 final Throwable exception) {
-        log(tag, LogLevel.ERROR, null, errorMessage, exception, true);
+        log(tag, LogLevel.ERROR, null, errorMessage, null, exception, true);
     }
 
     /**
@@ -217,7 +218,7 @@ public class Logger {
                                 final String correlationID,
                                 final String errorMessage,
                                 final Throwable exception) {
-        log(tag, LogLevel.ERROR, correlationID, errorMessage, exception, true);
+        log(tag, LogLevel.ERROR, correlationID, errorMessage, null, exception, true);
     }
 
     /**
@@ -229,7 +230,7 @@ public class Logger {
      */
     public static void warn(final String tag,
                             final String message) {
-        log(tag, LogLevel.WARN, null, message, null, false);
+        log(tag, LogLevel.WARN, null, message, null, null, false);
     }
 
     /**
@@ -243,7 +244,51 @@ public class Logger {
     public static void warn(final String tag,
                             final String correlationID,
                             final String message) {
-        log(tag, LogLevel.WARN, correlationID, message, null, false);
+        log(tag, LogLevel.WARN, correlationID, message, null, null, false);
+    }
+
+    /**
+     * Send a {@link Logger.LogLevel#WARN} log message. The object to printed may contain PII,
+     * depending on its containsPii() value. If isAllowPii() is set to false, a PII-safe string
+     * representation of the object will be used. If allowPII() is set to true, an un-sanitised
+     * string representation of the object will be used.
+     *
+     * @param tag     Used to identify the source of a log message. It usually identifies the class
+     *                or activity where the log call occurs.
+     * @param correlationID Unique identifier for a request or flow used to trace program execution.
+     * @param message The message to log.
+     * @param object The object to be printed.
+     */
+    public static void warnWithObject(final String tag,
+                                      final String correlationID,
+                                      final String message,
+                                      final ILoggable object) {
+        if (isAllowPii()) {
+            log(tag, Logger.LogLevel.WARN, correlationID, message, object.toUnsanitizedString(), null, object.containsPii());
+        } else {
+            log(tag, Logger.LogLevel.WARN, correlationID, message, object.toString(), null, false);
+        }
+    }
+
+    /**
+     * Send a {@link Logger.LogLevel#WARN} log message. The object to printed may contain PII,
+     * depending on its containsPii() value. If isAllowPii() is set to false, a PII-safe string
+     * representation of the object will be used. If allowPII() is set to true, an un-sanitised
+     * string representation of the object will be used.
+     *
+     * @param tag     Used to identify the source of a log message. It usually identifies the class
+     *                or activity where the log call occurs.
+     * @param message The message to log.
+     * @param object The object to be printed.
+     */
+    public static void warnWithObject(final String tag,
+                                      final String message,
+                                      final ILoggable object) {
+        if (isAllowPii()) {
+            log(tag, Logger.LogLevel.WARN, null, message, object.toUnsanitizedString(), null, object.containsPii());
+        } else {
+            log(tag, Logger.LogLevel.WARN, null, message, object.toString(), null, false);
+        }
     }
 
     /**
@@ -255,7 +300,7 @@ public class Logger {
      */
     public static void warnPII(final String tag,
                                final String message) {
-        log(tag, LogLevel.WARN, null, message, null, true);
+        log(tag, LogLevel.WARN, null, message, null, null, true);
     }
 
     /**
@@ -269,7 +314,7 @@ public class Logger {
     public static void warnPII(final String tag,
                                final String correlationID,
                                final String message) {
-        log(tag, LogLevel.WARN, correlationID, message, null, true);
+        log(tag, LogLevel.WARN, correlationID, message, null, null, true);
     }
 
     /**
@@ -281,7 +326,28 @@ public class Logger {
      */
     public static void info(final String tag,
                             final String message) {
-        log(tag, Logger.LogLevel.INFO, null, message, null, false);
+        log(tag, Logger.LogLevel.INFO, null, message, null, null, false);
+    }
+
+    /**
+     * Send a {@link Logger.LogLevel#INFO} log message. The object to printed may contain PII,
+     * depending on its containsPii() value. If isAllowPii() is set to false, a PII-safe string
+     * representation of the object will be used. If allowPII() is set to true, an un-sanitised
+     * string representation of the object will be used.
+     *
+     * @param tag     Used to identify the source of a log message. It usually identifies the class
+     *                or activity where the log call occurs.
+     * @param message The message to log.
+     * @param object The object to be printed.
+     */
+    public static void infoWithObject(final String tag,
+                            final String message,
+                            final ILoggable object) {
+        if (isAllowPii()) {
+            log(tag, Logger.LogLevel.INFO, null, message, object.toUnsanitizedString(), null, object.containsPii());
+        } else {
+            log(tag, Logger.LogLevel.INFO, null, message, object.toString(), null, false);
+        }
     }
 
     /**
@@ -295,7 +361,7 @@ public class Logger {
     public static void info(final String tag,
                             final String correlationID,
                             final String message) {
-        log(tag, LogLevel.INFO, correlationID, message, null, false);
+        log(tag, LogLevel.INFO, correlationID, message, null, null, false);
     }
 
     /**
@@ -307,7 +373,7 @@ public class Logger {
      */
     public static void infoPII(final String tag,
                                final String message) {
-        log(tag, LogLevel.INFO, null, message, null, true);
+        log(tag, LogLevel.INFO, null, message, null, null, true);
     }
 
     /**
@@ -321,7 +387,7 @@ public class Logger {
     public static void infoPII(final String tag,
                                final String correlationID,
                                final String message) {
-        log(tag, LogLevel.INFO, correlationID, message, null, true);
+        log(tag, LogLevel.INFO, correlationID, message, null, null, true);
     }
 
     /**
@@ -333,7 +399,7 @@ public class Logger {
      */
     public static void verbose(final String tag,
                                final String message) {
-        log(tag, LogLevel.VERBOSE, null, message, null, false);
+        log(tag, LogLevel.VERBOSE, null, message, null, null, false);
     }
 
     /**
@@ -347,7 +413,7 @@ public class Logger {
     public static void verbose(final String tag,
                                final String correlationID,
                                final String message) {
-        log(tag, LogLevel.VERBOSE, correlationID, message, null, false);
+        log(tag, LogLevel.VERBOSE, correlationID, message, null, null, false);
     }
 
     /**
@@ -359,7 +425,7 @@ public class Logger {
      */
     public static void verbosePII(final String tag,
                                   final String message) {
-        log(tag, LogLevel.VERBOSE, null, message, null, true);
+        log(tag, LogLevel.VERBOSE, null, message, null, null, true);
     }
 
     /**
@@ -373,13 +439,14 @@ public class Logger {
     public static void verbosePII(final String tag,
                                   final String correlationID,
                                   final String message) {
-        log(tag, LogLevel.VERBOSE, correlationID, message, null, true);
+        log(tag, LogLevel.VERBOSE, correlationID, message, null, null, true);
     }
 
     private static void log(final String tag,
                             @NonNull final LogLevel logLevel,
                             final String correlationId,
                             final String message,
+                            @Nullable final String objectToLog,
                             final Throwable throwable,
                             final boolean containsPII) {
         if ((sLogLevel == LogLevel.NO_LOG) || logLevel.compareTo(sLogLevel) > 0 || (!sAllowPii && containsPII)) {
@@ -396,7 +463,7 @@ public class Logger {
             public void run() {
                 final String dateTimeStamp = sDateTimeFormatter.format(now);
                 //Format the log message.
-                final String logMessage = formatMessage(diagnosticMetadata, sPlatformString, message, dateTimeStamp, throwable);
+                final String logMessage = formatMessage(diagnosticMetadata, sPlatformString, message, objectToLog, dateTimeStamp, throwable);
 
                 sLoggersLock.readLock().lock();
                 try {
@@ -418,22 +485,22 @@ public class Logger {
     }
 
     /**
-     * Wrap the log message.
-     * If diagnosticMetadata (diagnosticMetadata contains thread name and correlationId) exists:
-     * <library_version> [<timestamp> - <diagnosticMetadata>] <log_message>
-     * If diagnosticMetadata doesn't exist:
-     * <library_version> [<timestamp>] <log_message>
+     * Temporary method to allow the project to compile, without having to make changes everywhere
      */
     private static String formatMessage(@Nullable final String diagnosticMetadata,
                                         @Nullable final String platformString,
                                         @Nullable final String message,
+                                        @Nullable final String objectToLog,
                                         @NonNull final String dateTimeStamp,
                                         @Nullable final Throwable throwable) {
         final String logMessage = StringUtil.isNullOrEmpty(message) ? "N/A" : message;
+        final String logObject = StringUtil.isNullOrEmpty(objectToLog) ? "N/A" : objectToLog;
+
         return "[" + dateTimeStamp
                 + (StringUtil.isNullOrEmpty(diagnosticMetadata) ? " " : " - " + diagnosticMetadata + " ")
                 + "- " + platformString + "] "
                 + logMessage
+                + logObject
                 + (throwable == null ? "" : '\n' + ThrowableUtil.getStackTraceAsString(throwable));
     }
 
