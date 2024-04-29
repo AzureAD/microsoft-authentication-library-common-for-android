@@ -62,7 +62,6 @@ dependencies {
         implementation(group: 'com.microsoft.identity', name: 'labapi', version: '0.0.+')
     }
 
-    implementation(group: 'com.azure', name: 'azure-identity', version: '1.12.0')
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation "com.microsoft.azure:msal4j:$rootProject.ext.msal4jVersion"
     implementation 'com.microsoft.azure:adal4j:1.6.7'
