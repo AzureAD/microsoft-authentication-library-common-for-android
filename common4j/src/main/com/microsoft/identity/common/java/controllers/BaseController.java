@@ -807,11 +807,9 @@ public abstract class BaseController {
     protected void logParameters(String tag, Object parameters) {
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
 
-        if (Logger.isAllowPii()) {
-            Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
-        } else {
-            Logger.info(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
-        }
+
+        Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
+
     }
 
     protected TokenResult performSilentTokenRequest(

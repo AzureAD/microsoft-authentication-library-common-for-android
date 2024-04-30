@@ -472,11 +472,9 @@ public class CommandDispatcher {
                         + DiagnosticContext.INSTANCE.getRequestContext().toJsonString()
                         + ", with PublicApiId: " + publicApiId);
 
-        if (Logger.isAllowPii()) {
-            Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
-        } else {
-            Logger.info(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
-        }
+
+        Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
+
     }
 
     private static BiConsumer<CommandResult, Throwable> getCommandResultConsumer(
