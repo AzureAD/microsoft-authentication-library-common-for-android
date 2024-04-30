@@ -356,10 +356,11 @@ public class Logger {
      * representation of the object will be used. If allowPII() is set to true, an un-sanitised
      * string representation of the object will be used.
      *
-     * @param tag     Used to identify the source of a log message. It usually identifies the class
-     *                or activity where the log call occurs.
-     * @param message The message to log.
-     * @param object The object to be printed.
+     * @param tag           Used to identify the source of a log message. It usually identifies the class
+     *                      or activity where the log call occurs.
+     * @param message       The message to log.
+     * @param correlationId Unique identifier for a request or flow used to trace program execution.
+     * @param object        The object to be printed.
      */
     public static void infoWithObject(final String tag,
                             final String message,
