@@ -466,7 +466,8 @@ public class CommandDispatcher {
     }
 
     private static void logParameters(@NonNull String tag, @NonNull String correlationId,
-                                      @NonNull Object parameters, @Nullable String publicApiId) {
+                                      @NonNull CommandParameters parameters,
+                                      @Nullable String publicApiId) {
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
 
         //TODO:1315871 - conversion of PublicApiId in readable form.
@@ -474,15 +475,7 @@ public class CommandDispatcher {
                         + DiagnosticContext.INSTANCE.getRequestContext().toJsonString()
                         + ", with PublicApiId: " + publicApiId);
 
-        if (parameters instanceof BaseNativeAuthCommandParameters) {
-            Logger.infoWithObject(TAG, correlationId, (ILoggable) parameters);
-        } else {
-            if (Logger.isAllowPii()) {
-                Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
-            } else {
-                Logger.info(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
-            }
-        }
+        parameters.logParameters(TAG, correlationId);
     }
 
     private static BiConsumer<CommandResult, Throwable> getCommandResultConsumer(

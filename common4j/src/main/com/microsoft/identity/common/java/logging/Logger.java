@@ -351,6 +351,28 @@ public class Logger {
     }
 
     /**
+     * Send a {@link Logger.LogLevel#INFO} log message. The object to printed may contain PII,
+     * depending on its containsPii() value. If isAllowPii() is set to false, a PII-safe string
+     * representation of the object will be used. If allowPII() is set to true, an un-sanitised
+     * string representation of the object will be used.
+     *
+     * @param tag     Used to identify the source of a log message. It usually identifies the class
+     *                or activity where the log call occurs.
+     * @param message The message to log.
+     * @param object The object to be printed.
+     */
+    public static void infoWithObject(final String tag,
+                            final String message,
+                            final String correlationId,
+                            final ILoggable object) {
+        if (isAllowPii()) {
+            log(tag, Logger.LogLevel.INFO, correlationId, message, object.toUnsanitizedString(), null, object.containsPii());
+        } else {
+            log(tag, Logger.LogLevel.INFO, correlationId, message, object.toString(), null, false);
+        }
+    }
+
+    /**
      * * Send a {@link Logger.LogLevel#INFO} log message without PII.
      *
      * @param tag           Used to identify the source of a log message. It usually identifies the
@@ -493,14 +515,14 @@ public class Logger {
                                         @Nullable final String objectToLog,
                                         @NonNull final String dateTimeStamp,
                                         @Nullable final Throwable throwable) {
-        final String logMessage = StringUtil.isNullOrEmpty(message) ? "N/A" : message;
-        final String logObject = StringUtil.isNullOrEmpty(objectToLog) ? "N/A" : objectToLog;
+        final String logMessage = StringUtil.isNullOrEmpty(message) ? "" : message;
+        final String logObject = StringUtil.isNullOrEmpty(objectToLog) ? "" : objectToLog;
 
         return "[" + dateTimeStamp
                 + (StringUtil.isNullOrEmpty(diagnosticMetadata) ? " " : " - " + diagnosticMetadata + " ")
                 + "- " + platformString + "] "
-                + logMessage
-                + logObject
+                + logMessage + " "
+                + logObject + " "
                 + (throwable == null ? "" : '\n' + ThrowableUtil.getStackTraceAsString(throwable));
     }
 

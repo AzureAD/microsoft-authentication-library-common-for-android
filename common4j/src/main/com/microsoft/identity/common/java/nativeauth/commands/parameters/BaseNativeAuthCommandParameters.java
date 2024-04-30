@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
 import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority;
 import com.microsoft.identity.common.java.nativeauth.util.ILoggable;
 
@@ -54,4 +55,9 @@ public abstract class BaseNativeAuthCommandParameters extends CommandParameters 
      */
     @Nullable
     public final List<String> challengeType;
+
+    @Override
+    public void logParameters(String tag, String correlationId) {
+        Logger.infoWithObject(tag, null, correlationId, this);
+    }
 }
