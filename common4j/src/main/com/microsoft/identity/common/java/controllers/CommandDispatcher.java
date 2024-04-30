@@ -473,7 +473,7 @@ public class CommandDispatcher {
                         + ", with PublicApiId: " + publicApiId);
 
 
-        Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
+        Logger.info(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
 
     }
 

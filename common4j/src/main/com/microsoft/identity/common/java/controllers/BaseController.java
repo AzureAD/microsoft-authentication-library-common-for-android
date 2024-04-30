@@ -808,7 +808,7 @@ public abstract class BaseController {
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
 
 
-        Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
+        Logger.info(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
 
     }
 
