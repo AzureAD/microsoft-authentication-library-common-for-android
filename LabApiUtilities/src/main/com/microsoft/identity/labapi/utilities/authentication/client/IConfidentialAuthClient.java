@@ -27,6 +27,8 @@ import com.microsoft.identity.labapi.utilities.authentication.ITokenParameters;
 import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
 import com.microsoft.identity.labapi.utilities.authentication.common.ClientAssertion;
 
+import java.io.InputStream;
+
 /**
  * An interface that describes a confidential authentication client. Such an authentication client
  * has the ability to obtain tokens for an app by using client credentials.
@@ -64,4 +66,14 @@ public interface IConfidentialAuthClient {
      * @return an {@link IAuthenticationResult} containing the result of the token request
      */
     IAuthenticationResult acquireToken(CertificateCredential certificateCredential, ITokenParameters tokenParameters);
+
+    /**
+     * Acquire a token for a confidential client using a Certificate.
+     *
+     * @param pkcs12Certificate InputStream containing PCKS12 formatted certificate
+     * @param password          certificate password
+     * @param tokenParameters   the token parameters to use while acquiring token
+     * @return an {@link IAuthenticationResult} containing the result of the token request
+     */
+    IAuthenticationResult acquireToken(InputStream pkcs12Certificate, String password, ITokenParameters tokenParameters);
 }
