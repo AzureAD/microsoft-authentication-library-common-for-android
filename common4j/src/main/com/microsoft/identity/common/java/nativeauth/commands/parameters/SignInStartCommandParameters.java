@@ -22,8 +22,6 @@
 //THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
-import org.jetbrains.annotations.NotNull;
-
 import javax.annotation.Nullable;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -56,7 +54,7 @@ public class SignInStartCommandParameters extends BaseSignInTokenCommandParamete
     @Nullable
     public final char[] password;
 
-    @NotNull
+    @NonNull
     @Override
     public String toUnsanitizedString() {
         return "SignInStartCommandParameters(scopes=" + scopes + ", authenticationScheme=" + getAuthenticationScheme() + ", username=" + username + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
@@ -67,7 +65,7 @@ public class SignInStartCommandParameters extends BaseSignInTokenCommandParamete
         return !toString().equals(toUnsanitizedString());
     }
 
-    @NotNull
+    @NonNull
     @Override
     public String toString() {
         return "SignInStartCommandParameters(scopes=" + scopes + ", authenticationScheme=" + getAuthenticationScheme() + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";

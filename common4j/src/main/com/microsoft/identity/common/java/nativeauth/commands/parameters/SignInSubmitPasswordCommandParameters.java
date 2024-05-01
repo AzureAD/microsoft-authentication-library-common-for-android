@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
-import org.jetbrains.annotations.NotNull;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -53,7 +51,7 @@ public class SignInSubmitPasswordCommandParameters extends BaseSignInTokenComman
 	@NonNull
 	public final String continuationToken;
 
-	@NotNull
+	@NonNull
 	@Override
 	public String toUnsanitizedString() {
 		return "SignInSubmitPasswordCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
@@ -64,7 +62,7 @@ public class SignInSubmitPasswordCommandParameters extends BaseSignInTokenComman
 		return !toString().equals(toUnsanitizedString());
 	}
 
-	@NotNull
+	@NonNull
 	@Override
 	public String toString() {
 		return toUnsanitizedString();

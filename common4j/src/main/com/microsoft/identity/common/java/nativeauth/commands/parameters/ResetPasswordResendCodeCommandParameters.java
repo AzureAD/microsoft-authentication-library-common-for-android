@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
-import org.jetbrains.annotations.NotNull;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -44,7 +42,7 @@ public class ResetPasswordResendCodeCommandParameters extends BaseNativeAuthComm
     @NonNull
     public final String continuationToken;
 
-    @NotNull
+    @NonNull
     @Override
     public String toUnsanitizedString() {
         return "ResetPasswordResendCodeCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
@@ -55,7 +53,7 @@ public class ResetPasswordResendCodeCommandParameters extends BaseNativeAuthComm
         return !toString().equals(toUnsanitizedString());
     }
 
-    @NotNull
+    @NonNull
     @Override
     public String toString() {
         return toUnsanitizedString();

@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
-import org.jetbrains.annotations.NotNull;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -45,7 +43,7 @@ public class SignUpSubmitCodeCommandParameters extends SignUpContinueCommandPara
     @NonNull
     public final String code;
 
-    @NotNull
+    @NonNull
     @Override
     public String toUnsanitizedString() {
         return "SignUpSubmitCodeCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
@@ -56,7 +54,7 @@ public class SignUpSubmitCodeCommandParameters extends SignUpContinueCommandPara
         return !toString().equals(toUnsanitizedString());
     }
 
-    @NotNull
+    @NonNull
     @Override
     public String toString() {
         return toUnsanitizedString();

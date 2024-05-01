@@ -32,8 +32,6 @@ import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -64,7 +62,7 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
 
     private final boolean forceRefresh;
 
-    @NotNull
+    @NonNull
     @Override
     public String toUnsanitizedString() {
         return "AcquireTokenNoFixedScopesCommandParameters(account=" + account + ", authenticationScheme=" + getAuthenticationScheme() + ", forceRefresh=" + forceRefresh + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
@@ -75,7 +73,7 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
         return !toString().equals(toUnsanitizedString());
     }
 
-    @NotNull
+    @NonNull
     @Override
     public String toString() {
         return "AcquireTokenNoFixedScopesCommandParameters(authenticationScheme=" + getAuthenticationScheme() + ", forceRefresh=" + forceRefresh + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";

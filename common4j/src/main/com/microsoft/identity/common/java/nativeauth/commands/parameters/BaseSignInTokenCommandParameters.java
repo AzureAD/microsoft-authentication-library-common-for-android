@@ -22,10 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
-import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
-
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
