@@ -57,16 +57,27 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
 
     private final IAccountRecord account;
 
-    @Expose()
     @NonNull
     private final AbstractAuthenticationScheme authenticationScheme;
 
-    @Expose()
     private final boolean forceRefresh;
 
-    private final String loginHint;
+    @NonNull
+    @Override
+    public String toUnsanitizedString() {
+        return "AcquireTokenNoFixedScopesCommandParameters(account=" + account + ", authenticationScheme=" + getAuthenticationScheme() + ", forceRefresh=" + forceRefresh + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
 
-    private final List<Map.Entry<String, String>> extraOptions;
+    @Override
+    public boolean containsPii() {
+        return !toString().equals(toUnsanitizedString());
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "AcquireTokenNoFixedScopesCommandParameters(authenticationScheme=" + getAuthenticationScheme() + ", forceRefresh=" + forceRefresh + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
 
     /**
      * Validates the command parameters in this object are consistent and can be used for
