@@ -68,7 +68,7 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
                 try (final InputStream inputStream = new FileInputStream(mLabCredential)) {
                     authenticationResult = confidentialAuthClient.acquireToken(inputStream, "", tokenParameters);
                 } catch (final IOException e) {
-                    throw new LabApiException(LabError.FAILED_TO_LOAD_CERTIFICATE);
+                    throw new LabApiException(LabError.FAILED_TO_LOAD_CERTIFICATE, e.getMessage());
                 }
             } else {
                 authenticationResult = confidentialAuthClient.acquireToken(mLabCredential, tokenParameters);

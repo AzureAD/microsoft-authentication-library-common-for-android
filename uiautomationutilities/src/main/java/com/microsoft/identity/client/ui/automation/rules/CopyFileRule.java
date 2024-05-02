@@ -76,8 +76,7 @@ public class CopyFileRule implements TestRule {
             OneAuthTestApp.ONEAUTH_TESTAPP_APK,
             OneAuthTestApp.OLD_ONEAUTH_TESTAPP_APK,
             MsalTestApp.MSAL_TEST_APP_APK,
-            MsalTestApp.OLD_MSAL_TEST_APP_APK,
-            LAB_VAULT_ACCESS_CERT_PFX
+            MsalTestApp.OLD_MSAL_TEST_APP_APK
     };
 
     public CopyFileRule() {
@@ -101,6 +100,8 @@ public class CopyFileRule implements TestRule {
                 for (final String apkFileName: mApkFileNames){
                     AdbShellUtils.copyFile(mSourceFolder + apkFileName, mDestFolder);
                 }
+
+                AdbShellUtils.copyFile(mSourceFolder + LAB_VAULT_ACCESS_CERT_PFX, mDestFolder);
 
                 base.evaluate();
             }
