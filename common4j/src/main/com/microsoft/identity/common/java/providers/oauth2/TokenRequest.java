@@ -34,7 +34,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  * A class holding the state of the Token Request (oAuth2).
  * OAuth2 Spec: https://tools.ietf.org/html/rfc6749#section-4.1.3
  * OAuth2 Client Authentication: https://tools.ietf.org/html/rfc7521#section-4.2
- * This should include all fo the required parameters of the token request for oAuth2
+ * This should include all of the required parameters of the token request for oAuth2
  * This should provide an extension point for additional parameters to be set
  * <p>
  * Includes support for client assertions per the specs:
@@ -304,6 +304,7 @@ public class TokenRequest implements IHasExtraParameters {
         // The grant type is used when token request contains a JWT
         // e.g. used in Primary Refresh Token acquisition flows
         public static final String JWT_BEARER = "urn:ietf:params:oauth:grant-type:jwt-bearer";
+        public static final String TRANSFER_TOKEN = "transfer_token";
     }
 
     public static class TokenType {
