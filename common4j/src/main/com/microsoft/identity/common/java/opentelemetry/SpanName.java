@@ -57,5 +57,6 @@ public enum SpanName {
     BrokerSelectionProtocolManager,
     BrokerDiscoveryV1ProtocolBroadcastResult,
     Fido,
-    BrokerAccountServiceRemoveAccounts
+    BrokerAccountServiceRemoveAccounts,
+    AndroidKeyStoreSessionKeyLoaderOperation
 }
