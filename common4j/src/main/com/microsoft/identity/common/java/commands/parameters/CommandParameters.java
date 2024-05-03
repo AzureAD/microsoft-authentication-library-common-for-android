@@ -25,9 +25,11 @@ package com.microsoft.identity.common.java.commands.parameters;
 import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.request.SdkType;
+import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.Collections;
@@ -111,9 +113,9 @@ public class CommandParameters {
 
     @Expose()
     private SerializableSpanContext spanContext;
-    
+
     //Overriding what Lombok would otherwise generate for me
-    public String getApplicationIdentifier(){
+    public String getApplicationIdentifier() {
         return String.format(APPLICATION_IDENTIFIER_FORMAT, this.callerPackageName, this.callerSignature);
     }
 
@@ -127,6 +129,12 @@ public class CommandParameters {
     public String getCorrelationId() {
         return correlationId;
     }
+
+    public void logParameters(@NonNull String tag, @NonNull String correlationId) {
+        if (Logger.isAllowPii()) {
+            Logger.infoPII(tag, ObjectMapper.serializeObjectToJsonString(this));
+        } else {
+            Logger.info(tag, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(this));
+        }
+    }
 }
-
-
