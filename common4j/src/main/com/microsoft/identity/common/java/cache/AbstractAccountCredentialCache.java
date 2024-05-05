@@ -164,7 +164,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 && !StringUtil.isNullOrEmpty(authScheme)
                 && credentialType == CredentialType.AccessToken_With_AuthScheme;
         final boolean mustMatchOnKid = !StringUtil.isNullOrEmpty(kid);
-        final boolean mustMatchOnRequestedClaims = !StringUtil.isNullOrEmpty(requestedClaims);
+        final boolean mustMatchOnRequestedClaims = null != requestedClaims;
 
         Logger.verbose(
                 TAG,
