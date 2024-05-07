@@ -23,48 +23,43 @@
 package com.microsoft.identity.common.nativeauth.internal.commands
 
 import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
-import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpSubmitCodeCommandResult
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.AcquireTokenNoFixedScopesCommandParameters
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
+import com.microsoft.identity.common.java.result.AcquireTokenResult
 
 /**
- * Command class to call controllers to submit the user's otp code to the server in the self service password reset flow.
- * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
+ * Retrieve tokens from the cache or the server without specifying a fixed set of scopes.
+ * This command will use the access tokens from the cached AT to perform the refresh token flow, if
+ * necessary.
  */
-class SignUpSubmitCodeCommand(
-    private val parameters: SignUpSubmitCodeCommandParameters,
+class AcquireTokenNoFixedScopesCommand(
+    private val parameters: AcquireTokenNoFixedScopesCommandParameters,
     private val controller: NativeAuthMsalController,
     publicApiId: String
-) : BaseNativeAuthCommand<SignUpSubmitCodeCommandResult>(
+) : BaseNativeAuthCommand<AcquireTokenResult>(
     parameters,
     controller,
     publicApiId
 ) {
-
     companion object {
-        private val TAG = SignUpSubmitCodeCommand::class.java.simpleName
+        private val TAG = AcquireTokenNoFixedScopesCommand::class.java.simpleName
     }
 
-    /**
-     * The execution part of the command, to be run on the background thread.
-     * It calls the signUpSubmitCode method of the native auth MSAL controller with the given parameters.
-     */
-    override fun execute(): SignUpSubmitCodeCommandResult {
+    override fun execute(): AcquireTokenResult {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = parameters.getCorrelationId(),
             methodName = "${TAG}.execute"
         )
 
-        val result = controller.signUpSubmitCode(
-            parameters = parameters
+        val result = controller.acquireTokenSilent(
+            parameters
         )
 
-        Logger.infoWithObject(
+        Logger.info(
             TAG,
-            "Returning result: ",
-            result
+            "Returning result: AcquireTokenResult()"
         )
         return result
     }

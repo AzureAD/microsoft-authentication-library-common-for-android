@@ -29,7 +29,7 @@ import lombok.experimental.SuperBuilder;
 
 /**
  * A set of Reset Password Submit Code command parameters for submitting the one-time password to the server for authentication.
- * extends from {@link BaseNativeAuthCommandParameters
+ * extends from {@link BaseNativeAuthCommandParameters}
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
@@ -47,4 +47,21 @@ public class ResetPasswordSubmitCodeCommandParameters extends BaseNativeAuthComm
      */
     @NonNull
     public final String continuationToken;
+
+    @NonNull
+    @Override
+    public String toUnsanitizedString() {
+        return "ResetPasswordSubmitCodeCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
+
+    @Override
+    public boolean containsPii() {
+        return !toString().equals(toUnsanitizedString());
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return toUnsanitizedString();
+    }
 }

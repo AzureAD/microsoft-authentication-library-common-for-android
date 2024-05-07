@@ -44,4 +44,21 @@ public class SignUpSubmitPasswordCommandParameters extends SignUpContinueCommand
      */
     @NonNull
     public final char[] password;
+
+    @NonNull
+    @Override
+    public String toUnsanitizedString() {
+        return "SignUpSubmitPasswordCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
+
+    @Override
+    public boolean containsPii() {
+        return !toString().equals(toUnsanitizedString());
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return toUnsanitizedString();
+    }
 }

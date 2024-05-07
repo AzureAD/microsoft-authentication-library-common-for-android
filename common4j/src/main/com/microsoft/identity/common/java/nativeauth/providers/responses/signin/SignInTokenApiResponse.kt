@@ -43,13 +43,23 @@ import com.microsoft.identity.common.java.nativeauth.util.isUserNotFound
 class SignInTokenApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
+    @SerializedName("continuation_token") val continuationToken: String?,
     @SerializedName("error") val error: String?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     @SerializedName("suberror") val subError: String?,
-    @SerializedName("continuation_token") val continuationToken: String?,
     ): IApiResponse(statusCode, correlationId) {
+
+    override fun toUnsanitizedString(): String {
+        return "SignInTokenApiResponse(statusCode=$statusCode, " +
+                "correlationId=$correlationId, error=$error, errorDescription=$errorDescription, " +
+                "errorCodes=$errorCodes, errorUri=$errorUri, subError=$subError)"
+    }
+
+    override fun toString(): String = "SignInTokenApiResponse(statusCode=$statusCode, " +
+            "correlationId=$correlationId"
+
 
     companion object {
         private val TAG = SignInTokenApiResponse::class.java.simpleName

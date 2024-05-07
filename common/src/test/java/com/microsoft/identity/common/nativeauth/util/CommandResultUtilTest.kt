@@ -160,7 +160,7 @@ class CommandResultUtilTestSignUpStartCommandResult(private val resultValue: Any
     fun testCheckAndWrapCommandResultTypeCompletedStatusWrongType() {
         val commandResult = CommandResult<Any>(
             ResultStatus.COMPLETED,
-            ResetPasswordCommandResult.Complete("", null, correlationId = CORRELATION_ID),
+            ResetPasswordCommandResult.Complete(continuationToken = "", expiresIn = null, correlationId = CORRELATION_ID),
             null
         )
 
@@ -230,8 +230,7 @@ class CommandResultUtilTestSignUpSubmitCodeCommandResult(private val resultValue
     fun testCheckAndWrapCommandResultTypeCompletedStatusWrongType() {
         val commandResult = CommandResult<Any>(
             ResultStatus.COMPLETED,
-            ResetPasswordCommandResult.Complete("", null, correlationId = CORRELATION_ID
-            ),
+            ResetPasswordCommandResult.Complete(continuationToken = "", expiresIn = null, correlationId = CORRELATION_ID),
             null
         )
 
@@ -301,7 +300,7 @@ class CommandResultUtilTestSignUpSignUpSubmitUserAttributesCommandResult(private
     fun testCheckAndWrapCommandResultTypeCompletedStatusWrongType() {
         val commandResult = CommandResult<Any>(
             ResultStatus.COMPLETED,
-            ResetPasswordCommandResult.Complete("", null, correlationId = CORRELATION_ID),
+            ResetPasswordCommandResult.Complete(continuationToken = "", expiresIn = null, correlationId = CORRELATION_ID),
             null
         )
 
@@ -371,7 +370,7 @@ class CommandResultUtilTestSignUpSubmitPasswordCommandResult(private val resultV
     fun testCheckAndWrapCommandResultTypeCompletedStatusWrongType() {
         val commandResult = CommandResult<Any>(
             ResultStatus.COMPLETED,
-            ResetPasswordCommandResult.Complete("", null, correlationId = CORRELATION_ID),
+            ResetPasswordCommandResult.Complete(continuationToken = "", expiresIn = null, correlationId = CORRELATION_ID),
             null
         )
 
@@ -438,7 +437,7 @@ class CommandResultUtilTestSignUpResendCodeCommandResult(private val resultValue
     fun testCheckAndWrapCommandResultTypeCompletedStatusWrongType() {
         val commandResult = CommandResult<Any>(
             ResultStatus.COMPLETED,
-            ResetPasswordCommandResult.Complete("", null, correlationId = CORRELATION_ID),
+            ResetPasswordCommandResult.Complete(continuationToken = "", expiresIn = null, correlationId = CORRELATION_ID),
             null
         )
 
@@ -551,7 +550,7 @@ class CommandResultUtilTestSignInStartCommandResult(private val resultValue: Any
     fun testCheckAndWrapCommandResultTypeCompletedStatusWrongType() {
         val commandResult = CommandResult<Any>(
             ResultStatus.COMPLETED,
-            ResetPasswordCommandResult.Complete("", null, correlationId = CORRELATION_ID),
+            ResetPasswordCommandResult.Complete(continuationToken = "", expiresIn = null, correlationId = CORRELATION_ID),
             null
         )
 
@@ -618,7 +617,7 @@ class CommandResultUtilTestSignInWithContinuationTokenCommandResult(private val 
     fun testCheckAndWrapCommandResultTypeCompletedStatusWrongType() {
         val commandResult = CommandResult<Any>(
             ResultStatus.COMPLETED,
-            ResetPasswordCommandResult.Complete("", null, correlationId = CORRELATION_ID),
+            ResetPasswordCommandResult.Complete(continuationToken = "", expiresIn = null, correlationId = CORRELATION_ID),
             null
         )
 
@@ -686,7 +685,7 @@ class CommandResultUtilTestSignInSubmitCodeCommandResult(private val resultValue
     fun testCheckAndWrapCommandResultTypeCompletedStatusWrongType() {
         val commandResult = CommandResult<Any>(
             ResultStatus.COMPLETED,
-            ResetPasswordCommandResult.Complete("", null, correlationId = CORRELATION_ID),
+            ResetPasswordCommandResult.Complete(continuationToken = "", expiresIn = null, correlationId = CORRELATION_ID),
             null
         )
 
@@ -753,7 +752,7 @@ class CommandResultUtilTestSignInResendCodeCommandResult(private val resultValue
     fun testCheckAndWrapCommandResultTypeCompletedStatusWrongType() {
         val commandResult = CommandResult<Any>(
             ResultStatus.COMPLETED,
-            ResetPasswordCommandResult.Complete("", null, correlationId = CORRELATION_ID),
+            ResetPasswordCommandResult.Complete(continuationToken = "", expiresIn = null, correlationId = CORRELATION_ID),
             null
         )
 
@@ -821,7 +820,7 @@ class CommandResultUtilTestSignInSubmitPasswordCommandResult(private val resultV
     fun testCheckAndWrapCommandResultTypeCompletedStatusWrongType() {
         val commandResult = CommandResult<Any>(
             ResultStatus.COMPLETED,
-            ResetPasswordCommandResult.Complete("", null, correlationId = CORRELATION_ID),
+            ResetPasswordCommandResult.Complete(continuationToken = "", expiresIn = null, correlationId = CORRELATION_ID),
             null
         )
 
@@ -868,7 +867,7 @@ private val resetPasswordCodeRequiredCommandResult = ResetPasswordCommandResult.
     correlationId = CORRELATION_ID
 )
 
-private val resetPasswordCompleteCommandResult = ResetPasswordCommandResult.Complete("", null, correlationId = CORRELATION_ID)
+private val resetPasswordCompleteCommandResult = ResetPasswordCommandResult.Complete(continuationToken = "", expiresIn = null, correlationId = CORRELATION_ID)
 
 private val resetPasswordEmailNotVerifiedCommandResult = ResetPasswordCommandResult.EmailNotVerified(
     error = ERROR,

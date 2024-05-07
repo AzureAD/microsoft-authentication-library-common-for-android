@@ -135,8 +135,8 @@ public class StringUtil {
 
     /**
      * Helper method to get uid from home account id
-     * V2 home account format : <uid>.<utid>
-     * V1 : it's stored as <uid>
+     * V2 home account format : [uid].[utid]
+     * V1 : it's stored as [uid]
      *
      * @param homeAccountId
      * @return valid uid or null if it's not in either of the format.
@@ -190,7 +190,7 @@ public class StringUtil {
      *
      * @param items     String
      * @param delimiter String
-     * @return List<String>
+     * @return a List of string tokens.
      */
     public static List<String> getStringTokens(final String items, final String delimiter) {
         final StringTokenizer tokenizer = new StringTokenizer(items, delimiter);
@@ -210,7 +210,7 @@ public class StringUtil {
      *
      * @param input     String
      * @param delimiter char
-     * @return ArrayList<String>
+     * @return the splitted input in ArrayList
      */
     public static ArrayList<String> splitWithQuotes(String input, char delimiter) {
         final ArrayList<String> items = new ArrayList<>();

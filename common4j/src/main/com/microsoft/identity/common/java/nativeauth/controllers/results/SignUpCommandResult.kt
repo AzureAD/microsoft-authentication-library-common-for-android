@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.controllers.results
 
-import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.nativeauth.providers.responses.UserAttributeApiResult
 
 sealed interface SignUpSubmitCodeCommandResult: INativeAuthCommandResult
@@ -44,11 +43,15 @@ interface SignUpCommandResult {
      * There exists an account for the given username, so signup request cannot proceed.
      */
     data class UsernameAlreadyExists(
+        override val correlationId: String,
         val error: String,
         val errorDescription: String,
-        override val correlationId: String,
     ) : SignUpStartCommandResult, SignUpSubmitCodeCommandResult,
-        SignUpSubmitUserAttributesCommandResult, SignUpSubmitPasswordCommandResult
+        SignUpSubmitUserAttributesCommandResult, SignUpSubmitPasswordCommandResult {
+        override fun toUnsanitizedString(): String = "UsernameAlreadyExists(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "UsernameAlreadyExists(correlationId=$correlationId)"
+    }
 
     /**
      * Denotes completion of Signup operation
@@ -59,7 +62,11 @@ interface SignUpCommandResult {
         val expiresIn: Int?
     ) : SignUpStartCommandResult,
         SignUpSubmitCodeCommandResult, SignUpSubmitPasswordCommandResult,
-        SignUpSubmitUserAttributesCommandResult
+        SignUpSubmitUserAttributesCommandResult {
+        override fun toUnsanitizedString(): String = "Complete(correlationId=$correlationId, expiresIn=$expiresIn)"
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 
     /**
      * Signup is at a state where the user has to provide an out of band code to progress in the flow.
@@ -71,7 +78,11 @@ interface SignUpCommandResult {
         val challengeChannel: String,
         val codeLength: Int
     ) : SignUpStartCommandResult,
-        SignUpResendCodeCommandResult
+        SignUpResendCodeCommandResult {
+        override fun toUnsanitizedString(): String = "CodeRequired(correlationId=$correlationId, codeLength=$codeLength, challengeTargetLabel=$challengeTargetLabel, challengeChannel=$challengeChannel)"
+
+        override fun toString(): String = "CodeRequired(correlationId=$correlationId, codeLength=$codeLength, challengeChannel=$challengeChannel)"
+    }
 
 
     /**
@@ -81,60 +92,83 @@ interface SignUpCommandResult {
         override val correlationId: String,
         val continuationToken: String
     ) : SignUpStartCommandResult,
-        SignUpSubmitCodeCommandResult
+        SignUpSubmitCodeCommandResult {
+        override fun toUnsanitizedString(): String = "PasswordRequired(correlationId=$correlationId)"
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 
     /**
      * Signup operation requires user to supply attributes to progress in the flow. The parameter
      * requiredAttributes contains the list of required attributes
      */
     data class AttributesRequired(
+        override val correlationId: String,
         val continuationToken: String,
         val error: String,
         val errorDescription: String,
         val requiredAttributes: List<UserAttributeApiResult>,
-        override val correlationId: String
     ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult,
         SignUpSubmitUserAttributesCommandResult,
-        SignUpSubmitCodeCommandResult
+        SignUpSubmitCodeCommandResult {
+        override fun toUnsanitizedString(): String = "AttributesRequired(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, requiredAttributes=$requiredAttributes)"
+
+        override fun toString(): String = "AttributesRequired(correlationId=$correlationId, requiredAttributes=$requiredAttributes)"
+    }
 
     /**
      * The signup operation cannot progress as the provided password is not acceptable
      */
     data class InvalidPassword(
+        override val correlationId: String,
         val error: String,
         val errorDescription: String,
-        override val correlationId: String,
         val subError: String
-    ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult
+    ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult {
+        override fun toUnsanitizedString(): String = "InvalidPassword(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
 
+        override fun toString(): String = "InvalidPassword(correlationId=$correlationId)"
+    }
 
     /**
      * The signup operation cannot progress as the provided out of band code is invalid.
      */
     data class InvalidCode(
+        override val correlationId: String,
         val error: String,
         val errorDescription: String,
-        override val correlationId: String,
         val subError: String
-    ) : SignUpSubmitCodeCommandResult
+    ) : SignUpSubmitCodeCommandResult {
+        override fun toUnsanitizedString(): String = "InvalidCode(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
+
+        override fun toString(): String = "InvalidCode(correlationId=$correlationId)"
+    }
 
     /**
      * The signup operation cannot progress as the provided attributes are not valid. Some user
      * attributes can be validated at the server and if the validation fails then this error is returned.
      */
     data class InvalidAttributes(
+        override val correlationId: String,
         val error: String,
         val errorDescription: String,
         val invalidAttributes: List<String>,
-        override val correlationId: String,
-    ) : SignUpStartCommandResult, SignUpSubmitUserAttributesCommandResult
+    ) : SignUpStartCommandResult, SignUpSubmitUserAttributesCommandResult {
+        override fun toUnsanitizedString(): String = "InvalidAttributes(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, invalidAttributes=$invalidAttributes)"
+
+        override fun toString(): String = "InvalidAttributes(correlationId=$correlationId)"
+    }
 
     /**
      * Signup operation has failed as the server does not support requested authentication mechanism
      */
     data class AuthNotSupported(
+        override val correlationId: String,
         val error: String,
         val errorDescription: String,
-        override val correlationId: String,
-    ) : SignUpStartCommandResult
+    ) : SignUpStartCommandResult {
+        override fun toUnsanitizedString(): String = "AuthNotSupported(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "AuthNotSupported(correlationId=$correlationId)"
+    }
 }

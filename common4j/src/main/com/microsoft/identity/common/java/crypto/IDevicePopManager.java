@@ -213,8 +213,6 @@ public interface IDevicePopManager {
 
     /**
      * Async API to generate the req_cnf used for auth code redemptions.
-     *
-     * @return The req_cnf value.
      */
     void getRequestConfirmation(TaskCompletedCallbackWithError<String, ClientException> callback);
 

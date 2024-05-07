@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.nativeauth.providers.responses
 
 import com.google.gson.annotations.SerializedName
+import com.microsoft.identity.common.java.nativeauth.util.ILoggable
 
 /**
  * This data structure represents the information about the required user
@@ -33,4 +34,9 @@ data class UserAttributeApiResult(
     @SerializedName("type") val type: String?,
     @SerializedName("required") val required: Boolean?,
     @SerializedName("options") val options: UserAttributeOptionsApiResult?
-)
+) : ILoggable {
+    override fun toUnsanitizedString() = "UserAttributeApiResult(name=$name, type=$type, required=$required" +
+            "options=$options)"
+
+    override fun toString(): String = toUnsanitizedString()
+}

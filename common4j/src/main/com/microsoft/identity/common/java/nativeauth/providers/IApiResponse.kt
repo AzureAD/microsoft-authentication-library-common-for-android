@@ -22,8 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers
 
-import com.google.gson.annotations.Expose
-import com.google.gson.annotations.SerializedName
+import com.microsoft.identity.common.java.nativeauth.util.ILoggable
 
 /**
  * Base class to represent the various responses for Native Auth API requests.
@@ -32,7 +31,7 @@ abstract class IApiResponse(
     //HTTP status code
     @Transient open val statusCode: Int,
     correlationId: String
-) {
+) : ILoggable {
 
     // Custom setter. Limit access to this method, to avoid accidental overwrite.
     var correlationId = correlationId

@@ -30,7 +30,7 @@ import lombok.experimental.SuperBuilder;
 
 /**
  * A set of Reset Password Submit New Password command parameters for submitting the new password of the user.
- * extends from {@link BaseNativeAuthCommandParameters
+ * extends from {@link BaseNativeAuthCommandParameters}
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
@@ -50,4 +50,21 @@ public class ResetPasswordSubmitNewPasswordCommandParameters extends BaseNativeA
      */
     @NonNull
     public final String continuationToken;
+
+    @NonNull
+    @Override
+    public String toUnsanitizedString() {
+        return "ResetPasswordSubmitNewPasswordCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
+
+    @Override
+    public boolean containsPii() {
+        return !toString().equals(toUnsanitizedString());
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return toUnsanitizedString();
+    }
 }
