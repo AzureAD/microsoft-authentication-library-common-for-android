@@ -150,7 +150,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                                                                 @Nullable final String realm,
                                                                 @Nullable final String target,
                                                                 @Nullable final String authScheme,
-                                                                @Nullable final String requestedClaims,
+                                                                @Nullable String requestedClaims,
                                                                 @Nullable final String kid) {
         final boolean mustMatchOnEnvironment = !StringUtil.isNullOrEmpty(environment);
         final boolean mustMatchOnHomeAccountId = !StringUtil.isNullOrEmpty(homeAccountId);
@@ -164,7 +164,9 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 && !StringUtil.isNullOrEmpty(authScheme)
                 && credentialType == CredentialType.AccessToken_With_AuthScheme;
         final boolean mustMatchOnKid = !StringUtil.isNullOrEmpty(kid);
-        final boolean mustMatchOnRequestedClaims = null != requestedClaims;
+        if(requestedClaims == null){
+            requestedClaims = "";
+        }
 
         Logger.verbose(
                 TAG,
@@ -183,8 +185,6 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                         + "Credential lookup filtered by credential type? [" + mustMatchOnCredentialType + "]"
                         + NEW_LINE
                         + "Credential lookup filtered by auth scheme? [" + mustMatchOnAuthScheme + "]"
-                        + NEW_LINE
-                        + "Credential lookup filtered by requested claims? [" + mustMatchOnRequestedClaims + "]"
         );
 
         final List<Credential> matchingCredentials = new ArrayList<>();
@@ -271,13 +271,11 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 matches = matches && kid.equalsIgnoreCase(accessToken.getKid());
             }
 
-            if (mustMatchOnRequestedClaims) {
-                if (credential instanceof AccessTokenRecord) {
-                    final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                    matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(requestedClaims, accessToken.getRequestedClaims());
-                } else {
-                    Logger.verbose(TAG, "Query specified requested_claims-match, but attempted to match with non-AT credential type.");
-                }
+            if (credential instanceof AccessTokenRecord) {
+                final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
+                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(requestedClaims, accessToken.getRequestedClaims());
+            } else {
+                Logger.verbose(TAG, "Query specified requested_claims-match, but attempted to match with non-AT credential type.");
             }
 
             if (matches) {
