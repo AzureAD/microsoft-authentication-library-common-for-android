@@ -86,8 +86,8 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     private static final String TAG = UrlConnectionHttpClient.class.getSimpleName();
 
     protected static final int RETRY_TIME_WAITING_PERIOD_MSEC = 1000;
-    protected static final int DEFAULT_CONNECT_TIME_OUT_MS = 30000;
-    protected static final int DEFAULT_READ_TIME_OUT_MS = 30000;
+    protected static final int DEFAULT_CONNECT_TIME_OUT_MS = 60000;
+    protected static final int DEFAULT_READ_TIME_OUT_MS = 60000;
     protected static final int DEFAULT_STREAM_BUFFER_SIZE_BYTE = 1024;
 
     private static final transient AtomicReference<UrlConnectionHttpClient> defaultReference = new AtomicReference<>(null);
@@ -178,7 +178,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         if (reference == null) {
             defaultReference.compareAndSet(null, UrlConnectionHttpClient.builder()
                     .retryPolicy(StatusCodeAndExceptionRetry.builder()
-                            .number(1)
+                            .number(3)
                             .extensionFactor(2)
                             .isAcceptable(new Function<HttpResponse, Boolean>() {
                                 public Boolean apply(HttpResponse response) {
