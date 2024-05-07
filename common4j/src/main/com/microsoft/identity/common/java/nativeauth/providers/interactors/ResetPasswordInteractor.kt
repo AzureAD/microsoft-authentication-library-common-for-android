@@ -217,7 +217,7 @@ class ResetPasswordInteractor(
             )
         } finally {
             StringUtil.overwriteWithNull(
-                (request.parameters as ResetPasswordSubmitRequest.NativeAuthResetPasswordSubmitRequestBody).newPassword)
+                (request.parameters as ResetPasswordSubmitRequest.NativeAuthResetPasswordSubmitRequestParameters).newPassword)
         }
     }
 

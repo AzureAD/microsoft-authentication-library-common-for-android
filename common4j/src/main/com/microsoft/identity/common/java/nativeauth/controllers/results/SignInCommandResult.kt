@@ -22,7 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.controllers.results
 
-import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 
 sealed interface SignInStartCommandResult: INativeAuthCommandResult
@@ -42,47 +41,66 @@ interface SignInCommandResult {
     data class Complete(
         override val correlationId: String,
         val authenticationResult: ILocalAuthenticationResult
-    ) :
-        SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInSubmitCodeCommandResult,
-        SignInSubmitPasswordCommandResult
+    ) : SignInStartCommandResult, SignInWithContinuationTokenCommandResult,
+        SignInSubmitCodeCommandResult,
+        SignInSubmitPasswordCommandResult {
+        override fun toUnsanitizedString(): String = "Complete(correlationId=$correlationId)"
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 
     data class PasswordRequired(
         override val correlationId: String,
         val continuationToken: String
-    ) :
-        SignInStartCommandResult
+    ) : SignInStartCommandResult {
+        override fun toUnsanitizedString(): String = "PasswordRequired(correlationId=$correlationId)"
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 
     data class CodeRequired(
-        val continuationToken: String,
         override val correlationId: String,
+        val continuationToken: String,
         val challengeTargetLabel: String,
         val challengeChannel: String,
         val codeLength: Int
-    ) :
-        SignInStartCommandResult, SignInResendCodeCommandResult
+    ) : SignInStartCommandResult, SignInResendCodeCommandResult {
+        override fun toUnsanitizedString(): String = "CodeRequired(correlationId=$correlationId, codeLength=$codeLength, challengeTargetLabel=$challengeTargetLabel, challengeChannel=$challengeChannel)"
+
+        override fun toString(): String = "CodeRequired(correlationId=$correlationId, codeLength=$codeLength, challengeChannel=$challengeChannel)"
+    }
 
     data class UserNotFound(
+        override val correlationId: String,
         val error: String,
         val errorDescription: String,
-        override val correlationId: String,
         val errorCodes: List<Int>
-    ) :
-        SignInStartCommandResult
+    ) : SignInStartCommandResult {
+        override fun toUnsanitizedString(): String = "UserNotFound(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+
+        override fun toString(): String = "UserNotFound(correlationId=$correlationId)"
+    }
 
     data class InvalidCredentials(
+        override val correlationId: String,
         val error: String,
         val errorDescription: String,
-        override val correlationId: String,
         val errorCodes: List<Int>
-    ) :
-        SignInStartCommandResult, SignInSubmitPasswordCommandResult
+    ) : SignInStartCommandResult, SignInSubmitPasswordCommandResult {
+        override fun toUnsanitizedString(): String = "InvalidCredentials(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+
+        override fun toString(): String = "InvalidCredentials(correlationId=$correlationId)"
+    }
 
     data class IncorrectCode(
+        override val correlationId: String,
         val error: String,
         val errorDescription: String,
-        override val correlationId: String,
         val errorCodes: List<Int>,
         val subError: String
-    ) :
-        SignInSubmitCodeCommandResult
+    ) : SignInSubmitCodeCommandResult {
+        override fun toUnsanitizedString(): String = "IncorrectCode(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes, subError=$subError)"
+
+        override fun toString(): String = "IncorrectCode(correlationId=$correlationId)"
+    }
 }

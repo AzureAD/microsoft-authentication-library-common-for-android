@@ -43,4 +43,21 @@ public class SignUpSubmitUserAttributesCommandParameters extends SignUpContinueC
      */
     @NonNull
     public final Map<String, String> userAttributes;
+
+    @NonNull
+    @Override
+    public String toUnsanitizedString() {
+        return "SignUpSubmitUserAttributesCommandParameters(userAttributes=" + userAttributes + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
+
+    @Override
+    public boolean containsPii() {
+        return !toString().equals(toUnsanitizedString());
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "SignUpSubmitUserAttributesCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
 }
