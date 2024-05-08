@@ -503,12 +503,6 @@ public class UiAutomatorUtils {
                 FIND_UI_ELEMENT_TIMEOUT);
     }
 
-    public static UiObject obtainUiObjectWithClassname(@NonNull final String classname) {
-        Logger.i(TAG, "Obtain an instance of the UiObject for the class name:" + classname);
-        return obtainUiObjectWithUiSelector(new UiSelector().className(classname),
-                FIND_UI_ELEMENT_TIMEOUT);
-    }
-
     public static List<UiObject2> obtainAllEditTextObjects(final long existsTimeout) {
         Logger.i(TAG, "Obtain all edit Text Objects in the view.");
         final UiDevice device =
