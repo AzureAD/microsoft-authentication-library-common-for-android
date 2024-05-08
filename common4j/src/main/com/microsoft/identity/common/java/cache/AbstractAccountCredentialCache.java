@@ -150,7 +150,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                                                                 @Nullable final String realm,
                                                                 @Nullable final String target,
                                                                 @Nullable final String authScheme,
-                                                                @Nullable String requestedClaims,
+                                                                @Nullable final String requestedClaims,
                                                                 @Nullable final String kid) {
         final boolean mustMatchOnEnvironment = !StringUtil.isNullOrEmpty(environment);
         final boolean mustMatchOnHomeAccountId = !StringUtil.isNullOrEmpty(homeAccountId);
@@ -164,9 +164,6 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 && !StringUtil.isNullOrEmpty(authScheme)
                 && credentialType == CredentialType.AccessToken_With_AuthScheme;
         final boolean mustMatchOnKid = !StringUtil.isNullOrEmpty(kid);
-        if(requestedClaims == null){
-            requestedClaims = "";
-        }
 
         Logger.verbose(
                 TAG,
