@@ -54,7 +54,7 @@ jobs:
     inputs:
       javaHomeSelection: JDKVersion
       jdkVersionOption: "1.11"
-      tasks: common:testLocalDebugUnitTest  -PlabSecret='$(Build.SourcesDirectory)' + "\LabVaultAccessCert.pfx"
+      tasks: common:testLocalDebugUnitTest  -PlabSecret='$(Build.SourcesDirectory)'+"\LabVaultAccessCert.pfx"
   - task: Gradle@3
     displayName: Check Dependencies size
     condition: eq(variables['system.pullRequest.targetBranch'], 'dev')
