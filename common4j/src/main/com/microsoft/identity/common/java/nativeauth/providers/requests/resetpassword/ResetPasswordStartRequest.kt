@@ -78,5 +78,13 @@ data class ResetPasswordStartRequest private constructor(
         val username: String,
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("challenge_type") val challengeType: String?
-    ) : NativeAuthRequestParameters()
+    ) : NativeAuthRequestParameters() {
+        override fun toUnsanitizedString(): String = "ResetPasswordStartRequest(clientId=$clientId, challengeType=$challengeType)"
+
+        override fun toString(): String = "ResetPasswordStartRequest(clientId=$clientId)"
+    }
+
+    override fun toUnsanitizedString(): String = "ResetPasswordStartRequest(requestUrl=$requestUrl, headers=$headers, parameters=$parameters)"
+
+    override fun toString(): String = "ResetPasswordStartRequest()"
 }

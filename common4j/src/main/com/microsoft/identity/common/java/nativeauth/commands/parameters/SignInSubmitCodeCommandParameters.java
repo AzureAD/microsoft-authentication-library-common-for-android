@@ -48,4 +48,21 @@ public class SignInSubmitCodeCommandParameters extends BaseSignInTokenCommandPar
      */
     @NonNull
     public final String continuationToken;
+
+    @NonNull
+    @Override
+    public String toUnsanitizedString() {
+        return "SignInSubmitCodeCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
+
+    @Override
+    public boolean containsPii() {
+        return !toString().equals(toUnsanitizedString());
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return toUnsanitizedString();
+    }
 }

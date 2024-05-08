@@ -46,6 +46,16 @@ class SignInInitiateApiResponse(
     @SerializedName("error_codes") val errorCodes: List<Int>?,
 ): IApiResponse(statusCode, correlationId) {
 
+    override fun toUnsanitizedString(): String {
+        return "SignInInitiateApiResponse(statusCode=$statusCode, " +
+                "correlationId=$correlationId, challengeType=$challengeType, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes, " +
+                "errorUri=$errorUri)"
+    }
+
+    override fun toString(): String = "SignInInitiateApiResponse(statusCode=$statusCode, " +
+            "correlationId=$correlationId"
+
     companion object {
         private val TAG = SignInInitiateApiResponse::class.java.simpleName
     }
