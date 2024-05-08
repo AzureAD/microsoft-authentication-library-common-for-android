@@ -156,6 +156,11 @@ public class PromptHandlerParameters {
     private final boolean getTheAppExpected;
 
     /**
+     * Denotes whether or not to expect the passkey prompt.
+     */
+    private final boolean choosePasskeyExpected;
+
+    /**
      * Denotes the way in which we want to respond to the enroll page for this request.
      */
     @Builder.Default

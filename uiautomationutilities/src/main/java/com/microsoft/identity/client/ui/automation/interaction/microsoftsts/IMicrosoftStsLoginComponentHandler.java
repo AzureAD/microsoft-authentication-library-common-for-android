@@ -81,6 +81,11 @@ public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponen
     void handleChooseCertificate();
 
     /**
+     * Clicks the passkey option.
+     */
+    void handleChoosePasskey();
+
+    /**
      * Handle the How would you like to sign in page.
      */
     void handleHowWouldYouLikeToSignIn();

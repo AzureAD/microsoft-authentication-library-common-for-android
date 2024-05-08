@@ -251,4 +251,14 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         // Choose default certificate
         UiAutomatorUtils.handleButtonClickSafely("android:id/button1", mFindLoginUiElementTimeout);
     }
+
+    @Override
+    public void handleChoosePasskey() {
+        //UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Use your face, fingerprint, PIN, or security key instead");
+        UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Other ways to sign in");
+        UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Face, fingerprint, PIN or security key");
+        UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Continue");
+        UiAutomatorUtils.handleInput("com.android.systemui:id/lockPassword", "PinGoesHere");
+        UiAutomatorUtils.pressEnter();
+    }
 }
