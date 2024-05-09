@@ -36,11 +36,6 @@ jobs:
           project: LabApiUtilities
           cwd: $(Build.SourcesDirectory)/common-java-root
           spotbugsCommand: spotbugsMain
-      - task: Gradle@2
-        displayName: Run the unit tests.
-        inputs:
-          cwd: $(Build.SourcesDirectory)/common-java-root
-          tasks: LabApiUtilities:test -Psugar=true -PlabSecret=$(LabVaultAppCert)
       - task: PowerShell@2
         name: setvarStep
         displayName: Set cert path
@@ -54,5 +49,10 @@ jobs:
         displayName: Run the unit tests.
         inputs:
           cwd: $(Build.SourcesDirectory)/common-java-root
-          tasks: LabApiUtilities:test -Psugar=true -PlabSecret=${{variables.LabVaultAppCert}}
+          tasks: LabApiUtilities:test -Psugar=true -PlabSecret=$(LabVaultAppCert)
+      - task: Gradle@2
+        displayName: Run the unit tests.
+        inputs:
+          cwd: $(Build.SourcesDirectory)/common-java-root
+          tasks: LabApiUtilities:test -Psugar=true -PlabSecret=$(LabVaultAppCert)
 ...
