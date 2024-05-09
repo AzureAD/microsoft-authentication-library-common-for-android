@@ -133,7 +133,7 @@ stages:
         script: >
           $pfxCertPath = '$(Build.SourcesDirectory)' + "\LabVaultAccessCert.pfx"
           $certPathVar = $pfxCertPath -replace "\\", "\\\\"
-          Write-Host "##vso[task.setvariable variable=LabVaultAppCert]$certPathVar"  
+          Write-Host "##vso[task.setvariable variable=LabVaultAppCert]$($certPathVar)"  
     - task: Gradle@3
       displayName: Assemble msal
       inputs:
