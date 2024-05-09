@@ -37,6 +37,6 @@ steps:
       
       Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My
       
-      $certPathVar = $pfxPath -replace "\", "/"
+      $certPathVar = $pfxPath -replace "\\", "/"
       
       Write-Host "##vso[task.setvariable variable=LabVaultAppCert]$certPathVar"     
