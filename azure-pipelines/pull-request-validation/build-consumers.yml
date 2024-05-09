@@ -109,12 +109,12 @@ stages:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
-    - template: ../templates/steps/automation-cert.yml
     - checkout: msal
       displayName: Checkout msal repository
       clean: true
       submodules: recursive
       persistCredentials: True
+    - template: ../templates/steps/automation-cert.yml
     - task: CmdLine@2
       displayName: Checkout common submodule $(commonBranch)
       inputs:
