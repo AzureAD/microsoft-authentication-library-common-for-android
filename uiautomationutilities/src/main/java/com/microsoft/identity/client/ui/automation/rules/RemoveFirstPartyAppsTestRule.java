@@ -28,6 +28,7 @@ import com.microsoft.identity.client.ui.automation.app.TeamsApp;
 import com.microsoft.identity.client.ui.automation.app.WordApp;
 import com.microsoft.identity.client.ui.automation.browser.BrowserEdge;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.app.MsalTestApp;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -52,7 +53,7 @@ public class RemoveFirstPartyAppsTestRule implements TestRule {
                 new BrowserEdge().uninstall();
                 new OneAuthTestApp().uninstall();
                 // Commenting this until new msalAutomationApp name is added
-                // new MsalTestApp().uninstall();
+                 new MsalTestApp().uninstall();
                 base.evaluate();
             }
         };
