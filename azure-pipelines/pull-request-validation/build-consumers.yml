@@ -130,7 +130,7 @@ stages:
       displayName: Set cert path
       inputs:
         targetType: inline
-        script: >
+        script: |
           $pfxCertPath = '$(Build.SourcesDirectory)' + "\LabVaultAccessCert.pfx"
           $certPathVar = $pfxCertPath -replace "\\", "\\\\"
           Write-Host "##vso[task.setvariable variable=LabVaultAppCert]$($certPathVar)"  
