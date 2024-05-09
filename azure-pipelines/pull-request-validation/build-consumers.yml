@@ -22,6 +22,8 @@ variables:
     value: ""
 - name: robolectricSdkVersion
   value: 28
+- name: pfxCertPath
+  value: ""
 - group: AndroidAuthClientAutomationSecrets
 - group: MSIDLABVARS
 
@@ -123,6 +125,12 @@ stages:
           git status
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
+    - task: PowerShell@2
+      displayName: Fix cert path
+      inputs:
+      targetType: inline
+        script:>
+          $pfxPath = '$(Build.SourcesDirectory)' + "\LabVaultAccessCert.pfx"
     - task: Gradle@3
       displayName: Assemble msal
       inputs:
