@@ -132,7 +132,7 @@ stages:
     - task: Gradle@3
       displayName: Run msal Unit tests
       inputs:
-        tasks: msal:testLocalDebugUnitTest -Plabtest -PlabSecret=$(LabVaultAppSecret) -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+        tasks: msal:testLocalDebugUnitTest -Plabtest -PlabSecret=$(Build.SourcesDirectory)/LabVaultAccessCert.pfx -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
         jdkArchitecture: x64
         jdkVersionOption: "1.11"
   # broker
