@@ -150,12 +150,12 @@ stages:
     pool:
       name: 1ES-AndroidPool-EOC-Test
     steps:
-    - template: ../templates/steps/automation-cert.yml
     - checkout: broker
       displayName: Checkout broker repository
       clean: true
       submodules: recursive
       persistCredentials: True
+    - template: ../templates/steps/automation-cert.yml
     - task: CmdLine@2
       displayName: Checkout common submodule $(commonBranch)
       inputs:
