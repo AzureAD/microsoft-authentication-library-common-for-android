@@ -22,7 +22,7 @@ variables:
     value: ""
 - name: robolectricSdkVersion
   value: 28
-- name: pfxCertPath
+- name: LabVaultAppCert
   value: ""
 - group: AndroidAuthClientAutomationSecrets
 - group: MSIDLABVARS
@@ -132,6 +132,8 @@ stages:
         targetType: inline
         script: >
           $pfxCertPath = '$(Build.SourcesDirectory)' + "\LabVaultAccessCert.pfx"
+          $certPathVar = $pfxCertPath -replace "\\", "\\\\"
+          Write-Host "##vso[task.setvariable variable=LabVaultAppCert]$certPathVar"  
     - task: Gradle@3
       displayName: Assemble msal
       inputs:
@@ -141,7 +143,7 @@ stages:
     - task: Gradle@3
       displayName: Run msal Unit tests
       inputs:
-        tasks: msal:testLocalDebugUnitTest -Plabtest -PlabSecret=$pfxCertPath -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+        tasks: msal:testLocalDebugUnitTest -Plabtest -PlabSecret=${{variables.LabVaultAppCert}} -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
         jdkArchitecture: x64
         jdkVersionOption: "1.11"
   # broker
