@@ -131,7 +131,7 @@ stages:
       inputs:
         targetType: inline
         script: >
-          $pfxCertPath = $(Build.SourcesDirectory)\LabVaultAccessCert.pfx
+          $pfxCertPath = '$(Build.SourcesDirectory)' + "\LabVaultAccessCert.pfx"
     - task: Gradle@3
       displayName: Assemble msal
       inputs:
