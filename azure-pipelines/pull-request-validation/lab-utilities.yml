@@ -41,9 +41,18 @@ jobs:
         inputs:
           cwd: $(Build.SourcesDirectory)/common-java-root
           tasks: LabApiUtilities:test -Psugar=true -PlabSecret=$(LabVaultAppCert)
+      - task: PowerShell@2
+        name: setvarStep
+        displayName: Set cert path
+        inputs:
+          targetType: inline
+          script: |
+            $pfxCertPath = '$(Build.SourcesDirectory)' + "\LabVaultAccessCert.pfx"
+            $certPathVar = $pfxCertPath -replace "\\", "\\\\"
+            Write-Host "##vso[task.setvariable variable=LabVaultAppCert]$($certPathVar)"  
       - task: Gradle@2
         displayName: Run the unit tests.
         inputs:
           cwd: $(Build.SourcesDirectory)/common-java-root
-          tasks: LabApiUtilities:test -Psugar=true -PlabSecret='$(Build.SourcesDirectory)' + "\LabVaultAccessCert.pfx"
+          tasks: LabApiUtilities:test -Psugar=true -PlabSecret=${{variables.LabVaultAppCert}}
 ...
