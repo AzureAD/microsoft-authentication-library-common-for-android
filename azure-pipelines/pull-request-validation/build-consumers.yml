@@ -177,6 +177,9 @@ stages:
         tasks: AADAuthenticator:localDebugAADAuthenticatorUnitTestCoverageReport --build-cache --info -Plabtest -PlabSecret=$(LabVaultAppSecret) -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PpowerLiftApiKey=$(powerliftApiKey) -PcodeCoverageEnabled=true ${{variables.shouldSkipLongRunningTest}}
         jdkArchitecture: x64
         jdkVersionOption: "1.11"
+      condition: always()
+      env:
+        BuildSourcesDirectory: $[replace(variables['Build.SourcesDirectory'], '\\', '\\\\')]
   # Linux broker
   - job: linuxBrokerValidation
     displayName: Linux Broker
