@@ -114,7 +114,6 @@ stages:
       clean: true
       submodules: recursive
       persistCredentials: True
-    - template: ../templates/steps/automation-cert.yml
     - task: CmdLine@2
       displayName: Checkout common submodule $(commonBranch)
       inputs:
@@ -131,6 +130,7 @@ stages:
         jdkArchitecture: x64
         jdkVersionOption: "1.11"
         tasks: clean msal:assembleLocal
+    - template: ../templates/steps/automation-cert.yml
     - task: Gradle@3
       displayName: Run msal Unit tests
       inputs:
