@@ -42,7 +42,7 @@ steps:
       if([System.IO.File]::Exists($pfxPath)) {
         Write-Host "PFX file created successfully at $certPathVar"
       } else {
-        Write-Error "Failed to create PFX file at $pfxPath"
+        Write-Error "Failed to create PFX file at $certPathVar"
       }    
       
       Write-Host "##vso[task.setvariable variable=LabVaultAppCert]$certPathVar"     

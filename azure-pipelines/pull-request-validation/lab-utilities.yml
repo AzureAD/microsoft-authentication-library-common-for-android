@@ -36,15 +36,6 @@ jobs:
           project: LabApiUtilities
           cwd: $(Build.SourcesDirectory)/common-java-root
           spotbugsCommand: spotbugsMain
-      - task: PowerShell@2
-        name: setvarStep
-        displayName: Set cert path
-        inputs:
-          targetType: inline
-          script: |
-            $pfxCertPath = '$(Build.SourcesDirectory)' + "\LabVaultAccessCert.pfx"
-            $certPathVar = $pfxCertPath -replace "\\", "\\\\"
-            Write-Host "##vso[task.setvariable variable=LabVaultAppCert]$($certPathVar)"  
       - task: Gradle@2
         displayName: Run the unit tests.
         inputs:
