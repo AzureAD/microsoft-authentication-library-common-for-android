@@ -259,6 +259,7 @@ stages:
           git status
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
+    - template: ../templates/steps/automation-cert.yml
     - task: Gradle@3
       displayName: Assemble adal
       inputs:
