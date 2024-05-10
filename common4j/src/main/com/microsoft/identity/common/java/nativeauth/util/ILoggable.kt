@@ -1,10 +1,13 @@
 package com.microsoft.identity.common.java.nativeauth.util
 
+import lombok.NonNull
+
 interface ILoggable {
     /**
      * This method produces a String that may contain PII (PII = Personally identifiable information).
      * The value of containsPii() will indicate whether the value actually contains PII.
      */
+    @NonNull
     fun toUnsanitizedString(): String
 
     /**
@@ -19,5 +22,6 @@ interface ILoggable {
      * implements this interface, also implements this method. This method will return a PII-safe
      * String, i.e. any PII is not included.
      */
+    @NonNull
     override fun toString(): String
 }
