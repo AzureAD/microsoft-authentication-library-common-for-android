@@ -32,6 +32,8 @@ import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
+import java.util.concurrent.TimeUnit;
+
 
 /**
  * A model for interacting with the Google Chrome Browser App during UI Test.
@@ -52,13 +54,14 @@ public class BrowserChrome extends App implements IBrowser {
         // Make Chrome handleFirstRun safe
         try {
             Logger.i(TAG, "Handle First Run of Browser..");
-            UiAutomatorUtils.handleButtonClick("com.android.chrome:id/terms_accept");
+            UiAutomatorUtils.handleButtonClick("com.android.chrome:id/terms_accept", TimeUnit.SECONDS.toMillis(10));
             if (LITE_MODE_EXPECTED) {
                 UiAutomatorUtils.handleButtonClickForObjectWithText("Next");
             }
-            UiAutomatorUtils.handleButtonClick("com.android.chrome:id/negative_button");
+            UiAutomatorUtils.handleButtonClick("com.android.chrome:id/negative_button", TimeUnit.SECONDS.toMillis(10));
         } catch (AssertionError e) {
             if (e.toString().contains("UiObjectNotFoundException")){
+                UiAutomatorUtils.handleButtonClickSafely("com.android.chrome:id/signin_fre_dismiss_button", TimeUnit.SECONDS.toMillis(10));
                 Logger.i(TAG, "Handle First Run had a UIObjectNotFoundException, do not throw AssertionError");
             } else {
                 throw e;
