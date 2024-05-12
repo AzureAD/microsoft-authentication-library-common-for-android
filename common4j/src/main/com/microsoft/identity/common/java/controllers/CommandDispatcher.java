@@ -305,7 +305,7 @@ public class CommandDispatcher {
             codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_START);
             methodName = ":submitSilent";
         }
-
+        Logger.info(TAG + methodName, "silent command invoked");
         logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
 
         synchronized (mapAccessLock) {
