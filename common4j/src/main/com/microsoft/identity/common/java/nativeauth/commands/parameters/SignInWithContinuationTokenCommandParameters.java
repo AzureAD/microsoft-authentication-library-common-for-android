@@ -44,4 +44,21 @@ public class SignInWithContinuationTokenCommandParameters extends BaseSignInToke
      */
     @NonNull
     public final String username;
+
+    @NonNull
+    @Override
+    public String toUnsanitizedString() {
+        return "SignInSubmitPasswordCommandParameters(username=" + username + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
+
+    @Override
+    public boolean containsPii() {
+        return !toString().equals(toUnsanitizedString());
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "SignInSubmitPasswordCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
 }

@@ -37,7 +37,7 @@ import lombok.NonNull;
 /**
  * An implementation of {@link IMultiTypeNameValueStorage}.
  * <p>
- * The internal implementation here is backed by an implementation of a {@link INameValueStorage<String>}.
+ * The internal implementation here is backed by an implementation of a {@link INameValueStorage} with String.
  * Strings are dropped directly into the storage, whereas Long values are adapted into a String
  * using the {@link IGenericTypeStringAdapter#LongStringAdapter}.
  * <p>

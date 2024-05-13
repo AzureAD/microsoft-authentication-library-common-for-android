@@ -32,7 +32,11 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
 sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
     data class InProgress(
         override val correlationId: String,
-    ) : ResetPasswordPollCompletionApiResult
+    ) : ResetPasswordPollCompletionApiResult {
+        override fun toUnsanitizedString() = "InProgress(correlationId=$correlationId)"
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 
     data class PollingFailed(
         override val error: String,
@@ -42,7 +46,12 @@ sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), ResetPasswordPollCompletionApiResult
+    ), ResetPasswordPollCompletionApiResult {
+        override fun toUnsanitizedString() = "PollingFailed(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "PollingFailed(correlationId=$correlationId)"
+    }
 
     data class PasswordInvalid(
         override val correlationId: String,
@@ -53,13 +62,23 @@ sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), ResetPasswordPollCompletionApiResult
+    ), ResetPasswordPollCompletionApiResult {
+        override fun toUnsanitizedString() = "PasswordInvalid(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, subError=$subError)"
+
+        override fun toString(): String = "PasswordInvalid(correlationId=$correlationId)"
+    }
 
     data class PollingSucceeded(
         val continuationToken: String?,
         val expiresIn: Int?,
         override val correlationId: String,
-        ) : ResetPasswordPollCompletionApiResult
+        ) : ResetPasswordPollCompletionApiResult {
+        override fun toUnsanitizedString() = "PollingSucceeded(correlationId=$correlationId, " +
+                "expiresIn=$expiresIn)"
+
+        override fun toString(): String = "PollingSucceeded(correlationId=$correlationId)"
+        }
 
     data class UserNotFound(
         override val correlationId: String,
@@ -69,7 +88,12 @@ sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), ResetPasswordPollCompletionApiResult
+    ), ResetPasswordPollCompletionApiResult {
+        override fun toUnsanitizedString() = "UserNotFound(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "UserNotFound(correlationId=$correlationId)"
+    }
 
     data class ExpiredToken(
         override val correlationId: String,
@@ -79,7 +103,12 @@ sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), ResetPasswordPollCompletionApiResult
+    ), ResetPasswordPollCompletionApiResult {
+        override fun toUnsanitizedString() = "ExpiredToken(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "ExpiredToken(correlationId=$correlationId)"
+    }
 
     data class UnknownError(
         override val correlationId: String,
@@ -89,5 +118,10 @@ sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), ResetPasswordPollCompletionApiResult
+    ), ResetPasswordPollCompletionApiResult {
+        override fun toUnsanitizedString() = "UnknownError(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "UnknownError(correlationId=$correlationId)"
+    }
 }

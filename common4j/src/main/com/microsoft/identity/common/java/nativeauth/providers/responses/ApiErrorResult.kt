@@ -22,12 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.responses
 
-import com.microsoft.identity.common.java.logging.DiagnosticContext
-
 /**
  * Base class to encapsulate various error response from the Native Auth API.
  */
-open class ApiErrorResult(
+abstract class ApiErrorResult(
     open val error: String?,
     open val errorDescription: String?,
     open val errorCodes: List<Int>? = null,
@@ -35,6 +33,6 @@ open class ApiErrorResult(
 ): ApiResult
 {
     companion object {
-        public val INVALID_STATE = "invalid_state"
+        val INVALID_STATE = "invalid_state"
     }
 }
