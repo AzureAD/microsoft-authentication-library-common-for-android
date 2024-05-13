@@ -50,6 +50,17 @@ android {
         saveTestResultsToCsv = getBoolean(writeTestResultsToCsv);
     }
 
+    def nativeAuthSignInTestsUsername = "" // will be blank unless specified by developer
+    def nativeAuthSignInTestsPassword = "" // will be blank unless specified by developer
+
+    if (project.hasProperty("nativeAuthSignInTestsUsernameValue")) {
+        nativeAuthSignInTestsUsername = nativeAuthSignInTestsUsernameValue
+    }
+
+    if (project.hasProperty("nativeAuthSignInTestsPasswordValue")) {
+        nativeAuthSignInTestsPassword = nativeAuthSignInTestsPasswordValue
+    }
+
     defaultConfig {
         multiDexEnabled true
         minSdkVersion rootProject.ext.minSdkVersion
@@ -58,6 +69,8 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "LAB_CLIENT_SECRET", "\"$labClientSecret\"")
+        buildConfigField("String", "NATIVE_AUTH_SIGNIN_TEST_USERNAME", "\"$nativeAuthSignInTestsUsername\"")
+        buildConfigField("String", "NATIVE_AUTH_SIGNIN_TEST_PASSWORD", "\"$nativeAuthSignInTestsPassword\"")
         buildConfigField("String", "RUN_ID", "\"$runId\"")
         buildConfigField("boolean", "SAVE_TEST_RESULTS_TO_CSV", "$saveTestResultsToCsv")
 
