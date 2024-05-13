@@ -30,8 +30,8 @@ import java.net.URL
  */
 interface ApiConstants {
     companion object {
-        val BASEPATH = System.getenv("MOCK_API_URL")
-        private val BASE_REQUEST_PATH = BASEPATH + "1234/"
+        val BASEPATH: String? by lazy { System.getenv("MOCK_API_URL") }
+        val BASE_REQUEST_PATH = BASEPATH + "1234/"
         val signUpStartRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/start")
         val signUpChallengeRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/challenge")
         val signUpContinueRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/continue")
