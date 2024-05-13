@@ -308,10 +308,6 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     @Override
     public void remove(final String key) {
         final String methodTag = TAG + ":remove";
-        Logger.info(
-                methodTag,
-                "Removing cache key"
-        );
         synchronized (cacheLock) {
             fileCache.remove(key);
             final SharedPreferences.Editor editor = mSharedPreferences.edit();
