@@ -23,13 +23,14 @@
 
 package com.microsoft.identity.common.java.nativeauth.providers.requests
 
+import com.microsoft.identity.common.java.nativeauth.util.ILoggable
 import org.json.JSONObject
 import java.net.URL
 
 /**
  * Base class to represent all Native Auth API requests.
  */
-abstract class NativeAuthRequest {
+abstract class NativeAuthRequest : ILoggable {
     abstract var requestUrl: URL
     abstract var headers: Map<String, String?>
     abstract val parameters: NativeAuthRequestParameters
@@ -38,7 +39,7 @@ abstract class NativeAuthRequest {
      * Base class to represent parameters for all Native Auth API requests. These parameters
      * are sent as part of HTTP POST request.
      */
-    abstract class NativeAuthRequestParameters {
+    abstract class NativeAuthRequestParameters : ILoggable {
         abstract val clientId: String
     }
 

@@ -29,11 +29,13 @@ import com.microsoft.aad.msal4j.IClientCredential;
 import com.microsoft.aad.msal4j.PublicClientApplication;
 import com.microsoft.aad.msal4j.UserNamePasswordParameters;
 import com.microsoft.identity.labapi.utilities.authentication.IAuthenticationResult;
-import com.microsoft.identity.labapi.utilities.authentication.client.IConfidentialAuthClient;
 import com.microsoft.identity.labapi.utilities.authentication.ITokenParameters;
+import com.microsoft.identity.labapi.utilities.authentication.client.IConfidentialAuthClient;
 import com.microsoft.identity.labapi.utilities.authentication.client.IPublicAuthClient;
 import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
 import com.microsoft.identity.labapi.utilities.authentication.common.ClientAssertion;
+
+import java.io.InputStream;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -63,6 +65,13 @@ public class Msal4jAuthClient implements IConfidentialAuthClient, IPublicAuthCli
         final IClientCredential credential = ClientCredentialFactory.createFromCertificate(
                 certificateCredential.getPrivateKey(), certificateCredential.getPublicCertificate()
         );
+        return acquireTokenForConfidentialClient(credential, tokenParameters);
+    }
+
+    @SneakyThrows
+    @Override
+    public IAuthenticationResult acquireToken(InputStream pkcs12Certificate, String password, ITokenParameters tokenParameters) {
+        final IClientCredential credential = ClientCredentialFactory.createFromCertificate(pkcs12Certificate, password);
         return acquireTokenForConfidentialClient(credential, tokenParameters);
     }
 

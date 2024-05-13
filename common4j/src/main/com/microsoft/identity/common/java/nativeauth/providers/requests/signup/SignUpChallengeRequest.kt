@@ -33,7 +33,7 @@ import java.net.URL
 data class SignUpChallengeRequest private constructor(
     override var requestUrl: URL,
     override var headers: Map<String, String?>,
-    override val parameters: NativeAuthRequestSignUpStartParameters
+    override val parameters: NativeAuthRequestSignUpChallengeRequestParameters
 ) : NativeAuthRequest() {
 
     companion object {
@@ -60,7 +60,7 @@ data class SignUpChallengeRequest private constructor(
             ArgUtils.validateNonNullArg(headers, "headers")
 
             return SignUpChallengeRequest(
-                parameters = NativeAuthRequestSignUpStartParameters(
+                parameters = NativeAuthRequestSignUpChallengeRequestParameters(
                     continuationToken = continuationToken,
                     challengeType = challengeType,
                     clientId = clientId
@@ -71,13 +71,21 @@ data class SignUpChallengeRequest private constructor(
         }
     }
 
+    override fun toUnsanitizedString(): String = "SignUpChallengeRequest(requestUrl=$requestUrl, headers=$headers, parameters=$parameters)"
+
+    override fun toString(): String = "SignUpChallengeRequest()"
+
     /**
      * NativeAuthRequestSignUpStartParameters represents the request parameters sent as part of
      * /signup/challenge API call
      */
-    data class NativeAuthRequestSignUpStartParameters(
+    data class NativeAuthRequestSignUpChallengeRequestParameters(
         @SerializedName("continuation_token") val continuationToken: String,
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("challenge_type") val challengeType: String
-    ) : NativeAuthRequestParameters()
+    ) : NativeAuthRequestParameters() {
+        override fun toUnsanitizedString(): String = "NativeAuthRequestSignUpChallengeRequestParameters(clientId=$clientId, challengeType=$challengeType)"
+
+        override fun toString(): String = "NativeAuthRequestSignUpChallengeRequestParameters(clientId=$clientId)"
+    }
 }

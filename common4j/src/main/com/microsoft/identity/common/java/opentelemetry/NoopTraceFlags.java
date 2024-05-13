@@ -26,13 +26,13 @@ import io.opentelemetry.api.trace.TraceFlags;
 
 /**
  * A custom noop implementation of {@link io.opentelemetry.api.trace.TraceFlags} to be used in MSAL
- * for scenarios where minSdkVersion of calling application < 24. The reason for this is because the
+ * for scenarios where minSdkVersion of calling application {@literal <} 24. The reason for this is because the
  * default no-op implementation uses "static interface methods" and these get left out of the APK
- * for applications whose MIN SDK is < 24 and minification through R8 is DISABLED because the
+ * for applications whose MIN SDK is {@literal <} 24 and minification through R8 is DISABLED because the
  * consumers-rules are NOT honored when minification is disabled and R8 applies some default
  * proguard rules that leaves static interface methods out of the APK. This causes a
  * "NoSuchMethodError" when such methods are invoked.
- * This is not a problem for Broker Hosting applications as the MIN SDK for those is already >= 24.
+ * This is not a problem for Broker Hosting applications as the MIN SDK for those is already {@literal >}= 24.
  * The issue only arises for the some MSAL consumers falling into the above situation. Tracing is
  * disabled by default anyway for MSAL (and only turned on for Broker) and Open Telemetry uses its
  * own Noop implementations, however, here we are just providing our own that DON'T use static
