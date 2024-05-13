@@ -60,7 +60,7 @@ import java.util.UUID
 /**
  * These are integration tests using real API responses instead of mocked API responses. This class
  * covers all sign up endpoints.
- * These tests run on the mock API, see: https://native-auth-mock-api.azurewebsites.net/
+ * These tests run on the mock API, see: $(MOCK_API_URL) in the variable of the pipeline.
  */
 
 @RunWith(
