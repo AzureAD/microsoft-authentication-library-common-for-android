@@ -153,7 +153,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .build();
 
         final Bundle resultBundle = bundleFromBrokerResult(brokerResult, negotiatedBrokerProtocolVersion);
-        resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_SUCCESS, true);
+        resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, true);
 
         return resultBundle;
     }
@@ -205,7 +205,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         }
 
         final Bundle resultBundle = bundleFromBrokerResult(builder.build(), negotiatedBrokerProtocolVersion);
-        resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_SUCCESS, false);
+        resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, false);
 
         return resultBundle;
     }
@@ -674,7 +674,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 throw new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, "acquireDeviceCodeFlowToken() not supported in BrokerMsalController");
             }
 
-            if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_SUCCESS)) {
+            if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
                 final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
                 acquireTokenResult.setLocalAuthenticationResult(authenticationResultFromBundle(resultBundle));
                 span.setStatus(StatusCode.OK);
@@ -698,7 +698,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     public @NonNull
     AcquireTokenResult getAcquireTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
         final MsalBrokerResultAdapter resultAdapter = new MsalBrokerResultAdapter();
-        if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_SUCCESS)) {
+        if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
             final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
             acquireTokenResult.setLocalAuthenticationResult(
                     resultAdapter.authenticationResultFromBundle(resultBundle)

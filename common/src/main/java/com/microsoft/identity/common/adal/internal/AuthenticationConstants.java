@@ -1286,7 +1286,7 @@ public final class AuthenticationConstants {
         /**
          * String to return a true if the request succeeded, false otherwise.
          */
-        public static final String BROKER_REQUEST_SUCCESS = "broker_request_success";
+        public static final String BROKER_REQUEST_V2_SUCCESS = "broker_request_v2_success";
 
         /**
          * String to send true if the request should send the PkeyAuth header to the token endpoint, false otherwise.

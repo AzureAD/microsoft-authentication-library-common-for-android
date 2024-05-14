@@ -1319,7 +1319,7 @@ public class BrokerMsalController extends BaseController {
 
         final BrokerResult brokerResult = new MsalBrokerResultAdapter().brokerResultFromBundle(resultBundle);
 
-        if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_SUCCESS) &&
+        if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS) &&
                 AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(brokerResult.getTenantId())) {
             Logger.info(methodTag, "Result returned for MSA Account, saving to cache");
 
