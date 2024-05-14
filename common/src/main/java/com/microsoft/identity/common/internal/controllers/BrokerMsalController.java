@@ -486,8 +486,6 @@ public class BrokerMsalController extends BaseController {
             // Wait to be notified of the result being returned... we could add a timeout here if we want to
             final Bundle resultBundle = mBrokerResultFuture.get();
 
-            final String negotiatedBrokerProtocolVersion = interactiveAccountTransferRequestIntent.getStringExtra(NEGOTIATED_BP_VERSION_KEY);
-
             verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
             result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
         } catch (final BaseException | ExecutionException | InterruptedException e) {

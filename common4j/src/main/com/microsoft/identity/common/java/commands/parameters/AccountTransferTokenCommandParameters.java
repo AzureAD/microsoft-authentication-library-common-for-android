@@ -29,7 +29,7 @@ import lombok.experimental.SuperBuilder;
 
 /**
  * Command parameters class for Account Transfer requests. Extends {@link InteractiveTokenCommandParameters} since Account Transfer
- * can use the same set of parameters as a regular acquire token request. Includes an additional parameter to hold the SLK Token.
+ * can use the same set of parameters as a regular acquire token request. Includes an additional parameter to hold the Transfer Token.
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
@@ -37,7 +37,7 @@ import lombok.experimental.SuperBuilder;
 public class AccountTransferTokenCommandParameters extends InteractiveTokenCommandParameters {
 
     /**
-     * Slk token to be used in the Account Transfer request.
+     * Transfer token to be used in the Account Transfer request.
      */
     @NonNull
     private final String transferToken;
