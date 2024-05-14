@@ -22,17 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers
 
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signInChallengeRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signInInitiateRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signInTokenRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signUpChallengeRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signUpContinueRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signUpStartRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprChallengeRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprContinueRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprPollCompletionRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprStartRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprSubmitRequestUrl
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
@@ -47,6 +36,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.nativeauth.providers.requests.NativeAuthRequest.Companion.toJsonString
+import com.microsoft.identity.common.nativeauth.ApiConstants
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert
@@ -74,17 +64,17 @@ class NativeAuthRequestHandlerTest {
     private val grantType = NativeAuthConstants.GrantType.OOB
 
     private val mockConfig = mockk<NativeAuthOAuth2Configuration> {
-        every { getSignUpStartEndpoint() } returns signUpStartRequestUrl
-        every { getSignUpChallengeEndpoint() } returns signUpChallengeRequestUrl
-        every { getSignUpContinueEndpoint() } returns signUpContinueRequestUrl
-        every { getSignInInitiateEndpoint() } returns signInInitiateRequestUrl
-        every { getSignInChallengeEndpoint() } returns signInChallengeRequestUrl
-        every { getSignInTokenEndpoint() } returns signInTokenRequestUrl
-        every { getResetPasswordStartEndpoint() } returns ssprStartRequestUrl
-        every { getResetPasswordChallengeEndpoint() } returns ssprChallengeRequestUrl
-        every { getResetPasswordContinueEndpoint() } returns ssprContinueRequestUrl
-        every { getResetPasswordSubmitEndpoint() } returns ssprSubmitRequestUrl
-        every { getResetPasswordPollCompletionEndpoint() } returns ssprPollCompletionRequestUrl
+        every { getSignUpStartEndpoint() } returns ApiConstants.MockApi.signUpStartRequestUrl
+        every { getSignUpChallengeEndpoint() } returns ApiConstants.MockApi.signUpChallengeRequestUrl
+        every { getSignUpContinueEndpoint() } returns ApiConstants.MockApi.signUpContinueRequestUrl
+        every { getSignInInitiateEndpoint() } returns ApiConstants.MockApi.signInInitiateRequestUrl
+        every { getSignInChallengeEndpoint() } returns ApiConstants.MockApi.signInChallengeRequestUrl
+        every { getSignInTokenEndpoint() } returns ApiConstants.MockApi.signInTokenRequestUrl
+        every { getResetPasswordStartEndpoint() } returns ApiConstants.MockApi.ssprStartRequestUrl
+        every { getResetPasswordChallengeEndpoint() } returns ApiConstants.MockApi.ssprChallengeRequestUrl
+        every { getResetPasswordContinueEndpoint() } returns ApiConstants.MockApi.ssprContinueRequestUrl
+        every { getResetPasswordSubmitEndpoint() } returns ApiConstants.MockApi.ssprSubmitRequestUrl
+        every { getResetPasswordPollCompletionEndpoint() } returns ApiConstants.MockApi.ssprPollCompletionRequestUrl
         every { challengeType } returns this@NativeAuthRequestHandlerTest.challengeType
         every { clientId } returns this@NativeAuthRequestHandlerTest.clientId
         every { useMockApiForNativeAuth } returns true
@@ -175,7 +165,7 @@ class NativeAuthRequestHandlerTest {
         assertEquals(username, result.parameters.username)
         assertEquals(clientId, result.parameters.clientId)
         assertEquals(challengeType, result.parameters.challengeType)
-        assertEquals(signUpStartRequestUrl, result.requestUrl)
+        assertEquals(ApiConstants.MockApi.signUpStartRequestUrl, result.requestUrl)
         assertEquals(userAttributes.toJsonString(userAttributes), result.parameters.attributes)
     }
 
@@ -197,7 +187,7 @@ class NativeAuthRequestHandlerTest {
         assertEquals(username, result.parameters.username)
         assertEquals(clientId, result.parameters.clientId)
         assertEquals(challengeType, result.parameters.challengeType)
-        assertEquals(signUpStartRequestUrl, result.requestUrl)
+        assertEquals(ApiConstants.MockApi.signUpStartRequestUrl, result.requestUrl)
         assertEquals(userAttributes.toJsonString(userAttributes), result.parameters.attributes)
     }
 
@@ -218,7 +208,7 @@ class NativeAuthRequestHandlerTest {
         assertEquals(oobCode, result.parameters.oob)
         assertEquals(continuationToken, result.parameters.continuationToken)
         assertEquals(oobGrantType, result.parameters.grantType)
-        assertEquals(signUpContinueRequestUrl, result.requestUrl)
+        assertEquals(ApiConstants.MockApi.signUpContinueRequestUrl, result.requestUrl)
     }
 
     @Test
@@ -238,7 +228,7 @@ class NativeAuthRequestHandlerTest {
         assertEquals(password.toString(), result.parameters.password.toString())
         assertEquals(continuationToken, result.parameters.continuationToken)
         assertEquals(passwordGrantType, result.parameters.grantType)
-        assertEquals(signUpContinueRequestUrl, result.requestUrl)
+        assertEquals(ApiConstants.MockApi.signUpContinueRequestUrl, result.requestUrl)
     }
 
     @Test
@@ -257,7 +247,7 @@ class NativeAuthRequestHandlerTest {
 
         assertEquals(userAttributes.toJsonString(userAttributes), result.parameters.attributes)
         assertEquals(continuationToken, result.parameters.continuationToken)
-        assertEquals(signUpContinueRequestUrl, result.requestUrl)
+        assertEquals(ApiConstants.MockApi.signUpContinueRequestUrl, result.requestUrl)
     }
 
     @Test(expected = ClientException::class)
@@ -320,7 +310,7 @@ class NativeAuthRequestHandlerTest {
 
         assertEquals(challengeType, result.parameters.challengeType)
         assertEquals(continuationToken, result.parameters.continuationToken)
-        assertEquals(signUpChallengeRequestUrl, result.requestUrl)
+        assertEquals(ApiConstants.MockApi.signUpChallengeRequestUrl, result.requestUrl)
     }
 
     @Test(expected = ClientException::class)
@@ -410,7 +400,7 @@ class NativeAuthRequestHandlerTest {
         assertEquals(username, result.parameters.username)
         assertEquals(clientId, result.parameters.clientId)
         assertEquals(challengeType, result.parameters.challengeType)
-        assertEquals(signInInitiateRequestUrl, result.requestUrl)
+        assertEquals(ApiConstants.MockApi.signInInitiateRequestUrl, result.requestUrl)
     }
 
     @Test(expected = ClientException::class)
@@ -450,7 +440,7 @@ class NativeAuthRequestHandlerTest {
 
         assertEquals(clientId, result.parameters.clientId)
         assertEquals(continuationToken, result.parameters.continuationToken)
-        assertEquals(signInChallengeRequestUrl, result.requestUrl)
+        assertEquals(ApiConstants.MockApi.signInChallengeRequestUrl, result.requestUrl)
     }
 
     @Test(expected = ClientException::class)

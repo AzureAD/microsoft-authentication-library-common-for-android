@@ -55,7 +55,7 @@ public class ApiClient {
 
     private final String AUTH_TYPE = "Access Token";
 
-    private String basePath = "https://msidlab.com";
+    private String basePath;
     private boolean debugging = false;
     private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
     private String tempFolderPath = null;
@@ -77,11 +77,36 @@ public class ApiClient {
     private HttpLoggingInterceptor loggingInterceptor;
 
     /*
-     * Constructor for ApiClient
+     * Constructor for ApiClient with default MSID Labs API base URL
      */
     public ApiClient() {
+        basePath  = "https://msidlab.com";
+
         httpClient = new OkHttpClient();
 
+        verifyingSsl = true;
+
+        json = new JSON();
+
+        // Set default User-Agent.
+        setUserAgent("Swagger-Codegen/1.0.0/java");
+
+        // Setup authentications (key: authentication name, value: authentication).
+        authentications = new HashMap<String, Authentication>();
+
+        authentications.put("Access Token", new OAuth());
+
+        // Prevent the authentications from being modified.
+        authentications = Collections.unmodifiableMap(authentications);
+    }
+
+    /*
+     * Constructor for ApiClient with custom base path
+     */
+    public ApiClient(String basePath) {
+        this.basePath = basePath;
+
+        httpClient = new OkHttpClient();
 
         verifyingSsl = true;
 
