@@ -76,8 +76,8 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     @Expose
     private final String homeTenantId;
 
-    // Parameter representing if this broker request is an Account Transfer V2 request
-    private final boolean isAccountTransferV2Request;
+    // Parameter representing if this broker request is an Account Transfer request
+    private final boolean isAccountTransferRequest;
 
     @Override
     public void validate() throws ArgumentException {

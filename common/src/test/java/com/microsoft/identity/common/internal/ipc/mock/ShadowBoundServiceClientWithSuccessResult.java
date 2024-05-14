@@ -68,7 +68,7 @@ public class ShadowBoundServiceClientWithSuccessResult<T extends IInterface> {
             }
 
             @Override
-            public Intent getIntentForAccountTransferV2InteractiveRequest() throws RemoteException {
+            public Intent getIntentForAccountTransferInteractiveRequest() throws RemoteException {
                 throw new RemoteException("Not Implemented");
             }
 

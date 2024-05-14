@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.request;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.REQUEST_AUTHORITY;
 
 import android.os.Bundle;
@@ -32,11 +31,9 @@ import android.os.Bundle;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.components.MockPlatformComponentsFactory;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
-import com.microsoft.identity.common.internal.util.GzipUtil;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
-import com.microsoft.identity.common.java.commands.parameters.AccountTransferV2TokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.AccountTransferTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.java.request.SdkType;
@@ -90,10 +87,10 @@ public class MsalBrokerRequestAdapterTests {
     }
 
     @Test
-    public void test_getRequestBundleForAccountTransferV2() throws IOException {
+    public void test_getRequestBundleForAccountTransfer() throws IOException {
         final String aCorrelationId = "aCorrelationId";
         final String negotiatedBrokerProtocolVersion = "1.0";
-        final String slkToken = "This is an slk token";
+        final String transferToken = "This is a transfer token";
         final String aClientId = "aClientId";
         final String aRedirect = "aRedirect";
         final String appName = "appName";
@@ -102,11 +99,11 @@ public class MsalBrokerRequestAdapterTests {
         scopes.add("User.Read");
 
         final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
-        final AccountTransferV2TokenCommandParameters params = AccountTransferV2TokenCommandParameters.builder()
+        final AccountTransferTokenCommandParameters params = AccountTransferTokenCommandParameters.builder()
                 .platformComponents(components)
                 .correlationId(aCorrelationId)
                 .authority(new AzureActiveDirectoryAuthority())
-                .slkToken(slkToken)
+                .transferToken(transferToken)
                 .clientId(aClientId)
                 .redirectUri(aRedirect)
                 .scopes(scopes)
@@ -118,12 +115,12 @@ public class MsalBrokerRequestAdapterTests {
                 .build();
 
         MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
-        Bundle requestBundle = msalBrokerRequestAdapter.getRequestBundleForAccountTransferV2(params, negotiatedBrokerProtocolVersion);
+        Bundle requestBundle = msalBrokerRequestAdapter.getRequestBundleForAccountTransfer(params, negotiatedBrokerProtocolVersion);
 
         final BrokerRequest brokerRequest = AuthenticationSchemeTypeAdapter.getGsonInstance().fromJson(
                 requestBundle.getString(BROKER_REQUEST_V2),
                 BrokerRequest.class
         );
-        Assert.assertEquals(slkToken, brokerRequest.getAccountTransferV2SlkToken());
+        Assert.assertEquals(transferToken, brokerRequest.getAccountTransferToken());
     }
 }

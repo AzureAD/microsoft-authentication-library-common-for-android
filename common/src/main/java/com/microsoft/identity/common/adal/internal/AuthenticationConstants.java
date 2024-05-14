@@ -1286,7 +1286,7 @@ public final class AuthenticationConstants {
         /**
          * String to return a true if the request succeeded, false otherwise.
          */
-        public static final String BROKER_REQUEST_V2_SUCCESS = "broker_request_v2_success";
+        public static final String BROKER_REQUEST_SUCCESS = "broker_request_success";
 
         /**
          * String to send true if the request should send the PkeyAuth header to the token endpoint, false otherwise.
@@ -1489,7 +1489,7 @@ public final class AuthenticationConstants {
 
         public static final String GET_INTENT_FOR_INTERACTIVE_REQUEST = "GET_INTENT_FOR_INTERACTIVE_REQUEST";
 
-        public static final String GET_INTENT_FOR_ACCOUNT_TRANSFER_V2_INTERACTIVE_REQUEST = "GET_INTENT_FOR_ACCOUNT_TRANSFER_V2_INTERACTIVE_REQUEST";
+        public static final String GET_INTENT_FOR_ACCOUNT_TRANSFER_INTERACTIVE_REQUEST = "GET_INTENT_FOR_ACCOUNT_TRANSFER_INTERACTIVE_REQUEST";
 
         public static final String REMOVE_ACCOUNT = "REMOVE_ACCOUNT";
 
@@ -1521,6 +1521,7 @@ public final class AuthenticationConstants {
         private static final String VERSION_3 = THREE_POINT_ZERO;
         private static final String VERSION_6 = "6.0";
         private static final String VERSION_7 = "7.0";
+        private static final String VERSION_8 = "8.0";
         private static final String BROKER_VERSION_1 = ONE_POINT_ZERO;
         private static final String BROKER_VERSION_3 = THREE_POINT_ZERO;
         private static final String BROKER_VERSION_4 = FOUR_POINT_ZERO;
@@ -1536,7 +1537,7 @@ public final class AuthenticationConstants {
         public enum API {
             MSAL_HELLO(MSAL_HELLO_PATH, null, VERSION_3),
             ACQUIRE_TOKEN_INTERACTIVE(MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH, null, VERSION_3),
-            ACQUIRE_TOKEN_ACCOUNT_TRANSFER_V2_INTERACTIVE(MSAL_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_V2_INTERACTIVE_PATH, null, VERSION_3),
+            ACQUIRE_TOKEN_ACCOUNT_TRANSFER_INTERACTIVE(MSAL_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_INTERACTIVE_PATH, null, VERSION_8),
             ACQUIRE_TOKEN_SILENT(MSAL_ACQUIRE_TOKEN_SILENT_PATH, null, VERSION_3),
             GET_ACCOUNTS(MSAL_GET_ACCOUNTS_PATH, null, VERSION_3),
             REMOVE_ACCOUNT(MSAL_REMOVE_ACCOUNT_PATH, null, VERSION_3),
@@ -1601,10 +1602,10 @@ public final class AuthenticationConstants {
         public static final String MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH = "/acquireTokenInteractive";
 
         /**
-         * URI Path constant for MSAL-to-Broker Account Transfer V2 request using ContentProvider.
+         * URI Path constant for MSAL-to-Broker Account Transfer request using ContentProvider.
          *  TODO: Not really sure how this works, this seems right
          */
-        public static final String MSAL_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_V2_INTERACTIVE_PATH = "/acquireTokenInteractiveForAccountTransferV2";
+        public static final String MSAL_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_INTERACTIVE_PATH = "/acquireTokenInteractiveForAccountTransfer";
 
         /**
          * URI Path constant for MSAL-to-Broker acquireTokenSilent request using ContentProvider.

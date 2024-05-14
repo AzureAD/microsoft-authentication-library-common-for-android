@@ -38,7 +38,7 @@ interface IMicrosoftAuthService {
 
     Intent getIntentForInteractiveRequest();
 
-    Intent getIntentForAccountTransferV2InteractiveRequest();
+    Intent getIntentForAccountTransferInteractiveRequest();
 
     Bundle removeAccount(in Bundle bundle);
 

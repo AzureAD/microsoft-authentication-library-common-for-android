@@ -77,7 +77,7 @@ public class BrokerRequest implements Serializable {
         final static String SPAN_CONTEXT = "span_context";
         final static String PREFERRED_BROWSER = "preferred_browser";
         final static String PREFERRED_AUTH_METHOD = "preferred_auth_method";
-        final static String ACCOUNT_TRANSFER_V2_SLK = "account_transfer_v2_slk";
+        final static String ACCOUNT_TRANSFER_TOKEN = "account_transfer_token";
     }
 
     /**
@@ -255,6 +255,6 @@ public class BrokerRequest implements Serializable {
     private PreferredAuthMethod mPreferredAuthMethod;
 
     @Nullable
-    @SerializedName(SerializedNames.ACCOUNT_TRANSFER_V2_SLK)
-    private String mAccountTransferV2SlkToken;
+    @SerializedName(SerializedNames.ACCOUNT_TRANSFER_TOKEN)
+    private String mAccountTransferToken;
 }

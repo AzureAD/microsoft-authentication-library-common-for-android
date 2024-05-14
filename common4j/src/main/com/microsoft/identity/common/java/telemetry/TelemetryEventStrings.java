@@ -226,8 +226,8 @@ public class TelemetryEventStrings {
         public static final String BROKER_REMOVE_ACCOUNT = "207";
         public static final String BROKER_REMOVE_ACCOUNT_FROM_SHARED_DEVICE = "208";
         public static final String GET_PREFERRED_AUTH_METHOD = "209";
-        public static final String BROKER_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_V2_INTERACTIVE = "210";
-        public static final String BROKER_COMPLETE_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_V2_INTERACTIVE = "211";
+        public static final String BROKER_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_INTERACTIVE = "210";
+        public static final String BROKER_COMPLETE_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_INTERACTIVE = "211";
 
         public static final String LOCAL_ACQUIRE_TOKEN_INTERACTIVE = "101";
         public static final String LOCAL_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE = "1032";

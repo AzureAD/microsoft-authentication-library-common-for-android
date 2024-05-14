@@ -39,7 +39,7 @@ import com.microsoft.identity.common.java.cache.CacheRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
-import com.microsoft.identity.common.java.commands.parameters.AccountTransferV2TokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.AccountTransferTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
@@ -124,8 +124,8 @@ public abstract class BaseController {
     public abstract AcquireTokenResult acquireToken(final InteractiveTokenCommandParameters request)
             throws Exception;
 
-    public AcquireTokenResult acquireTokenForAccountTransferV2(final AccountTransferV2TokenCommandParameters request) throws Exception {
-        throw new UnsupportedOperationException("Account Transfer V2 is initiated from OneAuth, should only be called from BrokerMsalController.");
+    public AcquireTokenResult acquireTokenForAccountTransfer(final AccountTransferTokenCommandParameters request) throws Exception {
+        throw new UnsupportedOperationException("Account Transfer is initiated from OneAuth, should only be called from BrokerMsalController.");
     }
 
     public abstract void onFinishAuthorizationSession(

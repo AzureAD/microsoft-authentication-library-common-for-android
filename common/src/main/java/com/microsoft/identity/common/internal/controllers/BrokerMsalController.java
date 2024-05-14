@@ -34,7 +34,7 @@ import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationB
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_ACCOUNTS;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_DEVICE_MODE;
-import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_INTENT_FOR_ACCOUNT_TRANSFER_V2_INTERACTIVE_REQUEST;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_INTENT_FOR_ACCOUNT_TRANSFER_INTERACTIVE_REQUEST;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_PREFERRED_AUTH_METHOD;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_REMOVE_ACCOUNT;
@@ -81,7 +81,7 @@ import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWith
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
-import com.microsoft.identity.common.java.commands.parameters.AccountTransferV2TokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.AccountTransferTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
@@ -415,33 +415,33 @@ public class BrokerMsalController extends BaseController {
     }
 
     /**
-     * Performs Account Transfer V2 request with Broker.
+     * Performs Account Transfer request with Broker.
      *
-     * @param parameters a {@link AccountTransferV2TokenCommandParameters}
+     * @param parameters a {@link AccountTransferTokenCommandParameters}
      * @return an {@link AcquireTokenResult}.
      */
     @Override
-    public AcquireTokenResult acquireTokenForAccountTransferV2(final @NonNull AccountTransferV2TokenCommandParameters parameters) throws BaseException, ExecutionException, InterruptedException {
-        final String methodTag = TAG + ":acquireTokenForAccountTransferV2";
+    public AcquireTokenResult acquireTokenForAccountTransfer(final @NonNull AccountTransferTokenCommandParameters parameters) throws BaseException, ExecutionException, InterruptedException {
+        final String methodTag = TAG + ":acquireTokenForAccountTransfer";
 
         Telemetry.emit(
                 new ApiStartEvent()
                         .putProperties(parameters)
-                        .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_V2_INTERACTIVE)
+                        .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_INTERACTIVE)
         );
 
         // Same as in regular acquire token, let's create a result future to block on the broker request, it will
         // be unblocked in the onReceive function of the callback
         mBrokerResultFuture = new ResultFuture<>();
 
-        // Get the broker interactive parameters intent for Account Transfer V2
-        final Intent interactiveAccountTransferV2RequestIntent = getBrokerAuthorizationIntentForAccountTransferV2(parameters);
+        // Get the broker interactive parameters intent for Account Transfer
+        final Intent interactiveAccountTransferRequestIntent = getBrokerAuthorizationIntentForAccountTransfer(parameters);
 
         // Pass this intent to the BrokerActivity which will be used to start this activity
         final Intent brokerActivityIntent = new Intent(mApplicationContext, BrokerActivity.class);
-        brokerActivityIntent.putExtra(BrokerActivity.BROKER_INTENT, interactiveAccountTransferV2RequestIntent);
+        brokerActivityIntent.putExtra(BrokerActivity.BROKER_INTENT, interactiveAccountTransferRequestIntent);
 
-        // Callback alias can stay the same in Account Transfer V2 case.
+        // Callback alias can stay the same in Account Transfer case.
         LocalBroadcaster.INSTANCE.registerCallback(RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT,
                 new LocalBroadcaster.IReceiverCallback() {
                     @Override
@@ -455,12 +455,12 @@ public class BrokerMsalController extends BaseController {
 
                         Logger.verbose(
                                 methodTag,
-                                "Received result (for Account Transfer V2 request) from Broker..."
+                                "Received result (for Account Transfer request) from Broker..."
                         );
 
                         Telemetry.emit(
                                 new ApiStartEvent()
-                                        .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_V2_INTERACTIVE)
+                                        .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_INTERACTIVE)
                                         .put(TelemetryEventStrings.Key.REQUEST_CODE, propertyBag.<Integer>getOrDefault(REQUEST_CODE, -1).toString())
                                         .put(TelemetryEventStrings.Key.RESULT_CODE, propertyBag.<Integer>getOrDefault(RESULT_CODE, -1).toString())
                         );
@@ -469,7 +469,7 @@ public class BrokerMsalController extends BaseController {
 
                         Telemetry.emit(
                                 new ApiEndEvent()
-                                        .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_V2_INTERACTIVE)
+                                        .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_INTERACTIVE)
                         );
 
                         LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT);
@@ -486,11 +486,7 @@ public class BrokerMsalController extends BaseController {
             // Wait to be notified of the result being returned... we could add a timeout here if we want to
             final Bundle resultBundle = mBrokerResultFuture.get();
 
-            final String negotiatedBrokerProtocolVersion = interactiveAccountTransferV2RequestIntent.getStringExtra(NEGOTIATED_BP_VERSION_KEY);
-
-            if (parameters.getOAuth2TokenCache() != null && !BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker(negotiatedBrokerProtocolVersion)) {
-                saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
-            }
+            final String negotiatedBrokerProtocolVersion = interactiveAccountTransferRequestIntent.getStringExtra(NEGOTIATED_BP_VERSION_KEY);
 
             verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
             result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
@@ -498,7 +494,7 @@ public class BrokerMsalController extends BaseController {
             Telemetry.emit(
                     new ApiEndEvent()
                             .putException(e)
-                            .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_V2_INTERACTIVE)
+                            .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_INTERACTIVE)
             );
             throw e;
         }
@@ -506,7 +502,7 @@ public class BrokerMsalController extends BaseController {
         Telemetry.emit(
                 new ApiEndEvent()
                         .putResult(result)
-                        .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_V2_INTERACTIVE)
+                        .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_INTERACTIVE)
         );
 
         return result;
@@ -582,14 +578,14 @@ public class BrokerMsalController extends BaseController {
     }
 
     /**
-     * Get the intent for the broker Account Transfer V2 request
+     * Get the intent for the broker Account Transfer request
      *
-     * @param parameters a {@link AccountTransferV2TokenCommandParameters}
-     * @return an {@link Intent} for initiating Broker Account Transfer V2 interactive activity.
+     * @param parameters a {@link AccountTransferTokenCommandParameters}
+     * @return an {@link Intent} for initiating Broker Account Transfer interactive activity.
      */
     @NonNull
-    private Intent getBrokerAuthorizationIntentForAccountTransferV2(
-            final @NonNull AccountTransferV2TokenCommandParameters parameters) throws BaseException {
+    private Intent getBrokerAuthorizationIntentForAccountTransfer(
+            final @NonNull AccountTransferTokenCommandParameters parameters) throws BaseException {
         return getBrokerOperationExecutor().execute(parameters,
                 new BrokerOperation<Intent>() {
                     private String negotiatedBrokerProtocolVersion;
@@ -604,7 +600,7 @@ public class BrokerMsalController extends BaseController {
                     public @NonNull
                     BrokerOperationBundle getBundle() {
                         return new BrokerOperationBundle(
-                                MSAL_GET_INTENT_FOR_ACCOUNT_TRANSFER_V2_INTERACTIVE_REQUEST,
+                                MSAL_GET_INTENT_FOR_ACCOUNT_TRANSFER_INTERACTIVE_REQUEST,
                                 mActiveBrokerPackageName,
                                 null);
                     }
@@ -616,13 +612,13 @@ public class BrokerMsalController extends BaseController {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
 
-                        // Looked through this, i think we can keep it as is for Account Transfer V2
+                        // Looked through this, i think we can keep it as is for Account Transfer
                         final Intent intent = mResultAdapter.getIntentForInteractiveRequestFromResultBundle(
                                 resultBundle,
                                 negotiatedBrokerProtocolVersion);
 
                         intent.putExtras(
-                                mRequestAdapter.getRequestBundleForAccountTransferV2(parameters, negotiatedBrokerProtocolVersion)
+                                mRequestAdapter.getRequestBundleForAccountTransfer(parameters, negotiatedBrokerProtocolVersion)
                         );
                         return intent;
                     }
@@ -630,7 +626,7 @@ public class BrokerMsalController extends BaseController {
                     @Override
                     public @NonNull
                     String getMethodName() {
-                        return ":getBrokerAuthorizationIntentForAccountTransferV2";
+                        return ":getBrokerAuthorizationIntentForAccountTransfer";
                     }
 
                     @Override
@@ -1325,7 +1321,7 @@ public class BrokerMsalController extends BaseController {
 
         final BrokerResult brokerResult = new MsalBrokerResultAdapter().brokerResultFromBundle(resultBundle);
 
-        if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS) &&
+        if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_SUCCESS) &&
                 AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(brokerResult.getTenantId())) {
             Logger.info(methodTag, "Result returned for MSA Account, saving to cache");
 

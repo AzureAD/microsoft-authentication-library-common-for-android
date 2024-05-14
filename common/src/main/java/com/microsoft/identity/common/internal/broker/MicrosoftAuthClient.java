@@ -98,19 +98,19 @@ public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthServic
 
                 return bundle;
 
-            case MSAL_GET_INTENT_FOR_ACCOUNT_TRANSFER_V2_INTERACTIVE_REQUEST:
-                final Intent accountTransferV2Intent = microsoftAuthService.getIntentForAccountTransferV2InteractiveRequest();
-                final Bundle accountTransferV2Bundle = accountTransferV2Intent.getExtras();
+            case MSAL_GET_INTENT_FOR_ACCOUNT_TRANSFER_INTERACTIVE_REQUEST:
+                final Intent accountTransferIntent = microsoftAuthService.getIntentForAccountTransferInteractiveRequest();
+                final Bundle accountTransferBundle = accountTransferIntent.getExtras();
 
                 //older brokers (pre-ContentProvider) are ONLY sending these values in the intent itself.
-                if (accountTransferV2Intent.getComponent() != null &&
-                        !TextUtils.isEmpty(accountTransferV2Intent.getPackage()) &&
-                        !TextUtils.isEmpty(accountTransferV2Intent.getComponent().getClassName())){
-                    accountTransferV2Bundle.putString(BROKER_PACKAGE_NAME, accountTransferV2Intent.getPackage());
-                    accountTransferV2Bundle.putString(BROKER_ACTIVITY_NAME, accountTransferV2Intent.getComponent().getClassName());
+                if (accountTransferIntent.getComponent() != null &&
+                        !TextUtils.isEmpty(accountTransferIntent.getPackage()) &&
+                        !TextUtils.isEmpty(accountTransferIntent.getComponent().getClassName())){
+                    accountTransferBundle.putString(BROKER_PACKAGE_NAME, accountTransferIntent.getPackage());
+                    accountTransferBundle.putString(BROKER_ACTIVITY_NAME, accountTransferIntent.getComponent().getClassName());
                 }
 
-                return accountTransferV2Bundle;
+                return accountTransferBundle;
 
             case MSAL_ACQUIRE_TOKEN_SILENT:
                 return microsoftAuthService.acquireTokenSilently(inputBundle);
