@@ -30,6 +30,9 @@ steps:
   inputs:
     filename: echo
     arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAt }}]$(System.AccessToken)'
+- template: ../templates/steps/automation-cert.yml
+  parameters:
+    envVstsMvnAt: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
 - task: Gradle@2
   displayName: Assemble ${{ parameters.project }} ${{ parameters.variant }}
   inputs:
@@ -41,7 +44,7 @@ steps:
   inputs:
     javaHomeSelection: JDKVersion
     jdkVersionOption: "1.11"
-    tasks: '${{ parameters.project }}:test${{ parameters.variant }} ${{ parameters.testArguments }}'
+    tasks: '${{ parameters.project }}:test${{ parameters.variant }} -PlabSecret=$(LabVaultAppCert)'
 - task: Gradle@2
   displayName: Publish
   inputs:
