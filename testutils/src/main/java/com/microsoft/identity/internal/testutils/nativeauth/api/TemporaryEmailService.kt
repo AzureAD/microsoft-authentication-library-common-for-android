@@ -77,7 +77,9 @@ class TemporaryEmailService {
             throw IllegalStateException("Unable to fetch inbox for user $emailAddress")
         }
 
-        // TODO in case of multiple emails, sort by latest first
+        // TODO ID seems to work, but using timestamp-based sorting is more robust.
+        retrievedMailbox.sortedByDescending { it.id }
+
         val emailId = retrievedMailbox[0].id
         val emailContent = api.retrieveEmail(emailAddress, emailId)
         val otpValue = retrieveOtpFromEmailBody(emailContent.textBody)

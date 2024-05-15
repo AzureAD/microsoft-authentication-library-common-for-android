@@ -23,4 +23,14 @@ object NativeAuthCredentialHelper {
                 password
             }
         }
+
+    val nativeAuthSSPRUsername: String
+        get() {
+            val username = BuildConfig.NATIVE_AUTH_SSPR_TEST_USERNAME
+            return if (StringUtil.isNullOrEmpty(username)) {
+                throw IllegalStateException("env var NATIVE_AUTH_SSPR_TEST_USERNAME value not set")
+            } else {
+                username
+            }
+        }
 }
