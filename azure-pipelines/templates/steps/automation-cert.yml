@@ -37,6 +37,12 @@ steps:
       
       Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My
       
-      $certPathVar = $pfxPath -replace "\\", "\\\\"
+      $certPathVar = $pfxPath -replace "\\", "/"
+
+      if([System.IO.File]::Exists($pfxPath)) {
+        Write-Host "PFX file created successfully at $certPathVar"
+      } else {
+        Write-Error "Failed to create PFX file at $certPathVar"
+      }    
       
       Write-Host "##vso[task.setvariable variable=LabVaultAppCert]$certPathVar"     
