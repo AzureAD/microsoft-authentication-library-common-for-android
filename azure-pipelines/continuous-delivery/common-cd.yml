@@ -54,7 +54,7 @@ jobs:
       project: LabApiUtilities
       buildArguments: '-PprojVersion=$(versionNumber)'
       artifactFolder: 'LabApiUtilities/build/libs'
-      testArguments: "-PlabSecret=$(LabVaultAppCert)"
+      testArguments: -PlabSecret=$(LabVaultAppCert)
 # Test utils
 - job: testutils_phase
   displayName: 'Test utils: Build, Test and Publish'
