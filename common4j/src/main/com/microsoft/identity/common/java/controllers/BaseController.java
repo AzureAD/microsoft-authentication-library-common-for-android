@@ -931,10 +931,7 @@ public abstract class BaseController {
     }
 
     protected Set<String> addDefaultScopes(@NonNull final TokenCommandParameters commandParameters) {
-        return addDefaultScopes(commandParameters.getScopes());
-    }
-
-    public static Set<String> addDefaultScopes(@NonNull final Set<String> requestScopes) {
+        final Set<String> requestScopes = commandParameters.getScopes();
         requestScopes.addAll(AuthenticationConstants.DEFAULT_SCOPES);
         // sanitize empty and null scopes
         requestScopes.removeAll(Arrays.asList("", null));

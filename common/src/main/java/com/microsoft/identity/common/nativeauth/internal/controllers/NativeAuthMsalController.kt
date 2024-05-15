@@ -687,15 +687,12 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         val strategy = parametersWithScopes.authority.createOAuth2Strategy(strategyParameters)
 
         val tokenCache = parametersWithScopes.oAuth2TokenCache
-        var target: String? = null
-        if (parametersWithScopes.scopes != null) {
-            target = TextUtils.join(" ", parametersWithScopes.scopes)
-        }
+
         val cacheRecords = tokenCache.loadWithAggregatedAccountData(
             parametersWithScopes.clientId,
             parametersWithScopes.applicationIdentifier,
             null,
-            target,
+            TextUtils.join(" ", parametersWithScopes.scopes),
             targetAccount,
             authScheme
         ) as List<ICacheRecord>
@@ -729,7 +726,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     parameters.getCorrelationId(),
                     "Access token is expired. Removing from cache..."
                 )
-
+                // Remove the expired token
+                tokenCache.removeCredential(fullCacheRecord.accessToken)
                 renewAccessToken(
                     parametersWithScopes,
                     acquireTokenSilentResult,
@@ -777,6 +775,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 "Access token is expired. Removing from cache..."
             )
 
+            // Remove the expired token
+            tokenCache.removeCredential(fullCacheRecord.accessToken)
             renewAccessToken(
                 parametersWithScopes,
                 acquireTokenSilentResult,
