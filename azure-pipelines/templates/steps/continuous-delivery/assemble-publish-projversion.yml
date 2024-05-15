@@ -30,7 +30,7 @@ steps:
   inputs:
     filename: echo
     arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAt }}]$(System.AccessToken)'
-- template: ../templates/steps/automation-cert.yml
+- template: ../automation-cert.yml
   parameters:
     envVstsMvnAt: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
 - task: Gradle@2
