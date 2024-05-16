@@ -29,21 +29,19 @@ import java.net.URL
 /**
  * ApiConstants provides various endpoints for mock API for Native Auth endpoints.
  */
-interface ApiConstants {
-    companion object {
-        val BASE_PATH: String = BuildValues.getMockApiUrlForNativeAuthAuthority()
-        private val BASE_REQUEST_PATH = BASE_PATH + "1234/"
-        val signUpStartRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/start")
-        val signUpChallengeRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/challenge")
-        val signUpContinueRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/continue")
-        val signInInitiateRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/initiate")
-        val signInChallengeRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/challenge")
-        val signInTokenRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/token")
-        val ssprStartRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/start")
-        val ssprChallengeRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/challenge")
-        val ssprContinueRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/continue")
-        val ssprSubmitRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/submit")
-        val ssprPollCompletionRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/poll_completion")
-        val tokenEndpoint = URL("https://contoso.com/1234/token")
-    }
+object ApiConstants {
+    val BASE_PATH: String = BuildValues.getMockApiUrlForNativeAuthAuthority()
+    val BASE_REQUEST_PATH = BASE_PATH + "1234/"
+    val signUpStartRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/start")
+    val signUpChallengeRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/challenge")
+    val signUpContinueRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/continue")
+    val signInInitiateRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/initiate")
+    val signInChallengeRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/challenge")
+    val signInTokenRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/token")
+    val ssprStartRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/start")
+    val ssprChallengeRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/challenge")
+    val ssprContinueRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/continue")
+    val ssprSubmitRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/submit")
+    val ssprPollCompletionRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/poll_completion")
+    val tokenEndpoint = URL("https://contoso.com/1234/token")
 }
