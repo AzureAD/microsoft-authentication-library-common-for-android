@@ -148,7 +148,6 @@ publishing {
 def sliceParameter = "" // will be blank unless specified by developer
 def dcParameter = "" // will be blank unless specified by developer
 def useMockApiForNativeAuthParameter = false // will be false unless specified by developer
-def mockApiUrlForNativeAuthParameter = "" // will be blank unless specified by developer
 def disableAcquireTokenSilentTimeoutParameter = false // will be false unless specified by developer
 
 if (project.hasProperty("slice")) {
@@ -165,10 +164,6 @@ if (project.hasProperty("useMockApiForNativeAuth")) {
     useMockApiForNativeAuthParameter = useMockApiForNativeAuth
 }
 
-if (project.hasProperty("mockApiUrlForNativeAuth")) {
-    mockApiUrlForNativeAuthParameter = mockApiUrlForNativeAuth
-}
-
 // By adding -PdisableAcquireTokenSilentTimeout in your dev environment, you will no longer subject to the ATS timeout,
 // and your life will be much happier during debugging.
 if (project.hasProperty("disableAcquireTokenSilentTimeout")) {
@@ -181,7 +176,6 @@ sourceSets {
         buildConfigField("String", "SLICE", "\"$sliceParameter\"")
         buildConfigField("String", "DC", "\"$dcParameter\"")
         buildConfigField("boolean", "USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY", "${useMockApiForNativeAuthParameter}")
-        buildConfigField("String", "MOCK_API_URL_FOR_NATIVE_AUTH_AUTHORITY", "\"$mockApiUrlForNativeAuthParameter\"")
         buildConfigField("boolean", "DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT", "${disableAcquireTokenSilentTimeoutParameter}")
     }
     test {

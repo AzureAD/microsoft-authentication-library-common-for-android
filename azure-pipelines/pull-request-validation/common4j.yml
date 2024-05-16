@@ -21,6 +21,8 @@ pool:
 jobs:
 - job: build_test
   displayName: Build & Test
+  env:
+    MOCK_API_URL: $(MOCK_API_URL)
   steps:
   - checkout: self
     clean: true
@@ -40,9 +42,7 @@ jobs:
       spotbugsCommand: spotbugsMain
   - task: Gradle@2
     displayName: Run the unit tests.
-    env:
-      MOCK_API_URL: $(MOCK_API_URL)
     inputs:
       cwd: $(Build.SourcesDirectory)/common-java-root
-      tasks: common4j:test -Psugar=true -PmockApiUrlForNativeAuth=$(MOCK_API_URL)
+      tasks: common4j:test -Psugar=true
 ...

@@ -47,16 +47,9 @@ public class BuildValues {
     @Nonnull
     private static Boolean USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY = BuildConfig.USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY;
 
-    @Nonnull
-    private static String MOCK_API_URL_NATIVE_AUTH_AUTHORITY = BuildConfig.MOCK_API_URL_FOR_NATIVE_AUTH_AUTHORITY;
-
     public static Boolean shouldUseMockApiForNativeAuth()
     {
         return USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY;
-    }
-
-    public static String getMockApiUrlForNativeAuthAuthority() {
-        return MOCK_API_URL_NATIVE_AUTH_AUTHORITY;
     }
 
     public static void setUseMockApiForNativeAuth(Boolean useMockApi) {
