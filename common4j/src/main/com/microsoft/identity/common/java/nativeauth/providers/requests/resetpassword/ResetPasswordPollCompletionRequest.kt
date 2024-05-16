@@ -60,7 +60,7 @@ class ResetPasswordPollCompletionRequest private constructor(
             return ResetPasswordPollCompletionRequest(
                 requestUrl = URL(requestUrl),
                 headers = headers,
-                parameters = NativeAuthResetPasswordPollCompletionRequestBody(
+                parameters = NativeAuthResetPasswordPollCompletionRequestParameters(
                     clientId = clientId,
                     continuationToken = continuationToken
                 )
@@ -68,12 +68,20 @@ class ResetPasswordPollCompletionRequest private constructor(
         }
     }
 
+    override fun toUnsanitizedString(): String = "ResetPasswordPollCompletionRequest(requestUrl=$requestUrl, headers=$headers, parameters=$parameters)"
+
+    override fun toString(): String = "ResetPasswordPollCompletionRequest()"
+
     /**
      * NativeAuthResetPasswordPollCompletionRequestBody represents the request parameters sent as part of
      * /resetpassword/poll_completion API call
      */
-    data class NativeAuthResetPasswordPollCompletionRequestBody(
+    data class NativeAuthResetPasswordPollCompletionRequestParameters(
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("continuation_token") val continuationToken: String
-    ) : NativeAuthRequestParameters()
+    ) : NativeAuthRequestParameters() {
+        override fun toUnsanitizedString(): String = "NativeAuthResetPasswordPollCompletionRequestParameters(clientId=$clientId)"
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 }

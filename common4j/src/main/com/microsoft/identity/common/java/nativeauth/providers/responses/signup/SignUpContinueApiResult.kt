@@ -37,7 +37,13 @@ sealed interface SignUpContinueApiResult: ApiResult {
      */
     data class Redirect(
         override val correlationId: String,
-    ) : SignUpContinueApiResult
+    ) : SignUpContinueApiResult {
+        override fun toUnsanitizedString(): String {
+            return "Redirect(correlationId=$correlationId)"
+        }
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 
     /**
      * Signup operation has successfully completed.
@@ -46,7 +52,12 @@ sealed interface SignUpContinueApiResult: ApiResult {
         override val correlationId: String,
         val continuationToken: String?,
         val expiresIn: Int?
-    ) : SignUpContinueApiResult
+    ) : SignUpContinueApiResult {
+        override fun toUnsanitizedString(): String = "Success(correlationId=$correlationId, " +
+                "expiresIn=$expiresIn)"
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 
     /**
      * Signup operation requires user attributes to continue further.
@@ -61,7 +72,14 @@ sealed interface SignUpContinueApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), SignUpContinueApiResult
+    ), SignUpContinueApiResult {
+        override fun toUnsanitizedString(): String = "AttributesRequired(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, " +
+                "requiredAttributes=$requiredAttributes)"
+
+        override fun toString(): String = "AttributesRequired(correlationId=$correlationId, " +
+                "requiredAttributes=$requiredAttributes)"
+    }
 
     /**
      * Signup operation requires user credentials to continue further.
@@ -75,7 +93,12 @@ sealed interface SignUpContinueApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), SignUpContinueApiResult
+    ), SignUpContinueApiResult {
+        override fun toUnsanitizedString(): String = "CredentialRequired(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "CredentialRequired(correlationId=$correlationId)"
+    }
 
     /**
      * Signup continue request was issues with an expired token.
@@ -88,7 +111,12 @@ sealed interface SignUpContinueApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), SignUpContinueApiResult
+    ), SignUpContinueApiResult {
+        override fun toUnsanitizedString(): String = "ExpiredToken(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "ExpiredToken(correlationId=$correlationId)"
+    }
 
     /**
      * Signup operation was started for a username that already has an account.
@@ -101,7 +129,12 @@ sealed interface SignUpContinueApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), SignUpContinueApiResult
+    ), SignUpContinueApiResult {
+        override fun toUnsanitizedString(): String = "UsernameAlreadyExists(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "UsernameAlreadyExists(correlationId=$correlationId)"
+    }
 
     /**
      * The OOB value sent as part of Signup continue request was incorrect.
@@ -115,7 +148,12 @@ sealed interface SignUpContinueApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), SignUpContinueApiResult
+    ), SignUpContinueApiResult {
+        override fun toUnsanitizedString(): String = "InvalidOOBValue(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, subError=$subError)"
+
+        override fun toString(): String = "InvalidOOBValue(correlationId=$correlationId)"
+    }
 
     /**
      * The user attributes sent as part of Signup Continue request failed
@@ -123,15 +161,21 @@ sealed interface SignUpContinueApiResult: ApiResult {
      */
     data class InvalidAttributes(
         override val correlationId: String,
+        val invalidAttributes: List<String>,
         override val error: String,
         override val errorDescription: String,
-        val invalidAttributes: List<String>,
         val subError: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), SignUpContinueApiResult
+    ), SignUpContinueApiResult {
+        override fun toUnsanitizedString(): String = "InvalidAttributes(correlationId=$correlationId, " +
+                "invalidAttributes=$invalidAttributes, error=$error, errorDescription=$errorDescription, " +
+                "subError=$subError)"
+
+        override fun toString(): String = "InvalidAttributes(correlationId=$correlationId)"
+    }
 
     /**
      * The Signup Continue API request failed due to an unknown error.
@@ -144,7 +188,12 @@ sealed interface SignUpContinueApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), SignUpContinueApiResult
+    ), SignUpContinueApiResult {
+        override fun toUnsanitizedString() = "UnknownError(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+
+        override fun toString(): String = "UnknownError(correlationId=$correlationId)"
+    }
 
     /**
      * The Sign Up continue request failed as the password failed server side validation.
@@ -158,5 +207,10 @@ sealed interface SignUpContinueApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), SignUpContinueApiResult
+    ), SignUpContinueApiResult {
+        override fun toUnsanitizedString() = "InvalidPassword(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes, subError=$subError)"
+
+        override fun toString(): String = "InvalidPassword(correlationId=$correlationId)"
+    }
 }

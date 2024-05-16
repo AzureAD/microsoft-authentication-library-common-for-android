@@ -24,6 +24,8 @@ jobs:
 - job: build_test
   displayName: Build & Test
   cancelTimeoutInMinutes: 1
+  variables:
+    Codeql.Enabled: true
   steps:
   - checkout: self
     clean: true
@@ -35,6 +37,7 @@ jobs:
     inputs:
       filename: echo
       arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)'
+  - task: CodeQL3000Init@0
   - task: Gradle@3
     name: Gradle3   
     displayName: Assemble Local
@@ -45,12 +48,13 @@ jobs:
       publishJUnitResults: false
       jdkArchitecture: x64
       sqAnalysisEnabled: false
+  - task: CodeQL3000Finalize@0
   - task: Gradle@2
     displayName: Run Unit tests
     inputs:
       javaHomeSelection: JDKVersion
       jdkVersionOption: "1.11"
-      tasks: common:testLocalDebugUnitTest
+      tasks: common:testLocalDebugUnitTest -PlabSecret=$(LabVaultAppCert)
   - task: Gradle@3
     displayName: Check Dependencies size
     condition: eq(variables['system.pullRequest.targetBranch'], 'dev')
@@ -89,39 +93,4 @@ jobs:
       publishJUnitResults: false
       javaHomeSelection: JDKVersion
       jdkVersionOption: "1.11"
-- job: codeql
-  displayName: CodeQL
-  cancelTimeoutInMinutes: 1
-  steps:
-  - checkout: self
-    clean: true
-    submodules: recursive
-    persistCredentials: True
-  - task: JavaToolInstaller@0
-    inputs:
-        versionSpec: '11'
-        jdkArchitectureOption: 'x64'
-        jdkSourceOption: 'PreInstalled'
-  - task: CmdLine@1
-    displayName: Set Office MVN Access Token in Environment
-    inputs:
-      filename: echo
-      arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)'
-  # https://semmleportal.azurewebsites.net/codeql/guardian
-  - task: Semmle@1
-    env:
-      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-    inputs:
-      sourceCodeDirectory: '$(Build.SourcesDirectory)'
-      language: 'java'
-      buildCommandsString: 'gradlew.bat clean common:assembleLocal'
-      querySuite: 'Recommended'
-      timeout: '1800'
-      jdkVersionOption: "1.11"
-  - task: PublishPipelineArtifact@1
-    displayName: 'Publish code analysis artifacts'
-    inputs:
-      targetPath: '$(Build.SourcesDirectory)\build\outputs\'
-      ArtifactName: 'outputs'
-    condition: failed()
 ...

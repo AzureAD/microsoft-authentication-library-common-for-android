@@ -22,19 +22,26 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.responses.signin
 
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResult
+import com.microsoft.identity.common.java.nativeauth.util.ILoggable
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 
 /**
  * Represents the potential result types returned from the OAuth /token endpoint,
  * including a case for unexpected errors received from the server.
  */
-sealed interface SignInTokenApiResult: ApiResult {
+sealed interface SignInTokenApiResult: ApiResult, ILoggable {
     data class Success(
         override val correlationId: String,
         val tokenResponse: MicrosoftStsTokenResponse
-    ) : SignInTokenApiResult
+    ) : SignInTokenApiResult {
+        override fun toUnsanitizedString(): String {
+            return "Success(correlationId=$correlationId)"
+        }
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 
     data class MFARequired(
         override val correlationId: String,
@@ -46,66 +53,97 @@ sealed interface SignInTokenApiResult: ApiResult {
         errorDescription = errorDescription,
         errorCodes = errorCodes,
         correlationId = correlationId
-    ), SignInTokenApiResult
+    ), SignInTokenApiResult {
+        override fun toUnsanitizedString() = "MFARequired(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+
+        override fun toString(): String = "MFARequired(correlationId=$correlationId)"
+    }
 
     data class UserNotFound(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
-        override val correlationId: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
         errorCodes = errorCodes,
         correlationId = correlationId
-    ), SignInTokenApiResult
+    ), SignInTokenApiResult {
+        override fun toUnsanitizedString() = "UserNotFound(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+
+        override fun toString(): String = "UserNotFound(correlationId=$correlationId)"
+    }
 
     data class InvalidCredentials(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
-        override val correlationId: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
         errorCodes = errorCodes,
         correlationId = correlationId
-    ), SignInTokenApiResult
+    ), SignInTokenApiResult {
+        override fun toUnsanitizedString() = "InvalidCredentials(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+
+        override fun toString(): String = "InvalidCredentials(correlationId=$correlationId)"
+    }
 
     data class CodeIncorrect(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
         val subError: String,
-        override val correlationId: String
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
         errorCodes = errorCodes,
         correlationId = correlationId
-    ), SignInTokenApiResult
+    ), SignInTokenApiResult {
+        override fun toUnsanitizedString() = "CodeIncorrect(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes, " +
+                "subError=$subError)"
+
+        override fun toString(): String = "CodeIncorrect(correlationId=$correlationId)"
+    }
 
     data class InvalidAuthenticationType(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
-        override val correlationId: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
         errorCodes = errorCodes,
         correlationId = correlationId
-    ), SignInTokenApiResult
+    ), SignInTokenApiResult {
+        override fun toUnsanitizedString() = "InvalidAuthenticationType(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+
+        override fun toString(): String = "InvalidAuthenticationType(correlationId=$correlationId)"
+    }
 
     data class UnknownError(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
-        override val correlationId: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
         errorCodes = errorCodes,
         correlationId = correlationId
-    ), SignInTokenApiResult
+    ), SignInTokenApiResult {
+        override fun toUnsanitizedString() = "UnknownError(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+
+        override fun toString(): String = "UnknownError(correlationId=$correlationId)"
+    }
 }

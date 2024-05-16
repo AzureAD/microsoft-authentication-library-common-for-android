@@ -37,7 +37,7 @@ import java.net.URL
 data class SignInTokenRequest private constructor(
     override var requestUrl: URL,
     override var headers: Map<String, String?>,
-    override val parameters: NativeAuthRequestSignInTokenParameters
+    override val parameters: NativeAuthRequestSignInTokenRequestParameters
 ) : NativeAuthRequest() {
 
     /**
@@ -68,7 +68,7 @@ data class SignInTokenRequest private constructor(
 
 
             return SignInTokenRequest(
-                parameters = NativeAuthRequestSignInTokenParameters(
+                parameters = NativeAuthRequestSignInTokenRequestParameters(
                     oob = oob,
                     continuationToken = continuationToken,
                     clientId = clientId,
@@ -108,7 +108,7 @@ data class SignInTokenRequest private constructor(
 
 
             return SignInTokenRequest(
-                parameters = NativeAuthRequestSignInTokenParameters(
+                parameters = NativeAuthRequestSignInTokenRequestParameters(
                     password = password,
                     continuationToken = continuationToken,
                     clientId = clientId,
@@ -147,7 +147,7 @@ data class SignInTokenRequest private constructor(
             ArgUtils.validateNonNullArg(headers, "headers")
 
             return SignInTokenRequest(
-                parameters = NativeAuthRequestSignInTokenParameters(
+                parameters = NativeAuthRequestSignInTokenRequestParameters(
                     continuationToken = continuationToken,
                     clientId = clientId,
                     username = username,
@@ -161,7 +161,11 @@ data class SignInTokenRequest private constructor(
         }
     }
 
-    data class NativeAuthRequestSignInTokenParameters(
+    override fun toUnsanitizedString(): String = "SignInTokenRequest(requestUrl=$requestUrl, headers=$headers, parameters=$parameters)"
+
+    override fun toString(): String = "SignInTokenRequest()"
+
+    data class NativeAuthRequestSignInTokenRequestParameters(
         val username: String? = null,
         @JsonAdapter(CharArrayJsonAdapter::class) val password: CharArray? = null,
         val oob: String? = null,
@@ -172,5 +176,9 @@ data class SignInTokenRequest private constructor(
         @SerializedName("continuation_token") val continuationToken: String? = null,
         @SerializedName("scope") val scope: String?,
         @SerializedName("challenge_type") val challengeType: String?
-    ) : NativeAuthRequestParameters()
+    ) : NativeAuthRequestParameters() {
+        override fun toUnsanitizedString(): String = "NativeAuthRequestSignInTokenRequestParameters(nca=$nca, clientInfo=$clientInfo, clientId=$clientId, grantType=$grantType, scope=$scope, challengeType=$challengeType)"
+
+        override fun toString(): String = "NativeAuthRequestSignInTokenRequestParameters(nca=$nca, clientInfo=$clientInfo, clientId=$clientId)"
+    }
 }

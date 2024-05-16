@@ -46,14 +46,23 @@ import java.net.HttpURLConnection
 class ResetPasswordPollCompletionApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
-    @Expose @SerializedName("status") val status: String?,
     @SerializedName("continuation_token") val continuationToken: String?,
+    @Expose @SerializedName("status") val status: String?,
     @SerializedName("expires_in") val expiresIn: Int?,
     @SerializedName("error") val error: String?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
     @SerializedName("suberror") val subError: String?
 ): IApiResponse(statusCode, correlationId) {
+
+    override fun toUnsanitizedString(): String {
+        return "ResetPasswordPollCompletionApiResponse(statusCode=$statusCode, " +
+                "correlationId=$correlationId, status=$status, expiresIn=$expiresIn " +
+                "error=$error, errorUri=$errorUri, errorDescription=$errorDescription, subError=$subError)"
+    }
+
+    override fun toString(): String = "ResetPasswordPollCompletionApiResponse(statusCode=$statusCode, " +
+            "correlationId=$correlationId"
 
     companion object {
         private val TAG = ResetPasswordPollCompletionApiResponse::class.java.simpleName

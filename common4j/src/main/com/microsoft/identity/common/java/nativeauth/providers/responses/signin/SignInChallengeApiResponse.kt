@@ -52,6 +52,18 @@ class SignInChallengeApiResponse(
     @SerializedName("error_uri") val errorUri: String?,
 ): IApiResponse(statusCode, correlationId) {
 
+    override fun toUnsanitizedString(): String {
+        return "SignInChallengeApiResponse(statusCode=$statusCode, " +
+                "correlationId=$correlationId, challengeType=$challengeType, " +
+                "bindingMethod=$bindingMethod, challengeTargetLabel=$challengeTargetLabel, " +
+                "challengeChannel=$challengeChannel, codeLength=$codeLength, interval=$interval, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes, " +
+                "errorUri=$errorUri)"
+    }
+
+    override fun toString(): String = "SignInChallengeApiResponse(statusCode=$statusCode, " +
+            "correlationId=$correlationId"
+
     companion object {
         private val TAG = SignInChallengeApiResponse::class.java.simpleName
         private const val INVALID_GRANT = "invalid_grant";

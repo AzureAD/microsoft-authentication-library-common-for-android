@@ -74,7 +74,7 @@ task generateJavadoc(type: Javadoc) {
     classpath += project.sourceSets.main.compileClasspath
 
     options.memberLevel = JavadocMemberLevel.PUBLIC
-    options.addStringOption('Xdoclint:none', '-quiet')
+    options.addBooleanOption('Xdoclint:none', true)
 
     exclude '**/BuildConfig.Java'
     exclude '**/R.java'
