@@ -185,7 +185,8 @@ sourceSets {
         buildConfigField("boolean", "DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT", "${disableAcquireTokenSilentTimeoutParameter}")
     }
     test {
-        java.srcDirs = ['src/test']
+        java.srcDirs = ['src/test', "$project.buildDir/generated/source/buildConfig/test"]
+        buildConfigField("String", "MOCK_API_URL_FOR_NATIVE_AUTH_AUTHORITY", "\"$mockApiUrlForNativeAuthParameter\"")
     }
 }
 
