@@ -41,7 +41,6 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpa
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordStartApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResult
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
-import com.microsoft.identity.common.nativeauth.ApiConstants
 import com.microsoft.identity.common.nativeauth.MockApiEndpoint
 import com.microsoft.identity.common.nativeauth.MockApiResponseType
 import com.microsoft.identity.common.nativeauth.MockApiUtils.Companion.configureMockApi
@@ -56,6 +55,7 @@ import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprConti
 import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprStartRequestUrl
 import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprSubmitRequestUrl
 import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprPollCompletionRequestUrl
+import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.tokenEndpoint
 
 import io.mockk.every
 import io.mockk.mockk
@@ -112,7 +112,7 @@ class ResetPasswordOAuth2StrategyTest {
     @Before
     fun setup() {
         whenever(mockConfig.clientId).thenReturn(CLIENT_ID)
-        whenever(mockConfig.tokenEndpoint).thenReturn(ApiConstants.tokenEndpoint)
+        whenever(mockConfig.tokenEndpoint).thenReturn(tokenEndpoint)
         whenever(mockConfig.getSignUpStartEndpoint()).thenReturn(signUpStartRequestUrl)
         whenever(mockConfig.getSignUpChallengeEndpoint()).thenReturn(signUpChallengeRequestUrl)
         whenever(mockConfig.getSignUpContinueEndpoint()).thenReturn(signUpContinueRequestUrl)
