@@ -44,5 +44,5 @@ jobs:
     displayName: Run the unit tests.
     inputs:
       cwd: $(Build.SourcesDirectory)/common-java-root
-      tasks: common4j:test -Psugar=true -PmockApiUrlForNativeAuth=$(MOCK_API_URL)
+      tasks: common4j:test -Psugar=true -PmockApiUrlForNativeAuth=https://native-auth-mock-api.azurewebsites.net/
 ...
