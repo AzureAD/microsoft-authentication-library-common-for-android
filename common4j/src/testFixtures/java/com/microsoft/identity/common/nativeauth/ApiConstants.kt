@@ -23,6 +23,7 @@
 
 package com.microsoft.identity.common.nativeauth
 
+import com.microsoft.identity.common.java.nativeauth.BuildValues
 import java.net.URL
 
 /**
@@ -30,8 +31,8 @@ import java.net.URL
  */
 interface ApiConstants {
     companion object {
-        val BASEPATH: String? by lazy { System.getenv("MOCK_API_URL") }
-        val BASE_REQUEST_PATH = BASEPATH + "1234/"
+        val BASE_PATH: String = BuildValues.getMockApiUrlForNativeAuthAuthority()
+        private val BASE_REQUEST_PATH = BASE_PATH + "1234/"
         val signUpStartRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/start")
         val signUpChallengeRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/challenge")
         val signUpContinueRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/continue")
