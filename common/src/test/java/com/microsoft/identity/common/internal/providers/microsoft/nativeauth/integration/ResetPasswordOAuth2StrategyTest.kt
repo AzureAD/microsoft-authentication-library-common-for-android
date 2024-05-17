@@ -23,6 +23,18 @@
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration
 
 import android.os.Build
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration.ApiConstants.signInChallengeRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration.ApiConstants.signInInitiateRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration.ApiConstants.signInTokenRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration.ApiConstants.signUpChallengeRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration.ApiConstants.signUpContinueRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration.ApiConstants.signUpStartRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration.ApiConstants.ssprChallengeRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration.ApiConstants.ssprContinueRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration.ApiConstants.ssprPollCompletionRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration.ApiConstants.ssprStartRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration.ApiConstants.ssprSubmitRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration.ApiConstants.tokenEndpoint
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
@@ -41,18 +53,6 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpa
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordStartApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResult
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
-import com.microsoft.identity.common.nativeauth.ApiConstants.signInChallengeRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.signInInitiateRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.signInTokenRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.signUpChallengeRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.signUpContinueRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.signUpStartRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.ssprChallengeRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.ssprContinueRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.ssprPollCompletionRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.ssprStartRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.ssprSubmitRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.tokenEndpoint
 import com.microsoft.identity.common.nativeauth.MockApiEndpoint
 import com.microsoft.identity.common.nativeauth.MockApiResponseType
 import com.microsoft.identity.common.nativeauth.MockApiUtils.Companion.configureMockApi
@@ -61,7 +61,6 @@ import io.mockk.mockk
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.mock

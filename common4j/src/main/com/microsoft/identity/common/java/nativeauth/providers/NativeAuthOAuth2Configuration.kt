@@ -43,7 +43,8 @@ class NativeAuthOAuth2Configuration(
     val challengeType: String,
     // Need this to decide whether or not to return mock api authority or actual authority supplied in configuration
     // Turn this on if you plan to use web auth and/or open id configuration
-    val useMockApiForNativeAuth: Boolean = BuildValues.shouldUseMockApiForNativeAuth()
+    val useMockApiForNativeAuth: Boolean = BuildValues.shouldUseMockApiForNativeAuth(),
+    private val mockApiUrlForNativeAuth: String = BuildValues.getMockApiUrlForNativeAuthAuthority()
 ) : MicrosoftStsOAuth2Configuration() {
 
     private val TAG = NativeAuthOAuth2Configuration::class.java.simpleName
@@ -51,7 +52,6 @@ class NativeAuthOAuth2Configuration(
     companion object {
         //Base url for the mock API to make Native Auth calls. See the swagger at
         // $(MOCK_API_URL)/doc#/ for all possible urls
-        private const val MOCK_API_URL_WITH_NATIVE_AUTH_TENANT = "https://native-auth-mock-api.azurewebsites.net/lumonconvergedps.onmicrosoft.com"
         private const val SIGNUP_START_ENDPOINT_SUFFIX = "/signup/v1.0/start"
         private const val SIGNUP_CHALLENGE_ENDPOINT_SUFFIX = "/signup/v1.0/challenge"
         private const val SIGNUP_CONTINUE_ENDPOINT_SUFFIX = "/signup/v1.0/continue"
@@ -67,7 +67,7 @@ class NativeAuthOAuth2Configuration(
 
     override fun getAuthorityUrl(): URL {
         return if (useMockApiForNativeAuth) {
-            URL(MOCK_API_URL_WITH_NATIVE_AUTH_TENANT)
+            URL(mockApiUrlForNativeAuth)
         } else {
             authorityUrl
         }
