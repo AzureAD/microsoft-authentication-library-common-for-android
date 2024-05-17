@@ -47,7 +47,7 @@ class NativeAuthOAuth2Configuration(
     val useMockApiForNativeAuth: Boolean = BuildValues.shouldUseMockApiForNativeAuth(),
     // Base url for the mock API to make Native Auth calls. See the swagger at
     // $(MOCK_API_URL)/doc#/ for all possible urls
-    private val MOCK_API_URL_WITH_NATIVE_AUTH_TENANT: String = BuildValues.getMockApiUrl()
+    private val MOCK_API_URL_WITH_NATIVE_AUTH_TENANT: String = BuildValues.getMockApiUrl() + "lumonconvergedps.onmicrosoft.com"
 ) : MicrosoftStsOAuth2Configuration() {
 
     private val TAG = NativeAuthOAuth2Configuration::class.java.simpleName
