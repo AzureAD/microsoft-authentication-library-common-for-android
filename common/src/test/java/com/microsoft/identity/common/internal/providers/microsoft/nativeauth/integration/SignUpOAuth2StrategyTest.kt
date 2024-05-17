@@ -225,7 +225,7 @@ class SignUpOAuth2StrategyTest {
         configureMockApi(
             endpointType = MockApiEndpoint.SignUpStart,
             correlationId = correlationId,
-            responseType = MockApiResponseType.INVALID_CLIENT
+            responseType = MockApiResponseType.UNAUTHORIZED_CLIENT
         )
 
         val signUpStartCommandParameters = SignUpStartCommandParameters.builder()
