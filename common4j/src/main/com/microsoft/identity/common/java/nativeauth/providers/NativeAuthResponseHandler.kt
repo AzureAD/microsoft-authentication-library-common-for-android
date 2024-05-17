@@ -25,7 +25,6 @@ package com.microsoft.identity.common.java.nativeauth.providers
 import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordChallengeApiResponse
@@ -385,15 +384,6 @@ class NativeAuthResponseHandler {
                 response.body,
                 MicrosoftStsTokenResponse::class.java
             )
-
-            Logger.info(TAG, "MicrosoftStsTokenResponse " +
-                    "expiresIn:${apiResponse.expiresIn}, " +
-                    "extExpiresIn:${apiResponse.extExpiresIn}, " +
-                    "responseReceivedTime:${apiResponse.responseReceivedTime}, " +
-                    "scope:${apiResponse.scope}, " +
-                    "tokenType:${apiResponse.tokenType}"
-            )
-
             return SignInTokenApiResult.Success(
                 tokenResponse = apiResponse,
                 correlationId = correlationId
