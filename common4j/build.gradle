@@ -166,8 +166,7 @@ if (project.hasProperty("useMockApiForNativeAuth")) {
 }
 
 if (project.hasProperty("mockApiUrl")) {
-    mockApiUrlParameter = mockApiUrl.toString()
-    println("Mock API URL: $mockApiUrlParameter")
+    mockApiUrlParameter = mockApiUrl
 }
 
 // By adding -PdisableAcquireTokenSilentTimeout in your dev environment, you will no longer subject to the ATS timeout,
