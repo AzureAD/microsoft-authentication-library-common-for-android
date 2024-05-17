@@ -31,8 +31,7 @@ import java.net.URL
  */
 interface ApiConstants {
     companion object {
-        //val BASEPATH = BuildValues.getMockApiUrl()
-        val BASEPATH = "https://google.com"
+        val BASEPATH = BuildValues.getMockApiUrl()
         private val BASE_REQUEST_PATH = BASEPATH + "1234/"
         val signUpStartRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/start")
         val signUpChallengeRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/challenge")
