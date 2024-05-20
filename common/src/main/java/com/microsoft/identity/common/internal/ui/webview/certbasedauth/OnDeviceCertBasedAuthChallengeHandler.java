@@ -134,7 +134,7 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
                     .append(", ");
         }
 
-        logLine.append("\ngetPrincipals: ");
+        logLine.append("\nPrincipals: ");
         for (Principal p : request.getPrincipals()){
             logLine.append(p.getName())
                     .append(", ");
