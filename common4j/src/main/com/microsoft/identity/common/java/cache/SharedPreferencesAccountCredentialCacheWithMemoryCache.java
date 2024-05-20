@@ -673,8 +673,6 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
             throw new IllegalArgumentException("Param [cacheKey] cannot be null.");
         }
 
-        Logger.verbosePII(methodTag, "Evaluating cache key for CredentialType [" + cacheKey + "]");
-
         final Set<String> credentialTypesLowerCase = new HashSet<>();
 
         for (final String credentialTypeStr : CredentialType.valueSet()) {
@@ -684,8 +682,6 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         CredentialType type = null;
         for (final String credentialTypeStr : credentialTypesLowerCase) {
             if (cacheKey.contains(CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR + credentialTypeStr + CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR)) {
-                Logger.verbose(methodTag, "Cache key is a Credential type...");
-
                 if (CredentialType.AccessToken.name().equalsIgnoreCase(credentialTypeStr)) {
                     type = CredentialType.AccessToken;
                     break;
@@ -710,8 +706,6 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
                 }
             }
         }
-
-        Logger.verbose(methodTag, "Cache key was type: [" + type + "]");
 
         return type;
     }
