@@ -38,19 +38,25 @@ public class AdfsLoginComponentHandler extends AadLoginComponentHandler {
 
     @Override
     public void handleEmailField(@NonNull final String username) {
-        UiAutomatorUtils.handleInput("userNameInput", username);
-//        final UiObject2 usernameObject = UiAutomatorUtils.obtainAllEditTextObjects(CommonUtils.FIND_UI_ELEMENT_TIMEOUT).get(0);
-//        usernameObject.setText(username);
+        try {
+            UiAutomatorUtils.handleInput("userNameInput", username, CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
+        } catch (AssertionError e) {
+            final UiObject2 usernameObject = UiAutomatorUtils.obtainAllEditTextObjects(CommonUtils.FIND_UI_ELEMENT_TIMEOUT).get(0);
+            usernameObject.setText(username);
+        }
     }
 
     @Override
     public void handlePasswordField(@NonNull final String password) {
         Logger.i(TAG, "Handle Adfs Login Password UI..");
-        UiAutomatorUtils.handleInput("passwordInput", password);
-        UiAutomatorUtils.handleButtonClick("submitButton");
-//        final UiObject2 passwordObject = UiAutomatorUtils.obtainAllEditTextObjects(CommonUtils.FIND_UI_ELEMENT_TIMEOUT).get(1);
-//        passwordObject.setText(password);
-//        UiAutomatorUtils.handleButtonClickForObjectWithExactText("Sign in");
+        try {
+            UiAutomatorUtils.handleInput("passwordInput", password, CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
+            UiAutomatorUtils.handleButtonClick("submitButton");
+        } catch (AssertionError e) {
+            final UiObject2 passwordObject = UiAutomatorUtils.obtainAllEditTextObjects(CommonUtils.FIND_UI_ELEMENT_TIMEOUT).get(1);
+            passwordObject.setText(password);
+            UiAutomatorUtils.handleButtonClickForObjectWithExactText("Sign in");
+        }
     }
 
     /**
