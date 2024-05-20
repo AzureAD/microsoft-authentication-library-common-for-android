@@ -30,6 +30,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 
 import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import java.util.concurrent.TimeUnit;
@@ -54,14 +55,14 @@ public class BrowserChrome extends App implements IBrowser {
         // Make Chrome handleFirstRun safe
         try {
             Logger.i(TAG, "Handle First Run of Browser..");
-            UiAutomatorUtils.handleButtonClick("com.android.chrome:id/terms_accept", TimeUnit.SECONDS.toMillis(10));
+            UiAutomatorUtils.handleButtonClick("com.android.chrome:id/terms_accept", CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
             if (LITE_MODE_EXPECTED) {
                 UiAutomatorUtils.handleButtonClickForObjectWithText("Next");
             }
-            UiAutomatorUtils.handleButtonClick("com.android.chrome:id/negative_button", TimeUnit.SECONDS.toMillis(10));
+            UiAutomatorUtils.handleButtonClick("com.android.chrome:id/negative_button", CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
         } catch (AssertionError e) {
             if (e.toString().contains("UiObjectNotFoundException")){
-                UiAutomatorUtils.handleButtonClickSafely("com.android.chrome:id/signin_fre_dismiss_button", TimeUnit.SECONDS.toMillis(10));
+                UiAutomatorUtils.handleButtonClickSafely("com.android.chrome:id/signin_fre_dismiss_button", CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
                 Logger.i(TAG, "Handle First Run had a UIObjectNotFoundException, do not throw AssertionError");
             } else {
                 throw e;
