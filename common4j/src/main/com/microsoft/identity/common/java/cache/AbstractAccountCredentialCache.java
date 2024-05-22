@@ -150,7 +150,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                                                                 @Nullable final String realm,
                                                                 @Nullable final String target,
                                                                 @Nullable final String authScheme,
-                                                                @Nullable String requestedClaims,
+                                                                @Nullable final String requestedClaims,
                                                                 @Nullable final String kid,
                                                                 @Nullable Boolean mustMatchExactClaims) {
         final boolean mustMatchOnEnvironment = !StringUtil.isNullOrEmpty(environment);
