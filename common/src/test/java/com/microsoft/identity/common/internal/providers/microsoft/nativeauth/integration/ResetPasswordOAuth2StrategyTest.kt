@@ -171,7 +171,6 @@ class ResetPasswordOAuth2StrategyTest {
     }
 
     @Test
-    @Ignore("Ignoring this test for the release, it was failing with AssertionError")
     fun testPerformResetPasswordStartVerificationInvalidClientError() {
         val correlationId = UUID.randomUUID().toString()
 
