@@ -24,6 +24,7 @@ variables:
   value: 28
 - group: AndroidAuthClientAutomationSecrets
 - group: MSIDLABVARS
+- group: devex-ciam-test
 
 resources:
   repositories:
@@ -132,7 +133,7 @@ stages:
     - task: Gradle@3
       displayName: Run msal Unit tests
       inputs:
-        tasks: msal:testLocalDebugUnitTest -Plabtest -PlabSecret=$(LabVaultAppCert) -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+        tasks: msal:testLocalDebugUnitTest -Plabtest -PlabSecret=$(LabVaultAppCert) -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PmockApiUrl=$(MOCK_API_URL)
         jdkArchitecture: x64
         jdkVersionOption: "1.11"
   # broker
