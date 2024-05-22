@@ -150,8 +150,9 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                                                                 @Nullable final String realm,
                                                                 @Nullable final String target,
                                                                 @Nullable final String authScheme,
-                                                                @Nullable final String requestedClaims,
-                                                                @Nullable final String kid) {
+                                                                @Nullable String requestedClaims,
+                                                                @Nullable final String kid,
+                                                                @Nullable Boolean mustMatchExactClaims) {
         final boolean mustMatchOnEnvironment = !StringUtil.isNullOrEmpty(environment);
         final boolean mustMatchOnHomeAccountId = !StringUtil.isNullOrEmpty(homeAccountId);
         final boolean mustMatchOnRealm = !StringUtil.isNullOrEmpty(realm);
@@ -164,6 +165,9 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 && !StringUtil.isNullOrEmpty(authScheme)
                 && credentialType == CredentialType.AccessToken_With_AuthScheme;
         final boolean mustMatchOnKid = !StringUtil.isNullOrEmpty(kid);
+        final boolean mustMatchOnRequestedClaims = !StringUtil.isNullOrEmpty(requestedClaims);
+
+        mustMatchExactClaims = (mustMatchExactClaims != null) ? mustMatchExactClaims : false;
 
         Logger.verbose(
                 TAG,
@@ -182,6 +186,8 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                         + "Credential lookup filtered by credential type? [" + mustMatchOnCredentialType + "]"
                         + NEW_LINE
                         + "Credential lookup filtered by auth scheme? [" + mustMatchOnAuthScheme + "]"
+                        + NEW_LINE
+                        + "Credential lookup filtered by requested claims? [" + mustMatchOnRequestedClaims + "]"
         );
 
         final List<Credential> matchingCredentials = new ArrayList<>();
@@ -256,7 +262,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 if (TokenRequest.TokenType.POP.equalsIgnoreCase(atType)) {
                     matches = matches && (
                             authScheme.equalsIgnoreCase(PopAuthenticationSchemeWithClientKeyInternal.SCHEME_POP_WITH_CLIENT_KEY)
-                            || authScheme.equalsIgnoreCase(PopAuthenticationSchemeInternal.SCHEME_POP)
+                                    || authScheme.equalsIgnoreCase(PopAuthenticationSchemeInternal.SCHEME_POP)
                     );
                 } else {
                     matches = matches && authScheme.equalsIgnoreCase(atType);
@@ -268,11 +274,13 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 matches = matches && kid.equalsIgnoreCase(accessToken.getKid());
             }
 
-            if (credential instanceof AccessTokenRecord) {
-                final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(requestedClaims, accessToken.getRequestedClaims());
-            } else {
-                Logger.verbose(TAG, "Query specified requested_claims-match, but attempted to match with non-AT credential type.");
+            if (mustMatchOnRequestedClaims || mustMatchExactClaims) {
+                if (credential instanceof AccessTokenRecord) {
+                    final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
+                    matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(requestedClaims, accessToken.getRequestedClaims());
+                } else {
+                    Logger.verbose(TAG, "Query specified requested_claims-match, but attempted to match with non-AT credential type.");
+                }
             }
 
             if (matches) {
