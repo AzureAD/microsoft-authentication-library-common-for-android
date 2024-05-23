@@ -37,8 +37,10 @@ import androidx.annotation.RequiresApi;
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 
 /**
  * Handles a received ClientCertRequest by prompting the user to choose from certificates
@@ -72,6 +74,9 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
     @Override
     public Void processChallenge(ClientCertRequest request) {
         final String methodTag = TAG + ":processChallenge";
+
+        Logger.info(methodTag, printRequestDetails(request));
+
         KeyChain.choosePrivateKeyAlias(mActivity, new KeyChainAliasCallback() {
                     @Override
                     public void alias(String alias) {
@@ -115,6 +120,31 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
                 request.getPort(),
                 null);
         return null;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private String printRequestDetails(ClientCertRequest request) {
+
+        final StringBuilder logLine = new StringBuilder(256);
+        logLine.append("Processing CBA challenge. \nKey Type: ");
+
+        for (String k : request.getKeyTypes()){
+            logLine.append(k)
+                    .append(", ");
+        }
+
+        logLine.append("\nPrincipals: ");
+        for (Principal p : request.getPrincipals()){
+            logLine.append(p.getName())
+                    .append(", ");
+        }
+
+        logLine.append("\nHost: ")
+                .append(request.getHost())
+                .append("\nPort: ")
+                .append(request.getPort());
+
+        return logLine.toString();
     }
 
     /**
