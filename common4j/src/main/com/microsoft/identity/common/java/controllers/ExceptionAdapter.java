@@ -225,7 +225,7 @@ public class ExceptionAdapter {
     public static ServiceException convertToNativeAuthException(@NonNull final ServiceException exception) {
         final ServiceException outErr;
 
-        String message = "Token request failed. Please perform sign-in.\nOriginal exception details: " + exception.getMessage();
+        String message = "Token request failed.\nOriginal exception details: " + exception.getMessage();
 
         // UiRequiredException is not a native authentication concept, so we convert it into a generic
         // ServiceException
