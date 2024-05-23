@@ -228,7 +228,7 @@ public interface IAccountCredentialCache {
             final String target,
             final String authScheme,
             final String requestedClaims,
-            final Boolean mustMatchExactClaims,
+            final boolean mustMatchExactClaims,
             final List<Credential> inputCredentials
     );
 

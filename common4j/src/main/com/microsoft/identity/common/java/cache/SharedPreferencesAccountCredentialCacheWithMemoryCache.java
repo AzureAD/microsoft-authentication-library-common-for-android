@@ -523,7 +523,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
             @Nullable final String target,
             @Nullable final String authScheme,
             @Nullable final String requestedClaims,
-            @Nullable final Boolean mustMatchExactClaims,
+            final boolean mustMatchExactClaims,
             @NonNull final List<Credential> inputCredentials) {
         final String methodTag = TAG + ":getCredentialsFilteredBy";
         Logger.verbose(methodTag, "getCredentialsFilteredBy()");

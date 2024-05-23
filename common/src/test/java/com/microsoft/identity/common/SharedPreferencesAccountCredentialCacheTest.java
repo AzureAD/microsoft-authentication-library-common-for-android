@@ -1516,7 +1516,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 null,
                 BEARER_AUTHENTICATION_SCHEME.getName(),
                 null,
-                null,
+                false,
                 mSharedPreferencesAccountCredentialCache.getCredentials()
         );
         assertEquals(2, credentials.size());
