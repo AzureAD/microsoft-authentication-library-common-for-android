@@ -857,7 +857,6 @@ public abstract class BaseController {
             ((MicrosoftTokenRequest) refreshTokenRequest).setClaims(parameters.getClaimsRequestJson());
             ((MicrosoftTokenRequest) refreshTokenRequest).setClientAppName(parameters.getApplicationName());
             ((MicrosoftTokenRequest) refreshTokenRequest).setClientAppVersion(parameters.getApplicationVersion());
-            ((MicrosoftTokenRequest) refreshTokenRequest).setCorrelationId(UUID.fromString(parameters.getCorrelationId()));
 
             //NOTE: this should be moved to the strategy; however requires a larger refactor
             if (parameters.getSdkType() == SdkType.ADAL) {
