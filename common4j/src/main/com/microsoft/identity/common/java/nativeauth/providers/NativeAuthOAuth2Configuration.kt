@@ -23,10 +23,10 @@
 
 package com.microsoft.identity.common.java.nativeauth.providers
 
+import com.microsoft.identity.common.java.BuildConfig
 import com.microsoft.identity.common.java.nativeauth.BuildValues
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
-import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration
 import com.microsoft.identity.common.java.util.UrlUtil
 import java.net.MalformedURLException
@@ -47,7 +47,7 @@ class NativeAuthOAuth2Configuration(
     val useMockApiForNativeAuth: Boolean = BuildValues.shouldUseMockApiForNativeAuth(),
     // Base url for the mock API to make Native Auth calls. See the swagger at
     // $(MOCK_API_URL)/doc#/ for all possible urls
-    private val MOCK_API_URL_WITH_NATIVE_AUTH_TENANT: String = BuildValues.getMockApiUrl() + "lumonconvergedps.onmicrosoft.com"
+    private val MOCK_API_URL_WITH_NATIVE_AUTH_TENANT: String = BuildConfig.MOCK_API_URL + "lumonconvergedps.onmicrosoft.com"
 ) : MicrosoftStsOAuth2Configuration() {
 
     private val TAG = NativeAuthOAuth2Configuration::class.java.simpleName
