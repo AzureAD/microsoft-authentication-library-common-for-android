@@ -23,8 +23,10 @@
 package com.microsoft.identity.client.ui.automation.interaction.microsoftsts;
 
 import androidx.annotation.NonNull;
+import androidx.test.uiautomator.UiObject2;
 
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 /**
@@ -36,14 +38,15 @@ public class AdfsLoginComponentHandler extends AadLoginComponentHandler {
 
     @Override
     public void handleEmailField(@NonNull final String username) {
-        UiAutomatorUtils.handleInput("userNameInput", username);
+        final UiObject2 usernameObject = UiAutomatorUtils.obtainAllEditTextObjects(CommonUtils.FIND_UI_ELEMENT_TIMEOUT).get(0);
+        usernameObject.setText(username);
     }
 
     @Override
     public void handlePasswordField(@NonNull final String password) {
-        Logger.i(TAG, "Handle Adfs Login Password UI..");
-        UiAutomatorUtils.handleInput("passwordInput", password);
-        UiAutomatorUtils.handleButtonClick("submitButton");
+        final UiObject2 passwordObject = UiAutomatorUtils.obtainAllEditTextObjects(CommonUtils.FIND_UI_ELEMENT_TIMEOUT).get(1);
+        passwordObject.setText(password);
+        UiAutomatorUtils.handleButtonClickForObjectWithExactText("Sign in");
     }
 
     /**
