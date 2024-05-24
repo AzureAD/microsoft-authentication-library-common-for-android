@@ -76,7 +76,7 @@ import java.util.UUID
 /**
  * These are integration tests using real API responses instead of mocked API responses. This class
  * covers all sign up endpoints.
- * These tests run on the mock API, see: https://native-auth-mock-api.azurewebsites.net/
+ * These tests run on the mock API, see: $(MOCK_API_URL) in the variable of the pipeline.
  */
 
 
@@ -95,8 +95,8 @@ class ResetPasswordOAuth2StrategyTest {
     private val OOB_CODE = "123456"
     private val CONTINUATION_TOKEN = "1234"
     private val INVALID_GRANT_ERROR = "invalid_grant"
-    private val INVALID_CLIENT_ERROR = "invalid_client"
     private val UNSUPPORTED_CHALLENGE_TYPE_ERROR = "unsupported_challenge_type"
+    private val UNAUTHORIZED_CLIENT_ERROR = "unauthorized_client"
     private val EXPIRED_TOKEN_ERROR = "expired_token"
     private val PASSWORD_TOO_LONG_ERROR = "password_too_long"
     private val PASSWORD_TOO_SHORT_ERROR = "password_too_short"
@@ -177,7 +177,7 @@ class ResetPasswordOAuth2StrategyTest {
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRStart,
             correlationId = correlationId,
-            responseType = MockApiResponseType.INVALID_CLIENT
+            responseType = MockApiResponseType.UNAUTHORIZED_CLIENT
         )
 
         val mockResetPasswordStartCommandParameters = mockk<ResetPasswordStartCommandParameters>()
@@ -188,7 +188,7 @@ class ResetPasswordOAuth2StrategyTest {
             mockResetPasswordStartCommandParameters
         )
         assertTrue(ssprStartResult is ResetPasswordStartApiResult.UnknownError)
-        assertEquals((ssprStartResult as ResetPasswordStartApiResult.UnknownError).error, INVALID_CLIENT_ERROR)
+        assertEquals((ssprStartResult as ResetPasswordStartApiResult.UnknownError).error, UNAUTHORIZED_CLIENT_ERROR)
     }
 
     @Test
