@@ -48,6 +48,8 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
     public static final String MICROSOFT_ENROLLMENT_ID = "microsoft_enrollment_id";
     public static final String DEVICE_CODE = "device_code";
 
+    public static final String TRANSFER_TOKEN = "transfer_token";
+
     public MicrosoftTokenRequest() {
         mClientInfoEnabled = "1";
     }
@@ -94,6 +96,10 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
     @Expose()
     @SerializedName(DEVICE_CODE)
     private String mDeviceCode;
+
+    @Expose()
+    @SerializedName(TRANSFER_TOKEN)
+    private String mTransferToken;
 
     private String mTokenScope;
 
@@ -205,5 +211,14 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
 
     public void setDeviceCode(final String deviceCode) {
         this.mDeviceCode = deviceCode;
+    }
+
+    @Nullable
+    public String getTransferToken() {
+        return mTransferToken;
+    }
+
+    public void setTransferToken(final String transferToken) {
+        this.mTransferToken = transferToken;
     }
 }
