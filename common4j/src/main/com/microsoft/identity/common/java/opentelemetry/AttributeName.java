@@ -282,5 +282,15 @@ public enum AttributeName {
     /**
      * Indicates the prt's home authority.
      */
-    home_cloud_name;
+    home_cloud_name,
+
+    /**
+     * Indicates the time to retrieve blockstore data.
+     */
+    elapsed_time_retrieve_all_from_blockstore,
+
+    /**
+     * Indicates the number of entries retrieved from blockstore.
+     */
+     no_of_entries_retrieved_from_blockstore;
 }
