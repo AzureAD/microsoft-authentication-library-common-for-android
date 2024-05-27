@@ -181,7 +181,7 @@ sourceSets {
         buildConfigField("String", "SLICE", "\"$sliceParameter\"")
         buildConfigField("String", "DC", "\"$dcParameter\"")
         buildConfigField("boolean", "USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY", "${useMockApiForNativeAuthParameter}")
-        buildConfigField("String", "MOCK_API_URL", "\"$mockApiUrlParameter\"")
+        buildConfigField("String", "MOCK_API_URL", "{$mockApiUrlParameter}")
         buildConfigField("boolean", "DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT", "${disableAcquireTokenSilentTimeoutParameter}")
     }
     test {
