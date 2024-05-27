@@ -42,9 +42,9 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpa
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResult
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 import com.microsoft.identity.common.nativeauth.ApiConstants
-import com.microsoft.identity.common.nativeauth.MockApiEndpoint
-import com.microsoft.identity.common.nativeauth.MockApiResponseType
-import com.microsoft.identity.common.nativeauth.MockApiUtils.Companion.configureMockApi
+import com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint
+import com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType
+import com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils.Companion.configureMockApi
 import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signInChallengeRequestUrl
 import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signInInitiateRequestUrl
 import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signInTokenRequestUrl
@@ -175,9 +175,9 @@ class ResetPasswordOAuth2StrategyTest {
         val correlationId = UUID.randomUUID().toString()
 
         configureMockApi(
-            endpointType = MockApiEndpoint.SSPRStart,
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SSPRStart,
             correlationId = correlationId,
-            responseType = MockApiResponseType.UNAUTHORIZED_CLIENT
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.UNAUTHORIZED_CLIENT
         )
 
         val mockResetPasswordStartCommandParameters = mockk<ResetPasswordStartCommandParameters>()
@@ -196,9 +196,9 @@ class ResetPasswordOAuth2StrategyTest {
         val correlationId = UUID.randomUUID().toString()
 
         configureMockApi(
-            endpointType = MockApiEndpoint.SSPRStart,
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SSPRStart,
             correlationId = correlationId,
-            responseType = MockApiResponseType.UNSUPPORTED_CHALLENGE_TYPE
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.UNSUPPORTED_CHALLENGE_TYPE
         )
 
         val mockResetPasswordStartCommandParameters = mockk<ResetPasswordStartCommandParameters>()
@@ -217,9 +217,9 @@ class ResetPasswordOAuth2StrategyTest {
         val correlationId = UUID.randomUUID().toString()
 
         configureMockApi(
-            endpointType = MockApiEndpoint.SSPRStart,
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SSPRStart,
             correlationId = correlationId,
-            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
 
         val mockResetPasswordStartCommandParameters = mockk<ResetPasswordStartCommandParameters>()
@@ -242,9 +242,9 @@ class ResetPasswordOAuth2StrategyTest {
         val correlationId = UUID.randomUUID().toString()
 
         configureMockApi(
-            endpointType = MockApiEndpoint.SSPRStart,
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SSPRStart,
             correlationId = correlationId,
-            responseType = MockApiResponseType.USER_NOT_FOUND
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.USER_NOT_FOUND
         )
 
         val mockResetPasswordStartCommandParameters = mockk<ResetPasswordStartCommandParameters>()
@@ -264,9 +264,9 @@ class ResetPasswordOAuth2StrategyTest {
     fun testPerformResetPasswordChallengeSuccess() {
         val correlationId = UUID.randomUUID().toString()
         configureMockApi(
-            endpointType = MockApiEndpoint.SSPRChallenge,
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SSPRChallenge,
             correlationId = correlationId,
-            responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.CHALLENGE_TYPE_OOB
         )
 
         val ssprChallengeResult = nativeAuthOAuth2Strategy.performResetPasswordChallenge(
@@ -281,9 +281,9 @@ class ResetPasswordOAuth2StrategyTest {
         val correlationId = UUID.randomUUID().toString()
 
         configureMockApi(
-            endpointType = MockApiEndpoint.SSPRChallenge,
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SSPRChallenge,
             correlationId = correlationId,
-            responseType = MockApiResponseType.EXPIRED_TOKEN
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.EXPIRED_TOKEN
         )
 
         val ssprChallengeResult = nativeAuthOAuth2Strategy.performResetPasswordChallenge(
@@ -300,9 +300,9 @@ class ResetPasswordOAuth2StrategyTest {
         val correlationId = UUID.randomUUID().toString()
 
         configureMockApi(
-            endpointType = MockApiEndpoint.SSPRContinue,
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SSPRContinue,
             correlationId = correlationId,
-            responseType = MockApiResponseType.SSPR_CONTINUE_SUCCESS
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.SSPR_CONTINUE_SUCCESS
         )
 
         val mockResetPasswordSubmitCodeCommandParameters = mockk<ResetPasswordSubmitCodeCommandParameters>()
@@ -337,9 +337,9 @@ class ResetPasswordOAuth2StrategyTest {
         val correlationId = UUID.randomUUID().toString()
 
         configureMockApi(
-            endpointType = MockApiEndpoint.SSPRSubmit,
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SSPRSubmit,
             correlationId = correlationId,
-            responseType = MockApiResponseType.PASSWORD_TOO_WEAK
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.PASSWORD_TOO_WEAK
         )
 
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()
@@ -359,9 +359,9 @@ class ResetPasswordOAuth2StrategyTest {
         val correlationId = UUID.randomUUID().toString()
 
         configureMockApi(
-            endpointType = MockApiEndpoint.SSPRSubmit,
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SSPRSubmit,
             correlationId = correlationId,
-            responseType = MockApiResponseType.PASSWORD_TOO_SHORT
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.PASSWORD_TOO_SHORT
         )
 
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()
@@ -380,9 +380,9 @@ class ResetPasswordOAuth2StrategyTest {
     fun testPerformResetPasswordSubmitPasswordTooLongError() {
         val correlationId = UUID.randomUUID().toString()
         configureMockApi(
-            endpointType = MockApiEndpoint.SSPRSubmit,
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SSPRSubmit,
             correlationId = correlationId,
-            responseType = MockApiResponseType.PASSWORD_TOO_LONG
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.PASSWORD_TOO_LONG
         )
 
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()
@@ -402,9 +402,9 @@ class ResetPasswordOAuth2StrategyTest {
         val correlationId = UUID.randomUUID().toString()
 
         configureMockApi(
-            endpointType = MockApiEndpoint.SSPRSubmit,
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SSPRSubmit,
             correlationId = correlationId,
-            responseType = MockApiResponseType.PASSWORD_RECENTLY_USED
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.PASSWORD_RECENTLY_USED
         )
 
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()
@@ -424,9 +424,9 @@ class ResetPasswordOAuth2StrategyTest {
         val correlationId = UUID.randomUUID().toString()
 
         configureMockApi(
-            endpointType = MockApiEndpoint.SSPRSubmit,
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SSPRSubmit,
             correlationId = correlationId,
-            responseType = MockApiResponseType.PASSWORD_BANNED
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.PASSWORD_BANNED
         )
 
         val mockResetPasswordSubmitCommandParameters = mockk<ResetPasswordSubmitNewPasswordCommandParameters>()

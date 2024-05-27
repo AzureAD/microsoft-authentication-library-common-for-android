@@ -21,7 +21,7 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.common.nativeauth
+package com.microsoft.identity.internal.testutils.nativeauth
 
 /**
  * Enumerates all of the different endpoints supported by MockAPI for Native Auth.

@@ -42,9 +42,9 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
-import com.microsoft.identity.common.nativeauth.MockApiEndpoint
-import com.microsoft.identity.common.nativeauth.MockApiResponseType
-import com.microsoft.identity.common.nativeauth.MockApiUtils
+import com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint
+import com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType
+import com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert
@@ -130,10 +130,10 @@ class SignInOAuthStrategyTest {
     fun testPerformSignInInitiateSuccess() {
         val correlationId = UUID.randomUUID().toString()
 
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInInitiate,
+        com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils.configureMockApi(
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SignInInitiate,
             correlationId = correlationId,
-            responseType = MockApiResponseType.INITIATE_SUCCESS
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.INITIATE_SUCCESS
         )
 
         val parameters = SignInStartCommandParameters.builder()
@@ -153,10 +153,10 @@ class SignInOAuthStrategyTest {
     fun testPerformSignInChallengeSuccess() {
         val correlationId = UUID.randomUUID().toString()
 
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInChallenge,
+        com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils.configureMockApi(
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SignInChallenge,
             correlationId = correlationId,
-            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
 
         val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
@@ -171,10 +171,10 @@ class SignInOAuthStrategyTest {
     fun testPerformSignInTokenWithPasswordSuccess() {
         val correlationId = UUID.randomUUID().toString()
 
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInInitiate,
+        com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils.configureMockApi(
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SignInInitiate,
             correlationId = correlationId,
-            responseType = MockApiResponseType.INITIATE_SUCCESS
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.INITIATE_SUCCESS
         )
 
         val parameters = SignInStartCommandParameters.builder()
@@ -195,10 +195,10 @@ class SignInOAuthStrategyTest {
     fun testPerformSignInTokenWithOobSuccess() {
         val correlationId = UUID.randomUUID().toString()
 
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInToken,
+        com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils.configureMockApi(
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SignInToken,
             correlationId = correlationId,
-            responseType = MockApiResponseType.TOKEN_SUCCESS
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.TOKEN_SUCCESS
         )
 
         val parameters = mockk<SignInSubmitCodeCommandParameters>()
@@ -218,10 +218,10 @@ class SignInOAuthStrategyTest {
     fun testPerformOobTokenWithInvalidOob() {
         val correlationId = UUID.randomUUID().toString()
 
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInToken,
+        com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils.configureMockApi(
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SignInToken,
             correlationId = correlationId,
-            responseType = MockApiResponseType.INVALID_OOB_VALUE
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.INVALID_OOB_VALUE
         )
 
         val parameters = mockk<SignInSubmitCodeCommandParameters>()
@@ -240,10 +240,10 @@ class SignInOAuthStrategyTest {
     fun testPerformSignInInitiateWithChallengeTypeRedirectSuccess() {
         val correlationId = UUID.randomUUID().toString()
 
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInInitiate,
+        com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils.configureMockApi(
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SignInInitiate,
             correlationId = correlationId,
-            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
 
         val parameters = SignInStartCommandParameters.builder()
@@ -262,10 +262,10 @@ class SignInOAuthStrategyTest {
     fun testPerformSignInChallengeWithChallengeTypeOobSuccess() {
         val correlationId = UUID.randomUUID().toString()
 
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInChallenge,
+        com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils.configureMockApi(
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SignInChallenge,
             correlationId = correlationId,
-            responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.CHALLENGE_TYPE_OOB
         )
         val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
             continuationToken = CONTINUATION_TOKEN,
@@ -279,10 +279,10 @@ class SignInOAuthStrategyTest {
     fun testPerformSignInChallengeWithChallengeTypePasswordSuccess() {
         val correlationId = UUID.randomUUID().toString()
 
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInChallenge,
+        com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils.configureMockApi(
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SignInChallenge,
             correlationId = correlationId,
-            responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.CHALLENGE_TYPE_PASSWORD
         )
         val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
             continuationToken = CONTINUATION_TOKEN,
@@ -296,10 +296,10 @@ class SignInOAuthStrategyTest {
     fun testPerformSignInChallengeWithRedirectSuccess() {
         val correlationId = UUID.randomUUID().toString()
 
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInChallenge,
+        com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils.configureMockApi(
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SignInChallenge,
             correlationId = correlationId,
-            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
         val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
             continuationToken = CONTINUATION_TOKEN,
@@ -312,10 +312,10 @@ class SignInOAuthStrategyTest {
     fun testPerformTokenWithInvalidGrantError() {
         val correlationId = UUID.randomUUID().toString()
 
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInToken,
+        com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils.configureMockApi(
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SignInToken,
             correlationId = correlationId,
-            responseType = MockApiResponseType.INVALID_GRANT
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.INVALID_GRANT
         )
 
         val parameters = SignInSubmitPasswordCommandParameters.builder()
@@ -335,10 +335,10 @@ class SignInOAuthStrategyTest {
     fun testPerformPasswordTokenRequestSuccess() {
         val correlationId = UUID.randomUUID().toString()
 
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInToken,
+        com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils.configureMockApi(
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SignInToken,
             correlationId = correlationId,
-            responseType = MockApiResponseType.TOKEN_SUCCESS
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.TOKEN_SUCCESS
         )
 
         val parameters = SignInSubmitPasswordCommandParameters.builder()
@@ -358,10 +358,10 @@ class SignInOAuthStrategyTest {
     fun testPerformPasswordTokenRequestIncorrectPassword() {
         val correlationId = UUID.randomUUID().toString()
 
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInToken,
+        com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils.configureMockApi(
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SignInToken,
             correlationId = correlationId,
-            responseType = MockApiResponseType.SIGNIN_INVALID_PASSWORD
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.SIGNIN_INVALID_PASSWORD
         )
 
         val parameters = SignInSubmitPasswordCommandParameters.builder()
@@ -381,10 +381,10 @@ class SignInOAuthStrategyTest {
     fun testPerformPasswordTokenRequestUserNotFound() {
         val correlationId = UUID.randomUUID().toString()
 
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInToken,
+        com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils.configureMockApi(
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SignInToken,
             correlationId = correlationId,
-            responseType = MockApiResponseType.USER_NOT_FOUND
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.USER_NOT_FOUND
         )
 
         val parameters = SignInSubmitPasswordCommandParameters.builder()
@@ -403,10 +403,10 @@ class SignInOAuthStrategyTest {
     @Test
     fun testPerformContinuationTokenTokenRequest() {
         val correlationId = UUID.randomUUID().toString()
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInToken,
+        com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils.configureMockApi(
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SignInToken,
             correlationId = correlationId,
-            responseType = MockApiResponseType.TOKEN_SUCCESS
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.TOKEN_SUCCESS
         )
 
         val parameters = SignInWithContinuationTokenCommandParameters.builder()
@@ -425,10 +425,10 @@ class SignInOAuthStrategyTest {
     @Test
     fun testSignInStartWithPasswordMFARequired() {
         val correlationId = UUID.randomUUID().toString()
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInToken,
+        com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils.configureMockApi(
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SignInToken,
             correlationId = correlationId,
-            responseType = MockApiResponseType.MFA_REQUIRED
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.MFA_REQUIRED
         )
 
         val parameters = SignInWithContinuationTokenCommandParameters.builder()
@@ -447,10 +447,10 @@ class SignInOAuthStrategyTest {
     @Test
     fun testPerformContinuationTokenTokenRequestUserNotFound() {
         val correlationId = UUID.randomUUID().toString()
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInToken,
+        com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils.configureMockApi(
+            endpointType = com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint.SignInToken,
             correlationId = correlationId,
-            responseType = MockApiResponseType.USER_NOT_FOUND
+            responseType = com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType.USER_NOT_FOUND
         )
 
         val parameters = SignInWithContinuationTokenCommandParameters.builder()
