@@ -173,6 +173,6 @@ jobs:
       Owners: '$(releaseOwners)'
       Approvers: '$(releaseApprovers)'
       ServiceEndpointUrl: '$(esrpServiceEndpointUrl)'
-      MainPublisher: '$(esrpMainPublisher)'
+      MainPublisher: 'ESRPRELPACMAN'
       DomainTenantId: '$(esrpDomainTenantId)'
 ...

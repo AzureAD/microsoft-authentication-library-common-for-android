@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [MINOR] Update publishing tasks (#2414)
 
 Version 17.4.0
 ---------
