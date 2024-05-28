@@ -22,17 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers
 
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signInChallengeRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signInInitiateRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signInTokenRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signUpChallengeRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signUpContinueRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signUpStartRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprChallengeRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprContinueRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprPollCompletionRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprStartRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprSubmitRequestUrl
+import com.microsoft.identity.common.java.BuildConfig
+import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
@@ -44,8 +36,6 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
-import com.microsoft.identity.common.java.exception.ClientException
-import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.nativeauth.providers.requests.NativeAuthRequest.Companion.toJsonString
 import io.mockk.every
 import io.mockk.mockk
@@ -72,6 +62,22 @@ class NativeAuthRequestHandlerTest {
     private val continuationToken = "uY29tL2F1dGhlbnRpY"
     private val correlationId = "jsdfo4nslkjsrg"
     private val grantType = NativeAuthConstants.GrantType.OOB
+
+    companion object {
+        const val BASEPATH = "https://apidomain.com"
+        private const val BASE_REQUEST_PATH = BASEPATH + "1234/"
+        val signUpStartRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/start")
+        val signUpChallengeRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/challenge")
+        val signUpContinueRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/continue")
+        val signInInitiateRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/initiate")
+        val signInChallengeRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/challenge")
+        val signInTokenRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/token")
+        val ssprStartRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/start")
+        val ssprChallengeRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/challenge")
+        val ssprContinueRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/continue")
+        val ssprSubmitRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/submit")
+        val ssprPollCompletionRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/poll_completion")
+    }
 
     private val mockConfig = mockk<NativeAuthOAuth2Configuration> {
         every { getSignUpStartEndpoint() } returns signUpStartRequestUrl
@@ -110,6 +116,7 @@ class NativeAuthRequestHandlerTest {
         )
     }
 
+    @Test
     fun testSignUpStartWithEmptyPasswordShouldNotThrowException() {
         val commandParameters = SignUpStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())

@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.nativeauth.providers
 
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestHandlerTest
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.UserAttributeApiResult
@@ -49,7 +50,6 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpContinueApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResult
-import com.microsoft.identity.common.nativeauth.ApiConstants
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert
@@ -59,10 +59,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
+import java.net.URL
 
 class NativeAuthResponseHandlerTest {
     private val clientId = "1234"
-    private val requestUrl =  ApiConstants.signUpStartRequestUrl
+    private val requestUrl = URL("https://apidomain.com/signup/v1.0/start")
     private val challengeType = "oob password redirect"
     private val oobChallengeType = "oob"
     private val passwordChallengeType = "password"

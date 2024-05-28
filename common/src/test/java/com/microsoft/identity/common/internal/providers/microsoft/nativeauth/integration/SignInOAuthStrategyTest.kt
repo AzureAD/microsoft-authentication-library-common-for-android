@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration
 
 import android.os.Build
-import com.microsoft.identity.common.nativeauth.ApiConstants
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
@@ -42,9 +41,6 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
-import com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint
-import com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType
-import com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert
@@ -58,6 +54,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.util.UUID
+import com.microsoft.identity.internal.testutils.nativeauth.ApiConstants
 
 /**
  * These are integration tests using real API responses instead of mocked API responses. This class

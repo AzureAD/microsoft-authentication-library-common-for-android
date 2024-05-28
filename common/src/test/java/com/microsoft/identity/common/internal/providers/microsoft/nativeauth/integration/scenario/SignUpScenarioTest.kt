@@ -23,11 +23,9 @@
 
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration.scenario
 
-import com.microsoft.identity.common.nativeauth.ApiConstants
+import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
-import com.microsoft.identity.common.java.interfaces.PlatformComponents
-import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
@@ -38,11 +36,10 @@ import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignU
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpContinueApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResult
+import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
-import com.microsoft.identity.internal.testutils.nativeauth.MockApiEndpoint
-import com.microsoft.identity.internal.testutils.nativeauth.MockApiResponseType
+import com.microsoft.identity.internal.testutils.nativeauth.ApiConstants
 import com.microsoft.identity.internal.testutils.nativeauth.MockApiUtils.Companion.configureMockApi
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
