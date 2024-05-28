@@ -337,7 +337,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 target,
                 authScheme,
                 null,
-                null
+                null,
+                false
         );
 
         Logger.verbose(methodTag, "Found [" + matchingCredentials.size() + "] matching Credentials...");
@@ -372,7 +373,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 target,
                 authScheme,
                 null,
-                null
+                null,
+                false
         );
 
         Logger.verbose(methodTag, "Found [" + matchingCredentials.size() + "] matching Credentials...");
@@ -410,7 +412,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 target,
                 authScheme,
                 requestedClaims,
-                null
+                null,
+                false
         );
 
         Logger.verbose(methodTag, "Found [" + matchingCredentials.size() + "] matching Credentials...");
@@ -447,7 +450,47 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 target,
                 authScheme,
                 requestedClaims,
-                null
+                null,
+                false
+        );
+
+        Logger.verbose(methodTag, "Found [" + matchingCredentials.size() + "] matching Credentials...");
+
+        return matchingCredentials;
+    }
+
+    @Override
+    @NonNull
+    public List<Credential> getCredentialsFilteredBy(
+            @Nullable final String homeAccountId,
+            @Nullable final String environment,
+            @Nullable final CredentialType credentialType,
+            @Nullable final String clientId,
+            @Nullable final String applicationIdentifier,
+            @Nullable final String mamEnrollmentIdentifier,
+            @Nullable final String realm,
+            @Nullable final String target,
+            @Nullable final String authScheme,
+            @Nullable final String requestedClaims,
+            final boolean mustMatchExactClaims,
+            @NonNull final List<Credential> inputCredentials) {
+        final String methodTag = TAG + ":getCredentialsFilteredBy";
+        Logger.verbose(methodTag, "getCredentialsFilteredBy()");
+
+        final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(
+                inputCredentials,
+                homeAccountId,
+                environment,
+                credentialType,
+                clientId,
+                applicationIdentifier,
+                mamEnrollmentIdentifier,
+                realm,
+                target,
+                authScheme,
+                requestedClaims,
+                null,
+                mustMatchExactClaims
         );
 
         Logger.verbose(methodTag, "Found [" + matchingCredentials.size() + "] matching Credentials...");
@@ -483,7 +526,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                             target,
                             authScheme,
                             requestedClaims,
-                            null
+                            null,
+                            false
                     )
             );
         }
@@ -519,7 +563,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                         target,
                         authScheme,
                         requestedClaims,
-                        kid
+                        kid,
+                        false
                 )
         );
         return result;
