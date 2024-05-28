@@ -53,4 +53,21 @@ public class SignInStartCommandParameters extends BaseSignInTokenCommandParamete
      */
     @Nullable
     public final char[] password;
+
+    @NonNull
+    @Override
+    public String toUnsanitizedString() {
+        return "SignInStartCommandParameters(scopes=" + scopes + ", authenticationScheme=" + getAuthenticationScheme() + ", username=" + username + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
+
+    @Override
+    public boolean containsPii() {
+        return !toString().equals(toUnsanitizedString());
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "SignInStartCommandParameters(scopes=" + scopes + ", authenticationScheme=" + getAuthenticationScheme() + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
 }

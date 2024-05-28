@@ -72,15 +72,6 @@ abstract class BaseNativeAuthController : BaseController() {
     @Throws(ClientException::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
-        message = "acquireTokenSilent() not supported in NativeAuthController"
-    )
-    override fun acquireTokenSilent(parameters: SilentTokenCommandParameters?): AcquireTokenResult {
-        throw ClientException("acquireTokenSilent() not supported in NativeAuthController")
-    }
-
-    @Throws(ClientException::class)
-    @Deprecated(
-        level = DeprecationLevel.HIDDEN,
         message = "onFinishAuthorizationSession() not supported in NativeAuthController"
     )
     override fun onFinishAuthorizationSession(

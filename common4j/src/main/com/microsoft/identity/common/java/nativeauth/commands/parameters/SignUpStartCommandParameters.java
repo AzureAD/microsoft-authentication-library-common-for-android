@@ -62,4 +62,21 @@ public class SignUpStartCommandParameters extends BaseNativeAuthCommandParameter
      */
     @Nullable
     public final char[] password;
+
+    @NonNull
+    @Override
+    public String toUnsanitizedString() {
+        return "SignUpStartCommandParameters(username=" + username + ", userAttributes=" + userAttributes + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
+
+    @Override
+    public boolean containsPii() {
+        return !toString().equals(toUnsanitizedString());
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "SignUpStartCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
 }
