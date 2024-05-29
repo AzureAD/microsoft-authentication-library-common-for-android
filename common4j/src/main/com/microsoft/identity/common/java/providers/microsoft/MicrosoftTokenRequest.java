@@ -50,8 +50,6 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
 
     public static final String TRANSFER_TOKEN = "transfer_token";
 
-    public static final String CLIENT_XTRA_SKU = "x-client-xtra-sku";
-
     public MicrosoftTokenRequest() {
         mClientInfoEnabled = "1";
     }

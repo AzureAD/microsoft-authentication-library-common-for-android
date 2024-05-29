@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRAS;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.WarningType;
@@ -108,7 +110,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @Expose()
     @Getter
     @Accessors(prefix = "m")
-    @SerializedName("x-client-xtra-sku")
+    @SerializedName(CLIENT_EXTRAS)
     private final String mClientExtraSku;
 
     @Expose()
