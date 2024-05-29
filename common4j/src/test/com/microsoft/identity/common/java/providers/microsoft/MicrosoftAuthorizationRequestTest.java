@@ -27,6 +27,7 @@ import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.platform.MockDeviceMetadata;
 import com.microsoft.identity.common.java.providers.oauth2.MockAuthorizationRequest;
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
+import com.microsoft.identity.common.java.util.ClientExtraSkuAdapter;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import org.junit.After;
@@ -64,10 +65,16 @@ public class MicrosoftAuthorizationRequestTest {
     public void testCreateUriFromAuthorizationRequest() throws MalformedURLException, ClientException {
         Device.setDeviceMetadata(new MockDeviceMetadata());
 
+        final ClientExtraSkuAdapter clientExtraSkuAdapter = new ClientExtraSkuAdapter();
+        clientExtraSkuAdapter.setSrcSku(MOCK_LIBRARY_NAME);
+        clientExtraSkuAdapter.setSrcSkuVer(MOCK_LIBRARY_VERSION);
+        final String mockClientExtraSku = clientExtraSkuAdapter.toString();
+
         final MockMicrosoftAuthorizationRequest request = new MockMicrosoftAuthorizationRequest.Builder()
                 .setAuthority(new URL(MOCK_AUTHORITY))
                 .setLibraryVersion(MOCK_LIBRARY_VERSION)
                 .setLibraryName(MOCK_LIBRARY_NAME)
+                .setClientExtraSky(mockClientExtraSku)
                 .setMultipleCloudAware(MOCK_MULTIPLE_CLOUD_AWARE)
                 .setCorrelationId(MOCK_CORRELATION_ID)
                 .setLoginHint(MOCK_LOGIN_HINT)
@@ -82,6 +89,7 @@ public class MicrosoftAuthorizationRequestTest {
                         "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
                         "&x-client-Ver=" + MOCK_LIBRARY_VERSION +
                         "&x-client-SKU=" + MOCK_LIBRARY_NAME +
+                        "&x-client-xtra-sku=" + mockClientExtraSku.replace(",", "%2C") +
                         "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
                         "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
                         "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +

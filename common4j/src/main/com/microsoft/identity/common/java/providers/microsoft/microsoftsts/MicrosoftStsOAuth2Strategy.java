@@ -77,6 +77,7 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
+import com.microsoft.identity.common.java.util.ClientExtraSkuAdapter;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;
@@ -345,6 +346,9 @@ public class MicrosoftStsOAuth2Strategy
         builder.setFlightParameters(mConfig.getFlightParameters());
         builder.setMultipleCloudAware(mConfig.getMultipleCloudsSupported());
         builder.setOpenIdProviderConfiguration(mOpenIdProviderConfiguration);
+
+        final ClientExtraSkuAdapter clientExtraSkuAdapter = new ClientExtraSkuAdapter();
+        builder.setClientExtraSky(clientExtraSkuAdapter.toString());
 
         return builder;
     }

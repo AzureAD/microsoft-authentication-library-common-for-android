@@ -52,6 +52,7 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.telemetry.events.UiShownEvent;
+import com.microsoft.identity.common.java.util.ClientExtraSkuAdapter;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.ObjectMapper;
@@ -214,6 +215,9 @@ public abstract class OAuth2Strategy
         headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, Device.getProductVersion());
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
         headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
+
+        final ClientExtraSkuAdapter clientExtraSkuAdapter = new ClientExtraSkuAdapter();
+        headers.put(AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRAS, clientExtraSkuAdapter.toString());
 
         if (request instanceof MicrosoftTokenRequest) {
             final MicrosoftTokenRequest microsoftTokenRequest = (MicrosoftTokenRequest) request;
