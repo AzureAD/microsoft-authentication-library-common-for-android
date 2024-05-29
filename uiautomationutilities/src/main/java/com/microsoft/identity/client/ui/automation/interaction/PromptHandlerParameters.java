@@ -161,6 +161,11 @@ public class PromptHandlerParameters {
     private final boolean choosePasskeyExpected;
 
     /**
+     * Denotes device system PIN if different than global.
+     */
+    private final String systemPin;
+
+    /**
      * Denotes the way in which we want to respond to the enroll page for this request.
      */
     @Builder.Default

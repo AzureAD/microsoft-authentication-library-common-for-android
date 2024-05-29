@@ -81,9 +81,11 @@ public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponen
     void handleChooseCertificate();
 
     /**
-     * Clicks the passkey option.
+     * Clicks the passkey option when a username is not provided.
+     * @param systemPin System PIN of device. Needed to authenticate with a passkey.
+     * @param usernameProvided true if username hint provided.
      */
-    void handleChoosePasskey();
+    void handleChoosePasskey(@NonNull final String systemPin, final boolean usernameProvided);
 
     /**
      * Handle the How would you like to sign in page.

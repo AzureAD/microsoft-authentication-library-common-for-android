@@ -26,6 +26,7 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.client.ui.automation.constants.GlobalConstants;
 import com.microsoft.identity.client.ui.automation.interaction.AbstractPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
@@ -73,6 +74,14 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
                 parameters.getBroker().handleAccountPicker(username);
             } else if (parameters.isExpectingLoginPageAccountPicker()) {
                 loginComponentHandler.handleAccountPicker(username);
+            } else if (parameters.isChoosePasskeyExpected()) {
+                if (parameters.getBroker() != null) {
+                    // Brokered auth, but username-less. We need to get beyond BrokerAccountChooserActivity first and then select what we want.
+                    parameters.getBroker().handleAccountPicker(null);
+                }
+                aadLoginComponentHandler.handleChoosePasskey(
+                        parameters.getSystemPin() != null ? parameters.getSystemPin() : GlobalConstants.PIN,
+                        false);
             } else {
                 loginComponentHandler.handleEmailField(username);
             }
@@ -88,8 +97,10 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
             aadLoginComponentHandler.handleChooseCertificate();
         }
 
-        if (parameters.isChoosePasskeyExpected()) {
-            aadLoginComponentHandler.handleChoosePasskey();
+        if (loginHintProvided && parameters.isChoosePasskeyExpected()) {
+            aadLoginComponentHandler.handleChoosePasskey(
+                    parameters.getSystemPin() != null ? parameters.getSystemPin() : GlobalConstants.PIN,
+                    true);
         }
 
         if (parameters.isPasswordPageExpected() || parameters.getPrompt() == PromptParameter.LOGIN || !parameters.isSessionExpected()) {
