@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [MINOR] Update logic for matching requested claims for AT (#2401)
 
 Version 17.4.0
 ---------
