@@ -151,7 +151,8 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                                                                 @Nullable final String target,
                                                                 @Nullable final String authScheme,
                                                                 @Nullable final String requestedClaims,
-                                                                @Nullable final String kid) {
+                                                                @Nullable final String kid,
+                                                                boolean mustMatchExactClaims) {
         final boolean mustMatchOnEnvironment = !StringUtil.isNullOrEmpty(environment);
         final boolean mustMatchOnHomeAccountId = !StringUtil.isNullOrEmpty(homeAccountId);
         final boolean mustMatchOnRealm = !StringUtil.isNullOrEmpty(realm);
@@ -259,7 +260,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 if (TokenRequest.TokenType.POP.equalsIgnoreCase(atType)) {
                     matches = matches && (
                             authScheme.equalsIgnoreCase(PopAuthenticationSchemeWithClientKeyInternal.SCHEME_POP_WITH_CLIENT_KEY)
-                            || authScheme.equalsIgnoreCase(PopAuthenticationSchemeInternal.SCHEME_POP)
+                                    || authScheme.equalsIgnoreCase(PopAuthenticationSchemeInternal.SCHEME_POP)
                     );
                 } else {
                     matches = matches && authScheme.equalsIgnoreCase(atType);
@@ -271,10 +272,12 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 matches = matches && kid.equalsIgnoreCase(accessToken.getKid());
             }
 
-            if (mustMatchOnRequestedClaims) {
+            if (mustMatchOnRequestedClaims || mustMatchExactClaims) {
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                    matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(requestedClaims, accessToken.getRequestedClaims());
+                    if(!(mustMatchExactClaims && StringUtil.isNullOrEmpty(requestedClaims) && StringUtil.isNullOrEmpty(accessToken.getRequestedClaims()))) {
+                        matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(requestedClaims, accessToken.getRequestedClaims());
+                    }
                 } else {
                     Logger.verbose(TAG, "Query specified requested_claims-match, but attempted to match with non-AT credential type.");
                 }
