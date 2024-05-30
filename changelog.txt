@@ -1,6 +1,7 @@
 V.Next
 ---------
 - [MINOR] Update logic for matching requested claims for AT (#2401)
+- [MINOR] Updating YubiKit and CredMan versions (#2417)
 
 Version 17.4.0
 ---------
