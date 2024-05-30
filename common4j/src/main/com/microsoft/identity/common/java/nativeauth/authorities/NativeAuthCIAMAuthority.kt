@@ -104,7 +104,8 @@ class NativeAuthCIAMAuthority (
             correlationId = null,
             "${TAG}.getChallengeTypesWithDefault"
         )
-        val challengeTypesWithDefault = (challengeTypes ?: emptyList()).plus(listOf(NativeAuthConstants.GrantType.REDIRECT)).distinct().joinToString(" ")
+
+        val challengeTypesWithDefault = challengeTypes.orEmpty().plus(listOf(NativeAuthConstants.GrantType.REDIRECT)).distinct().joinToString(" ")
         Logger.info(TAG, "Challenge Types used = $challengeTypesWithDefault")
         return challengeTypesWithDefault
     }
