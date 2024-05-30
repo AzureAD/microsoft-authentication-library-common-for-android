@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.nativeauth.internal.controllers
 
+import android.text.TextUtils
 import androidx.annotation.VisibleForTesting
 import com.microsoft.identity.common.internal.commands.RefreshOnCommand
 import com.microsoft.identity.common.internal.telemetry.Telemetry
@@ -39,7 +40,6 @@ import com.microsoft.identity.common.java.exception.ErrorStrings
 import com.microsoft.identity.common.java.exception.ServiceException
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.AcquireTokenNoFixedScopesCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseNativeAuthCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseSignInTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordResendCodeCommandParameters
@@ -89,9 +89,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResult
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache
 import com.microsoft.identity.common.java.request.SdkType
 import com.microsoft.identity.common.java.result.AcquireTokenResult
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult
@@ -656,8 +654,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         ArgumentException::class,
         ServiceException::class
     )
-    fun acquireTokenSilent(
-        parameters: AcquireTokenNoFixedScopesCommandParameters
+    override fun acquireTokenSilent(
+        parameters: SilentTokenCommandParameters
     ): AcquireTokenResult {
         LogSession.logMethodCall(
             tag = TAG,
@@ -670,35 +668,31 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         // Validate original AcquireTokenNoScopesCommandParameters parameters
         parameters.validate()
 
-        // Convert AcquireTokenNoScopesCommandParameters into SilentTokenCommandParameters,
-        // so we can use it in BaseController.getCachedAccountRecord()
-        val silentTokenCommandParameters =
-            CommandUtil.convertAcquireTokenNoFixedScopesCommandParameters(
-                parameters,
-                parameters.getCorrelationId()
-            )
+        // Add default scopes
+        val mergedScopes = addDefaultScopes(parameters)
 
-        // We want to retrieve all tokens from the cache, regardless of their scopes. Since in the
-        // native auth get token flow the developer doesn't have the ability to specify scopes,
-        // we can't filter on it.
-        // In reality only 1 token should be returned, as native auth currently doesn't support
-        // multiple tokens.
-        val targetAccount: AccountRecord = getCachedAccountRecord(silentTokenCommandParameters)
+        val parametersWithScopes = parameters
+            .toBuilder()
+            .scopes(mergedScopes)
+            .build()
+
+        val targetAccount: AccountRecord = getCachedAccountRecord(parametersWithScopes)
 
         // Build up params for Strategy construction
-        val authScheme = silentTokenCommandParameters.authenticationScheme
+        val authScheme = parametersWithScopes.authenticationScheme
         val strategyParameters = OAuth2StrategyParameters.builder()
-            .platformComponents(parameters.platformComponents)
+            .platformComponents(parametersWithScopes.platformComponents)
             .authenticationScheme(authScheme)
             .build()
-        val strategy = silentTokenCommandParameters.authority.createOAuth2Strategy(strategyParameters)
+        val strategy = parametersWithScopes.authority.createOAuth2Strategy(strategyParameters)
 
-        val tokenCache = silentTokenCommandParameters.oAuth2TokenCache
+        val tokenCache = parametersWithScopes.oAuth2TokenCache
+
         val cacheRecords = tokenCache.loadWithAggregatedAccountData(
-            silentTokenCommandParameters.clientId,
-            parameters.applicationIdentifier,
+            parametersWithScopes.clientId,
+            parametersWithScopes.applicationIdentifier,
             null,
-            null,
+            TextUtils.join(" ", parametersWithScopes.scopes),
             targetAccount,
             authScheme
         ) as List<ICacheRecord>
@@ -708,10 +702,6 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         // subsequent CacheRecords represent other profiles (projections) of this principal in
         // other tenants. Those tokens will be 'sparse', meaning that their AT/RT will not be loaded
         val fullCacheRecord = cacheRecords[0]
-
-        if (accessTokenIsNull(fullCacheRecord)) {
-            throw ServiceException(ErrorStrings.NATIVE_AUTH_NO_ACCESS_TOKEN_FOUND, "No access token found during refresh - user must be signed out.", null)
-        }
 
         if (LibraryConfiguration.getInstance().isRefreshInEnabled &&
             fullCacheRecord.accessToken != null && fullCacheRecord.accessToken.refreshOnIsActive()
@@ -726,9 +716,9 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             fullCacheRecord.accessToken != null && fullCacheRecord.accessToken.shouldRefresh()
         ) {
             if (!fullCacheRecord.accessToken.isExpired) {
-                setAcquireTokenResult(acquireTokenSilentResult, silentTokenCommandParameters, cacheRecords)
+                setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords)
                 val refreshOnCommand =
-                    RefreshOnCommand(parameters, this.asControllerFactory(), PublicApiId.MSAL_REFRESH_ON)
+                    RefreshOnCommand(parametersWithScopes, this.asControllerFactory(), PublicApiId.MSAL_REFRESH_ON)
                 CommandDispatcher.submitAndForget(refreshOnCommand)
             } else {
                 Logger.warn(
@@ -736,9 +726,10 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     parameters.getCorrelationId(),
                     "Access token is expired. Removing from cache..."
                 )
-
-                renewAT(
-                    silentTokenCommandParameters,
+                // Remove the expired token
+                tokenCache.removeCredential(fullCacheRecord.accessToken)
+                renewAccessToken(
+                    parametersWithScopes,
                     acquireTokenSilentResult,
                     tokenCache,
                     strategy,
@@ -747,17 +738,17 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             }
         } else if (accessTokenIsNull(fullCacheRecord) ||
             refreshTokenIsNull(fullCacheRecord) ||
-            silentTokenCommandParameters.isForceRefresh ||
+            parametersWithScopes.isForceRefresh ||
             !isRequestAuthorityRealmSameAsATRealm(
-                silentTokenCommandParameters.authority,
+                parametersWithScopes.authority,
                 fullCacheRecord.accessToken
             ) ||
             !strategy.validateCachedResult(authScheme, fullCacheRecord)
         ) {
             if (!refreshTokenIsNull(fullCacheRecord)) {
                 // No AT found, but the RT checks out, so we'll use it
-                renewAT(
-                    silentTokenCommandParameters,
+                renewAccessToken(
+                    parametersWithScopes,
                     acquireTokenSilentResult,
                     tokenCache,
                     strategy,
@@ -784,8 +775,10 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 "Access token is expired. Removing from cache..."
             )
 
-            renewAT(
-                silentTokenCommandParameters,
+            // Remove the expired token
+            tokenCache.removeCredential(fullCacheRecord.accessToken)
+            renewAccessToken(
+                parametersWithScopes,
                 acquireTokenSilentResult,
                 tokenCache,
                 strategy,
@@ -797,7 +790,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 parameters.getCorrelationId(),
                 "Returning silent result"
             )
-            setAcquireTokenResult(acquireTokenSilentResult, silentTokenCommandParameters, cacheRecords)
+            setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords)
         }
         Telemetry.emit(
             ApiEndEvent()
@@ -1477,42 +1470,6 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 )
             }
         }
-    }
-
-    @Throws(
-        IOException::class,
-        ClientException::class,
-        ServiceException::class
-    )
-    private fun renewAT(
-        parameters: SilentTokenCommandParameters,
-        acquireTokenSilentResult: AcquireTokenResult,
-        tokenCache: OAuth2TokenCache<*, *, *>,
-        strategy: OAuth2Strategy<*, *, *, *, *, *, *, *, *, *, *, *, *>,
-        cacheRecord: ICacheRecord
-    ) {
-        Logger.verbose(
-            TAG,
-            parameters.getCorrelationId(),
-            "Renewing access token..."
-        )
-
-        // Add the AT's scopes to the parameters so that they can be used to perform the refresh
-        // token call.
-        val accessTokenScopes = cacheRecord.accessToken
-            .target?.split(" ".toRegex())?.dropLastWhile { it.isEmpty() }?.toSet()
-
-        val parametersWithScopes = parameters.toBuilder()
-            .scopes(accessTokenScopes)
-            .build()
-
-        renewAccessToken(
-            parametersWithScopes,
-            acquireTokenSilentResult,
-            tokenCache,
-            strategy,
-            cacheRecord
-        )
     }
 
     @VisibleForTesting
