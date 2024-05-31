@@ -63,6 +63,7 @@ class SignInSubmitCodeCommand(
 
         Logger.infoWithObject(
             TAG,
+            parameters.getCorrelationId(),
             "Returning result: ",
             result
         )

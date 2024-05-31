@@ -66,11 +66,6 @@ class ResetPasswordContinueApiResponse(
      * @see com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordContinueApiResult
      */
     fun toResult(): ResetPasswordContinueApiResult {
-        LogSession.logMethodCall(
-            tag = TAG,
-            correlationId = null,
-            methodName = "${TAG}.toResult" )
-
         return when (statusCode) {
 
             // Handle 400 errors
