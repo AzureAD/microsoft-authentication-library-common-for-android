@@ -30,7 +30,7 @@ public enum UserType {
     FEDERATED(LabConstants.UserType.FEDERATED),
     GUEST(LabConstants.UserType.GUEST),
     MSA(LabConstants.UserType.MSA),
-    ON_PREM(LabConstants.UserType.ON_PREM);
+    ONPREM(LabConstants.UserType.ONPREM);
 
     final String value;
 
