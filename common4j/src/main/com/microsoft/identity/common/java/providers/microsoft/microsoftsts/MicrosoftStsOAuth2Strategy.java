@@ -34,6 +34,7 @@ import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X
 import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
 
 import com.google.gson.JsonParseException;
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
@@ -756,7 +757,11 @@ public class MicrosoftStsOAuth2Strategy
             tokens = tokens.concat("access_token");
         }
 
-        if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType()) &&
+        if (response.getScope()!= null && response.getScope().equalsIgnoreCase(AuthenticationConstants.OAuth2Scopes.TRANSFER_TOKEN_SCOPE)) {
+            // Skip the idToken validation.
+            Logger.info(TAG, "Found response scope as empty or as transfer token scope");
+        }
+        else if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType()) &&
                 StringUtil.isNullOrEmpty(response.getIdToken())) {
             clientException = ClientException.TOKENS_MISSING;
             tokens = tokens.concat(" id_token");
