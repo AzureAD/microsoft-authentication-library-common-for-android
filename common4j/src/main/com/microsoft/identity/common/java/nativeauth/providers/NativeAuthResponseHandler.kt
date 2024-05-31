@@ -25,7 +25,6 @@ package com.microsoft.identity.common.java.nativeauth.providers
 import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordChallengeApiResponse
@@ -385,7 +384,6 @@ class NativeAuthResponseHandler {
                 response.body,
                 MicrosoftStsTokenResponse::class.java
             )
-            // TODO add safe logging
             return SignInTokenApiResult.Success(
                 tokenResponse = apiResponse,
                 correlationId = correlationId
