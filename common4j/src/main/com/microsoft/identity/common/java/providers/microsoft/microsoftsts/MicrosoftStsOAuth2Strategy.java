@@ -755,7 +755,11 @@ public class MicrosoftStsOAuth2Strategy
             tokens = tokens.concat("access_token");
         }
 
-        if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType()) &&
+        if (response.getScope()!= null && response.getScope().equalsIgnoreCase(AuthenticationConstants.OAuth2Scopes.TRANSFER_TOKEN_SCOPE)) {
+            // Skip the idToken validation.
+            Logger.info(TAG, "Found response scope as empty or as transfer token scope");
+        }
+        else if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType()) &&
                 StringUtil.isNullOrEmpty(response.getIdToken())) {
             clientException = ClientException.TOKENS_MISSING;
             tokens = tokens.concat(" id_token");
