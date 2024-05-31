@@ -199,9 +199,9 @@ public class LabClient implements ILabClient {
     }
 
     private ILabAccount createTempAccountInternal(@NonNull final TempUserType tempUserType) throws LabApiException {
-        Configuration.getDefaultApiClient().setAccessToken(
-                mLabApiAuthenticationClient.getAccessToken()
-        );
+//        Configuration.getDefaultApiClient().setAccessToken(
+//                mLabApiAuthenticationClient.getAccessToken()
+//        );
         final CreateTempUserApi createTempUserApi = new CreateTempUserApi();
         createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
         final TempUser tempUser;

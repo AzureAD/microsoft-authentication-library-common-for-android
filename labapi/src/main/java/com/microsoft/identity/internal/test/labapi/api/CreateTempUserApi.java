@@ -70,9 +70,10 @@ public class CreateTempUserApi {
 
         List<Pair> localVarQueryParams = new ArrayList<Pair>();
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
-
         if (usertype != null)
-            localVarQueryParams.addAll(apiClient.parameterToPair("usertype", usertype));
+        localVarQueryParams.addAll(apiClient.parameterToPair("usertype", usertype));
+
+        localVarQueryParams.addAll(apiClient.parameterToPair("code", "REDACTING_CODE_FROM_GIT"));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 
