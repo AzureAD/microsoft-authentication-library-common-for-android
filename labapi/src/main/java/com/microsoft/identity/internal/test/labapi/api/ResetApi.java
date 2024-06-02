@@ -16,6 +16,7 @@ import com.microsoft.identity.internal.test.labapi.ApiCallback;
 import com.microsoft.identity.internal.test.labapi.ApiClient;
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.ApiResponse;
+import com.microsoft.identity.internal.test.labapi.BuildConfig;
 import com.microsoft.identity.internal.test.labapi.Configuration;
 import com.microsoft.identity.internal.test.labapi.Pair;
 import com.microsoft.identity.internal.test.labapi.ProgressRequestBody;
@@ -39,7 +40,7 @@ public class ResetApi {
     private ApiClient apiClient;
 
     public ResetApi() {
-        this(Configuration.getDefaultApiClient());
+        this(Configuration.getFunctionApiClient());
     }
 
     public ResetApi(ApiClient apiClient) {
@@ -72,9 +73,12 @@ public class ResetApi {
         List<Pair> localVarQueryParams = new ArrayList<Pair>();
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
         if (upn != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("upn", upn));
+            localVarQueryParams.addAll(apiClient.parameterToPair("upn", upn));
         if (operation != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("operation", operation));
+            localVarQueryParams.addAll(apiClient.parameterToPair("operation", operation));
+
+        if (!BuildConfig.RESET_API_CLIENT_CODE.equals(""))
+            localVarQueryParams.addAll(apiClient.parameterToPair("code", BuildConfig.RESET_API_CLIENT_CODE));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 
@@ -105,7 +109,7 @@ public class ResetApi {
         }
 
         String[] localVarAuthNames = new String[] {  };
-        return apiClient.buildCall(localVarPath, "PUT", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarAuthNames, progressRequestListener);
+        return apiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarAuthNames, progressRequestListener);
     }
     
     @SuppressWarnings("rawtypes")
@@ -128,8 +132,8 @@ public class ResetApi {
      * @return CustomSuccessResponse
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public CustomSuccessResponse apiResetPut(String upn, String operation) throws ApiException {
-        ApiResponse<CustomSuccessResponse> resp = apiResetPutWithHttpInfo(upn, operation);
+    public String apiResetPut(String upn, String operation) throws ApiException {
+        ApiResponse<String> resp = apiResetPutWithHttpInfo(upn, operation);
         return resp.getData();
     }
 
@@ -141,9 +145,9 @@ public class ResetApi {
      * @return ApiResponse&lt;CustomSuccessResponse&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public ApiResponse<CustomSuccessResponse> apiResetPutWithHttpInfo(String upn, String operation) throws ApiException {
+    public ApiResponse<String> apiResetPutWithHttpInfo(String upn, String operation) throws ApiException {
         com.squareup.okhttp.Call call = apiResetPutValidateBeforeCall(upn, operation, null, null);
-        Type localVarReturnType = TypeToken.get(CustomSuccessResponse.class).getType();
+        Type localVarReturnType = TypeToken.get(String.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 

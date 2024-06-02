@@ -200,9 +200,10 @@ public class LabClient implements ILabClient {
     }
 
     private ILabAccount createTempAccountInternal(@NonNull final TempUserType tempUserType) throws LabApiException {
-
-        // The new function api is currently unauthenticated, so no need to make access token call.
-        final CreateTempUserApi createTempUserApi = new CreateTempUserApi(BuildConfig.FUNCTION_API_CLIENT_CODE);
+        Configuration.getDefaultApiClient().setAccessToken(
+                mLabApiAuthenticationClient.getAccessToken()
+        );
+        final CreateTempUserApi createTempUserApi = new CreateTempUserApi();
         createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
         final TempUser tempUser;
 
@@ -392,10 +393,9 @@ public class LabClient implements ILabClient {
     public boolean resetPassword(@NonNull final String upn) throws LabApiException {
         final ResetApi resetApi = new ResetApi();
         try {
-            final CustomSuccessResponse resetResponse = resetApi.apiResetPut(upn, ResetOperation.PASSWORD.toString());
-            final String expectedResult = ("Password reset successful for user : " + upn)
-                    .toLowerCase();
-            final boolean result = resetResponse.getResult().toLowerCase().contains(expectedResult);
+            final String resetResponse = resetApi.apiResetPut(upn, ResetOperation.PASSWORD.toString());
+            final String expectedResult = ("Password reset for " + upn).toLowerCase();
+            final boolean result = resetResponse.toLowerCase().contains(expectedResult);
             if (result) {
                 try {
                     Thread.sleep(PASSWORD_RESET_WAIT_DURATION);

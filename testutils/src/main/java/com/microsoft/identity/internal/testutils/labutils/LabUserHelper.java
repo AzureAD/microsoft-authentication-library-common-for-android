@@ -247,7 +247,7 @@ public class LabUserHelper {
 
     public static String loadTempUser(final String userType) {
         instance.setupApiClientWithAccessToken();
-        CreateTempUserApi createTempUserApi = new CreateTempUserApi(BuildConfig.FUNCTION_API_CLIENT_CODE);
+        CreateTempUserApi createTempUserApi = new CreateTempUserApi();
         createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
 
         TempUser tempUser;
@@ -266,7 +266,7 @@ public class LabUserHelper {
 
     public static TempUser loadTempUserForTest(final String userType) {
         instance.setupApiClientWithAccessToken();
-        CreateTempUserApi createTempUserApi = new CreateTempUserApi(BuildConfig.FUNCTION_API_CLIENT_CODE);
+        CreateTempUserApi createTempUserApi = new CreateTempUserApi();
         createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
 
         try {

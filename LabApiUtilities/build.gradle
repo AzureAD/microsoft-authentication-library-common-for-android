@@ -23,12 +23,6 @@ if (project.hasProperty("labSecret")) {
     labClientSecret = labSecret
 }
 
-def functionApiClientCode = ""
-
-if (project.hasProperty("functionApiCode")) {
-    functionApiClientCode = functionApiCode
-}
-
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
@@ -48,13 +42,11 @@ buildConfig {
 sourceSets {
     main {
         buildConfigField("String", "LAB_CLIENT_SECRET", "\"$labClientSecret\"")
-        buildConfigField("String", "FUNCTION_API_CLIENT_CODE", "\"$functionApiClientCode\"")
         java.srcDirs = ['src/main', "$project.buildDir/generated/source/buildConfig/main"]
     }
     test {
         java.srcDirs = ['src/test', "$project.buildDir/generated/source/buildConfig/test"]
         buildConfigField("String", "LAB_CLIENT_SECRET", "\"$labClientSecret\"")
-        buildConfigField("String", "FUNCTION_API_CLIENT_CODE", "\"$functionApiClientCode\"")
     }
 }
 

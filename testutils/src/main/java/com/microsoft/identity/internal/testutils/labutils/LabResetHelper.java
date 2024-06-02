@@ -46,11 +46,10 @@ public class LabResetHelper {
         final ResetApi resetApi = new ResetApi();
 
         try {
-            final CustomSuccessResponse customSuccessResponse;
-            customSuccessResponse = resetApi.apiResetPut(upn, LabConstants.ResetOperation.PASSWORD);
-            final String expectedResult = ("Password reset successful for user : " + upn)
-                    .toLowerCase();
-            return customSuccessResponse.getResult().toLowerCase().contains(expectedResult);
+            final String resetResponse;
+            resetResponse = resetApi.apiResetPut(upn, LabConstants.ResetOperation.PASSWORD);
+            final String expectedResult = ("Password reset for " + upn).toLowerCase();
+            return resetResponse.toLowerCase().contains(expectedResult);
         } catch (ApiException e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -67,10 +66,10 @@ public class LabResetHelper {
         final ResetApi resetApi = new ResetApi();
 
         try {
-            final CustomSuccessResponse customSuccessResponse;
-            customSuccessResponse = resetApi.apiResetPut(upn, LabConstants.ResetOperation.MFA);
-            return customSuccessResponse.getResult().contains(
-                    "MFA reset successful for user : " + upn
+            final String resetResponse;
+            resetResponse = resetApi.apiResetPut(upn, LabConstants.ResetOperation.MFA);
+            return resetResponse.contains(
+                    "MFA reset for " + upn
             );
         } catch (ApiException e) {
             throw new RuntimeException(e.getMessage());

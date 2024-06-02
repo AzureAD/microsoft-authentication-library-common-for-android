@@ -16,6 +16,7 @@ import com.microsoft.identity.internal.test.labapi.ApiCallback;
 import com.microsoft.identity.internal.test.labapi.ApiClient;
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.ApiResponse;
+import com.microsoft.identity.internal.test.labapi.BuildConfig;
 import com.microsoft.identity.internal.test.labapi.Configuration;
 import com.microsoft.identity.internal.test.labapi.Pair;
 import com.microsoft.identity.internal.test.labapi.ProgressRequestBody;
@@ -37,15 +38,13 @@ import java.util.Map;
 
 public class CreateTempUserApi {
     private ApiClient apiClient;
-    private final String functionApiCode;
 
-    public CreateTempUserApi(final String apiCode) {
-        this(Configuration.getFunctionApiClient(), apiCode);
+    public CreateTempUserApi() {
+        this(Configuration.getFunctionApiClient());
     }
 
-    public CreateTempUserApi(ApiClient apiClient, final String apiCode) {
+    public CreateTempUserApi(ApiClient apiClient) {
         this.apiClient = apiClient;
-        functionApiCode = apiCode;
     }
 
     public ApiClient getApiClient() {
@@ -76,7 +75,8 @@ public class CreateTempUserApi {
         if (usertype != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("usertype", usertype));
 
-        localVarQueryParams.addAll(apiClient.parameterToPair("code", functionApiCode));
+        if (!BuildConfig.FUNCTION_API_CLIENT_CODE.equals(""))
+            localVarQueryParams.addAll(apiClient.parameterToPair("code", BuildConfig.FUNCTION_API_CLIENT_CODE));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 
