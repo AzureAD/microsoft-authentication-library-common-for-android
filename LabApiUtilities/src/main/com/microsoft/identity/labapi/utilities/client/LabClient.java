@@ -36,6 +36,7 @@ import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
 import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
 import com.microsoft.identity.internal.test.labapi.model.TempUser;
 import com.microsoft.identity.internal.test.labapi.model.UserInfo;
+import com.microsoft.identity.labapi.utilities.BuildConfig;
 import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
 import com.microsoft.identity.labapi.utilities.constants.ProtectionPolicy;
 import com.microsoft.identity.labapi.utilities.constants.TempUserType;
@@ -199,10 +200,9 @@ public class LabClient implements ILabClient {
     }
 
     private ILabAccount createTempAccountInternal(@NonNull final TempUserType tempUserType) throws LabApiException {
-//        Configuration.getDefaultApiClient().setAccessToken(
-//                mLabApiAuthenticationClient.getAccessToken()
-//        );
-        final CreateTempUserApi createTempUserApi = new CreateTempUserApi();
+
+        // The new function api is currently unauthenticated, so no need to make access token call.
+        final CreateTempUserApi createTempUserApi = new CreateTempUserApi(BuildConfig.FUNCTION_API_CLIENT_CODE);
         createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
         final TempUser tempUser;
 

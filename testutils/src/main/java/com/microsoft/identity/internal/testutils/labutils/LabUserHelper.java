@@ -33,6 +33,7 @@ import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
 import com.microsoft.identity.internal.test.labapi.model.LabInfo;
 import com.microsoft.identity.internal.test.labapi.model.TempUser;
 import com.microsoft.identity.internal.test.labapi.model.UserInfo;
+import com.microsoft.identity.labapi.utilities.BuildConfig;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -246,7 +247,7 @@ public class LabUserHelper {
 
     public static String loadTempUser(final String userType) {
         instance.setupApiClientWithAccessToken();
-        CreateTempUserApi createTempUserApi = new CreateTempUserApi();
+        CreateTempUserApi createTempUserApi = new CreateTempUserApi(BuildConfig.FUNCTION_API_CLIENT_CODE);
         createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
 
         TempUser tempUser;
@@ -265,7 +266,7 @@ public class LabUserHelper {
 
     public static TempUser loadTempUserForTest(final String userType) {
         instance.setupApiClientWithAccessToken();
-        CreateTempUserApi createTempUserApi = new CreateTempUserApi();
+        CreateTempUserApi createTempUserApi = new CreateTempUserApi(BuildConfig.FUNCTION_API_CLIENT_CODE);
         createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
 
         try {

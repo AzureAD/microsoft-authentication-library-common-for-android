@@ -40,10 +40,10 @@ import lombok.NonNull;
  * A an authentication client that can acquire access tokens for the Microsoft Identity Lab Api.
  */
 public class LabApiAuthenticationClient implements IAccessTokenSupplier {
-    private final static String SCOPE = "https://thefunctionapi.azurewebsites.net/.default";
+    private final static String SCOPE = "https://msidlab.com/.default";
     private final static String TENANT_ID = "72f988bf-86f1-41af-91ab-2d7cd011db47";
     private final static String AUTHORITY = "https://login.microsoftonline.com/" + TENANT_ID;
-    private final static String CLIENT_ID = "961db44d-619c-4ea1-89b7-b25d8278cfd5";
+    private final static String CLIENT_ID = "e8f7e05f-3ae8-4307-bc34-b26aec3bb4bf";
     private final static String KEYSTORE_TYPE = "Windows-MY";
     private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
     private final static String CERTIFICATE_ALIAS = "LabVaultAccessCert";

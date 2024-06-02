@@ -37,13 +37,15 @@ import java.util.Map;
 
 public class CreateTempUserApi {
     private ApiClient apiClient;
+    private final String functionApiCode;
 
-    public CreateTempUserApi() {
-        this(Configuration.getDefaultApiClient());
+    public CreateTempUserApi(final String apiCode) {
+        this(Configuration.getFunctionApiClient(), apiCode);
     }
 
-    public CreateTempUserApi(ApiClient apiClient) {
+    public CreateTempUserApi(ApiClient apiClient, final String apiCode) {
         this.apiClient = apiClient;
+        functionApiCode = apiCode;
     }
 
     public ApiClient getApiClient() {
@@ -70,10 +72,11 @@ public class CreateTempUserApi {
 
         List<Pair> localVarQueryParams = new ArrayList<Pair>();
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
-        if (usertype != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("usertype", usertype));
 
-        localVarQueryParams.addAll(apiClient.parameterToPair("code", "REDACTING_CODE_FROM_GIT"));
+        if (usertype != null)
+            localVarQueryParams.addAll(apiClient.parameterToPair("usertype", usertype));
+
+        localVarQueryParams.addAll(apiClient.parameterToPair("code", functionApiCode));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 
