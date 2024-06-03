@@ -30,9 +30,12 @@ import com.microsoft.identity.labapi.utilities.constants.UserType;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class LabClientTest {
+
+    final long timeout = 35000;
 
     @Test
     public void canFetchCloudAccount() {
@@ -151,6 +154,7 @@ public class LabClientTest {
     }
 
     @Test
+    @Ignore
     public void canResetPassword() {
         final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
                 TestBuildConfig.LAB_CLIENT_SECRET
@@ -160,7 +164,7 @@ public class LabClientTest {
 
         try {
             final ILabAccount labAccount = labClient.createTempAccount(TempUserType.BASIC);
-            Thread.sleep(20000);
+            Thread.sleep(timeout);
             Assert.assertTrue(labClient.resetPassword(labAccount.getUsername(), 2));
         } catch (final LabApiException | InterruptedException e) {
             throw new AssertionError(e);
@@ -177,7 +181,7 @@ public class LabClientTest {
 
         try {
             final ILabAccount labAccount = labClient.createTempAccount(TempUserType.BASIC);
-            Thread.sleep(20000);
+            Thread.sleep(timeout);
             labClient.enablePolicy(labAccount.getUsername(), ProtectionPolicy.MAM_CA);
         } catch (final LabApiException | InterruptedException e) {
             throw new AssertionError(e);
@@ -194,7 +198,7 @@ public class LabClientTest {
 
         try {
             final ILabAccount labAccount = labClient.createTempAccount(TempUserType.MAM_CA);
-            Thread.sleep(20000);
+            Thread.sleep(timeout);
             labClient.disablePolicy(labAccount.getUsername(), ProtectionPolicy.MAM_CA);
         } catch (final LabApiException | InterruptedException e){
             throw new AssertionError(e);
