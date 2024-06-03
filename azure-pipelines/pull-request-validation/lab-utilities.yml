@@ -40,10 +40,5 @@ jobs:
         displayName: Run the unit tests.
         inputs:
           cwd: $(Build.SourcesDirectory)/common-java-root
-          tasks: LabApiUtilities:test -Psugar=true -PlabSecret=$(LabVaultAppCert) -PfunctionApiCreateTempUserCode=$(LabVaultAppSecret) -PfunctionApiResetCode=$(LabVaultAppSecret)
-      - task: Gradle@2
-        displayName: Run the unit tests.
-        inputs:
-          cwd: $(Build.SourcesDirectory)/common-java-root
           tasks: LabApiUtilities:test -Psugar=true -PlabSecret=$(LabVaultAppCert) -PfunctionApiCreateTempUserCode=$(FunctionApiCreateTempUserCode) -PfunctionApiResetCode=$(FunctionApiResetCode)
 ...
