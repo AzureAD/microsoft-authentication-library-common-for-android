@@ -26,7 +26,6 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.api.ResetApi;
-import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
 
 /**
  * Utilities to interact with Lab {@link ResetApi}.
@@ -47,7 +46,7 @@ public class LabResetHelper {
 
         try {
             final String resetResponse;
-            resetResponse = resetApi.apiResetPut(upn, LabConstants.ResetOperation.PASSWORD);
+            resetResponse = resetApi.apiResetPost(upn, LabConstants.ResetOperation.PASSWORD);
             final String expectedResult = ("Password reset for " + upn).toLowerCase();
             return resetResponse.toLowerCase().contains(expectedResult);
         } catch (ApiException e) {
@@ -67,7 +66,7 @@ public class LabResetHelper {
 
         try {
             final String resetResponse;
-            resetResponse = resetApi.apiResetPut(upn, LabConstants.ResetOperation.MFA);
+            resetResponse = resetApi.apiResetPost(upn, LabConstants.ResetOperation.MFA);
             return resetResponse.contains(
                     "MFA reset for " + upn
             );

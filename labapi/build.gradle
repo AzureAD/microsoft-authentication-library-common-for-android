@@ -17,16 +17,16 @@ project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
 //labapi version.  Let's not change this please
 version = getAppVersionName()
 
-def functionApiClientCode = ""
+def createTempUserApiClientCode = ""
 
-if (project.hasProperty("functionApiCode")) {
-    functionApiClientCode = functionApiCode
+if (project.hasProperty("functionApiCreateTempUserCode")) {
+    createTempUserApiClientCode = functionApiCreateTempUserCode
 }
 
 def resetApiClientCode = ""
 
-if (project.hasProperty("resetApiCode")) {
-    resetApiClientCode = resetApiCode
+if (project.hasProperty("functionApiResetCode")) {
+    resetApiClientCode = functionApiResetCode
 }
 
 buildConfig {
@@ -37,7 +37,7 @@ buildConfig {
 
 sourceSets {
     main {
-        buildConfigField("String", "FUNCTION_API_CLIENT_CODE", "\"$functionApiClientCode\"")
+        buildConfigField("String", "CREATE_TEMP_USER_API_CLIENT_CODE", "\"$createTempUserApiClientCode\"")
         buildConfigField("String", "RESET_API_CLIENT_CODE", "\"$resetApiClientCode\"")
     }
 }

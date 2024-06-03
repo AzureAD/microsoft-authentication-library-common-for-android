@@ -27,7 +27,6 @@ import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 
 
-import com.microsoft.identity.internal.test.labapi.model.CustomErrorResponse;
 import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
 
 import java.lang.reflect.Type;
@@ -56,7 +55,7 @@ public class ResetApi {
     }
 
     /**
-     * Build call for apiResetPut
+     * Build call for apiResetPost
      * @param upn Enter the Lab User UPN (optional)
      * @param operation Allowed Values : \&quot;MFA\&quot;, Password\&quot; (optional)
      * @param progressListener Progress listener
@@ -64,7 +63,7 @@ public class ResetApi {
      * @return Call to execute
      * @throws ApiException If fail to serialize the request body object
      */
-    public com.squareup.okhttp.Call apiResetPutCall(String upn, String operation, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
+    public com.squareup.okhttp.Call apiResetPostCall(String upn, String operation, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
         Object localVarPostBody = null;
         
         // create path and map variables
@@ -113,9 +112,9 @@ public class ResetApi {
     }
     
     @SuppressWarnings("rawtypes")
-    private com.squareup.okhttp.Call apiResetPutValidateBeforeCall(String upn, String operation, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
+    private com.squareup.okhttp.Call apiResetPostValidateBeforeCall(String upn, String operation, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
         
-        com.squareup.okhttp.Call call = apiResetPutCall(upn, operation, progressListener, progressRequestListener);
+        com.squareup.okhttp.Call call = apiResetPostCall(upn, operation, progressListener, progressRequestListener);
         return call;
 
         
@@ -132,8 +131,8 @@ public class ResetApi {
      * @return CustomSuccessResponse
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public String apiResetPut(String upn, String operation) throws ApiException {
-        ApiResponse<String> resp = apiResetPutWithHttpInfo(upn, operation);
+    public String apiResetPost(String upn, String operation) throws ApiException {
+        ApiResponse<String> resp = apiResetPostWithHttpInfo(upn, operation);
         return resp.getData();
     }
 
@@ -145,8 +144,8 @@ public class ResetApi {
      * @return ApiResponse&lt;CustomSuccessResponse&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public ApiResponse<String> apiResetPutWithHttpInfo(String upn, String operation) throws ApiException {
-        com.squareup.okhttp.Call call = apiResetPutValidateBeforeCall(upn, operation, null, null);
+    public ApiResponse<String> apiResetPostWithHttpInfo(String upn, String operation) throws ApiException {
+        com.squareup.okhttp.Call call = apiResetPostValidateBeforeCall(upn, operation, null, null);
         Type localVarReturnType = TypeToken.get(String.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
@@ -160,7 +159,7 @@ public class ResetApi {
      * @return The request call
      * @throws ApiException If fail to process the API call, e.g. serializing the request body object
      */
-    public com.squareup.okhttp.Call apiResetPutAsync(String upn, String operation, final ApiCallback<CustomSuccessResponse> callback) throws ApiException {
+    public com.squareup.okhttp.Call apiResetPostAsync(String upn, String operation, final ApiCallback<CustomSuccessResponse> callback) throws ApiException {
 
         ProgressResponseBody.ProgressListener progressListener = null;
         ProgressRequestBody.ProgressRequestListener progressRequestListener = null;
@@ -181,7 +180,7 @@ public class ResetApi {
             };
         }
 
-        com.squareup.okhttp.Call call = apiResetPutValidateBeforeCall(upn, operation, progressListener, progressRequestListener);
+        com.squareup.okhttp.Call call = apiResetPostValidateBeforeCall(upn, operation, progressListener, progressRequestListener);
         Type localVarReturnType = TypeToken.get(CustomSuccessResponse.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;

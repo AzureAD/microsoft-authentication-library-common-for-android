@@ -24,6 +24,7 @@ package com.microsoft.identity.labapi.utilities.client;
 
 import com.microsoft.identity.labapi.utilities.TestBuildConfig;
 import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
+import com.microsoft.identity.labapi.utilities.constants.ProtectionPolicy;
 import com.microsoft.identity.labapi.utilities.constants.TempUserType;
 import com.microsoft.identity.labapi.utilities.constants.UserType;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
@@ -53,6 +54,31 @@ public class LabClientTest {
             Assert.assertNotNull(labAccount.getUserType());
             Assert.assertTrue(labAccount.getUsername().toLowerCase().contains("msidlab4"));
             Assert.assertEquals(UserType.CLOUD, labAccount.getUserType());
+        } catch (final LabApiException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    @Test
+    public void canFetchGuestAccount() {
+        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
+                TestBuildConfig.LAB_CLIENT_SECRET
+        );
+
+        final LabClient labClient = new LabClient(authenticationClient);
+
+        final LabQuery query = LabQuery.builder()
+                .userType(UserType.GUEST)
+                .build();
+
+        try {
+            final ILabAccount labAccount = labClient.getLabAccount(query);
+            Assert.assertNotNull(labAccount);
+            Assert.assertNotNull(labAccount.getUsername());
+            Assert.assertNotNull(labAccount.getPassword());
+            Assert.assertNotNull(labAccount.getUserType());
+            Assert.assertTrue(labAccount.getUsername().toLowerCase().contains("msidlab4"));
+            Assert.assertEquals(UserType.GUEST, labAccount.getUserType());
         } catch (final LabApiException e) {
             throw new AssertionError(e);
         }
@@ -99,6 +125,74 @@ public class LabClientTest {
             Assert.assertNotNull(labAccount.getUserType());
             Assert.assertTrue(labAccount.getUsername().toLowerCase().contains("msidlab4"));
             Assert.assertEquals(UserType.CLOUD, labAccount.getUserType());
+        } catch (final LabApiException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    @Test
+    public void canCreateMAMCATempUser() {
+        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
+                TestBuildConfig.LAB_CLIENT_SECRET
+        );
+
+        final LabClient labClient = new LabClient(authenticationClient);
+
+        try {
+            final ILabAccount labAccount = labClient.createTempAccount(TempUserType.MAM_CA);
+            Assert.assertNotNull(labAccount);
+            Assert.assertNotNull(labAccount.getUsername());
+            Assert.assertNotNull(labAccount.getPassword());
+            Assert.assertNotNull(labAccount.getUserType());
+            Assert.assertTrue(labAccount.getUsername().toLowerCase().contains("msidlab4"));
+        } catch (final LabApiException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    @Test
+    public void canResetPassword() {
+        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
+                TestBuildConfig.LAB_CLIENT_SECRET
+        );
+
+        final LabClient labClient = new LabClient(authenticationClient);
+
+        try {
+            final ILabAccount labAccount = labClient.createTempAccount(TempUserType.BASIC);
+            Assert.assertTrue(labClient.resetPassword(labAccount.getUsername(), 2));
+        } catch (final LabApiException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    @Test
+    public void canEnablePolicy() {
+        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
+                TestBuildConfig.LAB_CLIENT_SECRET
+        );
+
+        final LabClient labClient = new LabClient(authenticationClient);
+
+        try {
+            final ILabAccount labAccount = labClient.createTempAccount(TempUserType.BASIC);
+            labClient.enablePolicy(labAccount.getUsername(), ProtectionPolicy.MAM_CA);
+        } catch (final LabApiException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    @Test
+    public void canDisablePolicy() {
+        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
+                TestBuildConfig.LAB_CLIENT_SECRET
+        );
+
+        final LabClient labClient = new LabClient(authenticationClient);
+
+        try {
+            final ILabAccount labAccount = labClient.createTempAccount(TempUserType.MAM_CA);
+            labClient.disablePolicy(labAccount.getUsername(), ProtectionPolicy.MAM_CA);
         } catch (final LabApiException e) {
             throw new AssertionError(e);
         }

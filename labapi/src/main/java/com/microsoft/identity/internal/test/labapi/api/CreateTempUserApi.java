@@ -75,8 +75,8 @@ public class CreateTempUserApi {
         if (usertype != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("usertype", usertype));
 
-        if (!BuildConfig.FUNCTION_API_CLIENT_CODE.equals(""))
-            localVarQueryParams.addAll(apiClient.parameterToPair("code", BuildConfig.FUNCTION_API_CLIENT_CODE));
+        if (!BuildConfig.CREATE_TEMP_USER_API_CLIENT_CODE.equals(""))
+            localVarQueryParams.addAll(apiClient.parameterToPair("code", BuildConfig.CREATE_TEMP_USER_API_CLIENT_CODE));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 

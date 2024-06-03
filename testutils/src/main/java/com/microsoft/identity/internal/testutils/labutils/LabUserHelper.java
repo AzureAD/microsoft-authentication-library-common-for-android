@@ -33,7 +33,6 @@ import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
 import com.microsoft.identity.internal.test.labapi.model.LabInfo;
 import com.microsoft.identity.internal.test.labapi.model.TempUser;
 import com.microsoft.identity.internal.test.labapi.model.UserInfo;
-import com.microsoft.identity.labapi.utilities.BuildConfig;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -327,7 +326,7 @@ public class LabUserHelper {
         instance.setupApiClientWithAccessToken();
         ResetApi resetApi = new ResetApi();
         try {
-            resetApi.apiResetPut(upn, "Password");
+            resetApi.apiResetPost(upn, "Password");
         } catch (ApiException e) {
             throw new RuntimeException("Error resetting lab user password", e);
         }
