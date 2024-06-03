@@ -27,8 +27,6 @@ import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 
 
-import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
-
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -128,7 +126,7 @@ public class ResetApi {
      * Provides generic error messages
      * @param upn Enter the Lab User UPN (optional)
      * @param operation Allowed Values : \&quot;MFA\&quot;, Password\&quot; (optional)
-     * @return CustomSuccessResponse
+     * @return String
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
     public String apiResetPost(String upn, String operation) throws ApiException {
@@ -141,7 +139,7 @@ public class ResetApi {
      * Provides generic error messages
      * @param upn Enter the Lab User UPN (optional)
      * @param operation Allowed Values : \&quot;MFA\&quot;, Password\&quot; (optional)
-     * @return ApiResponse&lt;CustomSuccessResponse&gt;
+     * @return ApiResponse&lt;String&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
     public ApiResponse<String> apiResetPostWithHttpInfo(String upn, String operation) throws ApiException {
@@ -159,7 +157,7 @@ public class ResetApi {
      * @return The request call
      * @throws ApiException If fail to process the API call, e.g. serializing the request body object
      */
-    public com.squareup.okhttp.Call apiResetPostAsync(String upn, String operation, final ApiCallback<CustomSuccessResponse> callback) throws ApiException {
+    public com.squareup.okhttp.Call apiResetPostAsync(String upn, String operation, final ApiCallback<String> callback) throws ApiException {
 
         ProgressResponseBody.ProgressListener progressListener = null;
         ProgressRequestBody.ProgressRequestListener progressRequestListener = null;
@@ -181,7 +179,7 @@ public class ResetApi {
         }
 
         com.squareup.okhttp.Call call = apiResetPostValidateBeforeCall(upn, operation, progressListener, progressRequestListener);
-        Type localVarReturnType = TypeToken.get(CustomSuccessResponse.class).getType();
+        Type localVarReturnType = TypeToken.get(String.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }

@@ -53,11 +53,10 @@ public class PolicyHelper {
         instance.setupApiClientWithAccessToken();
         final EnablePolicyApi enablePolicyApi = new EnablePolicyApi();
         try {
-            final CustomSuccessResponse customSuccessResponse = enablePolicyApi.apiEnablePolicyPut(upn, policy);
+            final String enablePolicyResult = enablePolicyApi.apiEnablePolicyPost(upn, policy);
             final String expectedResult = (policy +" Enabled for user : " + upn).toLowerCase();
-            final String result = customSuccessResponse.getResult();
-            Assert.assertNotNull(result);
-            return result.toLowerCase().contains(expectedResult);
+            Assert.assertNotNull(enablePolicyResult);
+            return enablePolicyResult.toLowerCase().contains(expectedResult);
         } catch (final ApiException e) {
             Logger.error(TAG,"Bad Request : Enable Policy can be used only for Locked users.",e);
             throw new AssertionError(e);
@@ -76,11 +75,10 @@ public class PolicyHelper {
         instance.setupApiClientWithAccessToken();
         final DisablePolicyApi disablePolicyApi = new DisablePolicyApi();
         try {
-            final CustomSuccessResponse customSuccessResponse = disablePolicyApi.apiDisablePolicyPut(upn, policy);
+            final String disablePolicyResponse = disablePolicyApi.apiDisablePolicyPost(upn, policy);
             final String expectedResult = (policy + " Disabled for user : " + upn).toLowerCase();
-            final String result = customSuccessResponse.getResult();
-            Assert.assertNotNull(result);
-            return result.toLowerCase().contains(expectedResult);
+            Assert.assertNotNull(disablePolicyResponse);
+            return disablePolicyResponse.toLowerCase().contains(expectedResult);
         } catch (final ApiException e) {
             Logger.error(TAG," Bad Request : Disable Policy can be used only for Locked users. ",e);
             throw new AssertionError(e);

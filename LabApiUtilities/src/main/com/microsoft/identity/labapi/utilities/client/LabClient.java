@@ -459,11 +459,10 @@ public class LabClient implements ILabClient {
     public boolean enablePolicy(@NonNull final String upn, @NonNull final ProtectionPolicy policy) {
         final EnablePolicyApi enablePolicyApi = new EnablePolicyApi();
         try {
-            final CustomSuccessResponse customSuccessResponse = enablePolicyApi.apiEnablePolicyPut(upn, policy.toString());
+            final String enablePolicyResult = enablePolicyApi.apiEnablePolicyPost(upn, policy.toString());
             final String expectedResult = (policy + " Enabled for user : " + upn).toLowerCase();
-            final String result = customSuccessResponse.getResult();
-            if (result != null) {
-                return result.toLowerCase().contains(expectedResult);
+            if (enablePolicyResult != null) {
+                return enablePolicyResult.toLowerCase().contains(expectedResult);
             }
             return false;
         } catch (final ApiException e) {
@@ -482,11 +481,10 @@ public class LabClient implements ILabClient {
     public boolean disablePolicy(@NonNull final String upn, @NonNull final ProtectionPolicy policy) {
         final DisablePolicyApi disablePolicyApi = new DisablePolicyApi();
         try {
-            final CustomSuccessResponse customSuccessResponse = disablePolicyApi.apiDisablePolicyPut(upn, policy.toString());
+            final String disablePolicyResponse = disablePolicyApi.apiDisablePolicyPost(upn, policy.toString());
             final String expectedResult = (policy + " Disabled for user : " + upn).toLowerCase();
-            final String result = customSuccessResponse.getResult();
-            if (result != null) {
-                return result.toLowerCase().contains(expectedResult);
+            if (disablePolicyResponse != null) {
+                return disablePolicyResponse.toLowerCase().contains(expectedResult);
             }
             return false;
         } catch (final ApiException e) {
