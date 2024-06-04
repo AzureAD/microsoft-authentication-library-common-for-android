@@ -30,6 +30,7 @@ import com.microsoft.identity.labapi.utilities.constants.UserType;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -176,6 +177,7 @@ public class LabClientTest {
     }
 
     @Test
+    @Ignore("Ignoring these until their codes are added to vault")
     public void canEnablePolicy() {
         final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
                 TestBuildConfig.LAB_CLIENT_SECRET
@@ -193,6 +195,7 @@ public class LabClientTest {
     }
 
     @Test
+    @Ignore("Ignoring these until their codes are added to vault")
     public void canDisablePolicy() {
         final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
                 TestBuildConfig.LAB_CLIENT_SECRET
