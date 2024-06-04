@@ -30,12 +30,17 @@ import com.microsoft.identity.labapi.utilities.constants.UserType;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
+/**
+ * Test Various function calls through the lab api including
+ * Temp-User Creation, fetching existing cloud, guest, and federated accounts, as well as
+ * password reset, policy enable/disable for temporary users.
+ */
 public class LabClientTest {
 
-    final long timeout = 35000;
+    // Give some time for basic user to finish creation to enable rest of test.
+    private final long POST_TEMP_USER_CREATION_WAIT = 15000;
 
     @Test
     public void canFetchCloudAccount() {
@@ -154,7 +159,6 @@ public class LabClientTest {
     }
 
     @Test
-    @Ignore
     public void canResetPassword() {
         final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
                 TestBuildConfig.LAB_CLIENT_SECRET
@@ -164,7 +168,7 @@ public class LabClientTest {
 
         try {
             final ILabAccount labAccount = labClient.createTempAccount(TempUserType.BASIC);
-            Thread.sleep(timeout);
+            Thread.sleep(POST_TEMP_USER_CREATION_WAIT);
             Assert.assertTrue(labClient.resetPassword(labAccount.getUsername(), 2));
         } catch (final LabApiException | InterruptedException e) {
             throw new AssertionError(e);
@@ -181,7 +185,7 @@ public class LabClientTest {
 
         try {
             final ILabAccount labAccount = labClient.createTempAccount(TempUserType.BASIC);
-            Thread.sleep(timeout);
+            Thread.sleep(POST_TEMP_USER_CREATION_WAIT);
             labClient.enablePolicy(labAccount.getUsername(), ProtectionPolicy.MAM_CA);
         } catch (final LabApiException | InterruptedException e) {
             throw new AssertionError(e);
@@ -198,7 +202,7 @@ public class LabClientTest {
 
         try {
             final ILabAccount labAccount = labClient.createTempAccount(TempUserType.MAM_CA);
-            Thread.sleep(timeout);
+            Thread.sleep(POST_TEMP_USER_CREATION_WAIT);
             labClient.disablePolicy(labAccount.getUsername(), ProtectionPolicy.MAM_CA);
         } catch (final LabApiException | InterruptedException e){
             throw new AssertionError(e);

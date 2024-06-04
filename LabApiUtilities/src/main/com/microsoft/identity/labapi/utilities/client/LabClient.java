@@ -68,6 +68,11 @@ public class LabClient implements ILabClient {
 
     public static final long TEMP_USER_WAIT_TIME = TimeUnit.SECONDS.toMillis(35);
 
+    public static final String CREATE_TEMP_USER_API_CODE_SECRET_NAME = "FunctionApiCreateTempUserCode";
+    public static final String RESET_API_CODE_SECRET_NAME = "FunctionApiResetCode";
+    public static final String ENABLE_POLICY_API_CODE_SECRET_NAME = "FunctionApiEnablePolicyCode";
+    public static final String DISABLE_POLICY_API_CODE_SECRET_NAME = "FunctionApiDisablePolicyCode";
+
     @Override
     public ILabAccount getLabAccount(@NonNull final LabQuery labQuery) throws LabApiException {
         final List<ConfigInfo> configInfos = fetchConfigsFromLab(labQuery);
@@ -202,13 +207,25 @@ public class LabClient implements ILabClient {
         Configuration.getDefaultApiClient().setAccessToken(
                 mLabApiAuthenticationClient.getAccessToken()
         );
-        final CreateTempUserApi createTempUserApi = new CreateTempUserApi();
+
+        // Before calling the api, we need to fetch the secret code from lab vault
+        final String createTempUserApiCode = getSecret(CREATE_TEMP_USER_API_CODE_SECRET_NAME);
+
+        final CreateTempUserApi createTempUserApi = new CreateTempUserApi(createTempUserApiCode);
         createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
         final TempUser tempUser;
 
         try {
             tempUser = createTempUserApi.apiCreateTempUserPost(valueOf(tempUserType));
         } catch (final ApiException e) {
+            throw new LabApiException(LabError.FAILED_TO_CREATE_TEMP_USER, e);
+        }
+
+        try {
+            // temp user takes some time to actually being created even though it may be
+            // returned by the LAB API. Adding a wait here before we proceed with the test.
+            Thread.sleep(LabClient.TEMP_USER_WAIT_TIME);
+        } catch (final InterruptedException e) {
             throw new LabApiException(LabError.FAILED_TO_CREATE_TEMP_USER, e);
         }
 
@@ -390,32 +407,22 @@ public class LabClient implements ILabClient {
 
     @Override
     public boolean resetPassword(@NonNull final String upn) throws LabApiException {
-        final ResetApi resetApi = new ResetApi();
-        try {
-            final String resetResponse = resetApi.apiResetPost(upn, ResetOperation.PASSWORD.toString());
-            final String expectedResult = ("Password reset for " + upn).toLowerCase();
-            final boolean result = resetResponse.toLowerCase().contains(expectedResult);
-            if (result) {
-                try {
-                    Thread.sleep(PASSWORD_RESET_WAIT_DURATION);
-                } catch (final InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            return result;
-        } catch (final ApiException e) {
-            throw new LabApiException(LabError.FAILED_TO_RESET_PASSWORD, e);
-        }
+        // Before calling the api, we need to fetch the secret code from lab vault
+        final String resetApiCode = getSecret(RESET_API_CODE_SECRET_NAME);
+        return resetPassword(upn, resetApiCode);
     }
 
     @Override
     public boolean resetPassword(@NonNull final String upn,
                                  final int resetAttempts) throws LabApiException {
+        // Before calling the api, we need to fetch the secret code from lab vault
+        final String resetApiCode = getSecret(RESET_API_CODE_SECRET_NAME);
+
         for (int i = 0; i < resetAttempts; i++) {
             System.out.printf(Locale.ENGLISH, "Password reset attempt #%d%n", (i + 1));
 
             try {
-                if (resetPassword(upn)) {
+                if (resetPassword(upn, resetApiCode)) {
                     return true;
                 }
             } catch (final LabApiException labApiException) {
@@ -443,6 +450,29 @@ public class LabClient implements ILabClient {
         return false;
     }
 
+    private boolean resetPassword(@NonNull final String upn, final String resetApiCode) throws LabApiException {
+        final ResetApi resetApi = new ResetApi(resetApiCode);
+        try {
+            final String resetResponse = resetApi.apiResetPost(upn, ResetOperation.PASSWORD.toString());
+            if (resetResponse == null) {
+                return false;
+            }
+
+            final String expectedResult = ("Password reset for " + upn).toLowerCase();
+            final boolean result = resetResponse.toLowerCase().contains(expectedResult);
+            if (result) {
+                try {
+                    Thread.sleep(PASSWORD_RESET_WAIT_DURATION);
+                } catch (final InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            return result;
+        } catch (final ApiException e) {
+            throw new LabApiException(LabError.FAILED_TO_RESET_PASSWORD, e);
+        }
+    }
+
     private String getLabSecretName(final String credentialVaultKeyName) {
         final String[] parts = credentialVaultKeyName.split("/");
         return parts[parts.length - 1];
@@ -456,8 +486,11 @@ public class LabClient implements ILabClient {
      * @param policy Enable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO. (optional)
      * @return boolean value indicating policy enabled or not.
      */
-    public boolean enablePolicy(@NonNull final String upn, @NonNull final ProtectionPolicy policy) {
-        final EnablePolicyApi enablePolicyApi = new EnablePolicyApi();
+    public boolean enablePolicy(@NonNull final String upn, @NonNull final ProtectionPolicy policy) throws LabApiException {
+        // Before calling the api, we need to fetch the secret code from lab vault
+        final String enablePolicyApiCode = getSecret(ENABLE_POLICY_API_CODE_SECRET_NAME);
+
+        final EnablePolicyApi enablePolicyApi = new EnablePolicyApi(enablePolicyApiCode);
         try {
             final String enablePolicyResult = enablePolicyApi.apiEnablePolicyPost(upn, policy.toString());
             final String expectedResult = (policy + " Enabled for user : " + upn).toLowerCase();
@@ -478,8 +511,11 @@ public class LabClient implements ILabClient {
      * @param policy Disable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO. (optional)
      * @return boolean value indicating policy is disabled or not for the upn.
      */
-    public boolean disablePolicy(@NonNull final String upn, @NonNull final ProtectionPolicy policy) {
-        final DisablePolicyApi disablePolicyApi = new DisablePolicyApi();
+    public boolean disablePolicy(@NonNull final String upn, @NonNull final ProtectionPolicy policy) throws LabApiException {
+        // Before calling the api, we need to fetch the secret code from lab vault
+        final String disablePolicyApiCode = getSecret(DISABLE_POLICY_API_CODE_SECRET_NAME);
+
+        final DisablePolicyApi disablePolicyApi = new DisablePolicyApi(disablePolicyApiCode);
         try {
             final String disablePolicyResponse = disablePolicyApi.apiDisablePolicyPost(upn, policy.toString());
             final String expectedResult = (policy + " Disabled for user : " + upn).toLowerCase();

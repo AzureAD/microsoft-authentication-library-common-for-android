@@ -16,7 +16,6 @@ import com.microsoft.identity.internal.test.labapi.ApiCallback;
 import com.microsoft.identity.internal.test.labapi.ApiClient;
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.ApiResponse;
-import com.microsoft.identity.internal.test.labapi.BuildConfig;
 import com.microsoft.identity.internal.test.labapi.Configuration;
 import com.microsoft.identity.internal.test.labapi.Pair;
 import com.microsoft.identity.internal.test.labapi.ProgressRequestBody;
@@ -36,12 +35,15 @@ import java.util.Map;
 public class ResetApi {
     private ApiClient apiClient;
 
-    public ResetApi() {
-        this(Configuration.getFunctionApiClient());
+    private final String apiCode;
+
+    public ResetApi(final String code) {
+        this(Configuration.getFunctionApiClient(), code);
     }
 
-    public ResetApi(ApiClient apiClient) {
+    public ResetApi(ApiClient apiClient, final String code) {
         this.apiClient = apiClient;
+        this.apiCode = code;
     }
 
     public ApiClient getApiClient() {
@@ -74,8 +76,8 @@ public class ResetApi {
         if (operation != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("operation", operation));
 
-        if (!BuildConfig.RESET_API_CLIENT_CODE.equals(""))
-            localVarQueryParams.addAll(apiClient.parameterToPair("code", BuildConfig.RESET_API_CLIENT_CODE));
+        if (!apiCode.equals(""))
+            localVarQueryParams.addAll(apiClient.parameterToPair("code", apiCode));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 

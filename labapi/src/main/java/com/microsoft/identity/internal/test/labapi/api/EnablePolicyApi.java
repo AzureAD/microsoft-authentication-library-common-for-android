@@ -16,7 +16,6 @@ import com.microsoft.identity.internal.test.labapi.ApiCallback;
 import com.microsoft.identity.internal.test.labapi.ApiClient;
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.ApiResponse;
-import com.microsoft.identity.internal.test.labapi.BuildConfig;
 import com.microsoft.identity.internal.test.labapi.Configuration;
 import com.microsoft.identity.internal.test.labapi.Pair;
 import com.microsoft.identity.internal.test.labapi.ProgressRequestBody;
@@ -34,13 +33,15 @@ import java.util.Map;
 
 public class EnablePolicyApi {
     private ApiClient apiClient;
+    private final String apiCode;
 
-    public EnablePolicyApi() {
-        this(Configuration.getFunctionApiClient());
+    public EnablePolicyApi(final String code) {
+        this(Configuration.getFunctionApiClient(), code);
     }
 
-    public EnablePolicyApi(ApiClient apiClient) {
+    public EnablePolicyApi(ApiClient apiClient, final String code) {
         this.apiClient = apiClient;
+        this.apiCode = code;
     }
 
     public ApiClient getApiClient() {
@@ -72,8 +73,8 @@ public class EnablePolicyApi {
             localVarQueryParams.addAll(apiClient.parameterToPair("upn", upn));
         if (policy != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("policy", policy));
-        if (!BuildConfig.ENABLE_POLICY_API_CLIENT_CODE.equals(""))
-            localVarQueryParams.addAll(apiClient.parameterToPair("code", BuildConfig.ENABLE_POLICY_API_CLIENT_CODE));
+        if (!apiCode.equals(""))
+            localVarQueryParams.addAll(apiClient.parameterToPair("code", apiCode));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 

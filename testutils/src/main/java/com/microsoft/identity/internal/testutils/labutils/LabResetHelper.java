@@ -25,7 +25,10 @@ package com.microsoft.identity.internal.testutils.labutils;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.internal.test.labapi.ApiException;
+import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
 import com.microsoft.identity.internal.test.labapi.api.ResetApi;
+import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
+import com.microsoft.identity.labapi.utilities.client.LabClient;
 
 /**
  * Utilities to interact with Lab {@link ResetApi}.
@@ -42,7 +45,9 @@ public class LabResetHelper {
      */
     public static boolean resetPassword(@NonNull final String upn) {
         INSTANCE.setupApiClientWithAccessToken();
-        final ResetApi resetApi = new ResetApi();
+
+        final String resetApiCode = getSecret(LabClient.RESET_API_CODE_SECRET_NAME);
+        final ResetApi resetApi = new ResetApi(resetApiCode);
 
         try {
             final String resetResponse;
@@ -62,7 +67,9 @@ public class LabResetHelper {
      */
     public static boolean resetMfa(@NonNull final String upn) {
         INSTANCE.setupApiClientWithAccessToken();
-        final ResetApi resetApi = new ResetApi();
+
+        final String resetApiCode = getSecret(LabClient.RESET_API_CODE_SECRET_NAME);
+        final ResetApi resetApi = new ResetApi(resetApiCode);
 
         try {
             final String resetResponse;
@@ -72,6 +79,17 @@ public class LabResetHelper {
             );
         } catch (ApiException e) {
             throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    private static String getSecret(final String secretName) {
+        final LabSecretApi labSecretApi = new LabSecretApi();
+
+        try {
+            final SecretResponse secretResponse = labSecretApi.apiLabSecretGet(secretName);
+            return secretResponse.getValue();
+        } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
+            throw new RuntimeException("Failed to fetch secret", ex);
         }
     }
 
