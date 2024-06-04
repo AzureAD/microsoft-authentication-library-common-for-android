@@ -41,7 +41,7 @@ import org.junit.Test;
 public class LabClientTest {
 
     // Give some time for basic user to finish creation to enable rest of test.
-    private final long POST_TEMP_USER_CREATION_WAIT = 15000;
+    private final long POST_TEMP_USER_CREATION_WAIT = 7000;
 
     @Test
     public void canFetchCloudAccount() {

@@ -61,10 +61,10 @@ public class LabClient implements ILabClient {
     private final long LAB_API_RETRY_WAIT = TimeUnit.SECONDS.toMillis(8);
 
     /**
-     * Temp users API provided by Lab team can often take more than 10 seconds to return...hence, we
-     * are overriding the read timeout.
+     * The new Api for temp user creation seems to be more susceptible to longer calls, although the calls aren't failing,
+     * Increased the timeout to give it more time to return the new user.
      */
-    private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(15);
+    private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(35);
 
     public static final long TEMP_USER_WAIT_TIME = TimeUnit.SECONDS.toMillis(35);
 
