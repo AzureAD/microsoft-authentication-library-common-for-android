@@ -455,7 +455,7 @@ public class LabClient implements ILabClient {
         try {
             final String resetResponse = resetApi.apiResetPost(upn, ResetOperation.PASSWORD.toString());
             if (resetResponse == null) {
-                // New password api is currently buggy, feedback is not being communicated properly, we're going to assume the call is successful,
+                // New password api is currently buggy, response body is not being communicated properly, we're going to assume the call is successful,
                 // if we don't get an exception making the call (this happens with any response code that isn't a success.
                 return true;
             }
