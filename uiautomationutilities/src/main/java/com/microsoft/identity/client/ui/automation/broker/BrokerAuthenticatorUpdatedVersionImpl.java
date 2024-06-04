@@ -203,5 +203,8 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
         );
 
         UiAutomatorUtils.handleButtonClick("android:id/button1");
+
+        // Handle "Name this cert"
+        UiAutomatorUtils.handleButtonClickSafely("android:id/button1", TimeUnit.SECONDS.toMillis(5));
     }
 }
