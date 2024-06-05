@@ -61,5 +61,7 @@ public enum SpanName {
 
     AcquirePRTUsingTransferToken,
 
-    AcquireTransferTokenUsingPrt
+    AcquireTransferTokenUsingPrt,
+
+    SaveTransferTokenToBlockstore
 }
