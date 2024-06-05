@@ -27,6 +27,7 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -280,6 +281,17 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     requestCameraPermissionFromUser();
                 }
 
+            }
+
+            @Override
+            public Bitmap getDefaultVideoPoster() {
+                // When not playing, video elements are represented by a 'poster' image.
+                // The image to use can be specified by the poster attribute of the video tag in HTML.
+                // If the attribute is absent, then a default poster will be used.
+                // This method allows the ChromeClient to provide that default image.
+                // On our case when an invalid QR code is provided,  we will return a 10x10 empty image.
+                // Instead of the default grey playback image.
+                return Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
             }
         });
     }
