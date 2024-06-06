@@ -80,24 +80,7 @@ public class ApiClient {
      * Constructor for ApiClient with default MSID Labs API base URL
      */
     public ApiClient() {
-        basePath  = "https://msidlab.com";
-
-        httpClient = new OkHttpClient();
-
-        verifyingSsl = true;
-
-        json = new JSON();
-
-        // Set default User-Agent.
-        setUserAgent("Swagger-Codegen/1.0.0/java");
-
-        // Setup authentications (key: authentication name, value: authentication).
-        authentications = new HashMap<String, Authentication>();
-
-        authentications.put("Access Token", new OAuth());
-
-        // Prevent the authentications from being modified.
-        authentications = Collections.unmodifiableMap(authentications);
+        this("https://msidlab.com");
     }
 
     /*
