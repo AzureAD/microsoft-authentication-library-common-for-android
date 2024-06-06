@@ -38,7 +38,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ProgressBar;
-
+import android.graphics.Bitmap;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -281,6 +281,21 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 }
 
             }
+
+
+            @Override
+            public Bitmap getDefaultVideoPoster() {
+                // When not playing, video elements are represented by a 'poster' image.
+                // The image to use can be specified by the poster attribute of the video tag in HTML.
+                // If the attribute is absent, then a default poster will be used.
+                // This method allows the ChromeClient to provide that default image.
+                // On our case when an invalid QR code is provided,  we will return a 10x10 empty image.
+                // Instead of the default grey playback image. #2424
+                return Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
+            }
+
+
+            
         });
     }
 
