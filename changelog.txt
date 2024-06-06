@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [PATCH] Provide empty image when no video is present on QR +PIN auth (#2424)
 - [MINOR] Update logic for matching requested claims for AT (#2401)
 - [MINOR] Updating YubiKit and CredMan versions (#2417)
 
