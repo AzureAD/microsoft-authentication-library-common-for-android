@@ -72,6 +72,7 @@ public class LabClient implements ILabClient {
     public static final String RESET_API_CODE_SECRET_NAME = "FunctionApiResetCode";
     public static final String ENABLE_POLICY_API_CODE_SECRET_NAME = "FunctionApiEnablePolicyCode";
     public static final String DISABLE_POLICY_API_CODE_SECRET_NAME = "FunctionApiDisablePolicyCode";
+    public static final String DELETE_DEVICE_API_CODE_SECRET_NAME = "FunctionApiDeleteDeviceCode";
 
     @Override
     public ILabAccount getLabAccount(@NonNull final LabQuery labQuery) throws LabApiException {
@@ -308,21 +309,27 @@ public class LabClient implements ILabClient {
         Configuration.getDefaultApiClient().setAccessToken(
                 mLabApiAuthenticationClient.getAccessToken()
         );
-        final DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi();
+
+        // Before calling the api, we need to fetch the secret code from lab vault
+        final String deleteDeviceApiSecretCode = getSecret(DELETE_DEVICE_API_CODE_SECRET_NAME);
+
+        final DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi(deleteDeviceApiSecretCode);
 
         try {
             final CustomSuccessResponse successResponse = deleteDeviceApi.apiDeleteDeviceDelete(
                     upn, deviceId
             );
 
+            if (successResponse == null) {
+                return false;
+            }
+
             // we probably need a more sophisticated logger integrated into LabApi
             // for now this is fine
             System.out.println(successResponse.getResult());
 
-            final String expectedResult = String.format(
-                    "Device : %s, successfully deleted from AAD.", deviceId
-            );
-            return expectedResult.equalsIgnoreCase(successResponse.getResult());
+            final String expectedResult = "Device removed Successfully.";
+            return expectedResult.equalsIgnoreCase(successResponse.getMessage());
         } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new LabApiException(
                     LabError.FAILED_TO_DELETE_DEVICE, ex,
@@ -455,12 +462,10 @@ public class LabClient implements ILabClient {
         try {
             final String resetResponse = resetApi.apiResetPost(upn, ResetOperation.PASSWORD.toString());
             if (resetResponse == null) {
-                // New password api is currently buggy, response body is not being communicated properly, we're going to assume the call is successful,
-                // if we don't get an exception making the call (this happens with any response code that isn't a success.
-                return true;
+                return false;
             }
 
-            final String expectedResult = ("Password reset for " + upn).toLowerCase();
+            final String expectedResult = ("Password reset for user: " + upn).toLowerCase();
             final boolean result = resetResponse.toLowerCase().contains(expectedResult);
             if (result) {
                 try {

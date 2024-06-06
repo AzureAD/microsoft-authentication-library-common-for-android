@@ -52,7 +52,7 @@ public class LabResetHelper {
         try {
             final String resetResponse;
             resetResponse = resetApi.apiResetPost(upn, LabConstants.ResetOperation.PASSWORD);
-            final String expectedResult = ("Password reset for " + upn).toLowerCase();
+            final String expectedResult = ("Password reset for user: " + upn).toLowerCase();
             return resetResponse.toLowerCase().contains(expectedResult);
         } catch (ApiException e) {
             throw new RuntimeException(e.getMessage());
@@ -75,7 +75,7 @@ public class LabResetHelper {
             final String resetResponse;
             resetResponse = resetApi.apiResetPost(upn, LabConstants.ResetOperation.MFA);
             return resetResponse.contains(
-                    "MFA reset for " + upn
+                    "MFA reset for user: " + upn
             );
         } catch (ApiException e) {
             throw new RuntimeException(e.getMessage());
