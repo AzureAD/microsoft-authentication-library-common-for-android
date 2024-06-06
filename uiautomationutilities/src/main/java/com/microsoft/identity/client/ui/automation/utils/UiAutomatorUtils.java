@@ -28,14 +28,18 @@ import android.widget.ScrollView;
 
 import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+
+import java.util.List;
 
 /**
  * This class contains utility methods for leveraging UI Automator to interact with UI elements.
@@ -136,7 +140,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Obtain an instance of the UiObject for the given text.
+     * Obtain an instance of the UiObject for the given class and description.
      *
      * @param description the content description of the element to obtain
      * @return the UiObject associated to the supplied text
@@ -145,6 +149,18 @@ public class UiAutomatorUtils {
                                                                  @NonNull final String description) {
         Logger.i(TAG, "Obtain an instance of the UiObject with description:" + description + " and class name:" + clazz);
         return obtainUiObjectWithUiSelector(new UiSelector().className(clazz).descriptionContains(description),
+                FIND_UI_ELEMENT_TIMEOUT);
+    }
+
+    /**
+     * Obtain an instance of the UiObject for the class.
+     *
+     * @param clazz the class name of the element to obtain
+     * @return the UiObject associated to the supplied text
+     */
+    public static UiObject obtainUiObjectWithClass(@NonNull final String clazz) {
+        Logger.i(TAG, "Obtain an instance of the UiObject with class name:" + clazz);
+        return obtainUiObjectWithUiSelector(new UiSelector().className(clazz),
                 FIND_UI_ELEMENT_TIMEOUT);
     }
 
@@ -280,10 +296,28 @@ public class UiAutomatorUtils {
      */
     public static void handleInput(@NonNull final String resourceId,
                                    @NonNull final String inputText,
-                                   final long inputTimeout
-    ) {
+                                   final long inputTimeout) {
         Logger.i(TAG, "Handling input for resource id: " + resourceId);
         final UiObject inputField = obtainUiObjectWithResourceId(resourceId, inputTimeout);
+
+        try {
+            inputField.setText(inputText);
+            closeKeyboardIfNeeded();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    /**
+     * Fills the supplied text into the input element of a given class.
+     *
+     * @param clazz classname of the object to give input
+     * @param inputText  the text to enter
+     */
+    public static void handleInputByClass(@NonNull final String clazz,
+                                   @NonNull final String inputText) {
+        Logger.i(TAG, "Handling input for class: " + clazz);
+        final UiObject inputField = obtainUiObjectWithClass(clazz);
 
         try {
             inputField.setText(inputText);
@@ -361,7 +395,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Clicks the button element associated to the supplied text.
+     * Clicks the button element that contains the supplied text.
      *
      * @param text the text on the button to click
      */
@@ -376,7 +410,22 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Clicks the button element associated to the supplied text.
+     * Clicks the button element with exactly the supplied text.
+     *
+     * @param text the text on the button to click
+     */
+    public static void handleButtonClickForObjectWithExactText(@NonNull final String text) {
+        final UiObject button = obtainUiObjectWithExactText(text);
+
+        try {
+            button.click();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    /**
+     * Clicks the button element that contains the supplied text.
      * Do not throw an exception if the button is not found.
      *
      * @param text the text on the button to click
@@ -482,6 +531,19 @@ public class UiAutomatorUtils {
         Logger.i(TAG, "Obtain an instance of the UiObject for the class name:" + clazz + " and index value:" + index);
         return obtainUiObjectWithUiSelector(new UiSelector().className(clazz).index(index),
                 FIND_UI_ELEMENT_TIMEOUT);
+    }
+
+    public static List<UiObject2> obtainAllEditTextObjects(final long existsTimeout) {
+        Logger.i(TAG, "Obtain all edit Text Objects in the view.");
+        final UiDevice device =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        // Wait for one edit text object to become visible
+        final UiObject firstEditText = device.findObject(new UiSelector().className("android.widget.EditText"));
+        firstEditText.waitForExists(existsTimeout);
+
+        // Return all edit texts currently visible
+        return device.findObjects(By.clazz("android.widget.EditText"));
     }
 
     public static UiObject obtainUiObjectWithUiSelector(@NonNull final UiSelector selector, final long existsTimeout) {

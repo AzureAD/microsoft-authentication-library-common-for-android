@@ -1,9 +1,15 @@
 V.Next
 ---------
+- [MINOR] Update logic for matching requested claims for AT (#2401)
+- [MINOR] Updating YubiKit and CredMan versions (#2417)
+
+Version 17.4.0
+---------
 - [PATCH] Update nimbus-jose-jwt 9.37.3 and junit 4.13.2 (#2392)
 - [MINOR] Update flow to get token for labapi to not require automationrunnerapp (#2376)
 - [MINOR] Add field in BrokerInteractiveTokenCommandParameters for ATv2. (#2363)
 - [PATCH] Safe logging of Kotlin data classes through ILoggable interface (#2384)
+- [MINOR] Support for multiple access tokens for NativeAuth. (#2390)
 
 Version 17.3.0
 ---------

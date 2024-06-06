@@ -63,6 +63,7 @@ class SignUpStartCommand(
 
         Logger.infoWithObject(
             TAG,
+            parameters.getCorrelationId(),
             "Returning result: ",
             result
         )
