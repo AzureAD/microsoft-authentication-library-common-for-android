@@ -68,6 +68,31 @@ public class LabClientTest {
     }
 
     @Test
+    public void canFetchMSAAccount() {
+        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
+                TestBuildConfig.LAB_CLIENT_SECRET
+        );
+
+        final LabClient labClient = new LabClient(authenticationClient);
+
+        final LabQuery query = LabQuery.builder()
+                .userType(UserType.MSA)
+                .build();
+
+        try {
+            final ILabAccount labAccount = labClient.getLabAccount(query);
+            Assert.assertNotNull(labAccount);
+            Assert.assertNotNull(labAccount.getUsername());
+            Assert.assertNotNull(labAccount.getPassword());
+            Assert.assertNotNull(labAccount.getUserType());
+            Assert.assertTrue(labAccount.getUsername().toLowerCase().contains("outlook"));
+            Assert.assertEquals(UserType.MSA, labAccount.getUserType());
+        } catch (final LabApiException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    @Test
     public void canFetchGuestAccount() {
         final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
                 TestBuildConfig.LAB_CLIENT_SECRET
