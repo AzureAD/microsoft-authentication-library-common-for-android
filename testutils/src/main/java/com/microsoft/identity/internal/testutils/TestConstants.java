@@ -37,9 +37,7 @@ public class TestConstants {
         public static final String MULTIPLE_ACCOUNT_MODE_AAD_USGOV_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "msal_arlington_config.json";
         public static final String MULTIPLE_ACCOUNT_MODE_MOCK_TEST_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "multiple_account_mock_test_config.json";
         public static final String SINGLE_ACCOUNT_MODE_MOCK_TEST_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "single_account_mock_test_config.json";
-        public static final String SINGLE_ACCOUNT_DCF_TEST_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "single_account_dcf_test_config.json";
-        public static final String NATIVE_AUTH_SIGN_IN_TEST_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "native_auth_config_one.json";
-    }
+        public static final String SINGLE_ACCOUNT_DCF_TEST_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "single_account_dcf_test_config.json";}
 
     public static class Scopes {
         public static final String[] USER_READ_SCOPE = {"user.read"};
