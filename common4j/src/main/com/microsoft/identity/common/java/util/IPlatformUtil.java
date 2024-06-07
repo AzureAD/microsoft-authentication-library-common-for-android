@@ -29,6 +29,7 @@ import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.Map;
 
 import javax.net.ssl.KeyManagerFactory;
 
@@ -127,4 +128,12 @@ public interface IPlatformUtil {
      */
     @Nullable
     String getPackageNameFromUid(final int uid);
+
+    /**
+     * We might want to add (or remove) extra query parameters which are specific to each platform.
+     * @param originalList existing list of extra query parameters to
+     * @return a list of extra query parameters, or null.
+     */
+    @Nullable
+    List<Map.Entry<String, String>> setPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList);
 }

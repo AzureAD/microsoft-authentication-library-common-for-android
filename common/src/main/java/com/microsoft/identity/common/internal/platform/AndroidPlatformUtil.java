@@ -45,17 +45,22 @@ import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightManager;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.security.NoSuchAlgorithmException;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import javax.net.ssl.KeyManagerFactory;
 
@@ -211,6 +216,23 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     @Override
     public String getPackageNameFromUid(int uid) {
         return mContext.getPackageManager().getNameForUid(uid);
+    }
+
+    @Override
+    public List<Map.Entry<String, String>> setPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList) {
+        List<Map.Entry<String, String>> queryParams = originalList != null ?  new ArrayList<>(originalList) : new ArrayList<>();
+
+        // Passkey feature support is only for Android at the moment.
+        final  Map.Entry<String, String> webauthnParam = new AbstractMap.SimpleEntry<>(FidoConstants.WEBAUTHN_QUERY_PARAMETER_FIELD, FidoConstants.WEBAUTHN_QUERY_PARAMETER_VALUE);
+        if (CommonFlightManager.isFlightEnabled(CommonFlight.ENABLE_PASSKEY_FEATURE)) {
+            if (!queryParams.contains(webauthnParam)) {
+                queryParams.add(webauthnParam);
+            }
+        } else {
+            // If we don't want to add this query string param, then we should also remove other instances of it that might be already present from MSAL/OneAuth-MSAL.
+            queryParams.remove(webauthnParam);
+        }
+        return queryParams;
     }
 
     /**
