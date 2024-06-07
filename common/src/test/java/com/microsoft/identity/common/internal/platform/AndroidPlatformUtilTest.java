@@ -53,12 +53,12 @@ public class AndroidPlatformUtilTest {
         final List <Map.Entry<String, String>> list = new ArrayList<>();
         list.add(new AbstractMap.SimpleEntry<>("foo", "1"));
 
-        assertTrue(mPlatformUtil.setPlatformSpecificExtraQueryParameters(list).contains(webauthnEntry));
+        assertTrue(mPlatformUtil.updateWithAndGetPlatformSpecificExtraQueryParameters(list).contains(webauthnEntry));
     }
 
     @Test
     public void testSetPlatformSpecificExtraQueryParameters_emptyList() {
-        assertTrue(mPlatformUtil.setPlatformSpecificExtraQueryParameters(null).contains(webauthnEntry));
+        assertTrue(mPlatformUtil.updateWithAndGetPlatformSpecificExtraQueryParameters(null).contains(webauthnEntry));
     }
 
     @Test
@@ -66,7 +66,7 @@ public class AndroidPlatformUtilTest {
         final List <Map.Entry<String, String>> list = new ArrayList<>();
         list.add(new AbstractMap.SimpleEntry<>("foo", "1"));
         list.add(webauthnEntry);
-        final List <Map.Entry<String, String>> result = mPlatformUtil.setPlatformSpecificExtraQueryParameters(list);
+        final List <Map.Entry<String, String>> result = mPlatformUtil.updateWithAndGetPlatformSpecificExtraQueryParameters(list);
         assertNotNull(result);
         assertEquals(2, result.size());
         assertTrue(result.contains(webauthnEntry));

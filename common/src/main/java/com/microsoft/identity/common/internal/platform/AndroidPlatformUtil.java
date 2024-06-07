@@ -219,7 +219,7 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     }
 
     @Override
-    public List<Map.Entry<String, String>> setPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList) {
+    public List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList) {
         List<Map.Entry<String, String>> queryParams = originalList != null ?  new ArrayList<>(originalList) : new ArrayList<>();
 
         // Passkey feature support is only for Android at the moment.
