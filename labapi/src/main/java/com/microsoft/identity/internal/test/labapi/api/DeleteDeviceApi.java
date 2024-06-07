@@ -37,13 +37,15 @@ import java.util.Map;
 
 public class DeleteDeviceApi {
     private ApiClient apiClient;
+    private final String apiCode;
 
-    public DeleteDeviceApi() {
-        this(Configuration.getDefaultApiClient());
+    public DeleteDeviceApi(final String code) {
+        this(Configuration.getFunctionApiClient(), code);
     }
 
-    public DeleteDeviceApi(ApiClient apiClient) {
+    public DeleteDeviceApi(ApiClient apiClient, final String code) {
         this.apiClient = apiClient;
+        this.apiCode = code;
     }
 
     public ApiClient getApiClient() {
@@ -72,9 +74,13 @@ public class DeleteDeviceApi {
         List<Pair> localVarQueryParams = new ArrayList<Pair>();
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
         if (upn != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("upn", upn));
+            localVarQueryParams.addAll(apiClient.parameterToPair("upn", upn));
+
         if (deviceid != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("deviceid", deviceid));
+            localVarQueryParams.addAll(apiClient.parameterToPair("deviceid", deviceid));
+
+        if (!apiCode.equals(""))
+            localVarQueryParams.addAll(apiClient.parameterToPair("code", apiCode));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 
@@ -105,7 +111,7 @@ public class DeleteDeviceApi {
         }
 
         String[] localVarAuthNames = new String[] {  };
-        return apiClient.buildCall(localVarPath, "DELETE", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarAuthNames, progressRequestListener);
+        return apiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarAuthNames, progressRequestListener);
     }
     
     @SuppressWarnings("rawtypes")
