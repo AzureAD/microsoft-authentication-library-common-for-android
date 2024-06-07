@@ -156,7 +156,7 @@ public class MicrosoftStsOAuth2Strategy
                 } else {
                     setTokenEndpoint(config.getTokenEndpoint().toString());
                 }
-            } catch (ServiceException e) {
+            } catch (final ServiceException e) {
                 Logger.error(
                         TAG,
                         "There was a problem with loading the openIdConfiguration",
