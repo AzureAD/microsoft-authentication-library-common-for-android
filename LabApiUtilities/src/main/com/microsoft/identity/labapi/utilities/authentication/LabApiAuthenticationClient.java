@@ -40,7 +40,7 @@ import lombok.NonNull;
  * A an authentication client that can acquire access tokens for the Microsoft Identity Lab Api.
  */
 public class LabApiAuthenticationClient implements IAccessTokenSupplier {
-    private final static String SCOPE = "https://msidlab.com/.default";
+    private final static String SCOPE = "https://request.msidlab.com/.default";
     private final static String TENANT_ID = "72f988bf-86f1-41af-91ab-2d7cd011db47";
     private final static String AUTHORITY = "https://login.microsoftonline.com/" + TENANT_ID;
     private final static String CLIENT_ID = "f62c5ae3-bf3a-4af5-afa8-a68b800396e9";

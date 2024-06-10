@@ -38,7 +38,7 @@ import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 class KeyVaultAuthHelper extends ConfidentialClientHelper {
 
     private final static String CLIENT_ID = "f62c5ae3-bf3a-4af5-afa8-a68b800396e9";
-    private final static String SCOPE = "https://msidlab.com/.default";
+    private final static String SCOPE = "https://request.msidlab.com/.default";
     private final static String CERTIFICATE_ALIAS = "LabVaultAccessCert";
     private final static String KEYSTORE_TYPE = "Windows-MY";
     private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
