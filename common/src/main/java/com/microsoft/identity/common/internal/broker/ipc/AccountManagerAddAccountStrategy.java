@@ -35,6 +35,8 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
+import com.microsoft.identity.common.internal.activebrokerdiscovery.AccountManagerBrokerDiscoveryUtil;
+import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.util.AccountManagerUtil;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
 import com.microsoft.identity.common.logging.Logger;
@@ -43,7 +45,9 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.CONNECTION_ERROR;
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
@@ -101,9 +105,16 @@ public class AccountManagerAddAccountStrategy implements IIpcStrategy {
 
     @Override
     public boolean isSupportedByTargetedBroker(@NonNull final String targetedBrokerPackageName) {
-        final Set<String> brokerList = new HashSet<>();
-        brokerList.add(BROKER_PACKAGE_NAME);
+        final BrokerData workAccountOwner = new AccountManagerBrokerDiscoveryUtil(mContext)
+                .getActiveBrokerFromAccountManager();
+        if (workAccountOwner == null ||
+                !workAccountOwner.getPackageName().equalsIgnoreCase(targetedBrokerPackageName)){
+            return false;
+        }
 
-        return AccountManagerUtil.canUseAccountManagerOperation(mContext, brokerList);
+        final Set<String> brokerAccountType = new HashSet<>();
+        brokerAccountType.add(BROKER_ACCOUNT_TYPE);
+
+        return AccountManagerUtil.canUseAccountManagerOperation(mContext, brokerAccountType);
     }
 }
