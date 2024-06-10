@@ -65,6 +65,7 @@ class SignUpResendCodeCommand(
 
         Logger.infoWithObject(
             TAG,
+            parameters.getCorrelationId(),
             "Returning result: ",
             result
         )

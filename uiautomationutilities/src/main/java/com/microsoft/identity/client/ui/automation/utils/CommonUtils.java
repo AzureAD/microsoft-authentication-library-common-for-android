@@ -48,6 +48,7 @@ import java.util.concurrent.TimeUnit;
 public class CommonUtils {
 
     private final static String TAG = CommonUtils.class.getSimpleName();
+    public final static long FIND_UI_ELEMENT_TIMEOUT_SHORT = TimeUnit.SECONDS.toMillis(10);
     public final static long FIND_UI_ELEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(15);
     public final static long FIND_UI_ELEMENT_TIMEOUT_LONG = TimeUnit.SECONDS.toMillis(30);
 
