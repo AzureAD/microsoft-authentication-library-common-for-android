@@ -280,9 +280,9 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     @Override
     public void handleChoosePasskey(@NonNull String systemPin, boolean usernameProvided) {
         if (usernameProvided) {
-            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Use your face, fingerprint, PIN, or security key instead");
-            //UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Other ways to sign in");
-            //UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Face, fingerprint, PIN or security key");
+            //UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Use your face, fingerprint, PIN, or security key instead");
+            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Other ways to sign in");
+            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Face, fingerprint, PIN or security key");
         }
         else {
             final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
@@ -290,7 +290,8 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
             device.click(460, 1080);
             UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Face, fingerprint, PIN or security key");
         }
-        UiAutomatorUtils.handleButtonClickSafely("com.google.android.gms:id/continue_button");
+        UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Continue");
         UiAutomatorUtils.handleInput("com.android.systemui:id/lockPassword", systemPin);
+        UiAutomatorUtils.pressEnter();
     }
 }

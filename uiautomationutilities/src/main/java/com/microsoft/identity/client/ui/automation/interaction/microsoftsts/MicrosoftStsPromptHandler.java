@@ -97,14 +97,14 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
             aadLoginComponentHandler.handleChooseCertificate();
         }
 
-        if (loginHintProvided && parameters.isChoosePasskeyExpected()) {
-            aadLoginComponentHandler.handleChoosePasskey(
-                    parameters.getSystemPin() != null ? parameters.getSystemPin() : GlobalConstants.PIN,
-                    true);
-        }
-
         if (parameters.isPasswordPageExpected() || parameters.getPrompt() == PromptParameter.LOGIN || !parameters.isSessionExpected()) {
-            loginComponentHandler.handlePasswordField(password);
+            if (loginHintProvided && parameters.isChoosePasskeyExpected()) {
+                aadLoginComponentHandler.handleChoosePasskey(
+                        parameters.getSystemPin() != null ? parameters.getSystemPin() : GlobalConstants.PIN,
+                        true);
+            } else {
+                loginComponentHandler.handlePasswordField(password);
+            }
         }
 
         if (parameters.isVerifyYourIdentityPageExpected()) {
