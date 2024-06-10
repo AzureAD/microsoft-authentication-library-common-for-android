@@ -41,9 +41,4 @@ jobs:
         inputs:
           cwd: $(Build.SourcesDirectory)/common-java-root
           tasks: LabApiUtilities:test -Psugar=true -PlabSecret=$(LabVaultAppCert)
-      - task: Gradle@2
-        displayName: Run the unit tests.
-        inputs:
-          cwd: $(Build.SourcesDirectory)/common-java-root
-          tasks: LabApiUtilities:test -Psugar=true -PlabSecret=$(LabVaultAppCert)
 ...

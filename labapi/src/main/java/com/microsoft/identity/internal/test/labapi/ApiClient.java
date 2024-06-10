@@ -55,6 +55,8 @@ public class ApiClient {
 
     private final String AUTH_TYPE = "Access Token";
 
+    private static final String DEFAULT_BASE_PATH = "https://msidlab.com";
+    public static final String FUNCTION_API_BASE_PATH = "https://thefunctionapi.azurewebsites.net";
     private String basePath;
     private boolean debugging = false;
     private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
@@ -76,20 +78,20 @@ public class ApiClient {
 
     private HttpLoggingInterceptor loggingInterceptor;
 
-    /*
-     * Constructor for ApiClient with default MSID Labs API base URL
+    /**
+     * No-parameter constructor will use default Base Path.
      */
     public ApiClient() {
-        this("https://msidlab.com");
+        this(DEFAULT_BASE_PATH);
     }
 
     /*
-     * Constructor for ApiClient with custom base path
+     * Constructor for ApiClient
      */
-    public ApiClient(String basePath) {
-        this.basePath = basePath;
-
+    public ApiClient(final String basePathParam) {
         httpClient = new OkHttpClient();
+
+        basePath = basePathParam;
 
         verifyingSsl = true;
 
