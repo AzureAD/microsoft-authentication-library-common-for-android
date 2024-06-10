@@ -26,9 +26,6 @@ import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 
 
-import com.microsoft.identity.internal.test.labapi.model.CustomErrorResponse;
-import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
-
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,13 +34,15 @@ import java.util.Map;
 
 public class DisablePolicyApi {
     private ApiClient apiClient;
+    private final String apiCode;
 
-    public DisablePolicyApi() {
-        this(Configuration.getDefaultApiClient());
+    public DisablePolicyApi(final String code) {
+        this(Configuration.getFunctionApiClient(), code);
     }
 
-    public DisablePolicyApi(ApiClient apiClient) {
+    public DisablePolicyApi(ApiClient apiClient, final String code) {
         this.apiClient = apiClient;
+        this.apiCode = code;
     }
 
     public ApiClient getApiClient() {
@@ -55,7 +54,7 @@ public class DisablePolicyApi {
     }
 
     /**
-     * Build call for apiDisablePolicyPut
+     * Build call for apiDisablePolicyPost
      * @param upn Enter a valid Locked User UPN (optional)
      * @param policy Disable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO. (optional)
      * @param progressListener Progress listener
@@ -63,7 +62,7 @@ public class DisablePolicyApi {
      * @return Call to execute
      * @throws ApiException If fail to serialize the request body object
      */
-    public com.squareup.okhttp.Call apiDisablePolicyPutCall(String upn, String policy, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
+    public com.squareup.okhttp.Call apiDisablePolicyPostCall(String upn, String policy, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
         Object localVarPostBody = null;
         
         // create path and map variables
@@ -72,9 +71,11 @@ public class DisablePolicyApi {
         List<Pair> localVarQueryParams = new ArrayList<Pair>();
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
         if (upn != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("upn", upn));
+            localVarQueryParams.addAll(apiClient.parameterToPair("upn", upn));
         if (policy != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("policy", policy));
+            localVarQueryParams.addAll(apiClient.parameterToPair("policy", policy));
+        if (!apiCode.equals(""))
+            localVarQueryParams.addAll(apiClient.parameterToPair("code", apiCode));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 
@@ -105,13 +106,13 @@ public class DisablePolicyApi {
         }
 
         String[] localVarAuthNames = new String[] {  };
-        return apiClient.buildCall(localVarPath, "PUT", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarAuthNames, progressRequestListener);
+        return apiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarAuthNames, progressRequestListener);
     }
     
     @SuppressWarnings("rawtypes")
-    private com.squareup.okhttp.Call apiDisablePolicyPutValidateBeforeCall(String upn, String policy, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
+    private com.squareup.okhttp.Call apiDisablePolicyPostValidateBeforeCall(String upn, String policy, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
         
-        com.squareup.okhttp.Call call = apiDisablePolicyPutCall(upn, policy, progressListener, progressRequestListener);
+        com.squareup.okhttp.Call call = apiDisablePolicyPostCall(upn, policy, progressListener, progressRequestListener);
         return call;
 
         
@@ -125,11 +126,11 @@ public class DisablePolicyApi {
      * Disable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO.   Also test users can have more than 1 policy assigned to the same user.
      * @param upn Enter a valid Locked User UPN (optional)
      * @param policy Disable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO. (optional)
-     * @return CustomSuccessResponse
+     * @return String
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public CustomSuccessResponse apiDisablePolicyPut(String upn, String policy) throws ApiException {
-        ApiResponse<CustomSuccessResponse> resp = apiDisablePolicyPutWithHttpInfo(upn, policy);
+    public String apiDisablePolicyPost(String upn, String policy) throws ApiException {
+        ApiResponse<String> resp = apiDisablePolicyPostWithHttpInfo(upn, policy);
         return resp.getData();
     }
 
@@ -138,12 +139,12 @@ public class DisablePolicyApi {
      * Disable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO.   Also test users can have more than 1 policy assigned to the same user.
      * @param upn Enter a valid Locked User UPN (optional)
      * @param policy Disable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO. (optional)
-     * @return ApiResponse&lt;CustomSuccessResponse&gt;
+     * @return ApiResponse&lt;String&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public ApiResponse<CustomSuccessResponse> apiDisablePolicyPutWithHttpInfo(String upn, String policy) throws ApiException {
-        com.squareup.okhttp.Call call = apiDisablePolicyPutValidateBeforeCall(upn, policy, null, null);
-        Type localVarReturnType = TypeToken.get(CustomSuccessResponse.class).getType();
+    public ApiResponse<String> apiDisablePolicyPostWithHttpInfo(String upn, String policy) throws ApiException {
+        com.squareup.okhttp.Call call = apiDisablePolicyPostValidateBeforeCall(upn, policy, null, null);
+        Type localVarReturnType = TypeToken.get(String.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -156,7 +157,7 @@ public class DisablePolicyApi {
      * @return The request call
      * @throws ApiException If fail to process the API call, e.g. serializing the request body object
      */
-    public com.squareup.okhttp.Call apiDisablePolicyPutAsync(String upn, String policy, final ApiCallback<CustomSuccessResponse> callback) throws ApiException {
+    public com.squareup.okhttp.Call apiDisablePolicyPostAsync(String upn, String policy, final ApiCallback<String> callback) throws ApiException {
 
         ProgressResponseBody.ProgressListener progressListener = null;
         ProgressRequestBody.ProgressRequestListener progressRequestListener = null;
@@ -177,8 +178,8 @@ public class DisablePolicyApi {
             };
         }
 
-        com.squareup.okhttp.Call call = apiDisablePolicyPutValidateBeforeCall(upn, policy, progressListener, progressRequestListener);
-        Type localVarReturnType = TypeToken.get(CustomSuccessResponse.class).getType();
+        com.squareup.okhttp.Call call = apiDisablePolicyPostValidateBeforeCall(upn, policy, progressListener, progressRequestListener);
+        Type localVarReturnType = TypeToken.get(String.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }

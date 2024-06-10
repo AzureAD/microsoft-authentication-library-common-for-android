@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
+import android.os.Build
 import android.webkit.WebView
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -69,6 +70,18 @@ class AuthFidoChallengeHandler (
         // If either one of these are missing or malformed, throw an exception and let the main WebViewClient handle it.
         val submitUrl = fidoChallenge.submitUrl.getOrThrow()
         val context = fidoChallenge.context.getOrThrow()
+        // Check the OS version as well. As of the time this is written, passkeys are only supported on devices that run Android 9 (API 28) or higher.
+        // https://developer.android.com/identity/sign-in/credential-manager
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            respondToChallengeWithError(
+                submitUrl = submitUrl,
+                context = context,
+                span = span,
+                errorMessage = "Device is running on an Android version less than 9 (API 28), which is the minimum level for passkeys.",
+                methodTag = methodTag
+            )
+            return null
+        }
         val authChallenge: String
         val relyingPartyIdentifier: String
         val userVerificationPolicy: String
