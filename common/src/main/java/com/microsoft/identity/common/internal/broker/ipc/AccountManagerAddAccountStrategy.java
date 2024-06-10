@@ -22,6 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker.ipc;
 
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.CONNECTION_ERROR;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
+
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerFuture;
 import android.accounts.AuthenticatorException;
@@ -44,13 +48,6 @@ import com.microsoft.identity.common.logging.Logger;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
-
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.CONNECTION_ERROR;
-import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT;
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
 
 /**
  * A strategy for communicating with the targeted broker via AccountManager's addAccount().
