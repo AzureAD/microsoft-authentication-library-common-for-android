@@ -149,7 +149,7 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
             this.setLibraryName("ADAL.Android");
             this.setLibraryVersion("1.15.2");
 
-            final ClientExtraSkuAdapter clientExtraSkuAdapter = new ClientExtraSkuAdapter();
+            final ClientExtraSkuAdapter clientExtraSkuAdapter = ClientExtraSkuAdapter.builder().build();
             this.setClientExtraSky(clientExtraSkuAdapter.toString());
 
             return new AzureActiveDirectoryAuthorizationRequest(this);

@@ -22,42 +22,33 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
-
-import com.microsoft.identity.common.java.logging.DiagnosticContext;
-import com.microsoft.identity.common.java.platform.Device;
-
-import lombok.Setter;
+import lombok.Builder;
 import lombok.experimental.Accessors;
 
 /**
  * Helper class in common4j to assist in supplying "x-client-xtra-sku" field for ESTS Telemetry.
  * This will be included in the /authorize endpoint request and the /token endpoint.
  */
+@Builder
+@Accessors(prefix = "m")
 public class ClientExtraSkuAdapter {
 
-    @Setter
-    @Accessors(prefix = "m")
-    private String mSrcSku = DiagnosticContext.INSTANCE.getRequestContext().get(PRODUCT);
+    @Builder.Default
+    private String mSrcSku = "";
 
-    @Setter
-    @Accessors(prefix = "m")
-    private String mSrcSkuVer = Device.getProductVersion();
+    @Builder.Default
+    private String mSrcSkuVer = "";
 
-    @Setter
-    @Accessors(prefix = "m")
+    @Builder.Default
     private String mMsalRuntimeVer = "";
 
-    @Setter
-    @Accessors(prefix = "m")
+    @Builder.Default
     private String mBrowserExtSku = "";
 
-    @Setter
-    @Accessors(prefix = "m")
+    @Builder.Default
     private String mBrowserExtVer = "";
 
-    @Setter
-    @Accessors(prefix = "m")
+    @Builder.Default
     private String mBrowserCoreVer = "";
 
     public String toString(){

@@ -347,9 +347,6 @@ public class MicrosoftStsOAuth2Strategy
         builder.setMultipleCloudAware(mConfig.getMultipleCloudsSupported());
         builder.setOpenIdProviderConfiguration(mOpenIdProviderConfiguration);
 
-        final ClientExtraSkuAdapter clientExtraSkuAdapter = new ClientExtraSkuAdapter();
-        builder.setClientExtraSky(clientExtraSkuAdapter.toString());
-
         return builder;
     }
 

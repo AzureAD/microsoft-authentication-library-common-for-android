@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.controllers;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_HEADER;
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_VERSION;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.authorities.Authority.B2C;
 import static com.microsoft.identity.common.java.exception.ServiceException.SERVICE_NOT_AVAILABLE;
 import static com.microsoft.identity.common.java.util.ResultUtil.logExposedFieldsOfObject;
@@ -85,6 +86,7 @@ import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
+import com.microsoft.identity.common.java.util.ClientExtraSkuAdapter;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ResultUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -286,6 +288,12 @@ public abstract class BaseController {
         }
         if (builder instanceof MicrosoftAuthorizationRequest.Builder) {
             ((MicrosoftAuthorizationRequest.Builder) builder).setCorrelationId(correlationId);
+
+            final ClientExtraSkuAdapter clientExtraSkuAdapter = ClientExtraSkuAdapter.builder()
+                    .srcSku(DiagnosticContext.INSTANCE.getRequestContext().get(PRODUCT))
+                    .srcSkuVer(parameters.getSdkVersion())
+                    .build();
+            ((MicrosoftAuthorizationRequest.Builder) builder).setClientExtraSky(clientExtraSkuAdapter.toString());
         }
 
         if (builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
