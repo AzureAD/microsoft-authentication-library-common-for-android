@@ -277,20 +277,24 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         UiAutomatorUtils.handleButtonClickSafely("android:id/button1", mFindLoginUiElementTimeout);
     }
 
-    @Override
-    public void handleChoosePasskey(@NonNull String systemPin, boolean usernameProvided) {
-        if (usernameProvided) {
-            //UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Use your face, fingerprint, PIN, or security key instead");
+    public void handlePasskeyWithHint(@NonNull String systemPin) {
+        try {
             UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Other ways to sign in");
             UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Face, fingerprint, PIN or security key");
-        }
-        else {
-            final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-            ThreadUtils.sleepSafely((int) TimeUnit.SECONDS.toMillis(15), TAG, "Wait some seconds for next screen.");
-            device.click(460, 1080);
-            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Face, fingerprint, PIN or security key");
+        } catch (Exception e) {
+            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Use your face, fingerprint, PIN, or security key instead");
         }
         UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Continue");
+        UiAutomatorUtils.handleInput("com.android.systemui:id/lockPassword", systemPin);
+        UiAutomatorUtils.pressEnter();
+    }
+
+    public void handlePasskeyWithoutHint(@NonNull String systemPin, @NonNull String username) {
+        final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        ThreadUtils.sleepSafely((int) TimeUnit.SECONDS.toMillis(5), TAG, "Wait some seconds for next screen.");
+        device.click(460, 1080);
+        UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Face, fingerprint, PIN or security key");
+        UiAutomatorUtils.handleButtonClickForObjectWithTextSafely(username);
         UiAutomatorUtils.handleInput("com.android.systemui:id/lockPassword", systemPin);
         UiAutomatorUtils.pressEnter();
     }

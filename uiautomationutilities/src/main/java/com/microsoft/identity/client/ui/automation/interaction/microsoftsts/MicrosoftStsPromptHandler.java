@@ -76,12 +76,11 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
                 loginComponentHandler.handleAccountPicker(username);
             } else if (parameters.isChoosePasskeyExpected()) {
                 if (parameters.getBroker() != null) {
-                    // Brokered auth, but username-less. We need to get beyond BrokerAccountChooserActivity first and then select what we want.
+                    //We need to get beyond BrokerAccountChooserActivity first and then select what we want.
                     parameters.getBroker().handleAccountPicker(null);
                 }
-                aadLoginComponentHandler.handleChoosePasskey(
-                        parameters.getSystemPin() != null ? parameters.getSystemPin() : GlobalConstants.PIN,
-                        false);
+                aadLoginComponentHandler.handlePasskeyWithoutHint(
+                        parameters.getSystemPin() != null ? parameters.getSystemPin() : GlobalConstants.PIN, username);
             } else {
                 loginComponentHandler.handleEmailField(username);
             }
@@ -98,10 +97,12 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
         }
 
         if (parameters.isPasswordPageExpected() || parameters.getPrompt() == PromptParameter.LOGIN || !parameters.isSessionExpected()) {
-            if (loginHintProvided && parameters.isChoosePasskeyExpected()) {
-                aadLoginComponentHandler.handleChoosePasskey(
-                        parameters.getSystemPin() != null ? parameters.getSystemPin() : GlobalConstants.PIN,
-                        true);
+            // If passkey, we want to skip over entering the password.
+            // But we should only handle it here if a hint was provided
+            // (as passkeys without login hint are handled in the !loginHintProvided block above).
+            if (parameters.isChoosePasskeyExpected() && loginHintProvided) {
+                aadLoginComponentHandler.handlePasskeyWithHint(
+                        parameters.getSystemPin() != null ? parameters.getSystemPin() : GlobalConstants.PIN);
             } else {
                 loginComponentHandler.handlePasswordField(password);
             }
