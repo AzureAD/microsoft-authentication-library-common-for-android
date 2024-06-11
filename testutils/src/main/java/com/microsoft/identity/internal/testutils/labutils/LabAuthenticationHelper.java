@@ -30,7 +30,7 @@ import com.microsoft.identity.internal.testutils.BuildConfig;
 
 class LabAuthenticationHelper extends ConfidentialClientHelper {
     private final static String LAB_APP_ID = "f62c5ae3-bf3a-4af5-afa8-a68b800396e9";
-    private final static String SCOPE = "https://msidlab.com/.default";
+    private final static String SCOPE = "https://default.msidlab.com/.default";
     private String mLabAppSecret = BuildConfig.LAB_CLIENT_SECRET;
     private static LabAuthenticationHelper sLabAuthHelper;
 
