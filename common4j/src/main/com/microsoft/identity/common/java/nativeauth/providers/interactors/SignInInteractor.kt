@@ -37,8 +37,11 @@ import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.S
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility
 import com.microsoft.identity.common.java.util.ObjectMapper
 import com.microsoft.identity.common.java.util.StringUtil
+import io.opentelemetry.api.trace.StatusCode
+import java.net.HttpURLConnection
 
 /**
  * Acts as a binding layer between the request providers and response handlers for a given request.
@@ -92,6 +95,10 @@ class SignInInteractor(
             correlationId = null,
             methodName = "${TAG}.performSignInInitiate"
         )
+
+        val span = OTelUtility.createSpan("SignInStart")
+        span.makeCurrent()
+
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -115,6 +122,9 @@ class SignInInteractor(
         )
 
         val result = rawApiResponse.toResult()
+
+        span.setStatus(if (rawApiResponse.statusCode == HttpURLConnection.HTTP_OK) StatusCode.OK else StatusCode.ERROR)
+        span.end()
 
         Logger.infoWithObject(
             "${TAG}.rawResponseToSignInInitiateApiResult",
@@ -165,6 +175,10 @@ class SignInInteractor(
             correlationId = null,
             methodName = "${TAG}.performSignInChallenge"
         )
+
+        val span = OTelUtility.createSpan("SignInChallenge")
+        span.makeCurrent()
+
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -187,6 +201,10 @@ class SignInInteractor(
         )
 
         val result = rawApiResponse.toResult()
+
+        span.setAttribute("correlation_id", requestCorrelationId)
+        span.setStatus(if (rawApiResponse.statusCode == HttpURLConnection.HTTP_OK) StatusCode.OK else StatusCode.ERROR)
+        span.end()
 
         Logger.infoWithObject(
             "${TAG}.rawResponseToSignInChallengeApiResult",
@@ -291,6 +309,9 @@ class SignInInteractor(
             methodName = "${TAG}.performGetToken"
         )
 
+        val span = OTelUtility.createSpan("SignInToken")
+        span.makeCurrent()
+
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -305,6 +326,10 @@ class SignInInteractor(
             requestCorrelationId = requestCorrelationId,
             response = response
         )
+
+        span.setAttribute("correlation_id", requestCorrelationId)
+        span.setStatus(if (response.statusCode == HttpURLConnection.HTTP_OK) StatusCode.OK else StatusCode.ERROR)
+        span.end()
 
         Logger.infoWithObject(
             "${TAG}.rawResponseToSignInTokenApiResult",
