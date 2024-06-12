@@ -52,10 +52,10 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.telemetry.events.UiShownEvent;
-import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -70,6 +70,7 @@ import java.util.concurrent.Future;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
@@ -287,6 +288,27 @@ public abstract class OAuth2Strategy
                 } catch (final URISyntaxException e) {
                     throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
                 }
+            }
+        }
+    }
+
+    protected final void updateTokenEndpoint(@Nullable String dc, @Nullable Map<String, String> flightParameters) throws ClientException {
+        if (dc != null || (flightParameters != null && !flightParameters.isEmpty())) {
+            try {
+                final CommonURIBuilder commonUriBuilder = new CommonURIBuilder(mTokenEndpoint);
+                if (!StringUtil.isNullOrEmpty(dc)) {
+                    commonUriBuilder.setParameter(AzureActiveDirectorySlice.DC_PARAMETER, dc);
+                }
+
+                if (flightParameters != null && !flightParameters.isEmpty()) {
+                    for (Map.Entry<String, String> entry : flightParameters.entrySet()) {
+                        commonUriBuilder.setParameter(entry.getKey(), entry.getValue());
+                    }
+                }
+
+                mTokenEndpoint = commonUriBuilder.build().toString();
+            } catch (final URISyntaxException e) {
+                throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
             }
         }
     }
