@@ -77,7 +77,6 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
-import com.microsoft.identity.common.java.util.ClientExtraSkuAdapter;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;

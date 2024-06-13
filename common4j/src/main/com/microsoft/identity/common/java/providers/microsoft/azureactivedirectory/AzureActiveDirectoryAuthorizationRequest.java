@@ -25,7 +25,6 @@ package com.microsoft.identity.common.java.providers.microsoft.azureactivedirect
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
-import com.microsoft.identity.common.java.util.ClientExtraSkuAdapter;
 
 // Suppressing rawtype warnings due to the generic type MicrosoftAuthorizationRequest
 @SuppressWarnings(WarningType.rawtype_warning)
@@ -148,9 +147,6 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
         public AzureActiveDirectoryAuthorizationRequest build() {
             this.setLibraryName("ADAL.Android");
             this.setLibraryVersion("1.15.2");
-
-            final ClientExtraSkuAdapter clientExtraSkuAdapter = ClientExtraSkuAdapter.builder().build();
-            this.setClientExtraSky(clientExtraSkuAdapter.toString());
 
             return new AzureActiveDirectoryAuthorizationRequest(this);
         }
