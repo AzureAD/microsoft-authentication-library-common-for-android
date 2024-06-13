@@ -30,7 +30,7 @@ import java.net.URL
  * ApiConstants provides various endpoints for mock API for Native Auth endpoints.
  */
 interface ApiConstants {
-    companion object {
+    object MockApi {
         val BASEPATH = BuildValues.getMockApiUrl()
         private val BASE_REQUEST_PATH = BASEPATH + "1234/"
         val signUpStartRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/start")
@@ -45,5 +45,9 @@ interface ApiConstants {
         val ssprSubmitRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/submit")
         val ssprPollCompletionRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/poll_completion")
         val tokenEndpoint = URL("https://contoso.com/1234/token")
+    }
+
+    object TemporaryMailService {
+        const val BASE_URL = "https://www.1secmail.com/api/v1/"
     }
 }

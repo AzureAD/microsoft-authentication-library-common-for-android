@@ -299,7 +299,7 @@ public class LabUserHelper {
         LabConfig labConfig;
         labConfig = sLabConfigCache.get(query);
         Credential credential = new Credential();
-        ConfigInfo configInfo = null;
+        ConfigInfo configInfo;
 
         if (labConfig == null) {
             String password;
@@ -307,6 +307,8 @@ public class LabUserHelper {
             password = getPasswordForUser(configInfo.getLabInfo());
             labConfig = new LabConfig(configInfo, password);
             sLabConfigCache.put(query, labConfig);
+        } else {
+            configInfo = labConfig.getConfigInfo();
         }
 
         LabConfig.setCurrentLabConfig(labConfig);
