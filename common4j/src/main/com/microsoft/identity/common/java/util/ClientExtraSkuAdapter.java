@@ -27,7 +27,20 @@ import lombok.experimental.Accessors;
 
 /**
  * Helper class in common4j to assist in supplying "x-client-xtra-sku" field for ESTS Telemetry.
- * This will be included in the /authorize endpoint request and the /token endpoint.
+ * This will be included in the requests to /authorize endpoint and the /token endpoint. As of
+ * the writing of this JavaDoc, this field is only passed in brokered scenarios.<br>
+ * The schema of this new field is index-based, and is as follows:<br>
+ * <ul>
+ *     <li>Index 0 – Auth SDK name and version </li>
+ *     <ul><li>Example: MSAL.Android|5.4.0</li></ul>
+ *     <li>Index 1 – MSAL runtime version. MSAL runtime name is omitted as static</li>
+ *     <ul><li>Example: |1.2.5</li></ul>
+ *     <li>Index 2 - Browser extension name and version</li>
+ *     <ul><li>Example: Chrome|1.0.7</li></ul>
+ *     <li>Index 3 -  Browser core version. Browser core name is omitted as static</li>
+ *     <ul><li>Example: |2.5.7</li></ul>
+ * </ul>
+ * Example output where no MSAL.Runtime or Browser Core is used: MSAL.Android|5.4.0,|,Chrome|1.0.7,|
  */
 @Builder
 @Accessors(prefix = "m")
@@ -53,16 +66,29 @@ public class ClientExtraSkuAdapter {
 
     public String toString(){
         final StringBuilder stringBuilder = new StringBuilder();
+        // Index 0 - Auth SDK
         stringBuilder.append(mSrcSku);
-        stringBuilder.append(",");
+        stringBuilder.append("|");
         stringBuilder.append(mSrcSkuVer);
         stringBuilder.append(",");
+
+        // Index 1 - MSAL runtime version
+        // We don't send anything for the name, since MSAL.Runtime name is static, this can change in
+        // the future as needed
+        stringBuilder.append("|");
         stringBuilder.append(mMsalRuntimeVer);
         stringBuilder.append(",");
+
+        // Index 2 - Browser Extension
         stringBuilder.append(mBrowserExtSku);
-        stringBuilder.append(",");
+        stringBuilder.append("|");
         stringBuilder.append(mBrowserExtVer);
         stringBuilder.append(",");
+
+        // Index 3 - Browser Core
+        // We don't send anything for the name, since Browser Core name is static, this can change in
+        // the future as needed
+        stringBuilder.append("|");
         stringBuilder.append(mBrowserCoreVer);
 
         return stringBuilder.toString();

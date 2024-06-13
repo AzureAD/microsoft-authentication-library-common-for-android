@@ -99,6 +99,9 @@ public class TokenRequest implements IHasExtraParameters {
     @SerializedName("req_cnf")
     private String mRequestConfirmation;
 
+    // Leaving this unserialized, as it will only be used as a header
+    private String mClientExtraSku;
+
     public String getRequestConfirmation() {
         return mRequestConfirmation;
     }
@@ -293,6 +296,14 @@ public class TokenRequest implements IHasExtraParameters {
      */
     public void setRefreshToken(final String refreshToken) {
         mRefreshToken = refreshToken;
+    }
+
+    public String getClientExtraSku() {
+        return mClientExtraSku;
+    }
+
+    public void setClientExtraSku(final String clientExtraSku) {
+        mClientExtraSku = clientExtraSku;
     }
 
     public static class GrantTypes {

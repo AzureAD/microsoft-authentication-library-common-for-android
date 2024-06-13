@@ -216,8 +216,9 @@ public abstract class OAuth2Strategy
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
         headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
 
-        final ClientExtraSkuAdapter clientExtraSkuAdapter = ClientExtraSkuAdapter.builder().build();
-        headers.put(AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRAS, clientExtraSkuAdapter.toString());
+        if (request.getClientExtraSku() != null) {
+            headers.put(AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRAS, request.getClientExtraSku());
+        }
 
         if (request instanceof MicrosoftTokenRequest) {
             final MicrosoftTokenRequest microsoftTokenRequest = (MicrosoftTokenRequest) request;
