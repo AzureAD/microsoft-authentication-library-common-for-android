@@ -25,8 +25,6 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 
-
-import com.microsoft.identity.internal.test.labapi.model.CustomErrorResponse;
 import com.microsoft.identity.internal.test.labapi.model.TempUser;
 
 import java.lang.reflect.Type;
@@ -38,12 +36,15 @@ import java.util.Map;
 public class CreateTempUserApi {
     private ApiClient apiClient;
 
-    public CreateTempUserApi() {
-        this(Configuration.getDefaultApiClient());
+    private final String apiCode;
+
+    public CreateTempUserApi(final String code) {
+        this(Configuration.getFunctionApiClient(), code);
     }
 
-    public CreateTempUserApi(ApiClient apiClient) {
+    public CreateTempUserApi(ApiClient apiClient, final String code) {
         this.apiClient = apiClient;
+        this.apiCode = code;
     }
 
     public ApiClient getApiClient() {
@@ -73,6 +74,9 @@ public class CreateTempUserApi {
 
         if (usertype != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("usertype", usertype));
+
+        if (!apiCode.equals(""))
+            localVarQueryParams.addAll(apiClient.parameterToPair("code", apiCode));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 

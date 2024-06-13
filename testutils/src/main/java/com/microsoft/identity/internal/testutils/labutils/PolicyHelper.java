@@ -27,7 +27,10 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.api.DisablePolicyApi;
 import com.microsoft.identity.internal.test.labapi.api.EnablePolicyApi;
+import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
 import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
+import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
+import com.microsoft.identity.labapi.utilities.client.LabClient;
 
 import org.junit.Assert;
 
@@ -51,13 +54,14 @@ public class PolicyHelper {
      */
     public boolean enablePolicy(@NonNull final String upn, @NonNull final String policy) {
         instance.setupApiClientWithAccessToken();
-        final EnablePolicyApi enablePolicyApi = new EnablePolicyApi();
+
+        final String enablePolicyApiCode = getSecret(LabClient.ENABLE_POLICY_API_CODE_SECRET_NAME);
+        final EnablePolicyApi enablePolicyApi = new EnablePolicyApi(enablePolicyApiCode);
         try {
-            final CustomSuccessResponse customSuccessResponse = enablePolicyApi.apiEnablePolicyPut(upn, policy);
+            final String enablePolicyResult = enablePolicyApi.apiEnablePolicyPost(upn, policy);
             final String expectedResult = (policy +" Enabled for user : " + upn).toLowerCase();
-            final String result = customSuccessResponse.getResult();
-            Assert.assertNotNull(result);
-            return result.toLowerCase().contains(expectedResult);
+            Assert.assertNotNull(enablePolicyResult);
+            return enablePolicyResult.toLowerCase().contains(expectedResult);
         } catch (final ApiException e) {
             Logger.error(TAG,"Bad Request : Enable Policy can be used only for Locked users.",e);
             throw new AssertionError(e);
@@ -74,16 +78,28 @@ public class PolicyHelper {
      */
     public boolean disablePolicy(@NonNull final String upn, @NonNull final String policy) {
         instance.setupApiClientWithAccessToken();
-        final DisablePolicyApi disablePolicyApi = new DisablePolicyApi();
+
+        final String disablePolicyApiCode = getSecret(LabClient.DISABLE_POLICY_API_CODE_SECRET_NAME);
+        final DisablePolicyApi disablePolicyApi = new DisablePolicyApi(disablePolicyApiCode);
         try {
-            final CustomSuccessResponse customSuccessResponse = disablePolicyApi.apiDisablePolicyPut(upn, policy);
+            final String disablePolicyResponse = disablePolicyApi.apiDisablePolicyPost(upn, policy);
             final String expectedResult = (policy + " Disabled for user : " + upn).toLowerCase();
-            final String result = customSuccessResponse.getResult();
-            Assert.assertNotNull(result);
-            return result.toLowerCase().contains(expectedResult);
+            Assert.assertNotNull(disablePolicyResponse);
+            return disablePolicyResponse.toLowerCase().contains(expectedResult);
         } catch (final ApiException e) {
             Logger.error(TAG," Bad Request : Disable Policy can be used only for Locked users. ",e);
             throw new AssertionError(e);
+        }
+    }
+
+    private static String getSecret(final String secretName) {
+        final LabSecretApi labSecretApi = new LabSecretApi();
+
+        try {
+            final SecretResponse secretResponse = labSecretApi.apiLabSecretGet(secretName);
+            return secretResponse.getValue();
+        } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
+            throw new RuntimeException("Failed to fetch secret", ex);
         }
     }
 }
