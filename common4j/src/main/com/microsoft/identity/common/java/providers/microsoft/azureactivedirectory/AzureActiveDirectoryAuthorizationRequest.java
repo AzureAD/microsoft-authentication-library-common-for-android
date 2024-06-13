@@ -147,7 +147,6 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
         public AzureActiveDirectoryAuthorizationRequest build() {
             this.setLibraryName("ADAL.Android");
             this.setLibraryVersion("1.15.2");
-
             return new AzureActiveDirectoryAuthorizationRequest(this);
         }
 
