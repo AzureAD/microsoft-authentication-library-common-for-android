@@ -22,7 +22,20 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.flighting
 
+/**
+ * Consumer of commons needs to implement [IFlightsManager] interface
+ * and set it using CommonFlightManager.initializeCommonFlightsManager(@NonNull IFlightsManager flightsManager)
+ * to provide Flight Values for CommonFlights
+ */
 interface IFlightsManager {
+    /**
+     * Flights provider applicable by default. Features should always this
+     * unless the feature behaviour is tenant specific one same device.
+     */
     fun getFlightsProvider(): IFlightsProvider
+
+    /**
+     * Flights provider for the given tenant
+     */
     fun getFlightsProviderForTenant(tenantId: String): IFlightsProvider
 }
