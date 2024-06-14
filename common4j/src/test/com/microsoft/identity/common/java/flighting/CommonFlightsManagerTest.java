@@ -51,6 +51,6 @@ public class CommonFlightsManagerTest {
 
     @After
     public void tearDown() {
-        CommonFlightsManager.INSTANCE.clearFlightsManager();
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 }

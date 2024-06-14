@@ -44,8 +44,8 @@ object CommonFlightsManager : IFlightsManager {
     /**
      * For tests
      */
-    fun clearFlightsManager() {
-        val methodTag = "$TAG:clearFlightsManager"
+    fun resetFlightsManager() {
+        val methodTag = "$TAG:resetFlightsManager"
         Logger.info(methodTag, "Resetting flights manager to default value.")
         mFlightsManager = DefaultValueFlightsManager
     }
