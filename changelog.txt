@@ -4,6 +4,7 @@ V.Next
 - [MINOR] Updating YubiKit and CredMan versions (#2417)
 - [PATCH] Adding check for OS version for passkeys (#2419)
 - [MINOR] Platform Specific Extra Query Parameters (#2426)
+- [PATCH] Return API error and errorDescription in case of unexpected response (#2431)
 
 Version 17.4.0
 ---------
