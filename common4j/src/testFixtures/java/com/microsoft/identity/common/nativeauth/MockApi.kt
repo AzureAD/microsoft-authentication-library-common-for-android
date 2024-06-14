@@ -50,7 +50,7 @@ class MockApi private constructor(
         // delete all responses in the queue
         // This endpoint allows a client to add a response to the response queue. When the client
         // makes a request with the matching correlation-id, the mock API will return that response
-        private val MOCK_ADD_RESPONSE_URL = "${ApiConstants.BASEPATH}/config/response"
+        private val MOCK_ADD_RESPONSE_URL = "${ApiConstants.MockApi.BASEPATH}/config/response"
 
         private val headers = TreeMap<String, String?>().also {
             it[HttpConstants.HeaderField.CONTENT_TYPE] = "application/json"
