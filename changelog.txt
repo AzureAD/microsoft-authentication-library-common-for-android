@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [MINOR] Add support per tenant flighting in broker (#2433)
 - [MINOR] Update logic for matching requested claims for AT (#2401)
 - [MINOR] Updating YubiKit and CredMan versions (#2417)
 - [PATCH] Adding check for OS version for passkeys (#2419)
