@@ -72,7 +72,7 @@ public class BrokerApiFragment extends AbstractBrokerHost {
     public void removeAccounts(@NonNull final String username) {
         fillTextBox(USERNAME_EDIT_TEXT, username);
         clickButton(REMOVE_ACCOUNTS_BUTTON_ID);
-        dismissDialogBoxAndGetText();
+      //  dismissDialogBoxAndGetText();
     }
 
     /**

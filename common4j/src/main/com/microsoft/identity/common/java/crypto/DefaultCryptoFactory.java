@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.CryptoFactoryName;
 
 import java.security.KeyFactory;
@@ -62,6 +63,7 @@ public class DefaultCryptoFactory implements ICryptoFactory {
 
     @Override
     public @NonNull KeyPairGenerator getKeyPairGenerator(@NonNull final String algorithm) throws ClientException {
+        Logger.info("keypairgenerator - TAG", "DCF");
         return ProviderFactory.getKeyPairGenerator(algorithm, null);
     }
 

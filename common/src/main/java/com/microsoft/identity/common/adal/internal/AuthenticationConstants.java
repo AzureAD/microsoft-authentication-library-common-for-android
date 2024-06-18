@@ -1375,6 +1375,11 @@ public final class AuthenticationConstants {
         public static final String SAVE_TRANSFER_TOKEN_SUCCEEDED = "save_transfer_token_succeeded";
 
         /**
+         * Public key to transfer transfer token.
+         */
+        public static final String KEY_FOR_TRANSFER_TOKEN_TRANSFER = "key_transfer_token_transfer";
+
+        /**
          * The Bundle key name of transfer token.
          */
         public static final String TRANSFER_TOKEN_BUNDLE_KEY = "transfer_token";
@@ -1383,6 +1388,11 @@ public final class AuthenticationConstants {
          * The Bundle key name of transfer token key (account name).
          */
         public static final String TRANSFER_TOKEN_ACCOUNT_NAME_BUNDLE_KEY = "account_name";
+
+        /**
+         * The Bundle key name of transfer token key (account name).
+         */
+        public static final String TRANSFER_TOKEN_AES_KEY_BUNDLE_KEY = "aes_key";
 
         /**
          * Boolean to return when a Broker RT is successfully updated.
@@ -1563,6 +1573,7 @@ public final class AuthenticationConstants {
             BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_VERSION_1, null),
             BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_VERSION_1, null),
             BROKER_BACKUP_TRANSFER_TOKEN(BROKER_BACKUP_TRANSFER_TOKEN_PATH, null, null),
+            BROKER_GET_KEY_FOR_TRANSFER_TOKEN_TRANSFER(BROKER_GET_KEY_FOR_TRANSFER_TOKEN_TRANSFER_PATH, null, null),
             BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_3, null),
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_3, null),
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
@@ -1686,6 +1697,8 @@ public final class AuthenticationConstants {
          * URI Path constant for BrokerApi-to-Broker backup transfer token request using ContentProvider.
          */
         public static final String BROKER_BACKUP_TRANSFER_TOKEN_PATH = "/brokerApi/backupTransferToken";
+
+        public static final String BROKER_GET_KEY_FOR_TRANSFER_TOKEN_TRANSFER_PATH = "/brokerApi/getKeyForTransferTokenTransfer";
 
         /**
          * Broker api path constant for setting flight information.
