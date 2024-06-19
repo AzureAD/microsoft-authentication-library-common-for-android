@@ -4,6 +4,15 @@ import com.microsoft.identity.common.java.util.StringUtil
 import com.microsoft.identity.internal.testutils.BuildConfig
 
 object NativeAuthCredentialHelper {
+    val nativeAuthConfig:  String
+        get() {
+            val config = BuildConfig.CONFIG_EMAIL_OTP_NO_ATTRIBUTES
+            return if (StringUtil.isNullOrEmpty(config)) {
+                throw IllegalStateException("env var NATIVE_AUTH_CONFIG value not set")
+            } else {
+                config
+            }
+        }
     val nativeAuthSignInUsername: String
         get() {
             val username = BuildConfig.NATIVE_AUTH_SIGNIN_TEST_USERNAME
