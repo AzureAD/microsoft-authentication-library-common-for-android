@@ -89,7 +89,7 @@ android {
         buildConfigField("String", "NATIVE_AUTH_SSPR_TEST_USERNAME", "\"$nativeAuthSSPRTestsUsername\"")
         buildConfigField("String", "NATIVE_AUTH_LABS_EMAIL_PW_APP_ID", "\"$nativeAuthLabsEmailPasswordAppId\"")
         buildConfigField("String", "NATIVE_AUTH_LABS_AUTHORITY_URL", "\"$nativeAuthLabsAuthorityUrl\"")
-        buildConfigField("String", "CONFIG_EMAIL_OTP_NO_ATTRIBUTES", "\"${nativeAuthEmailOTPNoAttributes}\"")
+        buildConfigField("String", "CONFIG_EMAIL_OTP_NO_ATTRIBUTES", "\"$nativeAuthEmailOTPNoAttributes\"")
         buildConfigField("String", "RUN_ID", "\"$runId\"")
         buildConfigField("boolean", "SAVE_TEST_RESULTS_TO_CSV", "$saveTestResultsToCsv")
 
