@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers
 
+import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
@@ -41,6 +42,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.mockito.kotlin.mock
 import java.net.URL
@@ -100,6 +102,7 @@ class NativeAuthRequestHandlerTest {
         )
     }
 
+    @Test
     fun testSignUpStartWithEmptyPasswordShouldNotThrowException() {
         val commandParameters = SignUpStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
@@ -149,6 +152,22 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
+    fun testSignUpStartWithUnsetCorrelationIdShouldHaveNilHeader() {
+        val commandParameters = SignUpStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .clientId(clientId)
+            .correlationId("UNSET")
+            .build()
+
+        val result = nativeAuthRequestProvider.createSignUpStartRequest(
+            commandParameters = commandParameters
+        )
+
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
+    }
+
+    @Test
     fun testSignUpStartSuccess() {
         val commandParameters = SignUpStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
@@ -167,6 +186,7 @@ class NativeAuthRequestHandlerTest {
         assertEquals(challengeType, result.parameters.challengeType)
         assertEquals(ApiConstants.MockApi.signUpStartRequestUrl, result.requestUrl)
         assertEquals(userAttributes.toJsonString(userAttributes), result.parameters.attributes)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
     }
 
     @Test
@@ -189,6 +209,24 @@ class NativeAuthRequestHandlerTest {
         assertEquals(challengeType, result.parameters.challengeType)
         assertEquals(ApiConstants.MockApi.signUpStartRequestUrl, result.requestUrl)
         assertEquals(userAttributes.toJsonString(userAttributes), result.parameters.attributes)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
+    }
+
+    @Test
+    fun testSignUpSubmitCodeWithUnsetCorrelationIdShouldHaveNilHeader() {
+        val commandParameters = SignUpSubmitCodeCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .continuationToken(continuationToken)
+            .code(oobCode)
+            .clientId(clientId)
+            .correlationId("UNSET")
+            .build()
+
+        val result = nativeAuthRequestProvider.createSignUpSubmitCodeRequest(
+            commandParameters = commandParameters
+        )
+
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
     }
 
     @Test
@@ -209,6 +247,24 @@ class NativeAuthRequestHandlerTest {
         assertEquals(continuationToken, result.parameters.continuationToken)
         assertEquals(oobGrantType, result.parameters.grantType)
         assertEquals(ApiConstants.MockApi.signUpContinueRequestUrl, result.requestUrl)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
+    }
+
+    @Test
+    fun testSignUpSubmitPasswordWithUnsetCorrelationIdShouldHaveNilHeader() {
+        val commandParameters = SignUpSubmitPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .continuationToken(continuationToken)
+            .password(password)
+            .clientId(clientId)
+            .correlationId("UNSET")
+            .build()
+
+        val result = nativeAuthRequestProvider.createSignUpSubmitPasswordRequest(
+            commandParameters = commandParameters
+        )
+
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
     }
 
     @Test
@@ -229,6 +285,24 @@ class NativeAuthRequestHandlerTest {
         assertEquals(continuationToken, result.parameters.continuationToken)
         assertEquals(passwordGrantType, result.parameters.grantType)
         assertEquals(ApiConstants.MockApi.signUpContinueRequestUrl, result.requestUrl)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
+    }
+
+    @Test
+    fun testSignUpSubmitUserAttributesWithUnsetCorrelationIdShouldHaveNilHeader() {
+        val commandParameters = SignUpSubmitUserAttributesCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .continuationToken(continuationToken)
+            .userAttributes(userAttributes)
+            .clientId(clientId)
+            .correlationId("UNSET")
+            .build()
+
+        val result = nativeAuthRequestProvider.createSignUpSubmitUserAttributesRequest(
+            commandParameters = commandParameters
+        )
+
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
     }
 
     @Test
@@ -248,10 +322,11 @@ class NativeAuthRequestHandlerTest {
         assertEquals(userAttributes.toJsonString(userAttributes), result.parameters.attributes)
         assertEquals(continuationToken, result.parameters.continuationToken)
         assertEquals(ApiConstants.MockApi.signUpContinueRequestUrl, result.requestUrl)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
     }
 
     @Test(expected = ClientException::class)
-    fun testSignUpSubmitEmptyUserAttributesShouldThrowExceptionSuccess() {
+    fun testSignUpSubmitEmptyUserAttributesShouldThrowException() {
         val commandParameters = SignUpSubmitUserAttributesCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
@@ -266,7 +341,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test(expected = ClientException::class)
-    fun testSignUpSubmitEmptyPasswordShouldThrowExceptionSuccess() {
+    fun testSignUpSubmitEmptyPasswordShouldThrowException() {
         val commandParameters = SignUpSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
@@ -281,7 +356,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test(expected = ClientException::class)
-    fun testSignUpSubmitEmptyCodedShouldThrowExceptionSuccess() {
+    fun testSignUpSubmitEmptyCodedShouldThrowException() {
         val commandParameters = SignUpSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
@@ -298,11 +373,6 @@ class NativeAuthRequestHandlerTest {
     // signup challenge tests
     @Test
     fun testSignUpChallengeSuccess() {
-        nativeAuthRequestProvider.createSignUpChallengeRequest(
-            continuationToken = continuationToken,
-            correlationId = correlationId
-        )
-
         val result = nativeAuthRequestProvider.createSignUpChallengeRequest(
             continuationToken = continuationToken,
             correlationId = correlationId
@@ -311,6 +381,17 @@ class NativeAuthRequestHandlerTest {
         assertEquals(challengeType, result.parameters.challengeType)
         assertEquals(continuationToken, result.parameters.continuationToken)
         assertEquals(ApiConstants.MockApi.signUpChallengeRequestUrl, result.requestUrl)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
+    }
+
+    @Test
+    fun testSignUpChallengeWithUnsetCorrelationIdShouldHaveNilHeader() {
+        val result = nativeAuthRequestProvider.createSignUpChallengeRequest(
+            continuationToken = continuationToken,
+            correlationId = "UNSET"
+        )
+
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
     }
 
     @Test(expected = ClientException::class)
@@ -353,6 +434,21 @@ class NativeAuthRequestHandlerTest {
         nativeAuthRequestProvider.createSignInInitiateRequest(
             commandParameters = commandParameters
         )
+    }
+
+    @Test
+    fun testSignInInitiateWithUnsetCorrelationIdShouldHaveNilHeader() {
+        val commandParameters = SignInStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(emptyString)
+            .correlationId("UNSET")
+            .build()
+
+        val result = nativeAuthRequestProvider.createSignInInitiateRequest(
+            commandParameters = commandParameters
+        )
+
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
     }
 
     @Test(expected = ClientException::class)
@@ -401,6 +497,7 @@ class NativeAuthRequestHandlerTest {
         assertEquals(clientId, result.parameters.clientId)
         assertEquals(challengeType, result.parameters.challengeType)
         assertEquals(ApiConstants.MockApi.signInInitiateRequestUrl, result.requestUrl)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
     }
 
     @Test(expected = ClientException::class)
@@ -432,6 +529,16 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
+    fun testSignInChallengeWithUnsetCorrelationIdShouldHaveNilHeader() {
+        val result = nativeAuthRequestProvider.createSignInChallengeRequest(
+            continuationToken = continuationToken,
+            correlationId = "UNSET"
+        )
+
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
+    }
+
+    @Test
     fun testSignInChallengeSuccess() {
         val result = nativeAuthRequestProvider.createSignInChallengeRequest(
             continuationToken = continuationToken,
@@ -441,6 +548,7 @@ class NativeAuthRequestHandlerTest {
         assertEquals(clientId, result.parameters.clientId)
         assertEquals(continuationToken, result.parameters.continuationToken)
         assertEquals(ApiConstants.MockApi.signInChallengeRequestUrl, result.requestUrl)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
     }
 
     @Test(expected = ClientException::class)
@@ -506,6 +614,22 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
+    fun testSignInTokenWithContinuationTokenUnsetCorrelationIdShouldHaveNilHeader() {
+        val commandParameters = SignInWithContinuationTokenCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .continuationToken(continuationToken)
+            .username(username)
+            .correlationId("UNSET")
+            .build()
+
+        val result = nativeAuthRequestProvider.createContinuationTokenTokenRequest(
+            commandParameters = commandParameters
+        )
+
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
+    }
+
+    @Test
     fun testSignInTokenWithContinuationTokenSuccess() {
         val commandParameters = SignInWithContinuationTokenCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
@@ -514,9 +638,15 @@ class NativeAuthRequestHandlerTest {
             .correlationId(correlationId)
             .build()
 
-        nativeAuthRequestProvider.createContinuationTokenTokenRequest(
+        val result = nativeAuthRequestProvider.createContinuationTokenTokenRequest(
             commandParameters = commandParameters
         )
+
+        assertEquals(username, result.parameters.username)
+        assertEquals(clientId, result.parameters.clientId)
+        assertEquals(challengeType, result.parameters.challengeType)
+        assertEquals(ApiConstants.MockApi.signInTokenRequestUrl, result.requestUrl)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
     }
 
     @Test(expected = ClientException::class)
@@ -590,6 +720,21 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
+    fun testPasswordTokenRequestWithUnsetCorrelationIdShouldHaveNilHeader() {
+        val commandParameters = SignInSubmitPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .password(password)
+            .continuationToken(continuationToken)
+            .correlationId("UNSET")
+            .build()
+
+        val result = nativeAuthRequestProvider.createPasswordTokenRequest(
+            commandParameters = commandParameters
+        )
+
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
+    }
+    @Test
     fun testPasswordTokenRequestSuccess() {
         val commandParameters = SignInSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
@@ -598,9 +743,14 @@ class NativeAuthRequestHandlerTest {
             .correlationId(correlationId)
             .build()
 
-        nativeAuthRequestProvider.createPasswordTokenRequest(
+        val result = nativeAuthRequestProvider.createPasswordTokenRequest(
             commandParameters = commandParameters
         )
+
+        assertEquals(clientId, result.parameters.clientId)
+        assertEquals(challengeType, result.parameters.challengeType)
+        assertEquals(ApiConstants.MockApi.signInTokenRequestUrl, result.requestUrl)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
     }
 
     @Test(expected = ClientException::class)
@@ -678,6 +828,21 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
+    fun testResetPasswordStartWithUnsetCorrelationIdShouldHaveNilHeader() {
+        val commandParameters = ResetPasswordStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .correlationId("UNSET")
+            .build()
+
+        val result = nativeAuthRequestProvider.createResetPasswordStartRequest(
+            commandParameters = commandParameters
+        )
+
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
+    }
+
+    @Test
     fun testResetPasswordStartSuccess() {
         val commandParameters = ResetPasswordStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
@@ -685,9 +850,15 @@ class NativeAuthRequestHandlerTest {
             .correlationId(correlationId)
             .build()
 
-        nativeAuthRequestProvider.createResetPasswordStartRequest(
+        val result = nativeAuthRequestProvider.createResetPasswordStartRequest(
             commandParameters = commandParameters
         )
+
+        assertEquals(username, result.parameters.username)
+        assertEquals(clientId, result.parameters.clientId)
+        assertEquals(challengeType, result.parameters.challengeType)
+        assertEquals(ApiConstants.MockApi.ssprStartRequestUrl, result.requestUrl)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
     }
 
     // ResetPassword challenge tests
@@ -710,11 +881,25 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
+    fun testResetPasswordChallengeWithUnsetCorrelationIdShouldHaveNilHeader() {
+        val result = nativeAuthRequestProvider.createResetPasswordChallengeRequest(
+            continuationToken = continuationToken,
+            correlationId = "UNSET"
+        )
+
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
+    }
+
+    @Test
     fun testResetPasswordChallengeSuccess() {
-        nativeAuthRequestProvider.createResetPasswordChallengeRequest(
+        val result = nativeAuthRequestProvider.createResetPasswordChallengeRequest(
             continuationToken = continuationToken,
             correlationId = correlationId
         )
+
+        assertEquals(clientId, result.parameters.clientId)
+        assertEquals(ApiConstants.MockApi.ssprChallengeRequestUrl, result.requestUrl)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
     }
 
     // ResetPassword continue tests
@@ -763,7 +948,23 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testResetPasswordContinueSucces() {
+    fun testResetPasswordContinueWithUnsetCorrelationIdShouldHaveNilHeader() {
+        val commandParameters = ResetPasswordSubmitCodeCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .code(oobCode)
+            .continuationToken(continuationToken)
+            .correlationId("UNSET")
+            .build()
+
+        val result = nativeAuthRequestProvider.createResetPasswordContinueRequest(
+            commandParameters = commandParameters
+        )
+
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
+    }
+
+    @Test
+    fun testResetPasswordContinueSuccess() {
         val commandParameters = ResetPasswordSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .code(oobCode)
@@ -771,9 +972,13 @@ class NativeAuthRequestHandlerTest {
             .correlationId(correlationId)
             .build()
 
-        nativeAuthRequestProvider.createResetPasswordContinueRequest(
+        val result = nativeAuthRequestProvider.createResetPasswordContinueRequest(
             commandParameters = commandParameters
         )
+
+        assertEquals(clientId, result.parameters.clientId)
+        assertEquals(ApiConstants.MockApi.ssprContinueRequestUrl, result.requestUrl)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
     }
 
     // ResetPassword submit tests
@@ -822,6 +1027,22 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
+    fun testResetPasswordSubmitWithUnsetCorrelationIdShouldHaveNilHeader() {
+        val commandParameters = ResetPasswordSubmitNewPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .continuationToken(continuationToken)
+            .newPassword(password)
+            .correlationId("UNSET")
+            .build()
+
+        val result = nativeAuthRequestProvider.createResetPasswordSubmitRequest(
+            commandParameters = commandParameters
+        )
+
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
+    }
+
+    @Test
     fun testResetPasswordSubmitSuccess() {
         val commandParameters = ResetPasswordSubmitNewPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
@@ -830,9 +1051,13 @@ class NativeAuthRequestHandlerTest {
             .correlationId(correlationId)
             .build()
 
-        nativeAuthRequestProvider.createResetPasswordSubmitRequest(
+        val result = nativeAuthRequestProvider.createResetPasswordSubmitRequest(
             commandParameters = commandParameters
         )
+
+        assertEquals(clientId, result.parameters.clientId)
+        assertEquals(ApiConstants.MockApi.ssprSubmitRequestUrl, result.requestUrl)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
     }
 
     // ResetPassword completion poll tests
@@ -855,10 +1080,24 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
+    fun testResetPasswordPollCompletionWithUnsetCorrelationIdShouldHaveNilHeader() {
+        val result = nativeAuthRequestProvider.createResetPasswordPollCompletionRequest(
+            continuationToken = continuationToken,
+            correlationId = "UNSET"
+        )
+
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
+    }
+
+    @Test
     fun testResetPasswordPollCompletionSuccess() {
-        nativeAuthRequestProvider.createResetPasswordPollCompletionRequest(
+        val result = nativeAuthRequestProvider.createResetPasswordPollCompletionRequest(
             continuationToken = continuationToken,
             correlationId = correlationId
         )
+
+        assertEquals(clientId, result.parameters.clientId)
+        assertEquals(ApiConstants.MockApi.ssprPollCompletionRequestUrl, result.requestUrl)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
     }
 }

@@ -50,6 +50,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.S
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpContinueRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpStartRequest
 import com.microsoft.identity.common.java.platform.Device
+import com.microsoft.identity.common.java.util.StringUtil
 import java.util.TreeMap
 
 /**
@@ -310,7 +311,11 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //region helpers
     private fun getRequestHeaders(correlationId: String): Map<String, String?> {
         val headers: MutableMap<String, String?> = TreeMap()
-        headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = correlationId
+
+        if (correlationId != "UNSET") {
+            headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = correlationId
+        }
+
         headers[AuthenticationConstants.SdkPlatformFields.PRODUCT] = DiagnosticContext.INSTANCE.requestContext[AuthenticationConstants.SdkPlatformFields.PRODUCT]
         headers[AuthenticationConstants.SdkPlatformFields.VERSION] = Device.getProductVersion()
         headers.putAll(Device.getPlatformIdParameters())
