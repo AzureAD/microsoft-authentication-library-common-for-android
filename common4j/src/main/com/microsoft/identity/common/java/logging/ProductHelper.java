@@ -44,12 +44,12 @@ public class ProductHelper {
     public static String getProduct() {
         final String methodName = ":getProduct";
 
-        final String version = DiagnosticContext.INSTANCE.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT);
-        if (StringUtil.isNullOrEmpty(version)) {
+        final String product = DiagnosticContext.INSTANCE.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT);
+        if (StringUtil.isNullOrEmpty(product)) {
             Logger.warn(TAG + methodName, "Product is not set.", null);
             return NOT_SET;
         } else {
-            return version;
+            return product;
         }
     }
 
