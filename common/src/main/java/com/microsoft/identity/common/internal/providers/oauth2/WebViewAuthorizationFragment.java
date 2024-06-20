@@ -455,6 +455,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     requestHeaders = new HashMap<>();
                 }
                 requestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_VALUE);
+//                requestHeaders.put(com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRAS, );
             }
             return requestHeaders;
         } catch (Exception e) {

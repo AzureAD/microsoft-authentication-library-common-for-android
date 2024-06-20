@@ -83,7 +83,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.
  * Serves as the abstract base class for an oAuth2 client implementation; The base class should be extended
  * by Identity Provider specific implementations; For example: Azure Active Directory, ADFS, Microsoft STS, Etc...
  */
-// Suppressing rawtype warnings due to generic types AuthorizationRequest, AuthorizationReuest.Builder, AuthorizationStrategy, AuthorizationResult and AuthorizationResultFactory
+// Suppressing rawtype warnings due to generic types AuthorizationRequest, AuthorizationRequest.Builder, AuthorizationStrategy, AuthorizationResult and AuthorizationResultFactory
 @SuppressWarnings(WarningType.rawtype_warning)
 public abstract class OAuth2Strategy
         <GenericAccessToken extends AccessToken,
