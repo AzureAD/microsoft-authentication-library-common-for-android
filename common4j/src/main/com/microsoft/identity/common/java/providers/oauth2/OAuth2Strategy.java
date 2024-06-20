@@ -208,6 +208,10 @@ public abstract class OAuth2Strategy
                     Device.PlatformIdParameters.BROKER_VERSION,
                     ((MicrosoftTokenRequest) request).getBrokerVersion()
             );
+
+            // Attach client extras header for ESTS telemetry.
+
+            headers.put(AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRAS, "");
         }
         headers.putAll(Device.getPlatformIdParameters());
         headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT,
@@ -215,10 +219,6 @@ public abstract class OAuth2Strategy
         headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, Device.getProductVersion());
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
         headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
-
-        if (request.getClientExtraSku() != null) {
-            headers.put(AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRAS, request.getClientExtraSku());
-        }
 
         if (request instanceof MicrosoftTokenRequest) {
             final MicrosoftTokenRequest microsoftTokenRequest = (MicrosoftTokenRequest) request;
