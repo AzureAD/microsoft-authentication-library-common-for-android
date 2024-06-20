@@ -1562,7 +1562,6 @@ public final class AuthenticationConstants {
             BROKER_GET_ACCOUNTS(BROKER_API_GET_BROKER_ACCOUNTS_PATH, BROKER_VERSION_1, null),
             BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_VERSION_1, null),
             BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_VERSION_1, null),
-            BROKER_BACKUP_TRANSFER_TOKEN(BROKER_BACKUP_TRANSFER_TOKEN_PATH, null, null),
             BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_3, null),
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_3, null),
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
@@ -1681,11 +1680,6 @@ public final class AuthenticationConstants {
          * URI Path constant for BrokerApi-to-Broker updateBrt request using ContentProvider.
          */
         public static final String BROKER_API_UPDATE_BRT_PATH = "/brokerApi/updateBrt";
-
-        /**
-         * URI Path constant for BrokerApi-to-Broker backup transfer token request using ContentProvider.
-         */
-        public static final String BROKER_BACKUP_TRANSFER_TOKEN_PATH = "/brokerApi/backupTransferToken";
 
         /**
          * Broker api path constant for setting flight information.
