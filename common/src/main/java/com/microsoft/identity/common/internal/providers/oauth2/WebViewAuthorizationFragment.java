@@ -59,8 +59,12 @@ import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightManager;
+import com.microsoft.identity.common.java.platform.Device;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.util.ClientExtraSkuAdapter;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Arrays;
@@ -457,6 +461,16 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 requestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_VALUE);
 //                requestHeaders.put(com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRAS, );
             }
+//            if (request instanceof MicrosoftTokenRequest &&
+//                    !StringUtil.isNullOrEmpty(((MicrosoftTokenRequest) request).getBrokerVersion())) {
+//
+//                // Attach client extras header for ESTS telemetry. Only done for broker requests
+//                final ClientExtraSkuAdapter clientExtraAdapter = ClientExtraSkuAdapter.builder()
+//                        .srcSku(product)
+//                        .srcSkuVer(productVersion)
+//                        .build();
+//                headers.put(com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRAS, clientExtraAdapter.toString());
+//            }
             return requestHeaders;
         } catch (Exception e) {
             return null;

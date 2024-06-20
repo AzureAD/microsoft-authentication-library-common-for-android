@@ -52,6 +52,7 @@ import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightManager;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.logging.ProductHelper;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpConstants;
 import com.microsoft.identity.common.java.net.HttpResponse;
@@ -340,8 +341,8 @@ public class MicrosoftStsOAuth2Strategy
             builder.setSlice(mConfig.getSlice());
         }
 
-        builder.setLibraryName(DiagnosticContext.INSTANCE.getRequestContext().get(PRODUCT));
-        builder.setLibraryVersion(Device.getProductVersion());
+        builder.setLibraryName(ProductHelper.getProduct());
+        builder.setLibraryVersion(ProductHelper.getProductVersion());
         builder.setFlightParameters(mConfig.getFlightParameters());
         builder.setMultipleCloudAware(mConfig.getMultipleCloudsSupported());
         builder.setOpenIdProviderConfiguration(mOpenIdProviderConfiguration);
@@ -561,8 +562,8 @@ public class MicrosoftStsOAuth2Strategy
         final Map<String, String> headers = new TreeMap<>();
         headers.put("client-request-id", DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         headers.putAll(Device.getPlatformIdParameters());
-        headers.put(PRODUCT, DiagnosticContext.INSTANCE.getRequestContext().get(PRODUCT));
-        headers.put(VERSION, Device.getProductVersion());
+        headers.put(PRODUCT, ProductHelper.getProduct());
+        headers.put(VERSION, ProductHelper.getProductVersion());
 
         headers.put(APP_PACKAGE_NAME, request.getClientAppName());
         headers.put(APP_VERSION, request.getClientAppVersion());

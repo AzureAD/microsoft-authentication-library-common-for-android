@@ -35,6 +35,7 @@ import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.logging.ProductHelper;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpConstants;
 import com.microsoft.identity.common.java.net.HttpResponse;
@@ -202,6 +203,9 @@ public abstract class OAuth2Strategy
         final Map<String, String> headers = new TreeMap<>();
         headers.put(CLIENT_REQUEST_ID, DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
 
+        final String product = ProductHelper.getProduct();
+        final String productVersion = ProductHelper.getProductVersion();
+
         if (request instanceof MicrosoftTokenRequest &&
                 !StringUtil.isNullOrEmpty(((MicrosoftTokenRequest) request).getBrokerVersion())) {
             headers.put(
@@ -209,14 +213,16 @@ public abstract class OAuth2Strategy
                     ((MicrosoftTokenRequest) request).getBrokerVersion()
             );
 
-            // Attach client extras header for ESTS telemetry.
-
-            headers.put(AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRAS, "");
+            // Attach client extras header for ESTS telemetry. Only done for broker requests
+            final ClientExtraSkuAdapter clientExtraAdapter = ClientExtraSkuAdapter.builder()
+                    .srcSku(product)
+                    .srcSkuVer(productVersion)
+                    .build();
+            headers.put(AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRAS, clientExtraAdapter.toString());
         }
         headers.putAll(Device.getPlatformIdParameters());
-        headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT,
-                DiagnosticContext.INSTANCE.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
-        headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, Device.getProductVersion());
+        headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, product);
+        headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, productVersion);
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
         headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
 
