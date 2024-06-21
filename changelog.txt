@@ -2,7 +2,6 @@ V.Next
 ---------
 - [PATCH] Adding check for OS version for passkeys (#2419)
 - [MINOR] Platform Specific Extra Query Parameters (#2426)
-- [MINOR] Bumping BouncyCastle version to 1.78 (#2436)
 
 Version 17.5.0
 ---------
