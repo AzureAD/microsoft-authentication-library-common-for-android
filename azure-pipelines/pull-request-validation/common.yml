@@ -5,7 +5,6 @@ name: $(date:yyyyMMdd)$(rev:.r)
 
 variables:
   - group: devex-ciam-test
-  - group: dexex-nativeauth
 
 trigger:
   branches:
@@ -58,7 +57,7 @@ jobs:
     inputs:
       javaHomeSelection: JDKVersion
       jdkVersionOption: "1.11"
-      tasks: common:testLocalDebugUnitTest -PlabSecret=$(LabVaultAppCert) -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthEmailOTPNoAttributes=$(EmailOTPNoAttributes)
+      tasks: common:testLocalDebugUnitTest -PlabSecret=$(LabVaultAppCert) -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthTestConfig=$(NativeAuthTestConfig)
   - task: Gradle@3
     displayName: Check Dependencies size
     condition: eq(variables['system.pullRequest.targetBranch'], 'dev')

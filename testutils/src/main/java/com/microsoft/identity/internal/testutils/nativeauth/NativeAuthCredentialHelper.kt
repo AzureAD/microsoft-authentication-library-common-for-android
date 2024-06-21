@@ -1,55 +1,18 @@
 package com.microsoft.identity.internal.testutils.nativeauth
 
+import com.google.gson.Gson
 import com.microsoft.identity.common.java.util.StringUtil
 import com.microsoft.identity.internal.testutils.BuildConfig
+import com.microsoft.identity.internal.testutils.nativeauth.api.models.NativeAuthTestConfig
 
 object NativeAuthCredentialHelper {
-    val nativeAuthConfig:  String
+    val nativeAuthTestConfig:  NativeAuthTestConfig
         get() {
-            val config = BuildConfig.CONFIG_EMAIL_OTP_NO_ATTRIBUTES
+            val config = BuildConfig.NATIVE_AUTH_TEST_CONFIG
             return if (StringUtil.isNullOrEmpty(config)) {
                 throw IllegalStateException("env var NATIVE_AUTH_CONFIG value not set")
             } else {
-                config
-            }
-        }
-    val nativeAuthSignInUsername: String
-        get() {
-            val username = BuildConfig.NATIVE_AUTH_SIGNIN_TEST_USERNAME
-            return if (StringUtil.isNullOrEmpty(username)) {
-                throw IllegalStateException("env var NATIVE_AUTH_SIGNIN_TEST_USERNAME value not set")
-            } else {
-                username
-            }
-        }
-
-    val nativeAuthSSPRUsername: String
-        get() {
-            val username = BuildConfig.NATIVE_AUTH_SSPR_TEST_USERNAME
-            return if (StringUtil.isNullOrEmpty(username)) {
-                throw IllegalStateException("env var NATIVE_AUTH_SSPR_TEST_USERNAME value not set")
-            } else {
-                username
-            }
-        }
-
-    val nativeAuthLabsEmailPasswordAppId: String
-        get() {
-            val appId = BuildConfig.NATIVE_AUTH_LABS_EMAIL_PW_APP_ID
-            return if (StringUtil.isNullOrEmpty(appId)) {
-                throw IllegalStateException("env var NATIVE_AUTH_LABS_EMAIL_PW_APP_ID value not set")
-            } else {
-                appId
-            }
-        }
-
-    val nativeAuthLabsAuthorityUrl: String
-        get() {
-            val authorityUrl = BuildConfig.NATIVE_AUTH_LABS_AUTHORITY_URL
-            return if (StringUtil.isNullOrEmpty(authorityUrl)) {
-                throw IllegalStateException("env var NATIVE_AUTH_LABS_AUTHORITY_URL value not set")
-            } else {
-                authorityUrl
+                Gson().fromJson(config, NativeAuthTestConfig::class.java)
             }
         }
 }

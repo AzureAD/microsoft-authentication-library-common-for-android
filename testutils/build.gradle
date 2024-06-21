@@ -51,30 +51,10 @@ android {
         saveTestResultsToCsv = getBoolean(writeTestResultsToCsv);
     }
 
-    def nativeAuthSignInTestsUsername = "" // will be blank unless specified by developer
-    def nativeAuthSSPRTestsUsername = "" // will be blank unless specified by developer
-    def nativeAuthLabsEmailPasswordAppId = "" // will be blank unless specified by developer
-    def nativeAuthLabsAuthorityUrl = "" // will be blank unless specified by developer
-    def nativeAuthEmailOTPNoAttributes = "" // will be blank unless specified by developer
+    def nativeAuthTestConfig = "" // will be blank unless specified by developer
 
-    if (project.hasProperty("nativeAuthSignInTestsUsernameValue")) {
-        nativeAuthSignInTestsUsername = nativeAuthSignInTestsUsernameValue
-    }
-
-    if (project.hasProperty("nativeAuthSSPRTestsUsernameValue")) {
-        nativeAuthSSPRTestsUsername = nativeAuthSSPRTestsUsernameValue
-    }
-
-    if (project.hasProperty("nativeAuthLabsEmailPasswordAppIdValue")) {
-        nativeAuthLabsEmailPasswordAppId = nativeAuthLabsEmailPasswordAppIdValue
-    }
-
-    if (project.hasProperty("nativeAuthLabsAuthorityUrlValue")) {
-        nativeAuthLabsAuthorityUrl = nativeAuthLabsAuthorityUrlValue
-    }
-
-    if (project.hasProperty("nativeAuthEmailOTPNoAttributes")) {
-        nativeAuthEmailOTPNoAttributes = nativeAuthEmailOTPNoAttributes
+    if (project.hasProperty("NativeAuthTestConfig")) {
+        nativeAuthTestConfig = nativeAuthTestConfig
     }
 
     defaultConfig {
@@ -85,11 +65,7 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "LAB_CLIENT_SECRET", "\"$labClientSecret\"")
-        buildConfigField("String", "NATIVE_AUTH_SIGNIN_TEST_USERNAME", "\"$nativeAuthSignInTestsUsername\"")
-        buildConfigField("String", "NATIVE_AUTH_SSPR_TEST_USERNAME", "\"$nativeAuthSSPRTestsUsername\"")
-        buildConfigField("String", "NATIVE_AUTH_LABS_EMAIL_PW_APP_ID", "\"$nativeAuthLabsEmailPasswordAppId\"")
-        buildConfigField("String", "NATIVE_AUTH_LABS_AUTHORITY_URL", "\"$nativeAuthLabsAuthorityUrl\"")
-        buildConfigField("String", "CONFIG_EMAIL_OTP_NO_ATTRIBUTES", "\"$nativeAuthEmailOTPNoAttributes\"")
+        buildConfigField("String", "NATIVE_AUTH_TEST_CONFIG", "\"$nativeAuthTestConfig\"")
         buildConfigField("String", "RUN_ID", "\"$runId\"")
         buildConfigField("boolean", "SAVE_TEST_RESULTS_TO_CSV", "$saveTestResultsToCsv")
 
