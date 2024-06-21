@@ -60,11 +60,9 @@ import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightManager;
 import com.microsoft.identity.common.java.platform.Device;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.util.ClientExtraSkuAdapter;
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Arrays;
@@ -79,6 +77,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 
 /**
  * Authorization fragment with embedded webview.
@@ -459,22 +459,28 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     requestHeaders = new HashMap<>();
                 }
                 requestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_VALUE);
-//                requestHeaders.put(com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRAS, );
             }
-//            if (request instanceof MicrosoftTokenRequest &&
-//                    !StringUtil.isNullOrEmpty(((MicrosoftTokenRequest) request).getBrokerVersion())) {
-//
-//                // Attach client extras header for ESTS telemetry. Only done for broker requests
-//                final ClientExtraSkuAdapter clientExtraAdapter = ClientExtraSkuAdapter.builder()
-//                        .srcSku(product)
-//                        .srcSkuVer(productVersion)
-//                        .build();
-//                headers.put(com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRAS, clientExtraAdapter.toString());
-//            }
+
+            // Attach client extras header for ESTS telemetry. Only done for broker requests
+            if (checkIfBrokerRequest(this.mAuthorizationRequestUrl)) {
+                final ClientExtraSkuAdapter clientExtraAdapter = ClientExtraSkuAdapter.builder()
+                        .srcSku(state.getString(PRODUCT))
+                        .srcSkuVer(state.getString(VERSION))
+                        .build();
+                requestHeaders.put(com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRAS, clientExtraAdapter.toString());
+            }
             return requestHeaders;
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * Helper method to check if the authorization request is being made through broker.
+     * Done by checking for broker version key in the url
+     */
+    private boolean checkIfBrokerRequest(final String authorizationUrl) {
+        return authorizationUrl.contains(Device.PlatformIdParameters.BROKER_VERSION);
     }
 
     class AuthorizationCompletionCallback implements IAuthorizationCompletionCallback {

@@ -45,6 +45,8 @@ import com.microsoft.identity.common.logging.Logger;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
 
 /**
@@ -155,17 +157,19 @@ public abstract class AuthorizationFragment extends Fragment {
      * @param state a bundle containing data provided when the activity was created
      */
     void extractState(@NonNull final Bundle state) {
-        setDiagnosticContextForNewThread(state.getString(DiagnosticContext.CORRELATION_ID));
+        setDiagnosticContextForNewThread(state.getString(DiagnosticContext.CORRELATION_ID), state.getString(PRODUCT), state.getString(VERSION));
     }
 
     /**
      * When authorization fragment is launched.  It will be launched on a new thread. (TODO: verify this)
      * Initialize based on value provided in intent.
      */
-    private static void setDiagnosticContextForNewThread(final String correlationId) {
+    private static void setDiagnosticContextForNewThread(final String correlationId, final String product, final String productVersion) {
         final String methodTag = TAG + ":setDiagnosticContextForAuthorizationActivity";
         final RequestContext rc = new RequestContext();
         rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
+        rc.put(PRODUCT, product);
+        rc.put(VERSION, productVersion);
         DiagnosticContext.INSTANCE.setRequestContext(rc);
         Logger.verbose(
                 methodTag,

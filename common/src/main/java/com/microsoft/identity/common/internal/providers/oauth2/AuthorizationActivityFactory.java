@@ -49,6 +49,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 import static com.microsoft.identity.common.java.logging.DiagnosticContext.CORRELATION_ID;
 
 /**
@@ -77,7 +79,35 @@ public class AuthorizationActivityFactory {
                                                         final AuthorizationAgent authorizationAgent,
                                                         final boolean webViewZoomEnabled,
                                                         final boolean webViewZoomControlsEnabled) {
-        Intent intent;
+        return getAuthorizationActivityIntent(context, authIntent, requestUrl, redirectUri, requestHeaders, authorizationAgent, webViewZoomEnabled, webViewZoomControlsEnabled, null, null);
+    }
+
+    /**
+     * Return the correct authorization activity based on library configuration.
+     *
+     * @param context                    Android application context
+     * @param authIntent                 Android intent used by the authorization activity to launch the specific implementation of authorization (BROWSER, EMBEDDED)
+     * @param requestUrl                 The authorization request in URL format
+     * @param redirectUri                The expected redirect URI associated with the authorization request
+     * @param requestHeaders             Additional HTTP headers included with the authorization request
+     * @param authorizationAgent         The means by which authorization should be performed (EMBEDDED, WEBVIEW) NOTE: This should move to library configuration
+     * @param webViewZoomEnabled         This parameter is specific to embedded and controls whether webview zoom is enabled... NOTE: Needs refactoring
+     * @param webViewZoomControlsEnabled This parameter is specific to embedded and controls whether webview zoom controls are enabled... NOTE: Needs refactoring
+     * @param product                    Product name to be of library making the request
+     * @param productVersion             Product version to be of library making the request
+     * @return An android Intent which will be used by Android to create an AuthorizationActivity
+     */
+    public static Intent getAuthorizationActivityIntent(final Context context,
+                                                        final Intent authIntent,
+                                                        final String requestUrl,
+                                                        final String redirectUri,
+                                                        final HashMap<String, String> requestHeaders,
+                                                        final AuthorizationAgent authorizationAgent,
+                                                        final boolean webViewZoomEnabled,
+                                                        final boolean webViewZoomControlsEnabled,
+                                                        final String product,
+                                                        final String productVersion) {
+        final Intent intent;
         final LibraryConfiguration libraryConfig = LibraryConfiguration.getInstance();
         if (ProcessUtil.isBrokerProcess(context)) {
             intent = new Intent(context, BrokerAuthorizationActivity.class);
@@ -99,6 +129,12 @@ public class AuthorizationActivityFactory {
         intent.putExtra(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         intent.putExtra(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
         intent.putExtra(CORRELATION_ID, DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+        if (product != null) {
+            intent.putExtra(PRODUCT, product);
+        }
+        if (productVersion != null) {
+            intent.putExtra(VERSION, productVersion);
+        }
         intent.putExtra(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT, new CommonMoshiJsonAdapter().toJson(
                 SerializableSpanContext.builder()
                         .traceId(SpanExtension.current().getSpanContext().getTraceId())
