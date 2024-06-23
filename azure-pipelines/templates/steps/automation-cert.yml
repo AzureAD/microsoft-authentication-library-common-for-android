@@ -54,10 +54,9 @@ steps:
     ScriptType: 'InlineScript'
     Inline: |
         $secretValue = Get-AzKeyVaultSecret -VaultName 'native-auth-secret' -Name 'EmailOTPNoAttributes' -AsPlainText
-        $config = $secretValue | ConvertFrom-Json
         
         # Set pipeline variables
-        Write-Host "##vso[task.setvariable variable=native_auth_test_config]$config"
+        Write-Host "##vso[task.setvariable variable=native_auth_test_config]$secretValue"
     failOnStderr: true
 - script: |
     echo "Native Auth Config: $(native_auth_test_config)"
