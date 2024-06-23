@@ -55,13 +55,13 @@ steps:
       $secret = Get-AzKeyVaultSecret -VaultName "native-auth-secret" -Name "EmailOTPNoAttributes"
       
       if ($secret) {
-        $secretValue = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($secret.SecretValueText))
+        $secretValue = ConvertFrom-SecureString -SecureString $secret.SecretValue -AsPlainText
       
         Write-Host "##vso[task.setvariable variable=native_auth_test_config]$secretValue"
       }
       else {
-        Write-Host "Failed to retrieve secret '$(secretName)' from Key Vault '$(keyVaultName)'."
+        Write-Host "Failed to retrieve secret value from Key Vault."
         exit 1
       }
-    azurePowerShellVersion: '3.0.0'
+    azurePowerShellVersion: 'LatestVersion'
     failOnStderr: true
