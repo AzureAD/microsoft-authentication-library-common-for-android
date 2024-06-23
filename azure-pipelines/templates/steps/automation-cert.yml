@@ -50,6 +50,7 @@ steps:
   displayName: Fetch Native Auth Test Config
   inputs:
     azureSubscription: 'Use Personal Tenant For Test'
+    azurePowerShellVersion: 'LatestVersion'
     ScriptType: 'InlineScript'
     Inline: |
         $secretValue = Get-AzKeyVaultSecret -VaultName 'native-auth-secret' -Name 'EmailOTPNoAttributes' -AsPlainText
