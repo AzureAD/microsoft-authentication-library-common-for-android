@@ -102,7 +102,6 @@ public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthServic
                 final Intent accountTransferIntent = microsoftAuthService.getIntentForAccountTransferInteractiveRequest();
                 final Bundle accountTransferBundle = accountTransferIntent.getExtras();
 
-                //older brokers (pre-ContentProvider) are ONLY sending these values in the intent itself.
                 if (accountTransferIntent.getComponent() != null &&
                         !TextUtils.isEmpty(accountTransferIntent.getPackage()) &&
                         !TextUtils.isEmpty(accountTransferIntent.getComponent().getClassName())){
