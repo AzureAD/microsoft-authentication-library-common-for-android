@@ -53,7 +53,7 @@ android {
 
     def nativeAuthTestConfig = "" // will be blank unless specified by developer
 
-    if (project.hasProperty("NativeAuthTestConfig")) {
+    if (project.hasProperty("nativeAuthTestConfig")) {
         nativeAuthTestConfig = nativeAuthTestConfig
     }
 
