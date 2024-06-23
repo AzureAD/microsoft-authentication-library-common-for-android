@@ -70,12 +70,6 @@ class SignInTokenApiResponse(
      * @see com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
      */
     fun toErrorResult(): SignInTokenApiResult {
-        LogSession.logMethodCall(
-            tag = TAG,
-            correlationId = null,
-            methodName = "${TAG}.toResult"
-        )
-
         if (error.isInvalidRequest()) {
             return when {
                 errorCodes.isNullOrEmpty() -> {

@@ -74,12 +74,6 @@ class SignUpStartApiResponse(
     }
 
     fun toResult(): SignUpStartApiResult {
-        LogSession.logMethodCall(
-            tag = TAG,
-            correlationId = null,
-            methodName = "${TAG}.toResult"
-        )
-
         return when (statusCode) {
 
             // Handle 400 errors

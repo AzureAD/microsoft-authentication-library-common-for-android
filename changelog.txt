@@ -1,6 +1,14 @@
 V.Next
 ---------
 - [MAJOR] Support a new API Path for Account Transfer in Broker (#2375)
+- [PATCH] Adding check for OS version for passkeys (#2419)
+- [MINOR] Platform Specific Extra Query Parameters (#2426)
+- [MINOR] Support certificate with password (#2405)
+
+Version 17.5.0
+---------
+- [MINOR] Update logic for matching requested claims for AT (#2401)
+- [MINOR] Updating YubiKit and CredMan versions (#2417)
 
 Version 17.4.0
 ---------
@@ -8,6 +16,7 @@ Version 17.4.0
 - [MINOR] Update flow to get token for labapi to not require automationrunnerapp (#2376)
 - [MINOR] Add field in BrokerInteractiveTokenCommandParameters for ATv2. (#2363)
 - [PATCH] Safe logging of Kotlin data classes through ILoggable interface (#2384)
+- [MINOR] Support for multiple access tokens for NativeAuth. (#2390)
 
 Version 17.3.0
 ---------

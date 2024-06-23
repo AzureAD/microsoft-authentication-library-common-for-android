@@ -140,7 +140,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Obtain an instance of the UiObject for the given text.
+     * Obtain an instance of the UiObject for the given class and description.
      *
      * @param description the content description of the element to obtain
      * @return the UiObject associated to the supplied text
@@ -149,6 +149,18 @@ public class UiAutomatorUtils {
                                                                  @NonNull final String description) {
         Logger.i(TAG, "Obtain an instance of the UiObject with description:" + description + " and class name:" + clazz);
         return obtainUiObjectWithUiSelector(new UiSelector().className(clazz).descriptionContains(description),
+                FIND_UI_ELEMENT_TIMEOUT);
+    }
+
+    /**
+     * Obtain an instance of the UiObject for the class.
+     *
+     * @param clazz the class name of the element to obtain
+     * @return the UiObject associated to the supplied text
+     */
+    public static UiObject obtainUiObjectWithClass(@NonNull final String clazz) {
+        Logger.i(TAG, "Obtain an instance of the UiObject with class name:" + clazz);
+        return obtainUiObjectWithUiSelector(new UiSelector().className(clazz),
                 FIND_UI_ELEMENT_TIMEOUT);
     }
 
@@ -284,10 +296,28 @@ public class UiAutomatorUtils {
      */
     public static void handleInput(@NonNull final String resourceId,
                                    @NonNull final String inputText,
-                                   final long inputTimeout
-    ) {
+                                   final long inputTimeout) {
         Logger.i(TAG, "Handling input for resource id: " + resourceId);
         final UiObject inputField = obtainUiObjectWithResourceId(resourceId, inputTimeout);
+
+        try {
+            inputField.setText(inputText);
+            closeKeyboardIfNeeded();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    /**
+     * Fills the supplied text into the input element of a given class.
+     *
+     * @param clazz classname of the object to give input
+     * @param inputText  the text to enter
+     */
+    public static void handleInputByClass(@NonNull final String clazz,
+                                   @NonNull final String inputText) {
+        Logger.i(TAG, "Handling input for class: " + clazz);
+        final UiObject inputField = obtainUiObjectWithClass(clazz);
 
         try {
             inputField.setText(inputText);

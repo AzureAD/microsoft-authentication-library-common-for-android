@@ -40,7 +40,7 @@ import lombok.NonNull;
  * A an authentication client that can acquire access tokens for the Microsoft Identity Lab Api.
  */
 public class LabApiAuthenticationClient implements IAccessTokenSupplier {
-    private final static String SCOPE = "https://msidlab.com/.default";
+    private final static String SCOPE = "https://request.msidlab.com/.default";
     private final static String TENANT_ID = "72f988bf-86f1-41af-91ab-2d7cd011db47";
     private final static String AUTHORITY = "https://login.microsoftonline.com/" + TENANT_ID;
     private final static String CLIENT_ID = "f62c5ae3-bf3a-4af5-afa8-a68b800396e9";
@@ -48,9 +48,15 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
     private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
     private final static String CERTIFICATE_ALIAS = "LabVaultAccessCert";
     private final String mLabCredential;
+    private final String mLabCertPassword;
 
     public LabApiAuthenticationClient(@NonNull final String labSecret) {
+        this(labSecret, null);
+    }
+
+    public LabApiAuthenticationClient(@NonNull final String labSecret, final String labCertPassword) {
         mLabCredential = labSecret;
+        mLabCertPassword = labCertPassword;
     }
 
     @Override
@@ -66,7 +72,8 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
         if (mLabCredential != null && mLabCredential.trim().length() > 0) {
             if(mLabCredential.endsWith(".pfx")) {
                 try (final InputStream inputStream = new FileInputStream(mLabCredential)) {
-                    authenticationResult = confidentialAuthClient.acquireToken(inputStream, "", tokenParameters);
+                    final String certPass = mLabCertPassword == null ? "" : mLabCertPassword;
+                    authenticationResult = confidentialAuthClient.acquireToken(inputStream, certPass, tokenParameters);
                 } catch (final IOException e) {
                     throw new LabApiException(LabError.FAILED_TO_LOAD_CERTIFICATE);
                 }
