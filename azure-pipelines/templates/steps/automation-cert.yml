@@ -50,14 +50,9 @@ steps:
   displayName: Fetch Native Auth Test Config
   inputs:
     azureSubscription: 'Use Personal Tenant For Test'
-    azurePowerShellVersion: 'LatestVersion'
+    azurePowerShellVersion: '3.0.0'
     ScriptType: 'InlineScript'
     Inline: |
-        $secretValue = Get-AzKeyVaultSecret -VaultName 'native-auth-secret' -Name 'EmailOTPNoAttributes' -AsPlainText
-        
-        # Set pipeline variables
+        $secretValue = Get-AzKeyVaultSecret -VaultName "$(keyVaultName)" -Name "$(secretName)" -AsPlainText
         Write-Host "##vso[task.setvariable variable=native_auth_test_config]$secretValue"
     failOnStderr: true
-- script: |
-    echo "Native Auth Config: $(native_auth_test_config)"
-    displayName: 'Print Variables'
