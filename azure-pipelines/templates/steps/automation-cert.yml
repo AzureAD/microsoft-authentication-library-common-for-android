@@ -57,7 +57,7 @@ steps:
         
         # Set pipeline variables
         Write-Host "##vso[task.setvariable variable=native_auth_test_config]$config"
-      failOnStderr: true
+    failOnStderr: true
 - script: |
     echo "Native Auth Config: $(native_auth_test_config)"
     displayName: 'Print Variables'
