@@ -50,9 +50,18 @@ steps:
   displayName: Fetch Native Auth Test Config
   inputs:
     azureSubscription: 'Use Personal Tenant For Test'
-    azurePowerShellVersion: '3.0.0'
     ScriptType: 'InlineScript'
     Inline: |
-        $secretValue = Get-AzKeyVaultSecret -VaultName 'native-auth-secret' -Name 'EmailOTPNoAttributes' -AsPlainText
+      $secret = Get-AzKeyVaultSecret -VaultName "native-auth-secret" -Name "EmailOTPNoAttributes"
+      
+      if ($secret) {
+        $secretValue = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($secret.SecretValueText))
+      
         Write-Host "##vso[task.setvariable variable=native_auth_test_config]$secretValue"
+      }
+      else {
+        Write-Host "Failed to retrieve secret '$(secretName)' from Key Vault '$(keyVaultName)'."
+        exit 1
+      }
+    azurePowerShellVersion: '3.0.0'
     failOnStderr: true
