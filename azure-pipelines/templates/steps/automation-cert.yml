@@ -27,8 +27,8 @@ steps:
 - task: PowerShell@2
   displayName: Install Automation Cert
   inputs:
-    targetType: inline
-    script: >
+    ScriptType: 'InlineScript'
+    Inline: |
       $kvSecretBytes = [System.Convert]::FromBase64String('$(LabVaultAccessCert)')
 
       $certCollection = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
@@ -52,7 +52,7 @@ steps:
       }    
       
       Write-Host "##vso[task.setvariable variable=LabVaultAppCert]$certPathVar"
-- task: PowerShell@2
+- task: AzurePowerShell@5
   displayName: Fetch Native Auth Test Config
   inputs:
       targetType: 'inline'
@@ -63,6 +63,7 @@ steps:
         # Set pipeline variables
         Write-Host "##vso[task.setvariable variable=native_auth_test_config]$config"
       failOnStderr: true
+
 - script: |
     echo "Native Auth Config: $(native_auth_test_config)"
     displayName: 'Print Variables'
