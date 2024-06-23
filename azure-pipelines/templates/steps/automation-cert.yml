@@ -4,6 +4,11 @@ parameters:
 - name: envVstsMvnAt
   default: ENV_VSTS_MVN_ANDROIDADACCOUNTS_ACCESSTOKEN
 
+variables:
+  azureSubscription: 'Use Personal Tenant For Test'
+  keyVaultName: 'native-auth-secret'
+  secretName: 'EmailOTPNoAttributes'
+
 steps:
 - task: CmdLine@1
   displayName: Set MVN Access Token in Environment
@@ -18,12 +23,6 @@ steps:
     #setting secrets filter to fetch only MSIDLABCertificate cert from the vault
     SecretsFilter: 'LabVaultAccessCert' # string. Required. Specifies the secret to download. Use '*' for all secrets.
     #RunAsPreJob: false # boolean. Make secrets available to whole job. Default: false.
-- task: AzureKeyVault@2
-  displayName: 'Azure Key Vault: Download Cert for Automation'
-  inputs:
-    azureSubscription: 'Use Personal Tenant For Test'
-    KeyVaultName: 'native-auth-secret'
-    SecretsFilter: 'EmailOTPNoAttributes'
 - task: PowerShell@2
   displayName: Install Automation Cert
   inputs:
@@ -51,4 +50,18 @@ steps:
         Write-Error "Failed to create PFX file at $certPathVar"
       }    
       
-      Write-Host "##vso[task.setvariable variable=LabVaultAppCert]$certPathVar"     
+      Write-Host "##vso[task.setvariable variable=LabVaultAppCert]$certPathVar"
+- task: PowerShell@2
+  displayName: Fetch Native Auth Test Config
+  inputs:
+      targetType: 'inline'
+      script: |
+        $secretValue = Get-AzKeyVaultSecret -VaultName "$(keyVaultName)" -Name "$(secretName)" -AsPlainText
+        $config = $secretValue | ConvertFrom-Json
+        
+        # Set pipeline variables
+        Write-Host "##vso[task.setvariable variable=native_auth_test_config]$config"
+      failOnStderr: true
+- script: |
+    echo "Client ID: $(native_auth_test_config)"
+    displayName: 'Print Variables'
