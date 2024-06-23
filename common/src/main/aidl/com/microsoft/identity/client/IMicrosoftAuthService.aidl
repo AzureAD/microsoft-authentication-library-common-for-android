@@ -38,8 +38,6 @@ interface IMicrosoftAuthService {
 
     Intent getIntentForInteractiveRequest();
 
-    Intent getIntentForAccountTransferInteractiveRequest();
-
     Bundle removeAccount(in Bundle bundle);
 
     Bundle getDeviceMode();
@@ -49,4 +47,6 @@ interface IMicrosoftAuthService {
     Bundle removeAccountFromSharedDevice(in Bundle bundle);
 
     Bundle generateSignedHttpRequest(in Bundle bundle);
+
+    Intent getIntentForAccountTransferInteractiveRequest();
 }
