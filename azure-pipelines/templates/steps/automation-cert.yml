@@ -55,8 +55,7 @@ steps:
       $secret = Get-AzKeyVaultSecret -VaultName "native-auth-secret" -Name "EmailOTPNoAttributes"
       
       if ($secret) {
-        $secureString = ConvertFrom-SecureString -SecureString $secret.SecretValue
-        $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureString)
+        $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secret.SecretValue)
         $plaintext = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
       
         Write-Host "##vso[task.setvariable variable=native_auth_test_config]$plaintext"
