@@ -152,7 +152,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testSignUpStartWithUnsetCorrelationIdShouldHaveNilHeader() {
+    fun testSignUpStartWithUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = SignUpStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
@@ -213,7 +213,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testSignUpSubmitCodeWithUnsetCorrelationIdShouldHaveNilHeader() {
+    fun testSignUpSubmitCodeWithUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = SignUpSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
@@ -251,7 +251,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testSignUpSubmitPasswordWithUnsetCorrelationIdShouldHaveNilHeader() {
+    fun testSignUpSubmitPasswordWithUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = SignUpSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
@@ -289,7 +289,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testSignUpSubmitUserAttributesWithUnsetCorrelationIdShouldHaveNilHeader() {
+    fun testSignUpSubmitUserAttributesWithUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = SignUpSubmitUserAttributesCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
@@ -385,7 +385,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testSignUpChallengeWithUnsetCorrelationIdShouldHaveNilHeader() {
+    fun testSignUpChallengeWithUnsetCorrelationIdShouldNotHaveHeader() {
         val result = nativeAuthRequestProvider.createSignUpChallengeRequest(
             continuationToken = continuationToken,
             correlationId = "UNSET"
@@ -437,7 +437,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testSignInInitiateWithUnsetCorrelationIdShouldHaveNilHeader() {
+    fun testSignInInitiateWithUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = SignInStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(emptyString)
@@ -529,7 +529,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testSignInChallengeWithUnsetCorrelationIdShouldHaveNilHeader() {
+    fun testSignInChallengeWithUnsetCorrelationIdShouldNotHaveHeader() {
         val result = nativeAuthRequestProvider.createSignInChallengeRequest(
             continuationToken = continuationToken,
             correlationId = "UNSET"
@@ -614,7 +614,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testSignInTokenWithContinuationTokenUnsetCorrelationIdShouldHaveNilHeader() {
+    fun testSignInTokenWithContinuationTokenUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = SignInWithContinuationTokenCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
@@ -720,7 +720,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testPasswordTokenRequestWithUnsetCorrelationIdShouldHaveNilHeader() {
+    fun testPasswordTokenRequestWithUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = SignInSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .password(password)
@@ -828,7 +828,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testResetPasswordStartWithUnsetCorrelationIdShouldHaveNilHeader() {
+    fun testResetPasswordStartWithUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = ResetPasswordStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
@@ -881,7 +881,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testResetPasswordChallengeWithUnsetCorrelationIdShouldHaveNilHeader() {
+    fun testResetPasswordChallengeWithUnsetCorrelationIdShouldNotHaveHeader() {
         val result = nativeAuthRequestProvider.createResetPasswordChallengeRequest(
             continuationToken = continuationToken,
             correlationId = "UNSET"
@@ -948,7 +948,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testResetPasswordContinueWithUnsetCorrelationIdShouldHaveNilHeader() {
+    fun testResetPasswordContinueWithUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = ResetPasswordSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .code(oobCode)
@@ -1027,7 +1027,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testResetPasswordSubmitWithUnsetCorrelationIdShouldHaveNilHeader() {
+    fun testResetPasswordSubmitWithUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = ResetPasswordSubmitNewPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
@@ -1080,7 +1080,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testResetPasswordPollCompletionWithUnsetCorrelationIdShouldHaveNilHeader() {
+    fun testResetPasswordPollCompletionWithUnsetCorrelationIdShouldNotHaveHeader() {
         val result = nativeAuthRequestProvider.createResetPasswordPollCompletionRequest(
             continuationToken = continuationToken,
             correlationId = "UNSET"
