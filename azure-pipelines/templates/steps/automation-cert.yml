@@ -68,7 +68,7 @@ steps:
           Write-Error "Failed to create JSON file at $jsonPathVar"
         }    
       
-        Write-Host "##vso[task.setvariable variable=native_auth_test_config]$jsonPathVar"
+        Write-Host "##vso[task.setvariable variable=native_auth_test_config]$jsonPath"
       }
       else {
         Write-Host "Failed to retrieve secret value from Key Vault."
