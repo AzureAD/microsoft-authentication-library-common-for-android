@@ -2,6 +2,7 @@ V.Next
 ---------
 - [PATCH] Adding check for OS version for passkeys (#2419)
 - [MINOR] Platform Specific Extra Query Parameters (#2426)
+- [PATCH] Return API error and errorDescription in case of unexpected response (#2431)
 - [MINOR] Support certificate with password (#2405)
 - [PATCH] Return API error and errorDescription in case of unexpected response (#2431)
 
