@@ -55,19 +55,17 @@ steps:
       $secret = Get-AzKeyVaultSecret -VaultName "native-auth-secret" -Name "EmailOTPNoAttributes"
       
       if ($secret) {
-        $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secret.SecretValue)
-        $plaintext = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
-        $jsonFile = ConvertFrom-Json $plaintext
-        $jsonPath = '$(Build.SourcesDirectory)' + "\NativeAuthTestConfig.json"
+        $secretValue = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secret.SecretValue))
       
-        [System.IO.File]::WriteAllBytes($jsonPath, $jsonFile)
+        $jsonPath = '$(Build.SourcesDirectory)' + "\NativeAuthTestConfig.json"
+        $secretValue | Out-File -FilePath $jsonPath -Encoding utf8
       
         $jsonPathVar = $jsonPath -replace "\\", "/"
       
         if([System.IO.File]::Exists($jsonPath)) {
           Write-Host "PFX file created successfully at $jsonPathVar"
         } else {
-          Write-Error "Failed to create PFX file at $jsonPathVar"
+          Write-Error "Failed to create JSON file at $jsonPathVar"
         }    
       
         Write-Host "##vso[task.setvariable variable=native_auth_test_config]$jsonPathVar"
