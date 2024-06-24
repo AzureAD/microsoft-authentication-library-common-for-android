@@ -1,10 +1,14 @@
 V.Next
 ---------
-- [MINOR] Update logic for matching requested claims for AT (#2401)
-- [MINOR] Updating YubiKit and CredMan versions (#2417)
 - [PATCH] Adding check for OS version for passkeys (#2419)
 - [MINOR] Platform Specific Extra Query Parameters (#2426)
+- [MINOR] Support certificate with password (#2405)
 - [PATCH] Return API error and errorDescription in case of unexpected response (#2431)
+
+Version 17.5.0
+---------
+- [MINOR] Update logic for matching requested claims for AT (#2401)
+- [MINOR] Updating YubiKit and CredMan versions (#2417)
 
 Version 17.4.0
 ---------
