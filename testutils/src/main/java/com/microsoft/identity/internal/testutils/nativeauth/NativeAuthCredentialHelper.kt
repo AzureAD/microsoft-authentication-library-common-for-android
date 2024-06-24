@@ -10,16 +10,17 @@ import java.io.File
 object NativeAuthCredentialHelper {
     val nativeAuthTestConfig:  NativeAuthTestConfig
         get() {
-            val configs = readJsonFile()
-            return if (StringUtil.isNullOrEmpty(configs)) {
+            val filePath = BuildConfig.NATIVE_AUTH_TEST_CONFIG
+            return if (StringUtil.isNullOrEmpty(filePath)) {
                 throw IllegalStateException("env var NATIVE_AUTH_CONFIG value not set")
             } else {
+                val configs = readJsonFile(filePath)
                 val type = object : TypeToken<Map<String, NativeAuthTestConfig.Config>>() {}.type
                 Gson().fromJson(configs, type)
             }
         }
 
-    private fun readJsonFile(): String {
-        return File(BuildConfig.NATIVE_AUTH_TEST_CONFIG).readText(Charsets.UTF_8)
+    private fun readJsonFile(filePath: String): String {
+        return File(filePath).readText(Charsets.UTF_8)
     }
 }

@@ -63,12 +63,12 @@ steps:
         $jsonPathVar = $jsonPath -replace "\\", "/"
       
         if([System.IO.File]::Exists($jsonPath)) {
-          Write-Host "PFX file created successfully at $jsonPathVar"
+          Write-Host "JSON file created successfully at $jsonPathVar"
         } else {
           Write-Error "Failed to create JSON file at $jsonPathVar"
         }    
       
-        Write-Host "##vso[task.setvariable variable=native_auth_test_config]$jsonPath"
+        Write-Host "##vso[task.setvariable variable=native_auth_test_config]$jsonPathVar"
       }
       else {
         Write-Host "Failed to retrieve secret value from Key Vault."
