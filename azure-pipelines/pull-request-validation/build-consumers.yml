@@ -147,7 +147,7 @@ stages:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     pool:
-      name: 1ES-AndroidPool-EOC-Test
+      name: 1ES-AndroidPool-EOC
     steps:
     - checkout: broker
       displayName: Checkout broker repository
