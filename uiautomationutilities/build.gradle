@@ -207,6 +207,7 @@ dependencies {
     implementation(project(":LabApiUtilities"))
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation project(path: ':common4j')
+    implementation 'com.google.android.gms:play-services-base:18.1.0'
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     androidTestImplementation "androidx.test:runner:$rootProject.ext.androidxTestRunnerVersion"

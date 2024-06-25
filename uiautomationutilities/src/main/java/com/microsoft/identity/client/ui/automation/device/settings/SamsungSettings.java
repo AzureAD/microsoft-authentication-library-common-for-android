@@ -38,6 +38,8 @@ import java.util.Calendar;
 
 import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
 
+import android.app.Activity;
+
 /**
  * A model representing the Settings app on a Samsung device. Please note that this class is
  * currently optimized for a Samsung Galaxy S6 device.
@@ -229,7 +231,7 @@ public class SamsungSettings extends BaseSettings {
     }
 
     @Override
-    public void enableGoogleAccountBackup() {
+    public void enableGoogleAccountBackup(Activity activity) {
         throw new UnsupportedOperationException("We do not support enabling apps through Settings Page on samsung devices");
     }
 }

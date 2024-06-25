@@ -29,8 +29,13 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
+
+import android.app.Activity;
+import android.content.Context;
 import android.provider.Settings;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
@@ -48,6 +53,7 @@ import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils
 import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
 
 import android.content.Intent;
+import android.widget.Toast;
 
 /**
  * A model representing the Settings app on a Google device. Please note that this class is
@@ -56,6 +62,7 @@ import android.content.Intent;
 public class GoogleSettings extends BaseSettings {
 
     private final static String TAG = GoogleSettings.class.getSimpleName();
+    private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
 
     @Override
     public void disableAdmin(@NonNull final DeviceAdmin deviceAdmin) {
@@ -369,9 +376,10 @@ public class GoogleSettings extends BaseSettings {
     }
 
     @Override
-    public void enableGoogleAccountBackup() throws UiObjectNotFoundException {
+    public void enableGoogleAccountBackup(Activity activity) throws UiObjectNotFoundException {
         Logger.i(TAG, "Enabling google account backup through settings");
-        //launchAccountListPage();
+        launchAccountListPage();
+        checkGooglePlayServices(activity);
         // Scroll to and click on "System"
         // Start from the home screen
 //        UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
@@ -397,22 +405,39 @@ public class GoogleSettings extends BaseSettings {
 //
 //        // Verification (optional)
 //        assert(backupToggle.isChecked());
-        launchIntent(Settings.ACTION_SETTINGS);
-        //        // Scroll to and click on "System"
-        UiScrollable settingsList = new UiScrollable(new UiSelector().scrollable(true));
-        UiObject systemOption = settingsList.getChildByText(new UiSelector().text("System"), "System");
-        systemOption.clickAndWaitForNewWindow();
-        UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-        // Click on "Backup"
-        UiObject backupOption = device.findObject(new UiSelector().text("Backup"));
-        backupOption.clickAndWaitForNewWindow();
+//        launchIntent(Settings.ACTION_SETTINGS);
+//        //        // Scroll to and click on "System"
+//        UiScrollable settingsList = new UiScrollable(new UiSelector().scrollable(true));
+//        UiObject systemOption = settingsList.getChildByText(new UiSelector().text("System"), "System");
+//        systemOption.clickAndWaitForNewWindow();
+//        UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+//        // Click on "Backup"
+//        UiObject backupOption = device.findObject(new UiSelector().text("Backup"));
+//        backupOption.clickAndWaitForNewWindow();
+//
+//        // Enable "Back up to Google Drive"
+//        UiObject backupToggle = device.findObject(new UiSelector().resourceId("android:id/switchWidget"));
+//        if (!backupToggle.isChecked()) {
+//            backupToggle.click();
+//        }
 
-        // Enable "Back up to Google Drive"
-        UiObject backupToggle = device.findObject(new UiSelector().resourceId("android:id/switchWidget"));
-        if (!backupToggle.isChecked()) {
-            backupToggle.click();
+    }
+
+    public boolean checkGooglePlayServices(Activity activity) {
+        GoogleApiAvailability googleApiAvailability = GoogleApiAvailability.getInstance();
+        int resultCode = googleApiAvailability.isGooglePlayServicesAvailable(activity);
+
+        if (resultCode != ConnectionResult.SUCCESS) {
+            if (googleApiAvailability.isUserResolvableError(resultCode)) {
+                googleApiAvailability.getErrorDialog(activity, resultCode, PLAY_SERVICES_RESOLUTION_REQUEST).show();
+            } else {
+                Toast.makeText(activity, "This device is not supported.", Toast.LENGTH_LONG).show();
+            }
+            Assert.fail();
+            return false;
         }
 
+        return true;
     }
 }
 

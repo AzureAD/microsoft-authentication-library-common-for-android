@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.device.settings;
 
+import android.app.Activity;
+
 import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 
@@ -143,5 +145,5 @@ public interface ISettings {
      */
     public void enableAppThroughSettings(@NonNull final String packageName);
 
-    public void enableGoogleAccountBackup() throws UiObjectNotFoundException;
+    public void enableGoogleAccountBackup(Activity activity) throws UiObjectNotFoundException;
 }
