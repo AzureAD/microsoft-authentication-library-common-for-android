@@ -1,6 +1,7 @@
 V.Next
 ---------
 - [MINOR] Fix AccountManager Strategy (#2427)
+- [MINOR] Add MessageDigest to ICryptoFactory (#2423)
 - [PATCH] Adding check for OS version for passkeys (#2419)
 - [MINOR] Platform Specific Extra Query Parameters (#2426)
 - [MINOR] Support certificate with password (#2405)
