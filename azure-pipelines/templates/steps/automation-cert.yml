@@ -52,23 +52,12 @@ steps:
     azureSubscription: 'Use Personal Tenant For Test'
     ScriptType: 'InlineScript'
     Inline: |
-      $secret = Get-AzKeyVaultSecret -VaultName "native-auth-secret" -Name "EmailOTPNoAttributes"
+      $secret = Get-AzKeyVaultSecret -VaultName "buildautomation" -Name "msalandroidnativeauthautomationconfjsonfile"
       
       if ($secret) {
         $secretValue = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secret.SecretValue))
       
-        $jsonPath = '$(Build.SourcesDirectory)' + "\NativeAuthTestConfig.json"
-        $secretValue | Out-File -FilePath $jsonPath -Encoding utf8
-      
-        $jsonPathVar = $jsonPath -replace "\\", "/"
-      
-        if([System.IO.File]::Exists($jsonPath)) {
-          Write-Host "JSON file created successfully at $jsonPathVar"
-        } else {
-          Write-Error "Failed to create JSON file at $jsonPathVar"
-        }    
-      
-        Write-Host "##vso[task.setvariable variable=native_auth_test_config]$jsonPathVar"
+        Write-Host "Successfully retrieved secret value from Key Vault $secretValue"
       }
       else {
         Write-Host "Failed to retrieve secret value from Key Vault."

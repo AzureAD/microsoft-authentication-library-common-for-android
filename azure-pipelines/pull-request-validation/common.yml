@@ -57,7 +57,7 @@ jobs:
     inputs:
       javaHomeSelection: JDKVersion
       jdkVersionOption: "1.11"
-      tasks: common:testLocalDebugUnitTest -PlabSecret=$(LabVaultAppCert) -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthTestConfig=$(native_auth_test_config)
+      tasks: common:testLocalDebugUnitTest -PlabSecret=$(LabVaultAppCert) -PmockApiUrl=$(MOCK_API_URL)
   - task: Gradle@3
     displayName: Check Dependencies size
     condition: eq(variables['system.pullRequest.targetBranch'], 'dev')

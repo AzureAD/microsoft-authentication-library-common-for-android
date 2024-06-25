@@ -51,12 +51,6 @@ android {
         saveTestResultsToCsv = getBoolean(writeTestResultsToCsv);
     }
 
-    def nativeAuthTestConfig = "" // will be blank unless specified by developer
-
-    if (project.hasProperty("nativeAuthTestConfig")) {
-        nativeAuthTestConfig = nativeAuthTestConfig
-    }
-
     defaultConfig {
         multiDexEnabled true
         minSdkVersion rootProject.ext.minSdkVersion
@@ -65,7 +59,6 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "LAB_CLIENT_SECRET", "\"$labClientSecret\"")
-        buildConfigField("String", "NATIVE_AUTH_TEST_CONFIG", "\"$nativeAuthTestConfig\"")
         buildConfigField("String", "RUN_ID", "\"$runId\"")
         buildConfigField("boolean", "SAVE_TEST_RESULTS_TO_CSV", "$saveTestResultsToCsv")
 
