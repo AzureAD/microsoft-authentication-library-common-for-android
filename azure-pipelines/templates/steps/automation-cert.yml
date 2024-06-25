@@ -46,3 +46,22 @@ steps:
       }    
       
       Write-Host "##vso[task.setvariable variable=LabVaultAppCert]$certPathVar"
+- task: AzurePowerShell@5
+  displayName: Fetch Native Auth Test Config
+  inputs:
+    azureSubscription: 'AuthSdkResourceManager'
+    ScriptType: 'InlineScript'
+    Inline: |
+      $secret = Get-AzKeyVaultSecret -VaultName "buildautomation" -Name "native-auth-test-config"
+      
+      if ($secret) {
+        $secretValue = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secret.SecretValue))
+      
+        Write-Host "Successfully retrieved secret value from Key Vault $secretValue"
+      }
+      else {
+        Write-Host "Failed to retrieve secret value from Key Vault."
+        exit 1
+      }
+    azurePowerShellVersion: 'LatestVersion'
+    failOnStderr: true
