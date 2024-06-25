@@ -71,7 +71,7 @@ public class SP800108KeyGen {
                                      final byte[] ctx)
             throws IOException, InvalidKeyException, NoSuchAlgorithmException, ClientException {
 
-        final SecretKeySpec keySpec = new SecretKeySpec(key, "HmacSHA256");
+        final SecretKeySpec keySpec = new SecretKeySpec(key, HMAC_ALGORITHM);
 
         return generateDerivedKey(keySpec, label, ctx);
     }
@@ -134,7 +134,7 @@ public class SP800108KeyGen {
         numCurrentElements = 0;
         ctr = 1;
         keyDerivated = new byte[outputSizeBit / 8];
-        final Mac hmacSHA256 = mCryptoFactory.getMac("HmacSHA256");
+        final Mac hmacSHA256 = mCryptoFactory.getMac(HMAC_ALGORITHM);
 
         do {
             dataInput = updateDataInput(ctr, fixedInput);
