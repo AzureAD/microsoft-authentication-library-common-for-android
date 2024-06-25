@@ -49,7 +49,7 @@ steps:
 - task: AzurePowerShell@5
   displayName: Fetch Native Auth Test Config
   inputs:
-    azureSubscription: 'Use Personal Tenant For Test'
+    azureSubscription: 'AuthSdkResourceManager'
     ScriptType: 'InlineScript'
     Inline: |
       $secret = Get-AzKeyVaultSecret -VaultName "buildautomation" -Name "msalandroidnativeauthautomationconfjsonfile"
