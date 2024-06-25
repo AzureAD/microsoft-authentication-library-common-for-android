@@ -27,7 +27,9 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
+import android.provider.Settings;
 
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
@@ -41,8 +43,11 @@ import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG;
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.launchIntent;
 import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.handleButtonClick;
 import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
+
+import android.content.Intent;
 
 /**
  * A model representing the Settings app on a Google device. Please note that this class is
@@ -361,6 +366,53 @@ public class GoogleSettings extends BaseSettings {
         launchAppInfoPage(packageName);
         // This is the id for the enable button
         handleButtonClick("com.android.settings:id/button2");
+    }
+
+    @Override
+    public void enableGoogleAccountBackup() throws UiObjectNotFoundException {
+        Logger.i(TAG, "Enabling google account backup through settings");
+        //launchAccountListPage();
+        // Scroll to and click on "System"
+        // Start from the home screen
+//        UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+//        device.pressHome();
+//        // Open the Settings app
+//        UiObject settingsApp = device.findObject(new UiSelector().description("Settings"));
+//        settingsApp.clickAndWaitForNewWindow();
+//
+//        // Scroll to and click on "System"
+//        UiScrollable settingsList = new UiScrollable(new UiSelector().scrollable(true));
+//        UiObject systemOption = settingsList.getChildByText(new UiSelector().text("System"), "System");
+//        systemOption.clickAndWaitForNewWindow();
+//
+//        // Click on "Backup"
+//        UiObject backupOption = device.findObject(new UiSelector().text("Backup"));
+//        backupOption.clickAndWaitForNewWindow();
+//
+//        // Enable "Back up to Google Drive"
+//        UiObject backupToggle = device.findObject(new UiSelector().resourceId("android:id/switchWidget"));
+//        if (!backupToggle.isChecked()) {
+//            backupToggle.click();
+//        }
+//
+//        // Verification (optional)
+//        assert(backupToggle.isChecked());
+        launchIntent(Settings.ACTION_SETTINGS);
+        //        // Scroll to and click on "System"
+        UiScrollable settingsList = new UiScrollable(new UiSelector().scrollable(true));
+        UiObject systemOption = settingsList.getChildByText(new UiSelector().text("System"), "System");
+        systemOption.clickAndWaitForNewWindow();
+        UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        // Click on "Backup"
+        UiObject backupOption = device.findObject(new UiSelector().text("Backup"));
+        backupOption.clickAndWaitForNewWindow();
+
+        // Enable "Back up to Google Drive"
+        UiObject backupToggle = device.findObject(new UiSelector().resourceId("android:id/switchWidget"));
+        if (!backupToggle.isChecked()) {
+            backupToggle.click();
+        }
+
     }
 }
 

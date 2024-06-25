@@ -23,6 +23,7 @@
 package com.microsoft.identity.client.ui.automation.device.settings;
 
 import androidx.annotation.NonNull;
+import androidx.test.uiautomator.UiObjectNotFoundException;
 
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
@@ -141,4 +142,6 @@ public interface ISettings {
      * @param packageName name of package to be enabled
      */
     public void enableAppThroughSettings(@NonNull final String packageName);
+
+    public void enableGoogleAccountBackup() throws UiObjectNotFoundException;
 }

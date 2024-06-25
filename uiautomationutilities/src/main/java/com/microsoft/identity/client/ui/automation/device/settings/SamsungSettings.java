@@ -227,4 +227,9 @@ public class SamsungSettings extends BaseSettings {
         //TODO: implement enabling app through settings
         throw new UnsupportedOperationException("We do not support enabling apps through Settings Page on samsung devices");
     }
+
+    @Override
+    public void enableGoogleAccountBackup() {
+        throw new UnsupportedOperationException("We do not support enabling apps through Settings Page on samsung devices");
+    }
 }
