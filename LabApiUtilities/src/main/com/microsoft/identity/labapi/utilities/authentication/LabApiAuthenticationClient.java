@@ -48,9 +48,15 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
     private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
     private final static String CERTIFICATE_ALIAS = "LabVaultAccessCert";
     private final String mLabCredential;
+    private final String mLabCertPassword;
 
     public LabApiAuthenticationClient(@NonNull final String labSecret) {
+        this(labSecret, null);
+    }
+
+    public LabApiAuthenticationClient(@NonNull final String labSecret, final String labCertPassword) {
         mLabCredential = labSecret;
+        mLabCertPassword = labCertPassword;
     }
 
     @Override
@@ -66,7 +72,8 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
         if (mLabCredential != null && mLabCredential.trim().length() > 0) {
             if(mLabCredential.endsWith(".pfx")) {
                 try (final InputStream inputStream = new FileInputStream(mLabCredential)) {
-                    authenticationResult = confidentialAuthClient.acquireToken(inputStream, "", tokenParameters);
+                    final String certPass = mLabCertPassword == null ? "" : mLabCertPassword;
+                    authenticationResult = confidentialAuthClient.acquireToken(inputStream, certPass, tokenParameters);
                 } catch (final IOException e) {
                     throw new LabApiException(LabError.FAILED_TO_LOAD_CERTIFICATE);
                 }
