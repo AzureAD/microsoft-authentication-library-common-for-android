@@ -98,7 +98,6 @@ public class Device {
     }
 
     /**
-     *
      * @deprecated use {@link ProductHelper#getProductVersion()} instead.
      */
     @NonNull

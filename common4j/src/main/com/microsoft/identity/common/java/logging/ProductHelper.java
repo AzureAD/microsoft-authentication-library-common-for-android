@@ -30,7 +30,7 @@ import cz.msebera.httpclient.android.BuildConfig;
 import lombok.NonNull;
 
 /**
- * Simple helper class to pull product telemtry information from diagnostic context.
+ * Simple helper class to pull product telemetry information from diagnostic context.
  */
 public class ProductHelper {
     private static final String TAG = ProductHelper.class.getSimpleName();
@@ -40,6 +40,10 @@ public class ProductHelper {
      */
     protected static final String NOT_SET = "NOT_SET";
 
+    /**
+     * Returns the product (library) name by accessing it from DiagnosticContext.
+     * @return product name from DiagnosticContext.
+     */
     @NonNull
     public static String getProduct() {
         final String methodName = ":getProduct";
@@ -53,6 +57,10 @@ public class ProductHelper {
         }
     }
 
+    /**
+     * Returns the product (library) version by accessing it from DiagnosticContext.
+     * @return product version from DiagnosticContext.
+     */
     @NonNull
     public static String getProductVersion() {
         final String methodName = ":getProductVersion";
