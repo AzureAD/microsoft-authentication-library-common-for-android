@@ -34,6 +34,16 @@ object NativeAuthCredentialHelper {
             }
         }
 
+//    val nativeAuthEmailPasswordAttributesAppId: String
+//        get() {
+//            val appId = BuildConfig.NATive_
+//            return if (StringUtil.isNullOrEmpty(appId)) {
+//                throw IllegalStateException("env var NATIVE_AUTH_EMAIL_PW_WITH_ATTRIBUTES_APP_ID value not set")
+//            } else {
+//                appId
+//            }
+//        }
+
     val nativeAuthLabsAuthorityUrl: String
         get() {
             val authorityUrl = BuildConfig.NATIVE_AUTH_LABS_AUTHORITY_URL
