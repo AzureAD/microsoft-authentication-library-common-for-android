@@ -34,15 +34,35 @@ object NativeAuthCredentialHelper {
             }
         }
 
-//    val nativeAuthEmailPasswordAttributesAppId: String
-//        get() {
-//            val appId = BuildConfig.NATive_
-//            return if (StringUtil.isNullOrEmpty(appId)) {
-//                throw IllegalStateException("env var NATIVE_AUTH_EMAIL_PW_WITH_ATTRIBUTES_APP_ID value not set")
-//            } else {
-//                appId
-//            }
-//        }
+    val nativeAuthLabsEmailPasswordAttributesAppId: String
+        get() {
+            val appId = BuildConfig.NATIVE_AUTH_LABS_EMAIL_PW_Attr_APP_ID
+            return if (StringUtil.isNullOrEmpty(appId)) {
+                throw IllegalStateException("env var NATIVE_AUTH_EMAIL_PW_WITH_ATTRIBUTES_APP_ID value not set")
+            } else {
+                appId
+            }
+        }
+
+    val nativeAuthLabsEmailOtpAppId: String
+        get() {
+            val appId = BuildConfig.NATIVE_AUTH_LABS_EMAIL_OTP_APP_ID
+            return if (StringUtil.isNullOrEmpty(appId)) {
+                throw IllegalStateException("env var NATIVE_AUTH_LABS_EMAIL_OTP_APP_ID value not set")
+            } else {
+                appId
+            }
+        }
+
+    val nativeAuthLabsEmailOtpAttributesAppId: String
+        get() {
+            val appId = BuildConfig.NATIVE_AUTH_LABS_EMAIL_OTP_Attr_APP_ID
+            return if (StringUtil.isNullOrEmpty(appId)) {
+                throw IllegalStateException("env var NATIVE_AUTH_EMAIL_OTP_WITH_ATTRIBUTES_APP_ID value not set")
+            } else {
+                appId
+            }
+        }
 
     val nativeAuthLabsAuthorityUrl: String
         get() {
