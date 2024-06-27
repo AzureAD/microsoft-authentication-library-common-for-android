@@ -22,12 +22,23 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.nativeauth.api.models
 
+import com.google.gson.annotations.SerializedName
+
 data class NativeAuthTestConfig(
     val configs: Map<String, Config>
 ) {
     data class Config(
-        val email: String,
-        val client_id: String,
-        val authority_url: String
+        @SerializedName("email") val email: String,
+        @SerializedName("client_id") val clientId: String,
+        @SerializedName("authority_url") val authorityUrl: String,
+        @SerializedName("resources") val resources: List<Resource>
+    )
+
+    data class Resource(
+        @SerializedName("resource_name") val resourceName: String,
+        @SerializedName("resource_id") val resourceId: String,
+        @SerializedName("scopes") val scopes: List<String>
     )
 }
+
+

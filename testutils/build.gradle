@@ -51,47 +51,6 @@ android {
         saveTestResultsToCsv = getBoolean(writeTestResultsToCsv);
     }
 
-    def nativeAuthSignInTestsUsername = "" // will be blank unless specified by developer
-    def nativeAuthSSPRTestsUsername = "" // will be blank unless specified by developer
-    def nativeAuthLabsEmailPasswordAppId = "" // will be blank unless specified by developer
-    def nativeAuthLabsAuthorityUrl = "" // will be blank unless specified by developer
-    def nativeAuthEmployeeWriteAllScope = "" // will be blank unless specified by developer
-    def nativeAuthEmployeeReadAllScope = "" // will be blank unless specified by developer
-    def nativeAuthCustomerWriteAllScope = "" // will be blank unless specified by developer
-    def nativeAuthCustomerReadAllScope = "" // will be blank unless specified by developer
-
-    if (project.hasProperty("nativeAuthSignInTestsUsernameValue")) {
-        nativeAuthSignInTestsUsername = nativeAuthSignInTestsUsernameValue
-    }
-
-    if (project.hasProperty("nativeAuthSSPRTestsUsernameValue")) {
-        nativeAuthSSPRTestsUsername = nativeAuthSSPRTestsUsernameValue
-    }
-
-    if (project.hasProperty("nativeAuthLabsEmailPasswordAppIdValue")) {
-        nativeAuthLabsEmailPasswordAppId = nativeAuthLabsEmailPasswordAppIdValue
-    }
-
-    if (project.hasProperty("nativeAuthLabsAuthorityUrlValue")) {
-        nativeAuthLabsAuthorityUrl = nativeAuthLabsAuthorityUrlValue
-    }
-
-    if (project.hasProperty("nativeAuthEmployeeWriteAllScopeValue")) {
-        nativeAuthEmployeeWriteAllScope = nativeAuthEmployeeWriteAllScopeValue
-    }
-
-    if (project.hasProperty("nativeAuthEmployeeReadAllScopeValue")) {
-        nativeAuthEmployeeReadAllScope = nativeAuthEmployeeReadAllScopeValue
-    }
-
-    if (project.hasProperty("nativeAuthCustomerWriteAllScopeValue")) {
-        nativeAuthCustomerWriteAllScope = nativeAuthCustomerWriteAllScopeValue
-    }
-
-    if (project.hasProperty("nativeAuthCustomerReadAllScopeValue")) {
-        nativeAuthCustomerReadAllScope = nativeAuthCustomerReadAllScopeValue
-    }
-
     defaultConfig {
         multiDexEnabled true
         minSdkVersion rootProject.ext.minSdkVersion
@@ -100,14 +59,6 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "LAB_CLIENT_SECRET", "\"$labClientSecret\"")
-        buildConfigField("String", "NATIVE_AUTH_SIGNIN_TEST_USERNAME", "\"$nativeAuthSignInTestsUsername\"")
-        buildConfigField("String", "NATIVE_AUTH_SSPR_TEST_USERNAME", "\"$nativeAuthSSPRTestsUsername\"")
-        buildConfigField("String", "NATIVE_AUTH_LABS_EMAIL_PW_APP_ID", "\"$nativeAuthLabsEmailPasswordAppId\"")
-        buildConfigField("String", "NATIVE_AUTH_LABS_AUTHORITY_URL", "\"$nativeAuthLabsAuthorityUrl\"")
-        buildConfigField("String", "NATIVE_AUTH_EMPLOYEE_WRITE_ALL_SCOPE", "\"$nativeAuthEmployeeWriteAllScope\"")
-        buildConfigField("String", "NATIVE_AUTH_EMPLOYEE_READ_ALL_SCOPE", "\"$nativeAuthEmployeeReadAllScope\"")
-        buildConfigField("String", "NATIVE_AUTH_CUSTOMERS_WRITE_ALL_SCOPE", "\"$nativeAuthCustomerWriteAllScope\"")
-        buildConfigField("String", "NATIVE_AUTH_CUSTOMERS_READ_ALL_SCOPE", "\"$nativeAuthCustomerReadAllScope\"")
         buildConfigField("String", "RUN_ID", "\"$runId\"")
         buildConfigField("boolean", "SAVE_TEST_RESULTS_TO_CSV", "$saveTestResultsToCsv")
 

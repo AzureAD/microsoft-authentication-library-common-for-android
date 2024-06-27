@@ -26,17 +26,11 @@ import com.microsoft.identity.internal.test.keyvault.ApiClient;
 import com.microsoft.identity.internal.test.keyvault.Configuration;
 import com.microsoft.identity.internal.test.keyvault.api.SecretsApi;
 import com.microsoft.identity.internal.test.keyvault.model.SecretBundle;
-import com.microsoft.identity.internal.test.labapi.ApiException;
-import com.microsoft.identity.internal.test.labapi.api.LabApi;
-import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
-import com.microsoft.identity.internal.test.labapi.model.LabInfo;
-import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
-import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 import androidx.annotation.NonNull;
 
 /**
- * Query the Lab Api to get lab specific info such as lab tenant, secret etc.
+ * Query Labs KeyVaults to retrieve secrets.
  */
 public class KeyVaultHelper {
 
@@ -56,10 +50,5 @@ public class KeyVaultHelper {
         }
 
         return secretBundleResponse.getValue();
-    }
-
-    private static String getLabSecretName(final String credentialVaultKeyName) {
-        final String[] parts = credentialVaultKeyName.split("/");
-        return parts[parts.length - 1];
     }
 }
