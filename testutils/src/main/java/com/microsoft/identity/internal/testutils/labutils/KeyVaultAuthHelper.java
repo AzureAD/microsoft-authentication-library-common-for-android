@@ -28,7 +28,10 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
+import com.microsoft.identity.internal.test.keyvault.ApiClient;
 import com.microsoft.identity.internal.test.keyvault.Configuration;
+import com.microsoft.identity.internal.testutils.BuildConfig;
+import com.microsoft.identity.labapi.utilities.authentication.KeyVaultCertificateBasedAuthenticationClient;
 import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
 import com.microsoft.identity.labapi.utilities.authentication.common.ClientCertificateMetadata;
 import com.microsoft.identity.labapi.utilities.authentication.common.KeyStoreConfiguration;
@@ -72,7 +75,25 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
 
     @Override
     public void setupApiClientWithAccessToken(final String accessToken) {
-        Configuration.getDefaultApiClient().setAccessToken(accessToken);
+        Configuration.getBuildAutomationVaultApiClient().setAccessToken(accessToken);
+    }
+
+    @Override
+    String getAccessToken() throws LabApiException {
+        if (mAccessToken == null) {
+            mAccessToken = requestAccessTokenForAutomation();
+        }
+
+        return mAccessToken;
+    }
+
+    private String requestAccessTokenForAutomation()
+            throws LabApiException {
+        return (new KeyVaultCertificateBasedAuthenticationClient(BuildConfig.LAB_CLIENT_SECRET)).getAccessToken();
+    }
+
+    public void setAccessTokenOnApiClient(final String accessToken, final ApiClient apiClient) {
+        apiClient.setAccessToken(accessToken);
     }
 
     @Override
