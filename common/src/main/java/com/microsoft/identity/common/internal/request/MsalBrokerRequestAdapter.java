@@ -49,7 +49,6 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
-import com.microsoft.identity.common.java.commands.parameters.AccountTransferTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
@@ -93,19 +92,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         final BrokerRequest.BrokerRequestBuilder brokerRequestBuilder =
                 getBrokerRequestBuilderForInteractiveTokenCommandParameters(parameters);
-
-        return brokerRequestBuilder.build();
-    }
-
-    public BrokerRequest brokerRequestFromAccountTransferParameters(@NonNull final AccountTransferTokenCommandParameters parameters) {
-        final String methodTag = TAG + ":brokerRequestFromAccountTransferParameters";
-        Logger.info(methodTag, "Constructing result bundle from AccountTransferTokenCommandParameters.");
-
-        final BrokerRequest.BrokerRequestBuilder brokerRequestBuilder =
-                getBrokerRequestBuilderForInteractiveTokenCommandParameters(parameters);
-
-        // Also add the transfer token parameter
-        brokerRequestBuilder.accountTransferToken(parameters.getTransferToken());
 
         return brokerRequestBuilder.build();
     }
@@ -274,23 +260,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public Bundle getRequestBundleForAcquireTokenInteractive(@NonNull final InteractiveTokenCommandParameters parameters,
                                                              @Nullable final String negotiatedBrokerProtocolVersion) {
         final BrokerRequest brokerRequest = brokerRequestFromAcquireTokenParameters(parameters);
-        return getRequestBundleFromBrokerRequest(
-                brokerRequest,
-                negotiatedBrokerProtocolVersion,
-                parameters.getRequiredBrokerProtocolVersion()
-        );
-    }
-
-    /**
-     * Method to construct a request bundle for a brokered Account Transfer request.
-     *
-     * @param parameters                      input parameters
-     * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
-     * @return request Bundle
-     */
-    public Bundle getRequestBundleForAccountTransfer(@NonNull final AccountTransferTokenCommandParameters parameters,
-                                                     @Nullable final String negotiatedBrokerProtocolVersion) {
-        final BrokerRequest brokerRequest = brokerRequestFromAccountTransferParameters(parameters);
         return getRequestBundleFromBrokerRequest(
                 brokerRequest,
                 negotiatedBrokerProtocolVersion,
