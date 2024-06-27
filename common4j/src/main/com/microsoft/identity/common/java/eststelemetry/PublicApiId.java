@@ -81,10 +81,6 @@ public final class PublicApiId {
     public static final String BROKER_ADD_ACCOUNT_WITH_ACTIVITY = "128";
     public static final String BROKER_CHOOSE_ACCOUNT_WITH_ACTIVITY_ACCOUNTNAME = "129";
 
-    // TODO: I feel this is a bit unnecessary now, still being used in the new activity,
-    //  but perhaps we can use the same one account chooser uses
-    public static final String BROKER_ADD_ACCOUNT_FOR_ACCOUNT_TRANSFER = "301";
-
     //endregion
 
     // region GET Accounts

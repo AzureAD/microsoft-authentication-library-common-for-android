@@ -386,13 +386,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 BrokerProtocolVersionUtil.canSendPKeyAuthHeaderToTheTokenEndpoint(requiredBrokerProtocolVersion)
         );
 
-        // If the brokerRequest contains an account transfer token, this is an account transfer request.
-        // We place the boolean here to decide which broker activity to launch from the intent.
-        requestBundle.putBoolean(
-                IS_ACCOUNT_TRANSFER_REQUEST_HEADER,
-                brokerRequest.getAccountTransferToken() != null
-        );
-
         return requestBundle;
     }
 
