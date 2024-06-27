@@ -35,6 +35,7 @@ import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 @Getter
@@ -71,6 +72,11 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
 
     @Expose()
     private final List<String> extraScopesToConsent;
+
+    /**
+     * Transfer token to be used in the Account Transfer request.
+     */
+    private final String transferToken;
 
     public boolean getHandleNullTaskAffinity(){
         return handleNullTaskAffinity;

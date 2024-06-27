@@ -98,19 +98,6 @@ public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthServic
 
                 return bundle;
 
-            case MSAL_GET_INTENT_FOR_ACCOUNT_TRANSFER_INTERACTIVE_REQUEST:
-                final Intent accountTransferIntent = microsoftAuthService.getIntentForAccountTransferInteractiveRequest();
-                final Bundle accountTransferBundle = accountTransferIntent.getExtras();
-
-                if (accountTransferIntent.getComponent() != null &&
-                        !TextUtils.isEmpty(accountTransferIntent.getPackage()) &&
-                        !TextUtils.isEmpty(accountTransferIntent.getComponent().getClassName())){
-                    accountTransferBundle.putString(BROKER_PACKAGE_NAME, accountTransferIntent.getPackage());
-                    accountTransferBundle.putString(BROKER_ACTIVITY_NAME, accountTransferIntent.getComponent().getClassName());
-                }
-
-                return accountTransferBundle;
-
             case MSAL_ACQUIRE_TOKEN_SILENT:
                 return microsoftAuthService.acquireTokenSilently(inputBundle);
 

@@ -34,7 +34,6 @@ import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationB
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_ACCOUNTS;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_DEVICE_MODE;
-import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_INTENT_FOR_ACCOUNT_TRANSFER_INTERACTIVE_REQUEST;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_PREFERRED_AUTH_METHOD;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_REMOVE_ACCOUNT;
@@ -81,7 +80,6 @@ import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWith
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
-import com.microsoft.identity.common.java.commands.parameters.AccountTransferTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
@@ -414,98 +412,6 @@ public class BrokerMsalController extends BaseController {
         return result;
     }
 
-    /**
-     * Performs Account Transfer request with Broker.
-     *
-     * @param parameters a {@link AccountTransferTokenCommandParameters}
-     * @return an {@link AcquireTokenResult}.
-     */
-    @Override
-    public AcquireTokenResult acquireTokenForAccountTransfer(final @NonNull AccountTransferTokenCommandParameters parameters) throws BaseException, ExecutionException, InterruptedException {
-        final String methodTag = TAG + ":acquireTokenForAccountTransfer";
-
-        Telemetry.emit(
-                new ApiStartEvent()
-                        .putProperties(parameters)
-                        .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_INTERACTIVE)
-        );
-
-        // Same as in regular acquire token, let's create a result future to block on the broker request, it will
-        // be unblocked in the onReceive function of the callback
-        mBrokerResultFuture = new ResultFuture<>();
-
-        // Get the broker interactive parameters intent for Account Transfer
-        final Intent interactiveAccountTransferRequestIntent = getBrokerAuthorizationIntentForAccountTransfer(parameters);
-
-        // Pass this intent to the BrokerActivity which will be used to start this activity
-        final Intent brokerActivityIntent = new Intent(mApplicationContext, BrokerActivity.class);
-        brokerActivityIntent.putExtra(BrokerActivity.BROKER_INTENT, interactiveAccountTransferRequestIntent);
-
-        // Callback alias can stay the same in Account Transfer case.
-        LocalBroadcaster.INSTANCE.registerCallback(RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT,
-                new LocalBroadcaster.IReceiverCallback() {
-                    @Override
-                    public void onReceive(@NonNull PropertyBag propertyBag) {
-                        /**
-                         * Get the response from the Broker captured by BrokerActivity.
-                         * BrokerActivity will pass along the response to the broker controller.
-                         * The Broker controller will map the response into the broker result
-                         * and signal the future with the broker result to unblock the request.
-                         */
-
-                        Logger.verbose(
-                                methodTag,
-                                "Received result (for Account Transfer request) from Broker..."
-                        );
-
-                        Telemetry.emit(
-                                new ApiStartEvent()
-                                        .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_INTERACTIVE)
-                                        .put(TelemetryEventStrings.Key.REQUEST_CODE, propertyBag.<Integer>getOrDefault(REQUEST_CODE, -1).toString())
-                                        .put(TelemetryEventStrings.Key.RESULT_CODE, propertyBag.<Integer>getOrDefault(RESULT_CODE, -1).toString())
-                        );
-
-                        mBrokerResultFuture.setResult(PropertyBagUtil.toBundle(propertyBag));
-
-                        Telemetry.emit(
-                                new ApiEndEvent()
-                                        .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_INTERACTIVE)
-                        );
-
-                        LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT);
-                    }
-                });
-
-        // To support calling from OneAuth-MSAL, which may be initialized without an Activity
-        // add Flags to start as a NEW_TASK if we are launching from an application Context
-        brokerActivityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        mApplicationContext.startActivity(brokerActivityIntent);
-
-        final AcquireTokenResult result;
-        try {
-            // Wait to be notified of the result being returned... we could add a timeout here if we want to
-            final Bundle resultBundle = mBrokerResultFuture.get();
-
-            verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
-            result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
-        } catch (final BaseException | ExecutionException | InterruptedException e) {
-            Telemetry.emit(
-                    new ApiEndEvent()
-                            .putException(e)
-                            .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_INTERACTIVE)
-            );
-            throw e;
-        }
-
-        Telemetry.emit(
-                new ApiEndEvent()
-                        .putResult(result)
-                        .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_ACCOUNT_TRANSFER_INTERACTIVE)
-        );
-
-        return result;
-    }
-
     @Override
     public void onFinishAuthorizationSession(int requestCode,
                                              int resultCode,
@@ -561,70 +467,6 @@ public class BrokerMsalController extends BaseController {
                     public @NonNull
                     String getMethodName() {
                         return ":getBrokerAuthorizationIntent";
-                    }
-
-                    @Override
-                    public @Nullable
-                    String getTelemetryApiId() {
-                        return null;
-                    }
-
-                    @Override
-                    public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull Intent result) {
-                    }
-                });
-    }
-
-    /**
-     * Get the intent for the broker Account Transfer request
-     *
-     * @param parameters a {@link AccountTransferTokenCommandParameters}
-     * @return an {@link Intent} for initiating Broker Account Transfer interactive activity.
-     */
-    @NonNull
-    private Intent getBrokerAuthorizationIntentForAccountTransfer(
-            final @NonNull AccountTransferTokenCommandParameters parameters) throws BaseException {
-        return getBrokerOperationExecutor().execute(parameters,
-                new BrokerOperation<Intent>() {
-                    private String negotiatedBrokerProtocolVersion;
-
-                    @Override
-                    public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
-                        verifyTokenParametersAreSupported(parameters);
-                        negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
-                    }
-
-                    @Override
-                    public @NonNull
-                    BrokerOperationBundle getBundle() {
-                        return new BrokerOperationBundle(
-                                MSAL_GET_INTENT_FOR_ACCOUNT_TRANSFER_INTERACTIVE_REQUEST,
-                                mActiveBrokerPackageName,
-                                null);
-                    }
-
-                    @Override
-                    public @NonNull
-                    Intent extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
-                        if (resultBundle == null) {
-                            throw mResultAdapter.getExceptionForEmptyResultBundle();
-                        }
-
-                        // Looked through this, i think we can keep it as is for Account Transfer
-                        final Intent intent = mResultAdapter.getIntentForInteractiveRequestFromResultBundle(
-                                resultBundle,
-                                negotiatedBrokerProtocolVersion);
-
-                        intent.putExtras(
-                                mRequestAdapter.getRequestBundleForAccountTransfer(parameters, negotiatedBrokerProtocolVersion)
-                        );
-                        return intent;
-                    }
-
-                    @Override
-                    public @NonNull
-                    String getMethodName() {
-                        return ":getBrokerAuthorizationIntentForAccountTransfer";
                     }
 
                     @Override

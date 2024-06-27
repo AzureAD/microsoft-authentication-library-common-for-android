@@ -66,11 +66,6 @@ public class ShadowBoundServiceClientWithLegacyBroker<T extends IInterface> {
                 return IpcStrategyTests.getMockLegacyInteractiveRequestResultIntent();
             }
 
-            @Override
-            public Intent getIntentForAccountTransferInteractiveRequest() throws RemoteException {
-                throw new RemoteException("Not Implemented");
-            }
-
             @Override public Bundle removeAccount(Bundle bundle) throws RemoteException {
                 throw new RemoteException("Not Implemented");
             }
