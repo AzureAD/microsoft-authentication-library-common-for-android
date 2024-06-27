@@ -35,15 +35,12 @@ import java.util.Map;
 public class ResetApi {
     private ApiClient apiClient;
 
-    private final String apiCode;
-
-    public ResetApi(final String code) {
-        this(Configuration.getFunctionApiClient(), code);
+    public ResetApi() {
+        this(Configuration.getDefaultApiClient());
     }
 
-    public ResetApi(ApiClient apiClient, final String code) {
+    public ResetApi(ApiClient apiClient) {
         this.apiClient = apiClient;
-        this.apiCode = code;
     }
 
     public ApiClient getApiClient() {
@@ -76,9 +73,6 @@ public class ResetApi {
         if (operation != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("operation", operation));
 
-        if (!apiCode.equals(""))
-            localVarQueryParams.addAll(apiClient.parameterToPair("code", apiCode));
-
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 
         Map<String, Object> localVarFormParams = new HashMap<String, Object>();
@@ -108,7 +102,7 @@ public class ResetApi {
         }
 
         String[] localVarAuthNames = new String[] {  };
-        return apiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarAuthNames, progressRequestListener);
+        return apiClient.buildCall(localVarPath, "PUT", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarAuthNames, progressRequestListener);
     }
     
     @SuppressWarnings("rawtypes")

@@ -55,13 +55,12 @@ public class PolicyHelper {
     public boolean enablePolicy(@NonNull final String upn, @NonNull final String policy) {
         instance.setupApiClientWithAccessToken();
 
-        final String enablePolicyApiCode = getSecret(LabClient.ENABLE_POLICY_API_CODE_SECRET_NAME);
-        final EnablePolicyApi enablePolicyApi = new EnablePolicyApi(enablePolicyApiCode);
+        final EnablePolicyApi enablePolicyApi = new EnablePolicyApi();
         try {
-            final String enablePolicyResult = enablePolicyApi.apiEnablePolicyPost(upn, policy);
+            final CustomSuccessResponse enablePolicyResult = enablePolicyApi.apiEnablePolicyPut(upn, policy);
             final String expectedResult = (policy +" Enabled for user : " + upn).toLowerCase();
             Assert.assertNotNull(enablePolicyResult);
-            return enablePolicyResult.toLowerCase().contains(expectedResult);
+            return enablePolicyResult.toString().toLowerCase().contains(expectedResult);
         } catch (final ApiException e) {
             Logger.error(TAG,"Bad Request : Enable Policy can be used only for Locked users.",e);
             throw new AssertionError(e);
@@ -79,13 +78,12 @@ public class PolicyHelper {
     public boolean disablePolicy(@NonNull final String upn, @NonNull final String policy) {
         instance.setupApiClientWithAccessToken();
 
-        final String disablePolicyApiCode = getSecret(LabClient.DISABLE_POLICY_API_CODE_SECRET_NAME);
-        final DisablePolicyApi disablePolicyApi = new DisablePolicyApi(disablePolicyApiCode);
+        final DisablePolicyApi disablePolicyApi = new DisablePolicyApi();
         try {
-            final String disablePolicyResponse = disablePolicyApi.apiDisablePolicyPost(upn, policy);
+            final CustomSuccessResponse disablePolicyResponse = disablePolicyApi.apiDisablePolicyPut(upn, policy);
             final String expectedResult = (policy + " Disabled for user : " + upn).toLowerCase();
             Assert.assertNotNull(disablePolicyResponse);
-            return disablePolicyResponse.toLowerCase().contains(expectedResult);
+            return disablePolicyResponse.toString().toLowerCase().contains(expectedResult);
         } catch (final ApiException e) {
             Logger.error(TAG," Bad Request : Disable Policy can be used only for Locked users. ",e);
             throw new AssertionError(e);

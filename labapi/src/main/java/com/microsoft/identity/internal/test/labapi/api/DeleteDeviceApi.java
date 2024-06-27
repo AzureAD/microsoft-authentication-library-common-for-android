@@ -37,15 +37,13 @@ import java.util.Map;
 
 public class DeleteDeviceApi {
     private ApiClient apiClient;
-    private final String apiCode;
 
-    public DeleteDeviceApi(final String code) {
-        this(Configuration.getFunctionApiClient(), code);
+    public DeleteDeviceApi() {
+        this(Configuration.getDefaultApiClient());
     }
 
-    public DeleteDeviceApi(ApiClient apiClient, final String code) {
+    public DeleteDeviceApi(ApiClient apiClient) {
         this.apiClient = apiClient;
-        this.apiCode = code;
     }
 
     public ApiClient getApiClient() {
@@ -78,9 +76,6 @@ public class DeleteDeviceApi {
 
         if (deviceid != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("deviceid", deviceid));
-
-        if (!apiCode.equals(""))
-            localVarQueryParams.addAll(apiClient.parameterToPair("code", apiCode));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 

@@ -46,8 +46,7 @@ public class LabResetHelper {
     public static boolean resetPassword(@NonNull final String upn) {
         INSTANCE.setupApiClientWithAccessToken();
 
-        final String resetApiCode = getSecret(LabClient.RESET_API_CODE_SECRET_NAME);
-        final ResetApi resetApi = new ResetApi(resetApiCode);
+        final ResetApi resetApi = new ResetApi();
 
         try {
             final String resetResponse;
@@ -73,8 +72,7 @@ public class LabResetHelper {
     public static boolean resetMfa(@NonNull final String upn) {
         INSTANCE.setupApiClientWithAccessToken();
 
-        final String resetApiCode = getSecret(LabClient.RESET_API_CODE_SECRET_NAME);
-        final ResetApi resetApi = new ResetApi(resetApiCode);
+        final ResetApi resetApi = new ResetApi();
 
         try {
             final String resetResponse;

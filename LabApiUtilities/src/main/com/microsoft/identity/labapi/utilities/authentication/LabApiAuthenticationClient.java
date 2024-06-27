@@ -40,32 +40,45 @@ import lombok.NonNull;
  * A an authentication client that can acquire access tokens for the Microsoft Identity Lab Api.
  */
 public class LabApiAuthenticationClient implements IAccessTokenSupplier {
-    private final static String SCOPE = "https://request.msidlab.com/.default";
+    private final static String DEFAULT_SCOPE = "https://msidlab.com/.default";
     private final static String TENANT_ID = "72f988bf-86f1-41af-91ab-2d7cd011db47";
     private final static String AUTHORITY = "https://login.microsoftonline.com/" + TENANT_ID;
-    private final static String CLIENT_ID = "f62c5ae3-bf3a-4af5-afa8-a68b800396e9";
+    private final static String DEFAULT_CLIENT_ID = "00bedee1-0e09-4a8d-81a0-0679c5a64a83";
     private final static String KEYSTORE_TYPE = "Windows-MY";
     private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
     private final static String CERTIFICATE_ALIAS = "LabVaultAccessCert";
     private final String mLabCredential;
     private final String mLabCertPassword;
+    private final String mScope;
+    private final String mClientId;
+
 
     public LabApiAuthenticationClient(@NonNull final String labSecret) {
-        this(labSecret, null);
+        this(labSecret, null, null, null);
     }
 
     public LabApiAuthenticationClient(@NonNull final String labSecret, final String labCertPassword) {
+        this(labSecret, labCertPassword, null, null);
+    }
+
+    public LabApiAuthenticationClient(@NonNull final String labSecret, @NonNull final String scope, @NonNull final String clientId) {
+        this(labSecret, null, scope, clientId);
+    }
+
+    public LabApiAuthenticationClient(@NonNull final String labSecret, final String labCertPassword, final String scope, final String clientId) {
         mLabCredential = labSecret;
         mLabCertPassword = labCertPassword;
+        mScope = scope != null ? scope : DEFAULT_SCOPE;
+        mClientId = clientId != null ? clientId : DEFAULT_CLIENT_ID;
     }
 
     @Override
     public String getAccessToken() throws LabApiException {
         final IConfidentialAuthClient confidentialAuthClient = new Msal4jAuthClient();
         final TokenParameters tokenParameters = TokenParameters.builder()
-                .clientId(CLIENT_ID)
+                .clientId(mClientId)
                 .authority(AUTHORITY)
-                .scope(SCOPE)
+                .scope(mScope)
                 .build();
 
         final IAuthenticationResult authenticationResult;

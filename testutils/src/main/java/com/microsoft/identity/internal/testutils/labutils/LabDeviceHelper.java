@@ -45,8 +45,7 @@ public class LabDeviceHelper {
      */
     public static boolean deleteDevice(final String upn, final String deviceId) throws LabApiException {
         INSTANCE.setupApiClientWithAccessToken();
-        final String deleteDeviceApiSecretCode = getSecret(LabClient.DELETE_DEVICE_API_CODE_SECRET_NAME);
-        final DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi(deleteDeviceApiSecretCode);
+        final DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi();
 
         try {
             final CustomSuccessResponse customSuccessResponse;
