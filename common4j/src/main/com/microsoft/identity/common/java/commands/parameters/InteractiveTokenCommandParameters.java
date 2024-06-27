@@ -75,7 +75,7 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
     /**
      * Transfer token to be used in the Account Transfer request.
      */
-    private final String transferToken;
+    private final String accountTransferToken;
 
     public boolean getHandleNullTaskAffinity(){
         return handleNullTaskAffinity;

@@ -1293,6 +1293,8 @@ public final class AuthenticationConstants {
          */
         public static final String SHOULD_SEND_PKEYAUTH_HEADER_TO_THE_TOKEN_ENDPOINT = "should.send.pkeyauth.header";
 
+        public static final String IS_ACCOUNT_TRANSFER_REQUEST_HEADER = "is.account.transfer.request.header";
+
         /**
          * String for ssl prefix.
          */

@@ -310,9 +310,12 @@ public class BrokerMsalController extends BaseController {
      * @return an {@link AcquireTokenResult}.
      */
     @Override
-    public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters)
+    public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters oldParameters)
             throws BaseException, InterruptedException, ExecutionException {
         final String methodTag = TAG + ":acquireToken";
+
+        // This is for testing only, will remove once validation is complete. Same parameter renaming
+        final InteractiveTokenCommandParameters parameters = oldParameters.toBuilder().accountTransferToken("MOCK_TOKEN").build();
 
         Telemetry.emit(
                 new ApiStartEvent()

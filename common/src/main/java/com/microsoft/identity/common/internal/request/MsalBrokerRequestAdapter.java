@@ -35,6 +35,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_MAX_PROTOCOL_VERSION;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ENVIRONMENT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IS_ACCOUNT_TRANSFER_REQUEST_HEADER;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.REQUEST_AUTHORITY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.SHOULD_SEND_PKEYAUTH_HEADER_TO_THE_TOKEN_ENDPOINT;
@@ -130,7 +131,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 )
                 .preferredBrowser(parameters.getPreferredBrowser())
                 .preferredAuthMethod(parameters.getPreferredAuthMethod())
-                .accountTransferToken(parameters.getTransferToken())
+                .accountTransferToken(parameters.getAccountTransferToken())
                 .build();
 
         return brokerRequest;
@@ -384,6 +385,14 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 SHOULD_SEND_PKEYAUTH_HEADER_TO_THE_TOKEN_ENDPOINT,
                 BrokerProtocolVersionUtil.canSendPKeyAuthHeaderToTheTokenEndpoint(requiredBrokerProtocolVersion)
         );
+
+        // If the brokerRequest contains an account transfer token, this is an account transfer request.
+        // We place the boolean here to decide which broker activity to launch from the intent.
+        requestBundle.putBoolean(
+                IS_ACCOUNT_TRANSFER_REQUEST_HEADER,
+                brokerRequest.getAccountTransferToken() != null
+        );
+
         return requestBundle;
     }
 
