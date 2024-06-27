@@ -74,8 +74,8 @@ public class MsalBrokerRequestAdapterTests {
                 .ssoUrl(ssoUrl)
                 .build();
 
-        MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
-        Bundle requestBundle = msalBrokerRequestAdapter.getRequestBundleForSsoToken(params, negotiatedBrokerProtocolVersion);
+        final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
+        final Bundle requestBundle = msalBrokerRequestAdapter.getRequestBundleForSsoToken(params, negotiatedBrokerProtocolVersion);
 
         Assert.assertEquals(anAccountName, requestBundle.getString(AuthenticationConstants.Broker.ACCOUNT_NAME));
         Assert.assertEquals(aHomeAccountId, requestBundle.getString(AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID));
@@ -115,8 +115,8 @@ public class MsalBrokerRequestAdapterTests {
                 .prompt(OpenIdConnectPromptParameter.LOGIN)
                 .build();
 
-        MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
-        Bundle requestBundle = msalBrokerRequestAdapter.getRequestBundleForAcquireTokenInteractive(params, negotiatedBrokerProtocolVersion);
+        final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
+        final Bundle requestBundle = msalBrokerRequestAdapter.getRequestBundleForAcquireTokenInteractive(params, negotiatedBrokerProtocolVersion);
 
         Assert.assertEquals(negotiatedBrokerProtocolVersion, requestBundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY));
         Assert.assertFalse(requestBundle.getBoolean(IS_ACCOUNT_TRANSFER_REQUEST));
@@ -152,8 +152,8 @@ public class MsalBrokerRequestAdapterTests {
                 .accountTransferToken(transferToken)
                 .build();
 
-        MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
-        Bundle requestBundle = msalBrokerRequestAdapter.getRequestBundleForAcquireTokenInteractive(params, negotiatedBrokerProtocolVersion);
+        final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
+        final Bundle requestBundle = msalBrokerRequestAdapter.getRequestBundleForAcquireTokenInteractive(params, negotiatedBrokerProtocolVersion);
 
         Assert.assertEquals(negotiatedBrokerProtocolVersion, requestBundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY));
         Assert.assertTrue(requestBundle.getBoolean(IS_ACCOUNT_TRANSFER_REQUEST));
