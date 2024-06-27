@@ -90,20 +90,13 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final String methodTag = TAG + ":brokerRequestFromAcquireTokenParameters";
         Logger.info(methodTag, "Constructing result bundle from AcquireTokenOperationParameters.");
 
-        final BrokerRequest.BrokerRequestBuilder brokerRequestBuilder =
-                getBrokerRequestBuilderForInteractiveTokenCommandParameters(parameters);
-
-        return brokerRequestBuilder.build();
-    }
-
-    private @NonNull BrokerRequest.BrokerRequestBuilder getBrokerRequestBuilderForInteractiveTokenCommandParameters(@NonNull final InteractiveTokenCommandParameters parameters) {
         final String extraQueryStringParameter = parameters.getExtraQueryStringParameters() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraQueryStringParameters())
                 : null;
         final String extraOptions = parameters.getExtraOptions() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
 
-        final BrokerRequest.BrokerRequestBuilder brokerRequestBuilder = BrokerRequest.builder()
+        final BrokerRequest brokerRequest = BrokerRequest.builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
                 .scope(TextUtils.join(" ", parameters.getScopes()))
                 .redirect(parameters.getRedirectUri())
@@ -136,9 +129,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         .build()
                 )
                 .preferredBrowser(parameters.getPreferredBrowser())
-                .preferredAuthMethod(parameters.getPreferredAuthMethod());
+                .preferredAuthMethod(parameters.getPreferredAuthMethod())
+                .accountTransferToken(parameters.getTransferToken())
+                .build();
 
-        return brokerRequestBuilder;
+        return brokerRequest;
     }
 
     @Override
