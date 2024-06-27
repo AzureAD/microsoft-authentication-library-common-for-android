@@ -6,7 +6,6 @@ name: $(date:yyyyMMdd)$(rev:.r)
 
 variables:
   - group: devex-ciam-test
-  - group: dexex-nativeauth
 
 trigger: none
 

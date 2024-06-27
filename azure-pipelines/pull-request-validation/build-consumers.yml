@@ -25,7 +25,6 @@ variables:
 - group: AndroidAuthClientAutomationSecrets
 - group: MSIDLABVARS
 - group: devex-ciam-test
-- group: dexex-nativeauth
 
 resources:
   repositories:
