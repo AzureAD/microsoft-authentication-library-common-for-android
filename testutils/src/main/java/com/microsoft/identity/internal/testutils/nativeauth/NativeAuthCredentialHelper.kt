@@ -83,4 +83,14 @@ object NativeAuthCredentialHelper {
                 scope
             }
         }
+
+    val nativeAuthInvalidScope: String
+        get() {
+            val scope = BuildConfig.NATIVE_AUTH_INVALID_SCOPE
+            return if (StringUtil.isNullOrEmpty(scope)) {
+                throw IllegalStateException("env var NATIVE_AUTH_INVALID_SCOPE value not set")
+            } else {
+                scope
+            }
+        }
 }
