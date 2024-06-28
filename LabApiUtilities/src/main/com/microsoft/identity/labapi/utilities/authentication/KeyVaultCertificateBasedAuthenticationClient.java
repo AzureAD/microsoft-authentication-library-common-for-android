@@ -37,7 +37,7 @@ import java.io.InputStream;
 import lombok.NonNull;
 
 /**
- * A an authentication client that can acquire access tokens for Labs KeyVaults.
+ * A an authentication client that can acquire access tokens for Labs KeyVaults (rather than Labs API).
  */
 public class KeyVaultCertificateBasedAuthenticationClient implements IAccessTokenSupplier {
     private final static String KEYVAULT_SCOPE = "https://vault.azure.net/.default";
