@@ -1370,21 +1370,6 @@ public final class AuthenticationConstants {
         public static final String REMOVE_BROKER_ACCOUNT_SUCCEEDED = "remove_broker_account_succeeded";
 
         /**
-         * Boolean to return when a transfer token is successfully saved.
-         */
-        public static final String SAVE_TRANSFER_TOKEN_SUCCEEDED = "save_transfer_token_succeeded";
-
-        /**
-         * The Bundle key name of transfer token.
-         */
-        public static final String TRANSFER_TOKEN_BUNDLE_KEY = "transfer_token";
-
-        /**
-         * The Bundle key name of transfer token key (account name).
-         */
-        public static final String TRANSFER_TOKEN_ACCOUNT_NAME_BUNDLE_KEY = "account_name";
-
-        /**
          * Boolean to return when a Broker RT is successfully updated.
          */
         public static final String UPDATE_BROKER_RT_SUCCEEDED = "update_broker_rt_succeeded";
