@@ -37,7 +37,7 @@ import org.junit.Test;
 public class MicrosoftClientAssertionTest {
 
     private final static String CLIENT_ID = "some_client_id";
-    private final static String CERTIFICATE_ALIAS = "LabVaultAccessCert";
+    private final static String CERTIFICATE_ALIAS = "LabAuth";
     private final static String KEYSTORE_TYPE = "Windows-MY";
     private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
     private final static String AUDIENCE = "some_audience";

@@ -46,7 +46,7 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
     private final static String DEFAULT_CLIENT_ID = "00bedee1-0e09-4a8d-81a0-0679c5a64a83";
     private final static String KEYSTORE_TYPE = "Windows-MY";
     private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
-    private final static String CERTIFICATE_ALIAS = "LabVaultAccessCert";
+    private final static String CERTIFICATE_ALIAS = "LabAuth";
     private final String mLabCredential;
     private final String mLabCertPassword;
     private final String mScope;
@@ -95,7 +95,7 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
             }
         } else {
             // Create ClientCertificateCredential from the certificate store on the device
-            // Expects the LabVaultAccessCert to be already installed on the device
+            // Expects the LabAuth to be already installed on the device
             final KeyStoreConfiguration keyStoreConfiguration = new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null);
             final ClientCertificateMetadata certificateMetadata = new ClientCertificateMetadata(CERTIFICATE_ALIAS, null);
 

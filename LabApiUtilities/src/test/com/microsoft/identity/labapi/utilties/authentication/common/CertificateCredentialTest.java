@@ -53,7 +53,7 @@ import java.util.Set;
 public class CertificateCredentialTest {
 
     private final static String CERTIFICATE_ALIAS_INVALID = "SomeRandomCertThatShouldNotExist";
-    private final static String CERTIFICATE_ALIAS_VALID = "LabVaultAccessCert";
+    private final static String CERTIFICATE_ALIAS_VALID = "LabAuth";
     private final static String KEYSTORE_TYPE = "Windows-MY";
     private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
 
