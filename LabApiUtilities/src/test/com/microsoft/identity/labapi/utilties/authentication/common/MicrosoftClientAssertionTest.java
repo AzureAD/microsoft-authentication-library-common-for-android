@@ -26,6 +26,7 @@ import com.microsoft.identity.labapi.utilities.authentication.common.Certificate
 import com.microsoft.identity.labapi.utilities.authentication.common.ClientCertificateMetadata;
 import com.microsoft.identity.labapi.utilities.authentication.common.KeyStoreConfiguration;
 import com.microsoft.identity.labapi.utilities.authentication.common.MicrosoftClientAssertion;
+import com.microsoft.identity.labapi.utilities.constants.LabConstants;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 import org.junit.Assert;
@@ -37,7 +38,7 @@ import org.junit.Test;
 public class MicrosoftClientAssertionTest {
 
     private final static String CLIENT_ID = "some_client_id";
-    private final static String CERTIFICATE_ALIAS = "LabAuth";
+    private final static String CERTIFICATE_ALIAS = LabConstants.DEFAULT_LAB_CERT_ALIAS;
     private final static String KEYSTORE_TYPE = "Windows-MY";
     private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
     private final static String AUDIENCE = "some_audience";

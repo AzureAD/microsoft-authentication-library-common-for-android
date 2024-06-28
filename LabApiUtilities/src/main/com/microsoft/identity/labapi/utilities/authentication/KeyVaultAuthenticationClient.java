@@ -26,6 +26,7 @@ import com.microsoft.identity.labapi.utilities.authentication.client.IConfidenti
 import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
 import com.microsoft.identity.labapi.utilities.authentication.common.ClientCertificateMetadata;
 import com.microsoft.identity.labapi.utilities.authentication.common.KeyStoreConfiguration;
+import com.microsoft.identity.labapi.utilities.constants.LabConstants;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 import com.microsoft.identity.labapi.utilities.exception.LabError;
 
@@ -37,9 +38,9 @@ import lombok.NonNull;
  */
 public class KeyVaultAuthenticationClient implements IAccessTokenSupplier {
 
-    private final static String CLIENT_ID = "f62c5ae3-bf3a-4af5-afa8-a68b800396e9";
-    private final static String SCOPE = "https://msidlab.com/.default";
-    private final static String CERTIFICATE_ALIAS = "LabAuth";
+    private final static String CLIENT_ID = LabConstants.DEFAULT_LAB_CLIENT_ID;
+    private final static String SCOPE = LabConstants.DEFAULT_LAB_SCOPE;
+    private final static String CERTIFICATE_ALIAS = LabConstants.DEFAULT_LAB_CERT_ALIAS;
     private final static String KEYSTORE_TYPE = "Windows-MY";
     private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
 

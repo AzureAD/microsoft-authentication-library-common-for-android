@@ -25,6 +25,7 @@ package com.microsoft.identity.labapi.utilties.authentication.common;
 import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
 import com.microsoft.identity.labapi.utilities.authentication.common.ClientCertificateMetadata;
 import com.microsoft.identity.labapi.utilities.authentication.common.KeyStoreConfiguration;
+import com.microsoft.identity.labapi.utilities.constants.LabConstants;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 import com.microsoft.identity.labapi.utilities.exception.LabError;
 
@@ -53,7 +54,7 @@ import java.util.Set;
 public class CertificateCredentialTest {
 
     private final static String CERTIFICATE_ALIAS_INVALID = "SomeRandomCertThatShouldNotExist";
-    private final static String CERTIFICATE_ALIAS_VALID = "LabAuth";
+    private final static String CERTIFICATE_ALIAS_VALID = LabConstants.DEFAULT_LAB_CERT_ALIAS;
     private final static String KEYSTORE_TYPE = "Windows-MY";
     private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
 
