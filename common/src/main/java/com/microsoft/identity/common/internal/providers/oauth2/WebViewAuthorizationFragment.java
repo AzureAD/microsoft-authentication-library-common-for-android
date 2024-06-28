@@ -62,7 +62,7 @@ import com.microsoft.identity.common.java.flighting.CommonFlightManager;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
-import com.microsoft.identity.common.java.util.ClientExtraSkuAdapter;
+import com.microsoft.identity.common.java.util.ClientExtraSku;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Arrays;
@@ -463,7 +463,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
             // Attach client extras header for ESTS telemetry. Only done for broker requests
             if (checkIfBrokerRequest(this.mAuthorizationRequestUrl)) {
-                final ClientExtraSkuAdapter clientExtraAdapter = ClientExtraSkuAdapter.builder()
+                final ClientExtraSku clientExtraAdapter = ClientExtraSku.builder()
                         .srcSku(state.getString(PRODUCT))
                         .srcSkuVer(state.getString(VERSION))
                         .build();

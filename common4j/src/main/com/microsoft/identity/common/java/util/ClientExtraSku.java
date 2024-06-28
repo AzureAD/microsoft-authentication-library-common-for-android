@@ -44,7 +44,7 @@ import lombok.experimental.Accessors;
  */
 @Builder
 @Accessors(prefix = "m")
-public class ClientExtraSkuAdapter {
+public class ClientExtraSku {
 
     @Builder.Default
     private String mSrcSku = "";

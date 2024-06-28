@@ -53,7 +53,7 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.telemetry.events.UiShownEvent;
-import com.microsoft.identity.common.java.util.ClientExtraSkuAdapter;
+import com.microsoft.identity.common.java.util.ClientExtraSku;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.ObjectMapper;
@@ -214,7 +214,7 @@ public abstract class OAuth2Strategy
             );
 
             // Attach client extras header for ESTS telemetry. Only done for broker requests
-            final ClientExtraSkuAdapter clientExtraAdapter = ClientExtraSkuAdapter.builder()
+            final ClientExtraSku clientExtraAdapter = ClientExtraSku.builder()
                     .srcSku(product)
                     .srcSkuVer(productVersion)
                     .build();
