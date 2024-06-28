@@ -27,6 +27,7 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
 import com.microsoft.identity.internal.test.labapi.api.ResetApi;
+import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
 import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
 import com.microsoft.identity.labapi.utilities.client.LabClient;
 
@@ -49,15 +50,14 @@ public class LabResetHelper {
         final ResetApi resetApi = new ResetApi();
 
         try {
-            final String resetResponse;
-            resetResponse = resetApi.apiResetPost(upn, LabConstants.ResetOperation.PASSWORD);
+            final CustomSuccessResponse resetResponse = resetApi.apiResetPut(upn, LabConstants.ResetOperation.PASSWORD);
 
             if (resetResponse == null) {
                 return false;
             }
 
             final String expectedResult = ("Password reset for user: " + upn).toLowerCase();
-            return resetResponse.toLowerCase().contains(expectedResult);
+            return resetResponse.toString().toLowerCase().contains(expectedResult);
         } catch (ApiException e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -75,29 +75,17 @@ public class LabResetHelper {
         final ResetApi resetApi = new ResetApi();
 
         try {
-            final String resetResponse;
-            resetResponse = resetApi.apiResetPost(upn, LabConstants.ResetOperation.MFA);
+            final CustomSuccessResponse resetResponse = resetApi.apiResetPut(upn, LabConstants.ResetOperation.MFA);
 
             if (resetResponse == null) {
                 return false;
             }
 
-            return resetResponse.contains(
+            return resetResponse.toString().contains(
                     "MFA reset for user: " + upn
             );
         } catch (ApiException e) {
             throw new RuntimeException(e.getMessage());
-        }
-    }
-
-    private static String getSecret(final String secretName) {
-        final LabSecretApi labSecretApi = new LabSecretApi();
-
-        try {
-            final SecretResponse secretResponse = labSecretApi.apiLabSecretGet(secretName);
-            return secretResponse.getValue();
-        } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
-            throw new RuntimeException("Failed to fetch secret", ex);
         }
     }
 

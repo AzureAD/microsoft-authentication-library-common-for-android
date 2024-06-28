@@ -335,20 +335,9 @@ public class LabUserHelper {
 
         ResetApi resetApi = new ResetApi();
         try {
-            resetApi.apiResetPost(upn, "Password");
+            resetApi.apiResetPut(upn, "Password");
         } catch (ApiException e) {
             throw new RuntimeException("Error resetting lab user password", e);
-        }
-    }
-
-    private static String getSecret(final String secretName) {
-        final LabSecretApi labSecretApi = new LabSecretApi();
-
-        try {
-            final SecretResponse secretResponse = labSecretApi.apiLabSecretGet(secretName);
-            return secretResponse.getValue();
-        } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
-            throw new RuntimeException("Failed to fetch secret", ex);
         }
     }
 

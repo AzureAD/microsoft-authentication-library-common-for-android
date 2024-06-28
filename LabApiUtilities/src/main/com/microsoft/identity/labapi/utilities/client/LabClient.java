@@ -404,13 +404,13 @@ public class LabClient implements ILabClient {
     public boolean resetPassword(@NonNull final String upn) throws LabApiException {
         final ResetApi resetApi = new ResetApi();
         try {
-            final String resetResponse = resetApi.apiResetPost(upn, ResetOperation.PASSWORD.toString());
+            final CustomSuccessResponse resetResponse = resetApi.apiResetPut(upn, ResetOperation.PASSWORD.toString());
             if (resetResponse == null) {
                 return false;
             }
 
             final String expectedResult = ("Password reset for user: " + upn).toLowerCase();
-            final boolean result = resetResponse.toLowerCase().contains(expectedResult);
+            final boolean result = resetResponse.toString().toLowerCase().contains(expectedResult);
             if (result) {
                 try {
                     Thread.sleep(PASSWORD_RESET_WAIT_DURATION);

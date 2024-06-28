@@ -61,15 +61,4 @@ public class LabDeviceHelper {
             throw new LabApiException(e);
         }
     }
-
-    private static String getSecret(final String secretName) {
-        final LabSecretApi labSecretApi = new LabSecretApi();
-
-        try {
-            final SecretResponse secretResponse = labSecretApi.apiLabSecretGet(secretName);
-            return secretResponse.getValue();
-        } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
-            throw new RuntimeException("Failed to fetch secret", ex);
-        }
-    }
 }
