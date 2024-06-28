@@ -43,4 +43,54 @@ object NativeAuthCredentialHelper {
                 authorityUrl
             }
         }
+
+    val nativeAuthEmployeeWriteAllScope: String
+        get() {
+            val scope = BuildConfig.NATIVE_AUTH_EMPLOYEE_WRITE_ALL_SCOPE
+            return if (StringUtil.isNullOrEmpty(scope)) {
+                throw IllegalStateException("env var EMPLOYEE_WRITE_ALL_SCOPE value not set")
+            } else {
+                scope
+            }
+        }
+
+    val nativeAuthEmployeeReadAllScope: String
+        get() {
+            val scope = BuildConfig.NATIVE_AUTH_EMPLOYEE_READ_ALL_SCOPE
+            return if (StringUtil.isNullOrEmpty(scope)) {
+                throw IllegalStateException("env var EMPLOYEE_READ_ALL_SCOPE value not set")
+            } else {
+                scope
+            }
+        }
+
+    val nativeAuthCustomerWriteAllScope: String
+        get() {
+            val scope = BuildConfig.NATIVE_AUTH_CUSTOMERS_WRITE_ALL_SCOPE
+            return if (StringUtil.isNullOrEmpty(scope)) {
+                throw IllegalStateException("env var CUSTOMERS_WRITE_ALL_SCOPE value not set")
+            } else {
+                scope
+            }
+        }
+
+    val nativeAuthCustomerReadAllScope: String
+        get() {
+            val scope = BuildConfig.NATIVE_AUTH_CUSTOMERS_READ_ALL_SCOPE
+            return if (StringUtil.isNullOrEmpty(scope)) {
+                throw IllegalStateException("env var CUSTOMERS_READ_ALL_SCOPE value not set")
+            } else {
+                scope
+            }
+        }
+
+    val nativeAuthInvalidScope: String
+        get() {
+            val scope = BuildConfig.NATIVE_AUTH_INVALID_SCOPE
+            return if (StringUtil.isNullOrEmpty(scope)) {
+                throw IllegalStateException("env var NATIVE_AUTH_INVALID_SCOPE value not set")
+            } else {
+                scope
+            }
+        }
 }

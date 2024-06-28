@@ -183,7 +183,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
     /**
      * Makes a call to the /token endpoint with the provided Continuation Token, and caches the returned token
-     * if successful. In case of error [INativeAuthCommandResult.UnknownError] is returned.
+     * if successful. In case of error [INativeAuthCommandResult.APIError] is returned.
      */
     fun signInWithContinuationToken(parameters: SignInWithContinuationTokenCommandParameters): SignInWithContinuationTokenCommandResult {
         LogSession.logMethodCall(
@@ -226,9 +226,9 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     )
                     tokenApiResult as ApiErrorResult
 
-                    return INativeAuthCommandResult.UnknownError(
+                    return INativeAuthCommandResult.APIError(
                         error = tokenApiResult.error,
-                        errorDescription = "API returned unexpected result: $tokenApiResult",
+                        errorDescription = tokenApiResult.errorDescription,
                         errorCodes = tokenApiResult.errorCodes,
                         correlationId = tokenApiResult.correlationId
                     )
@@ -247,7 +247,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
     /**
      * Makes a call to the /token endpoint with the provided OOB code, and caches the returned token
-     * if successful.  In case of error [INativeAuthCommandResult.UnknownError] is returned.
+     * if successful.  In case of error [INativeAuthCommandResult.APIError] is returned.
      */
     fun signInSubmitCode(parameters: SignInSubmitCodeCommandParameters): SignInSubmitCodeCommandResult {
         LogSession.logMethodCall(
@@ -300,7 +300,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         tokenApiResult
                     )
                     tokenApiResult as ApiErrorResult
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = tokenApiResult.error,
                         errorDescription = tokenApiResult.errorDescription,
                         errorCodes = tokenApiResult.errorCodes,
@@ -354,7 +354,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         "Unexpected result: ",
                         result
                     )
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = "unexpected_api_result",
                         errorDescription = "API returned unexpected result: $result",
                         correlationId = result.correlationId
@@ -371,7 +371,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         "Unexpected result: ",
                         result
                     )
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = result.error,
                         errorDescription = result.errorDescription,
                         errorCodes = result.errorCodes,
@@ -508,7 +508,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         "Unexpected result: ",
                         signUpStartApiResult
                     )
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = signUpStartApiResult.error,
                         errorDescription = signUpStartApiResult.errorDescription,
                         correlationId = signUpStartApiResult.correlationId
@@ -865,7 +865,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         resetPasswordStartApiResult
                     )
                     resetPasswordStartApiResult as ApiErrorResult
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = resetPasswordStartApiResult.error,
                         errorDescription = resetPasswordStartApiResult.errorDescription,
                         correlationId = resetPasswordStartApiResult.correlationId
@@ -928,7 +928,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         resetPasswordContinueApiResult
                     )
                     resetPasswordContinueApiResult as ApiErrorResult
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = resetPasswordContinueApiResult.error,
                         errorDescription = resetPasswordContinueApiResult.errorDescription,
                         correlationId = resetPasswordContinueApiResult.correlationId
@@ -990,7 +990,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         resetPasswordChallengeApiResult
                     )
                     resetPasswordChallengeApiResult as ApiErrorResult
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = resetPasswordChallengeApiResult.error,
                         errorDescription = resetPasswordChallengeApiResult.errorDescription,
                         correlationId = resetPasswordChallengeApiResult.correlationId
@@ -1054,7 +1054,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         resetPasswordSubmitApiResult
                     )
                     resetPasswordSubmitApiResult as ApiErrorResult
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = resetPasswordSubmitApiResult.error,
                         errorDescription = resetPasswordSubmitApiResult.errorDescription,
                         correlationId = resetPasswordSubmitApiResult.correlationId
@@ -1153,7 +1153,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         "in_progress received after polling, illegal state"
                     )
                     // This should never be reached, theoretically
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = "illegal_state",
                         errorDescription = "in_progress received after polling concluded, illegal state",
                         correlationId = pollCompletionApiResult.correlationId
@@ -1170,7 +1170,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         pollCompletionApiResult
                     )
                     pollCompletionApiResult as ApiErrorResult
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = pollCompletionApiResult.error,
                         errorDescription = pollCompletionApiResult.errorDescription,
                         correlationId = pollCompletionApiResult.correlationId
@@ -1437,7 +1437,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     "Expire token result: ",
                     this
                 )
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     correlationId = this.correlationId
@@ -1450,7 +1450,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     "Unsupported challenge type: ",
                     this
                 )
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     correlationId = this.correlationId
@@ -1463,7 +1463,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     "Unexpected result: ",
                     this
                 )
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     correlationId = this.correlationId
@@ -1561,7 +1561,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     this
                 )
                 this as ApiErrorResult
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     correlationId = this.correlationId
@@ -1606,7 +1606,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     this
                 )
                 this as ApiErrorResult
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     correlationId = this.correlationId
@@ -1637,7 +1637,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     "Expire token result: ",
                     this
                 )
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     correlationId = this.correlationId
@@ -1686,7 +1686,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     "Unexpected result: ",
                     this
                 )
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     correlationId = this.correlationId
@@ -1700,9 +1700,10 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     "Unexpected result: ",
                     this
                 )
-                INativeAuthCommandResult.UnknownError(
-                    error = "unexpected_api_result",
-                    errorDescription = "API returned unexpected result: $this",
+                this as ApiErrorResult
+                INativeAuthCommandResult.APIError(
+                    error = this.error,
+                    errorDescription = this.errorDescription,
                     correlationId = this.correlationId
                 )
             }
@@ -1766,7 +1767,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     this
                 )
                 this as ApiErrorResult
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     correlationId = this.correlationId
@@ -1832,7 +1833,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     this
                 )
                 this as ApiErrorResult
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     correlationId = this.correlationId
@@ -1871,9 +1872,9 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     this
                 )
                 this as ApiErrorResult
-                INativeAuthCommandResult.UnknownError(
-                    error = "unexpected_api_result",
-                    errorDescription = "API returned unexpected result: $this",
+                INativeAuthCommandResult.APIError(
+                    error = this.error,
+                    errorDescription = this.errorDescription,
                     errorCodes = this.errorCodes,
                     correlationId = this.correlationId
                 )
@@ -1911,9 +1912,9 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     this
                 )
                 this as ApiErrorResult
-                INativeAuthCommandResult.UnknownError(
-                    error = "unexpected_api_result",
-                    errorDescription = "API returned unexpected result: $this",
+                INativeAuthCommandResult.APIError(
+                    error = this.error,
+                    errorDescription = this.errorDescription,
                     errorCodes = this.errorCodes,
                     correlationId = this.correlationId
                 )
@@ -1962,7 +1963,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     "Unexpected result: ",
                     initiateApiResult
                 )
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = initiateApiResult.error,
                     errorDescription = initiateApiResult.errorDescription,
                     errorCodes = initiateApiResult.errorCodes,
@@ -2033,7 +2034,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     "Unexpected result: ",
                     result
                 )
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = result.error,
                     errorDescription = result.errorDescription,
                     errorCodes = result.errorCodes,
