@@ -218,7 +218,7 @@ public abstract class OAuth2Strategy
                     .srcSku(product)
                     .srcSkuVer(productVersion)
                     .build();
-            headers.put(AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRAS, clientExtraAdapter.toString());
+            headers.put(AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRA_SKU, clientExtraSku.toString());
         }
         headers.putAll(Device.getPlatformIdParameters());
         headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, product);

@@ -618,7 +618,7 @@ public class AuthenticationConstants {
         /**
          * The String representing client extra telemetry information to be sent to ESTS.
          */
-        public static final String CLIENT_EXTRAS = "x-client-xtra-sku";
+        public static final String CLIENT_EXTRA_SKU = "x-client-xtra-sku";
 
         /**
          * The String representing the MSAL SdkType.

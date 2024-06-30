@@ -467,7 +467,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         .srcSku(state.getString(PRODUCT))
                         .srcSkuVer(state.getString(VERSION))
                         .build();
-                requestHeaders.put(com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRAS, clientExtraAdapter.toString());
+                requestHeaders.put(com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRA_SKU, clientExtraSku.toString());
             }
             return requestHeaders;
         } catch (Exception e) {
