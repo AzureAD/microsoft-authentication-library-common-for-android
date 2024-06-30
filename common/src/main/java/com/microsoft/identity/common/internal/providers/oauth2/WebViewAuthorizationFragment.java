@@ -463,7 +463,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
             // Attach client extras header for ESTS telemetry. Only done for broker requests
             if (checkIfBrokerRequest(this.mAuthorizationRequestUrl)) {
-                final ClientExtraSku clientExtraAdapter = ClientExtraSku.builder()
+                final ClientExtraSku clientExtraSku = ClientExtraSku.builder()
                         .srcSku(state.getString(PRODUCT))
                         .srcSkuVer(state.getString(VERSION))
                         .build();
