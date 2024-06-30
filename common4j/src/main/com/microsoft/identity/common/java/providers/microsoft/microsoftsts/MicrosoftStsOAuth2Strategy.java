@@ -34,6 +34,7 @@ import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X
 import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
 
 import com.google.gson.JsonParseException;
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
@@ -122,7 +123,7 @@ public class MicrosoftStsOAuth2Strategy
     /**
      * The default scope.  This effects of usint this are captured in documentation here
      * https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent#the-default-scope
-     *
+     * <p>
      * What this does is important, from the documentation it requests permission for every scope
      * that has been selected for the client application in the registration portal.
      */
@@ -156,7 +157,7 @@ public class MicrosoftStsOAuth2Strategy
                 } else {
                     setTokenEndpoint(config.getTokenEndpoint().toString());
                 }
-            }  catch (ServiceException e) {
+            } catch (final ServiceException e) {
                 Logger.error(
                         TAG,
                         "There was a problem with loading the openIdConfiguration",
@@ -477,7 +478,7 @@ public class MicrosoftStsOAuth2Strategy
         final MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
         request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);
 
-        if (authScheme instanceof  PopAuthenticationSchemeInternal) {
+        if (authScheme instanceof PopAuthenticationSchemeInternal) {
             request.setTokenType(TokenRequest.TokenType.POP);
 
             final IDevicePopManager devicePopManager =
@@ -664,26 +665,26 @@ public class MicrosoftStsOAuth2Strategy
             final Map<String, String> mapWithAdditionalEntry = new HashMap<String, String>();
 
             final String ccsRequestId = response.getHeaderValue(XMS_CCS_REQUEST_ID, 0);
-            if (null != ccsRequestId){
+            if (null != ccsRequestId) {
                 SpanExtension.current().setAttribute(AttributeName.ccs_request_id.name(), ccsRequestId);
 
-                if (CommonFlightManager.isFlightEnabled(CommonFlight.EXPOSE_CCS_REQUEST_ID_IN_TOKENRESPONSE)){
+                if (CommonFlightManager.isFlightEnabled(CommonFlight.EXPOSE_CCS_REQUEST_ID_IN_TOKENRESPONSE)) {
                     mapWithAdditionalEntry.put(XMS_CCS_REQUEST_ID, ccsRequestId);
                 }
             }
 
             final String ccsRequestSequence = response.getHeaderValue(XMS_CCS_REQUEST_SEQUENCE, 0);
-            if (null != ccsRequestSequence){
+            if (null != ccsRequestSequence) {
                 SpanExtension.current().setAttribute(AttributeName.ccs_request_sequence.name(), ccsRequestSequence);
 
-                if (CommonFlightManager.isFlightEnabled(CommonFlight.EXPOSE_CCS_REQUEST_SEQUENCE_IN_TOKENRESPONSE)){
+                if (CommonFlightManager.isFlightEnabled(CommonFlight.EXPOSE_CCS_REQUEST_SEQUENCE_IN_TOKENRESPONSE)) {
                     mapWithAdditionalEntry.put(XMS_CCS_REQUEST_SEQUENCE, ccsRequestSequence);
                 }
             }
 
-            if (null != tokenResponse){
-                if (null != tokenResponse.getExtraParameters()){
-                    for (final Map.Entry<String, String> entry : tokenResponse.getExtraParameters()){
+            if (null != tokenResponse) {
+                if (null != tokenResponse.getExtraParameters()) {
+                    for (final Map.Entry<String, String> entry : tokenResponse.getExtraParameters()) {
                         mapWithAdditionalEntry.put(entry.getKey(), entry.getValue());
                     }
                 }
@@ -806,7 +807,7 @@ public class MicrosoftStsOAuth2Strategy
     @Nullable
     public String getDeviceAtPopThumbprint() {
         if (mStrategyParameters.getAuthenticationScheme() instanceof PopAuthenticationSchemeWithClientKeyInternal) {
-           return ((PopAuthenticationSchemeWithClientKeyInternal) mStrategyParameters.getAuthenticationScheme()).getKid();
+            return ((PopAuthenticationSchemeWithClientKeyInternal) mStrategyParameters.getAuthenticationScheme()).getKid();
         }
 
         String atPoPKid = null;

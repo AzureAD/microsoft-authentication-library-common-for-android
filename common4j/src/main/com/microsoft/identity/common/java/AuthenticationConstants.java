@@ -589,6 +589,11 @@ public class AuthenticationConstants {
         public static final String EMAIL_SCOPE = "email";
 
         /**
+         * Scope to get transfer token
+         */
+        public static final String TRANSFER_TOKEN_SCOPE = "service::http://Passport.NET/purpose::PURPOSE_TRANSFER_TOKEN_BACKUP_RESTORE";
+
+        /**
          * Used in the interrupt flow. See BrokerJoinedAccountController for more info.
          * The BRT request made with this resourceID will contain the updated claim acquired in the interrupt flow performed before it.
          */
