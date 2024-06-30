@@ -214,7 +214,7 @@ public abstract class OAuth2Strategy
             );
 
             // Attach client extras header for ESTS telemetry. Only done for broker requests
-            final ClientExtraSku clientExtraAdapter = ClientExtraSku.builder()
+            final ClientExtraSku clientExtraSku = ClientExtraSku.builder()
                     .srcSku(product)
                     .srcSkuVer(productVersion)
                     .build();
