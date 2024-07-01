@@ -58,13 +58,11 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.UserCancelException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightManager;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseNativeAuthCommandParameters;
-import com.microsoft.identity.common.java.nativeauth.util.ILoggable;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OtelContextExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
@@ -78,7 +76,6 @@ import com.microsoft.identity.common.java.result.VoidResult;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.util.BiConsumer;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
-import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
@@ -254,7 +251,7 @@ public class CommandDispatcher {
             if (BuildConfig.DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT){
                 commandResult = submitSilentReturningFuture(command).get();
             } else {
-                final int silentTokenTimeOutMs = CommonFlightManager.getIntValue(CommonFlight.ACQUIRE_TOKEN_SILENT_TIMEOUT_MILLISECONDS);
+                final int silentTokenTimeOutMs = CommonFlightsManager.INSTANCE.getFlightsProvider().getIntValue(CommonFlight.ACQUIRE_TOKEN_SILENT_TIMEOUT_MILLISECONDS);
                 commandResult = submitSilentReturningFuture(command).get(silentTokenTimeOutMs, TimeUnit.MILLISECONDS);
             }
         } catch (final InterruptedException | ExecutionException | TimeoutException e) {

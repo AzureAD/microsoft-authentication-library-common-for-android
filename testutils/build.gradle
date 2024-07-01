@@ -59,6 +59,7 @@ android {
     def nativeAuthEmployeeReadAllScope = "" // will be blank unless specified by developer
     def nativeAuthCustomerWriteAllScope = "" // will be blank unless specified by developer
     def nativeAuthCustomerReadAllScope = "" // will be blank unless specified by developer
+    def nativeAuthInvalidScope = "" // will be blank unless specified by developer
 
     if (project.hasProperty("nativeAuthSignInTestsUsernameValue")) {
         nativeAuthSignInTestsUsername = nativeAuthSignInTestsUsernameValue
@@ -92,6 +93,10 @@ android {
         nativeAuthCustomerReadAllScope = nativeAuthCustomerReadAllScopeValue
     }
 
+    if (project.hasProperty("nativeAuthInvalidScopeValue")) {
+        nativeAuthInvalidScope = nativeAuthInvalidScopeValue
+    }
+
     defaultConfig {
         multiDexEnabled true
         minSdkVersion rootProject.ext.minSdkVersion
@@ -108,6 +113,7 @@ android {
         buildConfigField("String", "NATIVE_AUTH_EMPLOYEE_READ_ALL_SCOPE", "\"$nativeAuthEmployeeReadAllScope\"")
         buildConfigField("String", "NATIVE_AUTH_CUSTOMERS_WRITE_ALL_SCOPE", "\"$nativeAuthCustomerWriteAllScope\"")
         buildConfigField("String", "NATIVE_AUTH_CUSTOMERS_READ_ALL_SCOPE", "\"$nativeAuthCustomerReadAllScope\"")
+        buildConfigField("String", "NATIVE_AUTH_INVALID_SCOPE", "\"$nativeAuthInvalidScope\"")
         buildConfigField("String", "RUN_ID", "\"$runId\"")
         buildConfigField("boolean", "SAVE_TEST_RESULTS_TO_CSV", "$saveTestResultsToCsv")
 

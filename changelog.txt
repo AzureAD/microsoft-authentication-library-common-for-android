@@ -1,11 +1,14 @@
 V.Next
 ---------
-- [MAJOR] Account Transfer Skips Account Chooser (#2375)
+- [MINOR] Account Transfer Skips Account Chooser (#2375)
+- [MINOR] Add support for per tenant flighting in broker (#2433)
 - [MINOR] Fix AccountManager Strategy (#2427)
 - [MINOR] Add MessageDigest to ICryptoFactory (#2423)
 - [PATCH] Adding check for OS version for passkeys (#2419)
 - [MINOR] Platform Specific Extra Query Parameters (#2426)
+- [PATCH] Return API error and errorDescription in case of unexpected response (#2431)
 - [MINOR] Support certificate with password (#2405)
+- [PATCH] Return API error and errorDescription in case of unexpected response (#2431)
 
 Version 17.5.0
 ---------
