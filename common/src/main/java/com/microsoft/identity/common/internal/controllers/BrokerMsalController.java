@@ -310,12 +310,9 @@ public class BrokerMsalController extends BaseController {
      * @return an {@link AcquireTokenResult}.
      */
     @Override
-    public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters oldParameters)
+    public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters)
             throws BaseException, InterruptedException, ExecutionException {
         final String methodTag = TAG + ":acquireToken";
-
-        // This is for testing only, will remove once validation is complete. Same parameter renaming
-        final InteractiveTokenCommandParameters parameters = oldParameters.toBuilder().accountTransferToken("MOCK_TOKEN").build();
 
         Telemetry.emit(
                 new ApiStartEvent()
@@ -390,7 +387,10 @@ public class BrokerMsalController extends BaseController {
             final Bundle resultBundle = mBrokerResultFuture.get();
 
             final String negotiatedBrokerProtocolVersion = interactiveRequestIntent.getStringExtra(NEGOTIATED_BP_VERSION_KEY);
-
+            // For MSA Accounts Broker doesn't save the accounts, instead it just passes the result along,
+            // MSAL needs to save this account locally for future token calls.
+            // parameters.getOAuth2TokenCache() will be non-null only in case of MSAL native
+            // If the request is from MSALCPP , OAuth2TokenCache will be null.
             if (parameters.getOAuth2TokenCache() != null && !BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker(negotiatedBrokerProtocolVersion)) {
                 saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
             }
