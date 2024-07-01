@@ -316,8 +316,10 @@ public class LabClient implements ILabClient {
             // for now this is fine
             System.out.println(successResponse.getResult());
 
-            final String expectedResult = "Device removed Successfully.";
-            return expectedResult.equalsIgnoreCase(successResponse.getMessage());
+            final String expectedResult = String.format(
+                    "Device : %s, successfully deleted from AAD.", deviceId
+            );
+            return expectedResult.equalsIgnoreCase(successResponse.getResult());
         } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new LabApiException(
                     LabError.FAILED_TO_DELETE_DEVICE, ex,
