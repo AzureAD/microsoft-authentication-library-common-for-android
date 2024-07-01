@@ -22,19 +22,32 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.flighting;
 
-import org.junit.Assert;
-import org.junit.Test;
 
-public class CommonFlightManagerTest {
-    private IFlightsProvider flightsProvider = new MockFlightsProvider();
+import org.jetbrains.annotations.NotNull;
 
-    @Test
-    public void testIsFlightEnabled() {
-        ((MockFlightsProvider)flightsProvider).addFlight(MockFlights.ENABLED_FLIGHT.getKey(), "true");
-        ((MockFlightsProvider)flightsProvider).addFlight(MockFlights.DISABLED_FLIGHT.getKey(), "false");
-        CommonFlightManager.setFlightProvider(flightsProvider);
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
-        Assert.assertTrue(CommonFlightManager.isFlightEnabled(MockFlights.ENABLED_FLIGHT));
-        Assert.assertFalse(CommonFlightManager.isFlightEnabled(MockFlights.DISABLED_FLIGHT));
+@Setter
+@Accessors(prefix = "m")
+public class MockFlightsManager implements IFlightsManager {
+
+    private MockFlightsProvider mMockBrokerFlightsProvider;
+    private MockFlightsProvider mMockBrokerFlightsProviderForTenant;
+
+    @NotNull
+    @Override
+    public IFlightsProvider getFlightsProvider() {
+        return mMockBrokerFlightsProvider;
+    }
+
+    @NotNull
+    @Override
+    public IFlightsProvider getFlightsProviderForTenant(@NotNull String tenantId) {
+        if (mMockBrokerFlightsProviderForTenant == null) {
+            return mMockBrokerFlightsProvider;
+        } else {
+            return mMockBrokerFlightsProviderForTenant;
+        }
     }
 }
