@@ -113,11 +113,6 @@ public class DeleteDeviceApi {
 
         com.squareup.okhttp.Call call = apiDeleteDeviceDeleteCall(upn, deviceid, progressListener, progressRequestListener);
         return call;
-
-
-
-
-
     }
 
     /**

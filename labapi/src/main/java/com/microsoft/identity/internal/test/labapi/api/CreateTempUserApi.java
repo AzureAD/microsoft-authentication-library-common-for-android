@@ -110,11 +110,6 @@ public class CreateTempUserApi {
 
         com.squareup.okhttp.Call call = apiCreateTempUserPostCall(usertype, progressListener, progressRequestListener);
         return call;
-
-
-
-
-
     }
 
     /**

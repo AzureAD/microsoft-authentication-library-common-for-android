@@ -112,11 +112,6 @@ public class DisablePolicyApi {
 
         com.squareup.okhttp.Call call = apiDisablePolicyPutCall(upn, policy, progressListener, progressRequestListener);
         return call;
-
-
-
-
-
     }
 
     /**

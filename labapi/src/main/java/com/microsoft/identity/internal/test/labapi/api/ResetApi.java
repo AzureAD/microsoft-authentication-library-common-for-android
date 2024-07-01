@@ -113,11 +113,6 @@ public class ResetApi {
 
         com.squareup.okhttp.Call call = apiResetPutCall(upn, operation, progressListener, progressRequestListener);
         return call;
-
-
-
-
-
     }
 
     /**

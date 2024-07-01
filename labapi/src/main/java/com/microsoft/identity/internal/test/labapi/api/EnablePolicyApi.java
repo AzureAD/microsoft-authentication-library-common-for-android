@@ -111,8 +111,6 @@ public class EnablePolicyApi {
 
         com.squareup.okhttp.Call call = apiEnablePolicyPutCall(upn, policy, progressListener, progressRequestListener);
         return call;
-
-
     }
 
     /**
