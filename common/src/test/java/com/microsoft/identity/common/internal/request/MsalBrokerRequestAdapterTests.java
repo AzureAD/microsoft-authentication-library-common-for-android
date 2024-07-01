@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.request;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IS_ACCOUNT_TRANSFER_REQUEST;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.REQUEST_AUTHORITY;
 
 import android.os.Bundle;
@@ -119,7 +118,6 @@ public class MsalBrokerRequestAdapterTests {
         final Bundle requestBundle = msalBrokerRequestAdapter.getRequestBundleForAcquireTokenInteractive(params, negotiatedBrokerProtocolVersion);
 
         Assert.assertEquals(negotiatedBrokerProtocolVersion, requestBundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY));
-        Assert.assertFalse(requestBundle.getBoolean(IS_ACCOUNT_TRANSFER_REQUEST));
     }
 
     @Test
@@ -156,6 +154,5 @@ public class MsalBrokerRequestAdapterTests {
         final Bundle requestBundle = msalBrokerRequestAdapter.getRequestBundleForAcquireTokenInteractive(params, negotiatedBrokerProtocolVersion);
 
         Assert.assertEquals(negotiatedBrokerProtocolVersion, requestBundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY));
-        Assert.assertTrue(requestBundle.getBoolean(IS_ACCOUNT_TRANSFER_REQUEST));
     }
 }
