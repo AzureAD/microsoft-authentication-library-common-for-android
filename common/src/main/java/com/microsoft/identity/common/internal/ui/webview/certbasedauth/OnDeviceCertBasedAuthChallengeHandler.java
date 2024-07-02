@@ -126,17 +126,22 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
     private String printRequestDetails(ClientCertRequest request) {
 
         final StringBuilder logLine = new StringBuilder(256);
-        logLine.append("Processing CBA challenge. \nKey Type: ");
+        logLine.append("Processing CBA challenge.");
 
-        for (String k : request.getKeyTypes()){
-            logLine.append(k)
-                    .append(", ");
+        if (request.getKeyTypes() != null) {
+            logLine.append("\nKey Types: ");
+            for (String k : request.getKeyTypes()) {
+                logLine.append(k)
+                        .append(", ");
+            }
         }
 
-        logLine.append("\nPrincipals: ");
-        for (Principal p : request.getPrincipals()){
-            logLine.append(p.getName())
-                    .append(", ");
+        if (request.getPrincipals() != null) {
+            logLine.append("\nPrincipals: ");
+            for (Principal p : request.getPrincipals()) {
+                logLine.append(p.getName())
+                        .append(", ");
+            }
         }
 
         logLine.append("\nHost: ")
