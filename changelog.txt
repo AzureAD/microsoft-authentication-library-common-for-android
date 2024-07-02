@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [PATCH] Add null check for CBA logging (#2443)
 - [MINOR] Add support for per tenant flighting in broker (#2433)
 - [MINOR] Fix AccountManager Strategy (#2427)
 - [MINOR] Add MessageDigest to ICryptoFactory (#2423)
