@@ -55,7 +55,7 @@ public class ApiClient {
 
     private final String AUTH_TYPE = "Access Token";
 
-    private static final String DEFAULT_BASE_PATH = "https://preview.msidlab.com";
+    private static final String DEFAULT_BASE_PATH = "https://msidlab.com";
     private String basePath;
     private boolean debugging = false;
     private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
