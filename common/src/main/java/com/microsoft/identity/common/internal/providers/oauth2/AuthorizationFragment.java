@@ -157,19 +157,17 @@ public abstract class AuthorizationFragment extends Fragment {
      * @param state a bundle containing data provided when the activity was created
      */
     void extractState(@NonNull final Bundle state) {
-        setDiagnosticContextForNewThread(state.getString(DiagnosticContext.CORRELATION_ID), state.getString(PRODUCT), state.getString(VERSION));
+        setDiagnosticContextForNewThread(state.getString(DiagnosticContext.CORRELATION_ID));
     }
 
     /**
      * When authorization fragment is launched.  It will be launched on a new thread. (TODO: verify this)
      * Initialize based on value provided in intent.
      */
-    private static void setDiagnosticContextForNewThread(final String correlationId, final String product, final String productVersion) {
+    private static void setDiagnosticContextForNewThread(final String correlationId) {
         final String methodTag = TAG + ":setDiagnosticContextForAuthorizationActivity";
         final RequestContext rc = new RequestContext();
         rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
-        rc.put(PRODUCT, product);
-        rc.put(VERSION, productVersion);
         DiagnosticContext.INSTANCE.setRequestContext(rc);
         Logger.verbose(
                 methodTag,

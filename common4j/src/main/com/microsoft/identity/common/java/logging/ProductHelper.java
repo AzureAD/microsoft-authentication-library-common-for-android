@@ -30,7 +30,7 @@ import cz.msebera.httpclient.android.BuildConfig;
 import lombok.NonNull;
 
 /**
- * Simple helper class to pull product telemetry information from diagnostic context.
+ * Simple helper class to pull client library telemetry information from diagnostic context.
  */
 public class ProductHelper {
     private static final String TAG = ProductHelper.class.getSimpleName();
