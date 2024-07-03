@@ -53,6 +53,7 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -385,6 +386,14 @@ public class ExceptionAdapter {
             return new ClientException(
                     ClientException.INTERRUPTED_OPERATION,
                     "SDK cancelled operation, the thread execution was interrupted",
+                    e
+            );
+        }
+
+        if (e instanceof TimeoutException) {
+            return new ClientException(
+                    ClientException.TIMED_OUT,
+                    "A blocking operation has timed out",
                     e
             );
         }
