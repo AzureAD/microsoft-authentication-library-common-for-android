@@ -1,5 +1,7 @@
 V.Next
 ---------
+- [PATCH] Add null check for CBA logging (#2443)
+- [MINOR] Add support for per tenant flighting in broker (#2433)
 - [MINOR] Fix AccountManager Strategy (#2427)
 - [MINOR] Add MessageDigest to ICryptoFactory (#2423)
 - [PATCH] Adding check for OS version for passkeys (#2419)
@@ -7,6 +9,7 @@ V.Next
 - [PATCH] Return API error and errorDescription in case of unexpected response (#2431)
 - [MINOR] Support certificate with password (#2405)
 - [PATCH] Return API error and errorDescription in case of unexpected response (#2431)
+- [MINOR] Classifying TimeoutException as timed_out (#2441)
 - [PATCH] Add check for unset correlation ID when sending Native Auth requests (#2435)
 
 Version 17.5.0
