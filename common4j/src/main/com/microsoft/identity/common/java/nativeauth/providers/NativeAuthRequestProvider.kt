@@ -34,9 +34,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
-import com.microsoft.identity.common.java.logging.DiagnosticContext
-import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.logging.ProductHelper
+import com.microsoft.identity.common.java.logging.LibraryInfoHelper
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpassword.ResetPasswordChallengeRequest
@@ -312,8 +310,8 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     private fun getRequestHeaders(correlationId: String): Map<String, String?> {
         val headers: MutableMap<String, String?> = TreeMap()
         headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = correlationId
-        headers[AuthenticationConstants.SdkPlatformFields.PRODUCT] = ProductHelper.getProduct()
-        headers[AuthenticationConstants.SdkPlatformFields.VERSION] = ProductHelper.getProductVersion()
+        headers[AuthenticationConstants.SdkPlatformFields.PRODUCT] = LibraryInfoHelper.getLibraryName()
+        headers[AuthenticationConstants.SdkPlatformFields.VERSION] = LibraryInfoHelper.getLibraryVersion()
         headers.putAll(Device.getPlatformIdParameters())
         headers.putAll(EstsTelemetry.getInstance().telemetryHeaders)
         headers[HttpConstants.HeaderField.CONTENT_TYPE] = "application/x-www-form-urlencoded"

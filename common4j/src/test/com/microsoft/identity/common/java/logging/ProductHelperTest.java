@@ -38,7 +38,7 @@ public class ProductHelperTest {
 
     @Test
     public void testProductEmpty() {
-        Assert.assertEquals(ProductHelper.NOT_SET, ProductHelper.getProduct());
+        Assert.assertEquals(LibraryInfoHelper.NOT_SET, LibraryInfoHelper.getLibraryName());
     }
 
     @Test
@@ -47,12 +47,12 @@ public class ProductHelperTest {
         final RequestContext rc = new RequestContext();
         rc.put(PRODUCT, PRODUCT_NAME);
         DiagnosticContext.INSTANCE.setRequestContext(rc);
-        Assert.assertEquals(PRODUCT_NAME, ProductHelper.getProduct());
+        Assert.assertEquals(PRODUCT_NAME, LibraryInfoHelper.getLibraryName());
     }
 
     @Test
     public void testProductVersionEmpty() {
-        Assert.assertEquals("1.5.9-default", ProductHelper.getProductVersion());
+        Assert.assertEquals("1.5.9-default", LibraryInfoHelper.getLibraryVersion());
     }
 
     @Test
@@ -61,6 +61,6 @@ public class ProductHelperTest {
         final RequestContext rc = new RequestContext();
         rc.put(VERSION, PRODUCT_VERSION);
         DiagnosticContext.INSTANCE.setRequestContext(rc);
-        Assert.assertEquals(PRODUCT_VERSION, ProductHelper.getProductVersion());
+        Assert.assertEquals(PRODUCT_VERSION, LibraryInfoHelper.getLibraryVersion());
     }
 }

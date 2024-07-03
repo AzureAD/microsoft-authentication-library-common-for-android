@@ -93,8 +93,8 @@ public class AuthorizationActivityFactory {
      * @param authorizationAgent         The means by which authorization should be performed (EMBEDDED, WEBVIEW) NOTE: This should move to library configuration
      * @param webViewZoomEnabled         This parameter is specific to embedded and controls whether webview zoom is enabled... NOTE: Needs refactoring
      * @param webViewZoomControlsEnabled This parameter is specific to embedded and controls whether webview zoom controls are enabled... NOTE: Needs refactoring
-     * @param product                    Product name to be of library making the request
-     * @param productVersion             Product version to be of library making the request
+     * @param sourceLibraryName                    Product name to be of library making the request
+     * @param sourceLibraryVersion             Product version to be of library making the request
      * @return An android Intent which will be used by Android to create an AuthorizationActivity
      */
     public static Intent getAuthorizationActivityIntent(final Context context,
@@ -105,8 +105,8 @@ public class AuthorizationActivityFactory {
                                                         final AuthorizationAgent authorizationAgent,
                                                         final boolean webViewZoomEnabled,
                                                         final boolean webViewZoomControlsEnabled,
-                                                        final String product,
-                                                        final String productVersion) {
+                                                        final String sourceLibraryName,
+                                                        final String sourceLibraryVersion) {
         final Intent intent;
         final LibraryConfiguration libraryConfig = LibraryConfiguration.getInstance();
         if (ProcessUtil.isBrokerProcess(context)) {
@@ -129,11 +129,11 @@ public class AuthorizationActivityFactory {
         intent.putExtra(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         intent.putExtra(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
         intent.putExtra(CORRELATION_ID, DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
-        if (product != null) {
-            intent.putExtra(PRODUCT, product);
+        if (sourceLibraryName != null) {
+            intent.putExtra(PRODUCT, sourceLibraryName);
         }
-        if (productVersion != null) {
-            intent.putExtra(VERSION, productVersion);
+        if (sourceLibraryVersion != null) {
+            intent.putExtra(VERSION, sourceLibraryVersion);
         }
         intent.putExtra(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT, new CommonMoshiJsonAdapter().toJson(
                 SerializableSpanContext.builder()

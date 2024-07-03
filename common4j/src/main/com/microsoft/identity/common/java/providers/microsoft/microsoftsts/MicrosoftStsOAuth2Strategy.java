@@ -34,7 +34,6 @@ import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X
 import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
 
 import com.google.gson.JsonParseException;
-import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
@@ -53,7 +52,7 @@ import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightManager;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.logging.ProductHelper;
+import com.microsoft.identity.common.java.logging.LibraryInfoHelper;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpConstants;
 import com.microsoft.identity.common.java.net.HttpResponse;
@@ -342,8 +341,8 @@ public class MicrosoftStsOAuth2Strategy
             builder.setSlice(mConfig.getSlice());
         }
 
-        builder.setLibraryName(ProductHelper.getProduct());
-        builder.setLibraryVersion(ProductHelper.getProductVersion());
+        builder.setLibraryName(LibraryInfoHelper.getLibraryName());
+        builder.setLibraryVersion(LibraryInfoHelper.getLibraryVersion());
         builder.setFlightParameters(mConfig.getFlightParameters());
         builder.setMultipleCloudAware(mConfig.getMultipleCloudsSupported());
         builder.setOpenIdProviderConfiguration(mOpenIdProviderConfiguration);
@@ -563,8 +562,8 @@ public class MicrosoftStsOAuth2Strategy
         final Map<String, String> headers = new TreeMap<>();
         headers.put("client-request-id", DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         headers.putAll(Device.getPlatformIdParameters());
-        headers.put(PRODUCT, ProductHelper.getProduct());
-        headers.put(VERSION, ProductHelper.getProductVersion());
+        headers.put(PRODUCT, LibraryInfoHelper.getLibraryName());
+        headers.put(VERSION, LibraryInfoHelper.getLibraryVersion());
 
         headers.put(APP_PACKAGE_NAME, request.getClientAppName());
         headers.put(APP_VERSION, request.getClientAppVersion());

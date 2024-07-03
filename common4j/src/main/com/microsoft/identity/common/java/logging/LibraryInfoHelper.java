@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.java.logging;
 
 import com.microsoft.identity.common.java.AuthenticationConstants;
-import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import cz.msebera.httpclient.android.BuildConfig;
@@ -32,8 +31,8 @@ import lombok.NonNull;
 /**
  * Simple helper class to pull client library telemetry information from diagnostic context.
  */
-public class ProductHelper {
-    private static final String TAG = ProductHelper.class.getSimpleName();
+public class LibraryInfoHelper {
+    private static final String TAG = LibraryInfoHelper.class.getSimpleName();
 
     /**
      * The String to be returned if the value is not set.
@@ -41,12 +40,12 @@ public class ProductHelper {
     protected static final String NOT_SET = "NOT_SET";
 
     /**
-     * Returns the product (library) name by accessing it from DiagnosticContext.
+     * Returns the library name by accessing it from DiagnosticContext.
      * @return product name from DiagnosticContext.
      */
     @NonNull
-    public static String getProduct() {
-        final String methodName = ":getProduct";
+    public static String getLibraryName() {
+        final String methodName = ":getLibraryName";
 
         final String product = DiagnosticContext.INSTANCE.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT);
         if (StringUtil.isNullOrEmpty(product)) {
@@ -62,8 +61,8 @@ public class ProductHelper {
      * @return product version from DiagnosticContext.
      */
     @NonNull
-    public static String getProductVersion() {
-        final String methodName = ":getProductVersion";
+    public static String getLibraryVersion() {
+        final String methodName = ":getLibraryVersion";
 
         final String version = DiagnosticContext.INSTANCE.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.VERSION);
         if (StringUtil.isNullOrEmpty(version)) {

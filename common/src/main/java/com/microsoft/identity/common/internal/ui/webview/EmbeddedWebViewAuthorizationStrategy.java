@@ -86,17 +86,17 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         Logger.info(methodTag,"Perform the authorization request with embedded webView.");
         final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
 
-        String product = null;
-        String productVersion = null;
+        String sourceLibraryName = null;
+        String sourceLibraryVersion = null;
 
         // TODO: Pretty sure this type check wouldn't be necessary, since all authorization requests that go through this path will
         //  extend MicrosoftAuthorizationRequest. Perhaps we can change the Generic type to extend MicrosoftAuthorizationRequest rather than just AuthorizationRequest.
         if (mAuthorizationRequest instanceof MicrosoftAuthorizationRequest) {
-            product = ((MicrosoftAuthorizationRequest) mAuthorizationRequest).getLibraryName();
-            productVersion = ((MicrosoftAuthorizationRequest) mAuthorizationRequest).getLibraryVersion();
+            sourceLibraryName = ((MicrosoftAuthorizationRequest) mAuthorizationRequest).getLibraryName();
+            sourceLibraryVersion = ((MicrosoftAuthorizationRequest) mAuthorizationRequest).getLibraryVersion();
         }
 
-        final Intent authIntent = buildAuthorizationActivityStartIntent(requestUrl, product, productVersion);
+        final Intent authIntent = buildAuthorizationActivityStartIntent(requestUrl, sourceLibraryName, sourceLibraryVersion);
 
         launchIntent(authIntent);
         return mAuthorizationResultFuture;
@@ -104,7 +104,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
 
     // Suppressing unchecked warnings during casting to HashMap<String,String> due to no generic type with mAuthorizationRequest
     @SuppressWarnings(WarningType.unchecked_warning)
-    private Intent buildAuthorizationActivityStartIntent(URI requestUrl, @Nullable final String product, @Nullable final String productVersion) {
+    private Intent buildAuthorizationActivityStartIntent(URI requestUrl, @Nullable final String sourceLibraryName, @Nullable final String sourceLibraryVersion) {
         // RedirectURI used to get the auth code in nested app auth is that of a hub app (brkRedirectURI)       
         final String redirectUri = mAuthorizationRequest.getBrkRedirectUri() != null ? mAuthorizationRequest.getBrkRedirectUri() : mAuthorizationRequest.getRedirectUri();
         return AuthorizationActivityFactory.getAuthorizationActivityIntent(
@@ -116,8 +116,8 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
                     AuthorizationAgent.WEBVIEW,
                     mAuthorizationRequest.isWebViewZoomEnabled(),
                     mAuthorizationRequest.isWebViewZoomControlsEnabled(),
-                    product,
-                    productVersion);
+                    sourceLibraryName,
+                    sourceLibraryVersion);
     }
 
     @Override
