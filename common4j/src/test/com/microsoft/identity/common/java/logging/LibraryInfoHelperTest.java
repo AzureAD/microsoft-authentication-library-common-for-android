@@ -29,7 +29,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ProductHelperTest {
+public class LibraryInfoHelperTest {
 
     @After
     public void cleanUp() {
@@ -37,12 +37,12 @@ public class ProductHelperTest {
     }
 
     @Test
-    public void testProductEmpty() {
+    public void testLibraryNameEmpty() {
         Assert.assertEquals(LibraryInfoHelper.NOT_SET, LibraryInfoHelper.getLibraryName());
     }
 
     @Test
-    public void testProductSet() {
+    public void testLibraryNameSet() {
         final String PRODUCT_NAME = "MSAL";
         final RequestContext rc = new RequestContext();
         rc.put(PRODUCT, PRODUCT_NAME);
@@ -51,12 +51,12 @@ public class ProductHelperTest {
     }
 
     @Test
-    public void testProductVersionEmpty() {
+    public void testLibraryVersionEmpty() {
         Assert.assertEquals("1.5.9-default", LibraryInfoHelper.getLibraryVersion());
     }
 
     @Test
-    public void testProductVersionSet() {
+    public void testLibraryVersionSet() {
         final String PRODUCT_VERSION = "5.0.0";
         final RequestContext rc = new RequestContext();
         rc.put(VERSION, PRODUCT_VERSION);
