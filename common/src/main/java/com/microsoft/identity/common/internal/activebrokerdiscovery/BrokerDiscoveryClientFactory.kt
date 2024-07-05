@@ -42,7 +42,7 @@ class BrokerDiscoveryClientFactory {
         private val TAG = BrokerDiscoveryClientFactory::class.simpleName
 
         @Volatile
-        private var IS_NEW_DISCOVERY_ENABLED = false
+        private var IS_NEW_DISCOVERY_ENABLED = true
 
         @Volatile
         private var clientSdkInstance: IBrokerDiscoveryClient? = null
