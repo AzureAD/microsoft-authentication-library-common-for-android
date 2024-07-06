@@ -1,6 +1,5 @@
 V.Next
 ---------
-- [MINOR] Enable Broker Discovery by default in MSAL (#2445)
 - [PATCH] Add null check for CBA logging (#2443)
 - [MINOR] Add support for per tenant flighting in broker (#2433)
 - [MINOR] Fix AccountManager Strategy (#2427)
