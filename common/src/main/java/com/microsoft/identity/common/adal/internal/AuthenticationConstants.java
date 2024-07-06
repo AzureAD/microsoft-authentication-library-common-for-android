@@ -1358,7 +1358,11 @@ public final class AuthenticationConstants {
         /**
          * String to return MSA account list from LTW broker.
          */
+<<<<<<< HEAD
         public static final String RESTORED_BROKER_MSA_ACCOUNT_NAMES= "restored_broker_msa_account_names";
+=======
+        public static final String LTW_BROKER_MSA_ACCOUNTS= "ltw_broker_msa_accounts";
+>>>>>>> 37cc075c8 (broker api version increased)
 
         /**
          * String to return account list as compressed json.
@@ -1557,7 +1561,6 @@ public final class AuthenticationConstants {
             BROKER_GET_ACCOUNTS(BROKER_API_GET_BROKER_ACCOUNTS_PATH, BROKER_VERSION_1, null),
             BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_VERSION_1, null),
             BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_VERSION_1, null),
-            BROKER_SAVE_TRANSFER_TOKEN(BROKER_SAVE_TRANSFER_TOKEN_PATH, null, null),
             BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_3, null),
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_3, null),
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
@@ -1682,11 +1685,6 @@ public final class AuthenticationConstants {
          * URI Path constant for BrokerApi-to-Broker updateBrt request using ContentProvider.
          */
         public static final String BROKER_API_UPDATE_BRT_PATH = "/brokerApi/updateBrt";
-
-        /**
-         * URI Path constant for BrokerApi-to-Broker save transfer token request using ContentProvider.
-         */
-        public static final String BROKER_SAVE_TRANSFER_TOKEN_PATH = "/brokerApi/saveTransferToken";
 
         /**
          * Broker api path constant for setting flight information.
