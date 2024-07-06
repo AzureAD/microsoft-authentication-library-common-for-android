@@ -90,6 +90,7 @@ public final class AuthenticationConstants {
     public static final String TWO_POINT_ZERO = "2.0";
     public static final String THREE_POINT_ZERO = "3.0";
     public static final String FOUR_POINT_ZERO = "4.0";
+    public static final String FIVE_POINT_ZERO = "5.0";
 
 
 
@@ -1355,6 +1356,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_ACCOUNTS = "broker_accounts";
 
         /**
+         * String to return MSA account list from LTW broker.
+         */
+        public static final String LTW_BROKER_MSA_ACCOUNTS= "ltw_broker_msa_accounts";
+
+        /**
          * String to return account list as compressed json.
          */
         public static final String BROKER_ACCOUNTS_COMPRESSED = "broker_accounts_compressed";
@@ -1380,12 +1386,12 @@ public final class AuthenticationConstants {
         /**
          * The Bundle key name of transfer token.
          */
-        public static final String TRANSFER_TOKEN = "transfer_token_value";
+        public static final String TRANSFER_TOKEN_BUNDLE_KEY = "transfer_token";
 
         /**
          * The Bundle key name of transfer token key (account name).
          */
-        public static final String TRANSFER_TOKEN_ACCOUNT_NAME = "account_name";
+        public static final String TRANSFER_TOKEN_ACCOUNT_NAME_BUNDLE_KEY = "account_name";
 
         /**
          * Boolean to return when a Broker RT is successfully updated.
@@ -1542,6 +1548,7 @@ public final class AuthenticationConstants {
         private static final String BROKER_VERSION_1 = ONE_POINT_ZERO;
         private static final String BROKER_VERSION_3 = THREE_POINT_ZERO;
         private static final String BROKER_VERSION_4 = FOUR_POINT_ZERO;
+        private static final String BROKER_VERSION_5 = FIVE_POINT_ZERO;
 
 
         /**
@@ -1565,7 +1572,6 @@ public final class AuthenticationConstants {
             BROKER_GET_ACCOUNTS(BROKER_API_GET_BROKER_ACCOUNTS_PATH, BROKER_VERSION_1, null),
             BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_VERSION_1, null),
             BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_VERSION_1, null),
-            BROKER_SAVE_TRANSFER_TOKEN(BROKER_SAVE_TRANSFER_TOKEN_PATH, null, null),
             BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_3, null),
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_3, null),
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
@@ -1580,7 +1586,8 @@ public final class AuthenticationConstants {
             PASSTHROUGH(PASSTHROUGH_PATH, null, null),
             READ_RESTRICTIONS_MANAGER(READ_RESTRICTIONS_MANAGER_PATH, null, null),
             GET_PREFERRED_AUTH_METHOD(BrokerContentProvider.GET_PREFERRED_AUTH_METHOD, null, null),
-            BROKER_INDIVIDUAL_LOGS_UPLOAD(BROKER_INDIVIDUAL_LOGS_UPLOAD_PATH, null, null);
+            BROKER_INDIVIDUAL_LOGS_UPLOAD(BROKER_INDIVIDUAL_LOGS_UPLOAD_PATH, null, null),
+            BROKER_RESTORE_MSA_ACCOUNTS_WITH_TRANSFER_TOKENS(BROKER_RESTORE_MSA_ACCOUNTS_WITH_TRANSFER_TOKENS_PATH, BROKER_VERSION_4, null);
 
             /**
              * The content provider path that the API exists behind.
@@ -1676,6 +1683,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_API_GET_BROKER_ACCOUNTS_PATH = "/brokerApi/getBrokerAccounts";
 
         /**
+         * URI Path constant for BrokerApi-to-Broker redeemMsaAccounts request using ContentProvider.
+         */
+        public static final String BROKER_RESTORE_MSA_ACCOUNTS_WITH_TRANSFER_TOKENS_PATH  = "/brokerApi/restoreMsaAccountsWithTransferTokens";
+
+        /**
          * URI Path constant for BrokerApi-to-Broker removeBrokerAccount request using ContentProvider.
          */
         public static final String BROKER_API_REMOVE_BROKER_ACCOUNT_PATH = "/brokerApi/removeBrokerAccount";
@@ -1684,11 +1696,6 @@ public final class AuthenticationConstants {
          * URI Path constant for BrokerApi-to-Broker updateBrt request using ContentProvider.
          */
         public static final String BROKER_API_UPDATE_BRT_PATH = "/brokerApi/updateBrt";
-
-        /**
-         * URI Path constant for BrokerApi-to-Broker save transfer token request using ContentProvider.
-         */
-        public static final String BROKER_SAVE_TRANSFER_TOKEN_PATH = "/brokerApi/saveTransferToken";
 
         /**
          * Broker api path constant for setting flight information.
