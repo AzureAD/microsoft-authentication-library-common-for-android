@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [MINOR] Account Transfer Skips Account Chooser (#2375)
 - [PATCH] Add null check for CBA logging (#2443)
 - [MINOR] Add support for per tenant flighting in broker (#2433)
 - [MINOR] Fix AccountManager Strategy (#2427)
@@ -8,7 +9,6 @@ V.Next
 - [MINOR] Platform Specific Extra Query Parameters (#2426)
 - [PATCH] Return API error and errorDescription in case of unexpected response (#2431)
 - [MINOR] Support certificate with password (#2405)
-- [PATCH] Return API error and errorDescription in case of unexpected response (#2431)
 - [MINOR] Classifying TimeoutException as timed_out (#2441)
 
 Version 17.5.0

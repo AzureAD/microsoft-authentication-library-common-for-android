@@ -95,6 +95,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 : null;
         final String extraOptions = parameters.getExtraOptions() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
+
         final BrokerRequest brokerRequest = BrokerRequest.builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
                 .scope(TextUtils.join(" ", parameters.getScopes()))
@@ -129,6 +130,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 )
                 .preferredBrowser(parameters.getPreferredBrowser())
                 .preferredAuthMethod(parameters.getPreferredAuthMethod())
+                .accountTransferToken(parameters.getAccountTransferToken())
                 .build();
 
         return brokerRequest;
@@ -382,6 +384,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 SHOULD_SEND_PKEYAUTH_HEADER_TO_THE_TOKEN_ENDPOINT,
                 BrokerProtocolVersionUtil.canSendPKeyAuthHeaderToTheTokenEndpoint(requiredBrokerProtocolVersion)
         );
+
         return requestBundle;
     }
 
@@ -521,5 +524,4 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             );
         }
     }
-
 }

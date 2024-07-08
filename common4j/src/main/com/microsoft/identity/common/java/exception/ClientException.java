@@ -188,11 +188,6 @@ public class ClientException extends BaseException {
     public static final String DUPLICATE_QUERY_PARAMETER = "duplicate_query_parameter";
 
     /**
-     * An Account Transfer V2 request did not contain an Slk.
-     */
-    public static final String MISSING_SLK = "missing_slk";
-
-    /**
      * Extra query parameters set by the client app is already sent by the sdk.
      */
     public static final String UNKNOWN_ERROR = "unknown_error";

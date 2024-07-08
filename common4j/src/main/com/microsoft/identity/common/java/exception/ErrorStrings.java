@@ -462,9 +462,6 @@ public final class ErrorStrings {
                     "Please make sure to use your organizational account. " +
                     "If that doesn’t help, please return the device to your administrator.";
 
-    public static final String MISSING_SLK_ERROR_MESSAGE =
-            "During an Account Transfer V2 request, an slk transfer token was not passed in with the request.";
-
     /**
      * Home tenant of the BRT acccount doesn't match with WPJ account's UPN.
      */
