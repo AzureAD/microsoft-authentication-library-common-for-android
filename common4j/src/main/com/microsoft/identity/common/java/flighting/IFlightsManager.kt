@@ -1,4 +1,3 @@
-package com.microsoft.identity.common.java.opentelemetry;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -21,44 +20,22 @@ package com.microsoft.identity.common.java.opentelemetry;
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.java.flighting
 
-public enum SpanName {
-    AcquirePrtUsingBrt,
-    RefreshPrt,
-    AcquireAtUsingPrt,
-    AcquireTokenInteractive,
-    AcquireTokenSilent,
-    CryptoFactoryEvent,
-    SetScopeForDMAgentForFoci,
-    GetAccounts,
-    RemoveAccount,
-    WorkplaceJoin,
-    DoDiscovery,
-    WorkplaceLeave,
-    DeviceState,
-    CertBasedAuth,
-    UploadBrokerLogs,
-    InitializePowerLift,
-    MSAL_PerformIpcStrategy,
-    DeviceRegistrationApi,
-    WorkplaceJoinApi,
-    AcquirePrtInteractively,
-    PrtUpgrade,
-    AcquireTokenDcf,
-    AcquireTokenDcfAuthRequest,
-    AcquireTokenDcfFetchToken,
-    AccountStorageWithBackup,
-    EncryptionManager,
-    Passthrough,
-    BrokerOperationRequestDispatcher,
-    BrokerDiscoveryManagerGetActiveBroker,
-    BrokerDiscoveryManagerPerformDiscoveryProcess,
-    BrokerDiscoveryMetadataAggregator,
-    BrokerSelectionProtocolManager,
-    BrokerDiscoveryV1ProtocolBroadcastResult,
-    Fido,
-    BrokerAccountServiceRemoveAccounts,
-    AcquirePrtUsingTransferToken,
-    AcquireTransferTokenUsingPrt,
-    SaveTransferTokenToBlockstore
+/**
+ * Consumer of commons needs to implement [IFlightsManager] interface
+ * and set it using CommonFlightManager.initializeCommonFlightsManager(@NonNull IFlightsManager flightsManager)
+ * to provide Flight Values for CommonFlights
+ */
+interface IFlightsManager {
+    /**
+     * Flights provider applicable by default. Features should always this
+     * unless the feature behaviour is tenant specific one same device.
+     */
+    fun getFlightsProvider(): IFlightsProvider
+
+    /**
+     * Flights provider for the given tenant
+     */
+    fun getFlightsProviderForTenant(tenantId: String): IFlightsProvider
 }

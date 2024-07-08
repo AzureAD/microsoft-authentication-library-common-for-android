@@ -188,11 +188,6 @@ public class ClientException extends BaseException {
     public static final String DUPLICATE_QUERY_PARAMETER = "duplicate_query_parameter";
 
     /**
-     * An Account Transfer V2 request did not contain an Slk.
-     */
-    public static final String MISSING_SLK = "missing_slk";
-
-    /**
      * Extra query parameters set by the client app is already sent by the sdk.
      */
     public static final String UNKNOWN_ERROR = "unknown_error";
@@ -439,6 +434,11 @@ public class ClientException extends BaseException {
      * An error was encountered while parsing query parameters related to the passkey protocol.
      */
     public static final String PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR = "passkey_protocol_request_parsing_error";
+
+    /**
+     * A blocking operation has timed out.
+     */
+    public static final String TIMED_OUT = "timed_out";
 
     /**
      * Constructor of ClientException.

@@ -27,6 +27,7 @@ import com.microsoft.identity.labapi.utilities.authentication.common.Certificate
 import com.microsoft.identity.labapi.utilities.authentication.common.ClientCertificateMetadata;
 import com.microsoft.identity.labapi.utilities.authentication.common.KeyStoreConfiguration;
 import com.microsoft.identity.labapi.utilities.authentication.msal4j.Msal4jAuthClient;
+import com.microsoft.identity.labapi.utilities.constants.LabConstants;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 import com.microsoft.identity.labapi.utilities.exception.LabError;
 
@@ -40,32 +41,42 @@ import lombok.NonNull;
  * A an authentication client that can acquire access tokens for the Microsoft Identity Lab Api.
  */
 public class LabApiAuthenticationClient implements IAccessTokenSupplier {
-    private final static String SCOPE = "https://request.msidlab.com/.default";
     private final static String TENANT_ID = "72f988bf-86f1-41af-91ab-2d7cd011db47";
     private final static String AUTHORITY = "https://login.microsoftonline.com/" + TENANT_ID;
-    private final static String CLIENT_ID = "f62c5ae3-bf3a-4af5-afa8-a68b800396e9";
     private final static String KEYSTORE_TYPE = "Windows-MY";
     private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
-    private final static String CERTIFICATE_ALIAS = "LabVaultAccessCert";
     private final String mLabCredential;
     private final String mLabCertPassword;
+    private final String mScope;
+    private final String mClientId;
+
 
     public LabApiAuthenticationClient(@NonNull final String labSecret) {
-        this(labSecret, null);
+        this(labSecret, null, null, null);
     }
 
     public LabApiAuthenticationClient(@NonNull final String labSecret, final String labCertPassword) {
+        this(labSecret, labCertPassword, null, null);
+    }
+
+    public LabApiAuthenticationClient(@NonNull final String labSecret, @NonNull final String scope, @NonNull final String clientId) {
+        this(labSecret, null, scope, clientId);
+    }
+
+    public LabApiAuthenticationClient(@NonNull final String labSecret, final String labCertPassword, final String scope, final String clientId) {
         mLabCredential = labSecret;
         mLabCertPassword = labCertPassword;
+        mScope = scope != null ? scope : LabConstants.DEFAULT_LAB_SCOPE;
+        mClientId = clientId != null ? clientId : LabConstants.DEFAULT_LAB_CLIENT_ID;
     }
 
     @Override
     public String getAccessToken() throws LabApiException {
         final IConfidentialAuthClient confidentialAuthClient = new Msal4jAuthClient();
         final TokenParameters tokenParameters = TokenParameters.builder()
-                .clientId(CLIENT_ID)
+                .clientId(mClientId)
                 .authority(AUTHORITY)
-                .scope(SCOPE)
+                .scope(mScope)
                 .build();
 
         final IAuthenticationResult authenticationResult;
@@ -82,9 +93,9 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
             }
         } else {
             // Create ClientCertificateCredential from the certificate store on the device
-            // Expects the LabVaultAccessCert to be already installed on the device
+            // Expects the LabAuth to be already installed on the device
             final KeyStoreConfiguration keyStoreConfiguration = new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null);
-            final ClientCertificateMetadata certificateMetadata = new ClientCertificateMetadata(CERTIFICATE_ALIAS, null);
+            final ClientCertificateMetadata certificateMetadata = new ClientCertificateMetadata(LabConstants.DEFAULT_LAB_CERT_ALIAS, null);
 
             final CertificateCredential certificateCredential = CertificateCredential.create(keyStoreConfiguration, certificateMetadata);
             authenticationResult = confidentialAuthClient.acquireToken(certificateCredential, tokenParameters);

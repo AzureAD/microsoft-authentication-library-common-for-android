@@ -40,17 +40,17 @@ steps:
     jdkVersionOption: "1.11"
     tasks: '${{ parameters.project }}:clean ${{ parameters.project }}:assemble${{ parameters.variant }} ${{ parameters.buildArguments }}'
 - task: Gradle@2
-  displayName: Run unit tests
-  inputs:
-    javaHomeSelection: JDKVersion
-    jdkVersionOption: "1.11"
-    tasks: '${{ parameters.project }}:test${{ parameters.variant }} -PlabSecret=$(LabVaultAppCert)'
-- task: Gradle@2
   displayName: Publish
   inputs:
     javaHomeSelection: JDKVersion
     jdkVersionOption: "1.11"
     tasks: '${{ parameters.project }}:publish${{ parameters.variant }} ${{ parameters.buildArguments }}'
+- task: Gradle@2
+  displayName: Run unit tests
+  inputs:
+    javaHomeSelection: JDKVersion
+    jdkVersionOption: "1.11"
+    tasks: '${{ parameters.project }}:test${{ parameters.variant }} -PlabSecret=$(LabVaultAppCert)'
 - ${{ if ne(parameters.artifactFolder, '') }}:
   - task: CopyFiles@2
     displayName: Copy Files to Artifact Staging Directory
