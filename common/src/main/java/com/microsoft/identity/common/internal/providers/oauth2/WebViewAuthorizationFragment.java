@@ -462,7 +462,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             }
 
             // Attach client extras header for ESTS telemetry. Only done for broker requests
-            if (checkIfBrokerRequest(this.mAuthorizationRequestUrl)) {
+            if (isBrokerRequest(this.mAuthorizationRequestUrl)) {
                 final ClientExtraSku clientExtraSku = ClientExtraSku.builder()
                         .srcSku(state.getString(PRODUCT))
                         .srcSkuVer(state.getString(VERSION))
@@ -479,7 +479,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      * Helper method to check if the authorization request is being made through broker.
      * Done by checking for broker version key in the url
      */
-    private boolean checkIfBrokerRequest(final String authorizationUrl) {
+    private boolean isBrokerRequest(final String authorizationUrl) {
         return authorizationUrl.contains(Device.PlatformIdParameters.BROKER_VERSION);
     }
 

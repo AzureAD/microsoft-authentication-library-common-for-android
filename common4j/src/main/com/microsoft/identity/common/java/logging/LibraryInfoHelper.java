@@ -41,6 +41,9 @@ public class LibraryInfoHelper {
 
     /**
      * Returns the library name by accessing it from DiagnosticContext.
+     * TODO: We should remove the library name field from DiagnosticContext eventually, and instead propagate
+     *  them in the command parameters objects.
+     *  DO NOT ADD NEW FIELDS TO DiagnosticContext.
      * @return product name from DiagnosticContext.
      */
     @NonNull
@@ -58,6 +61,9 @@ public class LibraryInfoHelper {
 
     /**
      * Returns the product (library) version by accessing it from DiagnosticContext.
+     * TODO: We should remove the library name field from DiagnosticContext eventually, and instead propagate
+     *  them in the command parameters objects.
+     *  DO NOT ADD NEW FIELDS TO DiagnosticContext.
      * @return product version from DiagnosticContext.
      */
     @NonNull

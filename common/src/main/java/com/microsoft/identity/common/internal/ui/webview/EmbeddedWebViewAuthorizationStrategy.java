@@ -102,9 +102,19 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         return mAuthorizationResultFuture;
     }
 
+    /**
+     * Method to build the intent to be used in web view authorization request.
+     * @param requestUrl url to which the request will be sent
+     * @param sourceLibraryName the source library making the request
+     * @param sourceLibraryVersion version of the source library making the request
+     * @return
+     */
     // Suppressing unchecked warnings during casting to HashMap<String,String> due to no generic type with mAuthorizationRequest
     @SuppressWarnings(WarningType.unchecked_warning)
-    private Intent buildAuthorizationActivityStartIntent(URI requestUrl, @Nullable final String sourceLibraryName, @Nullable final String sourceLibraryVersion) {
+    private Intent buildAuthorizationActivityStartIntent(
+            URI requestUrl,
+            @Nullable final String sourceLibraryName,
+            @Nullable final String sourceLibraryVersion) {
         // RedirectURI used to get the auth code in nested app auth is that of a hub app (brkRedirectURI)       
         final String redirectUri = mAuthorizationRequest.getBrkRedirectUri() != null ? mAuthorizationRequest.getBrkRedirectUri() : mAuthorizationRequest.getRedirectUri();
         return AuthorizationActivityFactory.getAuthorizationActivityIntent(

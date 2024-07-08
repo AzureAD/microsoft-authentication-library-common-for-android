@@ -27,15 +27,25 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 
 import android.os.Bundle;
 
+import androidx.test.core.app.ApplicationProvider;
+
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.components.MockPlatformComponentsFactory;
+import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryB2CAuthority;
+import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
+import com.microsoft.identity.common.java.request.SdkType;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @RunWith(RobolectricTestRunner.class)
 public class MsalBrokerRequestAdapterTests {
@@ -63,8 +73,8 @@ public class MsalBrokerRequestAdapterTests {
                 .ssoUrl(ssoUrl)
                 .build();
 
-        MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
-        Bundle requestBundle = msalBrokerRequestAdapter.getRequestBundleForSsoToken(params, negotiatedBrokerProtocolVersion);
+        final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
+        final Bundle requestBundle = msalBrokerRequestAdapter.getRequestBundleForSsoToken(params, negotiatedBrokerProtocolVersion);
 
         Assert.assertEquals(anAccountName, requestBundle.getString(AuthenticationConstants.Broker.ACCOUNT_NAME));
         Assert.assertEquals(aHomeAccountId, requestBundle.getString(AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID));
@@ -74,5 +84,75 @@ public class MsalBrokerRequestAdapterTests {
         Assert.assertEquals(ssoUrl, requestBundle.getString(AuthenticationConstants.Broker.BROKER_SSO_URL_KEY));
         Assert.assertEquals(negotiatedBrokerProtocolVersion, requestBundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY));
         Assert.assertEquals(aCorrelationId, requestBundle.getString(ACCOUNT_CORRELATIONID));
+    }
+
+    @Test
+    public void test_getRequestBundleForAcquireTokenInteractive() {
+        final String CORRELATION_ID = "aCorrelationId";
+        final String negotiatedBrokerProtocolVersion = "1.0";
+        final Set<String> scopes = new HashSet<>();
+        scopes.add("user.read");
+        final String CLIENT_ID = "4b0db8c2-9f26-4417-8bde-3f0e3656f8e0";
+        final String REDIRECT_URI = "msauth://com.microsoft.identity.client.sample.local/1wIqXSqBj7w%2Bh11ZifsnqwgyKrY%3D";
+        final String CALLER_PACKAGE_NAME = ApplicationProvider.getApplicationContext().getPackageName();
+        final String VERSION = "5.4.0";
+
+        final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
+
+        final InteractiveTokenCommandParameters params = InteractiveTokenCommandParameters.builder()
+                .platformComponents(components)
+                .correlationId(CORRELATION_ID)
+                .clientId(CLIENT_ID)
+                .applicationName(CALLER_PACKAGE_NAME)
+                .applicationVersion(VERSION)
+                .redirectUri(REDIRECT_URI)
+                .sdkType(SdkType.MSAL)
+                .sdkVersion(VERSION)
+                .authority(new AzureActiveDirectoryB2CAuthority("https://microsoft.login.com/"))
+                .scopes(scopes)
+                .authenticationScheme(new BearerAuthenticationSchemeInternal())
+                .prompt(OpenIdConnectPromptParameter.LOGIN)
+                .build();
+
+        final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
+        final Bundle requestBundle = msalBrokerRequestAdapter.getRequestBundleForAcquireTokenInteractive(params, negotiatedBrokerProtocolVersion);
+
+        Assert.assertEquals(negotiatedBrokerProtocolVersion, requestBundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY));
+    }
+
+    @Test
+    public void test_getRequestBundleForAcquireTokenInteractive_forAccountTransfer() {
+        final String CORRELATION_ID = "aCorrelationId";
+        final String negotiatedBrokerProtocolVersion = "1.0";
+        final Set<String> scopes = new HashSet<>();
+        scopes.add("user.read");
+        final String CLIENT_ID = "4b0db8c2-9f26-4417-8bde-3f0e3656f8e0";
+        final String REDIRECT_URI = "msauth://com.microsoft.identity.client.sample.local/1wIqXSqBj7w%2Bh11ZifsnqwgyKrY%3D";
+        final String CALLER_PACKAGE_NAME = ApplicationProvider.getApplicationContext().getPackageName();
+        final String VERSION = "5.4.0";
+        final String transferToken = "MOCK_TOKEN";
+
+        final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
+
+        final InteractiveTokenCommandParameters params = InteractiveTokenCommandParameters.builder()
+                .platformComponents(components)
+                .correlationId(CORRELATION_ID)
+                .clientId(CLIENT_ID)
+                .applicationName(CALLER_PACKAGE_NAME)
+                .applicationVersion(VERSION)
+                .redirectUri(REDIRECT_URI)
+                .sdkType(SdkType.MSAL)
+                .sdkVersion(VERSION)
+                .authority(new AzureActiveDirectoryB2CAuthority("https://microsoft.login.com/"))
+                .scopes(scopes)
+                .authenticationScheme(new BearerAuthenticationSchemeInternal())
+                .prompt(OpenIdConnectPromptParameter.LOGIN)
+                .accountTransferToken(transferToken)
+                .build();
+
+        final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
+        final Bundle requestBundle = msalBrokerRequestAdapter.getRequestBundleForAcquireTokenInteractive(params, negotiatedBrokerProtocolVersion);
+
+        Assert.assertEquals(negotiatedBrokerProtocolVersion, requestBundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY));
     }
 }
