@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [MINOR] Support Passing x-client-xtra-sku header to ESTS only for brokered requests (#2430)
 - [MINOR] Account Transfer Skips Account Chooser (#2375)
 - [PATCH] Add null check for CBA logging (#2443)
 - [MINOR] Add support for per tenant flighting in broker (#2433)

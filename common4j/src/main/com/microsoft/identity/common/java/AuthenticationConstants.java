@@ -616,6 +616,11 @@ public class AuthenticationConstants {
         public static final String VERSION = "x-client-Ver";
 
         /**
+         * The String representing client extra telemetry information to be sent to ESTS.
+         */
+        public static final String CLIENT_EXTRA_SKU = "x-client-xtra-sku";
+
+        /**
          * The String representing the MSAL SdkType.
          */
         public static final String PRODUCT_NAME_MSAL = "MSAL.Android";
