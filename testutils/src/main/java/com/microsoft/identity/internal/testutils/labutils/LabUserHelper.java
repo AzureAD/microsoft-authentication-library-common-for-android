@@ -252,9 +252,7 @@ public class LabUserHelper {
     public static String loadTempUser(final String userType) {
         instance.setupApiClientWithAccessToken();
 
-        final String createTempUserApiCode = getSecret(LabClient.CREATE_TEMP_USER_API_CODE_SECRET_NAME);
-
-        CreateTempUserApi createTempUserApi = new CreateTempUserApi(createTempUserApiCode);
+        CreateTempUserApi createTempUserApi = new CreateTempUserApi();
         createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
 
         TempUser tempUser;
@@ -273,10 +271,7 @@ public class LabUserHelper {
 
     public static TempUser loadTempUserForTest(final String userType) {
         instance.setupApiClientWithAccessToken();
-
-        final String createTempUserApiCode = getSecret(LabClient.CREATE_TEMP_USER_API_CODE_SECRET_NAME);
-
-        CreateTempUserApi createTempUserApi = new CreateTempUserApi(createTempUserApiCode);
+        CreateTempUserApi createTempUserApi = new CreateTempUserApi();
         createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
 
         try {
@@ -338,23 +333,11 @@ public class LabUserHelper {
     public static void resetPassword(final String upn) {
         instance.setupApiClientWithAccessToken();
 
-        final String resetApiCode = getSecret(LabClient.RESET_API_CODE_SECRET_NAME);
-        ResetApi resetApi = new ResetApi(resetApiCode);
+        ResetApi resetApi = new ResetApi();
         try {
-            resetApi.apiResetPost(upn, "Password");
+            resetApi.apiResetPut(upn, "Password");
         } catch (ApiException e) {
             throw new RuntimeException("Error resetting lab user password", e);
-        }
-    }
-
-    private static String getSecret(final String secretName) {
-        final LabSecretApi labSecretApi = new LabSecretApi();
-
-        try {
-            final SecretResponse secretResponse = labSecretApi.apiLabSecretGet(secretName);
-            return secretResponse.getValue();
-        } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
-            throw new RuntimeException("Failed to fetch secret", ex);
         }
     }
 

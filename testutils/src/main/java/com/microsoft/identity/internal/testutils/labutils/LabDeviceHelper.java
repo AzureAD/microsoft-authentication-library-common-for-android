@@ -45,8 +45,7 @@ public class LabDeviceHelper {
      */
     public static boolean deleteDevice(final String upn, final String deviceId) throws LabApiException {
         INSTANCE.setupApiClientWithAccessToken();
-        final String deleteDeviceApiSecretCode = getSecret(LabClient.DELETE_DEVICE_API_CODE_SECRET_NAME);
-        final DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi(deleteDeviceApiSecretCode);
+        final DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi();
 
         try {
             final CustomSuccessResponse customSuccessResponse;
@@ -60,17 +59,6 @@ public class LabDeviceHelper {
             return expectedResult.equalsIgnoreCase(customSuccessResponse.getMessage());
         } catch (final ApiException e) {
             throw new LabApiException(e);
-        }
-    }
-
-    private static String getSecret(final String secretName) {
-        final LabSecretApi labSecretApi = new LabSecretApi();
-
-        try {
-            final SecretResponse secretResponse = labSecretApi.apiLabSecretGet(secretName);
-            return secretResponse.getValue();
-        } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
-            throw new RuntimeException("Failed to fetch secret", ex);
         }
     }
 }
