@@ -60,5 +60,6 @@ public enum SpanName {
     BrokerAccountServiceRemoveAccounts,
     AcquirePrtUsingTransferToken,
     AcquireTransferTokenUsingPrt,
-    SaveTransferTokenToBlockstore
+    SaveTransferTokenToBlockstore,
+    RetrieveTransferTokenFromBlockstore
 }

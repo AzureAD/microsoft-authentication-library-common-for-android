@@ -699,6 +699,11 @@ public final class AuthenticationConstants {
         public static final String CAN_FOCI_APPS_CONSTRUCT_ACCOUNTS_FROM_PRT_ID_TOKEN_KEY = "can.construct.accounts.from.prt.id.token";
 
         /**
+         * The Boolean to send when LTW app wants to know if an MSA account is backed up to blockstore in getAccounts API call.
+         */
+        public static final String SHOULD_POPULATE_IF_MSA_ACCOUNT_IS_BACKED_UP_KEY = "should.populate.if.msa.account.is.backed.up.key";
+
+        /**
          * String of broker protocol version with PRT support.
          */
         public static final String BROKER_PROTOCOL_VERSION = "v2";
