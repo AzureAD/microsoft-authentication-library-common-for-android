@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.platform;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -36,6 +37,7 @@ import com.microsoft.identity.common.java.util.IPlatformUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -49,27 +51,35 @@ public class AndroidPlatformUtilTest {
     private final Map.Entry<String, String> webauthnEntry = new AbstractMap.SimpleEntry<>(FidoConstants.WEBAUTHN_QUERY_PARAMETER_FIELD, FidoConstants.WEBAUTHN_QUERY_PARAMETER_VALUE);
 
     @Test
+    @Config(sdk=28)
     public void testSetPlatformSpecificExtraQueryParameters_list() {
         final List <Map.Entry<String, String>> list = new ArrayList<>();
         list.add(new AbstractMap.SimpleEntry<>("foo", "1"));
-
-        assertTrue(mPlatformUtil.updateWithAndGetPlatformSpecificExtraQueryParameters(list).contains(webauthnEntry));
+        assertTrue(mPlatformUtil.updateWithAndGetPlatformSpecificExtraQueryParametersForBroker(list).contains(webauthnEntry));
     }
 
     @Test
+    @Config(sdk=28)
     public void testSetPlatformSpecificExtraQueryParameters_emptyList() {
-        assertTrue(mPlatformUtil.updateWithAndGetPlatformSpecificExtraQueryParameters(null).contains(webauthnEntry));
+        assertTrue(mPlatformUtil.updateWithAndGetPlatformSpecificExtraQueryParametersForBroker(null).contains(webauthnEntry));
     }
 
     @Test
+    @Config(sdk=28)
     public void testSetPlatformSpecificExtraQueryParameters_alreadyHasParameter() {
         final List <Map.Entry<String, String>> list = new ArrayList<>();
         list.add(new AbstractMap.SimpleEntry<>("foo", "1"));
         list.add(webauthnEntry);
-        final List <Map.Entry<String, String>> result = mPlatformUtil.updateWithAndGetPlatformSpecificExtraQueryParameters(list);
+        final List <Map.Entry<String, String>> result = mPlatformUtil.updateWithAndGetPlatformSpecificExtraQueryParametersForBroker(list);
         assertNotNull(result);
         assertEquals(2, result.size());
         assertTrue(result.contains(webauthnEntry));
         assertTrue(result.contains(new AbstractMap.SimpleEntry<>("foo", "1")));
+    }
+
+    @Test
+    @Config(sdk=26)
+    public void testSetPlatformSpecificExtraQueryParameters_OldOsVersion() {
+        assertFalse(mPlatformUtil.updateWithAndGetPlatformSpecificExtraQueryParametersForBroker(null).contains(webauthnEntry));
     }
 }

@@ -31,6 +31,7 @@ import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -219,13 +220,21 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     }
 
     @Override
-    public List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList) {
+    public List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParametersForBroker(@Nullable List<Map.Entry<String, String>> originalList) {
+        final String methodTag = TAG + ":updateWithAndGetPlatformSpecificExtraQueryParametersForBroker";
         List<Map.Entry<String, String>> queryParams = originalList != null ?  new ArrayList<>(originalList) : new ArrayList<>();
 
         // Passkey feature support is only for Android at the moment.
         final  Map.Entry<String, String> webauthnParam = new AbstractMap.SimpleEntry<>(FidoConstants.WEBAUTHN_QUERY_PARAMETER_FIELD, FidoConstants.WEBAUTHN_QUERY_PARAMETER_VALUE);
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PASSKEY_FEATURE)) {
-            if (!queryParams.contains(webauthnParam)) {
+            // Check the OS version as well. As of the time this is written, passkeys are only supported on devices that run Android 9 (API 28) or higher.
+            // https://developer.android.com/identity/sign-in/credential-manager
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+                Logger.info(methodTag, "Device is running on an Android version less than 9 (API 28), which is the minimum level for passkeys.");
+                // If we don't want to add this query string param, then we should also remove other instances of it that might be already present from MSAL/OneAuth-MSAL.
+                queryParams.remove(webauthnParam);
+            }
+            else if (!queryParams.contains(webauthnParam)) {
                 queryParams.add(webauthnParam);
             }
         } else {

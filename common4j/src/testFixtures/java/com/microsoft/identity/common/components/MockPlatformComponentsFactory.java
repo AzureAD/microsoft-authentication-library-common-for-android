@@ -191,7 +191,7 @@ public class MockPlatformComponentsFactory {
 
         @Nullable
         @Override
-        public List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList) {
+        public List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParametersForBroker(@Nullable List<Map.Entry<String, String>> originalList) {
             return originalList;
         }
     };
