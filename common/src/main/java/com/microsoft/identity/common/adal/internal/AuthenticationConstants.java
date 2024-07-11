@@ -1358,11 +1358,7 @@ public final class AuthenticationConstants {
         /**
          * String to return MSA account list from LTW broker.
          */
-<<<<<<< HEAD
-        public static final String RESTORED_BROKER_MSA_ACCOUNT_NAMES= "restored_broker_msa_account_names";
-=======
-        public static final String LTW_BROKER_MSA_ACCOUNTS= "ltw_broker_msa_accounts";
->>>>>>> 37cc075c8 (broker api version increased)
+        public static final String RESTORED_BROKER_MSA_ACCOUNT_NAMES = "restored_broker_msa_account_names";
 
         /**
          * String to return account list as compressed json.
