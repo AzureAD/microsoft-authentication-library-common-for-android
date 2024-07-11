@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
@@ -41,6 +42,7 @@ import static org.junit.Assert.fail;
 
 import android.widget.Button;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -278,16 +280,19 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     @Override
     public void handlePasswordUpdate(@NonNull final String currentPassword, @NonNull final String newPassword) {
+        // Seems the resource ids are not available for this ui in firebase, so we'll do it by class type
+        final List<UiObject2> editTextObjects = UiAutomatorUtils.obtainAllEditTextObjects(mFindLoginUiElementTimeout);
+
         // Enter current password
-        UiAutomatorUtils.handleInput("currentPassword", currentPassword);
+        editTextObjects.get(0).setText(currentPassword);
 
         // Enter new password
-        UiAutomatorUtils.handleInput("newPassword", newPassword);
+        editTextObjects.get(1).setText(newPassword);
 
         // Confirm new password
-        UiAutomatorUtils.handleInput("confirmNewPassword", newPassword);
+        editTextObjects.get(2).setText(newPassword);
 
         // Sign in
-        handleNextButton();
+        handleSignInButtonByText();
     }
 }
