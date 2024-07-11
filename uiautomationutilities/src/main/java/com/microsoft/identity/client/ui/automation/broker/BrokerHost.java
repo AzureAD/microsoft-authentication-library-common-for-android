@@ -161,7 +161,7 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     @Override
-    public void enableBrowserAccess() {
+    public void enableBrowserAccess(@NonNull final String username) {
         Logger.i(TAG, "Enable Browser Access..");
         singleWpjApiFragment.launch();
         singleWpjApiFragment.installCertificate();

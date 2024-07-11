@@ -136,6 +136,10 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
             }
         }
 
+        if (parameters.isUpdateYourPasswordExpected()) {
+            aadLoginComponentHandler.handlePasswordUpdate(password, parameters.getNewPasswordForUpdateScenario());
+        }
+
         if (parameters.isSecondPasswordPageExpected()) {
             try {
                 loginComponentHandler.handlePasswordField(password);

@@ -275,4 +275,19 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         // Choose default certificate
         UiAutomatorUtils.handleButtonClickSafely("android:id/button1", mFindLoginUiElementTimeout);
     }
+
+    @Override
+    public void handlePasswordUpdate(@NonNull final String currentPassword, @NonNull final String newPassword) {
+        // Enter current password
+        UiAutomatorUtils.handleInput("currentPassword", currentPassword);
+
+        // Enter new password
+        UiAutomatorUtils.handleInput("newPassword", newPassword);
+
+        // Confirm new password
+        UiAutomatorUtils.handleInput("confirmNewPassword", newPassword);
+
+        // Sign in
+        handleNextButton();
+    }
 }
