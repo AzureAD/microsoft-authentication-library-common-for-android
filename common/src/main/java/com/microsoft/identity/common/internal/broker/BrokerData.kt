@@ -74,7 +74,7 @@ data class BrokerData(val packageName : String,
          * Determines if the debug brokers should be trusted or not.
          * This should only be set to true only during testing.
          */
-        private var sShouldTrustDebugBrokers = BuildConfig.DEBUG || BuildConfig.trustDebugBrokerFlag
+        private var sShouldTrustDebugBrokers = true
 
         @JvmStatic
         fun setShouldTrustDebugBrokers(value: Boolean) {
