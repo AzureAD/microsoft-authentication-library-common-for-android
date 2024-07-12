@@ -22,6 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME;
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.REDIRECT_PREFIX;
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.UPGRADE_DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Browser.RESPONSE_EXCEPTION;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Browser.RESPONSE_FINAL_URL;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Browser.SUB_ERROR_UI_CANCEL;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.ERROR_SUBCODE;
+
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -40,15 +50,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
-import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME;
-import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.REDIRECT_PREFIX;
-import static com.microsoft.identity.common.java.AuthenticationConstants.Browser.RESPONSE_EXCEPTION;
-import static com.microsoft.identity.common.java.AuthenticationConstants.Browser.RESPONSE_FINAL_URL;
-import static com.microsoft.identity.common.java.AuthenticationConstants.Browser.SUB_ERROR_UI_CANCEL;
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.ERROR_SUBCODE;
 
 /**
  * Raw results from an Authorization session.
@@ -107,7 +108,14 @@ public class RawAuthorizationResult {
          * Indicates that MDM Flow is triggered.
          * Some apps uses this signal to optimize user experiences.
          */
-        MDM_FLOW(2009);
+        MDM_FLOW(2009),
+
+        /**
+         * The AuthZ session happens in broker, and device registration is not
+         * sufficient. Stronger device registration (backed by hardware bound keys)
+         * required
+         */
+        INSUFFICIENT_DEVICE_REGISTRATION(2010);
 
         private final int mCode;
 
@@ -221,6 +229,11 @@ public class RawAuthorizationResult {
             if (DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME.equalsIgnoreCase(uri.getHost())) {
                 Logger.info(methodTag, " Device needs to be registered, sending BROWSER_CODE_DEVICE_REGISTER");
                 return ResultCode.DEVICE_REGISTRATION_REQUIRED;
+            }
+
+            if (UPGRADE_DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME.equalsIgnoreCase(uri.getHost())) {
+                Logger.info(methodTag, " Device registration needs to be upgraded, sending INSUFFICIENT_DEVICE_REGISTRATION");
+                return ResultCode.INSUFFICIENT_DEVICE_REGISTRATION;
             }
         }
 

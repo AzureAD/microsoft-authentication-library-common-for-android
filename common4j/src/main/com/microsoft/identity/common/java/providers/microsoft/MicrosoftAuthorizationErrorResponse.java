@@ -104,6 +104,13 @@ public class MicrosoftAuthorizationErrorResponse extends AuthorizationErrorRespo
     public static final String DEVICE_NEEDS_TO_BE_MANAGED_ERROR_DESCRIPTION = "Device needs to be managed to access the resource";
 
     /**
+     * Error string to indicate that the device registration is not sufficient and needs
+     * to be upgraded with strong keys
+     */
+    public static final String INSUFFICIENT_DEVICE_REGISTRATION = "insufficient_device_registration";
+    public static final String INSUFFICIENT_DEVICE_REGISTRATION_ERROR_DESCRIPTION = "Device registration needs to be upgraded with strong keys";
+
+    /**
      * Constructor of {@link MicrosoftAuthorizationErrorResponse}.
      *
      * @param error            error string returned from the Authorization Server.

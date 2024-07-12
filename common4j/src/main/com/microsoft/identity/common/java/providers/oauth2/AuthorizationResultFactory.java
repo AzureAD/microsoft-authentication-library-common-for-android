@@ -22,22 +22,20 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.oauth2;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.UPN_TO_WPJ_KEY;
+
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.UrlUtil;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.UPN_TO_WPJ_KEY;
 
 /**
  * Abstract Factory class which can be extended to construct provider specific {@link AuthorizationResult}.
@@ -129,6 +127,18 @@ public abstract class AuthorizationResultFactory
                 return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                         MicrosoftAuthorizationErrorResponse.DEVICE_NEEDS_TO_BE_MANAGED,
                         MicrosoftAuthorizationErrorResponse.DEVICE_NEEDS_TO_BE_MANAGED_ERROR_DESCRIPTION);
+
+            case INSUFFICIENT_DEVICE_REGISTRATION: {
+                Logger.info(methodTag, "Insufficient Device Registration, need to perform update WPJ with hardware backed keys");
+                final GenericAuthorizationResult result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+                        MicrosoftAuthorizationErrorResponse.INSUFFICIENT_DEVICE_REGISTRATION,
+                        MicrosoftAuthorizationErrorResponse.INSUFFICIENT_DEVICE_REGISTRATION_ERROR_DESCRIPTION);
+
+                // Set username returned from the service
+                final Map<String, String> urlParameters = UrlUtil.getParameters(url);
+                result.getAuthorizationErrorResponse().setUpnToWpj(urlParameters.get(UPN_TO_WPJ_KEY));
+                return result;
+            }
         }
 
         return createAuthorizationResultWithErrorResponse(
