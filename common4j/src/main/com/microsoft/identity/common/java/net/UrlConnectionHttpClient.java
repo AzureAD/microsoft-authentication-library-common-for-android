@@ -22,6 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.CONTENT_TYPE;
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_ID;
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_SEQUENCE;
+
 import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
@@ -62,11 +67,6 @@ import io.opentelemetry.api.trace.Span;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
-import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.CONTENT_TYPE;
-import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_ID;
-import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_SEQUENCE;
 
 /**
  * A client object for handling HTTP requests and responses.  This class accepts a RetryPolicy that
@@ -268,7 +268,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                                                     byte[] requestContent) {
 
         // Apply special backcompat behaviors for PATCH, if reqd
-        if (HttpClient.HttpMethod.PATCH == httpMethod) {
+        if (HttpClient.HttpMethod.PATCH == httpMethod && !requestUrl.getPath().contains("upgradeRegistration")) {
             // Because HttpURLConnection predates RFC-5789, we need to fallback on POST w/ a backcompat
             // workaround. See: https://stackoverflow.com/a/32503192/741827
             httpMethod = HttpClient.HttpMethod.POST;
