@@ -25,7 +25,6 @@ package com.microsoft.identity.common.java.jwt;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.util.StringUtil;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -62,6 +61,7 @@ public abstract class AbstractJwtRequest {
 
         public static final String JWE_CRYPTO = "jwe_crypto";
         public static final String SESSION_KEY_CRYPTO = "session_key_crypto";
+        public static final String PURPOSE = "purpose";
     }
 
     @SerializedName(ClaimNames.REFRESH_TOKEN)
