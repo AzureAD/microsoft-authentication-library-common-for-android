@@ -1841,6 +1841,22 @@ public final class AuthenticationConstants {
 
     }
 
+    public static final class LtwContentProviderCall {
+
+        /**
+         * LTW's ContentProvider String Authority constant for getting if it is pre-installed.
+         */
+        public static final String LTW_CONTENT_PROVIDER_AUTHORITY =
+                "content://com.microsoft.appmanager.accountstateprovider";
+
+        /**
+         * LTW's ContentProvider method constant for getting if it is pre-installed.
+         */
+        public static final String LTW_CONTENT_PROVIDER_METHOD_IS_PRE_INSTALL_LTW =
+                "isPreinstallLTW";
+
+    }
+
     public static final class AuthorizationIntentKey {
 
         public static final String AUTH_INTENT = "com.microsoft.identity.auth.intent";
