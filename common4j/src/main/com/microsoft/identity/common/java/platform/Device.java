@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.platform;
 import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.logging.LibraryInfoHelper;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import net.jcip.annotations.GuardedBy;
@@ -96,7 +97,11 @@ public class Device {
         }
     }
 
+    /**
+     * @deprecated use {@link LibraryInfoHelper#getLibraryVersion()} instead.
+     */
     @NonNull
+    @Deprecated
     public static String getProductVersion() {
         final String methodName = ":getProductVersion";
 

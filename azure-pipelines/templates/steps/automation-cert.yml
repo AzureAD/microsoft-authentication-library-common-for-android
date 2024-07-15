@@ -16,14 +16,14 @@ steps:
     azureSubscription: 'AuthSdkResourceManager' # string. Workload identity service connection to use managed identity authentication
     KeyVaultName: 'msidlabs' # string. Required. The name of the Key Vault containing the secrets.
     #setting secrets filter to fetch only MSIDLABCertificate cert from the vault
-    SecretsFilter: 'LabVaultAccessCert' # string. Required. Specifies the secret to download. Use '*' for all secrets.
+    SecretsFilter: 'LabAuth' # string. Required. Specifies the secret to download. Use '*' for all secrets.
     #RunAsPreJob: false # boolean. Make secrets available to whole job. Default: false.
 - task: PowerShell@2
   displayName: Install Automation Cert
   inputs:
     targetType: inline
     script: >
-      $kvSecretBytes = [System.Convert]::FromBase64String('$(LabVaultAccessCert)')
+      $kvSecretBytes = [System.Convert]::FromBase64String('$(LabAuth)')
 
       $certCollection = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
 
@@ -31,7 +31,7 @@ steps:
 
       $protectedCertificateBytes = $certCollection.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Pkcs12)
 
-      $pfxPath = '$(Build.SourcesDirectory)' + "\LabVaultAccessCert.pfx"
+      $pfxPath = '$(Build.SourcesDirectory)' + "\LabAuth.pfx"
 
       [System.IO.File]::WriteAllBytes($pfxPath, $protectedCertificateBytes)
       
@@ -46,22 +46,3 @@ steps:
       }    
       
       Write-Host "##vso[task.setvariable variable=LabVaultAppCert]$certPathVar"
-- task: AzurePowerShell@5
-  displayName: Fetch Native Auth Test Config
-  inputs:
-    azureSubscription: 'AuthSdkResourceManager'
-    ScriptType: 'InlineScript'
-    Inline: |
-      $secret = Get-AzKeyVaultSecret -VaultName "buildautomation" -Name "native-auth-test-config"
-      
-      if ($secret) {
-        $secretValue = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secret.SecretValue))
-      
-        Write-Host "Successfully retrieved secret value from Key Vault $secretValue"
-      }
-      else {
-        Write-Host "Failed to retrieve secret value from Key Vault."
-        exit 1
-      }
-    azurePowerShellVersion: 'LatestVersion'
-    failOnStderr: true

@@ -35,6 +35,7 @@ import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.logging.LibraryInfoHelper;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpConstants;
 import com.microsoft.identity.common.java.net.HttpResponse;
@@ -52,6 +53,7 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.telemetry.events.UiShownEvent;
+import com.microsoft.identity.common.java.util.ClientExtraSku;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.ObjectMapper;
@@ -82,7 +84,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.
  * Serves as the abstract base class for an oAuth2 client implementation; The base class should be extended
  * by Identity Provider specific implementations; For example: Azure Active Directory, ADFS, Microsoft STS, Etc...
  */
-// Suppressing rawtype warnings due to generic types AuthorizationRequest, AuthorizationReuest.Builder, AuthorizationStrategy, AuthorizationResult and AuthorizationResultFactory
+// Suppressing rawtype warnings due to generic types AuthorizationRequest, AuthorizationRequest.Builder, AuthorizationStrategy, AuthorizationResult and AuthorizationResultFactory
 @SuppressWarnings(WarningType.rawtype_warning)
 public abstract class OAuth2Strategy
         <GenericAccessToken extends AccessToken,
@@ -201,17 +203,26 @@ public abstract class OAuth2Strategy
         final Map<String, String> headers = new TreeMap<>();
         headers.put(CLIENT_REQUEST_ID, DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
 
+        final String sourceLibraryName = LibraryInfoHelper.getLibraryName();
+        final String sourceLibraryVersion = LibraryInfoHelper.getLibraryVersion();
+
         if (request instanceof MicrosoftTokenRequest &&
                 !StringUtil.isNullOrEmpty(((MicrosoftTokenRequest) request).getBrokerVersion())) {
             headers.put(
                     Device.PlatformIdParameters.BROKER_VERSION,
                     ((MicrosoftTokenRequest) request).getBrokerVersion()
             );
+
+            // Attach client extras header for ESTS telemetry. Only done for broker requests
+            final ClientExtraSku clientExtraSku = ClientExtraSku.builder()
+                    .srcSku(sourceLibraryName)
+                    .srcSkuVer(sourceLibraryVersion)
+                    .build();
+            headers.put(AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRA_SKU, clientExtraSku.toString());
         }
         headers.putAll(Device.getPlatformIdParameters());
-        headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT,
-                DiagnosticContext.INSTANCE.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
-        headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, Device.getProductVersion());
+        headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, sourceLibraryName);
+        headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, sourceLibraryVersion);
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
         headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
 
