@@ -56,7 +56,6 @@ public class ApiClient {
     private final String AUTH_TYPE = "Access Token";
 
     private static final String DEFAULT_BASE_PATH = "https://msidlab.com";
-    public static final String FUNCTION_API_BASE_PATH = "https://thefunctionapi.azurewebsites.net";
     private String basePath;
     private boolean debugging = false;
     private Map<String, String> defaultHeaderMap = new HashMap<String, String>();

@@ -34,8 +34,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
-import com.microsoft.identity.common.java.logging.DiagnosticContext
-import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.LibraryInfoHelper
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpassword.ResetPasswordChallengeRequest

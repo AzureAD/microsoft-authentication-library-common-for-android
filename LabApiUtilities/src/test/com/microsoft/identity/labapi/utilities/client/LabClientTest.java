@@ -211,7 +211,7 @@ public class LabClientTest {
         try {
             final ILabAccount labAccount = labClient.createTempAccount(TempUserType.BASIC);
             Thread.sleep(POST_TEMP_USER_CREATION_WAIT);
-            labClient.enablePolicy(labAccount.getUsername(), ProtectionPolicy.MAM_CA);
+            Assert.assertTrue(labClient.enablePolicy(labAccount.getUsername(), ProtectionPolicy.MAM_CA));
         } catch (final LabApiException | InterruptedException e) {
             throw new AssertionError(e);
         }
@@ -228,7 +228,7 @@ public class LabClientTest {
         try {
             final ILabAccount labAccount = labClient.createTempAccount(TempUserType.MAM_CA);
             Thread.sleep(POST_TEMP_USER_CREATION_WAIT);
-            labClient.disablePolicy(labAccount.getUsername(), ProtectionPolicy.MAM_CA);
+            Assert.assertTrue(labClient.disablePolicy(labAccount.getUsername(), ProtectionPolicy.MAM_CA));
         } catch (final LabApiException | InterruptedException e){
             throw new AssertionError(e);
         }

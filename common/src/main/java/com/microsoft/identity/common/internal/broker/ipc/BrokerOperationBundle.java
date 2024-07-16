@@ -40,7 +40,6 @@ import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.logging.Logger;
 
 import lombok.Getter;
-import lombok.experimental.Accessors;
 
 
 public class BrokerOperationBundle {
