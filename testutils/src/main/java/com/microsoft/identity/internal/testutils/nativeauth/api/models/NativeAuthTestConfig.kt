@@ -24,6 +24,10 @@ package com.microsoft.identity.internal.testutils.nativeauth.api.models
 
 import com.google.gson.annotations.SerializedName
 
+/**
+ * Test configuration retrieved from Labs KeyVault and used in native auth tests.
+ * This class defines what test parameters to use.
+ */
 data class NativeAuthTestConfig(
     val configs: Map<String, Config>
 ) {
