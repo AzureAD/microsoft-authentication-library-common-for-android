@@ -280,19 +280,16 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     @Override
     public void handlePasswordUpdate(@NonNull final String currentPassword, @NonNull final String newPassword) {
-        // Seems the resource ids are not available for this ui in firebase, so we'll do it by class type
-        final List<UiObject2> editTextObjects = UiAutomatorUtils.obtainAllEditTextObjects(mFindLoginUiElementTimeout);
-
         // Enter current password
-        editTextObjects.get(0).setText(currentPassword);
+        UiAutomatorUtils.handleInput("currentPassword", currentPassword);
 
         // Enter new password
-        editTextObjects.get(1).setText(newPassword);
+        UiAutomatorUtils.handleInput("newPassword", newPassword);
 
         // Confirm new password
-        editTextObjects.get(2).setText(newPassword);
+        UiAutomatorUtils.handleInput("confirmNewPassword", newPassword);
 
         // Sign in
-        handleSignInButtonByText();
+        handleNextButton();
     }
 }
