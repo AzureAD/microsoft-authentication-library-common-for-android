@@ -23,7 +23,6 @@
 package com.microsoft.identity.internal.testutils.labutils;
 
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
-import com.microsoft.identity.internal.test.keyvault.ApiClient;
 import com.microsoft.identity.internal.testutils.BuildConfig;
 import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
