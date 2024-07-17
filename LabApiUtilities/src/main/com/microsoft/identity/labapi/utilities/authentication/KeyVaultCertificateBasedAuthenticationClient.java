@@ -27,6 +27,7 @@ import com.microsoft.identity.labapi.utilities.authentication.common.Certificate
 import com.microsoft.identity.labapi.utilities.authentication.common.ClientCertificateMetadata;
 import com.microsoft.identity.labapi.utilities.authentication.common.KeyStoreConfiguration;
 import com.microsoft.identity.labapi.utilities.authentication.msal4j.Msal4jAuthClient;
+import com.microsoft.identity.labapi.utilities.constants.LabConstants;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 import com.microsoft.identity.labapi.utilities.exception.LabError;
 
@@ -40,13 +41,13 @@ import lombok.NonNull;
  * A an authentication client that can acquire access tokens for Labs KeyVaults (rather than Labs API).
  */
 public class KeyVaultCertificateBasedAuthenticationClient implements IAccessTokenSupplier {
-    private final static String KEYVAULT_SCOPE = "https://vault.azure.net/.default";
+    private final static String KEYVAULT_SCOPE = LabConstants.KEYVAULT_SCOPE;
     private final static String TENANT_ID = "72f988bf-86f1-41af-91ab-2d7cd011db47";
     private final static String AUTHORITY = "https://login.microsoftonline.com/" + TENANT_ID;
-    private final static String CLIENT_ID = "f62c5ae3-bf3a-4af5-afa8-a68b800396e9";
+    private final static String CLIENT_ID = LabConstants.DEFAULT_LAB_CLIENT_ID;
     private final static String KEYSTORE_TYPE = "Windows-MY";
     private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
-    private final static String CERTIFICATE_ALIAS = "LabVaultAccessCert";
+    private final static String CERTIFICATE_ALIAS = LabConstants.DEFAULT_LAB_CERT_ALIAS;
     private final String mLabCredential;
     private final String mLabCertPassword;
 

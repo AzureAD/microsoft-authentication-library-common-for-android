@@ -32,7 +32,7 @@ import androidx.annotation.NonNull;
 /**
  * Query Labs KeyVaults to retrieve secrets.
  */
-public class KeyVaultHelper {
+public class KeyVaultFetchHelper {
 
     private static final KeyVaultAuthHelper instance =  (KeyVaultAuthHelper) KeyVaultAuthHelper.getInstance();
 
