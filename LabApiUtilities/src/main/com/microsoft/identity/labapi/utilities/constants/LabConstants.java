@@ -27,6 +27,7 @@ public class LabConstants {
 
     public static final String DEFAULT_LAB_CLIENT_ID = "f62c5ae3-bf3a-4af5-afa8-a68b800396e9";
     public static final String DEFAULT_LAB_SCOPE = "https://request.msidlab.com/.default";
+    public static final String KEYVAULT_SCOPE = "https://vault.azure.net/.default";
     public static final String DEFAULT_LAB_CERT_ALIAS = "LabAuth.MSIDLab.com";
 
     static final class UserType {
