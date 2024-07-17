@@ -117,6 +117,7 @@ public class CertBasedAuthFactory {
         }
 
         //Need input from user to determine which CertBasedAuthChallengeHandler to return.
+        Logger.info(TAG, "Showing user choice dialog.");
         mDialogHolder.showUserChoiceDialog(new UserChoiceDialog.PositiveButtonListener() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
