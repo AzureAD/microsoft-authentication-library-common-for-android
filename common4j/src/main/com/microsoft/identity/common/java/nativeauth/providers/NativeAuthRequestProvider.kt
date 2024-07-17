@@ -310,11 +310,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //region helpers
     private fun getRequestHeaders(correlationId: String): Map<String, String?> {
         val headers: MutableMap<String, String?> = TreeMap()
-
-        if (correlationId != "UNSET") {
-            headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = correlationId
-        }
-
+        headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = correlationId
         headers[AuthenticationConstants.SdkPlatformFields.PRODUCT] = DiagnosticContext.INSTANCE.requestContext[AuthenticationConstants.SdkPlatformFields.PRODUCT]
         headers[AuthenticationConstants.SdkPlatformFields.VERSION] = Device.getProductVersion()
         headers.putAll(Device.getPlatformIdParameters())
