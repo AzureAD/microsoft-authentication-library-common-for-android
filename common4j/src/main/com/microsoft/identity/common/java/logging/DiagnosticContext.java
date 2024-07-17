@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.logging;
 
+import java.util.UUID;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public enum DiagnosticContext {
@@ -77,7 +79,7 @@ public enum DiagnosticContext {
         IRequestContext context = getRequestContext();
         String correlationId = context.get(DiagnosticContext.CORRELATION_ID);
         if (correlationId == null) {
-            correlationId = UNSET;
+            correlationId = UUID.randomUUID().toString();
         }
         return correlationId;
     }
