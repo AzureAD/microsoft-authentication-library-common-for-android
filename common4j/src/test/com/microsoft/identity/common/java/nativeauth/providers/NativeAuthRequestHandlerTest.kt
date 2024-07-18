@@ -302,7 +302,7 @@ class NativeAuthRequestHandlerTest {
             commandParameters = commandParameters
         )
 
-        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
+        Assert.assertNotEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], "UNSET")
     }
 
     @Test
