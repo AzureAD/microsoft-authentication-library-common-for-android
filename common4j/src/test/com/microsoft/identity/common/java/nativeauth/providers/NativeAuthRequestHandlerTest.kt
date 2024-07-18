@@ -152,7 +152,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testSignUpStartWithUnsetCorrelationIdShouldNotHaveHeader() {
+    fun testSignUpStartWithUnsetCorrelationIdShouldFilterOutToUUID() {
         val commandParameters = SignUpStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
@@ -164,7 +164,7 @@ class NativeAuthRequestHandlerTest {
             commandParameters = commandParameters
         )
 
-        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
+        Assert.assertNotEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], "UNSET")
     }
 
     @Test
