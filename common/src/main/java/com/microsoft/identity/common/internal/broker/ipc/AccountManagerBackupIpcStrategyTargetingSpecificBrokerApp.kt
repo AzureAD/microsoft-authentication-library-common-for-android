@@ -141,6 +141,7 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp
         val methodTag = "$TAG:communicateToBroker"
         val targetPackageName = bundle.targetBrokerAppPackageName
 
+        Logger.info(methodTag, "Operation ${bundle.operation.name} is requested to $targetPackageName")
         val accountType = accountTypeForEachPackage.getOrElse(targetPackageName) {
             throw BrokerCommunicationException(
                 BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
