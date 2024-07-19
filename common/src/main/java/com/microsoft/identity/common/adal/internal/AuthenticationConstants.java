@@ -1125,7 +1125,7 @@ public final class AuthenticationConstants {
          * Signing certificate thumbprint of the DEBUG-signed Link To Windows app.
          * Generated with SHA-512.
          */
-        public static final String LTW_APP_SHA512_DEBUG_SIGNATURE = "x28mHDILP8IZRH6EfjD4zC1bcpgk8euKS91klxoddu8+e34xEgy3Q9XTa3ySY7C7EXX4o/EJpDV8MqmEfIf7LA==";
+        public static final String LTW_APP_SHA512_DEBUG_SIGNATURE = "5PAhhZNSRRvq7vpTT5vrYJbSLh05AU8USf7oUTS239PEltebX87uGN7GhAe5244lJepwZ5RU4vu8N6ospXVOlg==";
 
         /**
          * Teams IP Phones (Sakurai devices) is supported by Intune, but does not have a back button nor browser.
