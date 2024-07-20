@@ -531,6 +531,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public void onReceivedClientCertRequest(@NonNull final WebView view,
                                             @NonNull final ClientCertRequest clientCertRequest) {
         final String methodTag = TAG + ":onReceivedClientCertRequest";
+        Logger.info(methodTag, "Client cer request received");
         // When server sends null or empty issuers, we'll continue with CBA.
         // In the case where ADFS sends a clientTLS device auth request, we don't handle that in CBA.
         // This type of request will have a particular issuer, so if that issuer is found, we will
@@ -554,6 +555,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             @Override
             public void onReceived(@Nullable final AbstractCertBasedAuthChallengeHandler challengeHandler) {
                 mCertBasedAuthChallengeHandler = challengeHandler;
+                Logger.info(methodTag, "CertBasedAuthChallengeHandler created " + (mCertBasedAuthChallengeHandler == null));
                 if (mCertBasedAuthChallengeHandler == null) {
                     //User cancelled out of CBA.
                     clientCertRequest.cancel();
