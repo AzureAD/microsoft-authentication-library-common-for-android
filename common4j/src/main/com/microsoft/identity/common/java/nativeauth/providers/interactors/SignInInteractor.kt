@@ -103,7 +103,7 @@ class SignInInteractor(
         )
 
         val rawApiResponse = nativeAuthResponseHandler.getSignInInitiateResultFromHttpResponse(
-            requestCorrelationId = requestCorrelationId, // Question: should we use the CLIENT_REQUEST_ID header from response here?
+            requestCorrelationId = requestCorrelationId,
             response = response
         )
 

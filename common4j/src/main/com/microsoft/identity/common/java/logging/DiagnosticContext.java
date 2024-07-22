@@ -78,8 +78,8 @@ public enum DiagnosticContext {
     public String getThreadCorrelationId() {
         IRequestContext context = getRequestContext();
         String correlationId = context.get(DiagnosticContext.CORRELATION_ID);
-        if (correlationId == null || correlationId.equals(UNSET)) {
-            correlationId = UUID.randomUUID().toString();
+        if (correlationId == null) {
+            correlationId = UNSET;
         }
         return correlationId;
     }
