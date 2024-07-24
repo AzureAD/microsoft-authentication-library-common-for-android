@@ -213,7 +213,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testSignUpSubmitCodeWithUnsetCorrelationIdShouldFilterOutToUUID() {
+    fun testSignUpSubmitCodeWithUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = SignUpSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
@@ -226,7 +226,7 @@ class NativeAuthRequestHandlerTest {
             commandParameters = commandParameters
         )
 
-        Assert.assertNotEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], "UNSET")
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
     }
 
     @Test
@@ -251,7 +251,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testSignUpSubmitPasswordWithUnsetCorrelationIdShouldFilterOutToUUID() {
+    fun testSignUpSubmitPasswordWithUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = SignUpSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
@@ -264,7 +264,7 @@ class NativeAuthRequestHandlerTest {
             commandParameters = commandParameters
         )
 
-        Assert.assertNotEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], "UNSET")
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
     }
 
     @Test
@@ -289,7 +289,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testSignUpSubmitUserAttributesWithUnsetCorrelationIdShouldFilterOutToUUID() {
+    fun testSignUpSubmitUserAttributesWithUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = SignUpSubmitUserAttributesCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
@@ -385,13 +385,13 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testSignUpChallengeWithUnsetCorrelationIdShouldFilterOutToUUID() {
+    fun testSignUpChallengeWithUnsetCorrelationIdShouldNotHaveHeader() {
         val result = nativeAuthRequestProvider.createSignUpChallengeRequest(
             continuationToken = continuationToken,
             correlationId = "UNSET"
         )
 
-        Assert.assertNotEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], "UNSET")
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
     }
 
     @Test(expected = ClientException::class)
@@ -437,7 +437,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testSignInInitiateWithUnsetCorrelationIdShouldFilterOutToUUID() {
+    fun testSignInInitiateWithUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = SignInStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(emptyString)
@@ -448,7 +448,7 @@ class NativeAuthRequestHandlerTest {
             commandParameters = commandParameters
         )
 
-        Assert.assertNotEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], "UNSET")
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
     }
 
     @Test(expected = ClientException::class)
@@ -529,13 +529,13 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testSignInChallengeWithUnsetCorrelationIdShouldFilterOutToUUID() {
+    fun testSignInChallengeWithUnsetCorrelationIdShouldNotHaveHeader() {
         val result = nativeAuthRequestProvider.createSignInChallengeRequest(
             continuationToken = continuationToken,
             correlationId = "UNSET"
         )
 
-        Assert.assertNotEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], "UNSET")
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
     }
 
     @Test
@@ -614,7 +614,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testSignInTokenWithContinuationTokenUnsetCorrelationIdShouldFilterOutToUUID() {
+    fun testSignInTokenWithContinuationTokenUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = SignInWithContinuationTokenCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
@@ -626,7 +626,7 @@ class NativeAuthRequestHandlerTest {
             commandParameters = commandParameters
         )
 
-        Assert.assertNotEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], "UNSET")
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
     }
 
     @Test
@@ -720,7 +720,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testPasswordTokenRequestWithUnsetCorrelationIdShouldFilterOutToUUID() {
+    fun testPasswordTokenRequestWithUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = SignInSubmitPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .password(password)
@@ -732,7 +732,7 @@ class NativeAuthRequestHandlerTest {
             commandParameters = commandParameters
         )
 
-        Assert.assertNotEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], "UNSET")
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
     }
     @Test
     fun testPasswordTokenRequestSuccess() {
@@ -828,7 +828,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testResetPasswordStartWithUnsetCorrelationIdShouldFilterOutToUUID() {
+    fun testResetPasswordStartWithUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = ResetPasswordStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
@@ -839,7 +839,7 @@ class NativeAuthRequestHandlerTest {
             commandParameters = commandParameters
         )
 
-        Assert.assertNotEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], "UNSET")
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
     }
 
     @Test
@@ -881,13 +881,13 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testResetPasswordChallengeWithUnsetCorrelationIdShouldFilterOutToUUID() {
+    fun testResetPasswordChallengeWithUnsetCorrelationIdShouldNotHaveHeader() {
         val result = nativeAuthRequestProvider.createResetPasswordChallengeRequest(
             continuationToken = continuationToken,
             correlationId = "UNSET"
         )
 
-        Assert.assertNotEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], "UNSET")
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
     }
 
     @Test
@@ -948,7 +948,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testResetPasswordContinueWithUnsetCorrelationIdShouldFilterOutToUUID() {
+    fun testResetPasswordContinueWithUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = ResetPasswordSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .code(oobCode)
@@ -960,7 +960,7 @@ class NativeAuthRequestHandlerTest {
             commandParameters = commandParameters
         )
 
-        Assert.assertNotEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], "UNSET")
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
     }
 
     @Test
@@ -1027,7 +1027,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testResetPasswordSubmitWithUnsetCorrelationIdShouldFilterOutToUUID() {
+    fun testResetPasswordSubmitWithUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = ResetPasswordSubmitNewPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
@@ -1039,7 +1039,7 @@ class NativeAuthRequestHandlerTest {
             commandParameters = commandParameters
         )
 
-        Assert.assertNotEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], "UNSET")
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
     }
 
     @Test
@@ -1080,13 +1080,13 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    fun testResetPasswordPollCompletionWithUnsetCorrelationIdShouldFilterOutToUUID() {
+    fun testResetPasswordPollCompletionWithUnsetCorrelationIdShouldNotHaveHeader() {
         val result = nativeAuthRequestProvider.createResetPasswordPollCompletionRequest(
             continuationToken = continuationToken,
             correlationId = "UNSET"
         )
 
-        Assert.assertNotEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], "UNSET")
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
     }
 
     @Test
