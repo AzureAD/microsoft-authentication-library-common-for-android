@@ -60,6 +60,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -297,4 +298,27 @@ public class AndroidPlatformUtil implements IPlatformUtil {
                 || redirectUri.equals("msauth://com.microsoft.teams/fcg80qvoM1YMKJZibjBwQcDfOno=")
                 || redirectUri.equals("https://login.microsoftonline.com/common/oauth2/nativeclient"));
     }
-}
+
+    @Override
+    public String[] getPackageNamesForUid(int uid) {
+
+        final String[] packagesNames = mContext.getPackageManager().getPackagesForUid(uid);
+        if (packagesNames == null || packagesNames.length < 1) {
+            Logger.info(TAG, String.format(Locale.ROOT, "There are no packages for this uid: %s", uid));
+            return null;
+        }
+
+        // packageNames is a array of packages using that UID, could be more than 1 if using sharedUserIds
+        if (packagesNames.length > 1) {
+            StringBuilder builder = new StringBuilder(
+                    String.format(Locale.ROOT, "There is more than 1 package associated with the uid: %s ", uid));
+            for (String packageName : packagesNames) {
+                builder.append('\n');
+                builder.append(packageName);
+            }
+            Logger.info(TAG, builder.toString());
+        }
+        return packagesNames;
+    }
+
+    }

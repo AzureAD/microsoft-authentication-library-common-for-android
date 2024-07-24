@@ -129,6 +129,9 @@ public interface IPlatformUtil {
     @Nullable
     String getPackageNameFromUid(final int uid);
 
+    @Nullable
+    String[] getPackageNamesForUid(int uid);
+
     /**
      * We might want to add (or remove) extra query parameters which are specific to each platform.
      * @param originalList existing list of extra query parameters to
