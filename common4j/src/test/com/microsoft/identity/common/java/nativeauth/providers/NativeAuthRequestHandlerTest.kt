@@ -384,6 +384,16 @@ class NativeAuthRequestHandlerTest {
         assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
     }
 
+    @Test
+    fun testSignUpChallengeWithUnsetCorrelationIdShouldFilterOutToUUID() {
+        val result = nativeAuthRequestProvider.createSignUpChallengeRequest(
+            continuationToken = continuationToken,
+            correlationId = "UNSET"
+        )
+
+        Assert.assertNotEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], "UNSET")
+    }
+
     @Test(expected = ClientException::class)
     fun testSignUpChallengeWithEmptyContinuationTokenShouldThrowException() {
         nativeAuthRequestProvider.createSignUpChallengeRequest(
@@ -516,6 +526,16 @@ class NativeAuthRequestHandlerTest {
             continuationToken = emptyString,
             correlationId = correlationId
         )
+    }
+
+    @Test
+    fun testSignInChallengeWithUnsetCorrelationIdShouldFilterOutToUUID() {
+        val result = nativeAuthRequestProvider.createSignInChallengeRequest(
+            continuationToken = continuationToken,
+            correlationId = "UNSET"
+        )
+
+        Assert.assertNotEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], "UNSET")
     }
 
     @Test
@@ -861,6 +881,16 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
+    fun testResetPasswordChallengeWithUnsetCorrelationIdShouldFilterOutToUUID() {
+        val result = nativeAuthRequestProvider.createResetPasswordChallengeRequest(
+            continuationToken = continuationToken,
+            correlationId = "UNSET"
+        )
+
+        Assert.assertNotEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], "UNSET")
+    }
+
+    @Test
     fun testResetPasswordChallengeSuccess() {
         val result = nativeAuthRequestProvider.createResetPasswordChallengeRequest(
             continuationToken = continuationToken,
@@ -1047,6 +1077,16 @@ class NativeAuthRequestHandlerTest {
             continuationToken = emptyString,
             correlationId = correlationId
         )
+    }
+
+    @Test
+    fun testResetPasswordPollCompletionWithUnsetCorrelationIdShouldFilterOutToUUID() {
+        val result = nativeAuthRequestProvider.createResetPasswordPollCompletionRequest(
+            continuationToken = continuationToken,
+            correlationId = "UNSET"
+        )
+
+        Assert.assertNotEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], "UNSET")
     }
 
     @Test
