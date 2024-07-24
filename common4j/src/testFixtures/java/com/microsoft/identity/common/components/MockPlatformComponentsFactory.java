@@ -191,6 +191,12 @@ public class MockPlatformComponentsFactory {
 
         @Nullable
         @Override
+        public String[] getPackageNamesForUid(int uid) {
+            return new String[0];
+        }
+
+        @Nullable
+        @Override
         public List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList) {
             return originalList;
         }
