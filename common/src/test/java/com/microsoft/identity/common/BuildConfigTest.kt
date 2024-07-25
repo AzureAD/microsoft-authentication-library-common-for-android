@@ -24,6 +24,7 @@ package com.microsoft.identity.common
 
 import com.microsoft.identity.common4j.env.BuildReason
 import com.microsoft.identity.common4j.env.BuildReason.Companion.isBuildReason
+import org.junit.Assume
 import org.junit.Test
 
 /**
@@ -34,9 +35,7 @@ class BuildConfigTest {
     @Test
     fun failIfBypassRedirecUriCheckEnabled(){
         // Do not run this on scheduled test.
-        if (isBuildReason(BuildReason.Schedule)) {
-            return
-        }
+        Assume.assumeFalse(isBuildReason(BuildReason.Schedule))
 
         assert(!BuildConfig.bypassRedirectUriCheck)
     }
@@ -44,9 +43,7 @@ class BuildConfigTest {
     @Test
     fun failIfTrustDebugBrokerFlagEnabled(){
         // Do not run this on scheduled test.
-        if (isBuildReason(BuildReason.Schedule)) {
-            return
-        }
+        Assume.assumeFalse(isBuildReason(BuildReason.Schedule))
 
         assert(!BuildConfig.trustDebugBrokerFlag)
     }
