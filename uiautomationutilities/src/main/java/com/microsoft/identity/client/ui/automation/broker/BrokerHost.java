@@ -358,6 +358,6 @@ public class BrokerHost extends AbstractTestBroker {
     public boolean isLocalFlightProviderSelector() {
         final String methodTag = TAG + ".isLocalFlightProviderSelector";
         brokerFlightsFragment.launch();
-        return brokerFlightsFragment.isLocalFlightProviderSelected();
+        return brokerFlightsFragment.isLocalFlightProviderSelector();
     }
 }
