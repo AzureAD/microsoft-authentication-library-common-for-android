@@ -86,6 +86,13 @@ public class BrokerFlightsFragment extends AbstractBrokerHost {
     }
 
     /**
+     * Check if local flights provider is selected
+     */
+    public void isLocalFlightProviderSelected() {
+        isElementChecked(LOCAL_STORAGE_RADIO_BUTTON_ID);
+    }
+
+    /**
      * Set the ECS flights provider.
      */
     public void selectECSProvider() {

@@ -351,4 +351,13 @@ public class BrokerHost extends AbstractTestBroker {
         ThreadUtils.sleepSafely(500, methodTag, "Wait before launch.");
         launch();
     }
+
+    /**
+     * Returns true if brokerHost is using local flights
+     */
+    public boolean isLocalFlightProviderSelector() {
+        final String methodTag = TAG + ".isLocalFlightProviderSelector";
+        brokerFlightsFragment.launch();
+        return brokerFlightsFragment.isLocalFlightProviderSelected();
+    }
 }
