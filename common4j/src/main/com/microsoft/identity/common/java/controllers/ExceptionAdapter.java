@@ -52,7 +52,6 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import org.json.JSONException;
 
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -93,7 +92,7 @@ public class ExceptionAdapter {
                     methodTag,
                     "AuthorizationErrorResponse is not set"
             );
-            return new ClientException(ClientException.UNKNOWN_ERROR, "Authorization failed with unknown error. Authorization Status: " +authorizationResult.getAuthorizationStatus());
+            return new ClientException(ClientException.AUTHORIZATION_RESULT_ERROR, "Authorization failed with unknown error. Authorization Status: " +authorizationResult.getAuthorizationStatus());
         }
 
         //THERE ARE CURRENTLY NO USAGES of INVALID_REQUEST
@@ -403,7 +402,7 @@ public class ExceptionAdapter {
 
         if (e instanceof NullPointerException) {
             return new ClientException(
-                    ClientException.NULL_POINTER,
+                    ClientException.NULL_POINTER_ERROR,
                     e.getMessage()
             );
         }

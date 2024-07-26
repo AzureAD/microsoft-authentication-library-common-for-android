@@ -443,12 +443,42 @@ public class ClientException extends BaseException {
     /**
      * A NullPointerException was thrown.
      */
-    public static final String NULL_POINTER = "null_pointer";
+    public static final String NULL_POINTER_ERROR = "null_pointer_error";
+
+    /**
+     * An object was unexpectedly null. Used for explicit null checks, whereas NULL_POINTER_ERROR classifies NPEs.
+     */
+    public static final String NULL_OBJECT = "null_object";
+
+    /**
+     * An error related to the task Executor.
+     */
+    public static final String EXECUTOR_ERROR = "executor_error";
 
     /**
      * The JVM ran out of memory.
      */
     public static final String OUT_OF_MEMORY = "out_of_memory";
+
+    /**
+     * An error occurred in relation to the AuthorizationResult object.
+     */
+    public static final String AUTHORIZATION_RESULT_ERROR = "authorization_result_error";
+
+    /**
+     * An error occurred with the AccountChooser activity/logic.
+     */
+    public static final String ACCOUNT_CHOOSER_ERROR = "account_chooser_error";
+
+    /**
+     * An error related to a non-active broker.
+     */
+    public static final String NON_ACTIVE_BROKER_ERROR = "non_active_broker_error";
+
+    /**
+     * Error occurred in the process of installing a WPJ certificate.
+     */
+    public static final String INSTALL_CERT_ERROR = "install_cert_error";
 
     /**
      * Constructor of ClientException.
