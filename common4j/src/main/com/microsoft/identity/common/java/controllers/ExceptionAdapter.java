@@ -52,6 +52,7 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import org.json.JSONException;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -340,7 +341,8 @@ public class ExceptionAdapter {
 
     public static BaseException baseExceptionFromException(final Throwable exception) {
         Throwable e = exception;
-        if (exception instanceof ExecutionException) {
+        if (exception instanceof ExecutionException
+                && exception.getCause() != null) {
             e = exception.getCause();
         }
         if (e instanceof BaseException) {
@@ -357,7 +359,8 @@ public class ExceptionAdapter {
         }
 
         Throwable e = exception;
-        if (exception instanceof ExecutionException) {
+        if (exception instanceof ExecutionException
+                && exception.getCause() != null) {
             e = exception.getCause();
         }
 
@@ -393,7 +396,23 @@ public class ExceptionAdapter {
         if (e instanceof TimeoutException) {
             return new ClientException(
                     ClientException.TIMED_OUT,
-                    "A blocking operation has timed out",
+                    "A blocking operation has timed out: " + e.getMessage(),
+                    e
+            );
+        }
+
+        if (e instanceof NullPointerException) {
+            return new ClientException(
+                    ClientException.NULL_POINTER,
+                    e.getMessage()
+            );
+        }
+
+
+        if (e instanceof OutOfMemoryError) {
+            return new ClientException(
+                    ClientException.OUT_OF_MEMORY,
+                    e.getMessage(),
                     e
             );
         }

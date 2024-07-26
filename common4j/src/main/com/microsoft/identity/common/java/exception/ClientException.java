@@ -188,7 +188,7 @@ public class ClientException extends BaseException {
     public static final String DUPLICATE_QUERY_PARAMETER = "duplicate_query_parameter";
 
     /**
-     * Extra query parameters set by the client app is already sent by the sdk.
+     * Used when base exception is not categorizable into any of the current error codes.
      */
     public static final String UNKNOWN_ERROR = "unknown_error";
 
@@ -439,6 +439,16 @@ public class ClientException extends BaseException {
      * A blocking operation has timed out.
      */
     public static final String TIMED_OUT = "timed_out";
+
+    /**
+     * A NullPointerException was thrown.
+     */
+    public static final String NULL_POINTER = "null_pointer";
+
+    /**
+     * The JVM ran out of memory.
+     */
+    public static final String OUT_OF_MEMORY = "out_of_memory";
 
     /**
      * Constructor of ClientException.
