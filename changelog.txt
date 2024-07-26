@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [MINOR] Add null cursor BrokerCommunicationException error category (#2459)
 
 Version 17.6.1
 ---------

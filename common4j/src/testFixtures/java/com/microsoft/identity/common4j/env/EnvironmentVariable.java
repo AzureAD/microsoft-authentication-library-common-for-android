@@ -20,28 +20,11 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.ipc.mock;
+package com.microsoft.identity.common4j.env;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import android.content.ContentResolver;
-import android.database.Cursor;
-import android.net.Uri;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresPermission;
-
-import org.robolectric.annotation.Implements;
-
-@Implements(ContentResolver.class)
-public class ShadowContentResolverConnectionFailed {
-    public final Cursor query(@RequiresPermission.Read @NonNull Uri uri,
-                                        @Nullable String[] projection, @Nullable String selection,
-                                        @Nullable String[] selectionArgs, @Nullable String sortOrder) {
-        final Cursor cursor = mock(Cursor.class);
-        when(cursor.getExtras()).thenThrow(new RuntimeException("Connection failed"));
-        return cursor;
-    }
+/**
+ * Describes names for different environment variables available during test execution.
+ */
+public enum EnvironmentVariable {
+    BUILD_REASON;
 }
