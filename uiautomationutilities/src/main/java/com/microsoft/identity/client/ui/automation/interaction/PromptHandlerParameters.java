@@ -156,6 +156,11 @@ public class PromptHandlerParameters {
     private final boolean getTheAppExpected;
 
     /**
+     * Denotes whether or not to expect "Update your password" page.
+     */
+    private final boolean updateYourPasswordExpected;
+
+    /**
      * Denotes the way in which we want to respond to the enroll page for this request.
      */
     @Builder.Default
@@ -175,4 +180,9 @@ public class PromptHandlerParameters {
 
     @Builder.Default
     private final UiResponse staySignedInResponse = UiResponse.ACCEPT;
+
+    /**
+     * New password to be set in password update scenario
+     */
+    private final String newPasswordForUpdateScenario;
 }
