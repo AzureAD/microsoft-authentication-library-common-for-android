@@ -96,4 +96,9 @@ public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponen
      * Handle interaction with "Sign in options".
      */
     void handleSignInOptions();
+
+    /**
+     * Handle interaction for Update your password page.
+     */
+    void handlePasswordUpdate(@NonNull final String oldPassword, @NonNull final String newPassword);
 }
