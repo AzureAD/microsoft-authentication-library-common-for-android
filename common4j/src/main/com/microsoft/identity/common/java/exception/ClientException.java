@@ -461,14 +461,14 @@ public class ClientException extends BaseException {
     public static final String OUT_OF_MEMORY = "out_of_memory";
 
     /**
-     * An error occurred in relation to the AuthorizationResult object.
+     * The AuthorizationErrorResponse received was null.
      */
-    public static final String AUTHORIZATION_RESULT_ERROR = "authorization_result_error";
+    public static final String AUTHORIZATION_RESULT_NULL_ERROR_RESPONSE = "authorization_result_null_error_response";
 
     /**
-     * An error occurred with the AccountChooser activity/logic.
+     * There are parallel UI requests running.
      */
-    public static final String ACCOUNT_CHOOSER_ERROR = "account_chooser_error";
+    public static final String MULTIPLE_PARALLEL_INTERACTIVE_REQUEST_ERROR = "multiple_parallel_interactive_request_error";
 
     /**
      * An error related to a non-active broker.

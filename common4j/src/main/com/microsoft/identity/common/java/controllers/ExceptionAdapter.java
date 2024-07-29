@@ -92,7 +92,7 @@ public class ExceptionAdapter {
                     methodTag,
                     "AuthorizationErrorResponse is not set"
             );
-            return new ClientException(ClientException.AUTHORIZATION_RESULT_ERROR, "Authorization failed with unknown error. Authorization Status: " +authorizationResult.getAuthorizationStatus());
+            return new ClientException(ClientException.AUTHORIZATION_RESULT_NULL_ERROR_RESPONSE, "Authorization error response is null. Authorization Status: " +authorizationResult.getAuthorizationStatus());
         }
 
         //THERE ARE CURRENTLY NO USAGES of INVALID_REQUEST
