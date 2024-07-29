@@ -62,5 +62,6 @@ public enum SpanName {
     AcquireTransferTokenUsingPrt,
     SaveTransferTokenToBlockstore,
     RefreshTransferToken,
-    IsLtwPreInstalled
+    IsLtwPreInstalled,
+    DeleteTransferToken
 }
