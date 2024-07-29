@@ -64,7 +64,7 @@ public class LabClient implements ILabClient {
      * Temp users API provided by Lab team can often take more than 10 seconds to return...hence, we
      * are overriding the read timeout.
      */
-    private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(15);
+    private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(35);
 
     public static final long TEMP_USER_WAIT_TIME = TimeUnit.SECONDS.toMillis(35);
 
@@ -202,6 +202,7 @@ public class LabClient implements ILabClient {
         Configuration.getDefaultApiClient().setAccessToken(
                 mLabApiAuthenticationClient.getAccessToken()
         );
+
         final CreateTempUserApi createTempUserApi = new CreateTempUserApi();
         createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
         final TempUser tempUser;
@@ -209,6 +210,14 @@ public class LabClient implements ILabClient {
         try {
             tempUser = createTempUserApi.apiCreateTempUserPost(valueOf(tempUserType));
         } catch (final ApiException e) {
+            throw new LabApiException(LabError.FAILED_TO_CREATE_TEMP_USER, e);
+        }
+
+        try {
+            // temp user takes some time to actually being created even though it may be
+            // returned by the LAB API. Adding a wait here before we proceed with the test.
+            Thread.sleep(LabClient.TEMP_USER_WAIT_TIME);
+        } catch (final InterruptedException e) {
             throw new LabApiException(LabError.FAILED_TO_CREATE_TEMP_USER, e);
         }
 
@@ -291,12 +300,17 @@ public class LabClient implements ILabClient {
         Configuration.getDefaultApiClient().setAccessToken(
                 mLabApiAuthenticationClient.getAccessToken()
         );
+
         final DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi();
 
         try {
             final CustomSuccessResponse successResponse = deleteDeviceApi.apiDeleteDeviceDelete(
                     upn, deviceId
             );
+
+            if (successResponse == null) {
+                return false;
+            }
 
             // we probably need a more sophisticated logger integrated into LabApi
             // for now this is fine
@@ -393,9 +407,12 @@ public class LabClient implements ILabClient {
         final ResetApi resetApi = new ResetApi();
         try {
             final CustomSuccessResponse resetResponse = resetApi.apiResetPut(upn, ResetOperation.PASSWORD.toString());
-            final String expectedResult = ("Password reset successful for user : " + upn)
-                    .toLowerCase();
-            final boolean result = resetResponse.getResult().toLowerCase().contains(expectedResult);
+            if (resetResponse == null) {
+                return false;
+            }
+
+            final String expectedResult = ("Password reset for user: " + upn).toLowerCase();
+            final boolean result = resetResponse.toString().toLowerCase().contains(expectedResult);
             if (result) {
                 try {
                     Thread.sleep(PASSWORD_RESET_WAIT_DURATION);
@@ -457,14 +474,13 @@ public class LabClient implements ILabClient {
      * @param policy Enable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO. (optional)
      * @return boolean value indicating policy enabled or not.
      */
-    public boolean enablePolicy(@NonNull final String upn, @NonNull final ProtectionPolicy policy) {
+    public boolean enablePolicy(@NonNull final String upn, @NonNull final ProtectionPolicy policy) throws LabApiException {
         final EnablePolicyApi enablePolicyApi = new EnablePolicyApi();
         try {
-            final CustomSuccessResponse customSuccessResponse = enablePolicyApi.apiEnablePolicyPut(upn, policy.toString());
+            final CustomSuccessResponse enablePolicyResult = enablePolicyApi.apiEnablePolicyPut(upn, policy.toString());
             final String expectedResult = (policy + " Enabled for user : " + upn).toLowerCase();
-            final String result = customSuccessResponse.getResult();
-            if (result != null) {
-                return result.toLowerCase().contains(expectedResult);
+            if (enablePolicyResult != null) {
+                return enablePolicyResult.toString().toLowerCase().contains(expectedResult);
             }
             return false;
         } catch (final ApiException e) {
@@ -480,14 +496,13 @@ public class LabClient implements ILabClient {
      * @param policy Disable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO. (optional)
      * @return boolean value indicating policy is disabled or not for the upn.
      */
-    public boolean disablePolicy(@NonNull final String upn, @NonNull final ProtectionPolicy policy) {
+    public boolean disablePolicy(@NonNull final String upn, @NonNull final ProtectionPolicy policy) throws LabApiException {
         final DisablePolicyApi disablePolicyApi = new DisablePolicyApi();
         try {
-            final CustomSuccessResponse customSuccessResponse = disablePolicyApi.apiDisablePolicyPut(upn, policy.toString());
+            final CustomSuccessResponse disablePolicyResponse = disablePolicyApi.apiDisablePolicyPut(upn, policy.toString());
             final String expectedResult = (policy + " Disabled for user : " + upn).toLowerCase();
-            final String result = customSuccessResponse.getResult();
-            if (result != null) {
-                return result.toLowerCase().contains(expectedResult);
+            if (disablePolicyResponse != null) {
+                return disablePolicyResponse.toString().toLowerCase().contains(expectedResult);
             }
             return false;
         } catch (final ApiException e) {

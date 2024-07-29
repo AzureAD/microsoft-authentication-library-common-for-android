@@ -74,14 +74,26 @@ abstract class AbstractBrokerHost {
     /**
      * This method clicks on the button with the given resource id
      *
-     * @param resourceIdButton the resource id of the button to be clicked
+     * @param buttonResourceId the resource id of the button to be clicked
      */
-    static public void clickButton(@NonNull final String resourceIdButton) {
+    static public void clickButton(@NonNull final String buttonResourceId) {
         final String resourceId = CommonUtils.getResourceId(
                 BROKER_HOST_APP_PACKAGE_NAME,
-                resourceIdButton
+                buttonResourceId
         );
         UiAutomatorUtils.handleButtonClick(resourceId);
+    }
+
+    static public boolean isElementChecked(@NonNull final String elementResourceId) {
+        final String resourceId = CommonUtils.getResourceId(
+                BROKER_HOST_APP_PACKAGE_NAME,
+                elementResourceId
+        );
+        try {
+            return UiAutomatorUtils.obtainUiObjectWithResourceId(resourceId).isChecked();
+        } catch (UiObjectNotFoundException exception) {
+            return false;
+        }
     }
 
     /**

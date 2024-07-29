@@ -20,21 +20,29 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.flighting;
+package com.microsoft.identity.internal.testutils.nativeauth.api.models
 
-import org.junit.Assert;
-import org.junit.Test;
+import com.google.gson.annotations.SerializedName
 
-public class CommonFlightManagerTest {
-    private IFlightsProvider flightsProvider = new MockFlightsProvider();
+/**
+ * Test configuration retrieved from Labs KeyVault and used in native auth tests.
+ * This class defines what test parameters to use.
+ */
+data class NativeAuthTestConfig(
+    val configs: Map<String, Config>
+) {
+    data class Config(
+        @SerializedName("email") val email: String,
+        @SerializedName("client_id") val clientId: String,
+        @SerializedName("authority_url") val authorityUrl: String,
+        @SerializedName("resources") val resources: List<Resource>
+    )
 
-    @Test
-    public void testIsFlightEnabled() {
-        ((MockFlightsProvider)flightsProvider).addFlight(MockFlights.ENABLED_FLIGHT.getKey(), "true");
-        ((MockFlightsProvider)flightsProvider).addFlight(MockFlights.DISABLED_FLIGHT.getKey(), "false");
-        CommonFlightManager.setFlightProvider(flightsProvider);
-
-        Assert.assertTrue(CommonFlightManager.isFlightEnabled(MockFlights.ENABLED_FLIGHT));
-        Assert.assertFalse(CommonFlightManager.isFlightEnabled(MockFlights.DISABLED_FLIGHT));
-    }
+    data class Resource(
+        @SerializedName("resource_name") val resourceName: String,
+        @SerializedName("resource_id") val resourceId: String,
+        @SerializedName("scopes") val scopes: List<String>
+    )
 }
+
+

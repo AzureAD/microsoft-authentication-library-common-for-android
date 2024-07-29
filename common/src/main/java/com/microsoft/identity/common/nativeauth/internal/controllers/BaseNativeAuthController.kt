@@ -33,7 +33,6 @@ import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommand
 import com.microsoft.identity.common.java.controllers.BaseController
 import com.microsoft.identity.common.java.dto.AccountRecord
 import com.microsoft.identity.common.java.exception.ClientException
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult
@@ -67,15 +66,6 @@ abstract class BaseNativeAuthController : BaseController() {
     )
     override fun acquireToken(request: InteractiveTokenCommandParameters?): AcquireTokenResult {
         throw ClientException("acquireToken() not supported in NativeAuthController")
-    }
-
-    @Throws(ClientException::class)
-    @Deprecated(
-        level = DeprecationLevel.HIDDEN,
-        message = "acquireTokenSilent() not supported in NativeAuthController"
-    )
-    override fun acquireTokenSilent(parameters: SilentTokenCommandParameters?): AcquireTokenResult {
-        throw ClientException("acquireTokenSilent() not supported in NativeAuthController")
     }
 
     @Throws(ClientException::class)

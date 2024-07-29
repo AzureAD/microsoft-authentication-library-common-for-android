@@ -42,4 +42,21 @@ public class ResetPasswordStartCommandParameters extends BaseNativeAuthCommandPa
      */
     @NonNull
     public final String username;
+
+    @NonNull
+    @Override
+    public String toUnsanitizedString() {
+        return "ResetPasswordStartCommandParameters(username=" + username + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
+
+    @Override
+    public boolean containsPii() {
+        return !toString().equals(toUnsanitizedString());
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "ResetPasswordStartCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
 }

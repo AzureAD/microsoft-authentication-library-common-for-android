@@ -10,29 +10,39 @@ steps:
   inputs:
     filename: echo
     arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAt }}]$(System.AccessToken)'
-- task: AzureKeyVault@1
+- task: AzureKeyVault@2
   displayName: 'Azure Key Vault: Download Cert for Automation'
   inputs:
-    ConnectedServiceName: 9a9308ae-59b4-475f-b49c-3e828c508d8b
-    KeyVaultName: ADALTestInfo
-    SecretsFilter: AndroidAutomationRunner
+    azureSubscription: 'AuthSdkResourceManager' # string. Workload identity service connection to use managed identity authentication
+    KeyVaultName: 'msidlabs' # string. Required. The name of the Key Vault containing the secrets.
+    #setting secrets filter to fetch only MSIDLABCertificate cert from the vault
+    SecretsFilter: 'LabAuth' # string. Required. Specifies the secret to download. Use '*' for all secrets.
+    #RunAsPreJob: false # boolean. Make secrets available to whole job. Default: false.
 - task: PowerShell@2
   displayName: Install Automation Cert
   inputs:
     targetType: inline
     script: >
-      $kvSecretBytes = [System.Convert]::FromBase64String('$(AndroidAutomationRunner)')
+      $kvSecretBytes = [System.Convert]::FromBase64String('$(LabAuth)')
 
       $certCollection = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
 
       $certCollection.Import($kvSecretBytes, $null, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
 
-
       $protectedCertificateBytes = $certCollection.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Pkcs12)
 
-      $pfxPath = '$(Build.SourcesDirectory)' + "\TestCert.pfx"
+      $pfxPath = '$(Build.SourcesDirectory)' + "\LabAuth.pfx"
 
       [System.IO.File]::WriteAllBytes($pfxPath, $protectedCertificateBytes)
-
-
+      
       Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My
+      
+      $certPathVar = $pfxPath -replace "\\", "/"
+
+      if([System.IO.File]::Exists($pfxPath)) {
+        Write-Host "PFX file created successfully at $certPathVar"
+      } else {
+        Write-Error "Failed to create PFX file at $certPathVar"
+      }    
+      
+      Write-Host "##vso[task.setvariable variable=LabVaultAppCert]$certPathVar"

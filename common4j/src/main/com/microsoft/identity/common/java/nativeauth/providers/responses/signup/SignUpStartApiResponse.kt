@@ -60,17 +60,20 @@ class SignUpStartApiResponse(
     @SerializedName("suberror") val subError: String?
 ) : IApiResponse(statusCode, correlationId) {
 
+    override fun toUnsanitizedString(): String {
+        return "SignUpStartApiResponse(statusCode=$statusCode, " +
+                "correlationId=$correlationId, challengeType=$challengeType" +
+                "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription, subError=$subError)"
+    }
+
+    override fun toString(): String = "SignUpContinueApiResponse(statusCode=$statusCode, " +
+            "correlationId=$correlationId"
+
     companion object {
         private val TAG = SignUpStartApiResponse::class.java.simpleName
     }
 
     fun toResult(): SignUpStartApiResult {
-        LogSession.logMethodCall(
-            tag = TAG,
-            correlationId = null,
-            methodName = "${TAG}.toResult"
-        )
-
         return when (statusCode) {
 
             // Handle 400 errors

@@ -58,9 +58,11 @@ import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightManager;
+import com.microsoft.identity.common.java.platform.Device;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.util.ClientExtraSku;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Arrays;
@@ -75,6 +77,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 
 /**
  * Authorization fragment with embedded webview.
@@ -450,16 +454,33 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             HashMap<String, String> requestHeaders = (HashMap<String, String>) state.getSerializable(REQUEST_HEADERS);
             // In cases of WebView as an auth agent, we want to always add the passkey protocol header.
             // (Not going to add passkey protocol header until full feature is ready.)
-            if (CommonFlightManager.isFlightEnabled(CommonFlight.ENABLE_PASSKEY_FEATURE)) {
+            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PASSKEY_FEATURE)) {
                 if (requestHeaders == null) {
                     requestHeaders = new HashMap<>();
                 }
                 requestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_VALUE);
             }
+
+            // Attach client extras header for ESTS telemetry. Only done for broker requests
+            if (isBrokerRequest(this.mAuthorizationRequestUrl)) {
+                final ClientExtraSku clientExtraSku = ClientExtraSku.builder()
+                        .srcSku(state.getString(PRODUCT))
+                        .srcSkuVer(state.getString(VERSION))
+                        .build();
+                requestHeaders.put(com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRA_SKU, clientExtraSku.toString());
+            }
             return requestHeaders;
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * Helper method to check if the authorization request is being made through broker.
+     * Done by checking for broker version key in the url
+     */
+    private boolean isBrokerRequest(final String authorizationUrl) {
+        return authorizationUrl.contains(Device.PlatformIdParameters.BROKER_VERSION);
     }
 
     class AuthorizationCompletionCallback implements IAuthorizationCompletionCallback {

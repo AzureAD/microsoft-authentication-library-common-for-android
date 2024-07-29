@@ -57,5 +57,10 @@ public enum SpanName {
     BrokerSelectionProtocolManager,
     BrokerDiscoveryV1ProtocolBroadcastResult,
     Fido,
-    BrokerAccountServiceRemoveAccounts
+    BrokerAccountServiceRemoveAccounts,
+    AcquirePrtUsingTransferToken,
+    AcquireTransferTokenUsingPrt,
+    SaveTransferTokenToBlockstore,
+    RefreshTransferToken,
+    IsLtwPreInstalled
 }

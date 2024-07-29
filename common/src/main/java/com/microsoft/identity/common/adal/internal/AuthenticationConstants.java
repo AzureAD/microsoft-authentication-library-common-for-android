@@ -31,9 +31,7 @@ import java.nio.charset.Charset;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
 
 /**
  * {@link AuthenticationConstants} contains all the constant value the SDK is using.
@@ -699,6 +697,11 @@ public final class AuthenticationConstants {
          * The Boolean to send when FOCI apps are allowed to construct accounts from PRT id token in getAccounts.
          */
         public static final String CAN_FOCI_APPS_CONSTRUCT_ACCOUNTS_FROM_PRT_ID_TOKEN_KEY = "can.construct.accounts.from.prt.id.token";
+
+        /**
+         * The Boolean to send when LTW app wants to know if an MSA account is backed up to blockstore in getAccounts API call.
+         */
+        public static final String SHOULD_POPULATE_IF_MSA_ACCOUNT_IS_BACKED_UP_KEY = "should.populate.if.msa.account.is.backed.up.key";
 
         /**
          * String of broker protocol version with PRT support.
@@ -1835,6 +1838,22 @@ public final class AuthenticationConstants {
          * String value indicating supported AppDataClearAction.
          */
         public static final String APP_DATA_CLEAR_SUPPORTED = "SUPPORTED";
+
+    }
+
+    public static final class LtwContentProviderCall {
+
+        /**
+         * LTW's ContentProvider String Authority constant for getting if it is pre-installed.
+         */
+        public static final String LTW_CONTENT_PROVIDER_AUTHORITY =
+                "content://com.microsoft.appmanager.accountstateprovider";
+
+        /**
+         * LTW's ContentProvider method constant for getting if it is pre-installed.
+         */
+        public static final String LTW_CONTENT_PROVIDER_METHOD_IS_PRE_INSTALL_LTW =
+                "isPreinstallLTW";
 
     }
 

@@ -36,7 +36,13 @@ sealed interface SignUpStartApiResult: ApiResult {
      */
     data class Redirect(
         override val correlationId: String
-    ) : SignUpStartApiResult
+    ) : SignUpStartApiResult {
+        override fun toUnsanitizedString(): String {
+            return "Redirect(correlationId=$correlationId)"
+        }
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 
 
     /**
@@ -45,38 +51,52 @@ sealed interface SignUpStartApiResult: ApiResult {
     data class Success(
         val continuationToken: String,
         override val correlationId: String
-    ) : SignUpStartApiResult
+    ) : SignUpStartApiResult {
+        override fun toUnsanitizedString(): String = "Success(correlationId=$correlationId)"
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 
     /**
      * The Sign Up Start request failed as the password failed server side validation.
      */
     data class InvalidPassword(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         val subError: String,
-        override val correlationId: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), SignUpStartApiResult
+    ), SignUpStartApiResult {
+        override fun toUnsanitizedString() = "InvalidPassword(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+
+        override fun toString(): String = "InvalidPassword(correlationId=$correlationId)"
+    }
 
     /**
      * The user attributes sent as part of Signup Start request failed
      * validation on server.
      */
     data class InvalidAttributes(
+        override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         val invalidAttributes: List<String>,
         val subError: String,
-        override val correlationId: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), SignUpStartApiResult
+    ), SignUpStartApiResult {
+        override fun toUnsanitizedString() = "InvalidAttributes(correlationId=$correlationId, " +
+                "invalidAttributes=$invalidAttributes, error=$error, errorDescription=$errorDescription, " +
+                "errorCodes=$errorCodes, subError=$subError)"
 
+        override fun toString(): String = "InvalidPassword(correlationId=$correlationId)"
+    }
 
     /**
      * The Signup Start API request failed due to an unknown error.
@@ -89,7 +109,12 @@ sealed interface SignUpStartApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), SignUpStartApiResult
+    ), SignUpStartApiResult {
+        override fun toUnsanitizedString() = "UnknownError(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+
+        override fun toString(): String = "UnknownError(correlationId=$correlationId)"
+    }
 
     /**
      * The server does not support the challenge types presented by client as part of
@@ -103,7 +128,12 @@ sealed interface SignUpStartApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), SignUpStartApiResult
+    ), SignUpStartApiResult {
+        override fun toUnsanitizedString() = "UnsupportedChallengeType(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+
+        override fun toString(): String = "UnsupportedChallengeType(correlationId=$correlationId)"
+    }
 
     /**
      * Signup start operation was started for a username that already has an account.
@@ -116,7 +146,12 @@ sealed interface SignUpStartApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), SignUpStartApiResult
+    ), SignUpStartApiResult {
+        override fun toUnsanitizedString() = "UsernameAlreadyExists(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "UsernameAlreadyExists(correlationId=$correlationId)"
+    }
 
     /**
      * Signup start operation was started for a malformed email address.
@@ -129,7 +164,12 @@ sealed interface SignUpStartApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), SignUpStartApiResult
+    ), SignUpStartApiResult {
+        override fun toUnsanitizedString() = "InvalidUsername(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "InvalidUsername(correlationId=$correlationId)"
+    }
 
     /**
      * Signup start operation has failed as the server does not support requested authentication mechanism
@@ -142,5 +182,10 @@ sealed interface SignUpStartApiResult: ApiResult {
         error = error,
         errorDescription = errorDescription,
         correlationId = correlationId
-    ), SignUpStartApiResult
+    ), SignUpStartApiResult {
+        override fun toUnsanitizedString() = "AuthNotSupported(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String = "AuthNotSupported(correlationId=$correlationId)"
+    }
 }

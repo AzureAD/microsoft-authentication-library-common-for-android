@@ -26,6 +26,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPa
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
@@ -64,11 +65,19 @@ class ResetPasswordInteractor(
     ): ResetPasswordStartApiResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = parameters.correlationId,
+            correlationId = parameters.getCorrelationId(),
             methodName = "${TAG}.performResetPasswordStart(parameters: ResetPasswordStartCommandParameters)"
         )
 
         val request = nativeAuthRequestProvider.createResetPasswordStartRequest(commandParameters = parameters)
+
+        Logger.infoWithObject(
+            "${TAG}.performResetPasswordStart",
+            parameters.getCorrelationId(),
+            "request = ",
+            request
+        )
+
         return performResetPasswordStart(
             requestCorrelationId = parameters.getCorrelationId(),
             request = request
@@ -81,7 +90,7 @@ class ResetPasswordInteractor(
     ): ResetPasswordStartApiResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = null,
+            correlationId = requestCorrelationId,
             methodName = "${TAG}.performResetPasswordStart"
         )
 
@@ -94,11 +103,29 @@ class ResetPasswordInteractor(
             headers,
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
+
         val apiResponse = nativeAuthResponseHandler.getResetPasswordStartApiResponseFromHttpResponse(
             requestCorrelationId = requestCorrelationId,
             response = httpResponse
         )
-        return apiResponse.toResult()
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToResetPasswordStartApiResult",
+            apiResponse.correlationId,
+            "rawApiResponse = ",
+            apiResponse
+        )
+
+        val result = apiResponse.toResult()
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToResetPasswordStartApiResult",
+            result.correlationId,
+            "result = ",
+            result
+        )
+
+        return result
     }
     //endregion
 
@@ -117,6 +144,14 @@ class ResetPasswordInteractor(
             continuationToken = continuationToken,
             correlationId = correlationId
         )
+
+        Logger.infoWithObject(
+            "${TAG}.performResetPasswordChallenge",
+            correlationId,
+            "request = ",
+            request
+        )
+
         return performResetPasswordChallenge(
             requestCorrelationId = correlationId,
             request = request
@@ -129,7 +164,7 @@ class ResetPasswordInteractor(
     ): ResetPasswordChallengeApiResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = null,
+            correlationId = requestCorrelationId,
             methodName = "${TAG}.performResetPasswordChallenge"
         )
 
@@ -146,7 +181,24 @@ class ResetPasswordInteractor(
             response = httpResponse,
             requestCorrelationId = requestCorrelationId
         )
-        return apiResponse.toResult()
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToResetPasswordChallengeApiResult",
+            apiResponse.correlationId,
+            "rawApiResponse = ",
+            apiResponse
+        )
+
+        val result = apiResponse.toResult()
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToResetPasswordChallengeApiResult",
+            result.correlationId,
+            "result = ",
+            result
+        )
+
+        return result
     }
     //endregion
 
@@ -163,6 +215,14 @@ class ResetPasswordInteractor(
         val request = nativeAuthRequestProvider.createResetPasswordContinueRequest(
             commandParameters = parameters
         )
+
+        Logger.infoWithObject(
+            "${TAG}.performResetPasswordContinue",
+            parameters.getCorrelationId(),
+            "request = ",
+            request
+        )
+
         return performResetPasswordContinue(
             requestCorrelationId = parameters.getCorrelationId(),
             request = request
@@ -175,7 +235,7 @@ class ResetPasswordInteractor(
     ): ResetPasswordContinueApiResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = null,
+            correlationId = requestCorrelationId,
             methodName = "${TAG}.performResetPasswordContinue"
         )
 
@@ -188,11 +248,29 @@ class ResetPasswordInteractor(
             headers,
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
+
         val apiResponse = nativeAuthResponseHandler.getResetPasswordContinueApiResponseFromHttpResponse(
             requestCorrelationId = requestCorrelationId,
             response = httpResponse
         )
-        return apiResponse.toResult()
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToResetPasswordContinueApiResult",
+            apiResponse.correlationId,
+            "rawApiResponse = ",
+            apiResponse
+        )
+
+        val result = apiResponse.toResult()
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToResetPasswordContinueApiResult",
+            result.correlationId,
+            "result = ",
+            result
+        )
+
+        return result
     }
     //endregion
 
@@ -210,6 +288,13 @@ class ResetPasswordInteractor(
             commandParameters = commandParameters
         )
 
+        Logger.infoWithObject(
+            "${TAG}.performResetPasswordSubmit",
+            commandParameters.getCorrelationId(),
+            "request = ",
+            request
+        )
+
         try {
             return performResetPasswordSubmit(
                 requestCorrelationId = commandParameters.getCorrelationId(),
@@ -217,7 +302,7 @@ class ResetPasswordInteractor(
             )
         } finally {
             StringUtil.overwriteWithNull(
-                (request.parameters as ResetPasswordSubmitRequest.NativeAuthResetPasswordSubmitRequestBody).newPassword)
+                (request.parameters as ResetPasswordSubmitRequest.NativeAuthResetPasswordSubmitRequestParameters).newPassword)
         }
     }
 
@@ -227,7 +312,7 @@ class ResetPasswordInteractor(
     ): ResetPasswordSubmitApiResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = null,
+            correlationId = requestCorrelationId,
             methodName = "${TAG}.performResetPasswordSubmit"
         )
 
@@ -240,11 +325,29 @@ class ResetPasswordInteractor(
             headers,
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
+
         val apiResponse = nativeAuthResponseHandler.getResetPasswordSubmitApiResponseFromHttpResponse(
             response = httpResponse,
             requestCorrelationId = requestCorrelationId
         )
-        return apiResponse.toResult()
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToResetPasswordContinueApiResult",
+            apiResponse.correlationId,
+            "rawApiResponse = ",
+            apiResponse
+        )
+
+        val result = apiResponse.toResult()
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToResetPasswordSubmitApiResult",
+            result.correlationId,
+            "result = ",
+            result
+        )
+
+        return result
     }
     //endregion
 
@@ -263,6 +366,14 @@ class ResetPasswordInteractor(
             continuationToken = continuationToken,
             correlationId = correlationId
         )
+
+        Logger.infoWithObject(
+            "${TAG}.performResetPasswordPollCompletion",
+            correlationId,
+            "request = ",
+            request
+        )
+
         return performResetPasswordPollCompletion(
             requestCorrelationId = correlationId,
             request = request
@@ -275,7 +386,7 @@ class ResetPasswordInteractor(
     ): ResetPasswordPollCompletionApiResult {
         LogSession.logMethodCall(
             tag = TAG,
-            correlationId = null,
+            correlationId = requestCorrelationId,
             methodName = "${TAG}.performResetPasswordPollCompletion"
         )
 
@@ -288,11 +399,29 @@ class ResetPasswordInteractor(
             headers,
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
+
         val apiResponse = nativeAuthResponseHandler.getResetPasswordPollCompletionApiResponseFromHttpResponse(
             requestCorrelationId = requestCorrelationId,
             response = httpResponse
         )
-        return apiResponse.toResult()
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToResetPasswordCompletionApiResult",
+            apiResponse.correlationId,
+            "rawApiResponse = ",
+            apiResponse
+        )
+
+        val result = apiResponse.toResult()
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToResetPasswordCompletionApiResult",
+            result.correlationId,
+            "result = ",
+            result
+        )
+
+        return result
     }
     //endregion
 }

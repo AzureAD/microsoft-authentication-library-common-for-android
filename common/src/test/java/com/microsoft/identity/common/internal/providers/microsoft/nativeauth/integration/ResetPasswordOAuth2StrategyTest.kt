@@ -45,17 +45,6 @@ import com.microsoft.identity.common.nativeauth.ApiConstants
 import com.microsoft.identity.common.nativeauth.MockApiEndpoint
 import com.microsoft.identity.common.nativeauth.MockApiResponseType
 import com.microsoft.identity.common.nativeauth.MockApiUtils.Companion.configureMockApi
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signInChallengeRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signInInitiateRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signInTokenRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signUpChallengeRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signUpContinueRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.signUpStartRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprChallengeRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprContinueRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprStartRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprSubmitRequestUrl
-import com.microsoft.identity.common.nativeauth.ApiConstants.Companion.ssprPollCompletionRequestUrl
 
 import io.mockk.every
 import io.mockk.mockk
@@ -76,7 +65,7 @@ import java.util.UUID
 /**
  * These are integration tests using real API responses instead of mocked API responses. This class
  * covers all sign up endpoints.
- * These tests run on the mock API, see: https://native-auth-mock-api.azurewebsites.net/
+ * These tests run on the mock API, see: $(MOCK_API_URL) in the variable of the pipeline.
  */
 
 
@@ -95,8 +84,8 @@ class ResetPasswordOAuth2StrategyTest {
     private val OOB_CODE = "123456"
     private val CONTINUATION_TOKEN = "1234"
     private val INVALID_GRANT_ERROR = "invalid_grant"
-    private val INVALID_CLIENT_ERROR = "invalid_client"
     private val UNSUPPORTED_CHALLENGE_TYPE_ERROR = "unsupported_challenge_type"
+    private val UNAUTHORIZED_CLIENT_ERROR = "unauthorized_client"
     private val EXPIRED_TOKEN_ERROR = "expired_token"
     private val PASSWORD_TOO_LONG_ERROR = "password_too_long"
     private val PASSWORD_TOO_SHORT_ERROR = "password_too_short"
@@ -112,18 +101,18 @@ class ResetPasswordOAuth2StrategyTest {
     @Before
     fun setup() {
         whenever(mockConfig.clientId).thenReturn(CLIENT_ID)
-        whenever(mockConfig.tokenEndpoint).thenReturn(ApiConstants.tokenEndpoint)
-        whenever(mockConfig.getSignUpStartEndpoint()).thenReturn(signUpStartRequestUrl)
-        whenever(mockConfig.getSignUpChallengeEndpoint()).thenReturn(signUpChallengeRequestUrl)
-        whenever(mockConfig.getSignUpContinueEndpoint()).thenReturn(signUpContinueRequestUrl)
-        whenever(mockConfig.getSignInInitiateEndpoint()).thenReturn(signInInitiateRequestUrl)
-        whenever(mockConfig.getSignInChallengeEndpoint()).thenReturn(signInChallengeRequestUrl)
-        whenever(mockConfig.getSignInTokenEndpoint()).thenReturn(signInTokenRequestUrl)
-        whenever(mockConfig.getResetPasswordStartEndpoint()).thenReturn(ssprStartRequestUrl)
-        whenever(mockConfig.getResetPasswordChallengeEndpoint()).thenReturn(ssprChallengeRequestUrl)
-        whenever(mockConfig.getResetPasswordContinueEndpoint()).thenReturn(ssprContinueRequestUrl)
-        whenever(mockConfig.getResetPasswordSubmitEndpoint()).thenReturn(ssprSubmitRequestUrl)
-        whenever(mockConfig.getResetPasswordPollCompletionEndpoint()).thenReturn(ssprPollCompletionRequestUrl)
+        whenever(mockConfig.tokenEndpoint).thenReturn(ApiConstants.MockApi.tokenEndpoint)
+        whenever(mockConfig.getSignUpStartEndpoint()).thenReturn(ApiConstants.MockApi.signUpStartRequestUrl)
+        whenever(mockConfig.getSignUpChallengeEndpoint()).thenReturn(ApiConstants.MockApi.signUpChallengeRequestUrl)
+        whenever(mockConfig.getSignUpContinueEndpoint()).thenReturn(ApiConstants.MockApi.signUpContinueRequestUrl)
+        whenever(mockConfig.getSignInInitiateEndpoint()).thenReturn(ApiConstants.MockApi.signInInitiateRequestUrl)
+        whenever(mockConfig.getSignInChallengeEndpoint()).thenReturn(ApiConstants.MockApi.signInChallengeRequestUrl)
+        whenever(mockConfig.getSignInTokenEndpoint()).thenReturn(ApiConstants.MockApi.signInTokenRequestUrl)
+        whenever(mockConfig.getResetPasswordStartEndpoint()).thenReturn(ApiConstants.MockApi.ssprStartRequestUrl)
+        whenever(mockConfig.getResetPasswordChallengeEndpoint()).thenReturn(ApiConstants.MockApi.ssprChallengeRequestUrl)
+        whenever(mockConfig.getResetPasswordContinueEndpoint()).thenReturn(ApiConstants.MockApi.ssprContinueRequestUrl)
+        whenever(mockConfig.getResetPasswordSubmitEndpoint()).thenReturn(ApiConstants.MockApi.ssprSubmitRequestUrl)
+        whenever(mockConfig.getResetPasswordPollCompletionEndpoint()).thenReturn(ApiConstants.MockApi.ssprPollCompletionRequestUrl)
         whenever(mockConfig.challengeType).thenReturn(CHALLENGE_TYPE)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
@@ -177,7 +166,7 @@ class ResetPasswordOAuth2StrategyTest {
         configureMockApi(
             endpointType = MockApiEndpoint.SSPRStart,
             correlationId = correlationId,
-            responseType = MockApiResponseType.INVALID_CLIENT
+            responseType = MockApiResponseType.UNAUTHORIZED_CLIENT
         )
 
         val mockResetPasswordStartCommandParameters = mockk<ResetPasswordStartCommandParameters>()
@@ -188,7 +177,7 @@ class ResetPasswordOAuth2StrategyTest {
             mockResetPasswordStartCommandParameters
         )
         assertTrue(ssprStartResult is ResetPasswordStartApiResult.UnknownError)
-        assertEquals((ssprStartResult as ResetPasswordStartApiResult.UnknownError).error, INVALID_CLIENT_ERROR)
+        assertEquals((ssprStartResult as ResetPasswordStartApiResult.UnknownError).error, UNAUTHORIZED_CLIENT_ERROR)
     }
 
     @Test

@@ -48,6 +48,15 @@ class ResetPasswordContinueApiResponse(
     @SerializedName("suberror") val subError: String?
 ): IApiResponse(statusCode, correlationId) {
 
+    override fun toUnsanitizedString(): String {
+        return "ResetPasswordContinueApiResponse(statusCode=$statusCode, " +
+                "correlationId=$correlationId, challengeType=$challengeType, expiresIn=$expiresIn " +
+                "error=$error, errorUri=$errorUri, errorDescription=$errorDescription, subError=$subError)"
+    }
+
+    override fun toString(): String = "ResetPasswordContinueApiResponse(statusCode=$statusCode, " +
+            "correlationId=$correlationId"
+
     companion object {
         private val TAG = ResetPasswordContinueApiResponse::class.java.simpleName
     }
@@ -57,11 +66,6 @@ class ResetPasswordContinueApiResponse(
      * @see com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordContinueApiResult
      */
     fun toResult(): ResetPasswordContinueApiResult {
-        LogSession.logMethodCall(
-            tag = TAG,
-            correlationId = null,
-            methodName = "${TAG}.toResult" )
-
         return when (statusCode) {
 
             // Handle 400 errors

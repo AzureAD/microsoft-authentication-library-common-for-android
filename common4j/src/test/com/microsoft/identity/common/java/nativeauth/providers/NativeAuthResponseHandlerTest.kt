@@ -62,7 +62,7 @@ import org.mockito.kotlin.whenever
 
 class NativeAuthResponseHandlerTest {
     private val clientId = "1234"
-    private val requestUrl =  ApiConstants.signUpStartRequestUrl
+    private val requestUrl =  ApiConstants.MockApi.signUpStartRequestUrl
     private val challengeType = "oob password redirect"
     private val oobChallengeType = "oob"
     private val passwordChallengeType = "password"

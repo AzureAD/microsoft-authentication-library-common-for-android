@@ -1,7 +1,34 @@
 V.Next
 ---------
+- [MINOR] Add null cursor BrokerCommunicationException error category (#2459)
+
+Version 17.6.1
+---------
+- [MINOR] Support Passing x-client-xtra-sku header to ESTS only for brokered requests (#2430)
+- [MINOR] Account Transfer Skips Account Chooser (#2375)
+- [PATCH] Add null check for CBA logging (#2443)
+- [MINOR] Add support for per tenant flighting in broker (#2433)
+- [MINOR] Fix AccountManager Strategy (#2427)
+- [MINOR] Add MessageDigest to ICryptoFactory (#2423)
+- [PATCH] Adding check for OS version for passkeys (#2419)
+- [MINOR] Platform Specific Extra Query Parameters (#2426)
+- [PATCH] Return API error and errorDescription in case of unexpected response (#2431)
+- [MINOR] Support certificate with password (#2405)
+- [MINOR] Classifying TimeoutException as timed_out (#2441)
+- [PATCH] Add check for unset correlation ID when sending Native Auth requests (#2435)
+
+Version 17.5.0
+---------
+- [MINOR] Update logic for matching requested claims for AT (#2401)
+- [MINOR] Updating YubiKit and CredMan versions (#2417)
+
+Version 17.4.0
+---------
+- [PATCH] Update nimbus-jose-jwt 9.37.3 and junit 4.13.2 (#2392)
 - [MINOR] Update flow to get token for labapi to not require automationrunnerapp (#2376)
 - [MINOR] Add field in BrokerInteractiveTokenCommandParameters for ATv2. (#2363)
+- [PATCH] Safe logging of Kotlin data classes through ILoggable interface (#2384)
+- [MINOR] Support for multiple access tokens for NativeAuth. (#2390)
 
 Version 17.3.0
 ---------

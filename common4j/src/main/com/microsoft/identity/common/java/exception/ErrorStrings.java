@@ -387,6 +387,11 @@ public final class ErrorStrings {
     public static final String KEY_NOT_FOUND = "key_not_found";
 
     /**
+     * Restore MSA account using transfer token failed.
+     */
+    public static final String RESTORE_MSA_ACCOUNT_WITH_TRANSFER_TOKEN = "restore_msa_accounts_failed";
+
+    /**
      * AccountMode in configuration is set to multiple. However, the device is marked as shared (which requires single account mode).
      */
     public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_ON_SHARED_DEVICE_ERROR_CODE = "multiple_account_pca_init_fail_on_shared_device";
@@ -456,9 +461,6 @@ public final class ErrorStrings {
             "Requested account is from a different organization. " +
                     "Please make sure to use your organizational account. " +
                     "If that doesn’t help, please return the device to your administrator.";
-
-    public static final String MISSING_SLK_ERROR_MESSAGE =
-            "During an Account Transfer V2 request, an slk transfer token was not passed in with the request.";
 
     /**
      * Home tenant of the BRT acccount doesn't match with WPJ account's UPN.

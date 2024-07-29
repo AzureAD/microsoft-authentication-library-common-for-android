@@ -69,42 +69,31 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
             performDeviceRegistrationHelperWithButtonText(
                     username,
                     password,
-                    "workPlaceTextField",
-                    "REGISTER DEVICE",
+                    "Register a new organization",
+                    "Register device",
                     isFederatedUser,
                     AUTHENTICATOR_IS_REGISTER_EXPECTED
             );
 
 
-            try {
-                // after device registration, make sure that we see the unregister btn to confirm successful
-                // registration
-                final UiObject unRegisterBtn = UiAutomatorUtils.obtainUiObjectWithExactText(
-                        "UNREGISTER DEVICE", TimeUnit.SECONDS.toMillis(20)
-                );
-                Assert.assertTrue(
-                        "Microsoft Authenticator - Unregister Button appears.",
-                        unRegisterBtn.exists()
-                );
+            // after device registration, make sure that we see the unregister btn to confirm successful
+            // registration
 
-                // after device registration, make sure that the current registration upn matches with
-                // with what was passed in
-                final UiObject currentRegistration = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                        "workPlaceRegisteredAccountEmailText"
-                );
+            // relaunch device registration page
+            openDeviceRegistrationPage();
 
-                Assert.assertTrue(
-                        "Microsoft Authenticator - Registered account info appears.",
-                        currentRegistration.exists()
-                );
+            // Click the registered account domain
+            UiAutomatorUtils.handleButtonClickForObjectWithText(
+                    username.split("@")[1]
+            );
 
-                Assert.assertTrue(
-                        "Microsoft Authenticator - Registered account upn matches provided upn.",
-                        currentRegistration.getText().equalsIgnoreCase(username)
-                );
-            } catch (final UiObjectNotFoundException e) {
-                throw new AssertionError(e);
-            }
+            final UiObject unRegisterBtn = UiAutomatorUtils.obtainUiObjectWithExactText(
+                    "Unregister device", TimeUnit.SECONDS.toMillis(20)
+            );
+            Assert.assertTrue(
+                    "Microsoft Authenticator - Unregister Button appears.",
+                    unRegisterBtn.exists()
+            );
         }
     }
 
@@ -115,8 +104,8 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
         performDeviceRegistrationHelperWithButtonText(
                 username,
                 password,
-                "sharedWorkPlaceTextField",
-                "REGISTER AS SHARED DEVICE",
+                "Register as shared device",
+                "Register",
                 false,
                 AUTHENTICATOR_IS_REGISTER_EXPECTED_SHARED
         );
@@ -145,8 +134,8 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
         performDeviceRegistrationHelperWithButtonText(
                 username,
                 password,
-                "sharedWorkPlaceTextField",
-                "REGISTER AS SHARED DEVICE",
+                "Register as shared device",
+                "Register",
                 false,
                 AUTHENTICATOR_IS_REGISTER_EXPECTED_SHARED
         );
@@ -178,14 +167,19 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
     }
 
     @Override
-    public void enableBrowserAccess() {
+    public void enableBrowserAccess(@NonNull final String username) {
         Logger.i(TAG, "Enable Browser Access..");
         // open device registration page
         openDeviceRegistrationPage();
 
+        // Click the registered account domain
+        UiAutomatorUtils.handleButtonClickForObjectWithText(
+                username.split("@")[1]
+        );
+
         // Click enable browser access
-        UiAutomatorUtils.handleButtonClick(
-                "enableBrowserText"
+        UiAutomatorUtils.handleButtonClickForObjectWithText(
+                "Enable browser access"
         );
 
         // click continue in Dialog

@@ -58,7 +58,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.UserCancelException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightManager;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.logging.RequestContext;
@@ -76,7 +76,6 @@ import com.microsoft.identity.common.java.result.VoidResult;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.util.BiConsumer;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
-import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
@@ -252,7 +251,7 @@ public class CommandDispatcher {
             if (BuildConfig.DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT){
                 commandResult = submitSilentReturningFuture(command).get();
             } else {
-                final int silentTokenTimeOutMs = CommonFlightManager.getIntValue(CommonFlight.ACQUIRE_TOKEN_SILENT_TIMEOUT_MILLISECONDS);
+                final int silentTokenTimeOutMs = CommonFlightsManager.INSTANCE.getFlightsProvider().getIntValue(CommonFlight.ACQUIRE_TOKEN_SILENT_TIMEOUT_MILLISECONDS);
                 commandResult = submitSilentReturningFuture(command).get(silentTokenTimeOutMs, TimeUnit.MILLISECONDS);
             }
         } catch (final InterruptedException | ExecutionException | TimeoutException e) {
@@ -464,7 +463,8 @@ public class CommandDispatcher {
     }
 
     private static void logParameters(@NonNull String tag, @NonNull String correlationId,
-                                      @NonNull Object parameters, @Nullable String publicApiId) {
+                                      @NonNull CommandParameters parameters,
+                                      @Nullable String publicApiId) {
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
 
         //TODO:1315871 - conversion of PublicApiId in readable form.
@@ -472,11 +472,7 @@ public class CommandDispatcher {
                         + DiagnosticContext.INSTANCE.getRequestContext().toJsonString()
                         + ", with PublicApiId: " + publicApiId);
 
-        if (Logger.isAllowPii()) {
-            Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
-        } else {
-            Logger.info(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
-        }
+        parameters.logParameters(TAG, correlationId);
     }
 
     private static BiConsumer<CommandResult, Throwable> getCommandResultConsumer(

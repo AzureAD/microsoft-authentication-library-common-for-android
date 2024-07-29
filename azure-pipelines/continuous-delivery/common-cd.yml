@@ -46,15 +46,11 @@ jobs:
     - group: AndroidAuthClientAutomationSecrets
     - group: MSIDLABVARS
   steps:
-  - template: ../templates/steps/automation-cert.yml
-    parameters:
-      envVstsMvnAt: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
   - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
     parameters:
       project: LabApiUtilities
       buildArguments: '-PprojVersion=$(versionNumber)'
       artifactFolder: 'LabApiUtilities/build/libs'
-      testArguments: "-PlabSecret=$(LabVaultAppSecret)"
 # Test utils
 - job: testutils_phase
   displayName: 'Test utils: Build, Test and Publish'

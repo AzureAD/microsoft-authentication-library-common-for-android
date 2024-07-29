@@ -53,6 +53,7 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -225,7 +226,7 @@ public class ExceptionAdapter {
     public static ServiceException convertToNativeAuthException(@NonNull final ServiceException exception) {
         final ServiceException outErr;
 
-        String message = "Token request failed. Please perform sign-in.\nOriginal exception details: " + exception.getMessage();
+        String message = "Token request failed.\nOriginal exception details: " + exception.getMessage();
 
         // UiRequiredException is not a native authentication concept, so we convert it into a generic
         // ServiceException
@@ -385,6 +386,14 @@ public class ExceptionAdapter {
             return new ClientException(
                     ClientException.INTERRUPTED_OPERATION,
                     "SDK cancelled operation, the thread execution was interrupted",
+                    e
+            );
+        }
+
+        if (e instanceof TimeoutException) {
+            return new ClientException(
+                    ClientException.TIMED_OUT,
+                    "A blocking operation has timed out",
                     e
             );
         }

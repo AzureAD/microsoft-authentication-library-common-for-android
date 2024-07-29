@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.nativeauth.internal.controllers
 
+import android.text.TextUtils
 import androidx.annotation.VisibleForTesting
 import com.microsoft.identity.common.internal.commands.RefreshOnCommand
 import com.microsoft.identity.common.internal.telemetry.Telemetry
@@ -39,7 +40,6 @@ import com.microsoft.identity.common.java.exception.ErrorStrings
 import com.microsoft.identity.common.java.exception.ServiceException
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.AcquireTokenNoFixedScopesCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseNativeAuthCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseSignInTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordResendCodeCommandParameters
@@ -89,9 +89,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResult
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache
 import com.microsoft.identity.common.java.request.SdkType
 import com.microsoft.identity.common.java.result.AcquireTokenResult
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult
@@ -185,7 +183,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
     /**
      * Makes a call to the /token endpoint with the provided Continuation Token, and caches the returned token
-     * if successful. In case of error [INativeAuthCommandResult.UnknownError] is returned.
+     * if successful. In case of error [INativeAuthCommandResult.APIError] is returned.
      */
     fun signInWithContinuationToken(parameters: SignInWithContinuationTokenCommandParameters): SignInWithContinuationTokenCommandResult {
         LogSession.logMethodCall(
@@ -220,16 +218,17 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 is SignInTokenApiResult.MFARequired, is SignInTokenApiResult.CodeIncorrect,
                 is SignInTokenApiResult.UserNotFound, is SignInTokenApiResult.InvalidCredentials,
                 is SignInTokenApiResult.UnknownError -> {
-                    Logger.warn(
+                    Logger.warnWithObject(
                         TAG,
                         tokenApiResult.correlationId,
-                        "Unexpected result: $tokenApiResult"
+                        "Unexpected result: ",
+                        tokenApiResult
                     )
                     tokenApiResult as ApiErrorResult
 
-                    return INativeAuthCommandResult.UnknownError(
+                    return INativeAuthCommandResult.APIError(
                         error = tokenApiResult.error,
-                        errorDescription = "API returned unexpected result: $tokenApiResult",
+                        errorDescription = tokenApiResult.errorDescription,
                         errorCodes = tokenApiResult.errorCodes,
                         correlationId = tokenApiResult.correlationId
                     )
@@ -248,7 +247,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
     /**
      * Makes a call to the /token endpoint with the provided OOB code, and caches the returned token
-     * if successful.  In case of error [INativeAuthCommandResult.UnknownError] is returned.
+     * if successful.  In case of error [INativeAuthCommandResult.APIError] is returned.
      */
     fun signInSubmitCode(parameters: SignInSubmitCodeCommandParameters): SignInSubmitCodeCommandResult {
         LogSession.logMethodCall(
@@ -294,13 +293,14 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 is SignInTokenApiResult.UnknownError, is SignInTokenApiResult.InvalidAuthenticationType,
                 is SignInTokenApiResult.MFARequired, is SignInTokenApiResult.InvalidCredentials,
                 is SignInTokenApiResult.UserNotFound -> {
-                    Logger.warn(
+                    Logger.warnWithObject(
                         TAG,
                         tokenApiResult.correlationId,
-                        "Unexpected result: $tokenApiResult"
+                        "Unexpected result: ",
+                        tokenApiResult
                     )
                     tokenApiResult as ApiErrorResult
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = tokenApiResult.error,
                         errorDescription = tokenApiResult.errorDescription,
                         errorCodes = tokenApiResult.errorCodes,
@@ -348,12 +348,13 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     )
                 }
                 is SignInChallengeApiResult.PasswordRequired -> {
-                    Logger.warn(
+                    Logger.warnWithObject(
                         TAG,
                         result.correlationId,
-                        "Unexpected result: $result"
+                        "Unexpected result: ",
+                        result
                     )
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = "unexpected_api_result",
                         errorDescription = "API returned unexpected result: $result",
                         correlationId = result.correlationId
@@ -365,11 +366,12 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     )
                 }
                 is SignInChallengeApiResult.UnknownError -> {
-                    Logger.warn(
+                    Logger.warnWithObject(
                         TAG,
-                        "Unexpected result: $result"
+                        "Unexpected result: ",
+                        result
                     )
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = result.error,
                         errorDescription = result.errorDescription,
                         errorCodes = result.errorCodes,
@@ -500,12 +502,13 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 }
                 is SignUpStartApiResult.UnsupportedChallengeType, is SignUpStartApiResult.UnknownError -> {
                     signUpStartApiResult as ApiErrorResult
-                    Logger.warn(
+                    Logger.warnWithObject(
                         TAG,
                         signUpStartApiResult.correlationId,
-                        "Unexpected result: $signUpStartApiResult"
+                        "Unexpected result: ",
+                        signUpStartApiResult
                     )
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = signUpStartApiResult.error,
                         errorDescription = signUpStartApiResult.errorDescription,
                         correlationId = signUpStartApiResult.correlationId
@@ -651,8 +654,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         ArgumentException::class,
         ServiceException::class
     )
-    fun acquireTokenSilent(
-        parameters: AcquireTokenNoFixedScopesCommandParameters
+    override fun acquireTokenSilent(
+        parameters: SilentTokenCommandParameters
     ): AcquireTokenResult {
         LogSession.logMethodCall(
             tag = TAG,
@@ -665,35 +668,31 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         // Validate original AcquireTokenNoScopesCommandParameters parameters
         parameters.validate()
 
-        // Convert AcquireTokenNoScopesCommandParameters into SilentTokenCommandParameters,
-        // so we can use it in BaseController.getCachedAccountRecord()
-        val silentTokenCommandParameters =
-            CommandUtil.convertAcquireTokenNoFixedScopesCommandParameters(
-                parameters,
-                parameters.getCorrelationId()
-            )
+        // Add default scopes
+        val mergedScopes = addDefaultScopes(parameters)
 
-        // We want to retrieve all tokens from the cache, regardless of their scopes. Since in the
-        // native auth get token flow the developer doesn't have the ability to specify scopes,
-        // we can't filter on it.
-        // In reality only 1 token should be returned, as native auth currently doesn't support
-        // multiple tokens.
-        val targetAccount: AccountRecord = getCachedAccountRecord(silentTokenCommandParameters)
+        val parametersWithScopes = parameters
+            .toBuilder()
+            .scopes(mergedScopes)
+            .build()
+
+        val targetAccount: AccountRecord = getCachedAccountRecord(parametersWithScopes)
 
         // Build up params for Strategy construction
-        val authScheme = silentTokenCommandParameters.authenticationScheme
+        val authScheme = parametersWithScopes.authenticationScheme
         val strategyParameters = OAuth2StrategyParameters.builder()
-            .platformComponents(parameters.platformComponents)
+            .platformComponents(parametersWithScopes.platformComponents)
             .authenticationScheme(authScheme)
             .build()
-        val strategy = silentTokenCommandParameters.authority.createOAuth2Strategy(strategyParameters)
+        val strategy = parametersWithScopes.authority.createOAuth2Strategy(strategyParameters)
 
-        val tokenCache = silentTokenCommandParameters.oAuth2TokenCache
+        val tokenCache = parametersWithScopes.oAuth2TokenCache
+
         val cacheRecords = tokenCache.loadWithAggregatedAccountData(
-            silentTokenCommandParameters.clientId,
-            parameters.applicationIdentifier,
+            parametersWithScopes.clientId,
+            parametersWithScopes.applicationIdentifier,
             null,
-            null,
+            TextUtils.join(" ", parametersWithScopes.scopes),
             targetAccount,
             authScheme
         ) as List<ICacheRecord>
@@ -703,10 +702,6 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         // subsequent CacheRecords represent other profiles (projections) of this principal in
         // other tenants. Those tokens will be 'sparse', meaning that their AT/RT will not be loaded
         val fullCacheRecord = cacheRecords[0]
-
-        if (accessTokenIsNull(fullCacheRecord)) {
-            throw ServiceException(ErrorStrings.NATIVE_AUTH_NO_ACCESS_TOKEN_FOUND, "No access token found during refresh - user must be signed out.", null)
-        }
 
         if (LibraryConfiguration.getInstance().isRefreshInEnabled &&
             fullCacheRecord.accessToken != null && fullCacheRecord.accessToken.refreshOnIsActive()
@@ -721,9 +716,9 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             fullCacheRecord.accessToken != null && fullCacheRecord.accessToken.shouldRefresh()
         ) {
             if (!fullCacheRecord.accessToken.isExpired) {
-                setAcquireTokenResult(acquireTokenSilentResult, silentTokenCommandParameters, cacheRecords)
+                setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords)
                 val refreshOnCommand =
-                    RefreshOnCommand(parameters, this.asControllerFactory(), PublicApiId.MSAL_REFRESH_ON)
+                    RefreshOnCommand(parametersWithScopes, this.asControllerFactory(), PublicApiId.MSAL_REFRESH_ON)
                 CommandDispatcher.submitAndForget(refreshOnCommand)
             } else {
                 Logger.warn(
@@ -731,9 +726,10 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     parameters.getCorrelationId(),
                     "Access token is expired. Removing from cache..."
                 )
-
-                renewAT(
-                    silentTokenCommandParameters,
+                // Remove the expired token
+                tokenCache.removeCredential(fullCacheRecord.accessToken)
+                renewAccessToken(
+                    parametersWithScopes,
                     acquireTokenSilentResult,
                     tokenCache,
                     strategy,
@@ -742,17 +738,17 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             }
         } else if (accessTokenIsNull(fullCacheRecord) ||
             refreshTokenIsNull(fullCacheRecord) ||
-            silentTokenCommandParameters.isForceRefresh ||
+            parametersWithScopes.isForceRefresh ||
             !isRequestAuthorityRealmSameAsATRealm(
-                silentTokenCommandParameters.authority,
+                parametersWithScopes.authority,
                 fullCacheRecord.accessToken
             ) ||
             !strategy.validateCachedResult(authScheme, fullCacheRecord)
         ) {
             if (!refreshTokenIsNull(fullCacheRecord)) {
                 // No AT found, but the RT checks out, so we'll use it
-                renewAT(
-                    silentTokenCommandParameters,
+                renewAccessToken(
+                    parametersWithScopes,
                     acquireTokenSilentResult,
                     tokenCache,
                     strategy,
@@ -779,8 +775,10 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 "Access token is expired. Removing from cache..."
             )
 
-            renewAT(
-                silentTokenCommandParameters,
+            // Remove the expired token
+            tokenCache.removeCredential(fullCacheRecord.accessToken)
+            renewAccessToken(
+                parametersWithScopes,
                 acquireTokenSilentResult,
                 tokenCache,
                 strategy,
@@ -792,7 +790,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 parameters.getCorrelationId(),
                 "Returning silent result"
             )
-            setAcquireTokenResult(acquireTokenSilentResult, silentTokenCommandParameters, cacheRecords)
+            setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords)
         }
         Telemetry.emit(
             ApiEndEvent()
@@ -860,13 +858,14 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     )
                 }
                 is ResetPasswordStartApiResult.UnsupportedChallengeType, is ResetPasswordStartApiResult.UnknownError -> {
-                    Logger.warn(
+                    Logger.warnWithObject(
                         TAG,
                         parameters.getCorrelationId(),
-                        "Unexpected result: $resetPasswordStartApiResult"
+                        "Unexpected result: ",
+                        resetPasswordStartApiResult
                     )
                     resetPasswordStartApiResult as ApiErrorResult
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = resetPasswordStartApiResult.error,
                         errorDescription = resetPasswordStartApiResult.errorDescription,
                         correlationId = resetPasswordStartApiResult.correlationId
@@ -923,12 +922,13 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     )
                 }
                 is ResetPasswordContinueApiResult.ExpiredToken, is ResetPasswordContinueApiResult.UnknownError -> {
-                    Logger.warn(
+                    Logger.warnWithObject(
                         TAG,
-                        "Unexpected result: $resetPasswordContinueApiResult"
+                        "Unexpected result: ",
+                        resetPasswordContinueApiResult
                     )
                     resetPasswordContinueApiResult as ApiErrorResult
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = resetPasswordContinueApiResult.error,
                         errorDescription = resetPasswordContinueApiResult.errorDescription,
                         correlationId = resetPasswordContinueApiResult.correlationId
@@ -983,13 +983,14 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 is ResetPasswordChallengeApiResult.ExpiredToken,
                 is ResetPasswordChallengeApiResult.UnsupportedChallengeType,
                 is ResetPasswordChallengeApiResult.UnknownError -> {
-                    Logger.warn(
+                    Logger.warnWithObject(
                         TAG,
                         resetPasswordChallengeApiResult.correlationId,
-                        "Unexpected result: $resetPasswordChallengeApiResult"
+                        "Unexpected result: ",
+                        resetPasswordChallengeApiResult
                     )
                     resetPasswordChallengeApiResult as ApiErrorResult
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = resetPasswordChallengeApiResult.error,
                         errorDescription = resetPasswordChallengeApiResult.errorDescription,
                         correlationId = resetPasswordChallengeApiResult.correlationId
@@ -1046,13 +1047,14 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
                 is ResetPasswordSubmitApiResult.ExpiredToken,
                 is ResetPasswordSubmitApiResult.UnknownError -> {
-                    Logger.warn(
+                    Logger.warnWithObject(
                         TAG,
                         resetPasswordSubmitApiResult.correlationId,
-                        "Unexpected result: $resetPasswordSubmitApiResult"
+                        "Unexpected result: ",
+                        resetPasswordSubmitApiResult
                     )
                     resetPasswordSubmitApiResult as ApiErrorResult
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = resetPasswordSubmitApiResult.error,
                         errorDescription = resetPasswordSubmitApiResult.errorDescription,
                         correlationId = resetPasswordSubmitApiResult.correlationId
@@ -1151,7 +1153,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         "in_progress received after polling, illegal state"
                     )
                     // This should never be reached, theoretically
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = "illegal_state",
                         errorDescription = "in_progress received after polling concluded, illegal state",
                         correlationId = pollCompletionApiResult.correlationId
@@ -1161,13 +1163,14 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 is ResetPasswordPollCompletionApiResult.UserNotFound,
                 is ResetPasswordPollCompletionApiResult.PasswordInvalid,
                 is ResetPasswordPollCompletionApiResult.UnknownError -> {
-                    Logger.warn(
+                    Logger.warnWithObject(
                         TAG,
                         pollCompletionApiResult.correlationId,
-                        "Unexpected result: $pollCompletionApiResult"
+                        "Unexpected result: ",
+                        pollCompletionApiResult
                     )
                     pollCompletionApiResult as ApiErrorResult
-                    INativeAuthCommandResult.UnknownError(
+                    INativeAuthCommandResult.APIError(
                         error = pollCompletionApiResult.error,
                         errorDescription = pollCompletionApiResult.errorDescription,
                         correlationId = pollCompletionApiResult.correlationId
@@ -1428,36 +1431,39 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 )
             }
             is ResetPasswordChallengeApiResult.ExpiredToken -> {
-                Logger.warn(
+                Logger.warnWithObject(
                     TAG,
                     this.correlationId,
-                    "Expire token result: $this"
+                    "Expire token result: ",
+                    this
                 )
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     correlationId = this.correlationId
                 )
             }
             is ResetPasswordChallengeApiResult.UnsupportedChallengeType -> {
-                Logger.warn(
+                Logger.warnWithObject(
                     TAG,
                     this.correlationId,
-                    "Unsupported challenge type: $this"
+                    "Unsupported challenge type: ",
+                    this
                 )
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     correlationId = this.correlationId
                 )
             }
             is ResetPasswordChallengeApiResult.UnknownError -> {
-                Logger.warn(
+                Logger.warnWithObject(
                     TAG,
                     this.correlationId,
-                    "Unexpected result: $this"
+                    "Unexpected result: ",
+                    this
                 )
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     correlationId = this.correlationId
@@ -1466,47 +1472,16 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         }
     }
 
-    @Throws(
-        IOException::class,
-        ClientException::class,
-        ServiceException::class
-    )
-    private fun renewAT(
-        parameters: SilentTokenCommandParameters,
-        acquireTokenSilentResult: AcquireTokenResult,
-        tokenCache: OAuth2TokenCache<*, *, *>,
-        strategy: OAuth2Strategy<*, *, *, *, *, *, *, *, *, *, *, *, *>,
-        cacheRecord: ICacheRecord
-    ) {
-        Logger.verbose(
-            TAG,
-            parameters.getCorrelationId(),
-            "Renewing access token..."
-        )
-
-        // Add the AT's scopes to the parameters so that they can be used to perform the refresh
-        // token call.
-        val accessTokenScopes = cacheRecord.accessToken
-            .target?.split(" ".toRegex())?.dropLastWhile { it.isEmpty() }?.toSet()
-
-        val parametersWithScopes = parameters.toBuilder()
-            .scopes(accessTokenScopes)
-            .build()
-
-        renewAccessToken(
-            parametersWithScopes,
-            acquireTokenSilentResult,
-            tokenCache,
-            strategy,
-            cacheRecord
-        )
-    }
-
     @VisibleForTesting
     fun performSignUpStartUsingPasswordRequest(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignUpStartCommandParameters
     ): SignUpStartApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.performSignUpStartUsingPasswordRequest"
+        )
         return oAuth2Strategy.performSignUpStart(
             commandParameters = parameters
         )
@@ -1517,6 +1492,11 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         continuationToken: String,
         correlationId: String
     ): SignUpChallengeApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            methodName = "${TAG}.performSignUpChallengeCall"
+        )
         return oAuth2Strategy.performSignUpChallenge(
             continuationToken = continuationToken,
             correlationId = correlationId
@@ -1527,12 +1507,22 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignUpSubmitCodeCommandParameters
     ): SignUpContinueApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.performSignUpSubmitCode"
+        )
         return oAuth2Strategy.performSignUpSubmitCode(commandParameters = parameters)
     }
     private fun performSignUpSubmitPassword(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignUpSubmitPasswordCommandParameters
     ): SignUpContinueApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.performSignUpSubmitPassword"
+        )
         return oAuth2Strategy.performSignUpSubmitPassword(commandParameters = parameters)
     }
 
@@ -1541,6 +1531,11 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignUpSubmitUserAttributesCommandParameters
     ): SignUpContinueApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.performSignUpSubmitUserAttributes"
+        )
         return oAuth2Strategy.performSignUpSubmitUserAttributes(commandParameters = parameters)
     }
 
@@ -1559,13 +1554,14 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             is SignUpChallengeApiResult.ExpiredToken, is SignUpChallengeApiResult.UnsupportedChallengeType,
             is SignUpChallengeApiResult.OOBRequired, is SignUpChallengeApiResult.PasswordRequired,
             is SignUpChallengeApiResult.UnknownError -> {
-                Logger.warn(
+                Logger.warnWithObject(
                     TAG,
                     this.correlationId,
-                    "Unexpected result: $this"
+                    "Unexpected result: ",
+                    this
                 )
                 this as ApiErrorResult
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     correlationId = this.correlationId
@@ -1603,13 +1599,14 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             }
             is SignUpChallengeApiResult.ExpiredToken, is SignUpChallengeApiResult.UnsupportedChallengeType,
             is SignUpChallengeApiResult.UnknownError -> {
-                Logger.warn(
+                Logger.warnWithObject(
                     TAG,
                     this.correlationId,
-                    "Unexpected result: $this"
+                    "Unexpected result: ",
+                    this
                 )
                 this as ApiErrorResult
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     correlationId = this.correlationId
@@ -1634,12 +1631,13 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 )
             }
             is SignUpContinueApiResult.ExpiredToken -> {
-                Logger.warn(
+                Logger.warnWithObject(
                     TAG,
                     this.correlationId,
-                    "Expire token result: $this"
+                    "Expire token result: ",
+                    this
                 )
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     correlationId = this.correlationId
@@ -1682,12 +1680,13 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 )
             }
             is SignUpContinueApiResult.UnknownError -> {
-                Logger.warn(
+                Logger.warnWithObject(
                     TAG,
                     this.correlationId,
-                    "Unexpected result: $this"
+                    "Unexpected result: ",
+                    this
                 )
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     correlationId = this.correlationId
@@ -1695,14 +1694,16 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             }
 
             is SignUpContinueApiResult.InvalidAttributes, is SignUpContinueApiResult.InvalidPassword -> {
-                Logger.warn(
+                Logger.warnWithObject(
                     TAG,
                     this.correlationId,
-                    "Unexpected result: $this"
+                    "Unexpected result: ",
+                    this
                 )
-                INativeAuthCommandResult.UnknownError(
-                    error = "unexpected_api_result",
-                    errorDescription = "API returned unexpected result: $this",
+                this as ApiErrorResult
+                INativeAuthCommandResult.APIError(
+                    error = this.error,
+                    errorDescription = this.errorDescription,
                     correlationId = this.correlationId
                 )
             }
@@ -1759,13 +1760,14 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
             is SignUpContinueApiResult.InvalidOOBValue, is SignUpContinueApiResult.InvalidPassword,
             is SignUpContinueApiResult.ExpiredToken, is SignUpContinueApiResult.UnknownError -> {
-                Logger.warn(
+                Logger.warnWithObject(
                     TAG,
                     this.correlationId,
-                    "Expire token result: $this"
+                    "Expire token result: ",
+                    this
                 )
                 this as ApiErrorResult
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     correlationId = this.correlationId
@@ -1824,13 +1826,14 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             }
             is SignUpContinueApiResult.ExpiredToken, is SignUpContinueApiResult.InvalidOOBValue,
             is SignUpContinueApiResult.InvalidAttributes, is SignUpContinueApiResult.UnknownError -> {
-                Logger.warn(
+                Logger.warnWithObject(
                     TAG,
                     this.correlationId,
-                    "Error in signup continue result: $this"
+                    "Error in signup continue result: ",
+                    this
                 )
                 this as ApiErrorResult
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     correlationId = this.correlationId
@@ -1862,15 +1865,16 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             is SignInTokenApiResult.CodeIncorrect, is SignInTokenApiResult.MFARequired,
             is SignInTokenApiResult.InvalidAuthenticationType, is SignInTokenApiResult.UserNotFound,
             is SignInTokenApiResult.UnknownError -> {
-                Logger.warn(
+                Logger.warnWithObject(
                     TAG,
                     this.correlationId,
-                    "Unexpected result: $this"
+                    "Unexpected result: ",
+                    this
                 )
                 this as ApiErrorResult
-                INativeAuthCommandResult.UnknownError(
-                    error = "unexpected_api_result",
-                    errorDescription = "API returned unexpected result: $this",
+                INativeAuthCommandResult.APIError(
+                    error = this.error,
+                    errorDescription = this.errorDescription,
                     errorCodes = this.errorCodes,
                     correlationId = this.correlationId
                 )
@@ -1901,15 +1905,16 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             is SignInTokenApiResult.UserNotFound, is SignInTokenApiResult.CodeIncorrect,
             is SignInTokenApiResult.MFARequired, is SignInTokenApiResult.InvalidAuthenticationType,
             is SignInTokenApiResult.UnknownError -> {
-                Logger.warn(
+                Logger.warnWithObject(
                     TAG,
                     this.correlationId,
-                    "Unexpected result: $this"
+                    "Unexpected result: ",
+                    this
                 )
                 this as ApiErrorResult
-                INativeAuthCommandResult.UnknownError(
-                    error = "unexpected_api_result",
-                    errorDescription = "API returned unexpected result: $this",
+                INativeAuthCommandResult.APIError(
+                    error = this.error,
+                    errorDescription = this.errorDescription,
                     errorCodes = this.errorCodes,
                     correlationId = this.correlationId
                 )
@@ -1952,12 +1957,13 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 )
             }
             is SignInInitiateApiResult.UnknownError -> {
-                Logger.warn(
+                Logger.warnWithObject(
                     TAG,
                     initiateApiResult.correlationId,
-                    "Unexpected result: $initiateApiResult"
+                    "Unexpected result: ",
+                    initiateApiResult
                 )
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = initiateApiResult.error,
                     errorDescription = initiateApiResult.errorDescription,
                     errorCodes = initiateApiResult.errorCodes,
@@ -2022,12 +2028,13 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             }
 
             is SignInChallengeApiResult.UnknownError -> {
-                Logger.warn(
+                Logger.warnWithObject(
                     TAG,
                     result.correlationId,
-                    "Unexpected result: $result"
+                    "Unexpected result: ",
+                    result
                 )
-                INativeAuthCommandResult.UnknownError(
+                INativeAuthCommandResult.APIError(
                     error = result.error,
                     errorDescription = result.errorDescription,
                     errorCodes = result.errorCodes,

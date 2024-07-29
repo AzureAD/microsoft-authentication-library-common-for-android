@@ -44,6 +44,15 @@ class ResetPasswordSubmitApiResponse(
     @SerializedName("suberror") val subError: String?
 ): IApiResponse(statusCode, correlationId) {
 
+    override fun toUnsanitizedString(): String {
+        return "ResetPasswordSubmitApiResponse(statusCode=$statusCode, " +
+                "correlationId=$correlationId, pollInterval=$pollInterval, error=$error, " +
+                "errorUri=$errorUri, errorDescription=$errorDescription, subError=$subError)"
+    }
+
+    override fun toString(): String = "ResetPasswordSubmitApiResponse(statusCode=$statusCode, " +
+            "correlationId=$correlationId"
+
     companion object {
         private val TAG = ResetPasswordSubmitApiResponse::class.java.simpleName
         private const val MINIMUM_POLL_COMPLETION_INTERVAL_IN_SECONDS = 1
@@ -57,12 +66,6 @@ class ResetPasswordSubmitApiResponse(
      * @see com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResult
      */
     fun toResult(): ResetPasswordSubmitApiResult {
-        LogSession.logMethodCall(
-            tag = TAG,
-            correlationId = null,
-            methodName = "${TAG}.toResult"
-        )
-
         return when (statusCode) {
 
             // Handle 400 errors

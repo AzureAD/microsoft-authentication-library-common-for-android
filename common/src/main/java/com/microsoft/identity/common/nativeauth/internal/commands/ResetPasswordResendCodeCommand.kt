@@ -61,9 +61,11 @@ class ResetPasswordResendCodeCommand(
             parameters = parameters
         )
 
-        Logger.info(
+        Logger.infoWithObject(
             TAG,
-            "Returning result: $result"
+            parameters.getCorrelationId(),
+            "Returning result: ",
+            result
         )
         return result
     }
