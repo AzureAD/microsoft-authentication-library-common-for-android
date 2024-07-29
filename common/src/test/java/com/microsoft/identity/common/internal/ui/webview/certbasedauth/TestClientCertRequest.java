@@ -38,17 +38,31 @@ public class TestClientCertRequest extends ClientCertRequest {
 
     private boolean mProceeded;
     private boolean mCancelled;
+    private final String[] mKeyTypes;
+    private final Principal[] mPrincipals;
+
+    TestClientCertRequest() {
+        mKeyTypes = new String[0];
+        mPrincipals = new Principal[0];
+    }
+
+    TestClientCertRequest(@Nullable final String[] keyTypes,
+                          @Nullable final Principal[] principals) {
+        mKeyTypes = keyTypes;
+        mPrincipals = principals;
+    }
+
 
     @Nullable
     @Override
     public String[] getKeyTypes() {
-        return new String[0];
+        return mKeyTypes;
     }
 
     @Nullable
     @Override
     public Principal[] getPrincipals() {
-        return new Principal[0];
+        return mPrincipals;
     }
 
     @Override
