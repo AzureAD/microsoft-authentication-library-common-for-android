@@ -20,28 +20,29 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.ipc.mock;
+package com.microsoft.identity.common4j.env
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+/**
+ * Possible values for the [EnvironmentVariable.BUILD_REASON] environment variable on ADO
+ * pipelines.
+ * More information: https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml#build-variables-devops-services
+ */
+enum class BuildReason {
+    Manual,
+    IndividualCI,
+    BatchedCI,
+    Schedule,
+    ValidateShelveset,
+    CheckInShelveset,
+    PullRequest,
+    ResourceTrigger;
 
-import android.content.ContentResolver;
-import android.database.Cursor;
-import android.net.Uri;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresPermission;
-
-import org.robolectric.annotation.Implements;
-
-@Implements(ContentResolver.class)
-public class ShadowContentResolverConnectionFailed {
-    public final Cursor query(@RequiresPermission.Read @NonNull Uri uri,
-                                        @Nullable String[] projection, @Nullable String selection,
-                                        @Nullable String[] selectionArgs, @Nullable String sortOrder) {
-        final Cursor cursor = mock(Cursor.class);
-        when(cursor.getExtras()).thenThrow(new RuntimeException("Connection failed"));
-        return cursor;
+    companion object {
+        @JvmStatic
+        fun isBuildReason(expectedReason: BuildReason): Boolean {
+            val env = System.getenv()
+            val buildReason = env[EnvironmentVariable.BUILD_REASON.name]
+            return expectedReason.name == buildReason
+        }
     }
 }
