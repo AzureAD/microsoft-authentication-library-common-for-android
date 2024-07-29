@@ -161,7 +161,7 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     @Override
-    public void enableBrowserAccess() {
+    public void enableBrowserAccess(@NonNull final String username) {
         Logger.i(TAG, "Enable Browser Access..");
         singleWpjApiFragment.launch();
         singleWpjApiFragment.installCertificate();
@@ -350,5 +350,14 @@ public class BrokerHost extends AbstractTestBroker {
         forceStop();
         ThreadUtils.sleepSafely(500, methodTag, "Wait before launch.");
         launch();
+    }
+
+    /**
+     * Returns true if brokerHost is using local flights
+     */
+    public boolean isLocalFlightProviderSelector() {
+        final String methodTag = TAG + ".isLocalFlightProviderSelector";
+        brokerFlightsFragment.launch();
+        return brokerFlightsFragment.isLocalFlightProviderSelector();
     }
 }
