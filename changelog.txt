@@ -2,6 +2,7 @@ V.Next
 ---------
 - [MINOR] Changes needed for token binding CA policy error handling (#2453)
 - [MINOR] Add null cursor BrokerCommunicationException error category (#2459)
+- [MINOR] Classifying more UNKNOWN_ERRORs (#2460)
 
 Version 17.6.1
 ---------

@@ -32,6 +32,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.Browser
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.ERROR_SUBCODE;
 
+import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -167,9 +168,7 @@ public class RawAuthorizationResult {
         }
         return RawAuthorizationResult.builder()
                 .resultCode(ResultCode.NON_OAUTH_ERROR)
-                .exception(new BaseException(ClientException.UNKNOWN_ERROR,
-                        "Unknown error with class: " + e.getClass().getSimpleName(),
-                        e))
+                .exception(ExceptionAdapter.baseExceptionFromException(e))
                 .build();
     }
 

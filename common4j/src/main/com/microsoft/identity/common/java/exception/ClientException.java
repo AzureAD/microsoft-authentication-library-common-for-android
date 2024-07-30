@@ -188,7 +188,7 @@ public class ClientException extends BaseException {
     public static final String DUPLICATE_QUERY_PARAMETER = "duplicate_query_parameter";
 
     /**
-     * Extra query parameters set by the client app is already sent by the sdk.
+     * Used when base exception is not categorizable into any of the current error codes.
      */
     public static final String UNKNOWN_ERROR = "unknown_error";
 
@@ -439,6 +439,46 @@ public class ClientException extends BaseException {
      * A blocking operation has timed out.
      */
     public static final String TIMED_OUT = "timed_out";
+
+    /**
+     * A NullPointerException was thrown.
+     */
+    public static final String NULL_POINTER_ERROR = "null_pointer_error";
+
+    /**
+     * An object was unexpectedly null. Used for explicit null checks, whereas NULL_POINTER_ERROR classifies NPEs.
+     */
+    public static final String NULL_OBJECT = "null_object";
+
+    /**
+     * An error related to the task Executor.
+     */
+    public static final String EXECUTOR_ERROR = "executor_error";
+
+    /**
+     * The JVM ran out of memory.
+     */
+    public static final String OUT_OF_MEMORY = "out_of_memory";
+
+    /**
+     * The AuthorizationErrorResponse received was null.
+     */
+    public static final String AUTHORIZATION_RESULT_NULL_ERROR_RESPONSE = "authorization_result_null_error_response";
+
+    /**
+     * There are parallel UI requests running.
+     */
+    public static final String MULTIPLE_PARALLEL_INTERACTIVE_REQUEST_ERROR = "multiple_parallel_interactive_request_error";
+
+    /**
+     * An error related to a non-active broker.
+     */
+    public static final String NON_ACTIVE_BROKER_ERROR = "non_active_broker_error";
+
+    /**
+     * Error occurred in the process of installing a WPJ certificate.
+     */
+    public static final String INSTALL_CERT_ERROR = "install_cert_error";
 
     /**
      * Constructor of ClientException.
