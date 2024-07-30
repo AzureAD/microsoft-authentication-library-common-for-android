@@ -157,9 +157,7 @@ public abstract class Authority {
             } else if (CIAM.equalsIgnoreCase(authorityTypeStr)) {
                 authority = new CIAMAuthority(authorityUrl);
             } else if (AAD_NA.equalsIgnoreCase(authorityTypeStr) && configuredAuthority instanceof NativeAuthCIAMAuthority) {
-                authority = new NativeAuthCIAMAuthority(
-                        authorityUrl,
-                        ((NativeAuthCIAMAuthority) configuredAuthority).getClientId());
+                authority = new CIAMAuthority(authorityUrl);
             } else {
                 authority = createAadAuthority(authorityCommonUriBuilder, pathSegments);
             }
