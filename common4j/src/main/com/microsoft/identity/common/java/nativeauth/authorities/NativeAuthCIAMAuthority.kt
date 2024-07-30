@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.nativeauth.authorities
 
 import com.microsoft.identity.common.java.authorities.Authority
 import com.microsoft.identity.common.java.authorities.CIAMAuthority
+import com.microsoft.identity.common.java.exception.BaseException
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
@@ -48,7 +49,7 @@ class NativeAuthCIAMAuthority (
         // native auth currently.
         private const val NATIVE_AUTH_USE_OPENID_CONFIGURATION = false
 
-        @Throws(Exception::class)
+        @Throws(BaseException::class)
         fun getAuthorityFromAuthorityUrl(authorityUrl: String, clientId: String):
                 NativeAuthCIAMAuthority {
             // Piggy back on the existing authority creation to improve reliability.
