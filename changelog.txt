@@ -1,5 +1,8 @@
 V.Next
 ---------
+
+Version 17.7.0-RC1
+---------
 - [MINOR] Add null cursor BrokerCommunicationException error category (#2459)
 - [MINOR] Classifying more UNKNOWN_ERRORs (#2460)
 
