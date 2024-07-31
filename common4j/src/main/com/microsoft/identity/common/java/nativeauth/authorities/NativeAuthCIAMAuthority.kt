@@ -49,7 +49,7 @@ class NativeAuthCIAMAuthority (
         // native auth currently.
         private const val NATIVE_AUTH_USE_OPENID_CONFIGURATION = false
 
-        @Throws(BaseException::class)
+        @Throws(Exception::class)
         fun getAuthorityFromAuthorityUrl(authorityUrl: String, clientId: String):
                 NativeAuthCIAMAuthority {
             // Piggy back on the existing authority creation to improve reliability.
