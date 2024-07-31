@@ -120,13 +120,24 @@ public abstract class Authority {
     }
 
     /**
-     * Returns an Authority based on an authority url.  This method attempts to parse the URL and based on the contents of it
-     * determine the authority type and tenantid associated with it.
+     * Returns an Authority based on an authority url.  This method internally calls getAuthorityFromAuthorityUrl(String authorityUrl, @Nullable String clientId) with a null clientId.
      *
      * @param authorityUrl
      * @return
      */
     public static Authority getAuthorityFromAuthorityUrl(String authorityUrl) {
+        return getAuthorityFromAuthorityUrl(authorityUrl, null);
+    }
+
+    /**
+     * Returns an Authority based on an authority url.  This method attempts to parse the URL and based on the contents of it
+     * determine the authority type and tenantid associated with it.
+     *
+     * @param authorityUrl
+     * @param clientId This parameter is optional and can be null. It is used to construct NativeAuthCIAMAuthority when authority type is AAD_NA.
+     * @return
+     */
+    public static Authority getAuthorityFromAuthorityUrl(String authorityUrl, @Nullable String clientId) {
         final String methodName = ":getAuthorityFromAuthorityUrl";
         final CommonURIBuilder authorityCommonUriBuilder;
         try {
@@ -157,7 +168,7 @@ public abstract class Authority {
             } else if (CIAM.equalsIgnoreCase(authorityTypeStr)) {
                 authority = new CIAMAuthority(authorityUrl);
             } else if (AAD_NA.equalsIgnoreCase(authorityTypeStr) && configuredAuthority instanceof NativeAuthCIAMAuthority) {
-                authority = new CIAMAuthority(authorityUrl);
+                authority = new NativeAuthCIAMAuthority(authorityUrl, clientId);
             } else {
                 authority = createAadAuthority(authorityCommonUriBuilder, pathSegments);
             }
