@@ -25,7 +25,6 @@ package com.microsoft.identity.common.java.nativeauth.authorities
 
 import com.microsoft.identity.common.java.authorities.Authority
 import com.microsoft.identity.common.java.authorities.CIAMAuthority
-import com.microsoft.identity.common.java.exception.BaseException
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
