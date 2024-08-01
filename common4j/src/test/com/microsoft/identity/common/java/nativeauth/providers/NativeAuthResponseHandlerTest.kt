@@ -102,6 +102,7 @@ class NativeAuthResponseHandlerTest {
     private val invalidGrantError = "invalid_grant"
     private val invalidOOBValueError = "invalid_oob_value"
     private val invalidRequestError = "invalid_request"
+    private val introspectRequiredSubError = "introspect_required"
     private val unsupportedChallengeTypeError = "unsupported_challenge_type"
     private val expiredTokenError = "expired_token"
     private val userNotFoundError = "user_not_found"
@@ -2489,6 +2490,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = null,
             continuationToken = null,
             error = invalidGrantError,
+            subError = null,
             errorCodes = null,
             errorDescription = tenantMisconfiguration,
             errorUri = null,
@@ -2507,12 +2509,61 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
+    fun testSignInChallengeApiResponseIntrospectRequired() {
+        val signInInitiateApiResponse = SignInChallengeApiResponse(
+            statusCode = errorStatusCode,
+            challengeType = null,
+            continuationToken = continuationToken,
+            error = invalidRequestError,
+            subError = introspectRequiredSubError,
+            errorCodes = null,
+            errorDescription = null,
+            errorUri = null,
+            bindingMethod = null,
+            challengeTargetLabel = null,
+            challengeChannel = null,
+            codeLength = null,
+            interval = null,
+            correlationId = correlationId
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInChallengeApiResult.IntrospectRequired)
+        assertEquals(continuationToken, (apiResult as SignInChallengeApiResult.IntrospectRequired).continuationToken)
+    }
+
+    @Test
+    fun testSignInChallengeApiResponseIntrospectRequiredContinuationTokenMissing() {
+        val signInInitiateApiResponse = SignInChallengeApiResponse(
+            statusCode = errorStatusCode,
+            challengeType = null,
+            continuationToken = null,
+            error = invalidRequestError,
+            subError = introspectRequiredSubError,
+            errorCodes = null,
+            errorDescription = null,
+            errorUri = null,
+            bindingMethod = null,
+            challengeTargetLabel = null,
+            challengeChannel = null,
+            codeLength = null,
+            interval = null,
+            correlationId = correlationId
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInChallengeApiResult.UnknownError)
+        assertEquals(ApiErrorResult.INVALID_STATE, (apiResult as SignInChallengeApiResult.UnknownError).error)
+    }
+
+    @Test
     fun testSignInChallengeApiResponseChallengeTypeOobSuccess() {
         val signInInitiateApiResponse = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
             continuationToken = continuationToken,
             error = null,
+            subError = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
@@ -2521,7 +2572,7 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = emailChallengeChannel,
             codeLength = codeLength,
             interval = null,
-            correlationId = correlationId
+            correlationId = correlationId,
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
@@ -2537,6 +2588,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = oobChallengeType,
             continuationToken = continuationToken,
             error = null,
+            subError = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
@@ -2559,6 +2611,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = oobChallengeType,
             continuationToken = continuationToken,
             error = null,
+            subError = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
@@ -2581,6 +2634,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = oobChallengeType,
             continuationToken = continuationToken,
             error = null,
+            subError = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
@@ -2603,6 +2657,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = passwordChallengeType,
             continuationToken = null,
             error = null,
+            subError = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
@@ -2625,6 +2680,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = passwordChallengeType,
             continuationToken = continuationToken,
             error = null,
+            subError = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
@@ -2648,6 +2704,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = passwordChallengeType,
             continuationToken = null,
             error = null,
+            subError = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
@@ -2670,6 +2727,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = null,
             continuationToken = null,
             error = signInUnknownError,
+            subError = null,
             errorCodes = listOf(unknownErrorCode),
             errorDescription = unknownErrorDescription,
             errorUri = null,
@@ -2694,6 +2752,7 @@ class NativeAuthResponseHandlerTest {
             challengeType = null,
             continuationToken = null,
             error = null,
+            subError = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
