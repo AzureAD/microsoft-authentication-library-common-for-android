@@ -22,16 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import android.webkit.ClientCertRequest;
+import com.microsoft.identity.common.shadows.ShadowKeyChain;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+
+import java.security.Principal;
 
 @RunWith(RobolectricTestRunner.class)
+@Config(shadows = ShadowKeyChain.class)
 public class OnDeviceCertBasedAuthChallengeHandlerTest extends AbstractCertBasedAuthTest  {
 
     @Before
@@ -42,11 +47,35 @@ public class OnDeviceCertBasedAuthChallengeHandlerTest extends AbstractCertBased
     private final TestCertBasedAuthTelemetryHelper mTestCertBasedAuthTelemetryHelper = new TestCertBasedAuthTelemetryHelper();
 
     @Test
-    public void printRequestDetails_noNullRequest() {
-        final TestClientCertRequest request = new TestClientCertRequest();
-        mChallengeHandler.
-
+    public void processChallenge_noChoice() {
+        // This test also checks for nullable keyTypes and principals.
+        final TestClientCertRequest request = new TestClientCertRequest(null, null, null);
+        mChallengeHandler.processChallenge(request);
+        assertTrue(request.isCancelled());
+        assertFalse(request.isProceeded());
     }
 
+    @Test
+    public void processChallenge_throwKeyChainException() {
+        final TestClientCertRequest request = new TestClientCertRequest(new String[0], new Principal[0], ShadowKeyChain.KEY_CHAIN_EXCEPTION);
+        mChallengeHandler.processChallenge(request);
+        assertTrue(request.isCancelled());
+        assertFalse(request.isProceeded());
+    }
 
+    @Test
+    public void processChallenge_throwInterruptedException() {
+        final TestClientCertRequest request = new TestClientCertRequest(new String[0], new Principal[0], ShadowKeyChain.INTERRUPTED_EXCEPTION);
+        mChallengeHandler.processChallenge(request);
+        assertTrue(request.isCancelled());
+        assertFalse(request.isProceeded());
+    }
+
+    @Test
+    public void processChallenge_proceed() {
+        final TestClientCertRequest request = new TestClientCertRequest(new String[0], new Principal[0], ShadowKeyChain.PROCEED);
+        mChallengeHandler.processChallenge(request);
+        assertFalse(request.isCancelled());
+        assertTrue(request.isProceeded());
+    }
 }

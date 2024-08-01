@@ -40,16 +40,20 @@ public class TestClientCertRequest extends ClientCertRequest {
     private boolean mCancelled;
     private final String[] mKeyTypes;
     private final Principal[] mPrincipals;
+    private final String mHost;
 
     TestClientCertRequest() {
         mKeyTypes = new String[0];
         mPrincipals = new Principal[0];
+        mHost = null;
     }
 
     TestClientCertRequest(@Nullable final String[] keyTypes,
-                          @Nullable final Principal[] principals) {
+                          @Nullable final Principal[] principals,
+                          final String host) {
         mKeyTypes = keyTypes;
         mPrincipals = principals;
+        mHost = host;
     }
 
 
@@ -67,7 +71,7 @@ public class TestClientCertRequest extends ClientCertRequest {
 
     @Override
     public String getHost() {
-        return null;
+        return mHost;
     }
 
     @Override
