@@ -63,5 +63,6 @@ public enum SpanName {
     SaveTransferTokenToBlockstore,
     RefreshTransferToken,
     IsLtwPreInstalled,
-    DeleteTransferToken
+    DeleteTransferToken,
+    RestoreMsaAccounts
 }
