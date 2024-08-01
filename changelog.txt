@@ -5,6 +5,7 @@ Version 17.7.0-RC1
 ---------
 - [MINOR] Add null cursor BrokerCommunicationException error category (#2459)
 - [MINOR] Classifying more UNKNOWN_ERRORs (#2460)
+- [PATCH] Fix authority data being persisted across different SDK instances (#2462)
 
 Version 17.6.1
 ---------
