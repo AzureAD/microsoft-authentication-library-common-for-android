@@ -78,4 +78,12 @@ public class OnDeviceCertBasedAuthChallengeHandlerTest extends AbstractCertBased
         assertFalse(request.isCancelled());
         assertTrue(request.isProceeded());
     }
+
+    @Test
+    public void processChallenge_proceedWithNullKeyTypesAndPrincipals() {
+        final TestClientCertRequest request = new TestClientCertRequest(null, null, ShadowKeyChain.PROCEED);
+        mChallengeHandler.processChallenge(request);
+        assertFalse(request.isCancelled());
+        assertTrue(request.isProceeded());
+    }
 }
