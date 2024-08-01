@@ -82,7 +82,7 @@ public abstract class AndroidAuthorizationStrategy<
 
             final FragmentManager fragmentManager = fragment.getFragmentManager();
             if (fragmentManager == null) {
-                throw new ClientException(ClientException.UNKNOWN_ERROR, "Fragment Manager is null");
+                throw new ClientException(ClientException.NULL_OBJECT, "Fragment Manager is null");
             }
 
             fragmentManager.beginTransaction()
@@ -94,7 +94,7 @@ public abstract class AndroidAuthorizationStrategy<
 
         final Activity activity = mReferencedActivity.get();
         if (activity == null) {
-            throw new ClientException(ClientException.UNKNOWN_ERROR, "Referenced activity is null");
+            throw new ClientException(ClientException.NULL_OBJECT, "Referenced activity is null");
         }
         activity.startActivity(intent);
     }
