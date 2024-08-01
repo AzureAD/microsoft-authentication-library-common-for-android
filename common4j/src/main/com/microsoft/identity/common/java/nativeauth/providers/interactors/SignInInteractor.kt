@@ -33,9 +33,11 @@ import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequest
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInChallengeRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInInitiateRequest
+import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInIntrospectRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInTokenRequest
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.util.ObjectMapper
 import com.microsoft.identity.common.java.util.StringUtil
@@ -108,7 +110,7 @@ class SignInInteractor(
         )
 
         Logger.infoWithObject(
-            "${TAG}.rawResponseToSignInInitiateApiResult",
+            "${TAG}.rawResponseToSignInInitiateApiResponse",
             rawApiResponse.correlationId,
             "rawApiResponse = ",
             rawApiResponse
@@ -118,6 +120,78 @@ class SignInInteractor(
 
         Logger.infoWithObject(
             "${TAG}.rawResponseToSignInInitiateApiResult",
+            result.correlationId,
+            "result = ",
+            result
+        )
+
+        return result
+    }
+    //endregion
+
+    //region /oauth/v2.0/introspect
+    fun performSignInIntrospect(
+        continuationToken: String,
+        correlationId: String
+    ): SignInIntrospectApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            methodName = "${TAG}.performSignInIntrospect(continuationToken: String)"
+        )
+
+        val request = nativeAuthRequestProvider.createSignInIntrospectRequest(
+            continuationToken = continuationToken,
+            correlationId = correlationId
+        )
+
+        Logger.infoWithObject(
+            "${TAG}.performSignInIntrospect",
+            correlationId,
+            "request = ",
+            request
+        )
+
+        return performSignInIntrospect(
+            requestCorrelationId = correlationId,
+            request = request
+        )
+    }
+
+    private fun performSignInIntrospect(
+        requestCorrelationId: String,
+        request: SignInIntrospectRequest
+    ): SignInIntrospectApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.performSignInIntrospect"
+        )
+        val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
+        val headers = request.headers
+        val requestUrl = request.requestUrl
+
+        val response = httpClient.post(
+            requestUrl,
+            headers,
+            encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
+        )
+        val rawApiResponse = nativeAuthResponseHandler.getSignInIntrospectResultFromHttpResponse(
+            requestCorrelationId = requestCorrelationId,
+            response = response
+        )
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToSignInIntrospectApiResponse",
+            rawApiResponse.correlationId,
+            "rawApiResponse = ",
+            rawApiResponse
+        )
+
+        val result = rawApiResponse.toResult()
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToSignInIntrospectApiResult",
             result.correlationId,
             "result = ",
             result
@@ -180,7 +254,7 @@ class SignInInteractor(
         )
 
         Logger.infoWithObject(
-            "${TAG}.rawResponseToSignInChallengeApiResult",
+            "${TAG}.rawResponseToSignInChallengeApiResponse",
             rawApiResponse.correlationId,
             "rawApiResponse = ",
             rawApiResponse

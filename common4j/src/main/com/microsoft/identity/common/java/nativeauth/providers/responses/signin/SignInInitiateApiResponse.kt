@@ -99,7 +99,7 @@ class SignInInitiateApiResponse(
                         continuationToken = continuationToken
                             ?: return SignInInitiateApiResult.UnknownError(
                                 error = ApiErrorResult.INVALID_STATE,
-                                errorDescription = "SignIn /initiate did not return a flow token",
+                                errorDescription = "oauth/v2.0/initiate did not return a continuation token",
                                 errorCodes = errorCodes.orEmpty(),
                                 correlationId = correlationId
                             ),

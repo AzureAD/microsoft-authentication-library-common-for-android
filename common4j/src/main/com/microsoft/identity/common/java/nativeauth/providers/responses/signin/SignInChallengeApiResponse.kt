@@ -109,7 +109,7 @@ class SignInChallengeApiResponse(
                             challengeTargetLabel.isNullOrBlank() -> {
                                 SignInChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
-                                    errorDescription = "SignIn /challenge did not return a challenge_target_label with oob challenge type",
+                                    errorDescription = "oauth/v2.0/challenge did not return a challenge_target_label with oob challenge type",
                                     errorCodes = errorCodes.orEmpty(),
                                     correlationId = correlationId
                                 )
@@ -117,7 +117,7 @@ class SignInChallengeApiResponse(
                             challengeChannel.isNullOrBlank() -> {
                                 SignInChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
-                                    errorDescription = "SignIn /challenge did not return a challenge_channel with oob challenge type",
+                                    errorDescription = "oauth/v2.0/challenge did not return a challenge_channel with oob challenge type",
                                     errorCodes = errorCodes.orEmpty(),
                                     correlationId = correlationId
                                 )
@@ -125,7 +125,7 @@ class SignInChallengeApiResponse(
                             codeLength == null -> {
                                 SignInChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
-                                    errorDescription = "SignIn /challenge did not return a code_length with oob challenge type",
+                                    errorDescription = "oauth/v2.0/challenge did not return a code_length with oob challenge type",
                                     errorCodes = errorCodes.orEmpty(),
                                     correlationId = correlationId
                                 )
@@ -135,7 +135,7 @@ class SignInChallengeApiResponse(
                                     continuationToken = continuationToken
                                         ?: return SignInChallengeApiResult.UnknownError(
                                             error = ApiErrorResult.INVALID_STATE,
-                                            errorDescription = "SignIn /challenge did not return a continuation token with oob challenge type",
+                                            errorDescription = "oauth/v2.0/challenge did not return a continuation token with oob challenge type",
                                             errorCodes = errorCodes.orEmpty(),
                                             correlationId = correlationId
                                         ),
@@ -152,7 +152,7 @@ class SignInChallengeApiResponse(
                             continuationToken = continuationToken
                                 ?: return SignInChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
-                                    errorDescription = "SignIn /challenge did not return a continuation token with password challenge type",
+                                    errorDescription = "oauth/v2.0/challenge did not return a continuation token with password challenge type",
                                     errorCodes = errorCodes.orEmpty(),
                                     correlationId = correlationId
                                 ),

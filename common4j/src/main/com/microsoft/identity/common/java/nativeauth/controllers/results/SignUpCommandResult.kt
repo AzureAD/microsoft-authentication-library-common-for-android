@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.controllers.results
 
-import com.microsoft.identity.common.java.nativeauth.providers.responses.UserAttributeApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.UserAttributeApiResult
 
 sealed interface SignUpSubmitCodeCommandResult: INativeAuthCommandResult
 sealed interface SignUpSubmitUserAttributesCommandResult: INativeAuthCommandResult

@@ -24,7 +24,6 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.signup
 
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResult
-import com.microsoft.identity.common.java.nativeauth.providers.responses.UserAttributeApiResult
 
 /**
  * Represents the potential result types returned from the Sign Up /continue endpoint,

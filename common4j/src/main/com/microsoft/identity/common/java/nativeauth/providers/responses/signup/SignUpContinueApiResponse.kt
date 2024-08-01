@@ -24,10 +24,8 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.signup
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
-import com.microsoft.identity.common.java.nativeauth.providers.responses.UserAttributeApiResult
 import com.microsoft.identity.common.java.nativeauth.util.isAttributeValidationFailed
 import com.microsoft.identity.common.java.nativeauth.util.isAttributesRequired
 import com.microsoft.identity.common.java.nativeauth.util.isCredentialRequired

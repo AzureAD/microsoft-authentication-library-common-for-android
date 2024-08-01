@@ -44,6 +44,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpas
 import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpassword.ResetPasswordSubmitRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInChallengeRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInInitiateRequest
+import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInIntrospectRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInTokenRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpChallengeRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpContinueRequest
@@ -63,6 +64,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     private val signUpChallengeEndpoint = config.getSignUpChallengeEndpoint().toString()
     private val signUpContinueEndpoint = config.getSignUpContinueEndpoint().toString()
     private val signInInitiateEndpoint = config.getSignInInitiateEndpoint().toString()
+    private val signInIntrospectEndpoint = config.getSignInChallengeEndpoint().toString()
     private val signInChallengeEndpoint = config.getSignInChallengeEndpoint().toString()
     private val signInTokenEndpoint = config.getSignInTokenEndpoint().toString()
     private val resetPasswordStartEndpoint = config.getResetPasswordStartEndpoint().toString()
@@ -103,6 +105,24 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             continuationToken = continuationToken,
             challengeType = config.challengeType,
             requestUrl = signInChallengeEndpoint,
+            headers = getRequestHeaders(correlationId)
+        )
+    }
+    //endregion
+
+    // region /oauth/v2.0/introspect
+    /**
+     * Creates request object for /oauth/v2.0/introspect API call
+     * @param continuationToken: continuation token from a previous signin command
+     */
+    internal fun createSignInIntrospectRequest(
+        continuationToken: String,
+        correlationId: String
+    ): SignInIntrospectRequest {
+        return SignInIntrospectRequest.create(
+            clientId = config.clientId,
+            continuationToken = continuationToken,
+            requestUrl = signInIntrospectEndpoint,
             headers = getRequestHeaders(correlationId)
         )
     }
