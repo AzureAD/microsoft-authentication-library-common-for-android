@@ -20,31 +20,29 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common
+package com.microsoft.identity.internal.testutils.nativeauth.api.models
 
-import com.microsoft.identity.common4j.env.BuildReason
-import com.microsoft.identity.common4j.env.BuildReason.Companion.isBuildReason
-import org.junit.Assume
-import org.junit.Test
+import com.google.gson.annotations.SerializedName
 
 /**
- * Tests for making sure compile time flags aren't turned on in PROD build.
- **/
-class BuildConfigTest {
+ * Test configuration retrieved from Labs KeyVault and used in native auth tests.
+ * This class defines what test parameters to use.
+ */
+data class NativeAuthTestConfig(
+    val configs: Map<String, Config>
+) {
+    data class Config(
+        @SerializedName("email") val email: String,
+        @SerializedName("client_id") val clientId: String,
+        @SerializedName("authority_url") val authorityUrl: String,
+        @SerializedName("resources") val resources: List<Resource>
+    )
 
-    @Test
-    fun failIfBypassRedirecUriCheckEnabled(){
-        // Do not run this on scheduled test.
-        Assume.assumeFalse(isBuildReason(BuildReason.Schedule))
-
-        assert(!BuildConfig.bypassRedirectUriCheck)
-    }
-
-    @Test
-    fun failIfTrustDebugBrokerFlagEnabled(){
-        // Do not run this on scheduled test.
-        Assume.assumeFalse(isBuildReason(BuildReason.Schedule))
-
-        assert(!BuildConfig.trustDebugBrokerFlag)
-    }
+    data class Resource(
+        @SerializedName("resource_name") val resourceName: String,
+        @SerializedName("resource_id") val resourceId: String,
+        @SerializedName("scopes") val scopes: List<String>
+    )
 }
+
+

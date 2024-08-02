@@ -20,31 +20,18 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common
-
-import com.microsoft.identity.common4j.env.BuildReason
-import com.microsoft.identity.common4j.env.BuildReason.Companion.isBuildReason
-import org.junit.Assume
-import org.junit.Test
+package com.microsoft.identity.internal.testutils.nativeauth
 
 /**
- * Tests for making sure compile time flags aren't turned on in PROD build.
- **/
-class BuildConfigTest {
-
-    @Test
-    fun failIfBypassRedirecUriCheckEnabled(){
-        // Do not run this on scheduled test.
-        Assume.assumeFalse(isBuildReason(BuildReason.Schedule))
-
-        assert(!BuildConfig.bypassRedirectUriCheck)
-    }
-
-    @Test
-    fun failIfTrustDebugBrokerFlagEnabled(){
-        // Do not run this on scheduled test.
-        Assume.assumeFalse(isBuildReason(BuildReason.Schedule))
-
-        assert(!BuildConfig.trustDebugBrokerFlag)
-    }
+ * Test configuration retrieved from Labs KeyVault and used in native auth tests.
+ */
+enum class ConfigType(val stringValue: String) {
+    SSPR("SSPR"),
+    SIGN_UP_PASSWORD("SIGN_UP_PASSWORD"),
+    SIGN_IN_PASSWORD("SIGN_IN_PASSWORD"),
+    SIGN_UP_OTP("SIGN_UP_OTP"),
+    SIGN_IN_OTP("SIGN_IN_OTP"),
+    SIGN_UP_PASSWORD_ATTRIBUTES("SIGN_UP_PASSWORD_ATTRIBUTES"),
+    SIGN_UP_OTP_ATTRIBUTES("SIGN_UP_OTP_ATTRIBUTES"),
+    ACCESS_TOKEN("ACCESS_TOKEN")
 }

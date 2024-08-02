@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.nativeauth.providers
 
 import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry
+import com.microsoft.identity.common.java.logging.LibraryInfoHelper
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
@@ -34,7 +35,6 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
-import com.microsoft.identity.common.java.logging.LibraryInfoHelper
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpassword.ResetPasswordChallengeRequest
@@ -49,6 +49,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.S
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpContinueRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpStartRequest
 import com.microsoft.identity.common.java.platform.Device
+import com.microsoft.identity.common.java.util.StringUtil
 import java.util.TreeMap
 
 /**
@@ -309,7 +310,9 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //region helpers
     private fun getRequestHeaders(correlationId: String): Map<String, String?> {
         val headers: MutableMap<String, String?> = TreeMap()
-        headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = correlationId
+        if (correlationId != "UNSET") {
+            headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = correlationId
+        }
         headers[AuthenticationConstants.SdkPlatformFields.PRODUCT] = LibraryInfoHelper.getLibraryName()
         headers[AuthenticationConstants.SdkPlatformFields.VERSION] = LibraryInfoHelper.getLibraryVersion()
         headers.putAll(Device.getPlatformIdParameters())

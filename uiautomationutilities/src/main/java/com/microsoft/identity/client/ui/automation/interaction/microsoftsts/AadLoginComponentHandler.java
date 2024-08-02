@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
@@ -41,6 +42,7 @@ import static org.junit.Assert.fail;
 
 import android.widget.Button;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -274,5 +276,20 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     public void handleChooseCertificate() {
         // Choose default certificate
         UiAutomatorUtils.handleButtonClickSafely("android:id/button1", mFindLoginUiElementTimeout);
+    }
+
+    @Override
+    public void handlePasswordUpdate(@NonNull final String currentPassword, @NonNull final String newPassword) {
+        // Enter current password
+        UiAutomatorUtils.handleInput("currentPassword", currentPassword);
+
+        // Enter new password
+        UiAutomatorUtils.handleInput("newPassword", newPassword);
+
+        // Confirm new password
+        UiAutomatorUtils.handleInput("confirmNewPassword", newPassword);
+
+        // Sign in
+        handleNextButton();
     }
 }

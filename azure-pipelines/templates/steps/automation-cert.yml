@@ -45,4 +45,4 @@ steps:
         Write-Error "Failed to create PFX file at $certPathVar"
       }    
       
-      Write-Host "##vso[task.setvariable variable=LabVaultAppCert]$certPathVar"     
+      Write-Host "##vso[task.setvariable variable=LabVaultAppCert]$certPathVar"

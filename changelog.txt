@@ -1,5 +1,11 @@
 V.Next
 ---------
+- [MINOR] Add null cursor BrokerCommunicationException error category (#2459)
+- [MINOR] Classifying more UNKNOWN_ERRORs (#2460)
+- [MINOR] Moving OS version check for passkeys (#2450)
+
+Version 17.6.1
+---------
 - [MINOR] Support Passing x-client-xtra-sku header to ESTS only for brokered requests (#2430)
 - [MINOR] Account Transfer Skips Account Chooser (#2375)
 - [PATCH] Add null check for CBA logging (#2443)
@@ -11,7 +17,7 @@ V.Next
 - [PATCH] Return API error and errorDescription in case of unexpected response (#2431)
 - [MINOR] Support certificate with password (#2405)
 - [MINOR] Classifying TimeoutException as timed_out (#2441)
-- [MINOR] Moving OS version check for passkeys (#2450)
+- [PATCH] Add check for unset correlation ID when sending Native Auth requests (#2435)
 
 Version 17.5.0
 ---------

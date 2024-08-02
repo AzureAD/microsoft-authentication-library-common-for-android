@@ -52,9 +52,11 @@ import com.microsoft.identity.internal.test.keyvault.auth.OAuth;
 
 public class ApiClient {
 
-    private String basePath = "https://msidlabs.vault.azure.net";
+    private static final String DEFAULT_BASE_PATH = "https://msidlabs.vault.azure.net";
+    public static final String BUILD_AUTOMATION_VAULT_BASE_PATH = "https://buildautomation.vault.azure.net";
     private boolean debugging = false;
     private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
+    private String basePath;
     private String tempFolderPath = null;
 
     private Map<String, Authentication> authentications;
@@ -73,12 +75,20 @@ public class ApiClient {
 
     private HttpLoggingInterceptor loggingInterceptor;
 
+    /**
+     * No-parameter constructor will use default Base Path.
+     */
+    public ApiClient() {
+        this(DEFAULT_BASE_PATH);
+    }
+
     /*
      * Constructor for ApiClient
      */
-    public ApiClient() {
+    public ApiClient(final String basePathParam) {
         httpClient = new OkHttpClient();
 
+        basePath = basePathParam;
 
         verifyingSsl = true;
 
