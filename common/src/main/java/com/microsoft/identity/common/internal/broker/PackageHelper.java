@@ -23,10 +23,6 @@
 
 package com.microsoft.identity.common.internal.broker;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_DEBUG_SIGNATURE;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
-
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -38,7 +34,6 @@ import android.util.Base64;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.logging.Logger;
