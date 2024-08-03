@@ -229,6 +229,7 @@ public class MsalTestApp extends App {
         handleFirstRun();
         if (userType == UserType.MSA) {
             selectFromConfigFile("MSA");
+            selectFromConfigFile("MSA");
         }
     }
 }
