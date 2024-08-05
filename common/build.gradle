@@ -133,6 +133,8 @@ android {
 }
 
 dependencies {
+    implementation 'com.google.android.gms:play-services-fido:21.1.0'
+
     //Java 8 - Desugaring - Enabled/Disabled via plugin
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
 

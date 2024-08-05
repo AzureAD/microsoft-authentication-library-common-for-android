@@ -27,6 +27,12 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.PublicKeyCredential
+import androidx.credentials.exceptions.NoCredentialException
+import com.google.android.gms.fido.common.Transport
+import com.google.android.gms.fido.fido2.Fido2ApiClient
+import com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialDescriptor
+import com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialRequestOptions
+import com.google.android.gms.tasks.OnSuccessListener
 
 /**
  * Makes calls to the Android Credential Manager API in order to return an attestation.
@@ -57,11 +63,35 @@ class CredManFidoManager (val context: Context) : IFidoManager {
         val getCredRequest = GetCredentialRequest(
             listOf(publicKeyCredentialOption)
         )
-        val result = credentialManager.getCredential(
-            context = context,
-            request = getCredRequest
-        )
-        val credential: PublicKeyCredential = result.credential as PublicKeyCredential
-        return WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(credential.authenticationResponseJson)
+        try {
+            val result = credentialManager.getCredential(
+                context = context,
+                request = getCredRequest
+            )
+            val credential: PublicKeyCredential = result.credential as PublicKeyCredential
+            return WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(credential.authenticationResponseJson)
+        } catch (e: NoCredentialException) {
+            val legacyApi = Fido2ApiClient(context)
+            val publicKeyCredentialDescriptorList = ArrayList<PublicKeyCredentialDescriptor>()
+            allowedCredentials?.let {
+                for (id in allowedCredentials) {
+                    publicKeyCredentialDescriptorList.add(
+                        PublicKeyCredentialDescriptor("public-key", id.toByteArray(), ArrayList<Transport>())
+                    )
+                }
+            }
+            val requestOptions = PublicKeyCredentialRequestOptions.Builder()
+                .setChallenge(challenge.toByteArray())
+                .setRpId(relyingPartyIdentifier)
+                .setAllowList(publicKeyCredentialDescriptorList)
+                .build()
+            val result = legacyApi.getSignPendingIntent(requestOptions);
+            result.addOnSuccessListener(OnSuccessListener { pendingIntent ->
+                if (pendingIntent != null) {
+                    // Start the pending intent
+                    //context.startIntentSender(pendingIntent.intentSender, pendingIntent, 0, 0, 0)
+                }
+            })
+        }
     }
 }
