@@ -135,5 +135,5 @@ public interface IPlatformUtil {
      * @return a list of extra query parameters, or null.
      */
     @Nullable
-    List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParametersForBroker(@Nullable List<Map.Entry<String, String>> originalList);
+    List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList);
 }
