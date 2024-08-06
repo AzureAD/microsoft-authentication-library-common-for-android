@@ -106,8 +106,8 @@ internal fun Int?.isInvalidAuthenticationType(): Boolean {
     return this == 400002
 }
 
-fun Int?.isMFARequired(): Boolean {
-    return this == 50076
+fun String?.isMFARequired(): Boolean {
+    return (this?.contains(other = "mfa_required", ignoreCase = true) == true )
 }
 
 internal fun String?.isVerificationRequired(): Boolean {

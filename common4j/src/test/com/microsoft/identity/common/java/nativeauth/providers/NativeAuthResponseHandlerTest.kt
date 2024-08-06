@@ -120,7 +120,7 @@ class NativeAuthResponseHandlerTest {
     private val incorrectOOBErrorCode2 = 50184
     private val incorrectOOBErrorCode3 = 501811
     private val incorrectPasswordErrorCode = 50126
-    private val mfaRequiredErrorCode = 50076
+    private val mfaRequiredSubError = "mfa_required"
     private val randomErrorCode = 0
     private val errorDescription = "User not found"
     private val signInUnknownError = "unknown_error"
@@ -3013,10 +3013,10 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             continuationToken = null,
             error = invalidGrantError,
-            errorCodes = listOf(mfaRequiredErrorCode),
+            errorCodes = null,
             errorDescription = mfaRequiredTokenErrorDescription,
             errorUri = null,
-            subError = null,
+            subError = mfaRequiredSubError,
             correlationId = correlationId
         )
 
@@ -3024,7 +3024,7 @@ class NativeAuthResponseHandlerTest {
         assertTrue(apiResult is SignInTokenApiResult.MFARequired)
         assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.MFARequired).error)
         assertEquals(mfaRequiredTokenErrorDescription, apiResult.errorDescription)
-        assertEquals(listOf(mfaRequiredErrorCode), apiResult.errorCodes)
+        assertEquals(mfaRequiredSubError, apiResult.subError)
     }
 
     @Test
