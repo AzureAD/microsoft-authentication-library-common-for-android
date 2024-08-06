@@ -160,7 +160,7 @@ class NativeAuthOAuth2Strategy(
         continuationToken: String,
         correlationId: String
     ): SignInChallengeApiResult {
-        return signInInteractor.performSignInChallenge(
+        return signInInteractor.performSignInDefaultChallenge(
             continuationToken = continuationToken,
             correlationId = correlationId
         )

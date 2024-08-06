@@ -142,7 +142,7 @@ sealed interface SignUpContinueApiResult: ApiResult {
         override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
-        val subError: String
+        override val subError: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -163,7 +163,7 @@ sealed interface SignUpContinueApiResult: ApiResult {
         val invalidAttributes: List<String>,
         override val error: String,
         override val errorDescription: String,
-        val subError: String
+        override val subError: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -201,7 +201,7 @@ sealed interface SignUpContinueApiResult: ApiResult {
         override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
-        val subError: String
+        override val subError: String
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,

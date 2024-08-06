@@ -42,7 +42,6 @@ sealed interface SignInChallengeApiResult: ApiResult {
 
     data class IntrospectRequired(
         override val correlationId: String,
-        val continuationToken: String,
     ) : SignInChallengeApiResult {
         override fun toUnsanitizedString(): String {
             return "IntrospectRequired(correlationId=$correlationId)"

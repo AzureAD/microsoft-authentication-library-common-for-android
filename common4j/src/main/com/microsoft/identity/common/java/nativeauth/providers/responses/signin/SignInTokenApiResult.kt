@@ -99,7 +99,7 @@ sealed interface SignInTokenApiResult: ApiResult, ILoggable {
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
-        val subError: String,
+        override val subError: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,

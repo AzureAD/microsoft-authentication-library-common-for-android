@@ -306,6 +306,7 @@ class NativeAuthResponseHandler {
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 errorCodes = null,
                 errorUri = null,
+                subError = null,
                 continuationToken = null,
                 challengeType = null,
                 bindingMethod = null,

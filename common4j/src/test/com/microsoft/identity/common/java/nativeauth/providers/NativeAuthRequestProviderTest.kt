@@ -62,6 +62,7 @@ class NativeAuthRequestProviderTest {
     private val emptyString = ""
     private val emptyPassword = "".toCharArray()
     private val continuationToken = "uY29tL2F1dGhlbnRpY"
+    private val challengeId = "902rnwfn3"
     private val correlationId = "jsdfo4nslkjsrg"
     private val grantType = NativeAuthConstants.GrantType.OOB
 
@@ -581,36 +582,36 @@ class NativeAuthRequestProviderTest {
     }
 
     @Test(expected = ClientException::class)
-    fun testSignInChallengeWithEmptyClientIdShouldThrowException() {
+    fun testSignInDefaultChallengeWithEmptyClientIdShouldThrowException() {
         every { mockConfig.clientId } returns emptyString
 
-        nativeAuthRequestProvider.createSignInChallengeRequest(
+        nativeAuthRequestProvider.createSignInDefaultChallengeRequest(
             continuationToken = continuationToken,
             correlationId = correlationId
         )
     }
 
     @Test(expected = ClientException::class)
-    fun testSignInChallengeWithEmptyChallengeTypeShouldThrowException() {
+    fun testSignInDefaultChallengeWithEmptyChallengeTypeShouldThrowException() {
         every { mockConfig.challengeType } returns emptyString
 
-        nativeAuthRequestProvider.createSignInChallengeRequest(
+        nativeAuthRequestProvider.createSignInDefaultChallengeRequest(
             continuationToken = continuationToken,
             correlationId = correlationId
         )
     }
 
     @Test(expected = ClientException::class)
-    fun testSignInChallengeWithEmptyContinuationTokenShouldThrowException() {
-        nativeAuthRequestProvider.createSignInChallengeRequest(
+    fun testSignInDefaultChallengeWithEmptyContinuationTokenShouldThrowException() {
+        nativeAuthRequestProvider.createSignInDefaultChallengeRequest(
             continuationToken = emptyString,
             correlationId = correlationId
         )
     }
 
     @Test
-    fun testSignInChallengeWithUnsetCorrelationIdShouldNotHaveHeader() {
-        val result = nativeAuthRequestProvider.createSignInChallengeRequest(
+    fun testSignInDefaultChallengeWithUnsetCorrelationIdShouldNotHaveHeader() {
+        val result = nativeAuthRequestProvider.createSignInDefaultChallengeRequest(
             continuationToken = continuationToken,
             correlationId = "UNSET"
         )
@@ -619,10 +620,64 @@ class NativeAuthRequestProviderTest {
     }
 
     @Test
-    fun testSignInChallengeSuccess() {
-        val result = nativeAuthRequestProvider.createSignInChallengeRequest(
+    fun testSignInDefaultChallengeSuccess() {
+        val result = nativeAuthRequestProvider.createSignInDefaultChallengeRequest(
             continuationToken = continuationToken,
             correlationId = correlationId
+        )
+
+        assertEquals(clientId, result.parameters.clientId)
+        assertEquals(continuationToken, result.parameters.continuationToken)
+        assertEquals(ApiConstants.MockApi.signInChallengeRequestUrl, result.requestUrl)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignInSelectedChallengeWithEmptyClientIdShouldThrowException() {
+        every { mockConfig.clientId } returns emptyString
+
+        nativeAuthRequestProvider.createSignInSelectedChallengeRequest(
+            continuationToken = continuationToken,
+            challengeId = challengeId,
+            correlationId = correlationId
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignInSelectedChallengeWithEmptyChallengeIdShouldThrowException() {
+        nativeAuthRequestProvider.createSignInSelectedChallengeRequest(
+            continuationToken = continuationToken,
+            challengeId = emptyString,
+            correlationId = correlationId
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignInSelectedChallengeWithEmptyContinuationTokenShouldThrowException() {
+        nativeAuthRequestProvider.createSignInSelectedChallengeRequest(
+            continuationToken = emptyString,
+            correlationId = correlationId,
+            challengeId = challengeId
+        )
+    }
+
+    @Test
+    fun testSignInSelectedChallengeWithUnsetCorrelationIdShouldNotHaveHeader() {
+        val result = nativeAuthRequestProvider.createSignInSelectedChallengeRequest(
+            continuationToken = continuationToken,
+            correlationId = "UNSET",
+            challengeId = challengeId
+        )
+
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
+    }
+
+    @Test
+    fun testSignInSelectedChallengeSuccess() {
+        val result = nativeAuthRequestProvider.createSignInSelectedChallengeRequest(
+            continuationToken = continuationToken,
+            correlationId = correlationId,
+            challengeId = challengeId
         )
 
         assertEquals(clientId, result.parameters.clientId)

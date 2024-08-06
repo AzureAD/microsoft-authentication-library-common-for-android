@@ -202,23 +202,53 @@ class SignInInteractor(
     //endregion
 
     //region /oauth/v2.0/challenge
-    fun performSignInChallenge(
+    fun performSignInDefaultChallenge(
         continuationToken: String,
         correlationId: String
     ): SignInChallengeApiResult {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = correlationId,
-            methodName = "${TAG}.performSignInChallenge(continuationToken: String)"
+            methodName = "${TAG}.performSignInDefaultChallenge(continuationToken: String)"
         )
 
-        val request = nativeAuthRequestProvider.createSignInChallengeRequest(
+        val request = nativeAuthRequestProvider.createSignInDefaultChallengeRequest(
             continuationToken = continuationToken,
             correlationId = correlationId
         )
 
         Logger.infoWithObject(
-            "${TAG}.performSignInChallenge",
+            "${TAG}.performSignInDefaultChallenge",
+            correlationId,
+            "request = ",
+            request
+        )
+
+        return performSignInChallenge(
+            requestCorrelationId = correlationId,
+            request = request
+        )
+    }
+
+    fun performSignInSelectedChallenge(
+        continuationToken: String,
+        challengeId: String,
+        correlationId: String
+    ): SignInChallengeApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            methodName = "${TAG}.performSignInSelectedChallenge(continuationToken: String, challengeId: String)"
+        )
+
+        val request = nativeAuthRequestProvider.createSignInSelectedChallengeRequest(
+            continuationToken = continuationToken,
+            challengeId = challengeId,
+            correlationId = correlationId
+        )
+
+        Logger.infoWithObject(
+            "${TAG}.performSignInSelectedChallenge",
             correlationId,
             "request = ",
             request

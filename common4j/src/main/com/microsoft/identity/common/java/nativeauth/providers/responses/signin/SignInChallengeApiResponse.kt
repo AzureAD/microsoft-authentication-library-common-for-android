@@ -89,8 +89,7 @@ class SignInChallengeApiResponse(
                     }
                     error.isInvalidRequest() && subError.isIntrospectRequired() -> {
                         SignInChallengeApiResult.IntrospectRequired(
-                            correlationId = correlationId,
-                            continuationToken = continuationToken!! // TODO fix this; is continuation_token returned?
+                            correlationId = correlationId
                         )
                     }
                     else -> {
