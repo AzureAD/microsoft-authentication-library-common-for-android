@@ -26,8 +26,8 @@ import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2C
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.net.HttpResponse
-import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.UserAttributeApiResult
-import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.UserAttributeOptionsApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.UserAttributeApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.UserAttributeOptionsApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordChallengeApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordContinueApiResponse
