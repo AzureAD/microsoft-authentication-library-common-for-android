@@ -47,7 +47,7 @@ class SignInTokenApiResponse(
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
     @SerializedName("error_codes") val errorCodes: List<Int>?,
-    @SerializedName("suberror") val subError: String?,
+    @SerializedName("sub_error") val subError: String?,
     ): IApiResponse(statusCode, correlationId) {
 
     override fun toUnsanitizedString(): String {
