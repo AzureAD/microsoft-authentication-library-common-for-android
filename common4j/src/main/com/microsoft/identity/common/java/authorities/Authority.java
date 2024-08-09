@@ -169,9 +169,10 @@ public abstract class Authority {
                 authority = new CIAMAuthority(authorityUrl);
             } else if (AAD_NA.equalsIgnoreCase(authorityTypeStr) && configuredAuthority instanceof NativeAuthCIAMAuthority) {
                 if (clientId == null) {
-                    throw new IllegalArgumentException("ClientId must be non-null to create NativeAuthCIAMAuthority");
+                    authority = new CIAMAuthority(authorityUrl);
+                } else {
+                    authority = new NativeAuthCIAMAuthority(authorityUrl, clientId);
                 }
-                authority = new NativeAuthCIAMAuthority(authorityUrl, clientId);
             } else {
                 authority = createAadAuthority(authorityCommonUriBuilder, pathSegments);
             }
