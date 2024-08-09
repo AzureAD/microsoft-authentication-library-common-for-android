@@ -78,15 +78,6 @@ class SignInChallengeApiResponse(
             // Handle 400 errors
             HttpURLConnection.HTTP_BAD_REQUEST -> {
                 when {
-                    error.isInvalidGrant() -> {
-                        SignInChallengeApiResult.UnknownError(
-                            error = error.orEmpty(),
-                            subError = subError.orEmpty(),
-                            errorDescription = errorDescription.orEmpty(),
-                            errorCodes = errorCodes.orEmpty(),
-                            correlationId = correlationId
-                        )
-                    }
                     error.isInvalidRequest() && subError.isIntrospectRequired() -> {
                         SignInChallengeApiResult.IntrospectRequired(
                             correlationId = correlationId

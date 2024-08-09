@@ -39,7 +39,7 @@ data class SignInIntrospectRequest private constructor(
     /**
      * Returns a request object using the provided parameters.
      * The request URL and headers passed will be set directly.
-     * The username, challenge type, and client ID will be mapped to the NativeAuthRequestSignInInitiateParameters object.
+     * The continuationToken will be taken from the NativeAuthRequestSignIntrospectParameters object.
      *
      * Parameters that are null or empty will throw a ClientException.
      * @see com.microsoft.identity.common.java.exception.ClientException

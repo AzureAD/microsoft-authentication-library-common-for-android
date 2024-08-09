@@ -63,7 +63,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     private val signUpChallengeEndpoint = config.getSignUpChallengeEndpoint().toString()
     private val signUpContinueEndpoint = config.getSignUpContinueEndpoint().toString()
     private val signInInitiateEndpoint = config.getSignInInitiateEndpoint().toString()
-    private val signInIntrospectEndpoint = config.getSignInChallengeEndpoint().toString()
+    private val signInIntrospectEndpoint = config.getSignInIntrospectEndpoint().toString()
     private val signInChallengeEndpoint = config.getSignInChallengeEndpoint().toString()
     private val signInTokenEndpoint = config.getSignInTokenEndpoint().toString()
     private val resetPasswordStartEndpoint = config.getResetPasswordStartEndpoint().toString()

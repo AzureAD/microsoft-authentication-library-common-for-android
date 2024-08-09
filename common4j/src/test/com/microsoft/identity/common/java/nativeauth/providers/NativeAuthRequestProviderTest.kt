@@ -72,6 +72,7 @@ class NativeAuthRequestProviderTest {
         every { getSignUpContinueEndpoint() } returns ApiConstants.MockApi.signUpContinueRequestUrl
         every { getSignInInitiateEndpoint() } returns ApiConstants.MockApi.signInInitiateRequestUrl
         every { getSignInChallengeEndpoint() } returns ApiConstants.MockApi.signInChallengeRequestUrl
+        every { getSignInIntrospectEndpoint() } returns ApiConstants.MockApi.signInIntrospectRequestUrl
         every { getSignInTokenEndpoint() } returns ApiConstants.MockApi.signInTokenRequestUrl
         every { getResetPasswordStartEndpoint() } returns ApiConstants.MockApi.ssprStartRequestUrl
         every { getResetPasswordChallengeEndpoint() } returns ApiConstants.MockApi.ssprChallengeRequestUrl
@@ -571,6 +572,19 @@ class NativeAuthRequestProviderTest {
             continuationToken = continuationToken,
             correlationId = correlationId
         )
+    }
+
+    @Test
+    fun testSignInIntrospectSuccess() {
+        val result = nativeAuthRequestProvider.createSignInIntrospectRequest(
+            continuationToken = continuationToken,
+            correlationId = correlationId
+        )
+
+        assertEquals(clientId, result.parameters.clientId)
+        assertEquals(continuationToken, result.parameters.continuationToken)
+        assertEquals(ApiConstants.MockApi.signInIntrospectRequestUrl, result.requestUrl)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
     }
 
     @Test(expected = ClientException::class)
