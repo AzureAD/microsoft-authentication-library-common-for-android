@@ -595,7 +595,10 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     @NonNull
-    protected TokenResult getTokenResultFromHttpResponse(@NonNull final HttpResponse response)
+    protected TokenResult getTokenResultFromHttpResponse(
+            @NonNull final HttpResponse response,
+            @NonNull final MicrosoftStsTokenRequest tokenRequest
+    )
             throws ClientException {
         final String methodName = ":getTokenResultFromHttpResponse";
 
@@ -604,93 +607,7 @@ public class MicrosoftStsOAuth2Strategy
                 "Getting TokenResult from HttpResponse..."
         );
 
-        MicrosoftStsTokenResponse tokenResponse = null;
-        TokenErrorResponse tokenErrorResponse = null;
-
-        if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            //An error occurred
-            try {
-                tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(
-                        getBodyFromUnsuccessfulResponse(response.getBody()),
-                        MicrosoftTokenErrorResponse.class
-                );
-            } catch (final JsonParseException ex) {
-                tokenErrorResponse = new MicrosoftTokenErrorResponse();
-                final String statusCode = String.valueOf(response.getStatusCode());
-                tokenErrorResponse.setError(statusCode);
-                tokenErrorResponse.setErrorDescription("Received " + statusCode + " status code from Server ");
-            }
-            tokenErrorResponse.setStatusCode(response.getStatusCode());
-
-            if (null != response.getHeaders()) {
-                tokenErrorResponse.setResponseHeadersJson(
-                        HeaderSerializationUtil.toJson(response.getHeaders())
-                );
-            }
-            tokenErrorResponse.setResponseBody(response.getBody());
-        } else {
-            tokenResponse = ObjectMapper.deserializeJsonStringToObject(
-                    getBodyFromSuccessfulResponse(response.getBody()),
-                    MicrosoftStsTokenResponse.class
-            );
-        }
-
-        final TokenResult result = new TokenResult(tokenResponse, tokenErrorResponse);
-
-        ResultUtil.logResult(TAG, result);
-
-        if (null != response.getHeaders()) {
-            final Map<String, List<String>> responseHeaders = response.getHeaders();
-
-            final List<String> cliTelemValues;
-            if (null != (cliTelemValues = responseHeaders.get(X_MS_CLITELEM))
-                    && !cliTelemValues.isEmpty()) {
-                // Element should only contain 1 value...
-                final String cliTelemHeader = cliTelemValues.get(0);
-                final CliTelemInfo cliTelemInfo = CliTelemInfo.fromXMsCliTelemHeader(
-                        cliTelemHeader
-                );
-                // Parse and set the result...
-                result.setCliTelemInfo(cliTelemInfo);
-
-                if (null != tokenResponse && null != cliTelemInfo) {
-                    tokenResponse.setSpeRing(cliTelemInfo.getSpeRing());
-                    tokenResponse.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
-                    tokenResponse.setCliTelemErrorCode(cliTelemInfo.getServerErrorCode());
-                    tokenResponse.setCliTelemSubErrorCode(cliTelemInfo.getServerSubErrorCode());
-                }
-            }
-
-            final Map<String, String> mapWithAdditionalEntry = new HashMap<String, String>();
-
-            final String ccsRequestId = response.getHeaderValue(XMS_CCS_REQUEST_ID, 0);
-            if (null != ccsRequestId) {
-                SpanExtension.current().setAttribute(AttributeName.ccs_request_id.name(), ccsRequestId);
-                if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.EXPOSE_CCS_REQUEST_ID_IN_TOKENRESPONSE)){
-                    mapWithAdditionalEntry.put(XMS_CCS_REQUEST_ID, ccsRequestId);
-                }
-            }
-
-            final String ccsRequestSequence = response.getHeaderValue(XMS_CCS_REQUEST_SEQUENCE, 0);
-            if (null != ccsRequestSequence) {
-                SpanExtension.current().setAttribute(AttributeName.ccs_request_sequence.name(), ccsRequestSequence);
-                if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.EXPOSE_CCS_REQUEST_SEQUENCE_IN_TOKENRESPONSE)){
-                    mapWithAdditionalEntry.put(XMS_CCS_REQUEST_SEQUENCE, ccsRequestSequence);
-                }
-            }
-
-            if (null != tokenResponse) {
-                if (null != tokenResponse.getExtraParameters()) {
-                    for (final Map.Entry<String, String> entry : tokenResponse.getExtraParameters()) {
-                        mapWithAdditionalEntry.put(entry.getKey(), entry.getValue());
-                    }
-                }
-
-                tokenResponse.setExtraParameters(mapWithAdditionalEntry.entrySet());
-            }
-        }
-
-        return result;
+        return tokenRequest.getTokenResponseHandler().handleTokenResponse(response);
     }
 
     protected String getBodyFromSuccessfulResponse(@NonNull final String responseBody) throws ClientException {

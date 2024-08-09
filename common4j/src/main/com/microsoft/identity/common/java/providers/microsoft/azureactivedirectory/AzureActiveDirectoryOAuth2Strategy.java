@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 import com.microsoft.identity.common.java.WarningType;
@@ -242,7 +243,10 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
-    protected TokenResult getTokenResultFromHttpResponse(final HttpResponse response) {
+    protected TokenResult getTokenResultFromHttpResponse(
+            final HttpResponse response,
+            @Nullable final AzureActiveDirectoryTokenRequest request
+    ) {
         final String methodName = "getTokenResultFromHttpResponse";
 
         TokenResponse tokenResponse = null;

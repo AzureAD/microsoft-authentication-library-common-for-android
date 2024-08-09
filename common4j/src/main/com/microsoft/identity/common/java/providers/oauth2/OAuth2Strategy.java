@@ -172,7 +172,7 @@ public abstract class OAuth2Strategy
         validateTokenRequest(request);
 
         final HttpResponse response = performTokenRequest(request);
-        final GenericTokenResult result = getTokenResultFromHttpResponse(response);
+        final GenericTokenResult result = getTokenResultFromHttpResponse(response, request);
         if (result.getTokenResponse() != null) {
             result.getTokenResponse().setAuthority(mTokenEndpoint);
         }
@@ -485,7 +485,7 @@ public abstract class OAuth2Strategy
      *
      * @param response Http response.
      */
-    protected abstract GenericTokenResult getTokenResultFromHttpResponse(HttpResponse response) throws ClientException;
+    protected abstract GenericTokenResult getTokenResultFromHttpResponse(HttpResponse response, GenericTokenRequest tokenRequest) throws ClientException;
 
     // TODO
 //    protected abstract void validateAuthorizationResponse(GenericAuthorizationResponse response);

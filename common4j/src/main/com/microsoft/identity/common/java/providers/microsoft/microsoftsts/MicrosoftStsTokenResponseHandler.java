@@ -22,34 +22,19 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.net.HttpResponse;
+import com.microsoft.identity.common.java.util.ObjectMapper;
 
-import java.util.Map;
-
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
-import lombok.experimental.Accessors;
 
-@Setter
-@Getter
-@Accessors(prefix = "m")
-public class MicrosoftStsTokenRequest extends MicrosoftTokenRequest {
-    /**
-     * Additional JWT claims which would be used to create JWT based token requests
-     */
+public class MicrosoftStsTokenResponseHandler extends AbstractMicrosoftStsTokenResponseHandler {
 
-    private transient AbstractMicrosoftStsTokenResponseHandler mTokenResponseHandler;
-
-    public MicrosoftStsTokenRequest() {
-        super();
-    }
-
-    @NonNull
-    public AbstractMicrosoftStsTokenResponseHandler getTokenResponseHandler() {
-        if (mTokenResponseHandler == null) {
-            mTokenResponseHandler = new MicrosoftStsTokenResponseHandler();
-        }
-        return mTokenResponseHandler;
+    @Override
+    protected MicrosoftStsTokenResponse getSuccessfulResponse(@NonNull HttpResponse httpResponse) throws ClientException {
+        return ObjectMapper.deserializeJsonStringToObject(
+                httpResponse.getBody(),
+                MicrosoftStsTokenResponse.class
+        );
     }
 }

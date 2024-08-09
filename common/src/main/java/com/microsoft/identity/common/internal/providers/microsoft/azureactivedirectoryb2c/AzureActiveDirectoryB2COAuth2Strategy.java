@@ -135,7 +135,7 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     }
 
     @Override
-    protected TokenResult getTokenResultFromHttpResponse(HttpResponse response) {
+    protected TokenResult getTokenResultFromHttpResponse(HttpResponse response,  TokenRequest request) {
         return null;
     }
 
