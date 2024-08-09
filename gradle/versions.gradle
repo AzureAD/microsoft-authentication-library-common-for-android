@@ -1,5 +1,4 @@
 // Variables for entire project
-// Taken from android-complete.
 ext {
     // SDK
     minSdkVersion = 16
@@ -70,13 +69,14 @@ ext {
     yubikitPivVersion = "2.5.0"
     powerliftAndroidVersion="1.0.3"
     kotlinXCoroutinesVersion = "1.6.4"
+    coreKtxVersion = "1.6.0"
     mockkVersion = "1.11.0"
     mockitoKotlinVersion = "4.1.0"
     androidxAnnotationVersion = "1.4.0"
     spotBugsAnnotationVersion = "4.3.0"
     jcipAnnotationVersion = "1.0-1"
     openTelemetryVersion = "1.18.0"
-    jetpackDataStoreVersion = "1.0.0"
+    jetpackDataStoreVersion = "1.1.0"
     blockstoreVersion="16.2.0"
     lifecycleKtxVersion="2.5.1"
     AndroidCredentialsVersion="1.2.2"
@@ -109,4 +109,3 @@ ext {
     dexMakerLibraryVersion = "1.2"
     //#### The ABOVE are TSL version variables - END
 }
-

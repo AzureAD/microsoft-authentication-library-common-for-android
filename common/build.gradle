@@ -150,8 +150,6 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$rootProject.ext.kotlinXCoroutinesVersion"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$rootProject.ext.lifecycleKtxVersion"
 
-    implementation "androidx.datastore:datastore-preferences:$rootProject.ext.jetpackDataStoreVersion"
-
     implementation(group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
     implementation "cz.msebera.android:httpclient:$rootProject.ext.mseberaApacheHttpClientVersion"
