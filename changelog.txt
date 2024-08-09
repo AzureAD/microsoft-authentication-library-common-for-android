@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [PATCH] Move MS STS Response handling to separate class (#2471)
 - [MINOR] Add null cursor BrokerCommunicationException error category (#2459)
 - [MINOR] Classifying more UNKNOWN_ERRORs (#2460)
 
