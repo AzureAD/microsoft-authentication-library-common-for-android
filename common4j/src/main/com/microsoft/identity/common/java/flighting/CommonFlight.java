@@ -24,6 +24,8 @@
 package com.microsoft.identity.common.java.flighting;
 
 import static com.microsoft.identity.common.java.commands.SilentTokenCommand.ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS;
+import static com.microsoft.identity.common.java.net.UrlConnectionHttpClient.DEFAULT_CONNECT_TIME_OUT_MS;
+import static com.microsoft.identity.common.java.net.UrlConnectionHttpClient.DEFAULT_READ_TIME_OUT_MS;
 
 import lombok.NonNull;
 
@@ -56,7 +58,17 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to be able to disable/rollback the passkey feature in broker if necessary.
      * This will be set to true by default.
      */
-    ENABLE_PASSKEY_FEATURE("EnablePasskeyFeature", true);
+    ENABLE_PASSKEY_FEATURE("EnablePasskeyFeature", true),
+
+    /**
+     * Flight to control the timeout duration for UrlConnection connect timeout.
+     */
+    URL_CONNECTION_CONNECT_TIME_OUT("UrlConnectionConnectTimeOut", DEFAULT_CONNECT_TIME_OUT_MS),
+
+    /**
+     * Flight to control the timeout duration for UrlConnection read timeout.
+     */
+    URL_CONNECTION_READ_TIME_OUT("UrlConnectionReadTimeOut", DEFAULT_READ_TIME_OUT_MS);
 
     private String key;
     private Object defaultValue;

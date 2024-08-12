@@ -28,6 +28,8 @@ import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_SEQUENCE;
 
 import com.microsoft.identity.common.java.AuthenticationConstants;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
@@ -86,8 +88,8 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     private static final String TAG = UrlConnectionHttpClient.class.getSimpleName();
 
     protected static final int RETRY_TIME_WAITING_PERIOD_MSEC = 1000;
-    protected static final int DEFAULT_CONNECT_TIME_OUT_MS = 30000;
-    protected static final int DEFAULT_READ_TIME_OUT_MS = 30000;
+    public static final int DEFAULT_CONNECT_TIME_OUT_MS = 30000;
+    public static final int DEFAULT_READ_TIME_OUT_MS = 30000;
     protected static final int DEFAULT_STREAM_BUFFER_SIZE_BYTE = 1024;
 
     private static final transient AtomicReference<UrlConnectionHttpClient> defaultReference = new AtomicReference<>(null);
@@ -149,9 +151,9 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         this.streamBufferSize = streamBufferSize != null ?
                 streamBufferSize : DEFAULT_STREAM_BUFFER_SIZE_BYTE;
         this.connectTimeoutMs = connectTimeoutMs != null ?
-                connectTimeoutMs : DEFAULT_CONNECT_TIME_OUT_MS;
+                connectTimeoutMs : CommonFlightsManager.INSTANCE.getFlightsProvider().getIntValue(CommonFlight.URL_CONNECTION_CONNECT_TIME_OUT);
         this.readTimeoutMs = readTimeoutMs != null ?
-                readTimeoutMs : DEFAULT_READ_TIME_OUT_MS;
+                readTimeoutMs : CommonFlightsManager.INSTANCE.getFlightsProvider().getIntValue(CommonFlight.URL_CONNECTION_READ_TIME_OUT);
         this.connectTimeoutMsSupplier = connectTimeoutMsSupplier;
         this.readTimeoutMsSupplier = readTimeoutMsSupplier;
 

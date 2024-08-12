@@ -91,7 +91,8 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
                         try {
                             final X509Certificate[] certChain = KeyChain.getCertificateChain(
                                     mActivity.getApplicationContext(), alias);
-                            if (certChain.length > 0) {
+                            if (certChain != null
+                                    && certChain.length > 0) {
                                 //From my testing, the first cert (if there are more than one) is the selected one.
                                 mTelemetryHelper.setPublicKeyAlgoType(certChain[0].getPublicKey().getAlgorithm());
                             }
