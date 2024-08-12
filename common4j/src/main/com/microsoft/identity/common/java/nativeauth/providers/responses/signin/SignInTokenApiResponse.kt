@@ -92,15 +92,7 @@ class SignInTokenApiResponse(
             }
             error.isInvalidGrant() -> {
                 return when {
-                    errorCodes.isNullOrEmpty() -> {
-                        SignInTokenApiResult.UnknownError(
-                            error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty(),
-                            errorCodes = errorCodes.orEmpty(),
-                            correlationId = correlationId
-                        )
-                    }
-                    errorCodes[0].isInvalidCredentials() -> {
+                    !errorCodes.isNullOrEmpty() && errorCodes[0].isInvalidCredentials() -> {
                         SignInTokenApiResult.InvalidCredentials(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
@@ -112,7 +104,8 @@ class SignInTokenApiResponse(
                         SignInTokenApiResult.MFARequired(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            errorCodes = errorCodes,
+                            subError = subError,
+                            errorCodes = errorCodes.orEmpty(),
                             correlationId = correlationId
                         )
                     }
@@ -120,12 +113,12 @@ class SignInTokenApiResponse(
                         SignInTokenApiResult.CodeIncorrect(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            errorCodes = errorCodes,
+                            errorCodes = errorCodes.orEmpty(),
                             subError = subError.orEmpty(),
                             correlationId = correlationId
                         )
                     }
-                    errorCodes[0].isInvalidAuthenticationType() -> {
+                    !errorCodes.isNullOrEmpty() && errorCodes[0].isInvalidAuthenticationType() -> {
                         SignInTokenApiResult.InvalidAuthenticationType(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
@@ -137,7 +130,7 @@ class SignInTokenApiResponse(
                         SignInTokenApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            errorCodes = errorCodes,
+                            errorCodes = errorCodes.orEmpty(),
                             correlationId = correlationId
                         )
                     }

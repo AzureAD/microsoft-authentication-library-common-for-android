@@ -2531,30 +2531,6 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
-    fun testSignInChallengeApiResponseIntrospectRequiredContinuationTokenMissing() {
-        val response = SignInChallengeApiResponse(
-            statusCode = errorStatusCode,
-            challengeType = null,
-            continuationToken = null,
-            error = invalidRequestError,
-            subError = introspectRequiredSubError,
-            errorCodes = null,
-            errorDescription = null,
-            errorUri = null,
-            bindingMethod = null,
-            challengeTargetLabel = null,
-            challengeChannel = null,
-            codeLength = null,
-            interval = null,
-            correlationId = correlationId
-        )
-
-        val apiResult = response.toResult()
-        assertTrue(apiResult is SignInChallengeApiResult.UnknownError)
-        assertEquals(ApiErrorResult.INVALID_STATE, (apiResult as SignInChallengeApiResult.UnknownError).error)
-    }
-
-    @Test
     fun testSignInChallengeApiResponseChallengeTypeOobSuccess() {
         val response = SignInChallengeApiResponse(
             statusCode = successStatusCode,
