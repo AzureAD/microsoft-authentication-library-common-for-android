@@ -50,7 +50,7 @@ class SignInChallengeApiResponse(
     @Expose @SerializedName("code_length") val codeLength: Int?,
     @Expose @SerializedName("interval") val interval: Int?,
     @SerializedName("error") val error: String?,
-    @SerializedName("sub_error") val subError: String?,
+    @SerializedName("suberror") val subError: String?,
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
