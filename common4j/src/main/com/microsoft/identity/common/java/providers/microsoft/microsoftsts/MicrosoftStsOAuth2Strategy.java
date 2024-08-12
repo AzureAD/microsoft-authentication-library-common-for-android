@@ -28,12 +28,8 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2Scopes.CLAIMS_UPDATE_RESOURCE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
-import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_ID;
-import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_SEQUENCE;
-import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
 import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
 
-import com.google.gson.JsonParseException;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
@@ -48,8 +44,6 @@ import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.logging.LibraryInfoHelper;
@@ -57,11 +51,8 @@ import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpConstants;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
-import com.microsoft.identity.common.java.opentelemetry.AttributeName;
-import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResponse;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
@@ -74,14 +65,10 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfigurationClient;
-import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
-import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;
-import com.microsoft.identity.common.java.util.ResultUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.io.IOException;
@@ -90,8 +77,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -596,8 +581,7 @@ public class MicrosoftStsOAuth2Strategy
     @Override
     @NonNull
     protected TokenResult getTokenResultFromHttpResponse(
-            @NonNull final HttpResponse response,
-            @NonNull final MicrosoftStsTokenRequest tokenRequest
+            @NonNull final HttpResponse response
     )
             throws ClientException {
         final String methodName = ":getTokenResultFromHttpResponse";
@@ -607,7 +591,8 @@ public class MicrosoftStsOAuth2Strategy
                 "Getting TokenResult from HttpResponse..."
         );
 
-        return tokenRequest.getTokenResponseHandler().handleTokenResponse(response);
+        final MicrosoftStsTokenResponseHandler handler = new MicrosoftStsTokenResponseHandler();
+        return handler.handleTokenResponse(response);
     }
 
     protected String getBodyFromSuccessfulResponse(@NonNull final String responseBody) throws ClientException {
@@ -711,6 +696,21 @@ public class MicrosoftStsOAuth2Strategy
             return mTokenEndpoint;
         }
         return buildCloudSpecificTokenEndpoint((MicrosoftStsAuthorizationResponse) response);
+    }
+
+    /**
+     * Executes token request against Microsoft STS and uses response handler from request context to
+     * parse and handle the response.
+     */
+    public TokenResult executeTokenRequest(@NonNull final MicrosoftStsTokenRequestContext requestContext) throws ClientException, IOException {
+        final String methodName = ":executeTokenRequest";
+        Logger.verbose(
+                TAG + methodName,
+                "Executing token request... "
+        );
+
+        final HttpResponse response = performTokenRequest(requestContext.getRequest());
+        return requestContext.getTokenResponseHandler().handleTokenResponse(response);
     }
 
     /**

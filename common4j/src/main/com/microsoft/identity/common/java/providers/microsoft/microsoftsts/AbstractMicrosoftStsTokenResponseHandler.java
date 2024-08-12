@@ -48,21 +48,35 @@ import java.util.Map;
 
 import lombok.NonNull;
 
+/**
+ * Abstract class for handling Microsoft STS token responses. The responses can from service can
+ * encrypted or decrypted or either can be expected depends on contract between client and service.
+ * Implementations of this class should handle the response accordingly. Standard response is
+ * implemented in {@link MicrosoftStsTokenResponseHandler}. For PRT protocol contracts, different
+ * implementation would be used that can handle encrypted and unencryted responses.
+ */
 public abstract class AbstractMicrosoftStsTokenResponseHandler {
 
     private static final String TAG = AbstractMicrosoftStsTokenResponseHandler.class.getSimpleName();
+
+    /**
+     * Handle the token response from the service.
+     * @param response An {@link HttpResponse} from the service}
+     */
     @NonNull
     public TokenResult handleTokenResponse(@NonNull final HttpResponse response) throws ClientException {
         final String methodTag = TAG + ":handleTokenResponse";
 
-        MicrosoftStsTokenResponse tokenResponse = null;
-        TokenErrorResponse tokenErrorResponse = null;
+        final MicrosoftStsTokenResponse tokenResponse;
+        final TokenErrorResponse tokenErrorResponse;
 
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
             //An error occurred
+            tokenResponse = null;
             tokenErrorResponse = getErrorResponse(response);
         } else {
             tokenResponse = getSuccessfulResponse(response);
+            tokenErrorResponse = null;
         }
 
         final TokenResult result = new TokenResult(tokenResponse, tokenErrorResponse);
@@ -152,5 +166,10 @@ public abstract class AbstractMicrosoftStsTokenResponseHandler {
         return responseBody.isEmpty() ? EMPTY_JSON_OBJECT : responseBody;
     }
 
+    /**
+     * Error responses are handled in the class as they are not customized,
+     * successful need to implemented by the subclass. Standard succesful response is handled
+     * by {@link MicrosoftStsTokenResponseHandler}
+     */
     abstract protected MicrosoftStsTokenResponse getSuccessfulResponse(@NonNull final HttpResponse httpResponse) throws ClientException;
 }

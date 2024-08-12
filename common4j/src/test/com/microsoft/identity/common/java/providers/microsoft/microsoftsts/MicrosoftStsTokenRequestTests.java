@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 
 import org.junit.Assert;
@@ -32,8 +30,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.util.UUID;
-
-import lombok.NonNull;
 
 /**
  * Tests for {@link MicrosoftStsTokenRequest}
@@ -53,20 +49,5 @@ public final class MicrosoftStsTokenRequestTests {
         MicrosoftStsTokenRequest deserializedRequest = ObjectMapper.deserializeJsonStringToObject(jsonRequest, MicrosoftStsTokenRequest.class);
 
         Assert.assertEquals(correlationId, deserializedRequest.getCorrelationId());
-    }
-
-    @Test
-    public void testGetTokenResponseHandler(){
-        MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
-        Assert.assertNotNull(request.getTokenResponseHandler());
-        Assert.assertTrue(request.getTokenResponseHandler() instanceof MicrosoftStsTokenResponseHandler);
-        final AbstractMicrosoftStsTokenResponseHandler mockHandler = new AbstractMicrosoftStsTokenResponseHandler() {
-            @Override
-            protected MicrosoftStsTokenResponse getSuccessfulResponse(@NonNull HttpResponse httpResponse) {
-                return new MicrosoftStsTokenResponse();
-            }
-        };
-        request.setTokenResponseHandler(mockHandler);
-        Assert.assertEquals(mockHandler, request.getTokenResponseHandler());
     }
 }

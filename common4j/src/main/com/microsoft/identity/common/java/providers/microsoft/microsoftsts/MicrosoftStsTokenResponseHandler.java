@@ -28,10 +28,17 @@ import com.microsoft.identity.common.java.util.ObjectMapper;
 
 import lombok.NonNull;
 
+/**
+ * Handles standard successful token responses from the Microsoft STS.
+ */
 public class MicrosoftStsTokenResponseHandler extends AbstractMicrosoftStsTokenResponseHandler {
 
+    /**
+     * Expects JSON response and deserializes it to {@link MicrosoftStsTokenResponse}.
+     * @return Deserialized response into MicrosoftStsTokenResponse
+     */
     @Override
-    protected MicrosoftStsTokenResponse getSuccessfulResponse(@NonNull HttpResponse httpResponse) throws ClientException {
+    protected MicrosoftStsTokenResponse getSuccessfulResponse(@NonNull final HttpResponse httpResponse) {
         return ObjectMapper.deserializeJsonStringToObject(
                 httpResponse.getBody(),
                 MicrosoftStsTokenResponse.class

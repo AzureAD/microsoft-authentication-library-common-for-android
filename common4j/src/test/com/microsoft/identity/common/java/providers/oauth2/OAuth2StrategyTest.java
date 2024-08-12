@@ -117,7 +117,7 @@ public class OAuth2StrategyTest {
         }
 
         @Override
-        protected TokenResult getTokenResultFromHttpResponse(HttpResponse response, TokenRequest tokenRequest) throws ClientException {
+        protected TokenResult getTokenResultFromHttpResponse(HttpResponse response) throws ClientException {
             //This will return a null TokenResponse.
             return new TokenResult();
         }

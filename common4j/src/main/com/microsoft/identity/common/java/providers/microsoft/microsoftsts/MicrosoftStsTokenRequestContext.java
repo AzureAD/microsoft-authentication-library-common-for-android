@@ -22,18 +22,37 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
-
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
-@Setter
-@Getter
+/**
+ * Context that holds Microsoft STS token request and relevant context executing the request.
+ * Currently, it holds a response handler that will be used to handle the token response.
+ */
+@Getter(AccessLevel.PACKAGE)
 @Accessors(prefix = "m")
-public class MicrosoftStsTokenRequest extends MicrosoftTokenRequest {
+public class MicrosoftStsTokenRequestContext {
 
-    public MicrosoftStsTokenRequest() {
-        super();
+    private final MicrosoftStsTokenRequest mRequest;
+    private final AbstractMicrosoftStsTokenResponseHandler mTokenResponseHandler;
+
+    /**
+     * Constructor of MicrosoftStsTokenRequestContext.
+     * @param request Microsoft STS token request to run
+     * @param tokenResponseHandler Handler to handle the token response. If not provided default handler will be used
+     */
+    public MicrosoftStsTokenRequestContext(
+            @NonNull final MicrosoftStsTokenRequest request,
+            @Nullable final AbstractMicrosoftStsTokenResponseHandler tokenResponseHandler
+    ) {
+        mRequest = request;
+        if (tokenResponseHandler == null) { // use default handler if not provided
+            mTokenResponseHandler = new MicrosoftStsTokenResponseHandler();
+        } else {
+            mTokenResponseHandler = tokenResponseHandler;
+        }
     }
 }

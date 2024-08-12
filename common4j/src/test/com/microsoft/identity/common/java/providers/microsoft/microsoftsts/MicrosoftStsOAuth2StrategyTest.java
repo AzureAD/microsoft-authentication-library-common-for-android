@@ -44,6 +44,16 @@ import lombok.SneakyThrows;
  */
 @RunWith(JUnit4.class)
 public class MicrosoftStsOAuth2StrategyTest {
+    private static final String MOCK_TOKEN_SUCCESS_RESPONSE = "{\n" +
+            "\t\"token_type\": \"Bearer\",\n" +
+            "\t\"scope\": \"mock_scope_1\",\n" +
+            "\t\"expires_in\": 3599,\n" +
+            "\t\"ext_expires_in\": 3599,\n" +
+            "\t\"access_token\": \"b06d0810-12ff-4a4e-850b-4bda1540d895\",\n" +
+            "\t\"refresh_token\": \"6b80f5b5-d53c-4c46-992d-66c5dcd4cfb1\",\n" +
+            "\t\"id_token\": \"95608142-3a7a-4643-a543-6db44e403e97\",\n" +
+            "\t\"client_info\": \"2245f73e-287a-41c4-ba87-560809ad06b9\"\n" +
+            "}";
 
     @SneakyThrows
     @Test
@@ -62,12 +72,42 @@ public class MicrosoftStsOAuth2StrategyTest {
                 return new MicrosoftStsTokenResponse();
             }
         };
-        final MicrosoftStsTokenRequest mockTokenRequest = new MicrosoftStsTokenRequest();
-        mockTokenRequest.setTokenResponseHandler(mockTokenResponseHandler);
-        final HttpResponse mockHttpResponse = new HttpResponse(200, "response_body", null);
-        final TokenResult tokenResult = microsoftStsOAuth2Strategy.getTokenResultFromHttpResponse(mockHttpResponse, mockTokenRequest);
+        final HttpResponse mockHttpResponse = new HttpResponse(200, MOCK_TOKEN_SUCCESS_RESPONSE, null);
+        final TokenResult tokenResult = microsoftStsOAuth2Strategy.getTokenResultFromHttpResponse(mockHttpResponse);
         Assert.assertNotNull(tokenResult);
         Assert.assertNotNull(tokenResult.getSuccessResponse());
         Assert.assertTrue(tokenResult.getSuccess());
     }
+    @SneakyThrows
+    @Test
+    public void testExecuteTokenRequest() {
+        final IPlatformComponents mockPlatformComponents = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
+        final MicrosoftStsOAuth2Configuration mockConfig = new MicrosoftStsOAuth2Configuration();
+        mockConfig.setAuthorityUrl(new URL("https://login.microsoftonline.com/common"));
+        final OAuth2StrategyParameters parameters = OAuth2StrategyParameters.builder()
+                .platformComponents(mockPlatformComponents)
+                .usingOpenIdConfiguration(false)
+                .build();
+
+        final HttpResponse mockHttpResponse = new HttpResponse(200, "response_body", null);
+        final MicrosoftStsOAuth2Strategy microsoftStsOAuth2Strategy = new MicrosoftStsOAuth2Strategy(mockConfig, parameters) {
+            @Override
+            public HttpResponse performTokenRequest(@NonNull MicrosoftStsTokenRequest requestContext) {
+                return mockHttpResponse;
+            }
+        };
+        final AbstractMicrosoftStsTokenResponseHandler mockTokenResponseHandler = new AbstractMicrosoftStsTokenResponseHandler() {
+            @Override
+            protected MicrosoftStsTokenResponse getSuccessfulResponse(@NonNull HttpResponse httpResponse) {
+                return new MicrosoftStsTokenResponse();
+            }
+        };
+        final MicrosoftStsTokenRequest mockTokenRequest = new MicrosoftStsTokenRequest();
+        final MicrosoftStsTokenRequestContext mockTokenRequestContext = new MicrosoftStsTokenRequestContext(mockTokenRequest, mockTokenResponseHandler);
+        final TokenResult tokenResult = microsoftStsOAuth2Strategy.executeTokenRequest(mockTokenRequestContext);
+        Assert.assertNotNull(tokenResult);
+        Assert.assertNotNull(tokenResult.getSuccessResponse());
+        Assert.assertTrue(tokenResult.getSuccess());
+    }
+
 }

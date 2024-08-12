@@ -22,8 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.AUTHORITY_URL_NOT_VALID;
 
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
@@ -31,6 +30,7 @@ import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandPa
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
@@ -40,17 +40,15 @@ import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
-import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.java.util.ObjectMapper;
-import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
+import com.microsoft.identity.common.java.util.ObjectMapper;
 
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 
-import static com.microsoft.identity.common.java.exception.ErrorStrings.AUTHORITY_URL_NOT_VALID;
+import lombok.NonNull;
 
 /**
  * The Azure Active Directory OAuth 2.0 Strategy.
@@ -243,10 +241,7 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
-    protected TokenResult getTokenResultFromHttpResponse(
-            final HttpResponse response,
-            @Nullable final AzureActiveDirectoryTokenRequest request
-    ) {
+    protected TokenResult getTokenResultFromHttpResponse(final HttpResponse response) {
         final String methodName = "getTokenResultFromHttpResponse";
 
         TokenResponse tokenResponse = null;
