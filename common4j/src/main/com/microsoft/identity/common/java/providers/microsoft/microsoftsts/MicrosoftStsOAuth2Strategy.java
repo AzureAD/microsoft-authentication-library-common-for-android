@@ -708,9 +708,16 @@ public class MicrosoftStsOAuth2Strategy
                 TAG + methodName,
                 "Executing token request... "
         );
-
-        final HttpResponse response = performTokenRequest(requestContext.getRequest());
-        return requestContext.getTokenResponseHandler().handleTokenResponse(response);
+        final MicrosoftStsTokenRequest tokenRequest = requestContext.getRequest();
+        final HttpResponse response = performTokenRequest(tokenRequest);
+        final TokenResult tokenResult = requestContext.getTokenResponseHandler().handleTokenResponse(response);
+        if (tokenResult.getTokenResponse() != null) {
+            tokenResult.getTokenResponse().setAuthority(mTokenEndpoint);
+        }
+        if (tokenResult.getSuccess()) {
+            validateTokenResponse(tokenRequest, (MicrosoftStsTokenResponse) tokenResult.getTokenResponse());
+        }
+        return tokenResult;
     }
 
     /**
