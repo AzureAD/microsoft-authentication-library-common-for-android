@@ -73,37 +73,4 @@ public class MicrosoftStsOAuth2StrategyTest {
         Assert.assertNotNull(tokenResult.getSuccessResponse());
         Assert.assertTrue(tokenResult.getSuccess());
     }
-    @SneakyThrows
-    @Test
-    public void testExecuteTokenRequest() {
-        final IPlatformComponents mockPlatformComponents = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
-        final MicrosoftStsOAuth2Configuration mockConfig = new MicrosoftStsOAuth2Configuration();
-        mockConfig.setAuthorityUrl(new URL("https://login.microsoftonline.com/common"));
-        final OAuth2StrategyParameters parameters = OAuth2StrategyParameters.builder()
-                .platformComponents(mockPlatformComponents)
-                .usingOpenIdConfiguration(false)
-                .build();
-
-        final HttpResponse mockHttpResponse = new HttpResponse(200, "response_body", null);
-        final MicrosoftStsOAuth2Strategy microsoftStsOAuth2Strategy = new MicrosoftStsOAuth2Strategy(mockConfig, parameters) {
-            @Override
-            public HttpResponse performTokenRequest(@NonNull MicrosoftStsTokenRequest requestContext) {
-                return mockHttpResponse;
-            }
-        };
-        final AbstractMicrosoftStsTokenResponseHandler mockTokenResponseHandler = new AbstractMicrosoftStsTokenResponseHandler() {
-            @Override
-            protected MicrosoftStsTokenResponse getSuccessfulResponse(@NonNull HttpResponse httpResponse) {
-                return ObjectMapper.deserializeJsonStringToObject(MOCK_TOKEN_SUCCESS_RESPONSE, MicrosoftStsTokenResponse.class);
-            }
-        };
-        final MicrosoftStsTokenRequest mockTokenRequest = new MicrosoftStsTokenRequest();
-        final MicrosoftStsTokenRequestContext mockTokenRequestContext = new MicrosoftStsTokenRequestContext(mockTokenRequest, mockTokenResponseHandler);
-        final TokenResult tokenResult = microsoftStsOAuth2Strategy.executeTokenRequest(mockTokenRequestContext);
-        Assert.assertNotNull(tokenResult);
-        Assert.assertNotNull(tokenResult.getSuccessResponse());
-        Assert.assertTrue(tokenResult.getSuccess());
-        Assert.assertNotNull(tokenResult.getSuccessResponse().getAuthority());
-    }
-
 }

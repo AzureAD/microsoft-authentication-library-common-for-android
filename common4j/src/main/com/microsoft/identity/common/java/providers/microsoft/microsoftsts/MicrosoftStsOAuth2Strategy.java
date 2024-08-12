@@ -699,28 +699,6 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     /**
-     * Executes token request against Microsoft STS and uses response handler from request context to
-     * parse and handle the response.
-     */
-    public TokenResult executeTokenRequest(@NonNull final MicrosoftStsTokenRequestContext requestContext) throws ClientException, IOException {
-        final String methodName = ":executeTokenRequest";
-        Logger.verbose(
-                TAG + methodName,
-                "Executing token request... "
-        );
-        final MicrosoftStsTokenRequest tokenRequest = requestContext.getRequest();
-        final HttpResponse response = performTokenRequest(tokenRequest);
-        final TokenResult tokenResult = requestContext.getTokenResponseHandler().handleTokenResponse(response);
-        if (tokenResult.getTokenResponse() != null) {
-            tokenResult.getTokenResponse().setAuthority(mTokenEndpoint);
-        }
-        if (tokenResult.getSuccess()) {
-            validateTokenResponse(tokenRequest, (MicrosoftStsTokenResponse) tokenResult.getTokenResponse());
-        }
-        return tokenResult;
-    }
-
-    /**
      * Gets the at/pop device credential's thumbprint.
      *
      * @return The at/pop device credential thumbprint.
