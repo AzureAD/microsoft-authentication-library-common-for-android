@@ -69,5 +69,6 @@ public final class HttpConstants {
          * @see <a href="https://tools.ietf.org/html/rfc7159">RFC-7159</a>
          */
         public static final String APPLICATION_JSON = "application/json";
+        public static final String APPLICATION_JOSE_CHARSET_UTF8 = "application/jose; charset=utf-8";
     }
 }
