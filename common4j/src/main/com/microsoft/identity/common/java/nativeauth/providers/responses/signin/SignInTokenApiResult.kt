@@ -46,16 +46,18 @@ sealed interface SignInTokenApiResult: ApiResult, ILoggable {
     data class MFARequired(
         override val correlationId: String,
         override val error: String,
+        override val subError: String?,
         override val errorDescription: String,
         override val errorCodes: List<Int>
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
+        subError = subError,
         errorCodes = errorCodes,
         correlationId = correlationId
     ), SignInTokenApiResult {
         override fun toUnsanitizedString() = "MFARequired(correlationId=$correlationId, " +
-                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+                "error=$error, errorDescription=$errorDescription, subError=$subError, errorCodes=$errorCodes)"
 
         override fun toString(): String = "MFARequired(correlationId=$correlationId)"
     }
@@ -99,7 +101,7 @@ sealed interface SignInTokenApiResult: ApiResult, ILoggable {
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
-        val subError: String,
+        override val subError: String,
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,

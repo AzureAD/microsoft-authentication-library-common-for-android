@@ -365,6 +365,9 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         correlationId = result.correlationId
                     )
                 }
+                is SignInChallengeApiResult.IntrospectRequired -> {
+                    TODO()
+                }
                 is SignInChallengeApiResult.UnknownError -> {
                     Logger.warnWithObject(
                         TAG,
@@ -1256,7 +1259,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             correlationId = correlationId,
             methodName = "${TAG}.performSignInChallengeCall"
         )
-        return oAuth2Strategy.performSignInChallenge(
+        return oAuth2Strategy.performSignInDefaultChallenge(
             continuationToken = continuationToken,
             correlationId = correlationId
         )
@@ -2026,7 +2029,9 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     correlationId = result.correlationId
                 )
             }
-
+            is SignInChallengeApiResult.IntrospectRequired -> {
+                TODO()
+            }
             is SignInChallengeApiResult.UnknownError -> {
                 Logger.warnWithObject(
                     TAG,
