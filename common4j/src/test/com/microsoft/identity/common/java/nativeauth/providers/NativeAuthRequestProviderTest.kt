@@ -568,7 +568,7 @@ class NativeAuthRequestProviderTest {
     fun testSignInIntrospectWithEmptyClientIdShouldThrowException() {
         every { mockConfig.clientId } returns emptyString
 
-        nativeAuthRequestProvider.createSignInIntrospectRequest(
+        nativeAuthRequestProvider.createIntrospectRequest(
             continuationToken = continuationToken,
             correlationId = correlationId
         )
@@ -576,7 +576,7 @@ class NativeAuthRequestProviderTest {
 
     @Test
     fun testSignInIntrospectSuccess() {
-        val result = nativeAuthRequestProvider.createSignInIntrospectRequest(
+        val result = nativeAuthRequestProvider.createIntrospectRequest(
             continuationToken = continuationToken,
             correlationId = correlationId
         )
@@ -589,7 +589,7 @@ class NativeAuthRequestProviderTest {
 
     @Test(expected = ClientException::class)
     fun testSignInIntrospectWithEmptyContinuationTokenShouldThrowException() {
-        nativeAuthRequestProvider.createSignInIntrospectRequest(
+        nativeAuthRequestProvider.createIntrospectRequest(
             continuationToken = emptyString,
             correlationId = correlationId
         )

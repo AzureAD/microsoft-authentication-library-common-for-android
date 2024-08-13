@@ -185,11 +185,11 @@ class NativeAuthOAuth2Strategy(
     /**
      * Performs API call to /oauth/v2.0/introspect
      */
-    fun performSignInIntrospect(
+    fun performInIntrospect(
         continuationToken: String,
         correlationId: String
     ): SignInIntrospectApiResult {
-        return signInInteractor.performSignInIntrospect(
+        return signInInteractor.performIntrospect(
             continuationToken = continuationToken,
             correlationId = correlationId,
         )

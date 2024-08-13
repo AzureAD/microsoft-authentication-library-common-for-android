@@ -270,7 +270,7 @@ class SignInOAuthStrategyTest {
             correlationId = correlationId,
             responseType = MockApiResponseType.INTROSPECT_SUCCESS
         )
-        val result = nativeAuthOAuth2Strategy.performSignInIntrospect(
+        val result = nativeAuthOAuth2Strategy.performInIntrospect(
             continuationToken = CONTINUATION_TOKEN,
             correlationId = correlationId
         )
@@ -288,7 +288,7 @@ class SignInOAuthStrategyTest {
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
-        val result = nativeAuthOAuth2Strategy.performSignInIntrospect(
+        val result = nativeAuthOAuth2Strategy.performInIntrospect(
             continuationToken = CONTINUATION_TOKEN,
             correlationId = correlationId
         )

@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.signin
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidAuthenticationType
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidCredentials
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidGrant
@@ -104,7 +105,14 @@ class SignInTokenApiResponse(
                         SignInTokenApiResult.MFARequired(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            subError = subError,
+                            continuationToken = continuationToken ?:
+                            return SignInTokenApiResult.UnknownError(
+                                error = ApiErrorResult.INVALID_STATE,
+                                errorDescription = "oauth/v2.0/token did not return a continuation token",
+                                errorCodes = errorCodes.orEmpty(),
+                                correlationId = correlationId
+                            ),
+                            subError = subError.orEmpty(),
                             errorCodes = errorCodes.orEmpty(),
                             correlationId = correlationId
                         )

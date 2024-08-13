@@ -103,4 +103,17 @@ interface SignInCommandResult {
 
         override fun toString(): String = "IncorrectCode(correlationId=$correlationId)"
     }
+
+    data class MFARequired(
+        override val correlationId: String,
+        val continuationToken: String,
+        val error: String,
+        val errorDescription: String,
+        val errorCodes: List<Int>,
+        val subError: String
+    ) : SignInStartCommandResult, SignInSubmitPasswordCommandResult {
+        override fun toUnsanitizedString(): String = "MFARequired(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes, subError=$subError)"
+
+        override fun toString(): String = "MFARequired(correlationId=$correlationId)"
+    }
 }

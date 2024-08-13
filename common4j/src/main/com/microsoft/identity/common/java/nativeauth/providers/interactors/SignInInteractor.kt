@@ -130,35 +130,35 @@ class SignInInteractor(
     //endregion
 
     //region /oauth/v2.0/introspect
-    fun performSignInIntrospect(
+    fun performIntrospect(
         continuationToken: String,
         correlationId: String
     ): SignInIntrospectApiResult {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = correlationId,
-            methodName = "${TAG}.performSignInIntrospect(continuationToken: String)"
+            methodName = "${TAG}.performIntrospect(continuationToken: String)"
         )
 
-        val request = nativeAuthRequestProvider.createSignInIntrospectRequest(
+        val request = nativeAuthRequestProvider.createIntrospectRequest(
             continuationToken = continuationToken,
             correlationId = correlationId
         )
 
         Logger.infoWithObject(
-            "${TAG}.performSignInIntrospect",
+            "${TAG}.performIntrospect",
             correlationId,
             "request = ",
             request
         )
 
-        return performSignInIntrospect(
+        return performIntrospect(
             requestCorrelationId = correlationId,
             request = request
         )
     }
 
-    private fun performSignInIntrospect(
+    private fun performIntrospect(
         requestCorrelationId: String,
         request: SignInIntrospectRequest
     ): SignInIntrospectApiResult {

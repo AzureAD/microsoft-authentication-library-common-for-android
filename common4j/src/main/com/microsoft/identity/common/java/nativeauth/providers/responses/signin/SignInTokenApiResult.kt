@@ -45,8 +45,9 @@ sealed interface SignInTokenApiResult: ApiResult, ILoggable {
 
     data class MFARequired(
         override val correlationId: String,
+        val continuationToken: String,
         override val error: String,
-        override val subError: String?,
+        override val subError: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>
     ) : ApiErrorResult(
