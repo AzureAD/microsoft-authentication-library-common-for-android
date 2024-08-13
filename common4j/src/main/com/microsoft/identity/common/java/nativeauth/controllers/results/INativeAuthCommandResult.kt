@@ -68,7 +68,8 @@ interface INativeAuthCommandResult : ILoggable {
         SignUpSubmitCodeCommandResult, SignUpResendCodeCommandResult,
         SignUpSubmitPasswordCommandResult,
         ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,
-        ResetPasswordResendCodeCommandResult, ResetPasswordSubmitNewPasswordCommandResult {
+        ResetPasswordResendCodeCommandResult, ResetPasswordSubmitNewPasswordCommandResult,
+        GetAuthMethodsCommandResult, MFAChallengeCommandResult, MFASubmitChallengeCommandResult {
         override fun toUnsanitizedString(): String = "UnknownError(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes)"
 
         override fun toString(): String =  "UnknownError(correlationId=$correlationId)"

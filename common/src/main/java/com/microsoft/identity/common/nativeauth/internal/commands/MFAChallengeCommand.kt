@@ -25,6 +25,7 @@ package com.microsoft.identity.common.nativeauth.internal.commands
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFAChallengeCommandParameters
+import com.microsoft.identity.common.java.nativeauth.controllers.results.MFAChallengeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.MFACommandResult
 import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
 
@@ -36,7 +37,7 @@ class MFAChallengeCommand(
     private val parameters: MFAChallengeCommandParameters,
     private val controller: NativeAuthMsalController,
     publicApiId: String
-) : BaseNativeAuthCommand<MFACommandResult>(
+) : BaseNativeAuthCommand<MFAChallengeCommandResult>(
     parameters,
     controller,
     publicApiId
@@ -50,13 +51,13 @@ class MFAChallengeCommand(
      * The execution part of the command, to be run on the background thread.
      * It calls the signInStart method of the native auth MSAL controller with the given parameters.
      */
-    override fun execute(): MFACommandResult {
+    override fun execute(): MFAChallengeCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = parameters.getCorrelationId(),
             methodName = "${TAG}.execute"
         )
-        val result = controller.challengeDefaultAuth(
+        val result = controller.signInChallenge(
             parameters = parameters
         )
 

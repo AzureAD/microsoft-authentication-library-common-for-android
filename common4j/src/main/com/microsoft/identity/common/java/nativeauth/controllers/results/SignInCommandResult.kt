@@ -42,8 +42,8 @@ interface SignInCommandResult {
         override val correlationId: String,
         val authenticationResult: ILocalAuthenticationResult
     ) : SignInStartCommandResult, SignInWithContinuationTokenCommandResult,
-        SignInSubmitCodeCommandResult,
-        SignInSubmitPasswordCommandResult {
+        SignInSubmitCodeCommandResult, SignInSubmitPasswordCommandResult,
+        MFASubmitChallengeCommandResult {
         override fun toUnsanitizedString(): String = "Complete(correlationId=$correlationId)"
 
         override fun toString(): String = toUnsanitizedString()

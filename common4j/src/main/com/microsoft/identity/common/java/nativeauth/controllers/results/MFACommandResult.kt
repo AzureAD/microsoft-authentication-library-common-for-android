@@ -25,18 +25,22 @@ package com.microsoft.identity.common.java.nativeauth.controllers.results
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.AuthenticationMethodApiResult
 import com.microsoft.identity.common.java.nativeauth.util.toUnsanitizedString
 
+sealed interface GetAuthMethodsCommandResult: INativeAuthCommandResult
+sealed interface MFAChallengeCommandResult: INativeAuthCommandResult
+sealed interface MFASubmitChallengeCommandResult: INativeAuthCommandResult
+
 /**
  * Reflects the possible results of MFA commands.
  * Conforms to the INativeAuthCommandResult interface, and is mapped from the respective API result classes returned for each endpoint.
  */
-sealed interface MFACommandResult : INativeAuthCommandResult {
+interface MFACommandResult {
     data class VerificationRequired(
         override val correlationId: String,
         val continuationToken: String,
         val challengeTargetLabel: String,
         val challengeChannel: String,
         val codeLength: Int
-    ) : MFACommandResult {
+    ) : MFAChallengeCommandResult {
         override fun toUnsanitizedString(): String = "VerificationRequired(correlationId=$correlationId, codeLength=$codeLength, challengeTargetLabel=$challengeTargetLabel, challengeChannel=$challengeChannel)"
 
         override fun toString(): String = "VerificationRequired(correlationId=$correlationId, codeLength=$codeLength, challengeChannel=$challengeChannel)"
@@ -46,7 +50,7 @@ sealed interface MFACommandResult : INativeAuthCommandResult {
         override val correlationId: String,
         val continuationToken: String,
         val authMethods: List<AuthenticationMethodApiResult>
-    ) : MFACommandResult {
+    ) : GetAuthMethodsCommandResult, MFAChallengeCommandResult {
         override fun toUnsanitizedString(): String = "SelectionRequired(correlationId=$correlationId, authMethods=${authMethods.toUnsanitizedString()})"
 
         override fun toString(): String = "SelectionRequired(correlationId=$correlationId, authMethods=${authMethods})"

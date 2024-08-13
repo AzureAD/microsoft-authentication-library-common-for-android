@@ -24,40 +24,40 @@ package com.microsoft.identity.common.nativeauth.internal.commands
 
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.GetAuthMethodsCommandParameters
-import com.microsoft.identity.common.java.nativeauth.controllers.results.GetAuthMethodsCommandResult
-import com.microsoft.identity.common.java.nativeauth.controllers.results.MFACommandResult
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFASubmitChallengeCommandParameters
+import com.microsoft.identity.common.java.nativeauth.controllers.results.MFASubmitChallengeCommandResult
 import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
 
 /**
- * Command class to call controllers to trigger /introspect flow.
+ * Command class to call controllers to submit the challenge value that the user received to the server, to complete the challenge.
  * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
  */
-class GetAuthMethodsCommand(
-    private val parameters: GetAuthMethodsCommandParameters,
+class MFASubmitChallengeCommand(
+    private val parameters: MFASubmitChallengeCommandParameters,
     private val controller: NativeAuthMsalController,
     publicApiId: String
-) : BaseNativeAuthCommand<GetAuthMethodsCommandResult>(
+) : BaseNativeAuthCommand<MFASubmitChallengeCommandResult>(
     parameters,
     controller,
     publicApiId
 ) {
 
     companion object {
-        private val TAG = GetAuthMethodsCommand::class.java.simpleName
+        private val TAG = MFASubmitChallengeCommand::class.java.simpleName
     }
 
     /**
      * The execution part of the command, to be run on the background thread.
-     * It calls the signInStart method of the native auth MSAL controller with the given parameters.
+     * It calls the signInSubmitCode method of the native auth MSAL controller with the given parameters.
      */
-    override fun execute(): GetAuthMethodsCommandResult {
+    override fun execute(): MFASubmitChallengeCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = parameters.getCorrelationId(),
             methodName = "${TAG}.execute"
         )
-        val result = controller.getAuthMethods(
+
+        val result = controller.signInSubmitChallenge(
             parameters = parameters
         )
 

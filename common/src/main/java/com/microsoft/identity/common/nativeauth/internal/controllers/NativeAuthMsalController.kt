@@ -44,6 +44,8 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseNat
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseSignInTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.GetAuthMethodsCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFAChallengeCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFASelectedChallengeCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFASubmitChallengeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordResendCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
@@ -58,8 +60,11 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
+import com.microsoft.identity.common.java.nativeauth.controllers.results.GetAuthMethodsCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.MFAChallengeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.MFACommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.MFASubmitChallengeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.ResetPasswordCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.ResetPasswordResendCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.ResetPasswordStartCommandResult
@@ -323,6 +328,67 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         }
     }
 
+    fun signInSubmitChallenge(parameters: MFASubmitChallengeCommandParameters): MFASubmitChallengeCommandResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.signInSubmitCode"
+        )
+
+        try {
+            // Add default scopes
+            val mergedScopes: List<String> = addDefaultScopes(parameters.scopes)
+
+            val parametersWithScopes =
+                CommandUtil.createMFASubmitChallengeCommandParametersWithScopes(
+                    parameters,
+                    mergedScopes
+                )
+
+            val oAuth2Strategy = createOAuth2Strategy(parameters)
+
+            val tokenApiResult = performSubmitChallengeTokenRequest(
+                oAuth2Strategy = oAuth2Strategy,
+                parameters = parametersWithScopes
+            )
+            return when (tokenApiResult) {
+                is SignInTokenApiResult.Success -> {
+                    saveAndReturnTokens(
+                        oAuth2Strategy = oAuth2Strategy,
+                        parametersWithScopes = parametersWithScopes,
+                        tokenApiResult = tokenApiResult
+                    )
+                }
+                is SignInTokenApiResult.UnknownError, is SignInTokenApiResult.InvalidAuthenticationType,
+                is SignInTokenApiResult.MFARequired, is SignInTokenApiResult.InvalidCredentials,
+                is SignInTokenApiResult.UserNotFound, is SignInTokenApiResult.CodeIncorrect -> {
+                    // TODO
+                    Logger.warnWithObject(
+                        TAG,
+                        tokenApiResult.correlationId,
+                        "Unexpected result: ",
+                        tokenApiResult
+                    )
+                    tokenApiResult as ApiErrorResult
+                    INativeAuthCommandResult.APIError(
+                        error = tokenApiResult.error,
+                        errorDescription = tokenApiResult.errorDescription,
+                        errorCodes = tokenApiResult.errorCodes,
+                        correlationId = tokenApiResult.correlationId
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            Logger.error(
+                TAG,
+                parameters.correlationId,
+                "Exception thrown in signInSubmitCode",
+                e
+            )
+            throw e
+        }
+    }
+
     /**
      * Makes a call to the resend code endpoint, mapping responses returned from the server into a command result.
      */
@@ -336,7 +402,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         try {
             val oAuth2Strategy = createOAuth2Strategy(parameters)
 
-            val result = performSignInChallengeCall(
+            val result = performSignInDefaultChallengeCall(
                 oAuth2Strategy = oAuth2Strategy,
                 continuationToken = parameters.continuationToken,
                 correlationId = parameters.correlationId
@@ -440,7 +506,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         }
     }
 
-    fun challengeDefaultAuth(parameters: MFAChallengeCommandParameters): MFACommandResult {
+    fun signInChallenge(parameters: MFAChallengeCommandParameters): MFAChallengeCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = parameters.getCorrelationId(),
@@ -450,18 +516,29 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         try {
             val oAuth2Strategy = createOAuth2Strategy(parameters)
 
-            val result = performSignInChallengeCall(
-                oAuth2Strategy = oAuth2Strategy,
-                continuationToken = parameters.continuationToken,
-                correlationId = parameters.correlationId
-            )
+            val isSelectedChallenge = (parameters is MFASelectedChallengeCommandParameters)
+
+            val result = if (isSelectedChallenge) {
+                performSignInSelectedChallengeCall(
+                    oAuth2Strategy = oAuth2Strategy,
+                    continuationToken = parameters.continuationToken,
+                    correlationId = parameters.correlationId,
+                    challengeId = (parameters as MFASelectedChallengeCommandParameters).authMethodId
+                )
+            } else {
+                performSignInDefaultChallengeCall(
+                    oAuth2Strategy = oAuth2Strategy,
+                    continuationToken = parameters.continuationToken,
+                    correlationId = parameters.correlationId
+                )
+            }
             return when (result) {
                 is SignInChallengeApiResult.IntrospectRequired -> {
                     return performIntrospectCall(
                         oAuth2Strategy = oAuth2Strategy,
                         continuationToken = parameters.continuationToken,
                         correlationId = parameters.correlationId
-                    ).toMFAChallengeResult(
+                    ).toMFAChallengeCommandResult(
                         oAuth2Strategy = oAuth2Strategy,
                         parameters = parameters
                     )
@@ -490,7 +567,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         }
     }
 
-    fun getAuthMethods(parameters: GetAuthMethodsCommandParameters): MFACommandResult {
+    fun getAuthMethods(parameters: GetAuthMethodsCommandParameters): GetAuthMethodsCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = parameters.getCorrelationId(),
@@ -1311,6 +1388,25 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         )
     }
 
+    private fun performSubmitChallengeTokenRequest(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: MFASubmitChallengeCommandParameters
+    ): SignInTokenApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.performOOBTokenRequest"
+        )
+        // Transform MFASubmitChallengeCommandParameters into SignInSubmitCodeCommandParameters,
+        // as the API call is the same.
+        val signInSubmitCodeCommandParameters = CommandUtil.createSignInSubmitCodeCommandParameters(
+            parameters
+        )
+        return oAuth2Strategy.performOOBTokenRequest(
+            parameters = signInSubmitCodeCommandParameters
+        )
+    }
+
     @VisibleForTesting
     fun performPasswordTokenCall(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
@@ -1340,7 +1436,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         )
     }
 
-    private fun performSignInChallengeCall(
+    private fun performSignInDefaultChallengeCall(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         continuationToken: String,
         correlationId: String
@@ -1353,6 +1449,24 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         return oAuth2Strategy.performSignInDefaultChallenge(
             continuationToken = continuationToken,
             correlationId = correlationId
+        )
+    }
+
+    private fun performSignInSelectedChallengeCall(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        continuationToken: String,
+        correlationId: String,
+        challengeId: String
+    ): SignInChallengeApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            methodName = "${TAG}.performSignInSelectedChallengeCall"
+        )
+        return oAuth2Strategy.performSignInSelectedChallenge(
+            continuationToken = continuationToken,
+            correlationId = correlationId,
+            challengeId = challengeId
         )
     }
 
@@ -2051,10 +2165,10 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         }
     }
 
-    private fun SignInIntrospectApiResult.toMFAChallengeResult(
+    private fun SignInIntrospectApiResult.toMFAChallengeCommandResult(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: MFAChallengeCommandParameters,
-    ): MFACommandResult {
+    ): MFAChallengeCommandResult {
         return when (this) {
             is SignInIntrospectApiResult.Redirect -> TODO()
             is SignInIntrospectApiResult.Success -> {
@@ -2082,7 +2196,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 )
             }
             is SignInInitiateApiResult.Success -> {
-                val signInChallengeResult = performSignInChallengeCall(
+                val signInChallengeResult = performSignInDefaultChallengeCall(
                     oAuth2Strategy = oAuth2Strategy,
                     continuationToken = initiateApiResult.continuationToken,
                     correlationId = initiateApiResult.correlationId

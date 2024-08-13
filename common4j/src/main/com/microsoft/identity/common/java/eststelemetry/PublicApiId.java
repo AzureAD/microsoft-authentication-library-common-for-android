@@ -159,8 +159,9 @@ public final class PublicApiId {
     public static final String NATIVE_AUTH_SIGN_UP_SUBMIT_CODE = "235";
     public static final String NATIVE_AUTH_ACCOUNT_SIGN_OUT = "240";
     public static final String NATIVE_AUTH_ACCOUNT_GET_ACCESS_TOKEN = "250";
-    public static final String NATIVE_AUTH_MFA_CHALLENGE = "251";
+    public static final String NATIVE_AUTH_MFA_DEFAULT_CHALLENGE = "251";
     public static final String NATIVE_AUTH_GET_AUTH_METHODS = "252";
-
+    public static final String NATIVE_AUTH_MFA_SELECTED_CHALLENGE = "253";
+    public static final String NATIVE_AUTH_MFA_SUBMIT_CHALLENGE = "254";
     //endregion
 }
