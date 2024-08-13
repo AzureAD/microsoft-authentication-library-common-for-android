@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.nativeauth.providers
 
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
+import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.UserAttributeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.UserAttributeOptionsApiResult
@@ -37,10 +38,13 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpa
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordStartApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.AuthenticationMethodApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpChallengeApiResponse
@@ -96,6 +100,7 @@ class NativeAuthResponseHandlerTest {
     private val invalidGrantError = "invalid_grant"
     private val invalidOOBValueError = "invalid_oob_value"
     private val invalidRequestError = "invalid_request"
+    private val introspectRequiredSubError = "introspect_required"
     private val unsupportedChallengeTypeError = "unsupported_challenge_type"
     private val expiredTokenError = "expired_token"
     private val userNotFoundError = "user_not_found"
@@ -115,7 +120,7 @@ class NativeAuthResponseHandlerTest {
     private val incorrectOOBErrorCode2 = 50184
     private val incorrectOOBErrorCode3 = 501811
     private val incorrectPasswordErrorCode = 50126
-    private val mfaRequiredErrorCode = 50076
+    private val mfaRequiredSubError = "mfa_required"
     private val randomErrorCode = 0
     private val errorDescription = "User not found"
     private val signInUnknownError = "unknown_error"
@@ -126,6 +131,7 @@ class NativeAuthResponseHandlerTest {
     private val passwordBasedAuthNotSupported = "Password based authentication is not supported."
     private val attributesValidationFailed = "Attributes validation failed."
     private val challengeTargetLabel = "tester@contoso.com"
+    private val challengeTargetLabel2 = "tester2@contoso.com"
     private val emailChallengeChannel = "email"
     private val bindingMethod = "prompt"
     private val nullString = "null"
@@ -2340,14 +2346,149 @@ class NativeAuthResponseHandlerTest {
     }
     // endregion
 
+    // region sign in introspect
+    @Test
+    fun testSignInIntrospectRedirect() {
+        val apiResponse = SignInIntrospectApiResponse(
+            statusCode = successStatusCode,
+            challengeType = redirect,
+            methods = null,
+            continuationToken = null,
+            error = null,
+            errorCodes = null,
+            errorDescription = null,
+            correlationId = correlationId
+        )
+
+        val apiResult = apiResponse.toResult()
+        assertTrue(apiResult is SignInIntrospectApiResult.Redirect)
+    }
+
+    @Test
+    fun testSignInIntrospectMissingContinuationToken() {
+        val methods = listOf(
+            AuthenticationMethodApiResponse(
+                id = "1234",
+                challengeType = oobChallengeType,
+                loginHint = challengeTargetLabel,
+                challengeChannel = emailChallengeChannel
+            ),
+            AuthenticationMethodApiResponse(
+                id = "5678",
+                challengeType = oobChallengeType,
+                loginHint = challengeTargetLabel2,
+                challengeChannel = emailChallengeChannel
+            )
+        )
+        val apiResponse = SignInIntrospectApiResponse(
+            statusCode = successStatusCode,
+            challengeType = null,
+            methods = methods,
+            continuationToken = null,
+            error = null,
+            errorCodes = null,
+            errorDescription = null,
+            correlationId = correlationId
+        )
+
+        val apiResult = apiResponse.toResult()
+        assertTrue(apiResult is SignInIntrospectApiResult.UnknownError)
+    }
+
+    @Test
+    fun testSignInIntrospectSuccess() {
+        val methods = listOf(
+            AuthenticationMethodApiResponse(
+                id = "1234",
+                challengeType = oobChallengeType,
+                loginHint = challengeTargetLabel,
+                challengeChannel = emailChallengeChannel
+            ),
+            AuthenticationMethodApiResponse(
+                id = "5678",
+                challengeType = oobChallengeType,
+                loginHint = challengeTargetLabel2,
+                challengeChannel = emailChallengeChannel
+            )
+        )
+        val apiResponse = SignInIntrospectApiResponse(
+            statusCode = successStatusCode,
+            challengeType = null,
+            methods = methods,
+            continuationToken = continuationToken,
+            error = null,
+            errorCodes = null,
+            errorDescription = null,
+            correlationId = correlationId
+        )
+
+        val apiResult = apiResponse.toResult()
+        assertTrue(apiResult is SignInIntrospectApiResult.Success)
+        assertEquals(continuationToken, (apiResult as SignInIntrospectApiResult.Success).continuationToken)
+        assertEquals(challengeTargetLabel, apiResult.methods[0].loginHint)
+        assertEquals(challengeTargetLabel2, apiResult.methods[1].loginHint)
+    }
+
+    @Test
+    fun testSignInIntrospectWithEmptyMethodsShouldReturnError() {
+        val apiResponse = SignInIntrospectApiResponse(
+            statusCode = successStatusCode,
+            challengeType = null,
+            methods = emptyList(),
+            continuationToken = null,
+            error = null,
+            errorCodes = null,
+            errorDescription = null,
+            correlationId = correlationId
+        )
+
+        val apiResult = apiResponse.toResult()
+        assertTrue(apiResult is SignInIntrospectApiResult.UnknownError)
+        assertEquals(ApiErrorResult.INVALID_STATE, (apiResult as SignInIntrospectApiResult.UnknownError).error)
+    }
+
+    @Test
+    fun testSignInIntrospectWithIncompleteMethodsShouldReturnError() {
+        val methods = listOf(
+            AuthenticationMethodApiResponse(
+                id = "1234",
+                challengeType = emptyString,
+                loginHint = challengeTargetLabel,
+                challengeChannel = emailChallengeChannel
+            ),
+            AuthenticationMethodApiResponse(
+                id = "5678",
+                challengeType = emptyString,
+                loginHint = challengeTargetLabel2,
+                challengeChannel = emailChallengeChannel
+            )
+        )
+        val apiResponse = SignInIntrospectApiResponse(
+            statusCode = successStatusCode,
+            challengeType = null,
+            methods = methods,
+            continuationToken = null,
+            error = null,
+            errorCodes = null,
+            errorDescription = null,
+            correlationId = correlationId
+        )
+
+        val apiResult = apiResponse.toResult()
+        assertTrue(apiResult is SignInIntrospectApiResult.UnknownError)
+        assertEquals(ApiErrorResult.INVALID_STATE, (apiResult as SignInIntrospectApiResult.UnknownError).error)
+    }
+    // endregion
+
     // region SignIn Challenge
     @Test
     fun testSignInChallengeApiResponseInvalidGrant() {
-        val signInInitiateApiResponse = SignInChallengeApiResponse(
+        val response = SignInChallengeApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
             continuationToken = null,
             error = invalidGrantError,
+            subError = null,
             errorCodes = null,
             errorDescription = tenantMisconfiguration,
             errorUri = null,
@@ -2359,19 +2500,44 @@ class NativeAuthResponseHandlerTest {
             correlationId = correlationId
         )
 
-        val apiResult = signInInitiateApiResponse.toResult()
+        val apiResult = response.toResult()
         assertTrue(apiResult is SignInChallengeApiResult.UnknownError)
         assertEquals(invalidGrantError, (apiResult as SignInChallengeApiResult.UnknownError).error)
         assertEquals(tenantMisconfiguration, apiResult.errorDescription)
     }
 
     @Test
+    fun testSignInChallengeApiResponseIntrospectRequired() {
+        val response = SignInChallengeApiResponse(
+            statusCode = errorStatusCode,
+            challengeType = null,
+            continuationToken = null,
+            error = invalidRequestError,
+            subError = introspectRequiredSubError,
+            errorCodes = null,
+            errorDescription = null,
+            errorUri = null,
+            bindingMethod = null,
+            challengeTargetLabel = null,
+            challengeChannel = null,
+            codeLength = null,
+            interval = null,
+            correlationId = correlationId
+        )
+
+        val apiResult = response.toResult()
+        assertTrue(apiResult is SignInChallengeApiResult.IntrospectRequired)
+        assertEquals(correlationId, (apiResult as SignInChallengeApiResult.IntrospectRequired).correlationId)
+    }
+
+    @Test
     fun testSignInChallengeApiResponseChallengeTypeOobSuccess() {
-        val signInInitiateApiResponse = SignInChallengeApiResponse(
+        val response = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
             continuationToken = continuationToken,
             error = null,
+            subError = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
@@ -2380,10 +2546,10 @@ class NativeAuthResponseHandlerTest {
             challengeChannel = emailChallengeChannel,
             codeLength = codeLength,
             interval = null,
-            correlationId = correlationId
+            correlationId = correlationId,
         )
 
-        val apiResult = signInInitiateApiResponse.toResult()
+        val apiResult = response.toResult()
         assertTrue(apiResult is SignInChallengeApiResult.OOBRequired)
         assertEquals(continuationToken, (apiResult as SignInChallengeApiResult.OOBRequired).continuationToken)
         assertEquals(challengeTargetLabel, apiResult.challengeTargetLabel)
@@ -2391,11 +2557,12 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignInChallengeApiResponseChallengeTypeOobMissingCodeLength() {
-        val signInChallengeApiResponse = SignInChallengeApiResponse(
+        val response = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
             continuationToken = continuationToken,
             error = null,
+            subError = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
@@ -2407,17 +2574,18 @@ class NativeAuthResponseHandlerTest {
             correlationId = correlationId
         )
 
-        val apiResult = signInChallengeApiResponse.toResult()
+        val apiResult = response.toResult()
         assertTrue(apiResult is SignInChallengeApiResult.UnknownError)
     }
 
     @Test
     fun testSignInChallengeApiResponseChallengeTypeOobMissingChallengeChannel() {
-        val signInChallengeApiResponse = SignInChallengeApiResponse(
+        val response = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
             continuationToken = continuationToken,
             error = null,
+            subError = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
@@ -2429,17 +2597,18 @@ class NativeAuthResponseHandlerTest {
             correlationId = correlationId
         )
 
-        val apiResult = signInChallengeApiResponse.toResult()
+        val apiResult = response.toResult()
         assertTrue(apiResult is SignInChallengeApiResult.UnknownError)
     }
 
     @Test
     fun testSignInChallengeApiResponseChallengeTypeOobMissingChallengeTargetLabel() {
-        val signInChallengeApiResponse = SignInChallengeApiResponse(
+        val response = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
             continuationToken = continuationToken,
             error = null,
+            subError = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
@@ -2451,17 +2620,18 @@ class NativeAuthResponseHandlerTest {
             correlationId = correlationId
         )
 
-        val apiResult = signInChallengeApiResponse.toResult()
+        val apiResult = response.toResult()
         assertTrue(apiResult is SignInChallengeApiResult.UnknownError)
     }
 
     @Test
     fun testSignInChallengeApiResponseChallengeTypePasswordWithMissingContinuationToken() {
-        val signInChallengeApiResponse = SignInChallengeApiResponse(
+        val response = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = passwordChallengeType,
             continuationToken = null,
             error = null,
+            subError = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
@@ -2473,17 +2643,18 @@ class NativeAuthResponseHandlerTest {
             correlationId = correlationId
         )
 
-        val apiResult = signInChallengeApiResponse.toResult()
+        val apiResult = response.toResult()
         assertTrue(apiResult is SignInChallengeApiResult.UnknownError)
     }
 
     @Test
     fun testSignInChallengeApiResponseChallengeTypePassword() {
-        val signInInitiateApiResponse = SignInChallengeApiResponse(
+        val response = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = passwordChallengeType,
             continuationToken = continuationToken,
             error = null,
+            subError = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
@@ -2495,18 +2666,19 @@ class NativeAuthResponseHandlerTest {
             correlationId = correlationId
         )
 
-        val apiResult = signInInitiateApiResponse.toResult()
+        val apiResult = response.toResult()
         assertTrue(apiResult is SignInChallengeApiResult.PasswordRequired)
         assertEquals(continuationToken, (apiResult as SignInChallengeApiResult.PasswordRequired).continuationToken)
     }
 
     @Test
     fun testSignInChallengeApiResponseChallengeTypePasswordMissingFlowToken() {
-        val signInInitiateApiResponse = SignInChallengeApiResponse(
+        val response = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = passwordChallengeType,
             continuationToken = null,
             error = null,
+            subError = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
@@ -2518,17 +2690,18 @@ class NativeAuthResponseHandlerTest {
             correlationId = correlationId
         )
 
-        val apiResult = signInInitiateApiResponse.toResult()
+        val apiResult = response.toResult()
         assertTrue(apiResult is SignInChallengeApiResult.UnknownError)
     }
 
     @Test
     fun testSignInChallengeApiResponseWithUnknownError() {
-        val signInInitiateApiResponse = SignInChallengeApiResponse(
+        val response = SignInChallengeApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
             continuationToken = null,
             error = signInUnknownError,
+            subError = null,
             errorCodes = listOf(unknownErrorCode),
             errorDescription = unknownErrorDescription,
             errorUri = null,
@@ -2540,7 +2713,7 @@ class NativeAuthResponseHandlerTest {
             correlationId = correlationId
         )
 
-        val apiResult = signInInitiateApiResponse.toResult()
+        val apiResult = response.toResult()
         assertTrue(apiResult is SignInChallengeApiResult.UnknownError)
         assertEquals(signInUnknownError, (apiResult as SignInChallengeApiResult.UnknownError).error)
         assertEquals(unknownErrorDescription, apiResult.errorDescription)
@@ -2548,11 +2721,12 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignInChallengeUncommonStatusCode() {
-        val signInInitiateApiResponse = SignInChallengeApiResponse(
+        val response = SignInChallengeApiResponse(
             statusCode = uncommonErrorStatusCode,
             challengeType = null,
             continuationToken = null,
             error = null,
+            subError = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
@@ -2564,7 +2738,7 @@ class NativeAuthResponseHandlerTest {
             correlationId = correlationId
         )
 
-        val apiResult = signInInitiateApiResponse.toResult()
+        val apiResult = response.toResult()
         assertTrue(apiResult is SignInChallengeApiResult.UnknownError)
     }
     // endregion
@@ -2815,10 +2989,10 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             continuationToken = null,
             error = invalidGrantError,
-            errorCodes = listOf(mfaRequiredErrorCode),
+            errorCodes = null,
             errorDescription = mfaRequiredTokenErrorDescription,
             errorUri = null,
-            subError = null,
+            subError = mfaRequiredSubError,
             correlationId = correlationId
         )
 
@@ -2826,7 +3000,7 @@ class NativeAuthResponseHandlerTest {
         assertTrue(apiResult is SignInTokenApiResult.MFARequired)
         assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.MFARequired).error)
         assertEquals(mfaRequiredTokenErrorDescription, apiResult.errorDescription)
-        assertEquals(listOf(mfaRequiredErrorCode), apiResult.errorCodes)
+        assertEquals(mfaRequiredSubError, apiResult.subError)
     }
 
     @Test

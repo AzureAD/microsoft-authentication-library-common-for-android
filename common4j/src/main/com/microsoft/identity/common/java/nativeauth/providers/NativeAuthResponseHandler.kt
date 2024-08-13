@@ -34,6 +34,8 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpa
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpChallengeApiResponse
@@ -304,6 +306,7 @@ class NativeAuthResponseHandler {
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 errorCodes = null,
                 errorUri = null,
+                subError = null,
                 continuationToken = null,
                 challengeType = null,
                 bindingMethod = null,
@@ -318,6 +321,57 @@ class NativeAuthResponseHandler {
             ObjectMapper.deserializeJsonStringToObject(
                 response.body,
                 SignInChallengeApiResponse::class.java
+            )
+        }
+        result.statusCode = response.statusCode
+        result.correlationId = correlationId
+
+        ApiResultUtil.logResponse(TAG, result)
+
+        return result
+    }
+    //endregion
+
+    //region /oauth/v2.0/introspect
+    /**
+     * Converts the response for /oauth/v2.0/introspect REST API to Java object
+     * @param response HTTP response received from REST API
+     */
+    @Throws(ClientException::class)
+    fun getSignInIntrospectResultFromHttpResponse(
+        requestCorrelationId: String,
+        response: HttpResponse
+    ): SignInIntrospectApiResponse {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.getSignInIntrospectResultFromHttpResponse"
+        )
+
+        // If the API doesn't return a correlation ID header value, use the correlation ID of the original API request
+        val correlationId: String = response.getHeaderValue(AuthenticationConstants.AAD.CLIENT_REQUEST_ID, 0).let {responseCorrelationId ->
+            if (responseCorrelationId.isNullOrBlank()) {
+                requestCorrelationId
+            } else {
+                responseCorrelationId
+            }
+        }
+
+        val result = if (response.body.isNullOrBlank()) {
+            SignInIntrospectApiResponse(
+                statusCode = response.statusCode,
+                challengeType = null,
+                error = EMPTY_RESPONSE_ERROR,
+                errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
+                errorCodes = null,
+                continuationToken = null,
+                methods = null,
+                correlationId = correlationId,
+            )
+        } else {
+            ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                SignInIntrospectApiResponse::class.java
             )
         }
         result.statusCode = response.statusCode

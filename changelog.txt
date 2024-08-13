@@ -1,5 +1,9 @@
 V.Next
 ---------
+- [MINOR] Add support for email OTP MFA in native authentication (#2468)
+
+Version 17.7.0
+---------
 - [MINOR] Add null cursor BrokerCommunicationException error category (#2459)
 - [MINOR] Classifying more UNKNOWN_ERRORs (#2460)
 - [MINOR] Setting flights to control UrlConnection timeout values (#2473)
