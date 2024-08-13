@@ -27,6 +27,9 @@ import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
+import com.microsoft.identity.common.java.nativeauth.util.isIntrospectRequired
+import com.microsoft.identity.common.java.nativeauth.util.isInvalidGrant
+import com.microsoft.identity.common.java.nativeauth.util.isInvalidRequest
 import com.microsoft.identity.common.java.nativeauth.util.isOOB
 import com.microsoft.identity.common.java.nativeauth.util.isPassword
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
@@ -47,6 +50,7 @@ class SignInChallengeApiResponse(
     @Expose @SerializedName("code_length") val codeLength: Int?,
     @Expose @SerializedName("interval") val interval: Int?,
     @SerializedName("error") val error: String?,
+    @SerializedName("suberror") val subError: String?,
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
@@ -57,17 +61,12 @@ class SignInChallengeApiResponse(
                 "correlationId=$correlationId, challengeType=$challengeType, " +
                 "bindingMethod=$bindingMethod, challengeTargetLabel=$challengeTargetLabel, " +
                 "challengeChannel=$challengeChannel, codeLength=$codeLength, interval=$interval, " +
-                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes, " +
+                "error=$error, subError=$subError, errorDescription=$errorDescription, errorCodes=$errorCodes, " +
                 "errorUri=$errorUri)"
     }
 
     override fun toString(): String = "SignInChallengeApiResponse(statusCode=$statusCode, " +
             "correlationId=$correlationId"
-
-    companion object {
-        private val TAG = SignInChallengeApiResponse::class.java.simpleName
-        private const val INVALID_GRANT = "invalid_grant";
-    }
 
     /**
     * Maps potential errors returned from the server response, and provide different states based on the response.
@@ -78,21 +77,21 @@ class SignInChallengeApiResponse(
 
             // Handle 400 errors
             HttpURLConnection.HTTP_BAD_REQUEST -> {
-                if (error == INVALID_GRANT) {
-                    SignInChallengeApiResult.UnknownError(
-                        error = error,
-                        errorDescription = errorDescription.orEmpty(),
-                        errorCodes = errorCodes.orEmpty(),
-                        correlationId = correlationId
-                    )
-                }
-                else {
-                    SignInChallengeApiResult.UnknownError(
-                        error = error.orEmpty(),
-                        errorDescription = errorDescription.orEmpty(),
-                        errorCodes = errorCodes.orEmpty(),
-                        correlationId = correlationId
-                    )
+                when {
+                    error.isInvalidRequest() && subError.isIntrospectRequired() -> {
+                        SignInChallengeApiResult.IntrospectRequired(
+                            correlationId = correlationId
+                        )
+                    }
+                    else -> {
+                        SignInChallengeApiResult.UnknownError(
+                            error = error.orEmpty(),
+                            subError = subError.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            errorCodes = errorCodes.orEmpty(),
+                            correlationId = correlationId
+                        )
+                    }
                 }
             }
 
@@ -109,7 +108,8 @@ class SignInChallengeApiResponse(
                             challengeTargetLabel.isNullOrBlank() -> {
                                 SignInChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
-                                    errorDescription = "SignIn /challenge did not return a challenge_target_label with oob challenge type",
+                                    subError = subError.orEmpty(),
+                                    errorDescription = "oauth/v2.0/challenge did not return a challenge_target_label with oob challenge type",
                                     errorCodes = errorCodes.orEmpty(),
                                     correlationId = correlationId
                                 )
@@ -117,7 +117,8 @@ class SignInChallengeApiResponse(
                             challengeChannel.isNullOrBlank() -> {
                                 SignInChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
-                                    errorDescription = "SignIn /challenge did not return a challenge_channel with oob challenge type",
+                                    subError = subError.orEmpty(),
+                                    errorDescription = "oauth/v2.0/challenge did not return a challenge_channel with oob challenge type",
                                     errorCodes = errorCodes.orEmpty(),
                                     correlationId = correlationId
                                 )
@@ -125,7 +126,8 @@ class SignInChallengeApiResponse(
                             codeLength == null -> {
                                 SignInChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
-                                    errorDescription = "SignIn /challenge did not return a code_length with oob challenge type",
+                                    subError = subError.orEmpty(),
+                                    errorDescription = "oauth/v2.0/challenge did not return a code_length with oob challenge type",
                                     errorCodes = errorCodes.orEmpty(),
                                     correlationId = correlationId
                                 )
@@ -135,7 +137,8 @@ class SignInChallengeApiResponse(
                                     continuationToken = continuationToken
                                         ?: return SignInChallengeApiResult.UnknownError(
                                             error = ApiErrorResult.INVALID_STATE,
-                                            errorDescription = "SignIn /challenge did not return a continuation token with oob challenge type",
+                                            subError = subError.orEmpty(),
+                                            errorDescription = "oauth/v2.0/challenge did not return a continuation token with oob challenge type",
                                             errorCodes = errorCodes.orEmpty(),
                                             correlationId = correlationId
                                         ),
@@ -152,8 +155,9 @@ class SignInChallengeApiResponse(
                             continuationToken = continuationToken
                                 ?: return SignInChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
-                                    errorDescription = "SignIn /challenge did not return a continuation token with password challenge type",
+                                    errorDescription = "oauth/v2.0/challenge did not return a continuation token with password challenge type",
                                     errorCodes = errorCodes.orEmpty(),
+                                    subError = subError.orEmpty(),
                                     correlationId = correlationId
                                 ),
                             correlationId = correlationId
@@ -164,6 +168,7 @@ class SignInChallengeApiResponse(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
                             errorCodes = errorCodes.orEmpty(),
+                            subError = subError.orEmpty(),
                             correlationId = correlationId
                         )
                     }
@@ -176,6 +181,7 @@ class SignInChallengeApiResponse(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
                     errorCodes = errorCodes.orEmpty(),
+                    subError = subError.orEmpty(),
                     correlationId = correlationId
                 )
             }
