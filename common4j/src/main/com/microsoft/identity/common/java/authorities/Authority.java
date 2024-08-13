@@ -169,7 +169,7 @@ public abstract class Authority {
                 authority = new CIAMAuthority(authorityUrl);
             } else if (AAD_NA.equalsIgnoreCase(authorityTypeStr) && configuredAuthority instanceof NativeAuthCIAMAuthority) {
                 if (clientId == null) {
-                    authority = new CIAMAuthority(authorityUrl);
+                    authority = new CIAMAuthority(authorityUrl);  // NativeAuthPublicClientApplicationConfiguration.validateConfiguration() converts CIAMAuhority to NativeAuthCIAMAuthority by attaching the client id.
                 } else {
                     authority = new NativeAuthCIAMAuthority(authorityUrl, clientId);
                 }
