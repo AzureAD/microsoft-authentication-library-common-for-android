@@ -266,7 +266,7 @@ class SignInOAuthStrategyTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInIntrospect,
+            endpointType = MockApiEndpoint.Introspect,
             correlationId = correlationId,
             responseType = MockApiResponseType.INTROSPECT_SUCCESS
         )
@@ -284,7 +284,7 @@ class SignInOAuthStrategyTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInIntrospect,
+            endpointType = MockApiEndpoint.Introspect,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
