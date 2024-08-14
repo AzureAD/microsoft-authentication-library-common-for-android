@@ -336,6 +336,11 @@ public class BrokerHost extends AbstractTestBroker {
         setLocalFlight(FLIGHT_PRT_V3, Boolean.toString(true));
     }
 
+    public void restoreMsaAccounts(final int expectedNumberOfRestoredAccounts) {
+        brokerApiFragment.launch();
+        brokerApiFragment.restoreMsaAccounts(expectedNumberOfRestoredAccounts);
+    }
+
     /**
      * Ensures flight provider as LocalFlightsProvider
      * @param key The flight parameter name as string.
