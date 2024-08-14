@@ -8,6 +8,7 @@ Version 17.7.0
 - [MINOR] Classifying more UNKNOWN_ERRORs (#2460)
 - [MINOR] Setting flights to control UrlConnection timeout values (#2473)
 - [PATCH] Fix Native Auth authority data being persisted across different SDK instances (#2462)
+- [PATCH] Fix incorrect formatting when logging native auth objects
 
 Version 17.6.1
 ---------
