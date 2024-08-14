@@ -39,7 +39,7 @@ interface INativeAuthCommandResult : ILoggable {
         SignUpResendCodeCommandResult, SignUpSubmitPasswordCommandResult,
         SignUpSubmitUserAttributesCommandResult,
         ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,
-        ResetPasswordResendCodeCommandResult {
+        ResetPasswordResendCodeCommandResult, MFAChallengeCommandResult, GetAuthMethodsCommandResult {
             companion object {
                 private const val BROWSER_REQUIRED_ERROR: String = "browser_required"
                 private const val BROWSER_REQUIRED_ERROR_DESCRIPTION: String = "The client's authentication capabilities are insufficient. Please redirect to the browser to complete authentication"

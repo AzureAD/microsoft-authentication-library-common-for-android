@@ -107,7 +107,6 @@ class NativeAuthResponseHandler {
         result.statusCode = response.statusCode
         result.correlationId = correlationId
 
-        // TODO add correlation ID
         ApiResultUtil.logResponse(TAG, result)
 
         return result

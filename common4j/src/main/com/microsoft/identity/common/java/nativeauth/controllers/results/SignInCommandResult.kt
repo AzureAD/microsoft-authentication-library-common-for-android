@@ -98,7 +98,7 @@ interface SignInCommandResult {
         val errorDescription: String,
         val errorCodes: List<Int>,
         val subError: String
-    ) : SignInSubmitCodeCommandResult {
+    ) : SignInSubmitCodeCommandResult, MFASubmitChallengeCommandResult {
         override fun toUnsanitizedString(): String = "IncorrectCode(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes, subError=$subError)"
 
         override fun toString(): String = "IncorrectCode(correlationId=$correlationId)"
@@ -111,7 +111,7 @@ interface SignInCommandResult {
         val errorDescription: String,
         val errorCodes: List<Int>,
         val subError: String
-    ) : SignInStartCommandResult, SignInSubmitPasswordCommandResult {
+    ) : SignInStartCommandResult, SignInSubmitPasswordCommandResult, MFASubmitChallengeCommandResult {
         override fun toUnsanitizedString(): String = "MFARequired(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes, subError=$subError)"
 
         override fun toString(): String = "MFARequired(correlationId=$correlationId)"

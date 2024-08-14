@@ -359,10 +359,27 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         tokenApiResult = tokenApiResult
                     )
                 }
+                is SignInTokenApiResult.MFARequired -> {
+                    SignInCommandResult.MFARequired(
+                        error = tokenApiResult.error,
+                        errorDescription = tokenApiResult.errorDescription,
+                        continuationToken = tokenApiResult.continuationToken,
+                        subError = tokenApiResult.subError,
+                        errorCodes = tokenApiResult.errorCodes,
+                        correlationId = tokenApiResult.correlationId
+                    )
+                }
+                is SignInTokenApiResult.CodeIncorrect -> {
+                    SignInCommandResult.IncorrectCode(
+                        error = tokenApiResult.error,
+                        errorDescription = tokenApiResult.errorDescription,
+                        errorCodes = tokenApiResult.errorCodes,
+                        subError = tokenApiResult.subError,
+                        correlationId = tokenApiResult.correlationId
+                    )
+                }
                 is SignInTokenApiResult.UnknownError, is SignInTokenApiResult.InvalidAuthenticationType,
-                is SignInTokenApiResult.MFARequired, is SignInTokenApiResult.InvalidCredentials,
-                is SignInTokenApiResult.UserNotFound, is SignInTokenApiResult.CodeIncorrect -> {
-                    // TODO
+                is SignInTokenApiResult.InvalidCredentials, is SignInTokenApiResult.UserNotFound -> {
                     Logger.warnWithObject(
                         TAG,
                         tokenApiResult.correlationId,
@@ -435,15 +452,13 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         correlationId = result.correlationId
                     )
                 }
-                is SignInChallengeApiResult.IntrospectRequired -> {
-                    TODO()
-                }
-                is SignInChallengeApiResult.UnknownError -> {
+                is SignInChallengeApiResult.IntrospectRequired, is SignInChallengeApiResult.UnknownError -> {
                     Logger.warnWithObject(
                         TAG,
                         "Unexpected result: ",
                         result
                     )
+                    (result as ApiErrorResult)
                     INativeAuthCommandResult.APIError(
                         error = result.error,
                         errorDescription = result.errorDescription,
@@ -538,10 +553,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         oAuth2Strategy = oAuth2Strategy,
                         continuationToken = parameters.continuationToken,
                         correlationId = parameters.correlationId
-                    ).toMFAChallengeCommandResult(
-                        oAuth2Strategy = oAuth2Strategy,
-                        parameters = parameters
-                    )
+                    ).toMFAChallengeCommandResult()
                 }
                 is SignInChallengeApiResult.OOBRequired -> {
                     MFACommandResult.VerificationRequired(
@@ -552,9 +564,33 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         codeLength = result.codeLength
                     )
                 }
-                is SignInChallengeApiResult.PasswordRequired -> TODO()
-                is SignInChallengeApiResult.Redirect -> TODO()
-                is SignInChallengeApiResult.UnknownError -> TODO()
+                is SignInChallengeApiResult.PasswordRequired -> {
+                    Logger.warnWithObject(
+                        TAG,
+                        result.correlationId,
+                        "Unexpected result: ",
+                        result
+                    )
+                    INativeAuthCommandResult.APIError(
+                        error = "unexpected_api_result",
+                        errorDescription = "API returned unexpected result: $result",
+                        correlationId = result.correlationId
+                    )
+                }
+                is SignInChallengeApiResult.Redirect, is SignInChallengeApiResult.UnknownError -> {
+                    Logger.warnWithObject(
+                        TAG,
+                        "Unexpected result: ",
+                        result
+                    )
+                    (result as ApiErrorResult)
+                    INativeAuthCommandResult.APIError(
+                        error = result.error,
+                        errorDescription = result.errorDescription,
+                        errorCodes = result.errorCodes,
+                        correlationId = result.correlationId
+                    )
+                }
             }
         } catch (e: Exception) {
             Logger.error(
@@ -590,8 +626,25 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         authMethods = result.methods
                     )
                 }
-                is SignInIntrospectApiResult.Redirect -> TODO()
-                is SignInIntrospectApiResult.UnknownError -> TODO()
+                is SignInIntrospectApiResult.Redirect -> {
+                    INativeAuthCommandResult.Redirect(
+                        correlationId = result.correlationId
+                    )
+                }
+                is SignInIntrospectApiResult.UnknownError -> {
+                    Logger.warnWithObject(
+                        TAG,
+                        "Unexpected result: ",
+                        result
+                    )
+                    (result as ApiErrorResult)
+                    INativeAuthCommandResult.APIError(
+                        error = result.error,
+                        errorDescription = result.errorDescription,
+                        errorCodes = result.errorCodes,
+                        correlationId = result.correlationId
+                    )
+                }
             }
         } catch (e: Exception) {
             Logger.error(
@@ -2165,12 +2218,13 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         }
     }
 
-    private fun SignInIntrospectApiResult.toMFAChallengeCommandResult(
-        oAuth2Strategy: NativeAuthOAuth2Strategy,
-        parameters: MFAChallengeCommandParameters,
-    ): MFAChallengeCommandResult {
+    private fun SignInIntrospectApiResult.toMFAChallengeCommandResult(): MFAChallengeCommandResult {
         return when (this) {
-            is SignInIntrospectApiResult.Redirect -> TODO()
+            is SignInIntrospectApiResult.Redirect -> {
+                INativeAuthCommandResult.Redirect(
+                    correlationId = this.correlationId
+                )
+            }
             is SignInIntrospectApiResult.Success -> {
                 MFACommandResult.SelectionRequired(
                     correlationId = this.correlationId,
@@ -2178,7 +2232,20 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     authMethods = this.methods
                 )
             }
-            is SignInIntrospectApiResult.UnknownError -> TODO()
+            is SignInIntrospectApiResult.UnknownError -> {
+                Logger.warnWithObject(
+                    TAG,
+                    this.correlationId,
+                    "Unexpected result: ",
+                    this
+                )
+                INativeAuthCommandResult.APIError(
+                    error = this.error,
+                    errorDescription = this.errorDescription,
+                    errorCodes = this.errorCodes,
+                    correlationId = this.correlationId
+                )
+            }
         }
     }
 
