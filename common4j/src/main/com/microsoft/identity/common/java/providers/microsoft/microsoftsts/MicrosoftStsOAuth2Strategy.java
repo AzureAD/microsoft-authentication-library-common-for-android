@@ -28,12 +28,8 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2Scopes.CLAIMS_UPDATE_RESOURCE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
-import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_ID;
-import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_SEQUENCE;
-import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
 import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
 
-import com.google.gson.JsonParseException;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
@@ -48,8 +44,6 @@ import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.logging.LibraryInfoHelper;
@@ -57,11 +51,8 @@ import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpConstants;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
-import com.microsoft.identity.common.java.opentelemetry.AttributeName;
-import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResponse;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
@@ -74,14 +65,10 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfigurationClient;
-import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
-import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;
-import com.microsoft.identity.common.java.util.ResultUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.io.IOException;
@@ -90,8 +77,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -595,7 +580,9 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     @NonNull
-    protected TokenResult getTokenResultFromHttpResponse(@NonNull final HttpResponse response)
+    protected TokenResult getTokenResultFromHttpResponse(
+            @NonNull final HttpResponse response
+    )
             throws ClientException {
         final String methodName = ":getTokenResultFromHttpResponse";
 
@@ -604,93 +591,8 @@ public class MicrosoftStsOAuth2Strategy
                 "Getting TokenResult from HttpResponse..."
         );
 
-        MicrosoftStsTokenResponse tokenResponse = null;
-        TokenErrorResponse tokenErrorResponse = null;
-
-        if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            //An error occurred
-            try {
-                tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(
-                        getBodyFromUnsuccessfulResponse(response.getBody()),
-                        MicrosoftTokenErrorResponse.class
-                );
-            } catch (final JsonParseException ex) {
-                tokenErrorResponse = new MicrosoftTokenErrorResponse();
-                final String statusCode = String.valueOf(response.getStatusCode());
-                tokenErrorResponse.setError(statusCode);
-                tokenErrorResponse.setErrorDescription("Received " + statusCode + " status code from Server ");
-            }
-            tokenErrorResponse.setStatusCode(response.getStatusCode());
-
-            if (null != response.getHeaders()) {
-                tokenErrorResponse.setResponseHeadersJson(
-                        HeaderSerializationUtil.toJson(response.getHeaders())
-                );
-            }
-            tokenErrorResponse.setResponseBody(response.getBody());
-        } else {
-            tokenResponse = ObjectMapper.deserializeJsonStringToObject(
-                    getBodyFromSuccessfulResponse(response.getBody()),
-                    MicrosoftStsTokenResponse.class
-            );
-        }
-
-        final TokenResult result = new TokenResult(tokenResponse, tokenErrorResponse);
-
-        ResultUtil.logResult(TAG, result);
-
-        if (null != response.getHeaders()) {
-            final Map<String, List<String>> responseHeaders = response.getHeaders();
-
-            final List<String> cliTelemValues;
-            if (null != (cliTelemValues = responseHeaders.get(X_MS_CLITELEM))
-                    && !cliTelemValues.isEmpty()) {
-                // Element should only contain 1 value...
-                final String cliTelemHeader = cliTelemValues.get(0);
-                final CliTelemInfo cliTelemInfo = CliTelemInfo.fromXMsCliTelemHeader(
-                        cliTelemHeader
-                );
-                // Parse and set the result...
-                result.setCliTelemInfo(cliTelemInfo);
-
-                if (null != tokenResponse && null != cliTelemInfo) {
-                    tokenResponse.setSpeRing(cliTelemInfo.getSpeRing());
-                    tokenResponse.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
-                    tokenResponse.setCliTelemErrorCode(cliTelemInfo.getServerErrorCode());
-                    tokenResponse.setCliTelemSubErrorCode(cliTelemInfo.getServerSubErrorCode());
-                }
-            }
-
-            final Map<String, String> mapWithAdditionalEntry = new HashMap<String, String>();
-
-            final String ccsRequestId = response.getHeaderValue(XMS_CCS_REQUEST_ID, 0);
-            if (null != ccsRequestId) {
-                SpanExtension.current().setAttribute(AttributeName.ccs_request_id.name(), ccsRequestId);
-                if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.EXPOSE_CCS_REQUEST_ID_IN_TOKENRESPONSE)){
-                    mapWithAdditionalEntry.put(XMS_CCS_REQUEST_ID, ccsRequestId);
-                }
-            }
-
-            final String ccsRequestSequence = response.getHeaderValue(XMS_CCS_REQUEST_SEQUENCE, 0);
-            if (null != ccsRequestSequence) {
-                SpanExtension.current().setAttribute(AttributeName.ccs_request_sequence.name(), ccsRequestSequence);
-                if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.EXPOSE_CCS_REQUEST_SEQUENCE_IN_TOKENRESPONSE)){
-                    mapWithAdditionalEntry.put(XMS_CCS_REQUEST_SEQUENCE, ccsRequestSequence);
-                }
-            }
-
-            if (null != tokenResponse) {
-                if (null != tokenResponse.getExtraParameters()) {
-                    for (final Map.Entry<String, String> entry : tokenResponse.getExtraParameters()) {
-                        mapWithAdditionalEntry.put(entry.getKey(), entry.getValue());
-                    }
-                }
-
-                tokenResponse.setExtraParameters(mapWithAdditionalEntry.entrySet());
-            }
-        }
-
-        return result;
+        final MicrosoftStsTokenResponseHandler handler = new MicrosoftStsTokenResponseHandler();
+        return handler.handleTokenResponse(response);
     }
 
     protected String getBodyFromSuccessfulResponse(@NonNull final String responseBody) throws ClientException {
