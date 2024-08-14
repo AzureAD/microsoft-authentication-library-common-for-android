@@ -336,6 +336,9 @@ public class BrokerHost extends AbstractTestBroker {
         setLocalFlight(FLIGHT_PRT_V3, Boolean.toString(true));
     }
 
+    /**
+     * Restores the MSA accounts.
+     */
     public void restoreMsaAccounts(final int expectedNumberOfRestoredAccounts) {
         brokerApiFragment.launch();
         brokerApiFragment.restoreMsaAccounts(expectedNumberOfRestoredAccounts);
