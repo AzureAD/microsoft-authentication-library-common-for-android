@@ -72,11 +72,10 @@ public final class HttpConstants {
         public static final String APPLICATION_JOSE = "application/jose";
     }
 
+    /**
+     * Identifiers for character encodings which can be used in the Content-Type header parameters
+     */
     public static final class Charset {
         public static final String UTF8 = "charset=utf-8";
-    }
-
-    public static final class ContentType {
-        public static final String APPLICATION_JOSE_UTF8 = MediaType.APPLICATION_JOSE + "; " + Charset.UTF8;
     }
 }

@@ -525,5 +525,8 @@ public final class ErrorStrings {
      */
     public static final String NATIVE_AUTH_NO_ACCESS_TOKEN_FOUND = "native_auth_no_access_token_found";
 
-    public static final String UNEXPECTED_CONTENT_TYPE = "unexpected_content_type";
+    /**
+     * Unexpected content type received in http response.
+     */
+    public static final String UNEXPECTED_HTTP_RESPONSE_CONTENT_TYPE = "unexpected_http_response_content_type";
 }
