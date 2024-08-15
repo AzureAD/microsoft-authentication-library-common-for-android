@@ -137,7 +137,7 @@ abstract class AbstractBrokerHost {
     static public String dismissDialogBoxAndGetText() {
         // Look for the dialog box
         final UiObject dialogBox = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                DIALOG_BOX_RESOURCE_ID
+                DIALOG_BOX_RESOURCE_ID, CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG
         );
         Assert.assertTrue("Assert dialog box", dialogBox.exists());
         try {
