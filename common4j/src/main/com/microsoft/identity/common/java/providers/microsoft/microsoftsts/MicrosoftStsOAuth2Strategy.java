@@ -582,17 +582,8 @@ public class MicrosoftStsOAuth2Strategy
     @NonNull
     protected TokenResult getTokenResultFromHttpResponse(
             @NonNull final HttpResponse response
-    )
-            throws ClientException {
-        final String methodName = ":getTokenResultFromHttpResponse";
-
-        Logger.verbose(
-                TAG + methodName,
-                "Getting TokenResult from HttpResponse..."
-        );
-
-        final MicrosoftStsTokenResponseHandler handler = new MicrosoftStsTokenResponseHandler();
-        return handler.handleTokenResponse(response);
+    ) throws ClientException {
+        return getTokenResultFromHttpResponse(response, new MicrosoftStsTokenResponseHandler());
     }
 
     protected String getBodyFromSuccessfulResponse(@NonNull final String responseBody) throws ClientException {
@@ -610,6 +601,39 @@ public class MicrosoftStsOAuth2Strategy
             throws ClientException {
         validateAuthScheme(request, response);
         validateTokensAreInResponse(request, response);
+    }
+
+    public TokenResult requestToken(
+            @NonNull final MicrosoftStsTokenRequest request,
+            @NonNull final AbstractMicrosoftStsTokenResponseHandler responseHandler
+    ) throws IOException, ClientException {
+        final String methodName = ":requestToken";
+        validateTokenRequest(request);
+
+        final HttpResponse response = performTokenRequest(request);
+        final TokenResult result = getTokenResultFromHttpResponse(response, responseHandler);
+        if (result.getTokenResponse() != null) {
+            result.getTokenResponse().setAuthority(mTokenEndpoint);
+        }
+        if (result.getSuccess()) {
+            validateTokenResponse(request, (MicrosoftStsTokenResponse) result.getSuccessResponse());
+        }
+        return result;
+    }
+
+    private TokenResult getTokenResultFromHttpResponse(
+            @NonNull final HttpResponse response,
+            @NonNull final AbstractMicrosoftStsTokenResponseHandler handler
+    )
+            throws ClientException {
+        final String methodName = ":getTokenResultFromHttpResponse";
+
+        Logger.verbose(
+                TAG + methodName,
+                "Getting TokenResult from HttpResponse using " + handler.getClass().getSimpleName()
+        );
+
+        return handler.handleTokenResponse(response);
     }
 
     /**
