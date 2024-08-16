@@ -26,13 +26,13 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErro
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResult
 
 /**
- * Represents the potential result types returned from the OAuth /challenge endpoint,
+ * Represents the potential result types returned from the /oauth/v2.0/introspect endpoint,
  * including a case for unexpected errors received from the server.
  */
-sealed interface SignInChallengeApiResult: ApiResult {
+sealed interface SignInIntrospectApiResult: ApiResult {
     data class Redirect(
         override val correlationId: String
-    ) : SignInChallengeApiResult {
+    ) : SignInIntrospectApiResult {
         override fun toUnsanitizedString(): String {
             return "Redirect(correlationId=$correlationId)"
         }
@@ -40,55 +40,29 @@ sealed interface SignInChallengeApiResult: ApiResult {
         override fun toString(): String = toUnsanitizedString()
     }
 
-    data class IntrospectRequired(
-        override val correlationId: String,
-    ) : SignInChallengeApiResult {
-        override fun toUnsanitizedString(): String {
-            return "IntrospectRequired(correlationId=$correlationId)"
-        }
-
-        override fun toString(): String = toUnsanitizedString()
-    }
-
-    data class OOBRequired(
+    data class Success(
         override val correlationId: String,
         val continuationToken: String,
-        val challengeTargetLabel: String,
-        val challengeChannel: String,
-        val codeLength: Int
-    ) : SignInChallengeApiResult {
-        override fun toUnsanitizedString(): String = "OOBRequired(correlationId=$correlationId, " +
-                "challengeTargetLabel=$challengeTargetLabel, challengeChannel=$challengeChannel, " +
-                "codeLength=$codeLength)"
+        val methods: List<AuthenticationMethodApiResult>
+    ) : SignInIntrospectApiResult {
+        override fun toUnsanitizedString(): String = "Success(correlationId=$correlationId, methods=$methods)"
 
-        override fun toString(): String = "OOBRequired(correlationId=$correlationId, " +
-                "challengeChannel=$challengeChannel, codeLength=$codeLength)"
-    }
-
-    data class PasswordRequired(
-        override val correlationId: String,
-        val continuationToken: String
-    ) : SignInChallengeApiResult {
-        override fun toUnsanitizedString(): String = "PasswordRequired(correlationId=$correlationId)"
-
-        override fun toString(): String = toUnsanitizedString()
+        override fun toString(): String = "Success(correlationId=$correlationId)"
     }
 
     data class UnknownError(
         override val correlationId: String,
         override val error: String,
-        override val subError: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
     ) : ApiErrorResult(
         error = error,
-        subError = subError,
         errorDescription = errorDescription,
         errorCodes = errorCodes,
         correlationId = correlationId
-    ), SignInChallengeApiResult {
+    ), SignInIntrospectApiResult {
         override fun toUnsanitizedString() = "UnknownError(correlationId=$correlationId, " +
-                "error=$error, subError=$subError, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
 
         override fun toString(): String = "UnknownError(correlationId=$correlationId)"
     }

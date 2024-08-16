@@ -524,4 +524,9 @@ public final class ErrorStrings {
      * Access token doesn't exist and is required for NativeAuth token refresh
      */
     public static final String NATIVE_AUTH_NO_ACCESS_TOKEN_FOUND = "native_auth_no_access_token_found";
+
+    /**
+     * Unexpected content type received in http response.
+     */
+    public static final String UNEXPECTED_HTTP_RESPONSE_CONTENT_TYPE = "unexpected_http_response_content_type";
 }
