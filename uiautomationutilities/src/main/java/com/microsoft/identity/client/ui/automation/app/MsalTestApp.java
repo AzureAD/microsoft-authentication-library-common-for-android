@@ -231,4 +231,9 @@ public class MsalTestApp extends App {
             selectFromConfigFile("MSA");
         }
     }
+    public void trustDebugBroker() throws UiObjectNotFoundException {
+        final UiObject trustDebugBrokerButton  = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_trust_debug_brkr");
+        scrollToElement(trustDebugBrokerButton);
+        trustDebugBrokerButton.click();
+    }
 }
