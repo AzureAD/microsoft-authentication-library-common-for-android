@@ -68,7 +68,12 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to control the timeout duration for UrlConnection read timeout.
      */
-    URL_CONNECTION_READ_TIME_OUT("UrlConnectionReadTimeOut", DEFAULT_READ_TIME_OUT_MS);
+    URL_CONNECTION_READ_TIME_OUT("UrlConnectionReadTimeOut", DEFAULT_READ_TIME_OUT_MS),
+
+    /**
+     * Flight to disable the network connectivity check.
+     */
+    DISABLE_NETWORK_CONNECTIVITY_CHECK("DisableNetworkConnectivityCheck", true);;
 
     private String key;
     private Object defaultValue;

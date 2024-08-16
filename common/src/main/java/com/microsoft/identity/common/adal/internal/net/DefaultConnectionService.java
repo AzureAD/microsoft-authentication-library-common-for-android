@@ -75,6 +75,11 @@ public class DefaultConnectionService implements IConnectionService {
         ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
 
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.DISABLE_NETWORK_CONNECTIVITY_CHECK)){
+            // Skip the check.
+            return true;
+        }
+
         final boolean isConnectionAvailable;
         final boolean useNetworkCapabilityForNetworkCheck
                 = CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.USE_NETWORK_CAPABILITY_FOR_NETWORK_CHECK);
