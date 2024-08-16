@@ -72,13 +72,13 @@ public class DefaultConnectionService implements IConnectionService {
      * @return True if network connection available, false otherwise.
      */
     public boolean isConnectionAvailable() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
-
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.DISABLE_NETWORK_CONNECTIVITY_CHECK)){
             // Skip the check.
             return true;
         }
+
+        final ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
 
         final boolean isConnectionAvailable;
         final boolean useNetworkCapabilityForNetworkCheck
