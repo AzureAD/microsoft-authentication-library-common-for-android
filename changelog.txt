@@ -1,6 +1,7 @@
 V.Next
 ---------
 - [MINOR] Disable Network check by default (#2480)
+- [MINOR] Return Family ID in LocalAuthenticationResult (#2479)
 - [PATCH] Move MS STS Response handling to separate class (#2471)
 - [MINOR] Add support for email OTP MFA in native authentication (#2468)
 
