@@ -1,3 +1,7 @@
+Version 17.7.2
+---------
+- [MINOR] Disable Network check by default (#2480)
+
 Version 17.7.1
 ---------
 - [PATCH] Return Family ID in LocalAuthenticationResult (#2479)
