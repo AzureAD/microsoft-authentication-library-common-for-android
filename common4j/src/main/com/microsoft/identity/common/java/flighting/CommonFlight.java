@@ -56,7 +56,12 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to be able to disable/rollback the passkey feature in broker if necessary.
      * This will be set to true by default.
      */
-    ENABLE_PASSKEY_FEATURE("EnablePasskeyFeature", true);
+    ENABLE_PASSKEY_FEATURE("EnablePasskeyFeature", true),
+
+    /**
+     * Flight to disable the network connectivity check.
+     */
+    DISABLE_NETWORK_CONNECTIVITY_CHECK("DisableNetworkConnectivityCheck", true);
 
     private String key;
     private Object defaultValue;

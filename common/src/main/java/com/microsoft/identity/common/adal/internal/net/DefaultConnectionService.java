@@ -72,7 +72,7 @@ public class DefaultConnectionService implements IConnectionService {
      * @return True if network connection available, false otherwise.
      */
     public boolean isConnectionAvailable() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
+        final ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
 
         final boolean isConnectionAvailable;

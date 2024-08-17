@@ -1,5 +1,6 @@
 V.Next
 ---------
+- [MINOR] Disable Network check by default (#2480)
 
 Version 17.7.0
 ---------
