@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.internal.platform;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.java.constants.FidoConstants.WEBAUTHN_QUERY_PARAMETER_FIELD;
+import static com.microsoft.identity.common.java.constants.FidoConstants.WEBAUTHN_QUERY_PARAMETER_VALUE;
 
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -31,6 +33,7 @@ import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -53,6 +56,7 @@ import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.security.NoSuchAlgorithmException;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -222,6 +226,37 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     @Override
     public List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList) {
         return originalList;
+    }
+
+    /**
+     * Updates the query string parameters with the WebAuthn capability parameter (or removes the parameter) if applicable.
+     *
+     * @param originalList The original list of query string parameters.
+     * @param isWebAuthnCapable A boolean indicating whether the host app intends to be WebAuthn capable.
+     */
+    @NonNull
+    public static ArrayList<Map.Entry<String, String>> updateWithOrDeleteWebAuthnParam(@NonNull final List<Map.Entry<String, String>> originalList,
+                                                                                       final boolean isWebAuthnCapable) {
+        final String methodTag = TAG + ":UpdateWithOrDeleteWebAuthnParam";
+        final Map.Entry<String, String> webauthnParam = new AbstractMap.SimpleEntry<String, String>(
+                WEBAUTHN_QUERY_PARAMETER_FIELD,
+                WEBAUTHN_QUERY_PARAMETER_VALUE
+        );
+        final ArrayList<Map.Entry<String, String>> result = new ArrayList<>(originalList);
+        // Check the OS version. As of the time this is written, passkeys are only supported on devices that run Android 9 (API 28) or higher.
+        // https://developer.android.com/identity/sign-in/credential-manager
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            Logger.info(
+                    methodTag,
+                    "Device is running on an Android version less than 9 (API 28), which is the minimum level for passkeys."
+            );
+
+            // If we don't want to add this query string param, then we should also remove other instances of it that might be already present from MSAL/OneAuth-MSAL.
+            result.remove(webauthnParam);
+        } else if (isWebAuthnCapable && !originalList.contains(webauthnParam)) {
+            result.add(webauthnParam);
+        }
+        return result;
     }
 
     /**
