@@ -114,6 +114,22 @@ public class HttpResponse {
         return list.get(index);
     }
 
+    /**
+     * Checks if media type in response content type is same as expected media type.
+     */
+    public boolean isContentTypeMediaType(@NonNull final String expectedResponseType) {
+        final String responseContentType = this.getHeaderValue(HttpConstants.HeaderField.CONTENT_TYPE, 0);
+        if (StringUtil.isNullOrEmpty(responseContentType)) {
+            return false;
+        }
+        // Split the content type by semicolon to extract media type
+        // e.g. JWE response content type is expected to be application/jose and there can be extra parameter e.g
+        // eSTS is sending "application/jose; charset=utf-8". We are parsing the media type part and validating
+        // it.
+        String mediaType = responseContentType.split(";")[0].trim();
+        return expectedResponseType.equalsIgnoreCase(mediaType);
+    }
+
     //CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
