@@ -1,5 +1,6 @@
 V.Next
----------
+----------
+- [MINOR] Add API in MicrosoftStsOAuthStrategy to request token and handle response with provided handler (@2478)
 - [MINOR] Disable Network check by default (#2480)
 - [MINOR] Return Family ID in LocalAuthenticationResult (#2479)
 - [PATCH] Move MS STS Response handling to separate class (#2471)
