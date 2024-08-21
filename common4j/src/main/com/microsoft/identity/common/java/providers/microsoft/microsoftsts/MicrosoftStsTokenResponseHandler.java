@@ -22,32 +22,26 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-
-import java.util.UUID;
+import lombok.NonNull;
 
 /**
- * Tests for {@link MicrosoftStsTokenRequest}
-
+ * Handles standard successful token responses from the Microsoft STS.
  */
-@RunWith(JUnit4.class)
-public final class MicrosoftStsTokenRequestTests {
+public class MicrosoftStsTokenResponseHandler extends AbstractMicrosoftStsTokenResponseHandler {
 
-    @Test
-    public void testCorrelationIdSerializedCorrectly(){
-        UUID correlationId = UUID.randomUUID();
-        MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
-        request.setCorrelationId(correlationId);
-
-        String jsonRequest = ObjectMapper.serializeObjectToJsonString(request);
-
-        MicrosoftStsTokenRequest deserializedRequest = ObjectMapper.deserializeJsonStringToObject(jsonRequest, MicrosoftStsTokenRequest.class);
-
-        Assert.assertEquals(correlationId, deserializedRequest.getCorrelationId());
+    /**
+     * Expects JSON response and deserializes it to {@link MicrosoftStsTokenResponse}.
+     * @return Deserialized response into MicrosoftStsTokenResponse
+     */
+    @Override
+    protected MicrosoftStsTokenResponse getSuccessfulResponse(@NonNull final HttpResponse httpResponse) {
+        return ObjectMapper.deserializeJsonStringToObject(
+                httpResponse.getBody(),
+                MicrosoftStsTokenResponse.class
+        );
     }
 }
