@@ -337,6 +337,14 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     /**
+     * Restores the MSA accounts.
+     */
+    public void restoreMsaAccounts(final int expectedNumberOfRestoredAccounts) {
+        brokerApiFragment.launch();
+        brokerApiFragment.restoreMsaAccounts(expectedNumberOfRestoredAccounts);
+    }
+
+    /**
      * Ensures flight provider as LocalFlightsProvider
      * @param key The flight parameter name as string.
      * @param value The flight parameter value as string

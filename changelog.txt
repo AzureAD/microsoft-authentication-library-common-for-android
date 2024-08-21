@@ -1,10 +1,18 @@
 V.Next
 ---------
+- [MINOR] Disable Network check by default (#2480)
+- [MINOR] Return Family ID in LocalAuthenticationResult (#2479)
+- [PATCH] Move MS STS Response handling to separate class (#2471)
+- [MINOR] Add support for email OTP MFA in native authentication (#2468)
+- [MINOR] Moving OS version check for passkeys (#2450)
 
 Version 17.7.0
 ---------
 - [MINOR] Add null cursor BrokerCommunicationException error category (#2459)
 - [MINOR] Classifying more UNKNOWN_ERRORs (#2460)
+- [MINOR] Setting flights to control UrlConnection timeout values (#2473)
+- [PATCH] Fix Native Auth authority data being persisted across different SDK instances (#2462)
+- [PATCH] Fix incorrect formatting when logging native auth objects
 
 Version 17.6.1
 ---------

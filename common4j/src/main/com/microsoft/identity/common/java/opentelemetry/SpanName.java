@@ -61,7 +61,9 @@ public enum SpanName {
     AcquirePrtUsingTransferToken,
     AcquireTransferTokenUsingPrt,
     SaveTransferTokenToBlockstore,
+    GetBackedUpMsaAccounts,
     RefreshTransferToken,
     IsLtwPreInstalled,
-    DeleteTransferToken
+    DeleteTransferToken,
+    RestoreMsaAccounts
 }
