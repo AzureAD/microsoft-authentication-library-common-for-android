@@ -65,7 +65,10 @@ public class InteractiveTokenCommand extends TokenCommand {
 
         span.setAttribute(AttributeName.application_name.name(), getParameters().getApplicationName());
         span.setAttribute(AttributeName.public_api_id.name(), getPublicApiId());
-
+        Logger.info(
+                TAG + methodName,
+                "Start" + methodName
+        );
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             if (getParameters() instanceof InteractiveTokenCommandParameters) {
                 Logger.info(
@@ -92,7 +95,10 @@ public class InteractiveTokenCommand extends TokenCommand {
                         span.setStatus(StatusCode.ERROR, "empty exception");
                     }
                 }
-
+                Logger.info(
+                        TAG + methodName,
+                        "End" + methodName
+                );
                 return result;
             } else {
                 throw new IllegalArgumentException("Invalid operation parameters");

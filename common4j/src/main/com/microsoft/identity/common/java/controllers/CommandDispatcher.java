@@ -250,6 +250,11 @@ public class CommandDispatcher {
     public static ILocalAuthenticationResult submitAcquireTokenSilentSync(@NonNull final SilentTokenCommand command)
             throws BaseException {
         final CommandResult commandResult;
+        final String methodName = ":submitAcquireTokenSilentSync";
+        Logger.info(
+                TAG + methodName,
+                "Start" + methodName
+        );
         try {
             if (BuildConfig.DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT){
                 commandResult = submitSilentReturningFuture(command).get();
@@ -257,12 +262,15 @@ public class CommandDispatcher {
                 final int silentTokenTimeOutMs = CommonFlightManager.getIntValue(CommonFlight.ACQUIRE_TOKEN_SILENT_TIMEOUT_MILLISECONDS);
                 commandResult = submitSilentReturningFuture(command).get(silentTokenTimeOutMs, TimeUnit.MILLISECONDS);
             }
+
         } catch (final InterruptedException | ExecutionException | TimeoutException e) {
             throw ExceptionAdapter.baseExceptionFromException(e);
         }
 
         if (commandResult.getStatus() == ICommandResult.ResultStatus.COMPLETED){
-            return (ILocalAuthenticationResult) commandResult.getResult();
+            ILocalAuthenticationResult res = (ILocalAuthenticationResult) commandResult.getResult();
+            Logger.info(TAG + methodName, "End" + methodName);
+            return res;
         } else if (commandResult.getStatus() == ICommandResult.ResultStatus.ERROR){
             throw ExceptionAdapter.baseExceptionFromException((Throwable) commandResult.getResult());
         } else if (commandResult.getStatus() == ICommandResult.ResultStatus.CANCEL){
@@ -289,7 +297,7 @@ public class CommandDispatcher {
         final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(),
                 commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() :
                         commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
-
+        Logger.info(TAG + ":submitSilentReturningFuture", "Start:submitSilentReturningFuture");
         // set correlation id on parameters as it may not already be set
         commandParameters.setCorrelationId(correlationId);
 
@@ -398,6 +406,8 @@ public class CommandDispatcher {
                     codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_FUTURE_OBJECT_CREATION_END : ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);
                 }
             }));
+            Logger.info(TAG + ":submitSilentReturningFuture", "End:submitSilentReturningFuture");
+
             return finalFuture;
         }
     }
@@ -536,7 +546,7 @@ public class CommandDispatcher {
         Object result = null;
         BaseException baseException = null;
         CommandResult<?> commandResult = null;
-
+        Logger.info(TAG + ":executeCommand", "Start:executeCommand");
         try {
             //Try executing request
             result = command.execute();
@@ -578,6 +588,8 @@ public class CommandDispatcher {
         // set correlation id on Local Authentication Result
         setCorrelationIdOnResult(commandResult, correlationId);
         setTelemetryOnResultAndFlush(commandResult, correlationId);
+        Logger.info(TAG + ":executeCommand", "End:executeCommand");
+
         return commandResult;
     }
 
@@ -710,6 +722,10 @@ public class CommandDispatcher {
 
         public static void beginInteractive (final InteractiveTokenCommand command) {
             final String methodName = ":beginInteractive";
+            Logger.info(
+                    TAG + methodName,
+                    "Start" + methodName
+            );
             synchronized (sLock) {
 
                 //Cancel interactive request if authorizationInCurrentTask() returns true OR this is a broker request.
@@ -789,6 +805,8 @@ public class CommandDispatcher {
                                             statusMsg(commandResult.getStatus().getLogStatus()));
 
                             EstsTelemetry.getInstance().flush(command, commandResult);
+                            Logger.info(TAG + methodName,
+                                    "End" + methodName);
                             returnCommandResult(command, commandResult);
                         } finally {
                             DiagnosticContext.INSTANCE.clear();
@@ -818,7 +836,6 @@ public class CommandDispatcher {
             final String correlationId = StringUtil.isNullOrEmpty(requestCorrelationId) ?
                     UUID.randomUUID().toString() :
                     requestCorrelationId;
-
             final RequestContext rc = new RequestContext();
             rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
             rc.put(PRODUCT, sdkType);
