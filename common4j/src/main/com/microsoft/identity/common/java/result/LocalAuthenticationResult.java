@@ -76,7 +76,6 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
 
         if (cacheRecord.getRefreshToken() != null) {
             mRefreshToken = cacheRecord.getRefreshToken().getSecret();
-            mFamilyId = cacheRecord.getRefreshToken().getFamilyId();
         }
 
         final IdTokenRecord idTokenRecord = sdkType == SdkType.ADAL ?
