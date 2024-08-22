@@ -32,10 +32,11 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.HELLO_ERROR_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.HELLO_ERROR_MESSAGE;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PREFERRED_AUTH_METHOD_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PREFERRED_AUTH_METHOD_CODE;
 import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
 import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BROKER_BUNDLE;
+import static com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil.isFirstVersionOlderOrEqual;
 
 import android.accounts.AccountManager;
 import android.content.Intent;
@@ -43,6 +44,7 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -51,6 +53,8 @@ import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.request.AuthenticationSchemeTypeAdapter;
 import com.microsoft.identity.common.internal.util.GzipUtil;
+import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
+import com.microsoft.identity.common.java.cache.CacheRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
@@ -66,10 +70,13 @@ import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.exception.UnsupportedBrokerException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.request.SdkType;
@@ -80,13 +87,15 @@ import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.ThrowableUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import org.json.JSONException;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -105,12 +114,44 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     private static final String DCF_NOT_SUPPORTED_ERROR = "deviceCodeFlowAuthRequest() not supported in BrokerMsalController";
 
+    interface IBooleanCallback {
+        boolean getResult();
+    }
+
+    private final IBooleanCallback mShouldStopReturningRtWithAadResponseCallback;
+
+    public MsalBrokerResultAdapter() {
+        mShouldStopReturningRtWithAadResponseCallback = () -> CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.STOP_RETURNING_AAD_RT_BACK_TO_CALLING_APP);
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    public MsalBrokerResultAdapter(boolean shouldStopReturningRtWithAadResponse){
+        mShouldStopReturningRtWithAadResponseCallback = () -> shouldStopReturningRtWithAadResponse;
+    }
+
     @NonNull
     @Override
     public Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult,
                                                  @Nullable final String negotiatedBrokerProtocolVersion) {
         final String methodTag = TAG + ":bundleFromAuthenticationResult";
         Logger.info(methodTag, "Constructing result bundle from ILocalAuthenticationResult");
+
+        final Bundle resultBundle = bundleFromBrokerResult(
+                buildBrokerResultFromAuthenticationResult(authenticationResult, negotiatedBrokerProtocolVersion),
+                negotiatedBrokerProtocolVersion);
+        resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, true);
+
+        return resultBundle;
+    }
+
+    /**
+     * Constructs a {@link BrokerResult} object from the given {@link ILocalAuthenticationResult}
+     * **/
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @NonNull
+    public BrokerResult buildBrokerResultFromAuthenticationResult
+            (@NonNull final ILocalAuthenticationResult authenticationResult,
+             @Nullable final String negotiatedBrokerProtocolVersion){
 
         final IAccountRecord accountRecord = authenticationResult.getAccountRecord();
 
@@ -127,11 +168,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 ? expiresOn
                 : Long.parseLong(accessTokenRecord.getExtendedExpiresOn());
 
-        final BrokerResult brokerResult = new BrokerResult.Builder()
+        final BrokerResult.Builder brokerResultBuilder = new BrokerResult.Builder()
                 .tenantProfileRecords(authenticationResult.getCacheRecordWithTenantProfileData())
                 .accessToken(authenticationResult.getAccessToken())
                 .idToken(authenticationResult.getIdToken())
-                .refreshToken(authenticationResult.getRefreshToken())
                 .homeAccountId(accountRecord.getHomeAccountId())
                 .localAccountId(accountRecord.getLocalAccountId())
                 .userName(accountRecord.getUsername())
@@ -147,15 +187,115 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .extendedExpiresOn(extendedExpiresOn)
                 .cachedAt(Long.parseLong(accessTokenRecord.getCachedAt()))
                 .speRing(authenticationResult.getSpeRing())
-                .refreshTokenAge(authenticationResult.getRefreshTokenAge())
                 .success(true)
-                .servicedFromCache(authenticationResult.isServicedFromCache())
-                .build();
+                .servicedFromCache(authenticationResult.isServicedFromCache());
 
-        final Bundle resultBundle = bundleFromBrokerResult(brokerResult, negotiatedBrokerProtocolVersion);
-        resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, true);
+        if (shouldRemoveRefreshTokenFromResult(authenticationResult, negotiatedBrokerProtocolVersion)){
+            brokerResultBuilder.tenantProfileRecords(
+                    removeRefreshTokenFromCacheRecords(
+                            authenticationResult.getCacheRecordWithTenantProfileData()
+                    ));
+        } else {
+            brokerResultBuilder
+                    .tenantProfileRecords(authenticationResult.getCacheRecordWithTenantProfileData())
+                    .refreshToken(authenticationResult.getRefreshToken())
+                    .refreshTokenAge(authenticationResult.getRefreshTokenAge());
+        }
 
-        return resultBundle;
+        return brokerResultBuilder.build();
+    }
+
+    /**
+     * The Broker-MSAL protocol version which starts supporting AAD RT removal.
+     **/
+    public static final String REMOVE_RT_FROM_AAD_RESULT_MSAL_PROTOCOL_VERSION = "16.0";
+
+    /**
+     * Remove Refresh token from the given {@link ICacheRecord} list.
+     **/
+    @Nullable
+    private List<ICacheRecord> removeRefreshTokenFromCacheRecords(@Nullable final List<ICacheRecord> originalList){
+        if (originalList == null){
+            return null;
+        }
+
+        final List<ICacheRecord> cacheRecordsWithoutRT = new ArrayList<>();
+        for (final ICacheRecord record : originalList) {
+            cacheRecordsWithoutRT.add(
+                    CacheRecord.builder()
+                            .account(record.getAccount())
+                            .idToken(record.getIdToken())
+                            .v1IdToken(record.getV1IdToken())
+                            .accessToken(record.getAccessToken())
+                            .build()
+            );
+        }
+
+        return cacheRecordsWithoutRT;
+    }
+
+    /**
+     * Determine if AAD RT should be removed from the response object.
+     **/
+    private boolean shouldRemoveRefreshTokenFromResult(@NonNull final ILocalAuthenticationResult result,
+                                                      @Nullable final String negotiatedBrokerProtocolVersion){
+        final String methodTag = TAG + ":shouldRemoveRefreshTokenFromResult";
+        if (mShouldStopReturningRtWithAadResponseCallback.getResult()) {
+            // We'll only strip RT if both the client side and broker side supports protocol version 16.
+            if (!isFirstVersionOlderOrEqual(REMOVE_RT_FROM_AAD_RESULT_MSAL_PROTOCOL_VERSION, negotiatedBrokerProtocolVersion)) {
+                SpanExtension.current().setAttribute(
+                        AttributeName.stop_returning_rt_result.name(),
+                        "protocol_version_too_low");
+                return false;
+            }
+
+            try {
+                // Remove RT if the result is not MSA... by checking the "local" TenantID (realm).
+                // (e.g. For the guest account scenario,
+                //       if the account's home tenant is A and it's guested in B...
+                //       this value will be B.
+                if (!StringUtil.isNullOrEmpty(result.getTenantId())){
+                    final boolean resultToReturn = !AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(result.getTenantId());
+                    SpanExtension.current().setAttribute(
+                            AttributeName.stop_returning_rt_result.name(),
+                            resultToReturn
+                    );
+                    return resultToReturn;
+                }
+
+                // If that's empty... check the authority.
+                if (!StringUtil.isNullOrEmpty(result.getAccessTokenRecord().getAuthority())){
+                    final boolean resultToReturn = !result.getAccessTokenRecord().getAuthority().contains(AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID) &&
+                            !result.getAccessTokenRecord().getAuthority().contains(AzureActiveDirectoryAudience.CONSUMERS);
+                    SpanExtension.current().setAttribute(
+                            AttributeName.stop_returning_rt_result.name(),
+                            resultToReturn
+                    );
+                    return resultToReturn;
+                }
+
+                // Cannot determine if this is AAD or MSA. Do not strip values.
+                SpanExtension.current().setAttribute(
+                        AttributeName.stop_returning_rt_result.name(),
+                        "cannot_determine"
+                );
+                return false;
+            } catch (final Throwable t) {
+                // Best Effort.
+                Logger.error(methodTag, "Failed to determine if RT should be removed", t);
+                SpanExtension.current().setAttribute(
+                        AttributeName.stop_returning_rt_result.name(),
+                        ThrowableUtil.getStackTraceAsString(t)
+                );
+                return false;
+            }
+        }
+
+        SpanExtension.current().setAttribute(
+                AttributeName.stop_returning_rt_result.name(),
+                "feature_disabled"
+        );
+        return false;
     }
 
     @NonNull
