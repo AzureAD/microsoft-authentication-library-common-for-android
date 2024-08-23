@@ -126,7 +126,7 @@ public class HttpResponse {
         // e.g. JWE response content type is expected to be application/jose and there can be extra parameter e.g
         // eSTS is sending "application/jose; charset=utf-8". We are parsing the media type part and validating
         // it.
-        String mediaType = responseContentType.split(";")[0].trim();
+        final String mediaType = responseContentType.split(";")[0].trim();
         return expectedResponseType.equalsIgnoreCase(mediaType);
     }
 
