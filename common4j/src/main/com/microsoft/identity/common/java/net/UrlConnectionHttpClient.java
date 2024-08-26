@@ -264,13 +264,45 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         });
     }
 
+    /**
+     * Execute an HTTP PATCH request.
+     * @param requestUrl the URL of the resource to operate on.
+     * @param requestHeaders the headers for the request.
+     * @param requestContent the body content of the request, if applicable.  May be null.
+     * @return an HttpResponse with the result of the call.
+     * @throws IOException if there was a communication problem.
+     */
+    @Override
+    public HttpResponse patch(@NonNull final URL requestUrl,
+                              @NonNull final Map<String, String> requestHeaders,
+                              @edu.umd.cs.findbugs.annotations.Nullable final byte[] requestContent) throws IOException {
+        recordHttpTelemetryEventStart(HttpMethod.PATCH.name(), requestUrl, requestHeaders.get(CLIENT_REQUEST_ID));
+        final HttpRequest request = new HttpRequest(
+                requestUrl,
+                requestHeaders,
+                HttpMethod.PATCH.name(),
+                requestContent,
+                null
+        );
+        return retryPolicy.attempt(new Callable<HttpResponse>() {
+            public HttpResponse call() throws IOException {
+                return executeHttpSend(request, new Consumer<HttpResponse>() {
+                    @Override
+                    public void accept(HttpResponse httpResponse) {
+                        recordHttpTelemetryEventEnd(httpResponse);
+                    }
+                });
+            }
+        });
+    }
+
     private static HttpRequest constructHttpRequest(@NonNull HttpClient.HttpMethod httpMethod,
                                                     @NonNull URL requestUrl,
                                                     @NonNull Map<String, String> requestHeaders,
                                                     byte[] requestContent) {
 
         // Apply special backcompat behaviors for PATCH, if reqd
-        if (HttpClient.HttpMethod.PATCH == httpMethod && !requestUrl.getPath().contains("upgradeRegistration")) {
+        if (HttpClient.HttpMethod.PATCH == httpMethod) {
             // Because HttpURLConnection predates RFC-5789, we need to fallback on POST w/ a backcompat
             // workaround. See: https://stackoverflow.com/a/32503192/741827
             httpMethod = HttpClient.HttpMethod.POST;
