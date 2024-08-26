@@ -135,6 +135,7 @@ public class OAuth2StrategyTest {
     @Test
     public void testOauth2Strategy_NullTokenResponse() throws Exception {
         TestStrategy s = new TestStrategy(null, OAuth2StrategyParameters.builder().build());
-        Assert.assertNotNull(s.requestToken(null));
+        TokenRequest request = new TokenRequest();
+        Assert.assertNotNull(s.requestToken(request));
     }
 }
