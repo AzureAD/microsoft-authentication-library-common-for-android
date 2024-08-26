@@ -157,11 +157,26 @@ public abstract class OAuth2Strategy
     public abstract AuthorizationResultFactory getAuthorizationResultFactory();
 
     /**
+     * Uses default token response handler for the strategy.
      * @param request generic token request.
      * @return GenericTokenResult
      * @throws IOException thrown when failed or interrupted I/O operations occur.
      */
     public GenericTokenResult requestToken(final GenericTokenRequest request) throws IOException, ClientException {
+        return requestToken(request, this::getTokenResultFromHttpResponse);
+    }
+
+
+    /**
+     * Uses the provided token response handler to handle the token response.
+     * @param request generic token request.
+     * @return GenericTokenResult
+     * @throws IOException thrown when failed or interrupted I/O operations occur.
+     */
+    public GenericTokenResult requestToken(
+            @NonNull final GenericTokenRequest request,
+            @NonNull final ITokenResponseHandler<GenericTokenResult> tokenResponseHandler
+    ) throws IOException, ClientException {
         final String methodName = ":requestToken";
 
         Logger.verbose(
@@ -172,7 +187,7 @@ public abstract class OAuth2Strategy
         validateTokenRequest(request);
 
         final HttpResponse response = performTokenRequest(request);
-        final GenericTokenResult result = getTokenResultFromHttpResponse(response);
+        final GenericTokenResult result = tokenResponseHandler.handleTokenResponse(response);
         if (result.getTokenResponse() != null) {
             result.getTokenResponse().setAuthority(mTokenEndpoint);
         }

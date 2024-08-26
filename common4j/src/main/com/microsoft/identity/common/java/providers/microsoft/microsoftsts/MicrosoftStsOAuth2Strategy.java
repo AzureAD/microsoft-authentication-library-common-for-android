@@ -582,15 +582,7 @@ public class MicrosoftStsOAuth2Strategy
     @NonNull
     protected TokenResult getTokenResultFromHttpResponse(
             @NonNull final HttpResponse response
-    )
-            throws ClientException {
-        final String methodName = ":getTokenResultFromHttpResponse";
-
-        Logger.verbose(
-                TAG + methodName,
-                "Getting TokenResult from HttpResponse..."
-        );
-
+    ) throws ClientException {
         final MicrosoftStsTokenResponseHandler handler = new MicrosoftStsTokenResponseHandler();
         return handler.handleTokenResponse(response);
     }

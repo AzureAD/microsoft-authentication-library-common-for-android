@@ -1,5 +1,6 @@
 V.Next
----------
+----------
+- [MINOR] Add API in MicrosoftStsOAuthStrategy to request token and handle response with provided handler (@2478)
 - [MINOR] Setting flights to control UrlConnection timeout values (#2473)
 - [PATCH] Fix Native Auth authority data being persisted across different SDK instances (#2462)
 - [PATCH] Fix incorrect formatting when logging native auth objects
