@@ -36,6 +36,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.IOException;
 
+import lombok.NonNull;
+
 @RunWith(MockitoJUnitRunner.class)
 public class OAuth2StrategyTest {
 
@@ -137,5 +139,33 @@ public class OAuth2StrategyTest {
         TestStrategy s = new TestStrategy(null, OAuth2StrategyParameters.builder().build());
         TokenRequest request = new TokenRequest();
         Assert.assertNotNull(s.requestToken(request));
+    }
+
+    /**
+     * This test only verifies that if a null token response is returned from the token result,
+     * we don't create an error.
+     */
+    @Test
+    public void testOauth2Strategy_NullTokenResponse_WithResponseHandler() throws Exception {
+        final TestStrategy s = new TestStrategy(null, OAuth2StrategyParameters.builder().build());
+        final TokenRequest request = new TokenRequest();
+        Assert.assertNotNull(s.requestToken(request, response -> new TokenResult()));
+    }
+
+    /**
+     * This test only verifies that if a null token response is returned from the token result,
+     * we don't create an error.
+     */
+    @Test
+    public void testOauth2Strategy_RequestToken_WithResponseHandler() throws Exception {
+        final TestStrategy s = new TestStrategy(null, OAuth2StrategyParameters.builder().build());
+        final TokenRequest request = new TokenRequest();
+        final TokenResponse tokenResponse = new TokenResponse();
+
+        final TokenResult actualResult = s.requestToken(request, httpResponse -> new TokenResult(tokenResponse));
+        Assert.assertNotNull(actualResult);
+        Assert.assertNotNull(actualResult.getTokenResponse());
+        Assert.assertSame(tokenResponse, actualResult.getTokenResponse());
+
     }
 }
