@@ -35,6 +35,7 @@ import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
+import com.microsoft.identity.common.java.providers.oauth2.ITokenResponseHandler;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
@@ -55,7 +56,7 @@ import lombok.NonNull;
  * implemented in {@link MicrosoftStsTokenResponseHandler}. For PRT protocol contracts, different
  * implementation would be used that can handle encrypted and unencryted responses.
  */
-public abstract class AbstractMicrosoftStsTokenResponseHandler {
+public abstract class AbstractMicrosoftStsTokenResponseHandler implements ITokenResponseHandler<TokenResult> {
 
     private static final String TAG = AbstractMicrosoftStsTokenResponseHandler.class.getSimpleName();
 
