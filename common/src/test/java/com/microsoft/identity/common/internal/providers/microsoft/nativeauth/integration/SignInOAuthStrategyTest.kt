@@ -40,6 +40,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignI
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignUpInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 import com.microsoft.identity.common.nativeauth.MockApiEndpoint
@@ -76,6 +77,7 @@ class SignInOAuthStrategyTest {
     private val CLIENT_ID = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val CHALLENGE_TYPE = "oob password redirect"
     private val CONTINUATION_TOKEN = "12345"
+    private val CHALLENGE_ID = "079af063-4ea7-4dcd-92ff-2b24f54621ea"
 
     private val OOB = "1234"
 
@@ -93,6 +95,7 @@ class SignInOAuthStrategyTest {
         whenever(mockConfig.getSignUpContinueEndpoint()).thenReturn(ApiConstants.MockApi.signUpContinueRequestUrl)
         whenever(mockConfig.getSignInInitiateEndpoint()).thenReturn(ApiConstants.MockApi.signInInitiateRequestUrl)
         whenever(mockConfig.getSignInChallengeEndpoint()).thenReturn(ApiConstants.MockApi.signInChallengeRequestUrl)
+        whenever(mockConfig.getSignInIntrospectEndpoint()).thenReturn(ApiConstants.MockApi.signInIntrospectRequestUrl)
         whenever(mockConfig.getSignInTokenEndpoint()).thenReturn(ApiConstants.MockApi.signInTokenRequestUrl)
         whenever(mockConfig.getResetPasswordStartEndpoint()).thenReturn(ApiConstants.MockApi.ssprStartRequestUrl)
         whenever(mockConfig.getResetPasswordChallengeEndpoint()).thenReturn(ApiConstants.MockApi.ssprChallengeRequestUrl)
@@ -159,7 +162,7 @@ class SignInOAuthStrategyTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
 
-        val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
+        val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInDefaultChallenge(
             continuationToken = CONTINUATION_TOKEN,
             correlationId = correlationId
         )
@@ -259,7 +262,42 @@ class SignInOAuthStrategyTest {
     }
 
     @Test
-    fun testPerformSignInChallengeWithChallengeTypeOobSuccess() {
+    fun testPerformSignInIntrospectSuccess() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInIntrospect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INTROSPECT_SUCCESS
+        )
+        val result = nativeAuthOAuth2Strategy.performSignInIntrospect(
+            continuationToken = CONTINUATION_TOKEN,
+            correlationId = correlationId
+        )
+
+        Assert.assertTrue(result is SignInIntrospectApiResult.Success)
+        Assert.assertTrue((result as SignInIntrospectApiResult.Success).methods.isNotEmpty())
+    }
+
+    @Test
+    fun testPerformSignInIntrospectRedirect() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInIntrospect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+        )
+        val result = nativeAuthOAuth2Strategy.performSignInIntrospect(
+            continuationToken = CONTINUATION_TOKEN,
+            correlationId = correlationId
+        )
+
+        Assert.assertTrue(result is SignInIntrospectApiResult.Redirect)
+    }
+
+    @Test
+    fun testPerformSignInDefaultChallengeWithChallengeTypeOobSuccess() {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
@@ -267,7 +305,7 @@ class SignInOAuthStrategyTest {
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
-        val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
+        val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInDefaultChallenge(
             continuationToken = CONTINUATION_TOKEN,
             correlationId = correlationId
         )
@@ -276,7 +314,7 @@ class SignInOAuthStrategyTest {
     }
 
     @Test
-    fun testPerformSignInChallengeWithChallengeTypePasswordSuccess() {
+    fun testPerformSignInDefaultChallengeWithChallengeTypePasswordSuccess() {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
@@ -284,7 +322,7 @@ class SignInOAuthStrategyTest {
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
         )
-        val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
+        val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInDefaultChallenge(
             continuationToken = CONTINUATION_TOKEN,
             correlationId = correlationId
         )
@@ -293,7 +331,23 @@ class SignInOAuthStrategyTest {
     }
 
     @Test
-    fun testPerformSignInChallengeWithRedirectSuccess() {
+    fun testPerformSignInDefaultChallengeWithIntrospectRequired() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INTROSPECT_REQUIRED
+        )
+        val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInDefaultChallenge(
+            continuationToken = CONTINUATION_TOKEN,
+            correlationId = correlationId
+        )
+        Assert.assertTrue(signInChallengeResult is SignInChallengeApiResult.IntrospectRequired)
+    }
+
+    @Test
+    fun testPerformSignInDefaultChallengeWithRedirectSuccess() {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
@@ -301,11 +355,29 @@ class SignInOAuthStrategyTest {
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
-        val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
+        val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInDefaultChallenge(
             continuationToken = CONTINUATION_TOKEN,
             correlationId = correlationId
         )
         Assert.assertTrue(signInChallengeResult is SignInChallengeApiResult.Redirect)
+    }
+
+    @Test
+    fun testPerformSignInSelectedChallengeWithChallengeTypeOobSuccess() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
+        )
+        val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInSelectedChallenge(
+            continuationToken = CONTINUATION_TOKEN,
+            correlationId = correlationId,
+            challengeId = CHALLENGE_ID
+        )
+
+        Assert.assertTrue(signInChallengeResult is SignInChallengeApiResult.OOBRequired)
     }
 
     @Test
@@ -398,6 +470,29 @@ class SignInOAuthStrategyTest {
             parameters = parameters
         )
         Assert.assertTrue(result is SignInTokenApiResult.UserNotFound)
+    }
+
+    @Test
+    fun testPerformPasswordTokenRequestMFARequired() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.MFA_REQUIRED
+        )
+
+        val parameters = SignInSubmitPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .password(PASSWORD)
+            .correlationId(correlationId)
+            .continuationToken(CONTINUATION_TOKEN)
+            .build()
+
+        val result = nativeAuthOAuth2Strategy.performPasswordTokenRequest(
+            parameters = parameters
+        )
+        Assert.assertTrue(result is SignInTokenApiResult.MFARequired)
     }
 
     @Test

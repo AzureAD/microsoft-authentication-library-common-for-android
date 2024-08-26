@@ -26,6 +26,10 @@ internal fun String?.isRedirect(): Boolean {
     return this.contentEquals(other = "redirect", ignoreCase = true)
 }
 
+internal fun String?.isIntrospectRequired(): Boolean {
+    return this.contentEquals(other = "introspect_required", ignoreCase = true)
+}
+
 internal fun String?.isOOB(): Boolean {
     return this.contentEquals(other = "oob", ignoreCase = true)
 }
@@ -102,8 +106,8 @@ internal fun Int?.isInvalidAuthenticationType(): Boolean {
     return this == 400002
 }
 
-fun Int?.isMFARequired(): Boolean {
-    return this == 50076
+fun String?.isMFARequired(): Boolean {
+    return this.contentEquals(other = "mfa_required", ignoreCase = true)
 }
 
 internal fun String?.isVerificationRequired(): Boolean {
