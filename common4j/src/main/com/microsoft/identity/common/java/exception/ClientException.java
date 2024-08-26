@@ -88,6 +88,11 @@ public class ClientException extends BaseException {
     public static final String DEVICE_TOKEN_EMPTY_OR_NULL = "device_token_empty_or_null";
 
     /**
+     * Error occurred while requesting a device token.
+     */
+    public static final String DEVICE_TOKEN_REQUEST_FAILED = "device_token_request_failed";
+
+    /**
      * The sdk failed to parse the Json format.
      */
     public static final String JSON_PARSE_FAILURE = "json_parse_failure";
