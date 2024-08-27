@@ -332,7 +332,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = parameters.getCorrelationId(),
-            methodName = "${TAG}.signInSubmitCode"
+            methodName = "${TAG}.signInSubmitChallenge"
         )
 
         try {
@@ -359,16 +359,6 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         tokenApiResult = tokenApiResult
                     )
                 }
-                is SignInTokenApiResult.MFARequired -> {
-                    SignInCommandResult.MFARequired(
-                        error = tokenApiResult.error,
-                        errorDescription = tokenApiResult.errorDescription,
-                        continuationToken = tokenApiResult.continuationToken,
-                        subError = tokenApiResult.subError,
-                        errorCodes = tokenApiResult.errorCodes,
-                        correlationId = tokenApiResult.correlationId
-                    )
-                }
                 is SignInTokenApiResult.CodeIncorrect -> {
                     SignInCommandResult.IncorrectCode(
                         error = tokenApiResult.error,
@@ -379,7 +369,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     )
                 }
                 is SignInTokenApiResult.UnknownError, is SignInTokenApiResult.InvalidAuthenticationType,
-                is SignInTokenApiResult.InvalidCredentials, is SignInTokenApiResult.UserNotFound -> {
+                is SignInTokenApiResult.InvalidCredentials, is SignInTokenApiResult.UserNotFound,
+                is SignInTokenApiResult.MFARequired -> {
                     Logger.warnWithObject(
                         TAG,
                         tokenApiResult.correlationId,
@@ -525,7 +516,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = parameters.getCorrelationId(),
-            methodName = "${TAG}.challengeDefaultAuth()"
+            methodName = "${TAG}.signInChallenge()"
         )
 
         try {
@@ -1533,7 +1524,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             correlationId = correlationId,
             methodName = "${TAG}.performIntrospectCall"
         )
-        return oAuth2Strategy.performInIntrospect(
+        return oAuth2Strategy.performIntrospect(
             continuationToken = continuationToken,
             correlationId = correlationId
         )

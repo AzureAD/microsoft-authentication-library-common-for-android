@@ -49,7 +49,7 @@ class MFAChallengeCommand(
 
     /**
      * The execution part of the command, to be run on the background thread.
-     * It calls the signInStart method of the native auth MSAL controller with the given parameters.
+     * It calls the signInChallenge method of the native auth MSAL controller with the given parameters.
      */
     override fun execute(): MFAChallengeCommandResult {
         LogSession.logMethodCall(

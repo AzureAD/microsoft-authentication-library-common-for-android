@@ -23,7 +23,6 @@
 
 package com.microsoft.identity.common.java.nativeauth.providers
 
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFASubmitChallengeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
@@ -186,7 +185,7 @@ class NativeAuthOAuth2Strategy(
     /**
      * Performs API call to /oauth/v2.0/introspect
      */
-    fun performInIntrospect(
+    fun performIntrospect(
         continuationToken: String,
         correlationId: String
     ): SignInIntrospectApiResult {

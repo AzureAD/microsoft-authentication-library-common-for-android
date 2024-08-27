@@ -48,7 +48,7 @@ class MFASubmitChallengeCommand(
 
     /**
      * The execution part of the command, to be run on the background thread.
-     * It calls the signInSubmitCode method of the native auth MSAL controller with the given parameters.
+     * It calls the signInSubmitChallenge method of the native auth MSAL controller with the given parameters.
      */
     override fun execute(): MFASubmitChallengeCommandResult {
         LogSession.logMethodCall(

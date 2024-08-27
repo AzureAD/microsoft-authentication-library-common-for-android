@@ -652,7 +652,7 @@ class NativeAuthControllerTest {
     }
 
     @Test
-    fun testMFASubmitChallengeWithMFARequiredShouldReturnInvalidChallenge() {
+    fun testMFASubmitChallengeWithMFARequiredShouldReturnAPIError() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SignInToken,
@@ -662,7 +662,7 @@ class NativeAuthControllerTest {
 
         val parameters = createMFASubmitChallengeCommandParameters(correlationId)
         val result = controller.signInSubmitChallenge(parameters)
-        assert(result is SignInCommandResult.MFARequired)
+        assert(result is INativeAuthCommandResult.APIError)
     }
 
     @Test

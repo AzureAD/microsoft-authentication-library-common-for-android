@@ -49,7 +49,7 @@ class GetAuthMethodsCommand(
 
     /**
      * The execution part of the command, to be run on the background thread.
-     * It calls the signInStart method of the native auth MSAL controller with the given parameters.
+     * It calls the getAuthMethods method of the native auth MSAL controller with the given parameters.
      */
     override fun execute(): GetAuthMethodsCommandResult {
         LogSession.logMethodCall(
