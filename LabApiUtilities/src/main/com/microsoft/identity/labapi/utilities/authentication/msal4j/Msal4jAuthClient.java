@@ -82,6 +82,7 @@ public class Msal4jAuthClient implements IConfidentialAuthClient, IPublicAuthCli
                 ConfidentialClientApplication
                         .builder(tokenParameters.getClientId(), clientCredential)
                         .authority(tokenParameters.getAuthority())
+                        .sendX5c(true)
                         .build();
 
         final ClientCredentialParameters clientCredentialParameters = ClientCredentialParameters

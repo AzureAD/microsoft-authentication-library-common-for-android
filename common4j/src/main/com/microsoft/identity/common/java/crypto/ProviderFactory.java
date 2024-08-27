@@ -26,6 +26,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 
 import java.security.KeyFactory;
 import java.security.KeyPairGenerator;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
 import java.security.Signature;
@@ -105,6 +106,19 @@ public class ProviderFactory {
                 return KeyFactory.getInstance(algorithm, provider);
             }
             return KeyFactory.getInstance(algorithm);
+        } catch (final NoSuchAlgorithmException e) {
+            throw new ClientException(ClientException.NO_SUCH_ALGORITHM, e.getMessage(), e);
+        }
+    }
+
+    @NonNull
+    public static MessageDigest getMessageDigest(@NonNull final String algorithm,
+                                                 @Nullable final Provider provider) throws ClientException {
+        try {
+            if (provider != null) {
+                return MessageDigest.getInstance(algorithm, provider);
+            }
+            return MessageDigest.getInstance(algorithm);
         } catch (final NoSuchAlgorithmException e) {
             throw new ClientException(ClientException.NO_SUCH_ALGORITHM, e.getMessage(), e);
         }

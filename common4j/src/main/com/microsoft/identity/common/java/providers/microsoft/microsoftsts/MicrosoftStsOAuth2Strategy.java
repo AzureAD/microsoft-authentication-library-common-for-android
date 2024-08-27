@@ -28,12 +28,8 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2Scopes.CLAIMS_UPDATE_RESOURCE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
-import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_ID;
-import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_SEQUENCE;
-import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
 import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
 
-import com.google.gson.JsonParseException;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
@@ -48,19 +44,15 @@ import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightManager;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.logging.LibraryInfoHelper;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpConstants;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
-import com.microsoft.identity.common.java.opentelemetry.AttributeName;
-import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResponse;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
@@ -73,14 +65,10 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfigurationClient;
-import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
-import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;
-import com.microsoft.identity.common.java.util.ResultUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.io.IOException;
@@ -89,8 +77,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -121,7 +107,7 @@ public class MicrosoftStsOAuth2Strategy
     /**
      * The default scope.  This effects of usint this are captured in documentation here
      * https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent#the-default-scope
-     *
+     * <p>
      * What this does is important, from the documentation it requests permission for every scope
      * that has been selected for the client application in the registration portal.
      */
@@ -155,7 +141,7 @@ public class MicrosoftStsOAuth2Strategy
                 } else {
                     setTokenEndpoint(config.getTokenEndpoint().toString());
                 }
-            }  catch (ServiceException e) {
+            } catch (final ServiceException e) {
                 Logger.error(
                         TAG,
                         "There was a problem with loading the openIdConfiguration",
@@ -340,8 +326,8 @@ public class MicrosoftStsOAuth2Strategy
             builder.setSlice(mConfig.getSlice());
         }
 
-        builder.setLibraryName(DiagnosticContext.INSTANCE.getRequestContext().get(PRODUCT));
-        builder.setLibraryVersion(Device.getProductVersion());
+        builder.setLibraryName(LibraryInfoHelper.getLibraryName());
+        builder.setLibraryVersion(LibraryInfoHelper.getLibraryVersion());
         builder.setFlightParameters(mConfig.getFlightParameters());
         builder.setMultipleCloudAware(mConfig.getMultipleCloudsSupported());
         builder.setOpenIdProviderConfiguration(mOpenIdProviderConfiguration);
@@ -476,7 +462,7 @@ public class MicrosoftStsOAuth2Strategy
         final MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
         request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);
 
-        if (authScheme instanceof  PopAuthenticationSchemeInternal) {
+        if (authScheme instanceof PopAuthenticationSchemeInternal) {
             request.setTokenType(TokenRequest.TokenType.POP);
 
             final IDevicePopManager devicePopManager =
@@ -561,8 +547,8 @@ public class MicrosoftStsOAuth2Strategy
         final Map<String, String> headers = new TreeMap<>();
         headers.put("client-request-id", DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         headers.putAll(Device.getPlatformIdParameters());
-        headers.put(PRODUCT, DiagnosticContext.INSTANCE.getRequestContext().get(PRODUCT));
-        headers.put(VERSION, Device.getProductVersion());
+        headers.put(PRODUCT, LibraryInfoHelper.getLibraryName());
+        headers.put(VERSION, LibraryInfoHelper.getLibraryVersion());
 
         headers.put(APP_PACKAGE_NAME, request.getClientAppName());
         headers.put(APP_VERSION, request.getClientAppVersion());
@@ -594,104 +580,11 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     @NonNull
-    protected TokenResult getTokenResultFromHttpResponse(@NonNull final HttpResponse response)
-            throws ClientException {
-        final String methodName = ":getTokenResultFromHttpResponse";
-
-        Logger.verbose(
-                TAG + methodName,
-                "Getting TokenResult from HttpResponse..."
-        );
-
-        MicrosoftStsTokenResponse tokenResponse = null;
-        TokenErrorResponse tokenErrorResponse = null;
-
-        if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            //An error occurred
-            try {
-                tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(
-                        getBodyFromUnsuccessfulResponse(response.getBody()),
-                        MicrosoftTokenErrorResponse.class
-                );
-            } catch (final JsonParseException ex) {
-                tokenErrorResponse = new MicrosoftTokenErrorResponse();
-                final String statusCode = String.valueOf(response.getStatusCode());
-                tokenErrorResponse.setError(statusCode);
-                tokenErrorResponse.setErrorDescription("Received " + statusCode + " status code from Server ");
-            }
-            tokenErrorResponse.setStatusCode(response.getStatusCode());
-
-            if (null != response.getHeaders()) {
-                tokenErrorResponse.setResponseHeadersJson(
-                        HeaderSerializationUtil.toJson(response.getHeaders())
-                );
-            }
-            tokenErrorResponse.setResponseBody(response.getBody());
-        } else {
-            tokenResponse = ObjectMapper.deserializeJsonStringToObject(
-                    getBodyFromSuccessfulResponse(response.getBody()),
-                    MicrosoftStsTokenResponse.class
-            );
-        }
-
-        final TokenResult result = new TokenResult(tokenResponse, tokenErrorResponse);
-
-        ResultUtil.logResult(TAG, result);
-
-        if (null != response.getHeaders()) {
-            final Map<String, List<String>> responseHeaders = response.getHeaders();
-
-            final List<String> cliTelemValues;
-            if (null != (cliTelemValues = responseHeaders.get(X_MS_CLITELEM))
-                    && !cliTelemValues.isEmpty()) {
-                // Element should only contain 1 value...
-                final String cliTelemHeader = cliTelemValues.get(0);
-                final CliTelemInfo cliTelemInfo = CliTelemInfo.fromXMsCliTelemHeader(
-                        cliTelemHeader
-                );
-                // Parse and set the result...
-                result.setCliTelemInfo(cliTelemInfo);
-
-                if (null != tokenResponse && null != cliTelemInfo) {
-                    tokenResponse.setSpeRing(cliTelemInfo.getSpeRing());
-                    tokenResponse.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
-                    tokenResponse.setCliTelemErrorCode(cliTelemInfo.getServerErrorCode());
-                    tokenResponse.setCliTelemSubErrorCode(cliTelemInfo.getServerSubErrorCode());
-                }
-            }
-
-            final Map<String, String> mapWithAdditionalEntry = new HashMap<String, String>();
-
-            final String ccsRequestId = response.getHeaderValue(XMS_CCS_REQUEST_ID, 0);
-            if (null != ccsRequestId){
-                SpanExtension.current().setAttribute(AttributeName.ccs_request_id.name(), ccsRequestId);
-
-                if (CommonFlightManager.isFlightEnabled(CommonFlight.EXPOSE_CCS_REQUEST_ID_IN_TOKENRESPONSE)){
-                    mapWithAdditionalEntry.put(XMS_CCS_REQUEST_ID, ccsRequestId);
-                }
-            }
-
-            final String ccsRequestSequence = response.getHeaderValue(XMS_CCS_REQUEST_SEQUENCE, 0);
-            if (null != ccsRequestSequence){
-                SpanExtension.current().setAttribute(AttributeName.ccs_request_sequence.name(), ccsRequestSequence);
-
-                if (CommonFlightManager.isFlightEnabled(CommonFlight.EXPOSE_CCS_REQUEST_SEQUENCE_IN_TOKENRESPONSE)){
-                    mapWithAdditionalEntry.put(XMS_CCS_REQUEST_SEQUENCE, ccsRequestSequence);
-                }
-            }
-
-            if (null != tokenResponse){
-                if (null != tokenResponse.getExtraParameters()){
-                    for (final Map.Entry<String, String> entry : tokenResponse.getExtraParameters()){
-                        mapWithAdditionalEntry.put(entry.getKey(), entry.getValue());
-                    }
-                }
-
-                tokenResponse.setExtraParameters(mapWithAdditionalEntry.entrySet());
-            }
-        }
-
-        return result;
+    protected TokenResult getTokenResultFromHttpResponse(
+            @NonNull final HttpResponse response
+    ) throws ClientException {
+        final MicrosoftStsTokenResponseHandler handler = new MicrosoftStsTokenResponseHandler();
+        return handler.handleTokenResponse(response);
     }
 
     protected String getBodyFromSuccessfulResponse(@NonNull final String responseBody) throws ClientException {
@@ -805,7 +698,7 @@ public class MicrosoftStsOAuth2Strategy
     @Nullable
     public String getDeviceAtPopThumbprint() {
         if (mStrategyParameters.getAuthenticationScheme() instanceof PopAuthenticationSchemeWithClientKeyInternal) {
-           return ((PopAuthenticationSchemeWithClientKeyInternal) mStrategyParameters.getAuthenticationScheme()).getKid();
+            return ((PopAuthenticationSchemeWithClientKeyInternal) mStrategyParameters.getAuthenticationScheme()).getKid();
         }
 
         String atPoPKid = null;

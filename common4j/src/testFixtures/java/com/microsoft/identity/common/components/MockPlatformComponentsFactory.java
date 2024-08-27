@@ -39,9 +39,9 @@ import com.microsoft.identity.common.java.util.IBroadcaster;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 
-import java.security.cert.Certificate;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.net.ssl.KeyManagerFactory;
 
@@ -187,6 +187,12 @@ public class MockPlatformComponentsFactory {
         @Override
         public String getPackageNameFromUid(int uid) {
             return null;
+        }
+
+        @Nullable
+        @Override
+        public List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList) {
+            return originalList;
         }
     };
 }

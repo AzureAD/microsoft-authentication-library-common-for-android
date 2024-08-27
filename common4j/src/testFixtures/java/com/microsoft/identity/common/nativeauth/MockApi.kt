@@ -27,6 +27,7 @@ import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.util.ObjectMapper
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import java.net.URL
 import java.util.TreeMap
@@ -50,7 +51,7 @@ class MockApi private constructor(
         // delete all responses in the queue
         // This endpoint allows a client to add a response to the response queue. When the client
         // makes a request with the matching correlation-id, the mock API will return that response
-        private val MOCK_ADD_RESPONSE_URL = "${ApiConstants.BASEPATH}/config/response"
+        private val MOCK_ADD_RESPONSE_URL = "${ApiConstants.MockApi.BASEPATH}/config/response"
 
         private val headers = TreeMap<String, String?>().also {
             it[HttpConstants.HeaderField.CONTENT_TYPE] = "application/json"
@@ -90,7 +91,7 @@ class MockApi private constructor(
             headers,
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
-        assertTrue(result.statusCode == 200)
+        assertEquals(200, result.statusCode)
     }
 }
 

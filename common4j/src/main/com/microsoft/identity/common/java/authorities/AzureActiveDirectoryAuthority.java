@@ -200,6 +200,11 @@ public class AzureActiveDirectoryAuthority extends Authority {
         return Objects.equals(cloudOfThisAuthority, cloudOfAuthorityToCheck);
     }
 
+    public boolean isMSAAuthority() {
+        return AzureActiveDirectoryAudience.CONSUMERS.equalsIgnoreCase(getAudience().getTenantId()) ||
+                AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(getAudience().getTenantId());
+    }
+
     /**
      * Convert the given authority URL to a default authority (common).
      *

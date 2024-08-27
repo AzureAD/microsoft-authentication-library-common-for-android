@@ -78,13 +78,6 @@ public class LoadLabUserTestRule implements TestRule {
                 } else if (tempUserType != null) {
                     Logger.i(TAG, "Loading Temp User for Test....");
                     mLabAccount = mLabClient.createTempAccount(tempUserType);
-                    try {
-                        // temp user takes some time to actually being created even though it may be
-                        // returned by the LAB API. Adding a wait here before we proceed with the test.
-                        Thread.sleep(LabClient.TEMP_USER_WAIT_TIME);
-                    } catch (final InterruptedException e) {
-                        throw new AssertionError(e);
-                    }
                 } else {
                     throw new IllegalArgumentException("Both Lab User query and temp user type were null.");
                 }

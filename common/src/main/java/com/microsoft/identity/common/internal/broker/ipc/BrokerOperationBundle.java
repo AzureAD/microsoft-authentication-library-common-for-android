@@ -40,7 +40,6 @@ import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.logging.Logger;
 
 import lombok.Getter;
-import lombok.experimental.Accessors;
 
 
 public class BrokerOperationBundle {
@@ -74,7 +73,8 @@ public class BrokerOperationBundle {
         PASSTHROUGH(API.PASSTHROUGH, null),
         BROKER_READ_RESTRICTIONS_MANAGER(API.READ_RESTRICTIONS_MANAGER, null),
         MSAL_GET_PREFERRED_AUTH_METHOD(API.GET_PREFERRED_AUTH_METHOD, null),
-        BROKER_INDIVIDUAL_LOGS_UPLOAD(API.BROKER_INDIVIDUAL_LOGS_UPLOAD, null);
+        BROKER_INDIVIDUAL_LOGS_UPLOAD(API.BROKER_INDIVIDUAL_LOGS_UPLOAD, null),
+        BROKER_API_RESTORE_MSA_ACCOUNTS_WITH_TRANSFER_TOKENS(API.BROKER_RESTORE_MSA_ACCOUNTS_WITH_TRANSFER_TOKENS, null);
       
         final API mContentApi;
         final String mAccountManagerOperation;

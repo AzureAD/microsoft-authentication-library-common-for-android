@@ -72,6 +72,11 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
     @Expose()
     private final List<String> extraScopesToConsent;
 
+    /**
+     * Transfer token to be used in the Account Transfer request.
+     */
+    private final String accountTransferToken;
+
     public boolean getHandleNullTaskAffinity(){
         return handleNullTaskAffinity;
     }

@@ -462,9 +462,6 @@ public final class ErrorStrings {
                     "Please make sure to use your organizational account. " +
                     "If that doesn’t help, please return the device to your administrator.";
 
-    public static final String MISSING_SLK_ERROR_MESSAGE =
-            "During an Account Transfer V2 request, an slk transfer token was not passed in with the request.";
-
     /**
      * Home tenant of the BRT acccount doesn't match with WPJ account's UPN.
      */
@@ -527,4 +524,9 @@ public final class ErrorStrings {
      * Access token doesn't exist and is required for NativeAuth token refresh
      */
     public static final String NATIVE_AUTH_NO_ACCESS_TOKEN_FOUND = "native_auth_no_access_token_found";
+
+    /**
+     * Unexpected content type received in http response.
+     */
+    public static final String UNEXPECTED_HTTP_RESPONSE_CONTENT_TYPE = "unexpected_http_response_content_type";
 }

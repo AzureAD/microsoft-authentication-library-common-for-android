@@ -27,7 +27,10 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.api.DisablePolicyApi;
 import com.microsoft.identity.internal.test.labapi.api.EnablePolicyApi;
+import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
 import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
+import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
+import com.microsoft.identity.labapi.utilities.client.LabClient;
 
 import org.junit.Assert;
 
@@ -51,13 +54,13 @@ public class PolicyHelper {
      */
     public boolean enablePolicy(@NonNull final String upn, @NonNull final String policy) {
         instance.setupApiClientWithAccessToken();
+
         final EnablePolicyApi enablePolicyApi = new EnablePolicyApi();
         try {
-            final CustomSuccessResponse customSuccessResponse = enablePolicyApi.apiEnablePolicyPut(upn, policy);
+            final CustomSuccessResponse enablePolicyResult = enablePolicyApi.apiEnablePolicyPut(upn, policy);
             final String expectedResult = (policy +" Enabled for user : " + upn).toLowerCase();
-            final String result = customSuccessResponse.getResult();
-            Assert.assertNotNull(result);
-            return result.toLowerCase().contains(expectedResult);
+            Assert.assertNotNull(enablePolicyResult);
+            return enablePolicyResult.toString().toLowerCase().contains(expectedResult);
         } catch (final ApiException e) {
             Logger.error(TAG,"Bad Request : Enable Policy can be used only for Locked users.",e);
             throw new AssertionError(e);
@@ -74,13 +77,13 @@ public class PolicyHelper {
      */
     public boolean disablePolicy(@NonNull final String upn, @NonNull final String policy) {
         instance.setupApiClientWithAccessToken();
+
         final DisablePolicyApi disablePolicyApi = new DisablePolicyApi();
         try {
-            final CustomSuccessResponse customSuccessResponse = disablePolicyApi.apiDisablePolicyPut(upn, policy);
+            final CustomSuccessResponse disablePolicyResponse = disablePolicyApi.apiDisablePolicyPut(upn, policy);
             final String expectedResult = (policy + " Disabled for user : " + upn).toLowerCase();
-            final String result = customSuccessResponse.getResult();
-            Assert.assertNotNull(result);
-            return result.toLowerCase().contains(expectedResult);
+            Assert.assertNotNull(disablePolicyResponse);
+            return disablePolicyResponse.toString().toLowerCase().contains(expectedResult);
         } catch (final ApiException e) {
             Logger.error(TAG," Bad Request : Disable Policy can be used only for Locked users. ",e);
             throw new AssertionError(e);

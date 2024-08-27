@@ -459,8 +459,8 @@ class NativeAuthControllerTest {
             correlationId = correlationId
         )
         val result = controller.signInWithContinuationToken(parameters)
-        assert(result is INativeAuthCommandResult.UnknownError)
-        assert((result as INativeAuthCommandResult.UnknownError).error == invalidGrantError)
+        assert(result is INativeAuthCommandResult.APIError)
+        assert((result as INativeAuthCommandResult.APIError).error == invalidGrantError)
     }
 
     @Test
@@ -476,8 +476,8 @@ class NativeAuthControllerTest {
             correlationId = correlationId
         )
         val result = controller.signInWithContinuationToken(parameters)
-        assert(result is INativeAuthCommandResult.UnknownError)
-        assert((result as INativeAuthCommandResult.UnknownError).error == invalidGrantError)
+        assert(result is INativeAuthCommandResult.APIError)
+        assert((result as INativeAuthCommandResult.APIError).error == invalidGrantError)
     }
 
     @Test
@@ -493,8 +493,8 @@ class NativeAuthControllerTest {
             correlationId = correlationId
         )
         val result = controller.signInWithContinuationToken(parameters)
-        assert(result is INativeAuthCommandResult.UnknownError)
-        assert((result as INativeAuthCommandResult.UnknownError).error == userNotFoundError)
+        assert(result is INativeAuthCommandResult.APIError)
+        assert((result as INativeAuthCommandResult.APIError).error == userNotFoundError)
     }
 
     @Test
@@ -510,8 +510,8 @@ class NativeAuthControllerTest {
             correlationId = correlationId
         )
         val result = controller.signInWithContinuationToken(parameters)
-        assert(result is INativeAuthCommandResult.UnknownError)
-        assert((result as INativeAuthCommandResult.UnknownError).error == invalidGrantError)
+        assert(result is INativeAuthCommandResult.APIError)
+        assert((result as INativeAuthCommandResult.APIError).error == invalidGrantError)
     }
 
     @Test

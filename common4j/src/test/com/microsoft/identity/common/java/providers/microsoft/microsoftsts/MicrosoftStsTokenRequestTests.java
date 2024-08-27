@@ -31,6 +31,10 @@ import org.junit.runners.JUnit4;
 
 import java.util.UUID;
 
+/**
+ * Tests for {@link MicrosoftStsTokenRequest}
+
+ */
 @RunWith(JUnit4.class)
 public final class MicrosoftStsTokenRequestTests {
 

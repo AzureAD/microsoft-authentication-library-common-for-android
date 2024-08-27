@@ -33,8 +33,11 @@ import java.net.URISyntaxException;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.microsoft.identity.common.java.authorities.AccountsInOneOrganization;
 import com.microsoft.identity.common.java.authorities.AllAccounts;
 import com.microsoft.identity.common.java.authorities.AnyOrganizationalAccount;
+import com.microsoft.identity.common.java.authorities.AnyPersonalAccount;
+import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.java.exception.ClientException;
 
@@ -90,5 +93,19 @@ public class AzureActiveDirectoryAuthorityTests {
         } catch (final ClientException e) {
             Assert.assertEquals(ClientException.MALFORMED_URL, e.getErrorCode());
         }
+    }
+
+    @Test
+    public void testIsMSAAuthority() {
+        final AzureActiveDirectoryAuthority authorityConsumers = new AzureActiveDirectoryAuthority(new AnyPersonalAccount());
+        final AzureActiveDirectoryAuthority authorityMsaTenant = new AzureActiveDirectoryAuthority(new AccountsInOneOrganization("9188040d-6c67-4c5b-b112-36a304b66dad"));
+        final AzureActiveDirectoryAuthority authorityCommon = new AzureActiveDirectoryAuthority(new AllAccounts());
+        final AzureActiveDirectoryAuthority authorityOrganizations = new AzureActiveDirectoryAuthority(new AnyOrganizationalAccount());
+        final AzureActiveDirectoryAuthority authorityOneOrg = new AzureActiveDirectoryAuthority(new AccountsInOneOrganization("tenant-id"));
+        assertTrue(authorityConsumers.isMSAAuthority());
+        assertTrue(authorityMsaTenant.isMSAAuthority());
+        assertFalse(authorityCommon.isMSAAuthority());
+        assertFalse(authorityOrganizations.isMSAAuthority());
+        assertFalse(authorityOneOrg.isMSAAuthority());
     }
 }

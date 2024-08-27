@@ -75,4 +75,22 @@ public class LabApiAuthenticationClientTest {
         }
     }
 
+    @Test
+    public void canGetTokenForLabApiUsingCertificateWithPassword() {
+        final LabApiAuthenticationClient labApiAuthenticationClient =
+                new LabApiAuthenticationClient("", "pass");
+
+        try {
+            final String accessToken = labApiAuthenticationClient.getAccessToken();
+            Assert.assertNotNull(accessToken);
+            Assert.assertNotEquals("", accessToken);
+            Assert.assertEquals(
+                    LabAuthenticationConstants.LAB_API_TOKEN_AUDIENCE,
+                    ((List<String>) jwtParser.parseJWT(accessToken).get(LabAuthenticationConstants.AUDIENCE_CLAIM)).get(0)
+            );
+        } catch (final LabApiException e) {
+            throw new AssertionError(e);
+        }
+    }
+
 }

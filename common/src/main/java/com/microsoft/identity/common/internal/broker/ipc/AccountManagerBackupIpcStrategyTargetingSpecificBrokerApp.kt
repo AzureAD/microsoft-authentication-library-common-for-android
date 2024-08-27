@@ -127,7 +127,7 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerApp
                         null,
                         null,
                         ProcessUtil.getPreferredHandler()
-                    ).getResult(5, TimeUnit.SECONDS)
+                    ).getResult(2, TimeUnit.SECONDS)
                 },
                 getAccountManagerApps = {
                     accountManager.authenticatorTypes

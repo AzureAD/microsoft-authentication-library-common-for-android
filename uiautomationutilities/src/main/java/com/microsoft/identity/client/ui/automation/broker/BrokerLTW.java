@@ -97,7 +97,7 @@ public class BrokerLTW extends AbstractTestBroker {
     }
 
     @Override
-    public void enableBrowserAccess() {
+    public void enableBrowserAccess(@NonNull final String username) {
         throw new UnsupportedOperationException("LTW doesn't support this");
     }
 

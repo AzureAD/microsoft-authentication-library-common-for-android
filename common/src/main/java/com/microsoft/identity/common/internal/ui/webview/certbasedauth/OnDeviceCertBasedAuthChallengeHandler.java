@@ -91,7 +91,8 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
                         try {
                             final X509Certificate[] certChain = KeyChain.getCertificateChain(
                                     mActivity.getApplicationContext(), alias);
-                            if (certChain.length > 0) {
+                            if (certChain != null
+                                    && certChain.length > 0) {
                                 //From my testing, the first cert (if there are more than one) is the selected one.
                                 mTelemetryHelper.setPublicKeyAlgoType(certChain[0].getPublicKey().getAlgorithm());
                             }
@@ -126,17 +127,22 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
     private String printRequestDetails(ClientCertRequest request) {
 
         final StringBuilder logLine = new StringBuilder(256);
-        logLine.append("Processing CBA challenge. \nKey Type: ");
+        logLine.append("Processing CBA challenge.");
 
-        for (String k : request.getKeyTypes()){
-            logLine.append(k)
-                    .append(", ");
+        if (request.getKeyTypes() != null) {
+            logLine.append("\nKey Types: ");
+            for (String k : request.getKeyTypes()) {
+                logLine.append(k)
+                        .append(", ");
+            }
         }
 
-        logLine.append("\nPrincipals: ");
-        for (Principal p : request.getPrincipals()){
-            logLine.append(p.getName())
-                    .append(", ");
+        if (request.getPrincipals() != null) {
+            logLine.append("\nPrincipals: ");
+            for (Principal p : request.getPrincipals()) {
+                logLine.append(p.getName())
+                        .append(", ");
+            }
         }
 
         logLine.append("\nHost: ")

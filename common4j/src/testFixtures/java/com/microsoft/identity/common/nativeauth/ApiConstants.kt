@@ -30,7 +30,7 @@ import java.net.URL
  * ApiConstants provides various endpoints for mock API for Native Auth endpoints.
  */
 interface ApiConstants {
-    companion object {
+    object MockApi {
         val BASEPATH = BuildValues.getMockApiUrl()
         private val BASE_REQUEST_PATH = BASEPATH + "1234/"
         val signUpStartRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/start")
@@ -38,6 +38,7 @@ interface ApiConstants {
         val signUpContinueRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/continue")
         val signInInitiateRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/initiate")
         val signInChallengeRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/challenge")
+        val signInIntrospectRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/introspect")
         val signInTokenRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/token")
         val ssprStartRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/start")
         val ssprChallengeRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/challenge")
@@ -45,5 +46,9 @@ interface ApiConstants {
         val ssprSubmitRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/submit")
         val ssprPollCompletionRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/poll_completion")
         val tokenEndpoint = URL("https://contoso.com/1234/token")
+    }
+
+    object TemporaryMailService {
+        const val BASE_URL = "https://www.1secmail.com/api/v1/"
     }
 }

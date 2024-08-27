@@ -27,12 +27,17 @@ import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.api.AppApi;
 import com.microsoft.identity.internal.test.labapi.api.ConfigApi;
 import com.microsoft.identity.internal.test.labapi.api.CreateTempUserApi;
+import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
 import com.microsoft.identity.internal.test.labapi.api.ResetApi;
 import com.microsoft.identity.internal.test.labapi.model.AppInfo;
 import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
 import com.microsoft.identity.internal.test.labapi.model.LabInfo;
+import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
 import com.microsoft.identity.internal.test.labapi.model.TempUser;
 import com.microsoft.identity.internal.test.labapi.model.UserInfo;
+import com.microsoft.identity.labapi.utilities.client.LabClient;
+import com.microsoft.identity.labapi.utilities.exception.LabApiException;
+import com.microsoft.identity.labapi.utilities.exception.LabError;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -246,6 +251,7 @@ public class LabUserHelper {
 
     public static String loadTempUser(final String userType) {
         instance.setupApiClientWithAccessToken();
+
         CreateTempUserApi createTempUserApi = new CreateTempUserApi();
         createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
 
@@ -288,7 +294,7 @@ public class LabUserHelper {
         LabConfig labConfig;
         labConfig = sLabConfigCache.get(query);
         Credential credential = new Credential();
-        ConfigInfo configInfo = null;
+        ConfigInfo configInfo;
 
         if (labConfig == null) {
             String password;
@@ -296,6 +302,8 @@ public class LabUserHelper {
             password = getPasswordForUser(configInfo.getLabInfo());
             labConfig = new LabConfig(configInfo, password);
             sLabConfigCache.put(query, labConfig);
+        } else {
+            configInfo = labConfig.getConfigInfo();
         }
 
         LabConfig.setCurrentLabConfig(labConfig);
@@ -324,6 +332,7 @@ public class LabUserHelper {
 
     public static void resetPassword(final String upn) {
         instance.setupApiClientWithAccessToken();
+
         ResetApi resetApi = new ResetApi();
         try {
             resetApi.apiResetPut(upn, "Password");

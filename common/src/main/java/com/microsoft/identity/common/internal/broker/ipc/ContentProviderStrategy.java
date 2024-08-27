@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.broker.ipc;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider.AUTHORITY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider.CONTENT_SCHEME;
 import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.CONNECTION_ERROR;
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.NULL_CURSOR;
 import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE;
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.CONTENT_PROVIDER;
 
@@ -121,9 +122,14 @@ public class ContentProviderStrategy extends AbstractIpcStrategyWithServiceValid
                 cursor.close();
             }
         } else {
+            // This scenario can have multiple reasons, such as
+            // 1. The content provider cannot be acquired.
+            // 2. The content provider's query method itself returns null.
+            // 3. The content provider's query method throws an exception.
+            //https://stackoverflow.com/questions/13080540/what-causes-androids-contentresolver-query-to-return-null
             final String message = "Failed to get result from Broker Content Provider, cursor is null";
             Logger.error(methodTag, message, null);
-            throw new BrokerCommunicationException(CONNECTION_ERROR, getType(), message, null);
+            throw new BrokerCommunicationException(NULL_CURSOR, getType(), message, null);
         }
     }
 

@@ -25,8 +25,11 @@ package com.microsoft.identity.internal.testutils.labutils;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.internal.test.labapi.ApiException;
+import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
 import com.microsoft.identity.internal.test.labapi.api.ResetApi;
 import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
+import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
+import com.microsoft.identity.labapi.utilities.client.LabClient;
 
 /**
  * Utilities to interact with Lab {@link ResetApi}.
@@ -43,14 +46,18 @@ public class LabResetHelper {
      */
     public static boolean resetPassword(@NonNull final String upn) {
         INSTANCE.setupApiClientWithAccessToken();
+
         final ResetApi resetApi = new ResetApi();
 
         try {
-            final CustomSuccessResponse customSuccessResponse;
-            customSuccessResponse = resetApi.apiResetPut(upn, LabConstants.ResetOperation.PASSWORD);
-            final String expectedResult = ("Password reset successful for user : " + upn)
-                    .toLowerCase();
-            return customSuccessResponse.getResult().toLowerCase().contains(expectedResult);
+            final CustomSuccessResponse resetResponse = resetApi.apiResetPut(upn, LabConstants.ResetOperation.PASSWORD);
+
+            if (resetResponse == null) {
+                return false;
+            }
+
+            final String expectedResult = ("Password reset for user: " + upn).toLowerCase();
+            return resetResponse.toString().toLowerCase().contains(expectedResult);
         } catch (ApiException e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -64,13 +71,18 @@ public class LabResetHelper {
      */
     public static boolean resetMfa(@NonNull final String upn) {
         INSTANCE.setupApiClientWithAccessToken();
+
         final ResetApi resetApi = new ResetApi();
 
         try {
-            final CustomSuccessResponse customSuccessResponse;
-            customSuccessResponse = resetApi.apiResetPut(upn, LabConstants.ResetOperation.MFA);
-            return customSuccessResponse.getResult().contains(
-                    "MFA reset successful for user : " + upn
+            final CustomSuccessResponse resetResponse = resetApi.apiResetPut(upn, LabConstants.ResetOperation.MFA);
+
+            if (resetResponse == null) {
+                return false;
+            }
+
+            return resetResponse.toString().contains(
+                    "MFA reset for user: " + upn
             );
         } catch (ApiException e) {
             throw new RuntimeException(e.getMessage());

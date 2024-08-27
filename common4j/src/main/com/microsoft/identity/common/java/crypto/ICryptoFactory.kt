@@ -20,59 +20,60 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.crypto;
+package com.microsoft.identity.common.java.crypto
 
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.opentelemetry.CryptoFactoryName;
-
-import java.security.KeyFactory;
-import java.security.KeyPairGenerator;
-import java.security.Signature;
-
-import javax.crypto.Cipher;
-import javax.crypto.Mac;
-
-import lombok.NonNull;
+import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.opentelemetry.CryptoFactoryName
+import java.security.KeyFactory
+import java.security.KeyPairGenerator
+import java.security.MessageDigest
+import java.security.Signature
+import javax.crypto.Cipher
+import javax.crypto.Mac
 
 /**
  * Representing a class for generating crypto objects.
  */
-public interface ICryptoFactory {
+interface ICryptoFactory {
 
     /**
      * Gets a class name for emitting telemetry events.
-     *
-     * @return*/
-    @NonNull
-    CryptoFactoryName getTelemetryClassName();
+     */
+    val telemetryClassName: CryptoFactoryName
 
     /**
-     * Gets a {@link Signature} crypto object
+     * Gets a [Signature] crypto object
      */
-    @NonNull
-    Signature getSignature(@NonNull final String algorithm) throws ClientException;
+    @Throws(ClientException::class)
+    fun getSignature(algorithm: String): Signature
 
     /**
-     * Gets a {@link Cipher} crypto object
+     * Gets a [Cipher] crypto object
      */
-    @NonNull
-    Cipher getCipher(@NonNull final String algorithm) throws ClientException;
+    @Throws(ClientException::class)
+    fun getCipher(algorithm: String): Cipher
 
     /**
-     * Gets a {@link Mac} crypto object
+     * Gets a [Mac] crypto object
      */
-    @NonNull
-    Mac getMac(@NonNull final String algorithm) throws ClientException;
+    @Throws(ClientException::class)
+    fun getMac(algorithm: String): Mac
 
     /**
-     * Gets a {@link KeyPairGenerator} crypto object
+     * Gets a [KeyPairGenerator] crypto object
      */
-    @NonNull
-    KeyPairGenerator getKeyPairGenerator(@NonNull final String algorithm) throws ClientException;
+    @Throws(ClientException::class)
+    fun getKeyPairGenerator(algorithm: String): KeyPairGenerator
 
     /**
-     * Gets a {@link KeyFactory} crypto object
+     * Gets a [KeyFactory] crypto object
      */
-    @NonNull
-    KeyFactory getKeyFactory(@NonNull final String algorithm) throws ClientException;
+    @Throws(ClientException::class)
+    fun getKeyFactory(algorithm: String): KeyFactory
+
+    /**
+     * Gets a [MessageDigest] crypto object
+     */
+    @Throws(ClientException::class)
+    fun getMessageDigest(algorithm: String): MessageDigest
 }

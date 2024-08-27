@@ -45,7 +45,7 @@ inline fun <reified ExpectedType: com.microsoft.identity.common.java.nativeauth.
             exceptionMessage = exception.message
         }
 
-        return com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult.UnknownError(
+        return com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult.APIError(
             error = UNSUCCESSFUL_COMMAND_ERROR,
             errorDescription = exceptionMessage,
             exception = exception,
@@ -57,7 +57,7 @@ inline fun <reified ExpectedType: com.microsoft.identity.common.java.nativeauth.
                 // Extra check in case the status is COMPLETED, but the CommandResult.result value
                 // is not of type ExpectedType
                 (result is Exception) -> {
-                    return@let com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult.UnknownError(
+                    return@let com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult.APIError(
                         error = UNSUCCESSFUL_COMMAND_ERROR,
                         errorDescription = "Type casting error: result of $this is of type Exception, even though the command was marked as COMPLETED",
                         correlationId = this.correlationId
@@ -67,7 +67,7 @@ inline fun <reified ExpectedType: com.microsoft.identity.common.java.nativeauth.
                     return@let try {
                         result as ExpectedType
                     } catch (exception: java.lang.ClassCastException) {
-                        com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult.UnknownError(
+                        com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult.APIError(
                             error = UNSUCCESSFUL_COMMAND_ERROR,
                             errorDescription = "Type casting error: result of $this is not of type ${ExpectedType::class}, but of type ${result::class}, even though the command was marked as COMPLETED",
                             correlationId = this.correlationId

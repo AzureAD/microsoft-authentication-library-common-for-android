@@ -35,14 +35,14 @@ abstract class ConfidentialClientHelper {
     // tenant id where lab api and key vault api is registered
     private final static String TENANT_ID = "72f988bf-86f1-41af-91ab-2d7cd011db47";
 
-    private String mAccessToken;
+    String mAccessToken;
 
     abstract TokenRequest createTokenRequest()
             throws LabApiException;
 
     abstract void setupApiClientWithAccessToken(String accessToken);
 
-    private String getAccessToken()
+    String getAccessToken()
             throws LabApiException {
         if (mAccessToken == null) {
             mAccessToken = requestAccessTokenForAutomation();

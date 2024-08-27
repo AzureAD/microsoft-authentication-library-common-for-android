@@ -168,8 +168,8 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     }
 
     @Override
-    public void enableBrowserAccess() {
-        brokerMicrosoftAuthenticatorImpl.enableBrowserAccess();
+    public void enableBrowserAccess(@NonNull final String username) {
+        brokerMicrosoftAuthenticatorImpl.enableBrowserAccess(username);
 
         // This value was not being updated from the above performSharedDeviceRegistration method since
         // brokerMicrosoftAuthenticatorImpl is actually a completely separate object.
@@ -343,22 +343,24 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     }
     protected void performDeviceRegistrationHelperWithButtonText(@NonNull final String username,
                                                    @NonNull final String password,
-                                                   @NonNull final String emailInputResourceId,
-                                                   @NonNull final String registerBtnText,
+                                                   @NonNull final String firstRegisterBtnText,
+                                                   @NonNull final String secondRegisterBtnText,
                                                    final boolean isFederatedUser,
                                                    final boolean isRegistrationPageExpected) {
         Logger.i(TAG, "Execution of Helper for Device Registration..");
         // open device registration page
         openDeviceRegistrationPage();
 
+        // click register button
+        UiAutomatorUtils.handleButtonClickForObjectWithText(firstRegisterBtnText);
+
         // enter email
-        UiAutomatorUtils.handleInput(
-                emailInputResourceId,
+        UiAutomatorUtils.handleInputByClass(
+                "android.widget.EditText",
                 username
         );
 
-        // click register
-        UiAutomatorUtils.handleButtonClickForObjectWithText(registerBtnText);
+        UiAutomatorUtils.handleButtonClickForObjectWithExactText(secondRegisterBtnText);
 
         final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
                 .prompt(PromptParameter.LOGIN)

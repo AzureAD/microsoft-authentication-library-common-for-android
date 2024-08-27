@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.library'
     id 'maven-publish'
+    id 'kotlin-android'
 }
 
 apply from: '../versioning/version_tasks.gradle'
@@ -197,6 +198,8 @@ dependencies {
         implementation(group: 'com.microsoft.identity', name: 'labapi', version: '0.0.+')
     }
 
+    implementation(testFixtures(project(":common4j")))
+
     implementation project(":LabApiUtilities")
 
     implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
@@ -210,6 +213,7 @@ dependencies {
         exclude group: "xmlpull"
         exclude group: "xpp3"
     }
+    implementation 'com.squareup.okhttp:okhttp:2.7.5'
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
 }

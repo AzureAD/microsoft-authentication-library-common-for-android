@@ -168,7 +168,7 @@ public final class InstallCertActivityLauncher extends AppCompatActivity {
                     } else {
                         final String errorMessage = StringUtil.isNullOrEmpty(exceptionMessage) ?
                                 CERT_INSTALLATION_FAILED_WITH_EMPTY_RESPONSE : exceptionMessage;
-                        callback.onError(new ClientException(ClientException.UNKNOWN_ERROR, errorMessage));
+                        callback.onError(new ClientException(ClientException.INSTALL_CERT_ERROR, errorMessage));
                     }
                     LocalBroadcaster.INSTANCE.unregisterCallback(INSTALL_CERT_BROADCAST_ALIAS);
                 });

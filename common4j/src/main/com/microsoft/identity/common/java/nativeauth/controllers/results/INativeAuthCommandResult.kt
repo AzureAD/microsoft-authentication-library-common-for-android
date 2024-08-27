@@ -54,7 +54,7 @@ interface INativeAuthCommandResult : ILoggable {
     /**
      * UnknownError is base class to represent various kinds of errors in NativeAuth.
      */
-    data class UnknownError(
+    data class APIError(
         override val error: String?,
         override val errorDescription: String?,
         override val details: List<Map<String, String>>? = null,

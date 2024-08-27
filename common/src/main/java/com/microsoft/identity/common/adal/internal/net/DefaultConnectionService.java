@@ -32,7 +32,7 @@ import android.os.Build;
 import com.microsoft.identity.common.adal.internal.PowerManagerWrapper;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightManager;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.telemetry.events.BaseEvent;
@@ -72,12 +72,12 @@ public class DefaultConnectionService implements IConnectionService {
      * @return True if network connection available, false otherwise.
      */
     public boolean isConnectionAvailable() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
+        final ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
 
         final boolean isConnectionAvailable;
         final boolean useNetworkCapabilityForNetworkCheck
-                = CommonFlightManager.isFlightEnabled(CommonFlight.USE_NETWORK_CAPABILITY_FOR_NETWORK_CHECK);
+                = CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.USE_NETWORK_CAPABILITY_FOR_NETWORK_CHECK);
         if (useNetworkCapabilityForNetworkCheck && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             final NetworkCapabilities networkCapabilities =
                     connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());

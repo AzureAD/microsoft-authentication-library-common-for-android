@@ -23,9 +23,6 @@
 
 package com.microsoft.identity.common.java.controllers;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.TerminalException;
@@ -35,10 +32,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 @RunWith(JUnit4.class)
 public class ExceptionAdapterTests {
@@ -49,5 +43,11 @@ public class ExceptionAdapterTests {
         BaseException e = ExceptionAdapter.baseExceptionFromException(t);
         Assert.assertEquals(e.getErrorCode(), t.getErrorCode());
         Assert.assertEquals(e.getCause(), t);
+    }
+
+    @Test
+    public void testClientExceptionFromException_TimeoutException() {
+        final TimeoutException t = new TimeoutException();
+        Assert.assertEquals(ClientException.TIMED_OUT, ExceptionAdapter.clientExceptionFromException(t).getErrorCode());
     }
 }
