@@ -52,6 +52,13 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import org.json.JSONException;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableEntryException;
+import java.security.cert.CertificateException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -414,6 +421,40 @@ public class ExceptionAdapter {
                     e.getMessage(),
                     e
             );
+        }
+
+        if (e instanceof GeneralSecurityException) {
+            if (e instanceof CertificateException) {
+                return new ClientException(
+                        ClientException.CERTIFICATE_LOAD_FAILURE,
+                        e.getMessage(),
+                        e);
+            } else if (e instanceof KeyStoreException) {
+                return new ClientException(
+                        ClientException.KEYSTORE_NOT_INITIALIZED,
+                        e.getMessage(),
+                        e);
+            } else if (e instanceof NoSuchAlgorithmException) {
+                return new ClientException(
+                        ClientException.NO_SUCH_ALGORITHM,
+                        e.getMessage(),
+                        e);
+            } else if (e instanceof InvalidAlgorithmParameterException) {
+                return new ClientException(
+                        ClientException.INVALID_ALG_PARAMETER,
+                        e.getMessage(),
+                        e);
+            } else if (e instanceof UnrecoverableEntryException) {
+                return new ClientException(
+                        ClientException.INVALID_PROTECTION_PARAMS,
+                        e.getMessage(),
+                        e);
+            } else if (e instanceof InvalidKeyException) {
+                return new ClientException(
+                        ClientException.INVALID_KEY,
+                        e.getMessage(),
+                        e);
+            }
         }
 
         return new ClientException(

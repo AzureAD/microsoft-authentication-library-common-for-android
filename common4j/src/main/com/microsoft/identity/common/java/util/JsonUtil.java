@@ -50,7 +50,13 @@ public class JsonUtil {
         final Map<String, String> responseItems = new HashMap<>();
         while (keyIterator.hasNext()) {
             final String key = keyIterator.next();
-            responseItems.put(key, jsonObject.getString(key));
+            final Object jsonValue = jsonObject.get(key);
+            
+            if (jsonValue == null) {
+                responseItems.put(key, null);
+            } else {
+                responseItems.put(key, jsonValue.toString());
+            }
         }
 
         return responseItems;
