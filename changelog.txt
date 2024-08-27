@@ -1,4 +1,4 @@
-Version 17.7.1
+Version 17.6.2
 ---------
 - [PATCH] Return Family ID in LocalAuthenticationResult (#2479)
 
