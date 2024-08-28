@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.nativeauth.internal.util;
 
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFASubmitChallengeCommandParameters;
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters;
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters;
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters;
@@ -137,6 +138,56 @@ public class CommandUtil {
                         .password(parameters.getPassword())
                         .scopes(parameters.getScopes())
                         .correlationId(correlationId)
+                        .challengeType(parameters.getChallengeType())
+                        .build();
+
+        return commandParameters;
+    }
+
+    /**
+     * Adds scopes to [MFASubmitChallengeCommandParameters] object and returns a new
+     * [MFASubmitChallengeCommandParameters] object.
+     * @param parameters input command parameter
+     * @param defaultScopes scopes to be added
+     * @return [MFASubmitChallengeCommandParameters] object with scopes
+     */
+    public static MFASubmitChallengeCommandParameters createMFASubmitChallengeCommandParametersWithScopes(
+            MFASubmitChallengeCommandParameters parameters,
+            List<String> defaultScopes
+    ) {
+        return parameters.toBuilder()
+                .scopes(defaultScopes)
+                .correlationId(parameters.getCorrelationId())
+                .build();
+    }
+
+    /**
+     * Adds continuation token to [SignInStartCommandParameters] object and returns a new
+     * [SignInSubmitPasswordCommandParameters] object.
+     * @param parameters input command parameter
+     * @return [SignInSubmitPasswordCommandParameters] object with continuation token
+     */
+    public static SignInSubmitCodeCommandParameters createSignInSubmitCodeCommandParameters(
+            MFASubmitChallengeCommandParameters parameters
+    ) {
+        final SignInSubmitCodeCommandParameters commandParameters =
+                SignInSubmitCodeCommandParameters.builder()
+                        .platformComponents(parameters.getPlatformComponents())
+                        .applicationName(parameters.getApplicationName())
+                        .applicationVersion(parameters.getApplicationVersion())
+                        .clientId(parameters.getClientId())
+                        .isSharedDevice(parameters.isSharedDevice())
+                        .redirectUri(parameters.getRedirectUri())
+                        .oAuth2TokenCache(parameters.getOAuth2TokenCache())
+                        .requiredBrokerProtocolVersion(parameters.getRequiredBrokerProtocolVersion())
+                        .sdkType(SdkType.MSAL)
+                        .sdkVersion(parameters.getSdkVersion())
+                        .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
+                        .authority(parameters.getAuthority())
+                        .continuationToken(parameters.continuationToken)
+                        .code(parameters.challenge)
+                        .scopes(parameters.getScopes())
+                        .correlationId(parameters.getCorrelationId())
                         .challengeType(parameters.getChallengeType())
                         .build();
 
