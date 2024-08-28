@@ -258,7 +258,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     final boolean resultToReturn = !AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(result.getTenantId());
                     SpanExtension.current().setAttribute(
                             AttributeName.stop_returning_rt_result.name(),
-                            resultToReturn
+                            Boolean.toString(resultToReturn)
                     );
                     return resultToReturn;
                 }
@@ -269,7 +269,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                             !result.getAccessTokenRecord().getAuthority().contains(AzureActiveDirectoryAudience.CONSUMERS);
                     SpanExtension.current().setAttribute(
                             AttributeName.stop_returning_rt_result.name(),
-                            resultToReturn
+                            Boolean.toString(resultToReturn)
                     );
                     return resultToReturn;
                 }
