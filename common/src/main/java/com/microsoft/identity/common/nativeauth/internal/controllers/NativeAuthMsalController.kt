@@ -555,7 +555,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         codeLength = result.codeLength
                     )
                 }
-                is SignInChallengeApiResult.PasswordRequired -> {
+                is SignInChallengeApiResult.PasswordRequired, is SignInChallengeApiResult.Redirect -> {
                     Logger.warnWithObject(
                         TAG,
                         result.correlationId,
@@ -568,13 +568,12 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         correlationId = result.correlationId
                     )
                 }
-                is SignInChallengeApiResult.Redirect, is SignInChallengeApiResult.UnknownError -> {
+                is SignInChallengeApiResult.UnknownError -> {
                     Logger.warnWithObject(
                         TAG,
                         "Unexpected result: ",
                         result
                     )
-                    (result as ApiErrorResult)
                     INativeAuthCommandResult.APIError(
                         error = result.error,
                         errorDescription = result.errorDescription,
@@ -628,7 +627,6 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         "Unexpected result: ",
                         result
                     )
-                    (result as ApiErrorResult)
                     INativeAuthCommandResult.APIError(
                         error = result.error,
                         errorDescription = result.errorDescription,
