@@ -277,7 +277,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 // Cannot determine if this is AAD or MSA. Do not strip values.
                 SpanExtension.current().setAttribute(
                         AttributeName.stop_returning_rt_result.name(),
-                        "cannot_determine"
+                        "cannot_determine_account_type"
                 );
                 return false;
             } catch (final Throwable t) {
