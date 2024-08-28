@@ -2987,7 +2987,7 @@ class NativeAuthResponseHandlerTest {
     fun testSignInTokenApiResponseMFARequired() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
-            continuationToken = null,
+            continuationToken = continuationToken,
             error = invalidGrantError,
             errorCodes = null,
             errorDescription = mfaRequiredTokenErrorDescription,
