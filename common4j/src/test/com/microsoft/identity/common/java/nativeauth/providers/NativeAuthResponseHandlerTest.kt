@@ -2997,6 +2997,7 @@ class NativeAuthResponseHandlerTest {
         )
 
         val apiResult = signInTokenApiResponse.toErrorResult()
+
         assertTrue(apiResult is SignInTokenApiResult.MFARequired)
         assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.MFARequired).error)
         assertEquals(mfaRequiredTokenErrorDescription, apiResult.errorDescription)
