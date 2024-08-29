@@ -28,8 +28,10 @@ import com.microsoft.identity.labapi.utilities.constants.ProtectionPolicy;
 import com.microsoft.identity.labapi.utilities.constants.TempUserType;
 import com.microsoft.identity.labapi.utilities.constants.UserType;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
+import com.microsoft.identity.labapi.utilities.rules.RetryTestRule;
 
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -41,6 +43,9 @@ public class LabClientTest {
 
     // Give some time for basic user to finish creation to enable rest of test.
     private final long POST_TEMP_USER_CREATION_WAIT = 15000;
+
+    @Rule
+    public RetryTestRule retryRule = new RetryTestRule(3);
 
     @Test
     public void canFetchCloudAccount() {

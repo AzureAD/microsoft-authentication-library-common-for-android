@@ -28,68 +28,39 @@ import com.microsoft.identity.common.java.util.ArgUtils
 import java.net.URL
 
 /**
- * Represents a request to the OAuth /challenge endpoint, and provides a create() function to instantiate the request using the provided parameters.
+ * Represents a request to the OAuth /introspect endpoint, and provides a create() function to instantiate the request using the provided parameters
  */
-data class SignInChallengeRequest private constructor(
+data class SignInIntrospectRequest private constructor(
     override var requestUrl: URL,
     override var headers: Map<String, String?>,
-    override val parameters: NativeAuthRequestSignInChallengeRequestParameters
+    override val parameters: NativeAuthRequestSignInIntrospectRequestParameters
 ) : NativeAuthRequest() {
 
     /**
      * Returns a request object using the provided parameters.
      * The request URL and headers passed will be set directly.
-     * The clientId, continuation token, and challengeType will be mapped to the NativeAuthRequestSignInChallengeParameters object.
+     * The continuationToken will be taken from the NativeAuthRequestSignIntrospectParameters object.
      *
      * Parameters that are null or empty will throw a ClientException.
      * @see com.microsoft.identity.common.java.exception.ClientException
      */
     companion object {
-        fun createDefaultChallengeRequest(
-            clientId: String,
+        fun create(
             continuationToken: String,
-            challengeType: String,
+            clientId: String,
             requestUrl: String,
             headers: Map<String, String?>
-        ): SignInChallengeRequest {
+        ): SignInIntrospectRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(clientId, "clientId")
             ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
-            ArgUtils.validateNonNullArg(challengeType, "challengeType")
             ArgUtils.validateNonNullArg(headers, "headers")
 
-            return SignInChallengeRequest(
-                parameters = NativeAuthRequestSignInChallengeRequestParameters(
-                    clientId = clientId,
+            return SignInIntrospectRequest(
+                parameters = NativeAuthRequestSignInIntrospectRequestParameters(
                     continuationToken = continuationToken,
-                    challengeType = challengeType,
-                    id = null
-                ),
-                requestUrl = URL(requestUrl),
-                headers = headers
-            )
-        }
-        fun createSelectedChallengeRequest(
-            clientId: String,
-            continuationToken: String,
-            challengeId: String,
-            requestUrl: String,
-            headers: Map<String, String?>
-        ): SignInChallengeRequest {
-            // Check for empty Strings and empty Maps
-            ArgUtils.validateNonNullArg(clientId, "clientId")
-            ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
-            ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
-            ArgUtils.validateNonNullArg(challengeId, "challengeId")
-            ArgUtils.validateNonNullArg(headers, "headers")
-
-            return SignInChallengeRequest(
-                parameters = NativeAuthRequestSignInChallengeRequestParameters(
-                    clientId = clientId,
-                    continuationToken = continuationToken,
-                    challengeType = null,
-                    id = challengeId
+                    clientId = clientId
                 ),
                 requestUrl = URL(requestUrl),
                 headers = headers
@@ -97,18 +68,16 @@ data class SignInChallengeRequest private constructor(
         }
     }
 
-    override fun toUnsanitizedString(): String = "SignInChallengeRequest(requestUrl=$requestUrl, headers=$headers, parameters=$parameters)"
+    override fun toUnsanitizedString(): String = "SignInIntrospectRequest(requestUrl=$requestUrl, headers=$headers, parameters=$parameters)"
 
-    override fun toString(): String = "SignInChallengeRequest()"
+    override fun toString(): String = "SignInIntrospectRequest()"
 
-    data class NativeAuthRequestSignInChallengeRequestParameters(
+    data class NativeAuthRequestSignInIntrospectRequestParameters(
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("continuation_token") val continuationToken: String,
-        @SerializedName("challenge_type") val challengeType: String?,
-        @SerializedName("id") val id: String?
     ) : NativeAuthRequestParameters() {
-        override fun toUnsanitizedString(): String = "NativeAuthRequestSignInChallengeRequestParameters(clientId=$clientId, challengeType=$challengeType, id=$id)"
+        override fun toUnsanitizedString(): String = "NativeAuthRequestSignInIntrospectRequestParameters(clientId=$clientId)"
 
-        override fun toString(): String = "NativeAuthRequestSignInChallengeRequestParameters(clientId=$clientId, id=$id)"
+        override fun toString(): String = toUnsanitizedString()
     }
 }

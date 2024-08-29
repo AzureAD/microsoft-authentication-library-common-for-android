@@ -90,6 +90,7 @@ public final class AuthenticationConstants {
     public static final String TWO_POINT_ZERO = "2.0";
     public static final String THREE_POINT_ZERO = "3.0";
     public static final String FOUR_POINT_ZERO = "4.0";
+    public static final String FIVE_POINT_ZERO = "5.0";
 
 
 
@@ -1355,6 +1356,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_ACCOUNTS = "broker_accounts";
 
         /**
+         * String to return MSA account list from LTW broker.
+         */
+        public static final String RESTORED_BROKER_MSA_ACCOUNT_NAMES = "restored_broker_msa_account_names";
+
+        /**
          * String to return account list as compressed json.
          */
         public static final String BROKER_ACCOUNTS_COMPRESSED = "broker_accounts_compressed";
@@ -1527,6 +1533,7 @@ public final class AuthenticationConstants {
         private static final String BROKER_VERSION_1 = ONE_POINT_ZERO;
         private static final String BROKER_VERSION_3 = THREE_POINT_ZERO;
         private static final String BROKER_VERSION_4 = FOUR_POINT_ZERO;
+        private static final String BROKER_VERSION_5 = FIVE_POINT_ZERO;
 
 
         /**
@@ -1564,7 +1571,8 @@ public final class AuthenticationConstants {
             PASSTHROUGH(PASSTHROUGH_PATH, null, null),
             READ_RESTRICTIONS_MANAGER(READ_RESTRICTIONS_MANAGER_PATH, null, null),
             GET_PREFERRED_AUTH_METHOD(BrokerContentProvider.GET_PREFERRED_AUTH_METHOD, null, null),
-            BROKER_INDIVIDUAL_LOGS_UPLOAD(BROKER_INDIVIDUAL_LOGS_UPLOAD_PATH, null, null);
+            BROKER_INDIVIDUAL_LOGS_UPLOAD(BROKER_INDIVIDUAL_LOGS_UPLOAD_PATH, null, null),
+            BROKER_RESTORE_MSA_ACCOUNTS_WITH_TRANSFER_TOKENS(BROKER_RESTORE_MSA_ACCOUNTS_WITH_TRANSFER_TOKENS_PATH, BROKER_VERSION_5, null);
 
             /**
              * The content provider path that the API exists behind.
@@ -1658,6 +1666,11 @@ public final class AuthenticationConstants {
          * URI Path constant for BrokerApi-to-Broker getBrokerAccounts request using ContentProvider.
          */
         public static final String BROKER_API_GET_BROKER_ACCOUNTS_PATH = "/brokerApi/getBrokerAccounts";
+
+        /**
+         * URI Path constant for BrokerApi-to-Broker redeemMsaAccounts request using ContentProvider.
+         */
+        public static final String BROKER_RESTORE_MSA_ACCOUNTS_WITH_TRANSFER_TOKENS_PATH  = "/brokerApi/restoreMsaAccountsWithTransferTokens";
 
         /**
          * URI Path constant for BrokerApi-to-Broker removeBrokerAccount request using ContentProvider.

@@ -45,6 +45,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignI
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignUpInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpContinueApiResult
@@ -154,15 +155,43 @@ class NativeAuthOAuth2Strategy(
     }
 
     /**
-     * Performs API call to /oauth/v2.0/challenge
+     * Performs API call to /oauth/v2.0/challenge to challenge default auth method
      */
-    fun performSignInChallenge(
+    fun performSignInDefaultChallenge(
         continuationToken: String,
         correlationId: String
     ): SignInChallengeApiResult {
-        return signInInteractor.performSignInChallenge(
+        return signInInteractor.performSignInDefaultChallenge(
             continuationToken = continuationToken,
             correlationId = correlationId
+        )
+    }
+
+    /**
+     * Performs API call to /oauth/v2.0/challenge with specified auth method
+     */
+    fun performSignInSelectedChallenge(
+        continuationToken: String,
+        correlationId: String,
+        challengeId: String
+    ): SignInChallengeApiResult {
+        return signInInteractor.performSignInSelectedChallenge(
+            continuationToken = continuationToken,
+            correlationId = correlationId,
+            challengeId = challengeId
+        )
+    }
+
+    /**
+     * Performs API call to /oauth/v2.0/introspect
+     */
+    fun performSignInIntrospect(
+        continuationToken: String,
+        correlationId: String
+    ): SignInIntrospectApiResult {
+        return signInInteractor.performSignInIntrospect(
+            continuationToken = continuationToken,
+            correlationId = correlationId,
         )
     }
 
