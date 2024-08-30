@@ -73,7 +73,12 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to disable the network connectivity check.
      */
-    DISABLE_NETWORK_CONNECTIVITY_CHECK("DisableNetworkConnectivityCheck", true);
+    DISABLE_NETWORK_CONNECTIVITY_CHECK("DisableNetworkConnectivityCheck", true),
+
+    /**
+     * Flight to stop returning AAD RT back to calling apps.
+     */
+    STOP_RETURNING_AAD_RT_BACK_TO_CALLING_APP("StopReturningAadRtBackToCallingApp", false);
 
     private String key;
     private Object defaultValue;
