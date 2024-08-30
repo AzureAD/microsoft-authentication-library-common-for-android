@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.providers.oauth2;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.UPN_TO_WPJ_KEY;
 
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -119,6 +120,10 @@ public abstract class AuthorizationResultFactory
                 // Set username returned from the service
                 final Map<String, String> urlParameters = UrlUtil.getParameters(url);
                 result.getAuthorizationErrorResponse().setUpnToWpj(urlParameters.get(UPN_TO_WPJ_KEY));
+
+                // Set token protection required
+                result.getAuthorizationErrorResponse().setTokenProtectionRequired(
+                        Boolean.parseBoolean(urlParameters.get(AuthenticationConstants.AAD.TOKEN_PROTECTION_REQUIRED_KEY)));
                 return result;
             }
 

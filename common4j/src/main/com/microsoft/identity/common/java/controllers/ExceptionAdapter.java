@@ -35,6 +35,7 @@ import com.microsoft.identity.common.java.exception.DeviceRegistrationRequiredEx
 import com.microsoft.identity.common.java.exception.InsufficientDeviceRegistrationException;
 import com.microsoft.identity.common.java.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.exception.StrongDeviceRegistrationRequiredException;
 import com.microsoft.identity.common.java.exception.TerminalException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
@@ -114,11 +115,19 @@ public class ExceptionAdapter {
                     if (MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED.equals(
                             microsoftAuthorizationErrorResponse.getError())) {
 
-                        return new DeviceRegistrationRequiredException(
-                                microsoftAuthorizationErrorResponse.getError(),
-                                microsoftAuthorizationErrorResponse.getErrorDescription(),
-                                microsoftAuthorizationErrorResponse.getUpnToWpj()
-                        );
+                        if (microsoftAuthorizationErrorResponse.isTokenProtectionRequired()) {
+                            return new StrongDeviceRegistrationRequiredException(
+                                    microsoftAuthorizationErrorResponse.getError(),
+                                    microsoftAuthorizationErrorResponse.getErrorDescription(),
+                                    microsoftAuthorizationErrorResponse.getUpnToWpj()
+                            );
+                        } else {
+                            return new DeviceRegistrationRequiredException(
+                                    microsoftAuthorizationErrorResponse.getError(),
+                                    microsoftAuthorizationErrorResponse.getErrorDescription(),
+                                    microsoftAuthorizationErrorResponse.getUpnToWpj()
+                            );
+                        }
                     } else if (MicrosoftAuthorizationErrorResponse.INSUFFICIENT_DEVICE_REGISTRATION.equals(
                             microsoftAuthorizationErrorResponse.getError())) {
                         return new InsufficientDeviceRegistrationException(
