@@ -10,6 +10,7 @@ V.Next
 - [PATCH] Move MS STS Response handling to separate class (#2471)
 - [MINOR] Add support for email OTP MFA in native authentication (#2468)
 - [MINOR] Moving OS version check for passkeys (#2450)
+- [PATCH] Change LTW debug signature hash (#2492)
 
 Version 17.7.0
 ---------
