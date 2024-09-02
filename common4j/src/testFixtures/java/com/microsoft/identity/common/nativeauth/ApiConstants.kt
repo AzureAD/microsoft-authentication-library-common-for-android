@@ -38,6 +38,7 @@ interface ApiConstants {
         val signUpContinueRequestUrl = URL(BASE_REQUEST_PATH + "signup/v1.0/continue")
         val signInInitiateRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/initiate")
         val signInChallengeRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/challenge")
+        val signInIntrospectRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/introspect")
         val signInTokenRequestUrl = URL(BASE_REQUEST_PATH + "oauth2/v2.0/token")
         val ssprStartRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/start")
         val ssprChallengeRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/challenge")

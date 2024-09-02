@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.nativeauth.providers
 
 import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry
+import com.microsoft.identity.common.java.logging.LibraryInfoHelper
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
@@ -34,7 +35,6 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
-import com.microsoft.identity.common.java.logging.LibraryInfoHelper
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpassword.ResetPasswordChallengeRequest
@@ -44,6 +44,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpas
 import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpassword.ResetPasswordSubmitRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInChallengeRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInInitiateRequest
+import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInIntrospectRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInTokenRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpChallengeRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpContinueRequest
@@ -62,6 +63,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     private val signUpChallengeEndpoint = config.getSignUpChallengeEndpoint().toString()
     private val signUpContinueEndpoint = config.getSignUpContinueEndpoint().toString()
     private val signInInitiateEndpoint = config.getSignInInitiateEndpoint().toString()
+    private val signInIntrospectEndpoint = config.getSignInIntrospectEndpoint().toString()
     private val signInChallengeEndpoint = config.getSignInChallengeEndpoint().toString()
     private val signInTokenEndpoint = config.getSignInTokenEndpoint().toString()
     private val resetPasswordStartEndpoint = config.getResetPasswordStartEndpoint().toString()
@@ -90,18 +92,56 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
 
     //region /oauth/v2.0/challenge
     /**
-     * Creates request object for /oauth/v2.0/challenge API call from continuation token
+     * Creates request object for /oauth/v2.0/challenge API call from continuation token,
+     * querying the default challenge method (i.e. defined by the API).
      * @param continuationToken: continuation token from a previous signin command
      */
-    internal fun createSignInChallengeRequest(
+    internal fun createSignInDefaultChallengeRequest(
         continuationToken: String,
         correlationId: String
     ): SignInChallengeRequest {
-        return SignInChallengeRequest.create(
+        return SignInChallengeRequest.createDefaultChallengeRequest(
             clientId = config.clientId,
             continuationToken = continuationToken,
             challengeType = config.challengeType,
             requestUrl = signInChallengeEndpoint,
+            headers = getRequestHeaders(correlationId)
+        )
+    }
+
+    /**
+     * Creates request object for /oauth/v2.0/challenge API call from continuation token,
+     * querying a specific challenge method (i.e. set by the developer through the ID parameter.
+     * @param continuationToken: continuation token from a previous signin command
+     */
+    internal fun createSignInSelectedChallengeRequest(
+        continuationToken: String,
+        challengeId: String,
+        correlationId: String
+    ): SignInChallengeRequest {
+        return SignInChallengeRequest.createSelectedChallengeRequest(
+            clientId = config.clientId,
+            continuationToken = continuationToken,
+            challengeId = challengeId,
+            requestUrl = signInChallengeEndpoint,
+            headers = getRequestHeaders(correlationId)
+        )
+    }
+    //endregion
+
+    // region /oauth/v2.0/introspect
+    /**
+     * Creates request object for /oauth/v2.0/introspect API call
+     * @param continuationToken: continuation token from a previous signin command
+     */
+    internal fun createSignInIntrospectRequest(
+        continuationToken: String,
+        correlationId: String
+    ): SignInIntrospectRequest {
+        return SignInIntrospectRequest.create(
+            clientId = config.clientId,
+            continuationToken = continuationToken,
+            requestUrl = signInIntrospectEndpoint,
             headers = getRequestHeaders(correlationId)
         )
     }
@@ -309,7 +349,9 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //region helpers
     private fun getRequestHeaders(correlationId: String): Map<String, String?> {
         val headers: MutableMap<String, String?> = TreeMap()
-        headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = correlationId
+        if (correlationId != "UNSET") {
+            headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = correlationId
+        }
         headers[AuthenticationConstants.SdkPlatformFields.PRODUCT] = LibraryInfoHelper.getLibraryName()
         headers[AuthenticationConstants.SdkPlatformFields.VERSION] = LibraryInfoHelper.getLibraryVersion()
         headers.putAll(Device.getPlatformIdParameters())

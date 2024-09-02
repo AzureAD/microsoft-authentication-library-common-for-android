@@ -161,7 +161,7 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     @Override
-    public void enableBrowserAccess() {
+    public void enableBrowserAccess(@NonNull final String username) {
         Logger.i(TAG, "Enable Browser Access..");
         singleWpjApiFragment.launch();
         singleWpjApiFragment.installCertificate();
@@ -337,6 +337,14 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     /**
+     * Restores the MSA accounts.
+     */
+    public void restoreMsaAccounts(final int expectedNumberOfRestoredAccounts) {
+        brokerApiFragment.launch();
+        brokerApiFragment.restoreMsaAccounts(expectedNumberOfRestoredAccounts);
+    }
+
+    /**
      * Ensures flight provider as LocalFlightsProvider
      * @param key The flight parameter name as string.
      * @param value The flight parameter value as string
@@ -350,5 +358,14 @@ public class BrokerHost extends AbstractTestBroker {
         forceStop();
         ThreadUtils.sleepSafely(500, methodTag, "Wait before launch.");
         launch();
+    }
+
+    /**
+     * Returns true if brokerHost is using local flights
+     */
+    public boolean isLocalFlightProviderSelector() {
+        final String methodTag = TAG + ".isLocalFlightProviderSelector";
+        brokerFlightsFragment.launch();
+        return brokerFlightsFragment.isLocalFlightProviderSelector();
     }
 }

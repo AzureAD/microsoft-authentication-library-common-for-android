@@ -134,7 +134,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     }
 
     @Override
-    public void enableBrowserAccess() {
+    public void enableBrowserAccess(@NonNull final String username) {
         throw new UnsupportedOperationException("Not implemented");
     }
 

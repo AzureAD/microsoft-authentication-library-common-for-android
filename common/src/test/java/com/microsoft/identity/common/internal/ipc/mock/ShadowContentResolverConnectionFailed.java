@@ -22,6 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.ipc.mock;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
@@ -34,9 +37,11 @@ import org.robolectric.annotation.Implements;
 
 @Implements(ContentResolver.class)
 public class ShadowContentResolverConnectionFailed {
-    public final @Nullable Cursor query(@RequiresPermission.Read @NonNull Uri uri,
+    public final Cursor query(@RequiresPermission.Read @NonNull Uri uri,
                                         @Nullable String[] projection, @Nullable String selection,
                                         @Nullable String[] selectionArgs, @Nullable String sortOrder) {
-        return null;
+        final Cursor cursor = mock(Cursor.class);
+        when(cursor.getExtras()).thenThrow(new RuntimeException("Connection failed"));
+        return cursor;
     }
 }

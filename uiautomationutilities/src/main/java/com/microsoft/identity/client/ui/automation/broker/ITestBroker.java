@@ -113,7 +113,7 @@ public interface ITestBroker extends IApp {
     /**
      * Enable browser access from this broker.
      */
-    void enableBrowserAccess();
+    void enableBrowserAccess(@NonNull final String username);
 
     /**
      * The admin name for this broker app. This name is used to represent the broker app as an

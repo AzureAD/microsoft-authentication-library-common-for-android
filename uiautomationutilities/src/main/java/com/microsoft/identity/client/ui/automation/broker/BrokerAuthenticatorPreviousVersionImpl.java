@@ -152,7 +152,7 @@ public class BrokerAuthenticatorPreviousVersionImpl extends BrokerMicrosoftAuthe
     }
 
     @Override
-    public void enableBrowserAccess() {
+    public void enableBrowserAccess(@NonNull final String username) {
         Logger.i(TAG, "Enable Browser Access..");
         // open device registration page
         openDeviceRegistrationPage();

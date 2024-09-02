@@ -52,6 +52,13 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import org.json.JSONException;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableEntryException;
+import java.security.cert.CertificateException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -92,7 +99,7 @@ public class ExceptionAdapter {
                     methodTag,
                     "AuthorizationErrorResponse is not set"
             );
-            return new ClientException(ClientException.UNKNOWN_ERROR, "Authorization failed with unknown error. Authorization Status: " +authorizationResult.getAuthorizationStatus());
+            return new ClientException(ClientException.AUTHORIZATION_RESULT_NULL_ERROR_RESPONSE, "Authorization error response is null. Authorization Status: " +authorizationResult.getAuthorizationStatus());
         }
 
         //THERE ARE CURRENTLY NO USAGES of INVALID_REQUEST
@@ -340,7 +347,8 @@ public class ExceptionAdapter {
 
     public static BaseException baseExceptionFromException(final Throwable exception) {
         Throwable e = exception;
-        if (exception instanceof ExecutionException) {
+        if (exception instanceof ExecutionException
+                && exception.getCause() != null) {
             e = exception.getCause();
         }
         if (e instanceof BaseException) {
@@ -357,7 +365,8 @@ public class ExceptionAdapter {
         }
 
         Throwable e = exception;
-        if (exception instanceof ExecutionException) {
+        if (exception instanceof ExecutionException
+                && exception.getCause() != null) {
             e = exception.getCause();
         }
 
@@ -393,9 +402,59 @@ public class ExceptionAdapter {
         if (e instanceof TimeoutException) {
             return new ClientException(
                     ClientException.TIMED_OUT,
-                    "A blocking operation has timed out",
+                    "A blocking operation has timed out: " + e.getMessage(),
                     e
             );
+        }
+
+        if (e instanceof NullPointerException) {
+            return new ClientException(
+                    ClientException.NULL_POINTER_ERROR,
+                    e.getMessage()
+            );
+        }
+
+
+        if (e instanceof OutOfMemoryError) {
+            return new ClientException(
+                    ClientException.OUT_OF_MEMORY,
+                    e.getMessage(),
+                    e
+            );
+        }
+
+        if (e instanceof GeneralSecurityException) {
+            if (e instanceof CertificateException) {
+                return new ClientException(
+                        ClientException.CERTIFICATE_LOAD_FAILURE,
+                        e.getMessage(),
+                        e);
+            } else if (e instanceof KeyStoreException) {
+                return new ClientException(
+                        ClientException.KEYSTORE_NOT_INITIALIZED,
+                        e.getMessage(),
+                        e);
+            } else if (e instanceof NoSuchAlgorithmException) {
+                return new ClientException(
+                        ClientException.NO_SUCH_ALGORITHM,
+                        e.getMessage(),
+                        e);
+            } else if (e instanceof InvalidAlgorithmParameterException) {
+                return new ClientException(
+                        ClientException.INVALID_ALG_PARAMETER,
+                        e.getMessage(),
+                        e);
+            } else if (e instanceof UnrecoverableEntryException) {
+                return new ClientException(
+                        ClientException.INVALID_PROTECTION_PARAMS,
+                        e.getMessage(),
+                        e);
+            } else if (e instanceof InvalidKeyException) {
+                return new ClientException(
+                        ClientException.INVALID_KEY,
+                        e.getMessage(),
+                        e);
+            }
         }
 
         return new ClientException(
