@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.broker;
 
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
 
@@ -81,12 +83,30 @@ public class BrokerApiFragment extends AbstractBrokerHost {
     /**
      * Restores the MSA accounts.
      *
-     * @param expectedNumberOfRestoredAccounts the expected number of the accounts restored.
+     * @param expectedRestoredAccountNames the expected accounts restored.
      */
-    public void restoreMsaAccounts(final int expectedNumberOfRestoredAccounts) {
+    public void restoreMsaAccounts(final List<String> expectedRestoredAccountNames) {
         clickButton(RESTORE_MSA_ACCOUNTS_BUTTON_ID);
-        final String dialogBoxText = dismissDialogBoxAndGetText();
-        Assert.assertTrue(dialogBoxText.contains(String.valueOf(expectedNumberOfRestoredAccounts)));
+
+        UiObject dialogBox;
+        List<String> accountNames = new ArrayList<>();
+        do {
+            final String accountName = dismissDialogBoxAndGetText();
+            if (expectedRestoredAccountNames.isEmpty()) {
+                Assert.assertTrue(accountName.contains("No accounts restored"));
+                return;
+            }
+            if (accountName != null && !accountName.contains("No accounts")) {
+                accountNames.add(accountName);
+            }
+            ThreadUtils.sleepSafely(2000, TAG, "Waiting for the dialog box to disappear");
+            dialogBox = UiAutomatorUtils.obtainUiObjectWithResourceId(DIALOG_BOX_RESOURCE_ID);
+        } while (dialogBox.exists());
+        for (String expectedRestoredAccountName : expectedRestoredAccountNames) {
+            for (String accountName : accountNames) {
+                Assert.assertTrue(accountName.contains(expectedRestoredAccountName));
+            }
+        }
     }
 
     /**
