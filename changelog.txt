@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Allow OneAuth to set Max MSAL-Broker Protocol version (#2490)
 - [MAJOR] Remove RT from AAD token responses (#2483)
 - [MINOR] Add API in MicrosoftStsOAuthStrategy to request token and handle response with provided handler (@2478)
 - [MINOR] Setting flights to control UrlConnection timeout values (#2473)
