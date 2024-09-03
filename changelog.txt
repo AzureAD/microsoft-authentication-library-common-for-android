@@ -11,6 +11,7 @@ V.Next
 - [MINOR] Add support for email OTP MFA in native authentication (#2468)
 - [MINOR] Moving OS version check for passkeys (#2450)
 - [PATCH] Change LTW debug signature hash (#2492)
+- [MINOR] Add new span name for OnUpgradeReceiver (#2494)
 
 Version 17.7.0
 ---------
