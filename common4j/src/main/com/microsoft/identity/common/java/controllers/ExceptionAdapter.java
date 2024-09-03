@@ -491,6 +491,7 @@ public class ExceptionAdapter {
         if (!(errorResponse instanceof MicrosoftTokenErrorResponse)) {
             return false;
         }
+
         MicrosoftTokenErrorResponse microsoftTokenErrorResponse = ((MicrosoftTokenErrorResponse) errorResponse);
         return !StringUtil.isNullOrEmpty(microsoftTokenErrorResponse.getError()) &&
                 !StringUtil.isNullOrEmpty(microsoftTokenErrorResponse.getSubError()) &&
