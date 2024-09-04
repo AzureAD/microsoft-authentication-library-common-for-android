@@ -66,5 +66,6 @@ public enum SpanName {
     IsLtwPreInstalled,
     DeleteTransferToken,
     RestoreMsaAccounts,
+    OnUpgradeReceiver,
     UpgradeDeviceRegistration
 }

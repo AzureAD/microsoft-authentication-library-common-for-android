@@ -180,7 +180,7 @@ public class MockTokenCreator {
         );
     }
 
-    private static String createMockRawClientInfo(final String uid, final String utid) {
+    public static String createMockRawClientInfo(final String uid, final String utid) {
         final String claims = "{\"uid\":\"" + uid + "\",\"utid\":\"" + utid + "\"}";
 
         return new String(Base64.encode(claims.getBytes(
