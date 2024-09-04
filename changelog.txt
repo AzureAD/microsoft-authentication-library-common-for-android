@@ -1,5 +1,7 @@
 V.Next
 ----------
+- [PATCH] Add purpose claim to JwtRequestBody (#2454)
+- [MINOR] Changes needed for token binding CA policy error handling (#2453)
 - [MINOR] Allow OneAuth to set Max MSAL-Broker Protocol version (#2490)
 - [MAJOR] Remove RT from AAD token responses (#2483)
 - [MINOR] Add API in MicrosoftStsOAuthStrategy to request token and handle response with provided handler (@2478)
@@ -16,7 +18,6 @@ V.Next
 
 Version 17.7.0
 ---------
-- [PATCH] Add purpose claim to JwtRequestBody (#2454)
 - [MINOR] Add null cursor BrokerCommunicationException error category (#2459)
 - [MINOR] Classifying more UNKNOWN_ERRORs (#2460)
 
