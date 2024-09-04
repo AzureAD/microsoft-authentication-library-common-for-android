@@ -282,5 +282,10 @@ public enum AttributeName {
     /**
      * Indicates the prt's home authority.
      */
-    home_cloud_name
+    home_cloud_name,
+
+    /**
+     * Specify the result (or error stack trace) when determining if RT should be returned with AT response.
+     */
+    stop_returning_rt_result
 }
