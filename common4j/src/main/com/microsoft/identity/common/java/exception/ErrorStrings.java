@@ -351,6 +351,17 @@ public final class ErrorStrings {
     public static final String DEVICE_REGISTRATION_FAILED = "Device registration failed";
 
     /**
+     * Device registration upgrade failed.
+     */
+    public static final String UPGRADE_DEVICE_REGISTRATION_FAILED = "Upgrading Device registration failed";
+
+    /**
+     * Strong Device registration not enabled.
+     */
+    public static final String STRONG_DEVICE_REGISTRATION_NOT_ENABLED_ERROR_CODE = "Strong_device_registration_not_enabled";
+    public static final String STRONG_DEVICE_REGISTRATION_NOT_ENABLED_ERROR_MESSAGE = "Strong device registration required, but is not yet enabled in broker";
+
+    /**
      * Device unregistration/leave failed.
      */
     public static final String DEVICE_LEAVE_FAILED = "device_leave_failed";
