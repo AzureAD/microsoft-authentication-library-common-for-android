@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands;
 
+import static org.mockito.ArgumentMatchers.any;
+
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
@@ -31,6 +33,7 @@ import com.microsoft.identity.common.java.commands.CommandCallback;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.controllers.IControllerFactory;
+import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.util.ClockSkewManager;
 import com.microsoft.identity.common.java.util.UrlUtil;
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
@@ -38,8 +41,10 @@ import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -182,5 +187,86 @@ public class GenerateShrCommandTest {
     @Test
     public void testEquals_notEqualDifferenceInNonce() {
         Assert.assertNotEquals(COMMAND_ONE, COMMAND_TWO);
+    }
+
+    @Test
+    public void testNoControllers() {
+        final GenerateShrCommand generateShrCommand = new GenerateShrCommand(
+                GenerateShrCommandParameters.builder().platformComponents(AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext())).build(),
+                emptyControllerFactory,
+                Mockito.mock(CommandCallback.class),
+                "ID"
+        );
+
+        try {
+            generateShrCommand.execute();
+        } catch (Throwable t) {
+            Assert.assertNotNull(t instanceof Exception);
+            Assert.assertEquals("No controllers available", t.getMessage());
+        }
+    }
+
+    @Test
+    public void testSingleControllerSucceeds() throws Exception {
+        BaseController controller = Mockito.mock(BaseController.class);
+        GenerateShrResult generateShrResult = new GenerateShrResult();
+        Mockito.when(controller.generateSignedHttpRequest(any(GenerateShrCommandParameters.class))).thenReturn(generateShrResult);
+
+        final GenerateShrCommand generateShrCommand = new GenerateShrCommand(
+                GenerateShrCommandParameters.builder().platformComponents(AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext())).build(),
+                new IControllerFactory() {
+                    @NonNull
+                    @Override
+                    public List<BaseController> getAllControllers() {
+                        return Collections.singletonList(controller);
+                    }
+
+                    @NonNull
+                    @Override
+                    public BaseController getDefaultController() {
+                        return controller;
+                    }
+                },
+                Mockito.mock(CommandCallback.class),
+                "ID"
+        );
+
+        GenerateShrResult result = generateShrCommand.execute();
+        Assert.assertNotNull(result);
+    }
+
+    @Test
+    public void testFirstControllerFails_no_account_found_SecondControllerSucceeds() throws Exception {
+        BaseController controller1 = Mockito.mock(BaseController.class);
+        BaseController controller2 = Mockito.mock(BaseController.class);
+        GenerateShrResult generateShrFailResult = new GenerateShrResult();
+        generateShrFailResult.setErrorCode("no_account_found");
+        GenerateShrResult generateShrSuccessResult = new GenerateShrResult();
+        generateShrSuccessResult.setShr("shr");
+        Mockito.when(controller1.generateSignedHttpRequest(any(GenerateShrCommandParameters.class))).thenReturn(generateShrFailResult);
+        Mockito.when(controller2.generateSignedHttpRequest(any(GenerateShrCommandParameters.class))).thenReturn(generateShrSuccessResult);
+
+        final GenerateShrCommand generateShrCommand = new GenerateShrCommand(
+                GenerateShrCommandParameters.builder().platformComponents(AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext())).build(),
+                new IControllerFactory() {
+                    @NonNull
+                    @Override
+                    public List<BaseController> getAllControllers() {
+                        return Arrays.asList(controller1, controller2);
+                    }
+
+                    @NonNull
+                    @Override
+                    public BaseController getDefaultController() {
+                        return controller1;
+                    }
+                },
+                Mockito.mock(CommandCallback.class),
+                "ID"
+        );
+
+        GenerateShrResult result = generateShrCommand.execute();
+        Assert.assertNotNull(result);
+        Assert.assertEquals("shr", result.getShr());
     }
 }
