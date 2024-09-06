@@ -45,6 +45,7 @@ import com.microsoft.identity.common.internal.fido.CredManFidoManager;
 import com.microsoft.identity.common.internal.fido.FidoChallenge;
 import com.microsoft.identity.common.internal.fido.AuthFidoChallengeHandler;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
+import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
@@ -177,6 +178,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity)getActivity()).getSpanContext() : null;
                 final AuthFidoChallengeHandler challengeHandler = new AuthFidoChallengeHandler(
                         new CredManFidoManager(view.getContext()),
+                        (WebViewAuthorizationFragment) ((AuthorizationActivity)getActivity()).getFragment(),
                         view,
                         spanContext,
                         ViewTreeLifecycleOwner.get(view));

@@ -29,6 +29,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -49,6 +50,8 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
+import com.microsoft.identity.common.internal.fido.LegacyFidoObject;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -115,13 +118,23 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private PermissionRequest mCameraPermissionRequest;
 
+    private ActivityResultLauncher<LegacyFidoObject> mFidoLauncher;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        final String methodTag = TAG + ":onCreate";
         final FragmentActivity activity = getActivity();
         if (activity != null) {
             WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
         }
+
+        mFidoLauncher = registerForActivityResult(
+                new LegacyFidoActivityResultContract(),
+                result -> {
+                    Logger.info(methodTag, "Got legacy FIDO2API result.");
+                }
+        );
     }
 
     @Override
@@ -473,6 +486,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public ActivityResultLauncher<LegacyFidoObject> getFidoLauncher() {
+        return mFidoLauncher;
     }
 
     /**

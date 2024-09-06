@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
@@ -43,6 +44,9 @@ public class AuthorizationActivity extends DualScreenActivity {
     @Getter
     @Accessors(prefix = "m")
     private SpanContext mSpanContext;
+
+    @Getter
+    @Accessors(prefix = "m")
     private AuthorizationFragment mFragment;
 
     @Override

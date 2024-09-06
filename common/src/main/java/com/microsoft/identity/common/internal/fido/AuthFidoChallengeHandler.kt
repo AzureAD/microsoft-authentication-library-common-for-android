@@ -22,10 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
-import android.os.Build
 import android.webkit.WebView
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.fido.common.Transport
+import com.google.android.gms.fido.fido2.Fido2ApiClient
+import com.google.android.gms.tasks.OnSuccessListener
+import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler
 import com.microsoft.identity.common.java.constants.FidoConstants
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.PASSKEY_PROTOCOL_ERROR_PREFIX_STRING
@@ -49,6 +52,7 @@ import java.util.*
  */
 class AuthFidoChallengeHandler (
     private val fidoManager: IFidoManager,
+    private val fragment: WebViewAuthorizationFragment,
     private val webView: WebView,
     private val spanContext : SpanContext?,
     private val lifecycleOwner: LifecycleOwner?
@@ -119,14 +123,59 @@ class AuthFidoChallengeHandler (
                     span
                 )
             } catch (e : Exception) {
-                respondToChallengeWithError(
-                    submitUrl = submitUrl,
-                    context = context,
-                    span = span,
-                    errorMessage = e.message.toString(),
-                    exception = e,
-                    methodTag = methodTag
-                )
+                if (fidoManager is CredManFidoManager
+                    && fidoManager.shouldFallbackToLegacyApi(e)) {
+                    val legacyApi = Fido2ApiClient(webView.context)
+                    val publicKeyCredentialDescriptorList = ArrayList<com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialDescriptor>()
+                    allowedCredentials?.let {
+                        for (id in allowedCredentials) {
+                            publicKeyCredentialDescriptorList.add(
+                                com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialDescriptor("public-key", id.toByteArray(), ArrayList<Transport>())
+                            )
+                        }
+                    }
+                    val requestOptions = com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialRequestOptions.Builder()
+                        .setChallenge(authChallenge.toByteArray())
+                        .setRpId(relyingPartyIdentifier)
+                        .setAllowList(publicKeyCredentialDescriptorList)
+                        .build()
+                    val result = legacyApi.getSignPendingIntent(requestOptions)
+
+                    result.addOnSuccessListener(OnSuccessListener { pendingIntent ->
+                        if (pendingIntent != null) {
+                            fragment.fidoLauncher.launch(
+                                LegacyFidoObject(
+                                    callback = { assertion, succeeded ->
+                                        if (succeeded) {
+                                            respondToChallenge(
+                                                submitUrl = submitUrl,
+                                                assertion = assertion,
+                                                context = context,
+                                                span = span
+                                            )
+                                        } else {
+                                            respondToChallengeWithError(
+                                                submitUrl = submitUrl,
+                                                context = context,
+                                                span = span,
+                                                errorMessage = assertion
+                                            )
+                                        }
+                                    },
+                                    pendingIntent = pendingIntent
+                                ))
+                        }
+                    })
+                } else {
+                    respondToChallengeWithError(
+                        submitUrl = submitUrl,
+                        context = context,
+                        span = span,
+                        errorMessage = e.message.toString(),
+                        exception = e,
+                        methodTag = methodTag
+                    )
+                }
             }
         }
         return null
