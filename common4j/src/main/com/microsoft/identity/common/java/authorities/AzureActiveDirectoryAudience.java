@@ -53,6 +53,12 @@ public abstract class AzureActiveDirectoryAudience {
     public static final String ALL = "common";
     public static final String MSA_MEGA_TENANT_ID = "9188040d-6c67-4c5b-b112-36a304b66dad";
 
+    public static final String MSA_AUDIENCE = "MSA";
+    public static final String COMMON_AUDIENCE = "COMMON";
+    public static final String AAD_AUDIENCE = "AAD";
+    public static final String UNKNOWN_AUDIENCE = "UNKNOWN";
+
+
     public String getCloudUrl() {
         if (mCloudUrl == null) {
             return AzureActiveDirectory.getDefaultCloudUrl();
@@ -152,6 +158,25 @@ public abstract class AzureActiveDirectoryAudience {
 
     public void setTenantId(String tenantId) {
         mTenantId = tenantId;
+    }
+
+    public static String getAudienceFromTenantId( final String tenantId) {
+
+        if (tenantId == null) {
+            return UNKNOWN_AUDIENCE;
+        }
+
+        final String audienceToCheck = tenantId.toLowerCase(Locale.ROOT);
+
+        if (audienceToCheck.contains(CONSUMERS) || audienceToCheck.contains(MSA_MEGA_TENANT_ID)) {
+            return MSA_AUDIENCE;
+        }
+        else if (audienceToCheck.contains(ALL)) {
+            return COMMON_AUDIENCE;
+        }
+        else {
+            return AAD_AUDIENCE;
+        }
     }
 
     public static AzureActiveDirectoryAudience getAzureActiveDirectoryAudience(final String cloudUrl,
