@@ -55,11 +55,11 @@ public abstract class AzureActiveDirectoryAudience {
 
     // The values here are audience values reported in telemetry
     // rather than the values used to send to eSTS.
-    public static class TelemetryConstants {
-        public static final String MSA_AUDIENCE_FOR_REPORTING = "MSA";
-        public static final String COMMON_AUDIENCE_FOR_REPORTING = "COMMON";
-        public static final String AAD_AUDIENCE_FOR_REPORTING = "AAD";
-        public static final String UNKNOWN_AUDIENCE_FOR_REPORTING = "UNKNOWN";
+    public enum AudienceTelemetryConstant {
+        MSA_AUDIENCE_FOR_REPORTING,
+        COMMON_AUDIENCE_FOR_REPORTING,
+        AAD_AUDIENCE_FOR_REPORTING,
+        UNKNOWN_AUDIENCE_FOR_REPORTING;
     }
 
 
@@ -174,19 +174,19 @@ public abstract class AzureActiveDirectoryAudience {
     public static String getAudienceFromAuthority( final AzureActiveDirectoryAuthority authority) {
 
         if (authority == null || StringUtil.isNullOrEmpty(authority.getAudience().getTenantId())) {
-            return TelemetryConstants.UNKNOWN_AUDIENCE_FOR_REPORTING;
+            return AudienceTelemetryConstant.UNKNOWN_AUDIENCE_FOR_REPORTING.name();
         }
 
         final String audienceToCheck = authority.getAudience().mTenantId.toLowerCase(Locale.ROOT);
 
-        if (audienceToCheck.equals(CONSUMERS) || audienceToCheck.equals(MSA_MEGA_TENANT_ID)) {
-            return TelemetryConstants.MSA_AUDIENCE_FOR_REPORTING;
-        }
-        else if (audienceToCheck.equals(ALL)) {
-            return TelemetryConstants.COMMON_AUDIENCE_FOR_REPORTING;
-        }
-        else {
-            return TelemetryConstants.AAD_AUDIENCE_FOR_REPORTING;
+        switch (audienceToCheck) {
+            case CONSUMERS:
+            case MSA_MEGA_TENANT_ID:
+                return AudienceTelemetryConstant.MSA_AUDIENCE_FOR_REPORTING.name();
+            case ALL:
+                return AudienceTelemetryConstant.COMMON_AUDIENCE_FOR_REPORTING.name();
+            default:
+                return AudienceTelemetryConstant.AAD_AUDIENCE_FOR_REPORTING.name();
         }
     }
 
