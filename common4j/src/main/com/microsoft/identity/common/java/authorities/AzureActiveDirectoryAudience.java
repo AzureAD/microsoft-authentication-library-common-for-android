@@ -160,18 +160,18 @@ public abstract class AzureActiveDirectoryAudience {
         mTenantId = tenantId;
     }
 
-    public static String getAudienceFromTenantId( final String tenantId) {
+    public static String getAudienceFromAuthority( final AzureActiveDirectoryAuthority authority) {
 
-        if (tenantId == null) {
+        if (authority == null || StringUtil.isNullOrEmpty(authority.getAudience().getTenantId())) {
             return UNKNOWN_AUDIENCE;
         }
 
-        final String audienceToCheck = tenantId.toLowerCase(Locale.ROOT);
+        final String audienceToCheck = authority.getAudience().mTenantId.toLowerCase(Locale.ROOT);
 
-        if (audienceToCheck.contains(CONSUMERS) || audienceToCheck.contains(MSA_MEGA_TENANT_ID)) {
+        if (audienceToCheck.equals(CONSUMERS) || audienceToCheck.equals(MSA_MEGA_TENANT_ID)) {
             return MSA_AUDIENCE;
         }
-        else if (audienceToCheck.contains(ALL)) {
+        else if (audienceToCheck.equals(ALL)) {
             return COMMON_AUDIENCE;
         }
         else {
