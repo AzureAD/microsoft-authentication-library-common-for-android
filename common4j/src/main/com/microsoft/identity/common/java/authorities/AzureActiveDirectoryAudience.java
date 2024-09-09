@@ -56,10 +56,10 @@ public abstract class AzureActiveDirectoryAudience {
     // The values here are audience values reported in telemetry
     // rather than the values used to send to eSTS.
     public enum AudienceTelemetryConstant {
-        MSA_AUDIENCE_FOR_REPORTING,
-        COMMON_AUDIENCE_FOR_REPORTING,
-        AAD_AUDIENCE_FOR_REPORTING,
-        UNKNOWN_AUDIENCE_FOR_REPORTING;
+        MSA,
+        COMMON,
+        AAD,
+        UNKNOWN;
     }
 
 
@@ -171,10 +171,10 @@ public abstract class AzureActiveDirectoryAudience {
      * @param authority The authority from which the audience is derived.
      * @return The audience type: "MSA", "Common", "AAD", or "Unknown".
      */
-    public static String getAudienceFromAuthority( final AzureActiveDirectoryAuthority authority) {
+    public static AudienceTelemetryConstant getAudienceFromAuthority(final AzureActiveDirectoryAuthority authority) {
 
         if (authority == null || StringUtil.isNullOrEmpty(authority.getAudience().getTenantId())) {
-            return AudienceTelemetryConstant.UNKNOWN_AUDIENCE_FOR_REPORTING.name();
+            return AudienceTelemetryConstant.UNKNOWN;
         }
 
         final String audienceToCheck = authority.getAudience().mTenantId.toLowerCase(Locale.ROOT);
@@ -182,11 +182,11 @@ public abstract class AzureActiveDirectoryAudience {
         switch (audienceToCheck) {
             case CONSUMERS:
             case MSA_MEGA_TENANT_ID:
-                return AudienceTelemetryConstant.MSA_AUDIENCE_FOR_REPORTING.name();
+                return AudienceTelemetryConstant.MSA;
             case ALL:
-                return AudienceTelemetryConstant.COMMON_AUDIENCE_FOR_REPORTING.name();
+                return AudienceTelemetryConstant.COMMON;
             default:
-                return AudienceTelemetryConstant.AAD_AUDIENCE_FOR_REPORTING.name();
+                return AudienceTelemetryConstant.AAD;
         }
     }
 
