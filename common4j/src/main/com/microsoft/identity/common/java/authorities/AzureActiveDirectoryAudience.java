@@ -171,7 +171,7 @@ public abstract class AzureActiveDirectoryAudience {
      * @param authority The authority from which the audience is derived.
      * @return The audience type: "MSA", "Common", "AAD", or "Unknown".
      */
-    public static AudienceTelemetryConstant getAudienceFromAuthority(final AzureActiveDirectoryAuthority authority) {
+    public static AudienceTelemetryConstant getAudienceForTelemetryFromAuthority(final AzureActiveDirectoryAuthority authority) {
 
         if (authority == null || StringUtil.isNullOrEmpty(authority.getAudience().getTenantId())) {
             return AudienceTelemetryConstant.UNKNOWN;
