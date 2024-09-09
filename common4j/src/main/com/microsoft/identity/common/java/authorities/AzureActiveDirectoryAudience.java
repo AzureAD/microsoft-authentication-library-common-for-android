@@ -53,10 +53,14 @@ public abstract class AzureActiveDirectoryAudience {
     public static final String ALL = "common";
     public static final String MSA_MEGA_TENANT_ID = "9188040d-6c67-4c5b-b112-36a304b66dad";
 
-    public static final String MSA_AUDIENCE = "MSA";
-    public static final String COMMON_AUDIENCE = "COMMON";
-    public static final String AAD_AUDIENCE = "AAD";
-    public static final String UNKNOWN_AUDIENCE = "UNKNOWN";
+    // The values here are audience values reported in telemetry
+    // rather than the values used to send to eSTS.
+    public static class TelemetryConstants {
+        public static final String MSA_AUDIENCE_FOR_REPORTING = "MSA";
+        public static final String COMMON_AUDIENCE_FOR_REPORTING = "COMMON";
+        public static final String AAD_AUDIENCE_FOR_REPORTING = "AAD";
+        public static final String UNKNOWN_AUDIENCE_FOR_REPORTING = "UNKNOWN";
+    }
 
 
     public String getCloudUrl() {
@@ -160,22 +164,29 @@ public abstract class AzureActiveDirectoryAudience {
         mTenantId = tenantId;
     }
 
+    /**
+     * Determines the audience type (MSA, Common, AAD, or Unknown) from the given
+     * {@link AzureActiveDirectoryAuthority}.
+     *
+     * @param authority The authority from which the audience is derived.
+     * @return The audience type: "MSA", "Common", "AAD", or "Unknown".
+     */
     public static String getAudienceFromAuthority( final AzureActiveDirectoryAuthority authority) {
 
         if (authority == null || StringUtil.isNullOrEmpty(authority.getAudience().getTenantId())) {
-            return UNKNOWN_AUDIENCE;
+            return TelemetryConstants.UNKNOWN_AUDIENCE_FOR_REPORTING;
         }
 
         final String audienceToCheck = authority.getAudience().mTenantId.toLowerCase(Locale.ROOT);
 
         if (audienceToCheck.equals(CONSUMERS) || audienceToCheck.equals(MSA_MEGA_TENANT_ID)) {
-            return MSA_AUDIENCE;
+            return TelemetryConstants.MSA_AUDIENCE_FOR_REPORTING;
         }
         else if (audienceToCheck.equals(ALL)) {
-            return COMMON_AUDIENCE;
+            return TelemetryConstants.COMMON_AUDIENCE_FOR_REPORTING;
         }
         else {
-            return AAD_AUDIENCE;
+            return TelemetryConstants.AAD_AUDIENCE_FOR_REPORTING;
         }
     }
 
