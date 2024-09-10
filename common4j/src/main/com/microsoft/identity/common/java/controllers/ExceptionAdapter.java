@@ -484,7 +484,7 @@ public class ExceptionAdapter {
     /**
      * Identifies whether an error is specific to native authentication MFA scenarios.
      * @param errorResponse
-     * @return true if errorReponse is a native authentication MFA error
+     * @return true if errorResponse is a native authentication MFA error
      */
     private static boolean isNativeAuthenticationMFAError(
             @NonNull final TokenErrorResponse errorResponse) {
@@ -493,11 +493,8 @@ public class ExceptionAdapter {
         }
 
         MicrosoftTokenErrorResponse microsoftTokenErrorResponse = ((MicrosoftTokenErrorResponse) errorResponse);
-        return !StringUtil.isNullOrEmpty(microsoftTokenErrorResponse.getError()) &&
-                !StringUtil.isNullOrEmpty(microsoftTokenErrorResponse.getSubError()) &&
+        return microsoftTokenErrorResponse.getErrorCodes() != null &&
                 !microsoftTokenErrorResponse.getErrorCodes().isEmpty() &&
-                errorResponse.getError().equalsIgnoreCase(OAuth2ErrorCode.INVALID_GRANT) &&
-                errorResponse.getSubError().equalsIgnoreCase(OAuth2SubErrorCode.BASIC_ACTION) &&
                 microsoftTokenErrorResponse.getErrorCodes().contains((long) 50076);
     }
 }
