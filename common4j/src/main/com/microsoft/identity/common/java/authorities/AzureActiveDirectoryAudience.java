@@ -177,7 +177,7 @@ public abstract class AzureActiveDirectoryAudience {
             return AudienceTelemetryConstant.UNKNOWN;
         }
 
-        final String audienceToCheck = authority.getAudience().mTenantId.toLowerCase(Locale.ROOT);
+        final String audienceToCheck = authority.getAudience().getTenantId().toLowerCase(Locale.ROOT);
 
         switch (audienceToCheck) {
             case CONSUMERS:
