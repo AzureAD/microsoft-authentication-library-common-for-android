@@ -166,7 +166,7 @@ jobs:
     inputs:
       ConnectedServiceName: 'AndroidAuth_ESRP_Release'
       Intent: 'PackageDistribution'
-      ContentType: 'Maven'
+      ContentType: 'Python'
       ContentSource: 'Folder'
       FolderLocation: '$(Build.ArtifactStagingDirectory)'
       WaitForReleaseCompletion: true
