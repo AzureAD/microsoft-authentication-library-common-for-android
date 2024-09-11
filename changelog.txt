@@ -1,5 +1,6 @@
-V.Next
+Version 18.0.0 
 ----------
+(Common4j 15.0.0)
 - [PATCH] Add purpose claim to JwtRequestBody (#2454)
 - [MINOR] Changes needed for token binding CA policy error handling (#2453)
 - [MINOR] Allow OneAuth to set Max MSAL-Broker Protocol version (#2490)
