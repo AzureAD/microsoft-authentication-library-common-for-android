@@ -43,43 +43,50 @@ import com.google.android.gms.fido.fido2.api.common.AuthenticatorErrorResponse;
 import com.google.android.gms.fido.fido2.api.common.AuthenticatorResponse;
 import com.google.android.gms.fido.fido2.api.common.PublicKeyCredential;
 
+import kotlin.Unit;
+import kotlin.jvm.functions.Function2;
 
-public class LegacyFidoActivityResultContract extends ActivityResultContract<LegacyFidoObject, Object> {
 
-    LegacyFidoObject legacyFidoObject;
+public class LegacyFidoActivityResultContract extends ActivityResultContract<LegacyFido2ApiObject, Void> {
+    Function2<String, Boolean, Unit> callback;
 
     @NonNull
     @Override
-    public Intent createIntent(@NonNull Context context, LegacyFidoObject input) {
-        legacyFidoObject = input;
+    public Intent createIntent(@NonNull final Context context, @NonNull final LegacyFido2ApiObject input) {
+        callback = input.getCallback();
         return  new Intent(ACTION_INTENT_SENDER_REQUEST)
-                .putExtra(EXTRA_INTENT_SENDER_REQUEST, new IntentSenderRequest.Builder(input.getPendingIntent().getIntentSender()).build());
+                .putExtra(
+                        EXTRA_INTENT_SENDER_REQUEST,
+                        new IntentSenderRequest.Builder(
+                                input.getPendingIntent().getIntentSender()
+                        ).build());
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
-    public Object parseResult(int resultCode, @Nullable Intent intent) {
+    public Void parseResult(int resultCode, @Nullable Intent intent) {
         if (intent == null) {
-            legacyFidoObject.getCallback().invoke("Intent is null", false);
+            callback.invoke("Result intent from legacy FIDO2 API was null.", false);
             return null;
         }
         if (resultCode != Activity.RESULT_OK) {
-            legacyFidoObject.getCallback().invoke("Activity cancelled", false);
+            callback.invoke("Activity closed with a non-ok result code: " + resultCode, false);
             return null;
         }
+
         final byte[] bytes = intent.getByteArrayExtra(Fido.FIDO2_KEY_CREDENTIAL_EXTRA);
         if (bytes == null) {
-            legacyFidoObject.getCallback().invoke("Received credential is null", false);
+            callback.invoke("Credential result from Intent is null.", false);
             return null;
         }
         final PublicKeyCredential credential = PublicKeyCredential.deserializeFromBytes(bytes);
         final AuthenticatorResponse response = credential.getResponse();
         if (response instanceof AuthenticatorErrorResponse) {
-            legacyFidoObject.getCallback().invoke(((AuthenticatorErrorResponse) response).getErrorMessage(), false);
+            callback.invoke(((AuthenticatorErrorResponse) response).getErrorMessage(), false);
             return null;
         }
         if (response instanceof AuthenticatorAssertionResponse) {
-            legacyFidoObject.getCallback().invoke(
+            callback.invoke(
                     WebAuthnJsonUtil.createAssertionString(
                             Base64.encodeToString(response.getClientDataJSON(), Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING),
                             Base64.encodeToString(((AuthenticatorAssertionResponse) response).getAuthenticatorData(), Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING),
@@ -91,7 +98,7 @@ public class LegacyFidoActivityResultContract extends ActivityResultContract<Leg
             );
             return null;
         }
-        legacyFidoObject.getCallback().invoke("Something unexpected occurred", false);
+        callback.invoke("The legacy FIDO2 API response value is something unexpected which we currently cannot handle.", false);
         return null;
     }
 }

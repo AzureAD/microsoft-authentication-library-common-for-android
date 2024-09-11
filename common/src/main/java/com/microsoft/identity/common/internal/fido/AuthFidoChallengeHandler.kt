@@ -125,47 +125,7 @@ class AuthFidoChallengeHandler (
             } catch (e : Exception) {
                 if (fidoManager is CredManFidoManager
                     && fidoManager.shouldFallbackToLegacyApi(e)) {
-                    val legacyApi = Fido2ApiClient(webView.context)
-                    val publicKeyCredentialDescriptorList = ArrayList<com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialDescriptor>()
-                    allowedCredentials?.let {
-                        for (id in allowedCredentials) {
-                            publicKeyCredentialDescriptorList.add(
-                                com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialDescriptor("public-key", id.toByteArray(), ArrayList<Transport>())
-                            )
-                        }
-                    }
-                    val requestOptions = com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialRequestOptions.Builder()
-                        .setChallenge(authChallenge.toByteArray())
-                        .setRpId(relyingPartyIdentifier)
-                        .setAllowList(publicKeyCredentialDescriptorList)
-                        .build()
-                    val result = legacyApi.getSignPendingIntent(requestOptions)
 
-                    result.addOnSuccessListener(OnSuccessListener { pendingIntent ->
-                        if (pendingIntent != null) {
-                            fragment.fidoLauncher.launch(
-                                LegacyFidoObject(
-                                    callback = { assertion, succeeded ->
-                                        if (succeeded) {
-                                            respondToChallenge(
-                                                submitUrl = submitUrl,
-                                                assertion = assertion,
-                                                context = context,
-                                                span = span
-                                            )
-                                        } else {
-                                            respondToChallengeWithError(
-                                                submitUrl = submitUrl,
-                                                context = context,
-                                                span = span,
-                                                errorMessage = assertion
-                                            )
-                                        }
-                                    },
-                                    pendingIntent = pendingIntent
-                                ))
-                        }
-                    })
                 } else {
                     respondToChallengeWithError(
                         submitUrl = submitUrl,

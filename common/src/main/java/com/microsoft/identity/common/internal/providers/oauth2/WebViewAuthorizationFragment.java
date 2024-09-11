@@ -29,7 +29,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -51,7 +50,7 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
-import com.microsoft.identity.common.internal.fido.LegacyFidoObject;
+import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -118,7 +117,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private PermissionRequest mCameraPermissionRequest;
 
-    private ActivityResultLauncher<LegacyFidoObject> mFidoLauncher;
+    private ActivityResultLauncher<LegacyFido2ApiObject> mFidoLauncher;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -488,7 +487,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         }
     }
 
-    public ActivityResultLauncher<LegacyFidoObject> getFidoLauncher() {
+    public ActivityResultLauncher<LegacyFido2ApiObject> getFidoLauncher() {
         return mFidoLauncher;
     }
 

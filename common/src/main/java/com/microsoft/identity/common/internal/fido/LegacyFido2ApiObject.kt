@@ -24,8 +24,8 @@ package com.microsoft.identity.common.internal.fido
 
 import android.app.PendingIntent
 
-data class LegacyFidoObject(
-    val callback: (input: String, succeeded: Boolean) -> Unit,
+data class LegacyFido2ApiObject(
+    val callback: (result: String, succeeded: Boolean) -> Unit,
     val pendingIntent: PendingIntent
 ) {
 
