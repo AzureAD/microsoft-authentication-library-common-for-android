@@ -40,6 +40,7 @@ import com.microsoft.identity.common.java.exception.UserCancelException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
@@ -91,7 +92,7 @@ public class ExceptionAdapter {
         return exceptionFromTokenResult(result.getTokenResult(), commandParameters);
     }
 
-    public static BaseException exceptionFromAuthorizationResult(@NonNull  final AuthorizationResult authorizationResult, @Nullable final CommandParameters commandParameters) {
+    public static BaseException exceptionFromAuthorizationResult(@NonNull final AuthorizationResult authorizationResult, @Nullable final CommandParameters commandParameters) {
         final String methodTag = TAG + ":exceptionFromAuthorizationResult";
         final AuthorizationErrorResponse authorizationErrorResponse = authorizationResult.getAuthorizationErrorResponse();
         if (authorizationErrorResponse == null) {
@@ -206,8 +207,20 @@ public class ExceptionAdapter {
 
         final ServiceException outErr;
 
-        if (shouldBeConvertedToUiRequiredException(errorResponse.getError())) {
+        if (isNativeAuthenticationMFAError(errorResponse)) {
+            ServiceException apiError = new ServiceException(
+                    errorResponse.getError(),
+                    errorResponse.getErrorDescription(),
+                    null);
 
+            String developerDescription = "Multi-factor authentication is required, which can't be fulfilled as part of this flow. Please sign out and perform a new sign in operation. Please see exception details for more information.";
+            outErr = new ServiceException(
+                    errorResponse.getError(),
+                    developerDescription,
+                    apiError
+            );
+        }
+        else if (shouldBeConvertedToUiRequiredException(errorResponse.getError())) {
             outErr = new UiRequiredException(
                     errorResponse.getError(),
                     errorResponse.getErrorDescription());
@@ -233,13 +246,9 @@ public class ExceptionAdapter {
     public static ServiceException convertToNativeAuthException(@NonNull final ServiceException exception) {
         final ServiceException outErr;
 
-        String message = "Token request failed.\nOriginal exception details: " + exception.getMessage();
-
-        // UiRequiredException is not a native authentication concept, so we convert it into a generic
-        // ServiceException
         outErr = new ServiceException(
                 exception.getErrorCode(),
-                message,
+                exception.getMessage(),
                 exception.getHttpStatusCode(),
                 exception
         );
@@ -470,5 +479,22 @@ public class ExceptionAdapter {
                 !StringUtil.isNullOrEmpty(errorResponse.getSubError()) &&
                 errorResponse.getError().equalsIgnoreCase(OAuth2ErrorCode.UNAUTHORIZED_CLIENT) &&
                 errorResponse.getSubError().equalsIgnoreCase(OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED);
+    }
+
+    /**
+     * Identifies whether an error is specific to native authentication MFA scenarios.
+     * @param errorResponse
+     * @return true if errorResponse is a native authentication MFA error
+     */
+    private static boolean isNativeAuthenticationMFAError(
+            @NonNull final TokenErrorResponse errorResponse) {
+        if (!(errorResponse instanceof MicrosoftTokenErrorResponse)) {
+            return false;
+        }
+
+        MicrosoftTokenErrorResponse microsoftTokenErrorResponse = ((MicrosoftTokenErrorResponse) errorResponse);
+        return microsoftTokenErrorResponse.getErrorCodes() != null &&
+                !microsoftTokenErrorResponse.getErrorCodes().isEmpty() &&
+                microsoftTokenErrorResponse.getErrorCodes().contains((long) 50076);
     }
 }
