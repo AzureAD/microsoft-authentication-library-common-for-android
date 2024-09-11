@@ -1,5 +1,9 @@
 V.Next
 ----------
+- [PATCH] Add purpose claim to JwtRequestBody (#2454)
+- [MINOR] Changes needed for token binding CA policy error handling (#2453)
+- [MINOR] Allow OneAuth to set Max MSAL-Broker Protocol version (#2490)
+- [MAJOR] Remove RT from AAD token responses (#2483)
 - [MINOR] Add API in MicrosoftStsOAuthStrategy to request token and handle response with provided handler (@2478)
 - [MINOR] Setting flights to control UrlConnection timeout values (#2473)
 - [PATCH] Fix Native Auth authority data being persisted across different SDK instances (#2462)
@@ -9,6 +13,8 @@ V.Next
 - [PATCH] Move MS STS Response handling to separate class (#2471)
 - [MINOR] Add support for email OTP MFA in native authentication (#2468)
 - [MINOR] Moving OS version check for passkeys (#2450)
+- [PATCH] Change LTW debug signature hash (#2492)
+- [MINOR] Add new span name for OnUpgradeReceiver (#2494)
 
 Version 17.7.0
 ---------
