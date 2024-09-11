@@ -53,15 +53,6 @@ public abstract class AzureActiveDirectoryAudience {
     public static final String ALL = "common";
     public static final String MSA_MEGA_TENANT_ID = "9188040d-6c67-4c5b-b112-36a304b66dad";
 
-    // The values here are audience values reported in telemetry
-    // rather than the values used to send to eSTS.
-    public enum AudienceTelemetryConstant {
-        MSA,
-        COMMON,
-        AAD,
-        UNKNOWN;
-    }
-
 
     public String getCloudUrl() {
         if (mCloudUrl == null) {
@@ -162,32 +153,6 @@ public abstract class AzureActiveDirectoryAudience {
 
     public void setTenantId(String tenantId) {
         mTenantId = tenantId;
-    }
-
-    /**
-     * Determines the audience type (MSA, Common, AAD, or Unknown) from the given
-     * {@link AzureActiveDirectoryAuthority}.
-     *
-     * @param authority The authority from which the audience is derived.
-     * @return The audience type: "MSA", "Common", "AAD", or "Unknown".
-     */
-    public static AudienceTelemetryConstant getAudienceForTelemetryFromAuthority(final AzureActiveDirectoryAuthority authority) {
-
-        if (authority == null || StringUtil.isNullOrEmpty(authority.getAudience().getTenantId())) {
-            return AudienceTelemetryConstant.UNKNOWN;
-        }
-
-        final String audienceToCheck = authority.getAudience().getTenantId().toLowerCase(Locale.ROOT);
-
-        switch (audienceToCheck) {
-            case CONSUMERS:
-            case MSA_MEGA_TENANT_ID:
-                return AudienceTelemetryConstant.MSA;
-            case ALL:
-                return AudienceTelemetryConstant.COMMON;
-            default:
-                return AudienceTelemetryConstant.AAD;
-        }
     }
 
     public static AzureActiveDirectoryAudience getAzureActiveDirectoryAudience(final String cloudUrl,
