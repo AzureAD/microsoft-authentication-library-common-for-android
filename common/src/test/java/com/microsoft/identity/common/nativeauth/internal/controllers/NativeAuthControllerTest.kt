@@ -538,7 +538,7 @@ class NativeAuthControllerTest {
 
     // region sign in MFA
     @Test
-    fun testMFAChallengeWithIntrospectRequiredSuccessShouldReturnSelectionRequired() {
+    fun `testMFAChallenge challenge returns introspect_required and introspect returns success should return SelectionRequiredResult`() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SignInChallenge,
@@ -557,7 +557,7 @@ class NativeAuthControllerTest {
     }
 
     @Test
-    fun testMFAChallengeWithRedirectShouldReturnRedirect() {
+    fun `testMFAChallenge challenge returns introspect_required and introspect returns redirect should return RedirectResult`() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SignInChallenge,
@@ -576,7 +576,21 @@ class NativeAuthControllerTest {
     }
 
     @Test
-    fun testMFAChallengeWithSuccessShouldReturnVerificationRequired() {
+    fun `testMFAChallenge challenge returns redirect should return RedirectResult`() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+        )
+
+        val parameters = createMFAChallengeCommandParameters(correlationId)
+        val result = controller.signInChallenge(parameters)
+        assert(result is INativeAuthCommandResult.Redirect)
+    }
+
+    @Test
+    fun `testMFAChallenge challenge returns success should return VerificationRequired`() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SignInChallenge,

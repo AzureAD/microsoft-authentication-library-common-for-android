@@ -555,7 +555,12 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         codeLength = result.codeLength
                     )
                 }
-                is SignInChallengeApiResult.PasswordRequired, is SignInChallengeApiResult.Redirect -> {
+                is SignInChallengeApiResult.Redirect -> {
+                    INativeAuthCommandResult.Redirect(
+                        correlationId = result.correlationId
+                    )
+                }
+                is SignInChallengeApiResult.PasswordRequired,  -> {
                     Logger.warnWithObject(
                         TAG,
                         result.correlationId,
