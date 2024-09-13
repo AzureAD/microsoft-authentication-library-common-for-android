@@ -37,6 +37,7 @@ import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
+import com.microsoft.identity.common.java.interfaces.PlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthorizationStrategy;
@@ -45,6 +46,8 @@ import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import lombok.Builder;
@@ -66,17 +69,29 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
             @NonNull final InteractiveTokenCommandParameters parameters) {
         final String methodTag = TAG + ":getAuthorizationStrategy";
         //Valid if available browser installed. Will fallback to embedded webView if no browser available.
-
-        if (parameters.getAuthorizationAgent() == AuthorizationAgent.WEBVIEW) {
-            Logger.info(methodTag, "Use webView for authorization.");
-            return getGenericAuthorizationStrategy();
-        }
-
         try {
+
+            List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
+            final HashSet<String> signatureHashes = new HashSet<String>();
+            signatureHashes.add("7fmduHKTdHHrlMvldlEqAIlSfii1tl35bxj1OXN5Ve8c4lU6URVu4xtSHc3BVZxS6WWJnxMDhIfQN0N0K2NDJg==");
+            final BrowserDescriptor chrome = new BrowserDescriptor(
+                    "com.android.chrome",
+                    signatureHashes,
+                    null,
+                    null
+            );
+            browserDescriptors.add(chrome);
+
             final Browser browser = BrowserSelector.select(
                     mContext,
-                    parameters.getBrowserSafeList(),
-                    parameters.getPreferredBrowser());
+                    browserDescriptors,
+                    null
+            );
+
+            if (parameters.getAuthorizationAgent() == AuthorizationAgent.WEBVIEW) {
+                Logger.info(methodTag, "Use webView for authorization.");
+                return getGenericAuthorizationStrategy(browser);
+            }
 
             Logger.info(methodTag, "Use browser for authorization.");
             return getBrowserAuthorizationStrategy(
@@ -85,7 +100,8 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
         } catch (final ClientException e) {
             Logger.info(methodTag, "Unable to use browser to do the authorization because "
                     + ErrorStrings.NO_AVAILABLE_BROWSER_FOUND + " Use embedded webView instead.");
-            return getGenericAuthorizationStrategy();
+            return getGenericAuthorizationStrategy(null);
+            // revisit this null check
         }
     }
 
@@ -96,27 +112,28 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
                     new CurrentTaskBrowserAuthorizationStrategy(
                             mContext,
                             mActivity,
-                            mFragment);
-            currentTaskBrowserAuthorizationStrategy.setBrowser(browser);
+                            mFragment,
+                            browser);
             return currentTaskBrowserAuthorizationStrategy;
         } else {
             final DefaultBrowserAuthorizationStrategy defaultBrowserAuthorizationStrategy = new DefaultBrowserAuthorizationStrategy(
                     mContext,
                     mActivity,
                     mFragment,
-                    isBrokerRequest
+                    isBrokerRequest,
+                    browser
             );
-            defaultBrowserAuthorizationStrategy.setBrowser(browser);
             return defaultBrowserAuthorizationStrategy;
         }
     }
 
     // Suppressing unchecked warnings due to casting of EmbeddedWebViewAuthorizationStrategy to GenericAuthorizationStrategy
     @SuppressWarnings(WarningType.unchecked_warning)
-    private IAuthorizationStrategy getGenericAuthorizationStrategy() {
+    private IAuthorizationStrategy getGenericAuthorizationStrategy(@Nullable final Browser browser) {
         return new EmbeddedWebViewAuthorizationStrategy(
                 mContext,
                 mActivity,
-                mFragment);
+                mFragment,
+                browser);
     }
 }

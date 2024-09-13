@@ -81,7 +81,8 @@ public class BrowserSelector {
             return defaultBrowser;
         }
 
-        Logger.error(methodTag, "No available browser installed on the device.", null);
+        // this should retunr null
+        Logger.warn(methodTag, "No available browser installed on the device.", null);
         throw new ClientException(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND, "No available browser installed on the device.");
     }
 

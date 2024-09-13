@@ -46,8 +46,9 @@ public class DefaultBrowserAuthorizationStrategy<
     public DefaultBrowserAuthorizationStrategy(@NonNull Context applicationContext,
                                                @NonNull Activity activity,
                                                @Nullable Fragment fragment,
-                                               boolean isRequestFromBroker) {
-        super(applicationContext, activity, fragment);
+                                               boolean isRequestFromBroker,
+                                               @NonNull Browser browser) {
+        super(applicationContext, activity, fragment, browser);
         mIsRequestFromBroker = isRequestFromBroker;
     }
 

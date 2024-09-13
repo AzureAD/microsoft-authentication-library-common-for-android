@@ -30,6 +30,8 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.microsoft.identity.common.internal.ui.browser.Browser;
+import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
@@ -53,17 +55,20 @@ public abstract class AndroidAuthorizationStrategy<
 
     private final WeakReference<Context> mReferencedApplicationContext;
     private final WeakReference<Activity> mReferencedActivity;
-    private final WeakReference<Fragment> mReferencedFragment;
+    protected final WeakReference<Fragment> mReferencedFragment;
 
+    protected final Browser mBrowser;
     /**
      * Constructor of AndroidAuthorizationStrategy.
      */
     public AndroidAuthorizationStrategy(@NonNull Context applicationContext,
                                         @NonNull Activity activity,
-                                        @Nullable Fragment fragment) {
+                                        @Nullable Fragment fragment,
+                                        @Nullable Browser browser) {
         mReferencedApplicationContext = new WeakReference<>(applicationContext);
         mReferencedActivity = new WeakReference<>(activity);
         mReferencedFragment = new WeakReference<>(fragment);
+        mBrowser = browser;
     }
 
     protected Context getApplicationContext() {

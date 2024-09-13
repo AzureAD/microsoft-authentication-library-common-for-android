@@ -27,17 +27,24 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.UIReque
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidAuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityFactory;
+import com.microsoft.identity.common.internal.ui.browser.Browser;
+import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
@@ -61,6 +68,8 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
 
+    private CustomTabsManager mCustomTabManager;
+
     /**
      * Constructor of EmbeddedWebViewAuthorizationStrategy.
      *
@@ -68,8 +77,9 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
      */
     public EmbeddedWebViewAuthorizationStrategy(@NonNull Context applicationContext,
                                                 @NonNull Activity activity,
-                                                @Nullable Fragment fragment) {
-        super(applicationContext, activity, fragment);
+                                                @Nullable Fragment fragment,
+                                                @Nullable Browser browser) {
+        super(applicationContext, activity, fragment, browser);
     }
 
     /**
@@ -94,6 +104,8 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         if (mAuthorizationRequest instanceof MicrosoftAuthorizationRequest) {
             sourceLibraryName = ((MicrosoftAuthorizationRequest) mAuthorizationRequest).getLibraryName();
             sourceLibraryVersion = ((MicrosoftAuthorizationRequest) mAuthorizationRequest).getLibraryVersion();
+            final MicrosoftStsAuthorizationRequest.Builder builder = new MicrosoftStsAuthorizationRequest.Builder();
+            //builder.setOpenIdProviderConfiguration("asd").
         }
 
         final Intent authIntent = buildAuthorizationActivityStartIntent(requestUrl, sourceLibraryName, sourceLibraryVersion);
@@ -115,11 +127,47 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
             URI requestUrl,
             @Nullable final String sourceLibraryName,
             @Nullable final String sourceLibraryVersion) {
+
+        //ClientException will be thrown if no browser found.
+        Intent authIntent;
+        if (mBrowser != null && mBrowser.isCustomTabsServiceSupported()) {
+            Logger.info(
+                    "methodTag",
+
+                    "CustomTabsService is supported."
+            );
+            //create customTabsIntent
+            mCustomTabManager = new CustomTabsManager(getApplicationContext());
+            if (!mCustomTabManager.bind(getApplicationContext(), mBrowser.getPackageName())) {
+                //create browser auth intent
+                authIntent = new Intent(Intent.ACTION_VIEW);
+            } else {
+                authIntent = mCustomTabManager.getCustomTabsIntent().intent;
+            }
+        } else {
+            Logger.warn(
+                    "methodTag",
+                    "CustomTabsService is NOT supported"
+            );
+            //create browser auth intent
+            authIntent = new Intent(Intent.ACTION_VIEW);
+        }
+// this is and error if nto set
+        authIntent.setPackage(mBrowser.getPackageName());
+        //final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
+
+        //authIntent.setData(Uri.parse(requestUrl.toString()));
+
+
+
+
+
         // RedirectURI used to get the auth code in nested app auth is that of a hub app (brkRedirectURI)       
         final String redirectUri = mAuthorizationRequest.getBrkRedirectUri() != null ? mAuthorizationRequest.getBrkRedirectUri() : mAuthorizationRequest.getRedirectUri();
         return AuthorizationActivityFactory.getAuthorizationActivityIntent(
                     getApplicationContext(),
-                    null,
+                    authIntent,
+                    //null, authIntent
                     requestUrl.toString(),
                     redirectUri,
                     mAuthorizationRequest.getRequestHeaders(),
@@ -133,7 +181,13 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
     @Override
     public void completeAuthorization(int requestCode, @NonNull final RawAuthorizationResult data) {
         final String methodTag = TAG + ":completeAuthorization";
+
+
         if (requestCode == BROWSER_FLOW) {
+
+            if(mCustomTabManager != null){
+                mCustomTabManager.unbind();
+            }
             if (mOAuth2Strategy != null && mAuthorizationResultFuture != null) {
 
                 //Suppressing unchecked warnings due to method createAuthorizationResult being a member of the raw type AuthorizationResultFactory
@@ -155,4 +209,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
             Logger.warnPII(methodTag,"Unknown request code " + requestCode);
         }
     }
+
+
+
 }

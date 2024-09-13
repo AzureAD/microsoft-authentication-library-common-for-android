@@ -59,20 +59,17 @@ public abstract class BrowserAuthorizationStrategy<
 
     private CustomTabsManager mCustomTabManager;
     private ResultFuture<AuthorizationResult> mAuthorizationResultFuture;
-    private Browser mBrowser;
     private boolean mDisposed;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
 
     public BrowserAuthorizationStrategy(@NonNull Context applicationContext,
                                         @NonNull Activity activity,
-                                        @Nullable Fragment fragment) {
-        super(applicationContext, activity, fragment);
+                                        @Nullable Fragment fragment,
+                                        @NonNull Browser browser) {
+        super(applicationContext, activity, fragment, browser);
     }
 
-    public void setBrowser(final Browser browser) {
-        mBrowser = browser;
-    }
 
     @Override
     public Future<AuthorizationResult> requestAuthorization(

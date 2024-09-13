@@ -116,7 +116,9 @@ public class RawAuthorizationResult {
          * sufficient. Stronger device registration (backed by hardware bound keys)
          * required
          */
-        INSUFFICIENT_DEVICE_REGISTRATION(2010);
+        INSUFFICIENT_DEVICE_REGISTRATION(2010),
+
+        SWITCH_TO_BROWSER(20011);
 
         private final int mCode;
 
@@ -234,6 +236,11 @@ public class RawAuthorizationResult {
                 Logger.info(methodTag, " Device registration needs to be upgraded, sending INSUFFICIENT_DEVICE_REGISTRATION");
                 return ResultCode.INSUFFICIENT_DEVICE_REGISTRATION;
             }
+
+            if (parameters.containsKey("session_token")) {
+                return ResultCode.SWITCH_TO_BROWSER;
+            }
+
         }
 
         if (StringUtil.equalsIgnoreCase(parameters.get(ERROR_SUBCODE), SUB_ERROR_UI_CANCEL)) {

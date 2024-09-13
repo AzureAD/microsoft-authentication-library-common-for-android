@@ -90,6 +90,6 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
     }
 
     public List<BrowserDescriptor> getBrowserSafeList() {
-        return this.browserSafeList == null ? null : new ArrayList<>(this.browserSafeList);
+        return this.browserSafeList == null ?  new ArrayList<BrowserDescriptor>() : new ArrayList<>(this.browserSafeList);
     }
 }

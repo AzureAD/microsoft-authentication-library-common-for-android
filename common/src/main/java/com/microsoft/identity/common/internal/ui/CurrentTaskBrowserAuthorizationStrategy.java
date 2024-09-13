@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.microsoft.identity.common.internal.ui.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
@@ -43,8 +44,9 @@ public class CurrentTaskBrowserAuthorizationStrategy<
         extends BrowserAuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
     public CurrentTaskBrowserAuthorizationStrategy(@NonNull Context applicationContext,
                                                    @NonNull Activity activity,
-                                                   @Nullable Fragment fragment) {
-        super(applicationContext, activity, fragment);
+                                                   @Nullable Fragment fragment,
+                                                   @NonNull Browser browser) {
+        super(applicationContext, activity, fragment, browser);
     }
 
     @Override

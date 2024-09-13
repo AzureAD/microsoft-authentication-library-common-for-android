@@ -27,6 +27,7 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -39,6 +40,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ProgressBar;
 
+import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -49,6 +51,8 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.internal.ui.browser.Browser;
+import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -384,6 +388,21 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             }
     );
 
+    private final ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                Logger.info(TAG, "Camera permission granted: ");
+                if (result.getResultCode() == FragmentActivity.RESULT_OK) {
+                    Intent data = result.getData();
+                    if (data != null) {
+                        final String resultin = data.getStringExtra("result_key");
+                        Logger.info("ad", resultin);
+                    }
+                }
+            });
+
+
+
     /**
      * Launches the camera permission request for the app.
      */
@@ -421,7 +440,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
 
                 mAADWebViewClient.setRequestHeaders(mRequestHeaders);
-                mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
+                mWebView.loadUrl("http://192.168.0.108:3000/");
+                //mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
 
                 // The first page load could take time, and we do not want to just show a blank page.
                 // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.
@@ -510,4 +530,28 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             Logger.info(methodTag, null, "setPKeyAuthStatus:" + status);
         }
     }
+
+
+
+
+
+
+    public void launchDunaRequest() {
+        final String methodTag = TAG + ":processRedirectUrl";
+
+
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://192.168.0.108:3000/"));
+        //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.setPackage("com.android.chrome"); // Force Chrome to be used
+
+
+
+        mAuthIntent.setData(Uri.parse("http://192.168.0.108:3000/"));
+
+        //startActivity(intent);
+        activityResultLauncher.launch(mAuthIntent);
+
+    }
+
+
 }

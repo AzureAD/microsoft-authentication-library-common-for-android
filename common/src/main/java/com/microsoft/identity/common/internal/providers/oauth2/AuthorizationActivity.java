@@ -43,7 +43,9 @@ public class AuthorizationActivity extends DualScreenActivity {
     @Getter
     @Accessors(prefix = "m")
     private SpanContext mSpanContext;
-    private AuthorizationFragment mFragment;
+    @Getter
+    @Accessors(prefix = "m")
+    protected AuthorizationFragment mFragment;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -51,6 +53,11 @@ public class AuthorizationActivity extends DualScreenActivity {
 
         final String methodTag = TAG + ":onCreate";
         if (getIntent().getExtras() != null) {
+            String test =  getIntent().getExtras().getString("result_key");
+            if (test != null) {
+
+            }
+
             try {
                 mSpanContext = new CommonMoshiJsonAdapter().fromJson(
                         getIntent().getExtras().getString(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT),

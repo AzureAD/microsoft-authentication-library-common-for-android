@@ -137,7 +137,7 @@ public class ExceptionAdapter {
                         );
                     }
                 }
-
+                // Do i need to create a new exception i do not know
                 return new ServiceException(
                         authorizationErrorResponse.getError(),
                         authorizationErrorResponse.getErrorDescription(),

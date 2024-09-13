@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.ui.webview;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.Fragment;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.net.Uri;
@@ -45,6 +46,8 @@ import com.microsoft.identity.common.internal.fido.CredManFidoManager;
 import com.microsoft.identity.common.internal.fido.FidoChallenge;
 import com.microsoft.identity.common.internal.fido.AuthFidoChallengeHandler;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationFragment;
+import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
@@ -65,6 +68,7 @@ import com.microsoft.identity.common.logging.Logger;
 import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -181,6 +185,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                         spanContext,
                         ViewTreeLifecycleOwner.get(view));
                 challengeHandler.processChallenge(challenge);
+            } else if (isRedirectUrl(formattedURL) && true) {
+                Logger.info(methodTag,"Navigation starts with the redirect uri.");
+                processRedirectUrl2(view, url);
             } else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
                 processRedirectUrl(view, url);
@@ -303,6 +310,24 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final RawAuthorizationResult data = RawAuthorizationResult.fromRedirectUri(url);
         getCompletionCallback().onChallengeResponseReceived(data);
         view.stopLoading();
+        //the TokenTask should be processed at after the authorization process in the upper calling layer.
+    }
+    protected void processRedirectUrl2(@NonNull final WebView view, @NonNull final String url) {
+        final String methodTag = TAG + ":processRedirectUrl";
+        final Activity currentActivity = getActivity();
+        if (currentActivity instanceof AuthorizationActivity) {
+            final AuthorizationFragment fragment = ((AuthorizationActivity)currentActivity).getFragment();
+            if (fragment instanceof  WebViewAuthorizationFragment) {
+                ((WebViewAuthorizationFragment)fragment).launchDunaRequest();
+            }
+        }
+        //Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://192.168.0.108:3000/"));
+        //intent.setPackage("com.android.chrome"); // Force Chrome to be used
+        // Launch Chrome and wait for the result
+       //     Fragment f = getActivity().getFragmentManager().getPrimaryNavigationFragment();
+
+        //getActivity().startActivity(intent);
+
         //the TokenTask should be processed at after the authorization process in the upper calling layer.
     }
 

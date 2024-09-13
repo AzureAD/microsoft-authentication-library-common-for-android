@@ -144,6 +144,21 @@ public abstract class AuthorizationResultFactory
                 result.getAuthorizationErrorResponse().setUpnToWpj(urlParameters.get(UPN_TO_WPJ_KEY));
                 return result;
             }
+            case SWITCH_TO_BROWSER: {
+                Logger.info(methodTag, "Device Registration needed, need to start WPJ");
+                final GenericAuthorizationResult result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+                        MicrosoftAuthorizationErrorResponse.SWITH_TO_BROWSER,
+                        MicrosoftAuthorizationErrorResponse.SWITH_TO_BROWSER);
+
+                // Set username returned from the service
+                final Map<String, String> urlParameters = UrlUtil.getParameters(url);
+                final String asda = urlParameters.get("session_token");
+                result.getAuthorizationErrorResponse().setUpnToWpj("fakeupn@msiladb.com");
+
+                return result;
+
+
+            }
         }
 
         return createAuthorizationResultWithErrorResponse(
