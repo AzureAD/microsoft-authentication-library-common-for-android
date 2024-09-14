@@ -132,7 +132,7 @@ public class CommandParameters {
 
     public void logParameters(@NonNull String tag, @NonNull String correlationId) {
         if (Logger.isAllowPii()) {
-            Logger.infoPII(tag, ObjectMapper.serializeObjectToJsonString(this));
+            Logger.info(tag, ObjectMapper.serializeObjectToJsonString(this));
         } else {
             Logger.info(tag, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(this));
         }

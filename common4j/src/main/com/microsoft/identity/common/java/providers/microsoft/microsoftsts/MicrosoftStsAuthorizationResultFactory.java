@@ -58,7 +58,7 @@ public class MicrosoftStsAuthorizationResultFactory
                                                                                          @Nullable final String errorDescription) {
         final String methodTag = TAG + ":createAuthorizationResultWithErrorResponse";
         Logger.info(methodTag, "Error is returned from webview redirect");
-        Logger.infoPII(methodTag, "error: " + error
+        Logger.info(methodTag, "error: " + error
                 + " errorDescription: " + errorDescription);
         MicrosoftStsAuthorizationErrorResponse errorResponse
                 = new MicrosoftStsAuthorizationErrorResponse(error, errorDescription);
@@ -106,7 +106,7 @@ public class MicrosoftStsAuthorizationResultFactory
                                                                                        final String errorDescription) {
         final String methodTag = TAG + ":createAuthorizationResultWithErrorResponse";
         Logger.info(methodTag, "Error is returned from webview redirect");
-        Logger.infoPII(methodTag, "error: " + error
+        Logger.info(methodTag, "error: " + error
                 + "error subcode:" + errorSubcode
                 + " errorDescription: " + errorDescription);
         MicrosoftStsAuthorizationErrorResponse errorResponse

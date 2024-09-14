@@ -98,7 +98,7 @@ public class AzureActiveDirectoryAuthorizationResultFactory
                                                                                                @Nullable final String correlationId) {
         final String methodTag = TAG + ":createAuthorizationResultWithErrorResponse";
         Logger.info(methodTag, correlationId, "Error is returned from webview redirect");
-        Logger.infoPII(methodTag, correlationId, "error: " + error + " errorDescription: " + errorDescription);
+        Logger.info(methodTag, correlationId, "error: " + error + " errorDescription: " + errorDescription);
         final AzureActiveDirectoryAuthorizationErrorResponse errorResponse =
                 new AzureActiveDirectoryAuthorizationErrorResponse(error, errorDescription);
         errorResponse.setErrorCodes(errorCodes);

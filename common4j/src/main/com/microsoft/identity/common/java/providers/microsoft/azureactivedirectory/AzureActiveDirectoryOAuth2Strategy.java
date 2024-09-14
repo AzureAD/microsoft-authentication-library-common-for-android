@@ -191,7 +191,7 @@ public class AzureActiveDirectoryOAuth2Strategy
         final AzureActiveDirectoryAccount account = new AzureActiveDirectoryAccount(idToken, clientInfo);
 
         Logger.info(methodTag, "Account created");
-        Logger.infoPII(methodTag, account.toString());
+        Logger.info(methodTag, account.toString());
 
         return account;
     }

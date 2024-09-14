@@ -60,7 +60,7 @@ public class Logger {
     @Setter()
     @Getter()
     @Accessors(prefix = "s")
-    private static boolean sAllowPii = true;
+    private static boolean sAllowPii = false;
 
     @Accessors(prefix = "s")
     private static String sPlatformString = "";
@@ -120,7 +120,7 @@ public class Logger {
         sLoggersLock.writeLock().lock();
         try {
             sLoggers.clear();
-            sAllowPii = true;
+            sAllowPii = false;
             sPlatformString = "";
             sLogLevel = LogLevel.VERBOSE;
         } finally {
