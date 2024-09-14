@@ -85,6 +85,9 @@ public final class JwtRequestBody extends AbstractJwtRequest {
     @SerializedName(ClaimNames.SESSION_KEY_CRYPTO)
     private JsonObject mSessionKeyCrypto;
 
+    @SerializedName(ClaimNames.PURPOSE)
+    private String mPurpose;
+
     public void setIat(final long iat) {
         mIat = String.valueOf(iat);
     }

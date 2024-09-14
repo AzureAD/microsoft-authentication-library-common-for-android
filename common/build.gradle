@@ -133,8 +133,8 @@ android {
 }
 
 dependencies {
-    implementation 'com.google.android.gms:play-services-fido:20.1.0'
 
+    testImplementation project(path: ':testutils')
     //Java 8 - Desugaring - Enabled/Disabled via plugin
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
 
@@ -170,6 +170,7 @@ dependencies {
     implementation "androidx.credentials:credentials:$rootProject.ext.AndroidCredentialsVersion"
     //needed for credentials support from play services, for devices running
     implementation "androidx.credentials:credentials-play-services-auth:$rootProject.ext.AndroidCredentialsVersion"
+    implementation 'com.google.android.gms:play-services-fido:20.1.0'
 
     constraints {
         implementation ("com.squareup.okio:okio:3.4.0") {

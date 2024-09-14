@@ -54,6 +54,11 @@ public class AuthorizationErrorResponse implements IErrorResponse{
     private String mUpnToWpj;
 
     /**
+     * Set to true when the account needs to be workplace joined with hardware backed keys.
+     */
+    private boolean mTokenProtectionRequired;
+
+    /**
      * Constructor of {@link AuthorizationErrorResponse}.
      *
      * @param error            error returned due to Authorization request failure.
