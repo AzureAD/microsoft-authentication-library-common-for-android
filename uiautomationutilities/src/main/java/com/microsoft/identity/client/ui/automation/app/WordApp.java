@@ -159,4 +159,17 @@ public class WordApp extends App implements IFirstPartyApp {
                 testAccountLabelWord.exists()
         );
     }
+
+    /**
+     * Check that word (as an office app) has an option for phone sign-up
+     * @return true if the option is available, false otherwise
+     */
+    public boolean checkPhoneSignUpIsAvailable() {
+        launch();
+
+        Logger.i(TAG, "Checking that sign-up through phone number is available in Word...");
+
+        // Check for "phone" UI option, we can conclude phone option is available
+        return UiAutomatorUtils.obtainUiObjectWithText("phone").exists();
+    }
 }
