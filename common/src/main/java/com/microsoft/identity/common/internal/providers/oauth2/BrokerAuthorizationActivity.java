@@ -29,4 +29,8 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 public class BrokerAuthorizationActivity extends AuthorizationActivity {
 
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
 }

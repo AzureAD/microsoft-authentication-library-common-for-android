@@ -33,6 +33,8 @@ import com.microsoft.identity.common.java.exception.TerminalException;
 import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.util.Objects;
+
 import io.opentelemetry.api.trace.SpanContext;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -53,10 +55,9 @@ public class AuthorizationActivity extends DualScreenActivity {
 
         final String methodTag = TAG + ":onCreate";
         if (getIntent().getExtras() != null) {
-            String test =  getIntent().getExtras().getString("result_key");
-            if (test != null) {
+            String test =  getIntent().getExtras().getString("key_string");
+            if (Objects.equals(test, "eqw")) {
 
-            }
 
             try {
                 mSpanContext = new CommonMoshiJsonAdapter().fromJson(
@@ -66,6 +67,7 @@ public class AuthorizationActivity extends DualScreenActivity {
             } catch (final TerminalException e) {
                 // Don't want to block any features if an error occurs during deserialization of the span context.
                 mSpanContext = null;
+            }
             }
         }
         final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());

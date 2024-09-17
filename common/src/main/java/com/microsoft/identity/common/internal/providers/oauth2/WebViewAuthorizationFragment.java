@@ -548,8 +548,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
         mAuthIntent.setData(Uri.parse("http://192.168.0.108:3000/"));
 
-        //startActivity(intent);
-        activityResultLauncher.launch(mAuthIntent);
+        startActivity(mAuthIntent);
+        //activityResultLauncher.launch(mAuthIntent);
 
     }
 
