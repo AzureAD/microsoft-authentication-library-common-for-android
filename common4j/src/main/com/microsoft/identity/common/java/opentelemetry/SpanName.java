@@ -65,5 +65,6 @@ public enum SpanName {
     RefreshTransferToken,
     IsLtwPreInstalled,
     DeleteTransferToken,
-    RestoreMsaAccounts
+    RestoreMsaAccounts,
+    RemoveBrokerAccounts
 }

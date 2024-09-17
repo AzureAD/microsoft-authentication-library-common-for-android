@@ -103,8 +103,8 @@ class BrokerDiscoveryClientFactory {
          **/
         @JvmStatic
         fun getInstanceForBrokerSdk(context: Context,
-                                    platformComponents: IPlatformComponents) : IBrokerDiscoveryClient{
-            if (brokerSdkInstance == null){
+                                    platformComponents: IPlatformComponents) : IBrokerDiscoveryClient {
+            if (brokerSdkInstance == null) {
                 runBlocking {
                     lock.withLock {
                         if (brokerSdkInstance == null) {
