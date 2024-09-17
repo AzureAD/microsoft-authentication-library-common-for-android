@@ -94,7 +94,11 @@ public class OneDriveApp extends App implements IFirstPartyApp {
 
         Logger.i(TAG, "Checking that sign-up through phone number is available in OneDrive...");
 
-        // Check for "phone" UI option, we can conclude phone option is available
-        return UiAutomatorUtils.obtainUiObjectWithText("phone").exists();
+        // Click on account creation button
+        UiAutomatorUtils.handleButtonClick("com.microsoft.skydrive:id/sign_up_button");
+
+        // Check for "phoneCountry" UI option (Country code, part of phone input),
+        // we can conclude phone option is available
+        return UiAutomatorUtils.obtainUiObjectWithResourceId("phoneCountry").exists();
     }
 }
