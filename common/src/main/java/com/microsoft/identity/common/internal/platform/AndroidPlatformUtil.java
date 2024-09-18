@@ -126,6 +126,11 @@ public class AndroidPlatformUtil implements IPlatformUtil {
                             + "enabled. And the device is in doze mode or the app is standby");
         }
 
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.DISABLE_NETWORK_CONNECTIVITY_CHECK)){
+            // Skip the check.
+            return;
+        }
+
         if (!connectionService.isConnectionAvailable()) {
             throw new ClientException(
                     ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
