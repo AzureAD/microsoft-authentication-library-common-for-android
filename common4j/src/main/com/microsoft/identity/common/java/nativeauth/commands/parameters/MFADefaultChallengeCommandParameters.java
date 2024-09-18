@@ -36,19 +36,19 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuppressFBWarnings("EI_EXPOSE_REP2")   //Suppresses spotbugs warning on the builder class
 @SuperBuilder(toBuilder = true)
-public class MFASelectedChallengeCommandParameters extends MFAChallengeCommandParameters {
-    private static final String TAG = MFASelectedChallengeCommandParameters.class.getSimpleName();
+public class MFADefaultChallengeCommandParameters extends BaseSignInTokenCommandParameters {
+    private static final String TAG = MFADefaultChallengeCommandParameters.class.getSimpleName();
 
     /**
-     * The ID of the auth method that should be challenged.
+     * The continuation token obtained from the token endpoint.
      */
     @NonNull
-    public final String authMethodId;
+    public final String continuationToken;
 
     @NonNull
     @Override
     public String toUnsanitizedString() {
-        return "MFASelectedChallengeCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ", authMethodId=" + authMethodId + ")";
+        return "MFAChallengeCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
     }
 
     @Override

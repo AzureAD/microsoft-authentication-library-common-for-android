@@ -43,8 +43,8 @@ import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseNativeAuthCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseSignInTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.GetAuthMethodsCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFAChallengeCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFASelectedChallengeCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFADefaultChallengeCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFASelectedDefaultChallengeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFASubmitChallengeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordResendCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
@@ -512,7 +512,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         }
     }
 
-    fun signInChallenge(parameters: MFAChallengeCommandParameters): MFAChallengeCommandResult {
+    fun signInChallenge(parameters: MFADefaultChallengeCommandParameters): MFAChallengeCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = parameters.getCorrelationId(),
@@ -522,14 +522,14 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         try {
             val oAuth2Strategy = createOAuth2Strategy(parameters)
 
-            val isSelectedChallenge = (parameters is MFASelectedChallengeCommandParameters)
+            val isSelectedChallenge = (parameters is MFASelectedDefaultChallengeCommandParameters)
 
             val result = if (isSelectedChallenge) {
                 performSignInSelectedChallengeCall(
                     oAuth2Strategy = oAuth2Strategy,
                     continuationToken = parameters.continuationToken,
                     correlationId = parameters.correlationId,
-                    challengeId = (parameters as MFASelectedChallengeCommandParameters).authMethodId
+                    challengeId = (parameters as MFASelectedDefaultChallengeCommandParameters).authMethodId
                 )
             } else {
                 performSignInDefaultChallengeCall(

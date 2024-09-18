@@ -36,7 +36,7 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.nativeauth.BuildValues
 import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.GetAuthMethodsCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFAChallengeCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFADefaultChallengeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFASubmitChallengeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordResendCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
@@ -54,7 +54,6 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.MFACommandResult
-import com.microsoft.identity.common.java.nativeauth.controllers.results.MFASubmitChallengeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.ResetPasswordCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignInCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpCommandResult
@@ -65,7 +64,6 @@ import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil
 import com.microsoft.identity.common.nativeauth.MockApiEndpoint
 import com.microsoft.identity.common.nativeauth.MockApiResponseType
 import com.microsoft.identity.common.nativeauth.MockApiUtils
-import com.microsoft.identity.common.nativeauth.internal.commands.GetAuthMethodsCommand
 import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -1492,13 +1490,13 @@ class NativeAuthControllerTest {
 
     private fun createMFAChallengeCommandParameters(
         correlationId: String
-    ): MFAChallengeCommandParameters {
+    ): MFADefaultChallengeCommandParameters {
         val authenticationScheme = AuthenticationSchemeFactory.createScheme(
             AndroidPlatformComponentsFactory.createFromContext(context),
             null
         )
 
-        return MFAChallengeCommandParameters.builder()
+        return MFADefaultChallengeCommandParameters.builder()
             .clientId(clientId)
             .oAuth2TokenCache(createCache())
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
