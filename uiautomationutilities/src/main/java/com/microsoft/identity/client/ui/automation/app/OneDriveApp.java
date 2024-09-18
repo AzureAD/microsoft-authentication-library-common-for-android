@@ -24,12 +24,11 @@ package com.microsoft.identity.client.ui.automation.app;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.client.ui.automation.BuildConfig;
 import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
-import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
 import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 /**
@@ -59,7 +58,11 @@ public class OneDriveApp extends App implements IFirstPartyApp {
 
     @Override
     public void handleFirstRun() {
-        // Not yet implemented
+        if (shouldHandleFirstRun) {
+            // Grant permissions requested by OneDrive App
+            CommonUtils.grantPackagePermission();
+            shouldHandleFirstRun = false;
+        }
     }
 
     @Override
@@ -88,6 +91,7 @@ public class OneDriveApp extends App implements IFirstPartyApp {
      */
     public boolean checkPhoneSignUpIsAvailable() {
         launch();
+        handleFirstRun();
 
         Logger.i(TAG, "Checking that sign-up through phone number is available in OneDrive...");
 
