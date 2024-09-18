@@ -177,8 +177,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 final FidoChallenge challenge = FidoChallenge.createFromRedirectUri(url);
                 final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity)getActivity()).getSpanContext() : null;
                 final AuthFidoChallengeHandler challengeHandler = new AuthFidoChallengeHandler(
-                        new CredManFidoManager(view.getContext()),
-                        (WebViewAuthorizationFragment) ((AuthorizationActivity)getActivity()).getFragment(),
+                        new CredManFidoManager(
+                                view.getContext(),
+                                (WebViewAuthorizationFragment) ((AuthorizationActivity)getActivity()).getFragment()
+                        ),
                         view,
                         spanContext,
                         ViewTreeLifecycleOwner.get(view));

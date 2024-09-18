@@ -131,7 +131,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mFidoLauncher = registerForActivityResult(
                 new LegacyFidoActivityResultContract(),
                 result -> {
-                    Logger.info(methodTag, "Got legacy FIDO2API result.");
+                    Logger.info(methodTag, "Legacy FIDO2 API result received.");
                 }
         );
     }
@@ -454,6 +454,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         } else {
             Logger.error(methodTag, "Fragment destroyed, but smartcard usb discovery was unable to be stopped.", null);
         }
+        getFidoLauncher().unregister();
     }
 
     /**

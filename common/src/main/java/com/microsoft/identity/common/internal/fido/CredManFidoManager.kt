@@ -29,11 +29,13 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.PublicKeyCredential
 import androidx.credentials.exceptions.NoCredentialException
+import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment
 
 /**
  * Makes calls to the Android Credential Manager API in order to return an attestation.
  */
-class CredManFidoManager (val context: Context) : IFidoManager {
+class CredManFidoManager (val context: Context,
+                          val fragment: WebViewAuthorizationFragment) : IFidoManager {
 
     val credentialManager = CredentialManager.create(context)
 
@@ -57,18 +59,29 @@ class CredManFidoManager (val context: Context) : IFidoManager {
             requestJson = requestJson
         )
         val getCredRequest = GetCredentialRequest(
-            listOf(publicKeyCredentialOption),
+            credentialOptions = listOf(publicKeyCredentialOption),
             preferImmediatelyAvailableCredentials = (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
         )
-        val result = credentialManager.getCredential(
-            context = context,
-            request = getCredRequest
-        )
-        val credential: PublicKeyCredential = result.credential as PublicKeyCredential
-        return WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(credential.authenticationResponseJson)
-    }
-
-    fun shouldFallbackToLegacyApi(e: Exception): Boolean {
-        return (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE && e is NoCredentialException)
+        try {
+            val result = credentialManager.getCredential(
+                context = context,
+                request = getCredRequest
+            )
+            val credential: PublicKeyCredential = result.credential as PublicKeyCredential
+            return WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(credential.authenticationResponseJson)
+        } catch (e: NoCredentialException) {
+            // For version lower than Android 14, if NoCredentialException is returned,
+            // this means a UI dialog wasn't even shown to allow usage of a security key.
+            // Thus we need to call the legacy FIDO2 API here.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                 return LegacyFido2ApiManager(context, fragment).authenticate(
+                     challenge = challenge,
+                     relyingPartyIdentifier = relyingPartyIdentifier,
+                     allowedCredentials = allowedCredentials,
+                     userVerificationPolicy = userVerificationPolicy)
+            } else {
+                throw e
+            }
+        }
     }
 }

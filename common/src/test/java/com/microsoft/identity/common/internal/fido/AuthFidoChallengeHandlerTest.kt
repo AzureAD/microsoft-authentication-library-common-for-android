@@ -66,7 +66,6 @@ class AuthFidoChallengeHandlerTest {
         webView = ExtendedTestWebView()
         authFidoChallengeHandler = AuthFidoChallengeHandler(
             fidoManager = testFidoManager,
-            fragment = WebViewAuthorizationFragment(),
             webView = webView,
             spanContext = null,
             lifecycleOwner = testLifecycleOwner
@@ -127,7 +126,6 @@ class AuthFidoChallengeHandlerTest {
     fun testProcessChallenge_AuthNoLifecycleOwner() {
         authFidoChallengeHandler = AuthFidoChallengeHandler(
             fidoManager = testFidoManager,
-            fragment = WebViewAuthorizationFragment(),
             webView = webView,
             spanContext = null,
             lifecycleOwner = null

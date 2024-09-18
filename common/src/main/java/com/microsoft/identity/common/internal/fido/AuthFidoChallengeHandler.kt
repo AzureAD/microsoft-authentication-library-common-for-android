@@ -52,7 +52,6 @@ import java.util.*
  */
 class AuthFidoChallengeHandler (
     private val fidoManager: IFidoManager,
-    private val fragment: WebViewAuthorizationFragment,
     private val webView: WebView,
     private val spanContext : SpanContext?,
     private val lifecycleOwner: LifecycleOwner?
@@ -123,19 +122,14 @@ class AuthFidoChallengeHandler (
                     span
                 )
             } catch (e : Exception) {
-                if (fidoManager is CredManFidoManager
-                    && fidoManager.shouldFallbackToLegacyApi(e)) {
-
-                } else {
-                    respondToChallengeWithError(
-                        submitUrl = submitUrl,
-                        context = context,
-                        span = span,
-                        errorMessage = e.message.toString(),
-                        exception = e,
-                        methodTag = methodTag
-                    )
-                }
+                respondToChallengeWithError(
+                    submitUrl = submitUrl,
+                    context = context,
+                    span = span,
+                    errorMessage = e.message.toString(),
+                    exception = e,
+                    methodTag = methodTag
+                )
             }
         }
         return null
