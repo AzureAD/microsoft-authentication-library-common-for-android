@@ -41,12 +41,9 @@ public class OneDriveApp extends App implements IFirstPartyApp {
     public static final String ONEDRIVE_PACKAGE_NAME = "com.microsoft.skydrive";
     public static final String ONEDRIVE_APP_NAME = "Microsoft OneDrive";
     public final static String ONEDRIVE_APK = "OneDrive.apk";
-    public final static IAppInstaller DEFAULT_WORD_APP_INSTALLER = BuildConfig.INSTALL_SOURCE_LOCAL_APK
-            .equalsIgnoreCase(BuildConfig.WORD_APP_INSTALL_SOURCE)
-            ? new LocalApkInstaller() : new PlayStore();
 
     public OneDriveApp() {
-        super(ONEDRIVE_PACKAGE_NAME, ONEDRIVE_APP_NAME, DEFAULT_WORD_APP_INSTALLER);
+        super(ONEDRIVE_PACKAGE_NAME, ONEDRIVE_APP_NAME, new PlayStore());
         localApkFileName = ONEDRIVE_APK;
     }
 
