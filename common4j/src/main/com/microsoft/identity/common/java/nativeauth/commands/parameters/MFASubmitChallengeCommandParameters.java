@@ -52,7 +52,7 @@ public class MFASubmitChallengeCommandParameters extends BaseSignInTokenCommandP
     @NonNull
     @Override
     public String toUnsanitizedString() {
-        return "MFASubmitChallengeCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+        return "MFASubmitChallengeCommandParameters(authority=" + authority + ", challengeType=" + challengeType + ")";
     }
 
     @Override

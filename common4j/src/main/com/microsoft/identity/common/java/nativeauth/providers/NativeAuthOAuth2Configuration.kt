@@ -219,14 +219,11 @@ class NativeAuthOAuth2Configuration(
 
     private fun getEndpointUrlFromRootAndTenantAndSuffix(root: URL, endpointSuffix: String): URL {
         return try {
-//            UrlUtil.appendPathToURL(root, endpointSuffix)
-            UrlUtil.appendPathAndQueryToURL(root, endpointSuffix, "dc=ESTS-PUB-NEULR1-AZ1-FD000-TEST1")
-//            UrlUtil.appendPathAndQueryToURL(root, endpointSuffix, "dc=ESTS-PUB-NEULR1-AZ1-FD000-TEST1")
-//            if (BuildValues.getDC().isNotEmpty()) {
-//                UrlUtil.appendPathAndQueryToURL(root, endpointSuffix, "dc=ESTS-PUB-SCUS-LZ1-FD000-TEST1")
-//            } else {
-//                UrlUtil.appendPathToURL(root, endpointSuffix)
-//            }
+            if (BuildValues.getDC().isNotEmpty()) {
+                UrlUtil.appendPathAndQueryToURL(root, endpointSuffix, "dc=${BuildValues.getDC()}")
+            } else {
+                UrlUtil.appendPathToURL(root, endpointSuffix)
+            }
         } catch (e: URISyntaxException) {
             Logger.error(TAG, "appendPathToURL failed", e)
             throw e
