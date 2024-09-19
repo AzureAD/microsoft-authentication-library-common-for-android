@@ -10,6 +10,8 @@ project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") 
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 
 android {
+    namespace = "com.microsoft.identity.internal.testutils"
+    buildFeatures.buildConfig = true
     compileSdk rootProject.ext.compileSdkVersion
 
     testOptions {
@@ -95,65 +97,65 @@ android {
 
 }
 
-task sourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    classifier 'sources'
-}
-
-tasks.whenTaskAdded { task ->
-    if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
-        task.dependsOn 'sourcesJar'
-    }
-}
-
-project.afterEvaluate{
-    publishing {
-        publications {
-            aar(MavenPublication) {
-                artifact "$buildDir/outputs/aar/testutils-release.aar"
-                artifact sourcesJar
-                groupId 'com.microsoft.identity'
-                artifactId = 'testutils'
-                version = getAppVersionName()
-
-                pom.withXml {
-
-                    // Dependencies
-                    def dependenciesNode = asNode().appendNode('dependencies')
-
-                    //Iterate over the implementation dependencies (we don't want the test ones), adding a <dependency> node for each
-                    configurations.implementation.allDependencies.each {
-                        if (it.group != null && it.name != null) {
-                            def dependencyNode = dependenciesNode.appendNode('dependency')
-                            dependencyNode.appendNode('groupId', it.group)
-                            dependencyNode.appendNode('artifactId', it.name)
-                            dependencyNode.appendNode('version', it.version)
-                        }
-                    }
-                }
-            }
-        }
-
-        repositories {
-            maven {
-                name "vsts-maven-adal-android"
-                url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
-                credentials {
-                    username project.ext.vstsUsername
-                    password project.ext.vstsPassword
-                }
-            }
-            maven {
-                name "vsts-maven-android"
-                url 'https://identitydivision.pkgs.visualstudio.com/IDDP/_packaging/Android/maven/v1'
-                credentials {
-                    username project.vstsUsername
-                    password project.vstsPassword
-                }
-            }
-        }
-    }
-}
+//task sourcesJar(type: Jar) {
+//    from android.sourceSets.main.java.srcDirs
+//    classifier 'sources'
+//}
+//
+//tasks.whenTaskAdded { task ->
+//    if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
+//        task.dependsOn 'sourcesJar'
+//    }
+//}
+//
+//project.afterEvaluate{
+//    publishing {
+//        publications {
+//            aar(MavenPublication) {
+//                artifact "$buildDir/outputs/aar/testutils-release.aar"
+//                artifact sourcesJar
+//                groupId 'com.microsoft.identity'
+//                artifactId = 'testutils'
+//                version = getAppVersionName()
+//
+//                pom.withXml {
+//
+//                    // Dependencies
+//                    def dependenciesNode = asNode().appendNode('dependencies')
+//
+//                    //Iterate over the implementation dependencies (we don't want the test ones), adding a <dependency> node for each
+//                    configurations.implementation.allDependencies.each {
+//                        if (it.group != null && it.name != null) {
+//                            def dependencyNode = dependenciesNode.appendNode('dependency')
+//                            dependencyNode.appendNode('groupId', it.group)
+//                            dependencyNode.appendNode('artifactId', it.name)
+//                            dependencyNode.appendNode('version', it.version)
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        repositories {
+//            maven {
+//                name "vsts-maven-adal-android"
+//                url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
+//                credentials {
+//                    username project.ext.vstsUsername
+//                    password project.ext.vstsPassword
+//                }
+//            }
+//            maven {
+//                name "vsts-maven-android"
+//                url 'https://identitydivision.pkgs.visualstudio.com/IDDP/_packaging/Android/maven/v1'
+//                credentials {
+//                    username project.vstsUsername
+//                    password project.vstsPassword
+//                }
+//            }
+//        }
+//    }
+//}
 
 dependencies {
 

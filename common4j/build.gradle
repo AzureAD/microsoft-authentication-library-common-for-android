@@ -60,90 +60,90 @@ project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
 
 version = getAppVersionName()
 
-task sourcesJar(type: Jar) {
-    from sourceSets.main.java.srcDirs
-    classifier 'sources'
-    destinationDirectory = reporting.file("$project.buildDir/outputs/jars")
-}
-
-// Task to generate javadoc
-task generateJavadoc(type: Javadoc) {
-    failOnError false
-    title = "Microsoft Identity Common Java"
-    source = sourceSets.main.java
-    classpath += project.sourceSets.main.compileClasspath
-
-    options.memberLevel = JavadocMemberLevel.PUBLIC
-    options.addBooleanOption('Xdoclint:none', true)
-
-    exclude '**/BuildConfig.Java'
-    exclude '**/R.java'
-    destinationDir = reporting.file("$project.buildDir/outputs/javadoc")
-}
-
-// Task to generate javadoc.jar
-task javadocJar(type: Jar, dependsOn: generateJavadoc) {
-    from javadoc.destinationDir
-    classifier 'javadoc'
-    destinationDirectory = reporting.file("$project.buildDir/outputs/jars")
-}
-
-jar {
-    manifest {
-        attributes('Implementation-Title': project.name,
-                'Implementation-Version': project.version)
-    }
-}
-
-publishing {
-    publications {
-        aar(MavenPublication) {
-            groupId 'com.microsoft.identity'
-            artifactId 'common4j'
-            from components.java
-
-            pom {
-                name = 'common4j'
-                description = 'This library contains common java code shared between the Active Directory ' +
-                        'Authentication Library (ADAL) for Android and the Microsoft ' +
-                        'Authentication Library (MSAL) for Android. This library ' +
-                        'includes only internal classes and is NOT part of the ' +
-                        'public API'
-                url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android'
-                developers {
-                    developer {
-                        id = 'microsoft'
-                        name = 'Microsoft'
-                    }
-                }
-                licenses {
-                    license {
-                        name = 'MIT License'
-                    }
-                }
-                inceptionYear = '2021'
-                scm {
-                    url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android/tree/master'
-                }
-                properties = [
-                        branch: 'master',
-                        version: project.version
-                ]
-            }
-        }
-    }
-
-    repositories {
-        maven {
-            name "vsts-maven-adal-android"
-            url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
-            credentials {
-                username project.ext.vstsUsername
-                password project.ext.vstsPassword
-            }
-        }
-    }
-}
+//task sourcesJar(type: Jar) {
+//    from sourceSets.main.java.srcDirs
+//    classifier 'sources'
+//    destinationDirectory = reporting.file("$project.buildDir/outputs/jars")
+//}
+//
+//// Task to generate javadoc
+//task generateJavadoc(type: Javadoc) {
+//    failOnError false
+//    title = "Microsoft Identity Common Java"
+//    source = sourceSets.main.java
+//    classpath += project.sourceSets.main.compileClasspath
+//
+//    options.memberLevel = JavadocMemberLevel.PUBLIC
+//    options.addBooleanOption('Xdoclint:none', true)
+//
+//    exclude '**/BuildConfig.Java'
+//    exclude '**/R.java'
+//    destinationDir = reporting.file("$project.buildDir/outputs/javadoc")
+//}
+//
+//// Task to generate javadoc.jar
+//task javadocJar(type: Jar, dependsOn: generateJavadoc) {
+//    from javadoc.destinationDir
+//    classifier 'javadoc'
+//    destinationDirectory = reporting.file("$project.buildDir/outputs/jars")
+//}
+//
+//jar {
+//    manifest {
+//        attributes('Implementation-Title': project.name,
+//                'Implementation-Version': project.version)
+//    }
+//}
+//
+//publishing {
+//    publications {
+//        aar(MavenPublication) {
+//            groupId 'com.microsoft.identity'
+//            artifactId 'common4j'
+//            from components.java
+//
+//            pom {
+//                name = 'common4j'
+//                description = 'This library contains common java code shared between the Active Directory ' +
+//                        'Authentication Library (ADAL) for Android and the Microsoft ' +
+//                        'Authentication Library (MSAL) for Android. This library ' +
+//                        'includes only internal classes and is NOT part of the ' +
+//                        'public API'
+//                url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android'
+//                developers {
+//                    developer {
+//                        id = 'microsoft'
+//                        name = 'Microsoft'
+//                    }
+//                }
+//                licenses {
+//                    license {
+//                        name = 'MIT License'
+//                    }
+//                }
+//                inceptionYear = '2021'
+//                scm {
+//                    url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android/tree/master'
+//                }
+//                properties = [
+//                        branch: 'master',
+//                        version: project.version
+//                ]
+//            }
+//        }
+//    }
+//
+//    repositories {
+//        maven {
+//            name "vsts-maven-adal-android"
+//            url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
+//            credentials {
+//                username project.ext.vstsUsername
+//                password project.ext.vstsPassword
+//            }
+//        }
+//    }
+//}
 
 def sliceParameter = "" // will be blank unless specified by developer
 def dcParameter = "" // will be blank unless specified by developer
@@ -244,8 +244,8 @@ dependencies {
     implementation("io.opentelemetry:opentelemetry-api:$rootProject.ext.openTelemetryVersion")
 }
 
-sourceCompatibility = "1.8"
-targetCompatibility = "1.8"
+//sourceCompatibility = "1.8"
+//targetCompatibility = "1.8"
 
 buildConfig {
     // forces the package (of the generated BuildConfig file). Defaults to '${project.group}'
@@ -254,7 +254,7 @@ buildConfig {
 }
 
 afterEvaluate {
-    assemble.dependsOn sourcesJar, javadocJar
+//    assemble.dependsOn sourcesJar, javadocJar
 
     // these tasks are generated by the buildconfig plugin..for more details, read comment about it
     // above in the plugins block.
@@ -264,4 +264,10 @@ afterEvaluate {
 // This is used to generate the pom file for publishing to external maven in maven-release-jobs.yml
 tasks.withType(GenerateMavenPom).all {
     destination = layout.buildDirectory.file("poms/${project.name}-${project.version}.pom").get().asFile
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
