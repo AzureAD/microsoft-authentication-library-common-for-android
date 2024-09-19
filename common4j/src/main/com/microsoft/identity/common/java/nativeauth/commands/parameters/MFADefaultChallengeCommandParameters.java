@@ -48,7 +48,7 @@ public class MFADefaultChallengeCommandParameters extends BaseSignInTokenCommand
     @NonNull
     @Override
     public String toUnsanitizedString() {
-        return "MFAChallengeCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+        return "MFADefaultChallengeCommandParameters(authority=" + authority + ", challengeType=" + challengeType + ")";
     }
 
     @Override

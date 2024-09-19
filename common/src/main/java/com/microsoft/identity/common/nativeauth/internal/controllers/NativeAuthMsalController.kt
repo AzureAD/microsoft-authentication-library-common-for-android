@@ -390,7 +390,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             Logger.error(
                 TAG,
                 parameters.correlationId,
-                "Exception thrown in signInSubmitCode",
+                "Exception thrown in signInSubmitChallenge()",
                 e
             )
             throw e
@@ -591,7 +591,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             Logger.error(
                 TAG,
                 parameters.correlationId,
-                "Exception thrown in challengeDefaultAuth()",
+                "Exception thrown in signInChallenge()",
                 e
             )
             throw e

@@ -48,7 +48,7 @@ public class MFASelectedDefaultChallengeCommandParameters extends MFADefaultChal
     @NonNull
     @Override
     public String toUnsanitizedString() {
-        return "MFASelectedChallengeCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ", authMethodId=" + authMethodId + ")";
+        return "MFASelectedChallengeCommandParameters(authority=" + authority + ", challengeType=" + challengeType + ", authMethodId=" + authMethodId + ")";
     }
 
     @Override

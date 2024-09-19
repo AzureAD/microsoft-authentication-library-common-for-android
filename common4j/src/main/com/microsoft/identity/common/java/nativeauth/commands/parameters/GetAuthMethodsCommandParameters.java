@@ -48,7 +48,7 @@ public class GetAuthMethodsCommandParameters extends BaseNativeAuthCommandParame
     @NonNull
     @Override
     public String toUnsanitizedString() {
-        return "GetAuthMethodsCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+        return "GetAuthMethodsCommandParameters(authority=" + authority + ", challengeType=" + challengeType + ")";
     }
 
     @Override
