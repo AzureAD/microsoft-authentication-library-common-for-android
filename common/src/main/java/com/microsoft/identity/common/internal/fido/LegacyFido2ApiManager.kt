@@ -29,23 +29,41 @@ import com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialDescripto
 import com.google.android.gms.tasks.OnSuccessListener
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.logging.Logger
 import io.opentelemetry.api.trace.Span
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.ArrayList
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+/**
+ * Utilizes the legacy Android FIDO2 API in order to return an attestation.
+ * Note that the legacy FIDO2 API should only be used for older Android versions which need it,
+ * such as Android 13 and below for FIDO2 security key support.
+ */
 class LegacyFido2ApiManager (val context: Context, val fragment: WebViewAuthorizationFragment) : IFidoManager {
 
     val TAG = LegacyFido2ApiManager::class.simpleName.toString()
 
     private val legacyApi = Fido2ApiClient(context)
 
+    /**
+     * Interacts with the FIDO credential provider and returns an assertion.
+     *
+     * @param challenge AuthFidoChallenge received from the server.
+     * @param relyingPartyIdentifier rpId received from the server.
+     * @param allowedCredentials List of allowed credentials to filter by.
+     * @param userVerificationPolicy User verification policy string.
+     * @param span OpenTelemetry span.
+     * @return assertion
+     */
     override suspend fun authenticate(challenge: String,
                                       relyingPartyIdentifier: String,
                                       allowedCredentials: List<String>?,
                                       userVerificationPolicy: String,
-                                      span: Span): String = suspendCancellableCoroutine { continuation ->
+                                      span: Span):
+            String = suspendCancellableCoroutine { continuation ->
+        val methodTag = "$TAG:authenticate"
         val canceller = CancellationSignal()
         continuation.invokeOnCancellation { canceller.cancel() }
         span.setAttribute(
@@ -65,10 +83,12 @@ class LegacyFido2ApiManager (val context: Context, val fragment: WebViewAuthoriz
             .setRpId(relyingPartyIdentifier)
             .setAllowList(publicKeyCredentialDescriptorList)
             .build()
+        Logger.info(methodTag, "Calling the legacy FIDO2 API with public key credential options to get a PendingIntent.")
         val result = legacyApi.getSignPendingIntent(requestOptions)
 
         result.addOnSuccessListener(OnSuccessListener { pendingIntent ->
             if (pendingIntent != null) {
+                Logger.info(methodTag, "Launching the legacy FIDO2 API PendingIntent.")
                 fragment.fidoLauncher.launch(
                     LegacyFido2ApiObject(
                         assertionCallback = { assertion ->

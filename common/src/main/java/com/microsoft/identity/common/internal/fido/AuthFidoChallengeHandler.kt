@@ -60,6 +60,7 @@ class AuthFidoChallengeHandler (
 
     override fun processChallenge(fidoChallenge: FidoChallenge): Void? {
         val methodTag = "$TAG:processChallenge"
+        Logger.info(methodTag, "Processing FIDO challenge.")
         val span = if (spanContext != null) {
             OTelUtility.createSpanFromParent(SpanName.Fido.name, spanContext)
         } else {

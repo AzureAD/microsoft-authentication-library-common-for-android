@@ -46,7 +46,9 @@ import com.google.android.gms.fido.fido2.api.common.PublicKeyCredential;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 
-
+/**
+ * An implementation of an ActivityResultContract which helps run the PendingIntent from the legacy FIDO2 API and connect its results to the FIDO challenge handlers and managers.
+ */
 public class LegacyFidoActivityResultContract extends ActivityResultContract<LegacyFido2ApiObject, Void> {
     Function1<String, Unit> assertionCallback;
     Function1<LegacyFido2ApiException, Unit> errorCallback;
@@ -56,7 +58,7 @@ public class LegacyFidoActivityResultContract extends ActivityResultContract<Leg
     public Intent createIntent(@NonNull final Context context, @NonNull final LegacyFido2ApiObject input) {
         assertionCallback = input.getAssertionCallback();
         errorCallback = input.getErrorCallback();
-        return  new Intent(ACTION_INTENT_SENDER_REQUEST)
+        return new Intent(ACTION_INTENT_SENDER_REQUEST)
                 .putExtra(
                         EXTRA_INTENT_SENDER_REQUEST,
                         new IntentSenderRequest.Builder(
@@ -87,7 +89,8 @@ public class LegacyFidoActivityResultContract extends ActivityResultContract<Leg
         final byte[] bytes = intent.getByteArrayExtra(Fido.FIDO2_KEY_CREDENTIAL_EXTRA);
         if (bytes == null) {
             errorCallback.invoke(
-                    new LegacyFido2ApiException(LegacyFido2ApiException.NULL_OBJECT,
+                    new LegacyFido2ApiException(
+                            LegacyFido2ApiException.NULL_OBJECT,
                             "Credential result from Intent is null."
                     ));
             return null;
@@ -105,12 +108,34 @@ public class LegacyFidoActivityResultContract extends ActivityResultContract<Leg
             return null;
         }
         if (response instanceof AuthenticatorAssertionResponse) {
+            // While it's not expected to be null, the userHandle variable of AuthenticatorAssertionResponse is nullable.
+            // Since ESTS requires a user handle in the assertion, return an exception if it's null.
+            if (((AuthenticatorAssertionResponse) response).getUserHandle() == null) {
+                errorCallback.invoke(
+                        new LegacyFido2ApiException(
+                                LegacyFido2ApiException.NULL_OBJECT,
+                                "UserHandle value in AuthenticatorAssertionResponse is null."
+                        ));
+                return null;
+            }
             assertionCallback.invoke(
                     WebAuthnJsonUtil.createAssertionString(
-                            Base64.encodeToString(response.getClientDataJSON(), Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING),
-                            Base64.encodeToString(((AuthenticatorAssertionResponse) response).getAuthenticatorData(), Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING),
-                            Base64.encodeToString(((AuthenticatorAssertionResponse) response).getSignature(), Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING),
-                            Base64.encodeToString(((AuthenticatorAssertionResponse) response).getUserHandle(), Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING),
+                            Base64.encodeToString(
+                                    response.getClientDataJSON(),
+                                    Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING
+                            ),
+                            Base64.encodeToString(
+                                    ((AuthenticatorAssertionResponse) response).getAuthenticatorData(),
+                                    Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING
+                            ),
+                            Base64.encodeToString(
+                                    ((AuthenticatorAssertionResponse) response).getSignature(),
+                                    Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING
+                            ),
+                            Base64.encodeToString(
+                                    ((AuthenticatorAssertionResponse) response).getUserHandle(),
+                                    Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING
+                            ),
                             credential.getId()
                     )
             );

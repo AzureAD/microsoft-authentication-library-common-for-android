@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.fido
 
 import android.net.Uri
 import androidx.lifecycle.testing.TestLifecycleOwner
-import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility
 import com.microsoft.identity.common.java.opentelemetry.SpanName

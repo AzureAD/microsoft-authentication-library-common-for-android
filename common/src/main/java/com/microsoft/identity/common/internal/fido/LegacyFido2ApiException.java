@@ -24,6 +24,9 @@ package com.microsoft.identity.common.internal.fido;
 
 import com.microsoft.identity.common.java.exception.BaseException;
 
+/**
+ * An exception class which holds attributes from the legacy FIDO2 API error responses.
+ */
 public class LegacyFido2ApiException extends BaseException {
 
     public static final String NULL_OBJECT = "null_object";

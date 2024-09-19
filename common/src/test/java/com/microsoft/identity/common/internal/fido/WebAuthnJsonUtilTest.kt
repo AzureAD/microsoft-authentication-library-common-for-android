@@ -124,6 +124,20 @@ class WebAuthnJsonUtilTest {
     }
 
     @Test
+    fun testCreateAssertionString_allFieldsFilled() {
+        val result = WebAuthnJsonUtil.createAssertionString(
+            authenticatorData = authenticatorData,
+            clientDataJson = clientDataJSON,
+            id = idAssertionResponse,
+            signature = signature,
+            userHandle = userHandle
+        )
+        JSONAssert.assertEquals(expectedAuthenticationAssertionResponseJsonAllFieldsFilled, result, JSONCompareMode.LENIENT)
+    }
+
+    // No test for null parameters because the method only takes in nonnull strings.
+
+        @Test
     fun testBase64UrlEncoded_JWTFromServer() {
         assertEquals(expectedEncodedJWT, demoJWT.base64UrlEncoded())
     }

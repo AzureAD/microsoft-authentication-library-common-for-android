@@ -24,6 +24,9 @@ package com.microsoft.identity.common.internal.fido
 
 import android.app.PendingIntent
 
+/**
+ * A data class which holds the PendingIntent from the legacy FIDO2 API and the callbacks which handle its results.
+ */
 data class LegacyFido2ApiObject(
     val assertionCallback: (result: String) -> Unit,
     val errorCallback: (exception: LegacyFido2ApiException) -> Unit,

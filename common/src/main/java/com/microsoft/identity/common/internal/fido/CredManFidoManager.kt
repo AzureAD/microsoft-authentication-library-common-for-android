@@ -30,7 +30,10 @@ import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.PublicKeyCredential
 import androidx.credentials.exceptions.NoCredentialException
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.logging.Logger
 import io.opentelemetry.api.trace.Span
 
 /**
@@ -47,6 +50,10 @@ class CredManFidoManager (val context: Context,
      * Interacts with the FIDO credential provider and returns an assertion.
      *
      * @param challenge AuthFidoChallenge received from the server.
+     * @param relyingPartyIdentifier rpId received from the server.
+     * @param allowedCredentials List of allowed credentials to filter by.
+     * @param userVerificationPolicy User verification policy string.
+     * @param span OpenTelemetry span.
      * @return assertion
      */
     override suspend fun authenticate(challenge: String,
@@ -54,6 +61,7 @@ class CredManFidoManager (val context: Context,
                                       allowedCredentials: List<String>?,
                                       userVerificationPolicy: String,
                                       span: Span): String {
+        val methodTag = "$TAG:authenticate"
         span.setAttribute(
             AttributeName.fido_manager.name,
             TAG
@@ -72,6 +80,7 @@ class CredManFidoManager (val context: Context,
             preferImmediatelyAvailableCredentials = (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
         )
         try {
+            Logger.info(methodTag, "Calling Credential Manager with a GetCredentialRequest.")
             val result = credentialManager.getCredential(
                 context = context,
                 request = getCredRequest
@@ -82,7 +91,9 @@ class CredManFidoManager (val context: Context,
             // For version lower than Android 14, if NoCredentialException is returned,
             // this means a UI dialog wasn't even shown to allow usage of a security key.
             // Thus we need to call the legacy FIDO2 API here.
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            //        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)) {
+            if (CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)
+                && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                  return LegacyFido2ApiManager(context, fragment).authenticate(
                      challenge = challenge,
                      relyingPartyIdentifier = relyingPartyIdentifier,

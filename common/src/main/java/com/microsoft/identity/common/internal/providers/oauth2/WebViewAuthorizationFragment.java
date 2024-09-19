@@ -127,13 +127,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (activity != null) {
             WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
         }
-
-        mFidoLauncher = registerForActivityResult(
-                new LegacyFidoActivityResultContract(),
-                result -> {
-                    Logger.info(methodTag, "Legacy FIDO2 API result received.");
-                }
-        );
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)) {
+            mFidoLauncher = registerForActivityResult(
+                    new LegacyFidoActivityResultContract(),
+                    result -> {
+                        Logger.info(methodTag, "Legacy FIDO2 API result received.");
+                    }
+            );
+        }
     }
 
     @Override
@@ -454,7 +455,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         } else {
             Logger.error(methodTag, "Fragment destroyed, but smartcard usb discovery was unable to be stopped.", null);
         }
-        getFidoLauncher().unregister();
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)) {
+            getFidoLauncher().unregister();
+        }
     }
 
     /**
