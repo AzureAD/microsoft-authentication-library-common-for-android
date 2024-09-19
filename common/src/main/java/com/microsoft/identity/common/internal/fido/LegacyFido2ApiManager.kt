@@ -28,6 +28,8 @@ import com.google.android.gms.fido.fido2.Fido2ApiClient
 import com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialDescriptor
 import com.google.android.gms.tasks.OnSuccessListener
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import io.opentelemetry.api.trace.Span
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.ArrayList
 import kotlin.coroutines.resume
@@ -35,15 +37,21 @@ import kotlin.coroutines.resumeWithException
 
 class LegacyFido2ApiManager (val context: Context, val fragment: WebViewAuthorizationFragment) : IFidoManager {
 
+    val TAG = LegacyFido2ApiManager::class.simpleName.toString()
+
     private val legacyApi = Fido2ApiClient(context)
 
     override suspend fun authenticate(challenge: String,
                                       relyingPartyIdentifier: String,
                                       allowedCredentials: List<String>?,
-                                      userVerificationPolicy: String): String = suspendCancellableCoroutine { continuation ->
+                                      userVerificationPolicy: String,
+                                      span: Span): String = suspendCancellableCoroutine { continuation ->
         val canceller = CancellationSignal()
         continuation.invokeOnCancellation { canceller.cancel() }
-
+        span.setAttribute(
+            AttributeName.fido_manager.name,
+            TAG
+        )
         val publicKeyCredentialDescriptorList = ArrayList<PublicKeyCredentialDescriptor>()
         allowedCredentials?.let {
             for (id in allowedCredentials) {
@@ -63,15 +71,14 @@ class LegacyFido2ApiManager (val context: Context, val fragment: WebViewAuthoriz
             if (pendingIntent != null) {
                 fragment.fidoLauncher.launch(
                     LegacyFido2ApiObject(
-                        callback = { assertion, succeeded ->
-                            if (succeeded) {
-                                if (continuation.isActive) {
-                                    continuation.resume(assertion)
-                                }
-                            } else {
-                                if (continuation.isActive) {
-                                    continuation.resumeWithException(Exception(assertion))
-                                }
+                        assertionCallback = { assertion ->
+                            if (continuation.isActive) {
+                                continuation.resume(assertion)
+                            }
+                        },
+                        errorCallback = { exception ->
+                            if (continuation.isActive) {
+                                continuation.resumeWithException(exception)
                             }
                         },
                         pendingIntent = pendingIntent
@@ -79,5 +86,4 @@ class LegacyFido2ApiManager (val context: Context, val fragment: WebViewAuthoriz
             }
         })
     }
-
 }

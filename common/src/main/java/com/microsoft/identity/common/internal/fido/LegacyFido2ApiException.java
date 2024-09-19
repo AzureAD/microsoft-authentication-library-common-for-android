@@ -20,27 +20,28 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.fido
+package com.microsoft.identity.common.internal.fido;
 
-import io.opentelemetry.api.trace.Span
+import com.microsoft.identity.common.java.exception.BaseException;
 
-/**
- * Representation of a manager that handles interactions with a passkey provider (usually through an API).
- */
-interface IFidoManager {
-    /**
-     * Interacts with the FIDO credential provider and returns an assertion.
-     * @param challenge
-     * @param relyingPartyIdentifier
-     * @param allowedCredentials
-     * @param userVerificationPolicy
-     * @param span
-     * @return assertion
-     * @throws Exception
-     */
-    suspend fun authenticate(challenge: String,
-                             relyingPartyIdentifier: String,
-                             allowedCredentials: List<String>?,
-                             userVerificationPolicy: String,
-                             span: Span) : String
+public class LegacyFido2ApiException extends BaseException {
+
+    public static final String NULL_OBJECT = "null_object";
+
+    public static final String BAD_ACTIVITY_RESULT_CODE = "bad_activity_result_code";
+
+    public static final String UNKNOWN_ERROR = "unknown_error";
+
+
+    public LegacyFido2ApiException(final String errorCode) {
+        super(errorCode);
+    }
+
+    public LegacyFido2ApiException(final String errorCode, final String errorMessage) {
+        super(errorCode, errorMessage);
+    }
+
+    public LegacyFido2ApiException(final String errorCode, final String errorMessage, final Throwable throwable) {
+        super(errorCode, errorMessage, throwable);
+    }
 }

@@ -30,12 +30,16 @@ import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.PublicKeyCredential
 import androidx.credentials.exceptions.NoCredentialException
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import io.opentelemetry.api.trace.Span
 
 /**
  * Makes calls to the Android Credential Manager API in order to return an attestation.
  */
 class CredManFidoManager (val context: Context,
                           val fragment: WebViewAuthorizationFragment) : IFidoManager {
+
+    val TAG = CredManFidoManager::class.simpleName.toString()
 
     val credentialManager = CredentialManager.create(context)
 
@@ -48,7 +52,12 @@ class CredManFidoManager (val context: Context,
     override suspend fun authenticate(challenge: String,
                                       relyingPartyIdentifier: String,
                                       allowedCredentials: List<String>?,
-                                      userVerificationPolicy: String): String {
+                                      userVerificationPolicy: String,
+                                      span: Span): String {
+        span.setAttribute(
+            AttributeName.fido_manager.name,
+            TAG
+        )
         val requestJson = WebAuthnJsonUtil.createJsonAuthRequest(
             challenge,
             relyingPartyIdentifier,
@@ -78,7 +87,8 @@ class CredManFidoManager (val context: Context,
                      challenge = challenge,
                      relyingPartyIdentifier = relyingPartyIdentifier,
                      allowedCredentials = allowedCredentials,
-                     userVerificationPolicy = userVerificationPolicy)
+                     userVerificationPolicy = userVerificationPolicy,
+                     span = span)
             } else {
                 throw e
             }

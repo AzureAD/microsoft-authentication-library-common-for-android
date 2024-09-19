@@ -112,7 +112,8 @@ class AuthFidoChallengeHandler (
                     challenge = authChallenge,
                     relyingPartyIdentifier = relyingPartyIdentifier,
                     allowedCredentials = allowedCredentials,
-                    userVerificationPolicy = userVerificationPolicy
+                    userVerificationPolicy = userVerificationPolicy,
+                    span = span
                 )
                 span.setStatus(StatusCode.OK)
                 respondToChallenge(
