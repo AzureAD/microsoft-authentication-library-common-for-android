@@ -266,11 +266,11 @@ class SignInOAuthStrategyTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInIntrospect,
+            endpointType = MockApiEndpoint.Introspect,
             correlationId = correlationId,
             responseType = MockApiResponseType.INTROSPECT_SUCCESS
         )
-        val result = nativeAuthOAuth2Strategy.performSignInIntrospect(
+        val result = nativeAuthOAuth2Strategy.performIntrospect(
             continuationToken = CONTINUATION_TOKEN,
             correlationId = correlationId
         )
@@ -284,11 +284,11 @@ class SignInOAuthStrategyTest {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInIntrospect,
+            endpointType = MockApiEndpoint.Introspect,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
-        val result = nativeAuthOAuth2Strategy.performSignInIntrospect(
+        val result = nativeAuthOAuth2Strategy.performIntrospect(
             continuationToken = CONTINUATION_TOKEN,
             correlationId = correlationId
         )
