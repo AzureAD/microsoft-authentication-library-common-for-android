@@ -91,21 +91,17 @@ public class BrokerApiFragment extends AbstractBrokerHost {
         final List<String> restoredAccountsNames = new ArrayList<>();
         do {
             final String restoreAccountsText = dismissDialogBoxAndGetText();
-            if (restoreAccountsText != null && restoreAccountsText.contains("No accounts")) {
-                Assert.fail();
+            if (!expectedRestoreAccountNames.isEmpty() && restoreAccountsText != null && restoreAccountsText.contains("No accounts")) {
+                Assert.fail("No accounts restored");
             } else if (restoreAccountsText != null) {
-                Pattern pattern = Pattern.compile("AccountName\\s*:\\s*(\\w+)");
+                Pattern pattern = Pattern.compile("AccountName\\s*:\\s*([\\w.@]+)");
                 Matcher matcher = pattern.matcher(restoreAccountsText);
 
                 if (matcher.find()) {
                     // Extract the account name
                     String accountName = matcher.group(1);
                     restoredAccountsNames.add(accountName);
-                    System.out.println("AccountName: " + accountName);
-                } else {
-                    System.out.println("AccountName not found");
                 }
-
             }
             ThreadUtils.sleepSafely(2000, TAG, "Waiting for the dialog box to disappear");
             dialogBox = UiAutomatorUtils.obtainUiObjectWithResourceId(DIALOG_BOX_RESOURCE_ID);
@@ -116,7 +112,7 @@ public class BrokerApiFragment extends AbstractBrokerHost {
         }
         for (String expectedRestoreAccountName : expectedRestoreAccountNames) {
           if (!restoredAccountsNames.contains(expectedRestoreAccountName)) {
-              Assert.fail("Expected account "+ expectedRestoreAccountName + " not restored! "+ restoredAccountsNames.get(0));
+              Assert.fail("Expected account "+ expectedRestoreAccountName + " not restored!");
           }
         }
     }
