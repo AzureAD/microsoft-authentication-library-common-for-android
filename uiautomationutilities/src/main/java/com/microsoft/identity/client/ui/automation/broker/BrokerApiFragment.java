@@ -117,6 +117,7 @@ public class BrokerApiFragment extends AbstractBrokerHost {
         }
     }
 
+
     /**
      * Acquires a SSO token for the given nonce.
      *
