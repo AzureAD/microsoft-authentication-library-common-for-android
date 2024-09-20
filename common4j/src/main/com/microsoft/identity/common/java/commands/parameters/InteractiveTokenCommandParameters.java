@@ -77,6 +77,11 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
      */
     private final String accountTransferToken;
 
+    /**
+     * Should broker present account picker
+     */
+    private final boolean suppressBrokerAccountPicker;
+
     public boolean getHandleNullTaskAffinity(){
         return handleNullTaskAffinity;
     }

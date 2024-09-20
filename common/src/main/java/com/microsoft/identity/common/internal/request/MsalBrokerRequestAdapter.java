@@ -131,6 +131,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .preferredBrowser(parameters.getPreferredBrowser())
                 .preferredAuthMethod(parameters.getPreferredAuthMethod())
                 .accountTransferToken(parameters.getAccountTransferToken())
+                .suppressAccountPicker(parameters.isSuppressBrokerAccountPicker())
                 .build();
 
         return brokerRequest;
