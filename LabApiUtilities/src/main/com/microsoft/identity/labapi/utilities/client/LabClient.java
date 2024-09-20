@@ -180,21 +180,20 @@ public class LabClient implements ILabClient {
         // Adding a second attempt here, api sometimes fails to create the temp user.
         try {
             return createTempAccountInternal(tempUserType);
-        } catch (final LabApiException e){
-            if (LabError.FAILED_TO_CREATE_TEMP_USER.equals(e.getErrorCode())){
+        } catch (final Exception e){
+            // Seems new Lab API may fail temp user creation, without throwing a lab exception
+            // (we may get a non-error response, with a null temp user field)
+            // So, we will make this exception handling generic, and retry in all failure cases
 
-                // Wait for a bit
-                try {
-                    Thread.sleep(LAB_API_RETRY_WAIT);
-                } catch (final InterruptedException e2) {
-                    e2.printStackTrace();
-                }
-
-                // Try to create the temp account again
-                return createTempAccountInternal(tempUserType);
-            } else {
-                throw e;
+            // Wait for a bit
+            try {
+                Thread.sleep(LAB_API_RETRY_WAIT);
+            } catch (final InterruptedException e2) {
+                e2.printStackTrace();
             }
+
+            // Try to create the temp account again
+            return createTempAccountInternal(tempUserType);
         }
     }
 

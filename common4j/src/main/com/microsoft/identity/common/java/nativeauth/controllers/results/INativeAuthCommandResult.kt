@@ -39,7 +39,7 @@ interface INativeAuthCommandResult : ILoggable {
         SignUpResendCodeCommandResult, SignUpSubmitPasswordCommandResult,
         SignUpSubmitUserAttributesCommandResult,
         ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,
-        ResetPasswordResendCodeCommandResult {
+        ResetPasswordResendCodeCommandResult, MFAChallengeCommandResult, GetAuthMethodsCommandResult {
             companion object {
                 private const val BROWSER_REQUIRED_ERROR: String = "browser_required"
                 private const val BROWSER_REQUIRED_ERROR_DESCRIPTION: String = "The client's authentication capabilities are insufficient. Please redirect to the browser to complete authentication"
@@ -68,7 +68,8 @@ interface INativeAuthCommandResult : ILoggable {
         SignUpSubmitCodeCommandResult, SignUpResendCodeCommandResult,
         SignUpSubmitPasswordCommandResult,
         ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,
-        ResetPasswordResendCodeCommandResult, ResetPasswordSubmitNewPasswordCommandResult {
+        ResetPasswordResendCodeCommandResult, ResetPasswordSubmitNewPasswordCommandResult,
+        GetAuthMethodsCommandResult, MFAChallengeCommandResult, MFASubmitChallengeCommandResult {
         override fun toUnsanitizedString(): String = "UnknownError(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes)"
 
         override fun toString(): String =  "UnknownError(correlationId=$correlationId)"
