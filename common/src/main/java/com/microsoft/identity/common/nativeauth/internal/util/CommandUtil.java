@@ -162,10 +162,10 @@ public class CommandUtil {
     }
 
     /**
-     * Adds continuation token to [SignInStartCommandParameters] object and returns a new
-     * [SignInSubmitPasswordCommandParameters] object.
+     * Converts a MFASubmitChallengeCommandParameters object to a
+     * SignInSubmitPasswordCommandParameters object.
      * @param parameters input command parameter
-     * @return [SignInSubmitPasswordCommandParameters] object with continuation token
+     * @return MFASubmitChallengeCommandParameters object
      */
     public static SignInSubmitCodeCommandParameters createSignInSubmitCodeCommandParameters(
             MFASubmitChallengeCommandParameters parameters
