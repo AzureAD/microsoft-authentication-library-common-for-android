@@ -64,18 +64,18 @@ android {
         buildConfigField("boolean", "bypassRedirectUriCheck", "$bypassRedirectUriCheck")
     }
 
-    buildTypes {
-        debug {
-            testCoverageEnabled enableCodeCoverage
-            minifyEnabled false
-        }
-        release {
-            minifyEnabled false
-            debuggable false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            consumerProguardFiles 'consumer-rules.pro'
-        }
-    }
+//    buildTypes {
+//        debug {
+//            testCoverageEnabled enableCodeCoverage
+//            minifyEnabled false
+//        }
+//        release {
+//            minifyEnabled false
+//            debuggable false
+//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+//            consumerProguardFiles 'consumer-rules.pro'
+//        }
+//    }
     //Upgrading to Java 8 in order to use YubiKit SDK
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -101,21 +101,21 @@ android {
         }
     }
 
-    flavorDimensions "main"
-
-    productFlavors {
-        // The 'local' productFlavor sources common4j from mavenLocal and is intended to be used
-        // during development.
-        local {
-            dimension "main"
-        }
-
-        // The 'dist' productFlavor sources common from a central repository and is intended
-        // to be used for releases.
-        dist {
-            dimension "main"
-        }
-    }
+//    flavorDimensions "main"
+//
+//    productFlavors {
+//        // The 'local' productFlavor sources common4j from mavenLocal and is intended to be used
+//        // during development.
+//        local {
+//            dimension "main"
+//        }
+//
+//        // The 'dist' productFlavor sources common from a central repository and is intended
+//        // to be used for releases.
+//        dist {
+//            dimension "main"
+//        }
+//    }
 
     sourceSets {
         main {
@@ -139,13 +139,13 @@ dependencies {
     //Java 8 - Desugaring - Enabled/Disabled via plugin
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
 
-    localApi(project(":common4j")) {
+    api(project(":common4j")) {
         transitive = false
     }
 
-    distApi("com.microsoft.identity:common4j:${common4jVersion}") {
-        transitive = false
-    }
+//    distApi("com.microsoft.identity:common4j:${common4jVersion}") {
+//        transitive = false
+//    }
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$rootProject.ext.kotlinVersion"
     testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$rootProject.ext.kotlinVersion"

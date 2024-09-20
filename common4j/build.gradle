@@ -207,6 +207,12 @@ idea {
     }
 }
 
+java {
+    toolchain {
+        toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
     testImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
@@ -244,8 +250,16 @@ dependencies {
     implementation("io.opentelemetry:opentelemetry-api:$rootProject.ext.openTelemetryVersion")
 }
 
-//sourceCompatibility = "1.8"
-//targetCompatibility = "1.8"
+//sourceCompatibility = JavaVersion.VERSION_17
+//targetCompatibility = JavaVersion.VERSION_17
+
+//compileOptions {
+//    sourceCompatibility JavaVersion.VERSION_17
+//    targetCompatibility JavaVersion.VERSION_17
+//}
+//kotlinOptions {
+//    jvmTarget = '17'
+//}
 
 buildConfig {
     // forces the package (of the generated BuildConfig file). Defaults to '${project.group}'
@@ -264,10 +278,4 @@ afterEvaluate {
 // This is used to generate the pom file for publishing to external maven in maven-release-jobs.yml
 tasks.withType(GenerateMavenPom).all {
     destination = layout.buildDirectory.file("poms/${project.name}-${project.version}.pom").get().asFile
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
 }
