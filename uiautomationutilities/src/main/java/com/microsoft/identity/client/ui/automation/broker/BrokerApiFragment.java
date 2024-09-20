@@ -112,7 +112,7 @@ public class BrokerApiFragment extends AbstractBrokerHost {
         }
         for (String expectedRestoreAccountName : expectedRestoreAccountNames) {
             if (!restoredAccountsNames.contains(expectedRestoreAccountName)) {
-                Assert.fail("Expected account "+ expectedRestoreAccountName + " not restored! "+ restoredAccountsNames.get(0));
+                Assert.fail("Expected account "+ expectedRestoreAccountName + " not restored! ");
             }
         }
     }
