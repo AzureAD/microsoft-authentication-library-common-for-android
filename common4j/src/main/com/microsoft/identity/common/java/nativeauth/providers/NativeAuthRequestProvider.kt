@@ -134,7 +134,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
      * Creates request object for /oauth/v2.0/introspect API call
      * @param continuationToken: continuation token from a previous signin command
      */
-    internal fun createSignInIntrospectRequest(
+    internal fun createIntrospectRequest(
         continuationToken: String,
         correlationId: String
     ): SignInIntrospectRequest {
