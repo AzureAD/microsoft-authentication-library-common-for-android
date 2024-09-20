@@ -61,6 +61,8 @@ public class BrokerHost extends AbstractTestBroker {
     private final static String FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER = "ENABLE_MULTIPLE_WORKPLACE_JOIN_PP";
     private final static String FLIGHT_PRT_V3 = "EnablePrtV3";
 
+    private final static String FLIGHT_GENERATE_AND_SAVE_TRANSFER_TOKEN = "EnableGenerateAndStoreTransferTokens";
+
     // name for broker host APKs
     public final static String BROKER_HOST_APK = "BrokerHost.apk";
     public final static String OLD_BROKER_HOST_APK = "OldBrokerHost.apk";
@@ -336,17 +338,17 @@ public class BrokerHost extends AbstractTestBroker {
         setLocalFlight(FLIGHT_PRT_V3, Boolean.toString(true));
     }
 
-    public void restoreMsaAccounts(final int expectedNumberOfRestoredAccounts) {
-        brokerApiFragment.launch();
-        brokerApiFragment.restoreMsaAccounts(expectedNumberOfRestoredAccounts);
+    public void enableGenerateAndSaveTransferToken() {
+        Logger.i(TAG, "Enable Transfer token generation");
+        setLocalFlight(FLIGHT_GENERATE_AND_SAVE_TRANSFER_TOKEN, Boolean.toString(true));
     }
 
     /**
      * Restores the MSA accounts.
      */
-    public void restoreMsaAccounts(final int expectedNumberOfRestoredAccounts) {
+    public void restoreMsaAccounts(List<String> expectedRestoreAccountNames) {
         brokerApiFragment.launch();
-        brokerApiFragment.restoreMsaAccounts(expectedNumberOfRestoredAccounts);
+        brokerApiFragment.restoreMsaAccounts(expectedRestoreAccountNames);
     }
 
     /**
