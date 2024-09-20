@@ -137,7 +137,7 @@ class WebAuthnJsonUtilTest {
 
     // No test for null parameters because the method only takes in nonnull strings.
 
-        @Test
+    @Test
     fun testBase64UrlEncoded_JWTFromServer() {
         assertEquals(expectedEncodedJWT, demoJWT.base64UrlEncoded())
     }
