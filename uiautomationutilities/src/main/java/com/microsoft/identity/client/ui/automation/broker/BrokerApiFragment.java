@@ -83,7 +83,7 @@ public class BrokerApiFragment extends AbstractBrokerHost {
     /**
      * Restores the MSA accounts.
      *
-     * @param expectedNumberOfRestoredAccounts the expected number of the accounts restored.
+     * @param expectedRestoreAccountNames the expected number of the accounts restored.
      */
     public void restoreMsaAccounts(final List<String> expectedRestoreAccountNames) {
         clickButton(RESTORE_MSA_ACCOUNTS_BUTTON_ID);
@@ -91,7 +91,7 @@ public class BrokerApiFragment extends AbstractBrokerHost {
         final List<String> restoredAccountsNames = new ArrayList<>();
         do {
             final String restoreAccountsText = dismissDialogBoxAndGetText();
-            if (restoreAccountsText != null && !restoreAccountsText.contains("No accounts")) {
+            if (restoreAccountsText != null && restoreAccountsText.contains("No accounts")) {
                 Assert.fail();
             } else if (restoreAccountsText != null) {
                 Pattern pattern = Pattern.compile("AccountName\\s*:\\s*(\\w+)");
@@ -116,7 +116,7 @@ public class BrokerApiFragment extends AbstractBrokerHost {
         }
         for (String expectedRestoreAccountName : expectedRestoreAccountNames) {
           if (!restoredAccountsNames.contains(expectedRestoreAccountName)) {
-              Assert.fail("Expected account "+ expectedRestoreAccountName + "not restored!");
+              Assert.fail("Expected account "+ expectedRestoreAccountName + " not restored! "+ restoredAccountsNames.get(0));
           }
         }
     }
