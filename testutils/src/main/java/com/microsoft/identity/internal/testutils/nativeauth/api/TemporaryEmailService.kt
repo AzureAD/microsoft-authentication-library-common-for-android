@@ -87,6 +87,56 @@ class TemporaryEmailService {
         return otpValue
     }
 
+    /**
+     * Retrieve mailbox content, and OTP from latest email.
+     * When a new code is retrieved, it will be passed through the codeWasValid parameter.
+     * Return true to indicate the passed code was valid.
+     * If the code is not valid, return false, and the inbox will be checked again after a delay of three seconds.
+     * This process can be repeated up to three times, and if a valid code is not retrieved, an IllegalStateException will be thrown.
+     */
+    suspend fun retrieveValidCodeFromInbox(emailAddress: String, codeWasValid: suspend (String) -> Boolean): String {
+        val previousEmailIds = mutableSetOf<String>()
+        var validCodeRetrieved = false
+        var count = 0
+        var latestEmailId: String?
+        var otpValue = ""
+
+        while (count < 3) {
+            val newEmailIds = api.retrieveMailbox(emailAddress)
+                .map { it.id }
+                .minus(previousEmailIds)
+
+            if (newEmailIds.isNotEmpty()) {
+                latestEmailId = newEmailIds.first()
+
+                val emailContent = api.retrieveEmail(emailAddress, latestEmailId)
+                otpValue = retrieveOtpFromEmailBody(emailContent.textBody)
+
+                validCodeRetrieved = codeWasValid(otpValue)
+
+                if (validCodeRetrieved) {
+                    break
+                }
+            }
+
+            //captures the existing list of email IDs checked to ensure the next pass will only process new emails received
+            previousEmailIds.addAll(newEmailIds)
+
+            // Wait before retrying
+            Thread.sleep(3000)
+
+            // Max 3 retries
+            count++
+        }
+
+        // After the retries we still weren't able to retrieve a valid code from the inbox, so fail and restart the test.
+        if (!validCodeRetrieved) {
+            throw IllegalStateException("Unable to fetch valid code for user $emailAddress")
+        }
+
+        return otpValue
+    }
+
     private fun retrieveOtpFromEmailBody(emailBody: String): String {
         val otpRegex = "Account verification code:\n(?<otc>[0-9]*)\n".toRegex()
         val match = otpRegex.find(emailBody)
