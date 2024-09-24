@@ -102,7 +102,8 @@ class TemporaryEmailService {
         var otpValue = ""
 
         while (count < 3) {
-            val newEmailIds = api.retrieveMailbox(emailAddress)
+            val inboxEmails = api.retrieveMailbox(emailAddress)
+            val newEmailIds = inboxEmails
                 .map { it.id }
                 .minus(previousEmailIds)
 
