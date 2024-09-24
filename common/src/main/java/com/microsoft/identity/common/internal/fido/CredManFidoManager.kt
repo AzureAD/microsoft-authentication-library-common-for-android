@@ -91,7 +91,6 @@ class CredManFidoManager (val context: Context,
             // For version lower than Android 14, if NoCredentialException is returned,
             // this means a UI dialog wasn't even shown to allow usage of a security key.
             // Thus we need to call the legacy FIDO2 API here.
-            //        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)) {
             if (CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)
                 && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                  return LegacyFido2ApiManager(context, fragment).authenticate(
