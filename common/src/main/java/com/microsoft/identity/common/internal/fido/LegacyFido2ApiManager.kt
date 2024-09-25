@@ -74,17 +74,9 @@ class LegacyFido2ApiManager (val context: Context, val fragment: WebViewAuthoriz
             AttributeName.fido_manager.name,
             TAG
         )
-        val publicKeyCredentialDescriptorList = allowedCredentials?.map {
-            PublicKeyCredentialDescriptor(
-                "public-key",
-                Base64.decode(it, (Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)),
-                arrayListOf(Transport.USB)
-            )
-        }
         val requestOptions = com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialRequestOptions.Builder()
             .setChallenge(challenge.toByteArray(Charsets.UTF_8))
             .setRpId(relyingPartyIdentifier)
-            .setAllowList(publicKeyCredentialDescriptorList)
             .build()
         Logger.info(methodTag, "Calling the legacy FIDO2 API with public key credential options to get a PendingIntent.")
         val result = legacyApi.getSignPendingIntent(requestOptions)

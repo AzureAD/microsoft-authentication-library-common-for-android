@@ -457,12 +457,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             Logger.error(methodTag, "Fragment destroyed, but smartcard usb discovery was unable to be stopped.", null);
         }
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)
-                && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            // If we get to this point, mFidoLauncher shouldn't be null (based on the OS version check),
+                && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+                && mFidoLauncher != null) {
+            // Note: mFidoLauncher shouldn't be null (based on the OS version check),
             // but we should still have a check here just to be safe.
-            if (mFidoLauncher != null) {
-                mFidoLauncher.unregister();
-            }
+            mFidoLauncher.unregister();
         }
     }
 
