@@ -42,6 +42,7 @@ import com.google.android.gms.fido.fido2.api.common.AuthenticatorAssertionRespon
 import com.google.android.gms.fido.fido2.api.common.AuthenticatorErrorResponse;
 import com.google.android.gms.fido.fido2.api.common.AuthenticatorResponse;
 import com.google.android.gms.fido.fido2.api.common.PublicKeyCredential;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
@@ -77,6 +78,7 @@ public class LegacyFidoActivityResultContract extends ActivityResultContract<Leg
                     ));
             return null;
         }
+
         if (resultCode != Activity.RESULT_OK) {
             errorCallback.invoke(
                     new LegacyFido2ApiException(
@@ -95,6 +97,7 @@ public class LegacyFidoActivityResultContract extends ActivityResultContract<Leg
                     ));
             return null;
         }
+
         final PublicKeyCredential credential = PublicKeyCredential.deserializeFromBytes(bytes);
         final AuthenticatorResponse response = credential.getResponse();
         if (response instanceof AuthenticatorErrorResponse) {
@@ -103,10 +106,11 @@ public class LegacyFidoActivityResultContract extends ActivityResultContract<Leg
             errorCallback.invoke(
                     new LegacyFido2ApiException(
                             errorCode,
-                            errorMessage != null ? errorMessage : "AuthenticatorResponse has a null error message."
+                            StringUtil.isNullOrEmpty(errorMessage) ? errorMessage : "AuthenticatorResponse has a null error message."
                     ));
             return null;
         }
+
         if (response instanceof AuthenticatorAssertionResponse) {
             // While it's not expected to be null, the userHandle variable of AuthenticatorAssertionResponse is nullable.
             // Since ESTS requires a user handle in the assertion, return an exception if it's null.
@@ -118,6 +122,7 @@ public class LegacyFidoActivityResultContract extends ActivityResultContract<Leg
                         ));
                 return null;
             }
+
             assertionCallback.invoke(
                     WebAuthnJsonUtil.createAssertionString(
                             Base64.encodeToString(
@@ -141,6 +146,7 @@ public class LegacyFidoActivityResultContract extends ActivityResultContract<Leg
             );
             return null;
         }
+
         errorCallback.invoke(
                 new LegacyFido2ApiException(
                         LegacyFido2ApiException.UNKNOWN_ERROR,

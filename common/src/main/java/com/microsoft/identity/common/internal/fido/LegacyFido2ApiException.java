@@ -35,6 +35,9 @@ public class LegacyFido2ApiException extends BaseException {
 
     public static final String UNKNOWN_ERROR = "unknown_error";
 
+    public static final String GET_PENDING_INTENT_ERROR = "get_pending_intent_error";
+
+    public static final String GET_PENDING_INTENT_CANCELED = "get_pending_intent_canceled";
 
     public LegacyFido2ApiException(final String errorCode) {
         super(errorCode);

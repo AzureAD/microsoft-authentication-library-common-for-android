@@ -26,6 +26,8 @@ import android.content.Context
 import android.os.CancellationSignal
 import com.google.android.gms.fido.fido2.Fido2ApiClient
 import com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialDescriptor
+import com.google.android.gms.tasks.OnCanceledListener
+import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
@@ -61,8 +63,8 @@ class LegacyFido2ApiManager (val context: Context, val fragment: WebViewAuthoriz
                                       relyingPartyIdentifier: String,
                                       allowedCredentials: List<String>?,
                                       userVerificationPolicy: String,
-                                      span: Span):
-            String = suspendCancellableCoroutine { continuation ->
+                                      span: Span
+    ): String = suspendCancellableCoroutine { continuation ->
         val methodTag = "$TAG:authenticate"
         val canceller = CancellationSignal()
         continuation.invokeOnCancellation { canceller.cancel() }
@@ -70,13 +72,8 @@ class LegacyFido2ApiManager (val context: Context, val fragment: WebViewAuthoriz
             AttributeName.fido_manager.name,
             TAG
         )
-        val publicKeyCredentialDescriptorList = ArrayList<PublicKeyCredentialDescriptor>()
-        allowedCredentials?.let {
-            for (id in allowedCredentials) {
-                publicKeyCredentialDescriptorList.add(
-                    PublicKeyCredentialDescriptor("public-key", id.toByteArray(), ArrayList())
-                )
-            }
+        val publicKeyCredentialDescriptorList = allowedCredentials?.map {
+            PublicKeyCredentialDescriptor("public-key", it.toByteArray(), ArrayList())
         }
         val requestOptions = com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialRequestOptions.Builder()
             .setChallenge(challenge.toByteArray())
@@ -103,6 +100,25 @@ class LegacyFido2ApiManager (val context: Context, val fragment: WebViewAuthoriz
                         },
                         pendingIntent = pendingIntent
                     ))
+            }
+        })
+        result.addOnFailureListener(OnFailureListener { exception ->
+            Logger.error(methodTag, "Failed to get a PendingIntent from the legacy FIDO2 API.", exception)
+            if (continuation.isActive) {
+                continuation.resumeWithException(
+                    LegacyFido2ApiException(
+                        LegacyFido2ApiException.GET_PENDING_INTENT_ERROR,
+                        "Failed to get a PendingIntent from the legacy FIDO2 API.",
+                        exception))
+            }
+        })
+        result.addOnCanceledListener(OnCanceledListener {
+            Logger.warn(methodTag, "The operation to get a PendingIntent from the legacy FIDO2 API was canceled.")
+            if (continuation.isActive) {
+                continuation.resumeWithException(
+                    LegacyFido2ApiException(
+                        LegacyFido2ApiException.GET_PENDING_INTENT_CANCELED,
+                        "The operation to get a PendingIntent from the legacy FIDO2 API was canceled."))
             }
         })
     }
