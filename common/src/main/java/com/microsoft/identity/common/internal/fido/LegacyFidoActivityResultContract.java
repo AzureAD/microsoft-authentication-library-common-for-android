@@ -106,7 +106,7 @@ public class LegacyFidoActivityResultContract extends ActivityResultContract<Leg
             errorCallback.invoke(
                     new LegacyFido2ApiException(
                             errorCode,
-                            StringUtil.isNullOrEmpty(errorMessage) ? errorMessage : "AuthenticatorResponse has a null error message."
+                            StringUtil.isNullOrEmpty(errorMessage) ? "AuthenticatorResponse has a null error message.": errorMessage
                     ));
             return null;
         }

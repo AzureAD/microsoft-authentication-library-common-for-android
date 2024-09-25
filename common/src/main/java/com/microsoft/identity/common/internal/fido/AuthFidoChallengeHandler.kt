@@ -25,10 +25,6 @@ package com.microsoft.identity.common.internal.fido
 import android.webkit.WebView
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.google.android.gms.fido.common.Transport
-import com.google.android.gms.fido.fido2.Fido2ApiClient
-import com.google.android.gms.tasks.OnSuccessListener
-import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler
 import com.microsoft.identity.common.java.constants.FidoConstants
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.PASSKEY_PROTOCOL_ERROR_PREFIX_STRING
