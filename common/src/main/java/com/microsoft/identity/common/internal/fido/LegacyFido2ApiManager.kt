@@ -24,6 +24,8 @@ package com.microsoft.identity.common.internal.fido
 
 import android.content.Context
 import android.os.CancellationSignal
+import android.util.Base64
+import com.google.android.gms.fido.common.Transport
 import com.google.android.gms.fido.fido2.Fido2ApiClient
 import com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialDescriptor
 import com.google.android.gms.tasks.OnCanceledListener
@@ -73,10 +75,14 @@ class LegacyFido2ApiManager (val context: Context, val fragment: WebViewAuthoriz
             TAG
         )
         val publicKeyCredentialDescriptorList = allowedCredentials?.map {
-            PublicKeyCredentialDescriptor("public-key", it.toByteArray(), ArrayList())
+            PublicKeyCredentialDescriptor(
+                "public-key",
+                Base64.decode(it, (Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)),
+                arrayListOf(Transport.USB)
+            )
         }
         val requestOptions = com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialRequestOptions.Builder()
-            .setChallenge(challenge.toByteArray())
+            .setChallenge(challenge.toByteArray(Charsets.UTF_8))
             .setRpId(relyingPartyIdentifier)
             .setAllowList(publicKeyCredentialDescriptorList)
             .build()
@@ -86,7 +92,7 @@ class LegacyFido2ApiManager (val context: Context, val fragment: WebViewAuthoriz
         result.addOnSuccessListener(OnSuccessListener { pendingIntent ->
             if (pendingIntent != null) {
                 Logger.info(methodTag, "Launching the legacy FIDO2 API PendingIntent.")
-                fragment.fidoLauncher.launch(
+                fragment.fidoLauncher?.launch(
                     LegacyFido2ApiObject(
                         assertionCallback = { assertion ->
                             if (continuation.isActive) {
@@ -100,6 +106,25 @@ class LegacyFido2ApiManager (val context: Context, val fragment: WebViewAuthoriz
                         },
                         pendingIntent = pendingIntent
                     ))
+                if (fragment.fidoLauncher == null) {
+                    val e = LegacyFido2ApiException(
+                        LegacyFido2ApiException.NULL_OBJECT,
+                        "fidoLauncher is null, which indicates that the legacy FIDO2 API is being used where it shouldn't be."
+                    )
+                    Logger.error(methodTag, e.message, e)
+                    if (continuation.isActive) {
+                        continuation.resumeWithException(e)
+                    }
+                }
+            } else {
+                val e = LegacyFido2ApiException(
+                    LegacyFido2ApiException.NULL_OBJECT,
+                    "Returned PendingIntent from legacy API is null."
+                )
+                Logger.error(methodTag, e.message, e)
+                if (continuation.isActive) {
+                    continuation.resumeWithException(e)
+                }
             }
         })
         result.addOnFailureListener(OnFailureListener { exception ->

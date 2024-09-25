@@ -127,7 +127,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (activity != null) {
             WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
         }
-        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)) {
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)
+                && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             mFidoLauncher = registerForActivityResult(
                     new LegacyFidoActivityResultContract(),
                     result -> {
@@ -455,8 +456,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         } else {
             Logger.error(methodTag, "Fragment destroyed, but smartcard usb discovery was unable to be stopped.", null);
         }
-        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)) {
-            getFidoLauncher().unregister();
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)
+                && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            // If we get to this point, mFidoLauncher shouldn't be null (based on the OS version check),
+            // but we should still have a check here just to be safe.
+            if (mFidoLauncher != null) {
+                mFidoLauncher.unregister();
+            }
         }
     }
 
@@ -491,6 +497,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         }
     }
 
+    @Nullable
     public ActivityResultLauncher<LegacyFido2ApiObject> getFidoLauncher() {
         return mFidoLauncher;
     }
