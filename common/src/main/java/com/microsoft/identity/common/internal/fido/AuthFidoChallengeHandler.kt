@@ -35,6 +35,7 @@ import com.microsoft.identity.common.logging.Logger
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanContext
 import io.opentelemetry.api.trace.StatusCode
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -119,15 +120,24 @@ class AuthFidoChallengeHandler (
                     context = context,
                     span
                 )
-            } catch (e : Exception) {
+            } catch (e : CancellationException) {
                 respondToChallengeWithError(
                     submitUrl = submitUrl,
                     context = context,
                     span = span,
-                    errorMessage = e.message.toString(),
+                    errorMessage = "Coroutine job of FIDO API calls cancelled.",
                     exception = e,
                     methodTag = methodTag
                 )
+            } catch (e : Exception) {
+                    respondToChallengeWithError(
+                        submitUrl = submitUrl,
+                        context = context,
+                        span = span,
+                        errorMessage = e.message.toString(),
+                        exception = e,
+                        methodTag = methodTag
+                    )
             }
         }
         return null
