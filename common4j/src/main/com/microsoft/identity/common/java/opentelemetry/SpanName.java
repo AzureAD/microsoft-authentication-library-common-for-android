@@ -67,5 +67,10 @@ public enum SpanName {
     DeleteTransferToken,
     RestoreMsaAccounts,
     OnUpgradeReceiver,
-    UpgradeDeviceRegistration
+    UpgradeDeviceRegistration,
+
+    /**
+     * Span covering interrupt handling using PRT protocol.
+     */
+    PrtHandleInterrupt
 }

@@ -33,11 +33,13 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 /**
@@ -231,6 +233,14 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
             return self();
         }
 
+        public B addExtraQueryParam(@NonNull final Map.Entry<String, String> extraQueryParam) {
+            if (mExtraQueryParams == null) {
+                mExtraQueryParams = new ArrayList<>();
+            }
+            mExtraQueryParams.add(extraQueryParam);
+            return self();
+        }
+
         public B setClaims(String claims) {
             mClaims = claims;
             return self();
@@ -238,6 +248,14 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
 
         public B setRequestHeaders(HashMap<String, String> requestHeaders) {
             mRequestHeaders = requestHeaders;
+            return self();
+        }
+
+        public B addRequestHeader(@NonNull final String key, final String value) {
+            if (mRequestHeaders == null) {
+                mRequestHeaders = new HashMap<>();
+            }
+            mRequestHeaders.put(key, value);
             return self();
         }
 
