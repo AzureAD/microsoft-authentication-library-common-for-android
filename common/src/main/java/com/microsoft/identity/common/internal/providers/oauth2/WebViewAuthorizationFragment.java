@@ -117,6 +117,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private PermissionRequest mCameraPermissionRequest;
 
+    // This is used by LegacyFido2ApiManager to launch a PendingIntent received by the legacy API.
     private ActivityResultLauncher<LegacyFido2ApiObject> mFidoLauncher;
 
     @Override

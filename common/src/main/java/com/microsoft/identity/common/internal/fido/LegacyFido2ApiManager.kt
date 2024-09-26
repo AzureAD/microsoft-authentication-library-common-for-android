@@ -23,11 +23,7 @@
 package com.microsoft.identity.common.internal.fido
 
 import android.content.Context
-import android.os.CancellationSignal
-import android.util.Base64
-import com.google.android.gms.fido.common.Transport
 import com.google.android.gms.fido.fido2.Fido2ApiClient
-import com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialDescriptor
 import com.google.android.gms.tasks.OnCanceledListener
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
@@ -35,8 +31,8 @@ import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizat
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.logging.Logger
 import io.opentelemetry.api.trace.Span
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
-import java.util.ArrayList
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -68,8 +64,6 @@ class LegacyFido2ApiManager (val context: Context, val fragment: WebViewAuthoriz
                                       span: Span
     ): String = suspendCancellableCoroutine { continuation ->
         val methodTag = "$TAG:authenticate"
-        val canceller = CancellationSignal()
-        continuation.invokeOnCancellation { canceller.cancel() }
         span.setAttribute(
             AttributeName.fido_manager.name,
             TAG
@@ -84,59 +78,87 @@ class LegacyFido2ApiManager (val context: Context, val fragment: WebViewAuthoriz
         result.addOnSuccessListener(OnSuccessListener { pendingIntent ->
             if (pendingIntent != null) {
                 Logger.info(methodTag, "Launching the legacy FIDO2 API PendingIntent.")
-                fragment.fidoLauncher?.launch(
-                    LegacyFido2ApiObject(
-                        assertionCallback = { assertion ->
-                            if (continuation.isActive) {
-                                continuation.resume(assertion)
-                            }
-                        },
-                        errorCallback = { exception ->
-                            if (continuation.isActive) {
-                                continuation.resumeWithException(exception)
-                            }
-                        },
-                        pendingIntent = pendingIntent
-                    ))
-                if (fragment.fidoLauncher == null) {
-                    val e = LegacyFido2ApiException(
-                        LegacyFido2ApiException.NULL_OBJECT,
-                        "fidoLauncher is null, which indicates that the legacy FIDO2 API is being used where it shouldn't be."
+                val fidoLauncher = fragment.fidoLauncher
+                if (fidoLauncher != null) {
+                    fidoLauncher.launch(
+                        LegacyFido2ApiObject(
+                            assertionCallback = { assertion ->
+                                if (continuation.isActive) {
+                                    continuation.resume(assertion)
+                                }
+                            },
+                            errorCallback = { exception ->
+                                if (continuation.isActive) {
+                                    continuation.resumeWithException(exception)
+                                }
+                            },
+                            pendingIntent = pendingIntent
+                        ))
+                } else {
+                    createAndThrowException(
+                        continuation = continuation,
+                        methodTag = methodTag,
+                        errorCode = LegacyFido2ApiException.NULL_OBJECT,
+                        message = "fidoLauncher is null, which indicates that the legacy FIDO2 API is being used where it shouldn't be."
                     )
-                    Logger.error(methodTag, e.message, e)
-                    if (continuation.isActive) {
-                        continuation.resumeWithException(e)
-                    }
                 }
             } else {
-                val e = LegacyFido2ApiException(
-                    LegacyFido2ApiException.NULL_OBJECT,
-                    "Returned PendingIntent from legacy API is null."
+                createAndThrowException(
+                    continuation = continuation,
+                    methodTag = methodTag,
+                    errorCode = LegacyFido2ApiException.NULL_OBJECT,
+                    message = "Returned PendingIntent from legacy API is null."
                 )
-                Logger.error(methodTag, e.message, e)
-                if (continuation.isActive) {
-                    continuation.resumeWithException(e)
-                }
             }
         })
         result.addOnFailureListener(OnFailureListener { exception ->
-            Logger.error(methodTag, "Failed to get a PendingIntent from the legacy FIDO2 API.", exception)
-            if (continuation.isActive) {
-                continuation.resumeWithException(
-                    LegacyFido2ApiException(
-                        LegacyFido2ApiException.GET_PENDING_INTENT_ERROR,
-                        "Failed to get a PendingIntent from the legacy FIDO2 API.",
-                        exception))
-            }
+            createAndThrowException(
+                continuation = continuation,
+                methodTag = methodTag,
+                errorCode = LegacyFido2ApiException.GET_PENDING_INTENT_ERROR,
+                message = "Failed to get a PendingIntent from the legacy FIDO2 API.",
+                exception = exception
+            )
         })
         result.addOnCanceledListener(OnCanceledListener {
-            Logger.warn(methodTag, "The operation to get a PendingIntent from the legacy FIDO2 API was canceled.")
-            if (continuation.isActive) {
-                continuation.resumeWithException(
-                    LegacyFido2ApiException(
-                        LegacyFido2ApiException.GET_PENDING_INTENT_CANCELED,
-                        "The operation to get a PendingIntent from the legacy FIDO2 API was canceled."))
-            }
+            createAndThrowException(
+                continuation = continuation,
+                methodTag = methodTag,
+                errorCode = LegacyFido2ApiException.GET_PENDING_INTENT_CANCELED,
+                message = "The operation to get a PendingIntent from the legacy FIDO2 API was canceled."
+            )
         })
+    }
+
+    /**
+     * Helper method to create a LegacyFido2ApiException, log, and resume with the exception.
+     *
+     * @param continuation
+     * @param methodTag
+     * @param errorCode
+     * @param message
+     * @param exception optional, if there is a root exception.
+     */
+    private fun createAndThrowException(continuation: CancellableContinuation<String>,
+                                        methodTag: String,
+                                        errorCode : String,
+                                        message: String,
+                                        exception: Exception? = null) {
+        val e = if (exception != null) {
+            LegacyFido2ApiException(
+                errorCode,
+                message,
+                exception
+            )
+        } else {
+            LegacyFido2ApiException(
+                errorCode,
+                message
+            )
+        }
+        Logger.error(methodTag, message, e)
+        if (continuation.isActive) {
+            continuation.resumeWithException(e)
+        }
     }
 }

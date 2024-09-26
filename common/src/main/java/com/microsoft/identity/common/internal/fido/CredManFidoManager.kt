@@ -77,6 +77,9 @@ class CredManFidoManager (val context: Context,
         )
         val getCredRequest = GetCredentialRequest(
             credentialOptions = listOf(publicKeyCredentialOption),
+            // We're setting preferImmediatelyAvailableCredentials in the CredMan getCredentialRequest object to true if the device OS is Android 13 or lower.
+            // This ensures the behavior where no dialog from CredMan is shown if no passkey cred is present.
+            // The end goal is for an Android <= 13 user who only has a security key to see one dialog which will allow them to authenticate.
             preferImmediatelyAvailableCredentials = (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
         )
         try {
