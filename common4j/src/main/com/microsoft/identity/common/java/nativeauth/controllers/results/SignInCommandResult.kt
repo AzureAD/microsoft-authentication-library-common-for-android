@@ -42,8 +42,8 @@ interface SignInCommandResult {
         override val correlationId: String,
         val authenticationResult: ILocalAuthenticationResult
     ) : SignInStartCommandResult, SignInWithContinuationTokenCommandResult,
-        SignInSubmitCodeCommandResult,
-        SignInSubmitPasswordCommandResult {
+        SignInSubmitCodeCommandResult, SignInSubmitPasswordCommandResult,
+        MFASubmitChallengeCommandResult {
         override fun toUnsanitizedString(): String = "Complete(correlationId=$correlationId)"
 
         override fun toString(): String = toUnsanitizedString()
@@ -98,9 +98,22 @@ interface SignInCommandResult {
         val errorDescription: String,
         val errorCodes: List<Int>,
         val subError: String
-    ) : SignInSubmitCodeCommandResult {
+    ) : SignInSubmitCodeCommandResult, MFASubmitChallengeCommandResult {
         override fun toUnsanitizedString(): String = "IncorrectCode(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes, subError=$subError)"
 
         override fun toString(): String = "IncorrectCode(correlationId=$correlationId)"
+    }
+
+    data class MFARequired(
+        override val correlationId: String,
+        val continuationToken: String,
+        val error: String,
+        val errorDescription: String,
+        val errorCodes: List<Int>,
+        val subError: String
+    ) : SignInStartCommandResult, SignInSubmitPasswordCommandResult {
+        override fun toUnsanitizedString(): String = "MFARequired(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes, subError=$subError)"
+
+        override fun toString(): String = "MFARequired(correlationId=$correlationId)"
     }
 }

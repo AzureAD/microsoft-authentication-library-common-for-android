@@ -80,6 +80,10 @@ class SignInChallengeApiResponse(
                 when {
                     error.isInvalidRequest() && subError.isIntrospectRequired() -> {
                         SignInChallengeApiResult.IntrospectRequired(
+                            error = error.orEmpty(),
+                            subError = subError.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            errorCodes = errorCodes.orEmpty(),
                             correlationId = correlationId
                         )
                     }
