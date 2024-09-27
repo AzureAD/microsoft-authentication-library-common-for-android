@@ -23,21 +23,22 @@
 package com.microsoft.identity.common.internal.fido;
 
 import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 
 /**
  * An exception class which holds attributes from the legacy FIDO2 API error responses.
  */
 public class LegacyFido2ApiException extends BaseException {
 
-    public static final String NULL_OBJECT = "null_object";
+    public static final String NULL_OBJECT = ErrorStrings.NULL_OBJECT;
 
-    public static final String BAD_ACTIVITY_RESULT_CODE = "bad_activity_result_code";
+    public static final String BAD_ACTIVITY_RESULT_CODE = ErrorStrings.BAD_ACTIVITY_RESULT_CODE;
 
-    public static final String UNKNOWN_ERROR = "unknown_error";
+    public static final String UNKNOWN_ERROR = ErrorStrings.UNKNOWN_ERROR;
 
-    public static final String GET_PENDING_INTENT_ERROR = "get_pending_intent_error";
+    public static final String GET_PENDING_INTENT_ERROR = ErrorStrings.GET_PENDING_INTENT_ERROR;
 
-    public static final String GET_PENDING_INTENT_CANCELED = "get_pending_intent_canceled";
+    public static final String GET_PENDING_INTENT_CANCELED = ErrorStrings.GET_PENDING_INTENT_CANCELED;
 
     public LegacyFido2ApiException(final String errorCode) {
         super(errorCode);
