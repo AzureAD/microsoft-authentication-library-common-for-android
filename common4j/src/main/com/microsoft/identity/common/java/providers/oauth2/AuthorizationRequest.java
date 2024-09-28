@@ -233,6 +233,11 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
             return self();
         }
 
+        /**
+         * Adds entry to existing extra query param list. If list is null, creates and
+         * adds the entry.
+         * @param extraQueryParam a {@link Map.Entry<String, String>}
+         */
         public B addExtraQueryParam(@NonNull final Map.Entry<String, String> extraQueryParam) {
             if (mExtraQueryParams == null) {
                 mExtraQueryParams = new ArrayList<>();
@@ -251,6 +256,12 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
             return self();
         }
 
+        /**
+         * Adds key, value to existing headers. If headers are is null, creates and
+         * puts the key and value.
+         * @param key header key to be added
+         * @param value header value to be added
+         */
         public B addRequestHeader(@NonNull final String key, final String value) {
             if (mRequestHeaders == null) {
                 mRequestHeaders = new HashMap<>();
