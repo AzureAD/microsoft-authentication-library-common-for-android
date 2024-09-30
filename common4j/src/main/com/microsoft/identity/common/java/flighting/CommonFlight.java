@@ -78,7 +78,12 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to stop returning AAD RT back to calling apps.
      */
-    STOP_RETURNING_AAD_RT_BACK_TO_CALLING_APP("StopReturningAadRtBackToCallingApp", false);
+    STOP_RETURNING_AAD_RT_BACK_TO_CALLING_APP("StopReturningAadRtBackToCallingApp", false),
+
+    /**
+     * Flight to enable the legacy FIDO security key additional logic. Default is true for common.
+     */
+    ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC("EnableLegacyFidoSecurityKeyLogic", true);
 
     private String key;
     private Object defaultValue;
