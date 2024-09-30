@@ -32,6 +32,8 @@ import org.junit.Assert;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A representation of the Broker API Fragment that handles the interactions with UI.
@@ -81,12 +83,38 @@ public class BrokerApiFragment extends AbstractBrokerHost {
     /**
      * Restores the MSA accounts.
      *
-     * @param expectedNumberOfRestoredAccounts the expected number of the accounts restored.
+     * @param expectedRestoreAccountNames the expected number of the accounts restored.
      */
-    public void restoreMsaAccounts(final int expectedNumberOfRestoredAccounts) {
+    public void restoreMsaAccounts(final List<String> expectedRestoreAccountNames) {
         clickButton(RESTORE_MSA_ACCOUNTS_BUTTON_ID);
-        final String dialogBoxText = dismissDialogBoxAndGetText();
-        Assert.assertTrue(dialogBoxText.contains(String.valueOf(expectedNumberOfRestoredAccounts)));
+        UiObject dialogBox;
+        final List<String> restoredAccountsNames = new ArrayList<>();
+        do {
+            final String restoreAccountsText = dismissDialogBoxAndGetText();
+            if (!expectedRestoreAccountNames.isEmpty() && restoreAccountsText != null && restoreAccountsText.contains("No accounts")) {
+                Assert.fail("No accounts restored");
+            } else if (restoreAccountsText != null) {
+                Pattern pattern = Pattern.compile("AccountName\\s*:\\s*([\\w.@]+)");
+                Matcher matcher = pattern.matcher(restoreAccountsText);
+
+                if (matcher.find()) {
+                    // Extract the account name
+                    String accountName = matcher.group(1);
+                    restoredAccountsNames.add(accountName);
+                }
+            }
+            ThreadUtils.sleepSafely(2000, TAG, "Waiting for the dialog box to disappear");
+            dialogBox = UiAutomatorUtils.obtainUiObjectWithResourceId(DIALOG_BOX_RESOURCE_ID);
+        } while (dialogBox.exists());
+
+        if (expectedRestoreAccountNames.isEmpty() && !restoredAccountsNames.isEmpty()) {
+            Assert.fail("Expected to not restore any accounts but 1 or more accounts were restored!");
+        }
+        for (String expectedRestoreAccountName : expectedRestoreAccountNames) {
+          if (!restoredAccountsNames.contains(expectedRestoreAccountName)) {
+              Assert.fail("Expected account "+ expectedRestoreAccountName + " not restored!");
+          }
+        }
     }
 
     /**
