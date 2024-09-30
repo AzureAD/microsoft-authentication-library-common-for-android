@@ -23,28 +23,51 @@
 package com.microsoft.identity.common.internal.fido
 
 import android.content.Context
+import android.os.Build
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.PublicKeyCredential
+import androidx.credentials.exceptions.NoCredentialException
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.logging.Logger
+import io.opentelemetry.api.trace.Span
 
 /**
  * Makes calls to the Android Credential Manager API in order to return an attestation.
+ *
+ * @param context Android context.
+ * @param legacyManager Legacy FIDO2 API manager to use if the Credential Manager API doesn't work for the particular device/purpose. Optional.
  */
-class CredManFidoManager (val context: Context) : IFidoManager {
+class CredManFidoManager (val context: Context,
+                          private val legacyManager: IFidoManager?) : IFidoManager {
 
-    val credentialManager = CredentialManager.create(context)
+    companion object {
+        val TAG = CredManFidoManager::class.simpleName.toString()
+    }
+
+    private val credentialManager = CredentialManager.create(context)
 
     /**
      * Interacts with the FIDO credential provider and returns an assertion.
      *
      * @param challenge AuthFidoChallenge received from the server.
+     * @param relyingPartyIdentifier rpId received from the server.
+     * @param allowedCredentials List of allowed credentials to filter by.
+     * @param userVerificationPolicy User verification policy string.
+     * @param span OpenTelemetry span.
      * @return assertion
      */
     override suspend fun authenticate(challenge: String,
                                       relyingPartyIdentifier: String,
                                       allowedCredentials: List<String>?,
-                                      userVerificationPolicy: String): String {
+                                      userVerificationPolicy: String,
+                                      span: Span): String {
+        val methodTag = "$TAG:authenticate"
+        span.setAttribute(
+            AttributeName.fido_manager.name,
+            TAG
+        )
         val requestJson = WebAuthnJsonUtil.createJsonAuthRequest(
             challenge,
             relyingPartyIdentifier,
@@ -55,13 +78,34 @@ class CredManFidoManager (val context: Context) : IFidoManager {
             requestJson = requestJson
         )
         val getCredRequest = GetCredentialRequest(
-            listOf(publicKeyCredentialOption)
+            credentialOptions = listOf(publicKeyCredentialOption),
+            // We're setting preferImmediatelyAvailableCredentials in the CredMan getCredentialRequest object to true if the device OS is Android 13 or lower.
+            // This ensures the behavior where no dialog from CredMan is shown if no passkey cred is present.
+            // The end goal is for an Android <= 13 user who only has a security key to see one dialog which will allow them to authenticate.
+            preferImmediatelyAvailableCredentials = (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
         )
-        val result = credentialManager.getCredential(
-            context = context,
-            request = getCredRequest
-        )
-        val credential: PublicKeyCredential = result.credential as PublicKeyCredential
-        return WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(credential.authenticationResponseJson)
+        try {
+            Logger.info(methodTag, "Calling Credential Manager with a GetCredentialRequest.")
+            val result = credentialManager.getCredential(
+                context = context,
+                request = getCredRequest
+            )
+            val credential: PublicKeyCredential = result.credential as PublicKeyCredential
+            return WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(credential.authenticationResponseJson)
+        } catch (e: NoCredentialException) {
+            // For version lower than Android 14, if NoCredentialException is returned,
+            // this means a UI dialog wasn't even shown to allow usage of a security key.
+            // Thus we need to call the legacy FIDO2 API here, if present.
+            if (legacyManager != null) {
+                 return legacyManager.authenticate(
+                     challenge = challenge,
+                     relyingPartyIdentifier = relyingPartyIdentifier,
+                     allowedCredentials = allowedCredentials,
+                     userVerificationPolicy = userVerificationPolicy,
+                     span = span)
+            } else {
+                throw e
+            }
+        }
     }
 }
