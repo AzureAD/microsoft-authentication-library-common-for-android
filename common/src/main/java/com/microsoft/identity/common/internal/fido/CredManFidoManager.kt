@@ -35,6 +35,9 @@ import io.opentelemetry.api.trace.Span
 
 /**
  * Makes calls to the Android Credential Manager API in order to return an attestation.
+ *
+ * @param context Android context.
+ * @param legacyManager Legacy FIDO2 API manager to use if the Credential Manager API doesn't work for the particular device/purpose. Optional.
  */
 class CredManFidoManager (val context: Context,
                           private val legacyManager: IFidoManager?) : IFidoManager {
