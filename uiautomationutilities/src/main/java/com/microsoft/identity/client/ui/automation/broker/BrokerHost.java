@@ -61,8 +61,6 @@ public class BrokerHost extends AbstractTestBroker {
     private final static String FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER = "ENABLE_MULTIPLE_WORKPLACE_JOIN_PP";
     private final static String FLIGHT_GENERATE_AND_SAVE_TRANSFER_TOKEN = "EnableGenerateAndStoreTransferTokens";
 
-    private final static String FLIGHT_GENERATE_AND_SAVE_TRANSFER_TOKEN = "EnableGenerateAndStoreTransferTokens";
-
     // name for broker host APKs
     public final static String BROKER_HOST_APK = "BrokerHost.apk";
     public final static String OLD_BROKER_HOST_APK = "OldBrokerHost.apk";
@@ -333,11 +331,6 @@ public class BrokerHost extends AbstractTestBroker {
      * Changes flight provider to local flights provider and sets
      * transfer token generation flight flag to true.
      */
-    public void enableGenerateAndSaveTransferToken() {
-        Logger.i(TAG, "Enable Transfer token generation");
-        setLocalFlight(FLIGHT_GENERATE_AND_SAVE_TRANSFER_TOKEN, Boolean.toString(true));
-    }
-
     public void enableGenerateAndSaveTransferToken() {
         Logger.i(TAG, "Enable Transfer token generation");
         setLocalFlight(FLIGHT_GENERATE_AND_SAVE_TRANSFER_TOKEN, Boolean.toString(true));
