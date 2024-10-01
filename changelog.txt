@@ -1,4 +1,4 @@
-vNext
+Version 18.1.0
 ----------
 - [MINOR] Use legacy FIDO2 API to provide security key support to Android 13 devices (#2508)
 
