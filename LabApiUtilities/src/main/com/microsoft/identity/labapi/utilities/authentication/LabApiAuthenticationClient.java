@@ -34,6 +34,8 @@ import com.microsoft.identity.labapi.utilities.exception.LabError;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import lombok.NonNull;
 
@@ -45,6 +47,8 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
     private final static String AUTHORITY = "https://login.microsoftonline.com/" + TENANT_ID;
     private final static String KEYSTORE_TYPE = "Windows-MY";
     private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
+    private final int DEFAULT_ACCESS_TOKEN_RETRIES = 2;
+    private final int ATTEMPT_RETRY_WAIT = 3;
     private final String mLabCredential;
     private final String mLabCertPassword;
     private final String mScope;
@@ -72,6 +76,45 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
 
     @Override
     public String getAccessToken() throws LabApiException {
+        return getAccessToken(DEFAULT_ACCESS_TOKEN_RETRIES);
+    }
+
+    public String getAccessToken(final int retries) throws LabApiException {
+
+        // Do this in a loop, if we get an exception or null result, try again
+        for (int i = 0; i < retries; i++) {
+            System.out.printf(Locale.ENGLISH, "getAccessToken attempt #%d%n", (i + 1));
+
+            try {
+                final String result = getAccessTokenInternal();
+                if (result != null) {
+                    return result;
+                }
+            } catch (LabApiException labApiException) {
+                if (i < (retries - 1)) {
+                    System.out.printf(
+                            Locale.ENGLISH,
+                            "getAccessToken attempt #%d%n failed: %s", (i + 1),
+                            labApiException
+                    );
+
+                    try {
+                        Thread.sleep(TimeUnit.SECONDS.toMillis(ATTEMPT_RETRY_WAIT));
+                    } catch (final InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    // last attempt, just throw the exception back
+                    throw labApiException;
+                }
+            }
+        }
+
+        // Retries exhausted, no error, but still a null result
+        return null;
+    }
+
+    private String getAccessTokenInternal() throws LabApiException {
         final IConfidentialAuthClient confidentialAuthClient = new Msal4jAuthClient();
         final TokenParameters tokenParameters = TokenParameters.builder()
                 .clientId(mClientId)

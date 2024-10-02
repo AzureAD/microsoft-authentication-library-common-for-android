@@ -58,13 +58,13 @@ public class LabClient implements ILabClient {
 
     private final LabApiAuthenticationClient mLabApiAuthenticationClient;
     private final long PASSWORD_RESET_WAIT_DURATION = TimeUnit.SECONDS.toMillis(65);
-    private final long LAB_API_RETRY_WAIT = TimeUnit.SECONDS.toMillis(2);
+    private final long LAB_API_RETRY_WAIT = TimeUnit.SECONDS.toMillis(5);
 
     /**
      * Temp users API provided by Lab team can often take more than 10 seconds to return...hence, we
      * are overriding the read timeout.
      */
-    private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(35);
+    private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(15);
 
     public static final long TEMP_USER_WAIT_TIME = TimeUnit.SECONDS.toMillis(35);
 

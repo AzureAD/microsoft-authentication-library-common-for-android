@@ -56,6 +56,7 @@ public class ApiClient {
     private final String AUTH_TYPE = "Access Token";
 
     private static final String DEFAULT_BASE_PATH = "https://msidlab.com";
+    private final long LAB_API_RETRY_WAIT = TimeUnit.SECONDS.toMillis(5);
     private String basePath;
     private boolean debugging = false;
     private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
@@ -854,8 +855,25 @@ public class ApiClient {
             Response response = call.execute();
             T data = handleResponse(response, returnType);
             return new ApiResponse<T>(response.code(), response.headers().toMultimap(), data);
-        } catch (IOException e) {
-            throw new ApiException(e);
+        } catch (IOException exception) {
+            // If we receive an IO Exception, we should retry once, to avoid inconsistent
+            // network causing test failures. The timeout has been reduced to allow this.
+
+            try {
+                // Wait for a bit
+                try {
+                    Thread.sleep(LAB_API_RETRY_WAIT);
+                } catch (final InterruptedException e2) {
+                    e2.printStackTrace();
+                }
+                Response response = call.execute();
+                T data = handleResponse(response, returnType);
+                return new ApiResponse<T>(response.code(), response.headers().toMultimap(), data);
+            } catch (IOException secondException) {
+                // If we get another IO Exception, we should fail. Most likely another retry
+                // will not resolve the issue.
+                throw new ApiException(secondException);
+            }
         }
     }
 
