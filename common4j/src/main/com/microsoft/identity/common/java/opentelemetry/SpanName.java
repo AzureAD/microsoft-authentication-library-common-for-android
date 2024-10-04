@@ -33,6 +33,8 @@ public enum SpanName {
     GetAccounts,
     RemoveAccount,
     WorkplaceJoin,
+    preInterruptInteractive,
+    preInterruptSilent,
     DoDiscovery,
     WorkplaceLeave,
     DeviceState,
