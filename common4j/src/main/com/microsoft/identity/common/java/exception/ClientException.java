@@ -88,6 +88,11 @@ public class ClientException extends BaseException {
     public static final String DEVICE_TOKEN_EMPTY_OR_NULL = "device_token_empty_or_null";
 
     /**
+     * Error occurred while requesting a device token.
+     */
+    public static final String DEVICE_TOKEN_REQUEST_FAILED = "device_token_request_failed";
+
+    /**
      * The sdk failed to parse the Json format.
      */
     public static final String JSON_PARSE_FAILURE = "json_parse_failure";
@@ -423,6 +428,21 @@ public class ClientException extends BaseException {
      * The workplacejoin data is null.
      */
     public static final String WORKPLACE_JOIN_DATA_NULL = "workplace_join_data_null";
+
+    /**
+     * An error occurred related to device registration.
+     */
+    public static final String WORKPLACE_JOIN_DEVICE_REGISTRATION_ERROR = "workplace_join_device_registration_error";
+
+    /**
+     * An error occurred related to device attribute patching.
+     */
+    public static final String WORKPLACE_JOIN_DEVICE_ATTRIBUTE_PATCHING_ERROR = "workplace_join_device_attribute_patching_error";
+
+    /**
+     * An error occurred related to getting device state.
+     */
+    public static final String WORKPLACE_JOIN_DEVICE_STATE_ERROR = "workplace_join_device_state_error";
 
     /**
      * Error code to be returned when the broker determines that only account manager can be used
