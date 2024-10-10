@@ -102,37 +102,46 @@ class TemporaryEmailService {
         var otpValue = ""
 
         while (count < 3) {
-            val inboxEmails = api.retrieveMailbox(emailAddress)
-            val newEmailIds = inboxEmails
-                .map { it.id }
-                .minus(previousEmailIds)
+            try {
+                val inboxEmails = api.retrieveMailbox(emailAddress)
+                val newEmailIds = inboxEmails
+                    .map { it.id }
+                    .minus(previousEmailIds)
 
-            if (newEmailIds.isNotEmpty()) {
-                latestEmailId = newEmailIds.first()
+                if (newEmailIds.isNotEmpty()) {
+                    latestEmailId = newEmailIds.first()
 
-                val emailContent = api.retrieveEmail(emailAddress, latestEmailId)
-                otpValue = retrieveOtpFromEmailBody(emailContent.textBody)
+                    val emailContent = api.retrieveEmail(emailAddress, latestEmailId)
+                    otpValue = retrieveOtpFromEmailBody(emailContent.textBody)
 
-                validCodeRetrieved = codeWasValid(otpValue)
+                    validCodeRetrieved = codeWasValid(otpValue)
 
-                if (validCodeRetrieved) {
-                    break
+                    if (validCodeRetrieved) {
+                        break
+                    }
                 }
+
+                //captures the existing list of email IDs checked to ensure the next pass will only process new emails received
+                previousEmailIds.addAll(newEmailIds)
+
+                // Wait before retrying
+                Thread.sleep(3000)
+
+                // Max 3 retries
+                count++
+            } catch (e: Exception) {
+                //1secmail server occasionally returns an internal server error which causes the API client to throw an exception
+                //In this case, wait, then retry the operation
+                Thread.sleep(3000)
+
+                // Max 3 retries
+                count++
             }
-
-            //captures the existing list of email IDs checked to ensure the next pass will only process new emails received
-            previousEmailIds.addAll(newEmailIds)
-
-            // Wait before retrying
-            Thread.sleep(3000)
-
-            // Max 3 retries
-            count++
         }
 
         // After the retries we still weren't able to retrieve a valid code from the inbox, so fail and restart the test.
         if (!validCodeRetrieved) {
-            throw IllegalStateException("Unable to fetch valid code for user $emailAddress")
+            throw IllegalStateException("Unable to fetch valid code for user")
         }
 
         return otpValue
