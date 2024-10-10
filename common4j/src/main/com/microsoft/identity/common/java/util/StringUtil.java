@@ -477,9 +477,9 @@ public class StringUtil {
      */
     public static void throwIfArgumentIsNullOrEmpty(final @Nullable String argument,
                                                     final @NonNull String argumentName,
-                                                    final @NonNull String methodName) throws NullPointerException {
+                                                    final @NonNull String methodTag) throws NullPointerException {
         if (isNullOrEmpty(argument)) {
-            Logger.error(TAG + methodName, argumentName + " is null or empty.", null);
+            Logger.error(methodTag, argumentName + " is null or empty.", null);
             throw new NullPointerException(argumentName + " is null or empty.");
         }
     }
