@@ -409,7 +409,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             getActivity().startActivity(intent);
             Logger.info(methodTag, "Sent Intent to launch Amazon app");
-        } catch (Throwable throwable) {
+        } catch (final Throwable throwable) {
             Logger.error(methodTag, "Failed to launch Amazon app.", e);
         }
     }
