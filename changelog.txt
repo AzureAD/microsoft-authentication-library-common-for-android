@@ -1,7 +1,7 @@
 vNext
 ----------
 - [MINOR] Use legacy FIDO2 API to provide security key support to Android 13 devices (#2508)
-- [MINOR] Handle error gracefully when amazon app url scheme is not found
+- [MINOR] Handle error gracefully when amazon app url scheme is not found (#2515)
 
 Version 18.0.0 
 ----------
