@@ -869,7 +869,7 @@ public class ApiClient {
                 final Response response = call.execute();
                 final T data = handleResponse(response, returnType);
                 return new ApiResponse<T>(response.code(), response.headers().toMultimap(), data);
-            } catch (IOException secondException) {
+            } catch (final IOException secondException) {
                 // If we get another IO Exception, we should fail. Most likely another retry
                 // will not resolve the issue.
                 throw new ApiException(secondException);
