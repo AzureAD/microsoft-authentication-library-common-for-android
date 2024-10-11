@@ -855,7 +855,7 @@ public class ApiClient {
             Response response = call.execute();
             T data = handleResponse(response, returnType);
             return new ApiResponse<T>(response.code(), response.headers().toMultimap(), data);
-        } catch (IOException exception) {
+        } catch (final IOException exception) {
             // If we receive an IO Exception, we should retry once, to avoid inconsistent
             // network causing test failures. The timeout has been reduced to allow this.
 
