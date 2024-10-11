@@ -88,8 +88,8 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
     public String getAccessToken(final int retries) throws LabApiException {
 
         // Do this in a loop, if we get an exception or null result, try again
-        for (int i = 0; i < retries; i++) {
-            System.out.printf(Locale.ENGLISH, "getAccessToken attempt #%d%n", (i + 1));
+        for (int i = 1; i <= retries; i++) {
+            System.out.printf(Locale.ENGLISH, "getAccessToken attempt #%d%n", i);
 
             try {
                 final String result = getAccessTokenInternal();
@@ -97,10 +97,10 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
                     return result;
                 }
             } catch (final LabApiException labApiException) {
-                if (i < (retries - 1)) {
+                if (i < retries) {
                     System.out.printf(
                             Locale.ENGLISH,
-                            "getAccessToken attempt #%d%n failed: %s", (i + 1),
+                            "getAccessToken attempt #%d%n failed: %s", i,
                             labApiException
                     );
 
