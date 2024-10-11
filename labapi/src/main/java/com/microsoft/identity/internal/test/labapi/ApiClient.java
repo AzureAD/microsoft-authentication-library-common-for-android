@@ -866,8 +866,8 @@ public class ApiClient {
                 } catch (final InterruptedException e2) {
                     e2.printStackTrace();
                 }
-                Response response = call.execute();
-                T data = handleResponse(response, returnType);
+                final Response response = call.execute();
+                final T data = handleResponse(response, returnType);
                 return new ApiResponse<T>(response.code(), response.headers().toMultimap(), data);
             } catch (IOException secondException) {
                 // If we get another IO Exception, we should fail. Most likely another retry
