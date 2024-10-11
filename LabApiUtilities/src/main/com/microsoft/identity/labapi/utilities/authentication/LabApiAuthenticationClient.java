@@ -79,6 +79,12 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
         return getAccessToken(DEFAULT_ACCESS_TOKEN_RETRIES);
     }
 
+    /**
+     * Attempt to acquire an access token. Accepts a parameter to denote number of retries
+     * @param retries how many times to attempt acquire access token before returning a failure.
+     * @return an access token for Lab API
+     * @throws LabApiException exception given back by Lab API
+     */
     public String getAccessToken(final int retries) throws LabApiException {
 
         // Do this in a loop, if we get an exception or null result, try again
