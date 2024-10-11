@@ -863,8 +863,8 @@ public class ApiClient {
                 // Wait for a bit
                 try {
                     Thread.sleep(LAB_API_RETRY_WAIT);
-                } catch (final InterruptedException e2) {
-                    e2.printStackTrace();
+                } catch (final InterruptedException exception) {
+                    exception.printStackTrace();
                 }
                 final Response response = call.execute();
                 final T data = handleResponse(response, returnType);
