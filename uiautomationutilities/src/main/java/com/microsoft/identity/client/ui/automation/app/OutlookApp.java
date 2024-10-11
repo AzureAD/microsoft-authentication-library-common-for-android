@@ -48,6 +48,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
     public static final String OUTLOOK_PACKAGE_NAME = "com.microsoft.office.outlook";
     public static final String OUTLOOK_APP_NAME = "Microsoft Outlook";
     public static final String OUTLOOK_APK = "Outlook.apk";
+    public static boolean shouldHandleIntroDialogueAfterSignIn = true;
 
     public OutlookApp() {
         super(OUTLOOK_PACKAGE_NAME, OUTLOOK_APP_NAME, new PlayStore());
@@ -116,6 +117,9 @@ public class OutlookApp extends App implements IFirstPartyApp {
     @Override
     public void confirmAccount(@NonNull final String username) {
         Logger.i(TAG, "Confirming account with supplied username is signed in..");
+
+        handleIntroDialogueAfterSignIn();
+
         // Click the account drawer
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/account_button", FIND_UI_ELEMENT_TIMEOUT_LONG);
 
@@ -125,6 +129,13 @@ public class OutlookApp extends App implements IFirstPartyApp {
                 "Provided user account exists in Outlook App.",
                 testAccountLabel.waitForExists(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG)
         );
+    }
+
+    private void handleIntroDialogueAfterSignIn() {
+        if (shouldHandleIntroDialogueAfterSignIn) {
+            UiAutomatorUtils.handleButtonClickSafely("com.microsoft.office.outlook:id/btn_primary_button");
+            shouldHandleIntroDialogueAfterSignIn = false;
+        }
     }
 
     private void signIn(@NonNull final String username,
@@ -169,6 +180,8 @@ public class OutlookApp extends App implements IFirstPartyApp {
     public void signInThroughSnackBar(@NonNull final String username,
                                       @NonNull final String password,
                                       @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+        handleIntroDialogueAfterSignIn();
+
         // Click SIGN IN Button in snackBar
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/snackbar_action");
 
