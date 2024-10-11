@@ -855,7 +855,7 @@ public class ApiClient {
             Response response = call.execute();
             T data = handleResponse(response, returnType);
             return new ApiResponse<T>(response.code(), response.headers().toMultimap(), data);
-        } catch (IOException exception) {
+        } catch (final IOException exception) {
             // If we receive an IO Exception, we should retry once, to avoid inconsistent
             // network causing test failures. The timeout has been reduced to allow this.
 
@@ -863,13 +863,13 @@ public class ApiClient {
                 // Wait for a bit
                 try {
                     Thread.sleep(LAB_API_RETRY_WAIT);
-                } catch (final InterruptedException e2) {
-                    e2.printStackTrace();
+                } catch (final InterruptedException exception) {
+                    exception.printStackTrace();
                 }
-                Response response = call.execute();
-                T data = handleResponse(response, returnType);
+                final Response response = call.execute();
+                final T data = handleResponse(response, returnType);
                 return new ApiResponse<T>(response.code(), response.headers().toMultimap(), data);
-            } catch (IOException secondException) {
+            } catch (final IOException secondException) {
                 // If we get another IO Exception, we should fail. Most likely another retry
                 // will not resolve the issue.
                 throw new ApiException(secondException);

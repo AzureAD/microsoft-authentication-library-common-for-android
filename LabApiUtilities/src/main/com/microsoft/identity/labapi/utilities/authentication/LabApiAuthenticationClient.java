@@ -90,7 +90,7 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
                 if (result != null) {
                     return result;
                 }
-            } catch (LabApiException labApiException) {
+            } catch (final LabApiException labApiException) {
                 if (i < (retries - 1)) {
                     System.out.printf(
                             Locale.ENGLISH,
