@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.cache
 
 import com.microsoft.identity.common.internal.broker.BrokerData
-import net.jcip.annotations.ThreadSafe
+import javax.annotation.concurrent.ThreadSafe
 
 
 /**

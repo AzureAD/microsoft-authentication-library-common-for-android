@@ -66,7 +66,7 @@ public class UrlUtil {
      */
     public static URL appendPathAndQueryToURL(@NonNull final URL urlToAppend,
                                       @Nullable final String pathString,
-                                      @Nullable final String queryParam)
+                                      @Nullable final Map<String, String> queryParam)
             throws URISyntaxException, MalformedURLException {
 
         if (StringUtil.isNullOrEmpty(pathString)) {
@@ -99,9 +99,8 @@ public class UrlUtil {
         }
 
         builder.setPathSegments(pathSegments);
-        if (queryParam != null && !queryParam.isEmpty()) {
-            builder.setQuery(queryParam);
-        }
+        builder.addParametersIfAbsent(queryParam);
+
         return builder.build().toURL();
     }
 

@@ -41,7 +41,7 @@ public class Constants {
     public static final String MOCK_STATE = "MOCK_STATE";
     public static final String MOCK_STATE_ENCODED = "TU9DS19TVEFURQ";
     public static final String MOCK_SCOPE = "MOCK_SCOPE MOCK_SCOPE2";
-    public static final String MOCK_SCOPE_ENCODED = "MOCK_SCOPE+MOCK_SCOPE2";
+    public static final String MOCK_SCOPE_ENCODED = "MOCK_SCOPE%20MOCK_SCOPE2";
     public static final String MOCK_QUERY_1 = "MOCK_QUERY_1";
     public static final String MOCK_QUERY_2 = "MOCK_QUERY_2";
     public static final String MOCK_VALUE_1 = "MOCK_VALUE_1";
