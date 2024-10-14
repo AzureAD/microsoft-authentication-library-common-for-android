@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
+import io.opentelemetry.api.trace.Span
+
 class TestFidoManager () : IFidoManager {
     companion object {
         //Example assertion with values taken from https://developer.android.com/training/sign-in/passkeys#configure
@@ -38,7 +40,8 @@ class TestFidoManager () : IFidoManager {
     override suspend fun authenticate(challenge: String,
                                       relyingPartyIdentifier: String,
                                       allowedCredentials: List<String>?,
-                                      userVerificationPolicy: String): String {
+                                      userVerificationPolicy: String,
+                                      span: Span): String {
         if (challenge == EXCEPTION_CHALLENGE) {
             throw Exception(EXCEPTION_MESSAGE)
         }

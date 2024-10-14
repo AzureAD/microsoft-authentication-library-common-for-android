@@ -20,20 +20,35 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils.nativeauth
+package com.microsoft.identity.common.internal.fido;
+
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 
 /**
- * Test configuration retrieved from Labs KeyVault and used in native auth tests.
+ * An exception class which holds attributes from the legacy FIDO2 API error responses.
  */
-enum class ConfigType(val stringValue: String) {
-    SSPR("SSPR"),
-    SIGN_UP_PASSWORD("SIGN_UP_PASSWORD"),
-    SIGN_IN_PASSWORD("SIGN_IN_PASSWORD"),
-    SIGN_UP_OTP("SIGN_UP_OTP"),
-    SIGN_IN_OTP("SIGN_IN_OTP"),
-    SIGN_UP_PASSWORD_ATTRIBUTES("SIGN_UP_PASSWORD_ATTRIBUTES"),
-    SIGN_UP_OTP_ATTRIBUTES("SIGN_UP_OTP_ATTRIBUTES"),
-    SIGN_IN_MFA_SINGLE_AUTH("SIGN_IN_MFA_SINGLE_AUTH"),
-    SIGN_IN_MFA_MULTI_AUTH("SIGN_IN_MFA_MULTI_AUTH"),
-    ACCESS_TOKEN("ACCESS_TOKEN")
+public class LegacyFido2ApiException extends BaseException {
+
+    public static final String NULL_OBJECT = ErrorStrings.NULL_OBJECT;
+
+    public static final String BAD_ACTIVITY_RESULT_CODE = ErrorStrings.BAD_ACTIVITY_RESULT_CODE;
+
+    public static final String UNKNOWN_ERROR = ErrorStrings.UNKNOWN_ERROR;
+
+    public static final String GET_PENDING_INTENT_ERROR = ErrorStrings.GET_PENDING_INTENT_ERROR;
+
+    public static final String GET_PENDING_INTENT_CANCELED = ErrorStrings.GET_PENDING_INTENT_CANCELED;
+
+    public LegacyFido2ApiException(final String errorCode) {
+        super(errorCode);
+    }
+
+    public LegacyFido2ApiException(final String errorCode, final String errorMessage) {
+        super(errorCode, errorMessage);
+    }
+
+    public LegacyFido2ApiException(final String errorCode, final String errorMessage, final Throwable throwable) {
+        super(errorCode, errorMessage, throwable);
+    }
 }

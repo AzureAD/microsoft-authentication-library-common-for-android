@@ -50,6 +50,8 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
+import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -116,12 +118,25 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private PermissionRequest mCameraPermissionRequest;
 
+    // This is used by LegacyFido2ApiManager to launch a PendingIntent received by the legacy API.
+    private ActivityResultLauncher<LegacyFido2ApiObject> mFidoLauncher;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        final String methodTag = TAG + ":onCreate";
         final FragmentActivity activity = getActivity();
         if (activity != null) {
             WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
+        }
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)
+                && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            mFidoLauncher = registerForActivityResult(
+                    new LegacyFidoActivityResultContract(),
+                    result -> {
+                        Logger.info(methodTag, "Legacy FIDO2 API result received.");
+                    }
+            );
         }
     }
 
@@ -454,6 +469,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         } else {
             Logger.error(methodTag, "Fragment destroyed, but smartcard usb discovery was unable to be stopped.", null);
         }
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)
+                && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+                && mFidoLauncher != null) {
+            // Note: mFidoLauncher shouldn't be null (based on the OS version check),
+            // but we should still have a check here just to be safe.
+            mFidoLauncher.unregister();
+        }
     }
 
     /**
@@ -485,6 +507,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    @Nullable
+    public ActivityResultLauncher<LegacyFido2ApiObject> getFidoLauncher() {
+        return mFidoLauncher;
     }
 
     /**
