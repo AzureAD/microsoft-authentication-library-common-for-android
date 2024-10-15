@@ -1,3 +1,7 @@
+V.Next
+---------
+- [PATCH] Provide empty image when no video is present on QR +PIN auth (#2424)
+
 Version 18.1.0
 ----------
 (common4j 15.1.0)
@@ -45,7 +49,6 @@ Version 17.6.1
 
 Version 17.5.0
 ---------
-- [PATCH] Provide empty image when no video is present on QR +PIN auth (#2424)
 - [MINOR] Update logic for matching requested claims for AT (#2401)
 - [MINOR] Updating YubiKit and CredMan versions (#2417)
 
