@@ -23,10 +23,6 @@
 
 package com.microsoft.identity.common.internal.broker;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_DEBUG_SIGNATURE;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
-
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -38,7 +34,6 @@ import android.util.Base64;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.logging.Logger;
@@ -255,27 +250,5 @@ public class PackageHelper {
 
     public static Signature[] getSignatures(@NonNull Context context) throws PackageManager.NameNotFoundException {
         return getSignatures(getPackageInfo(context.getPackageManager(), context.getPackageName()));
-    }
-
-    /**
-     * Validate if provided package name is a valid teams app package
-     * @return true if context is from Teams app, false otherwise
-     */
-    public boolean verifyIfValidTeamsPackage(final String packageName) {
-        // Bypass if the request made on a debug MSAL build.
-        if (BuildConfig.DEBUG) {
-            return true;
-        }
-
-        if (packageName.equals(IPPHONE_APP_PACKAGE_NAME) &&
-                isPackageInstalledAndEnabled(IPPHONE_APP_PACKAGE_NAME)) {
-            final String currentSignatureForTeamsApp = getSha1SignatureForPackage(IPPHONE_APP_PACKAGE_NAME);
-            if (IPPHONE_APP_SIGNATURE.equals(currentSignatureForTeamsApp) ||
-                    IPPHONE_APP_DEBUG_SIGNATURE.equals(currentSignatureForTeamsApp)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
