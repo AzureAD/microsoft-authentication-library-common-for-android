@@ -85,7 +85,6 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlat
 /**
  * Authorization fragment with embedded webview.
  */
-@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private static final String TAG = WebViewAuthorizationFragment.class.getSimpleName();
@@ -285,6 +284,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // There is a issue in ESTS UX where it sends multiple camera permission requests.
                 // So, if there is already a camera permission request in progress we handle it here.
                 if (mCameraPermissionRequest != null) {
+                    Logger.info(methodTag, "Repeated request, granted? " + mCameraPermissionRequest.isGranted());
                     handleRepeatedCameraRequests(request);
                     return;
                 }
@@ -296,7 +296,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 } else {
                     launchCameraRequestActivity();
                 }
-
             }
         });
     }
@@ -311,13 +310,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      * @param request The permission request.
      */
     private void handleRepeatedCameraRequests(@NonNull final PermissionRequest request) {
-        final String methodTag = TAG + ":handleRepeatedRequests";
         final CameraPermissionRequest duplicatedRequest = new CameraPermissionRequest(request);
         if (mCameraPermissionRequest.isGranted()) {
-            Logger.info(methodTag, "Repeated request, granting the permission.");
             duplicatedRequest.grant();
         } else {
-            Logger.info(methodTag, "Repeated request, denying the permission");
             duplicatedRequest.denny();
         }
     }
@@ -331,7 +327,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         return ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED;
     }
-
 
     private final ActivityResultLauncher<String> cameraRequestActivity = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(),
@@ -369,7 +364,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 .setNegativeButton(R.string.qr_code_rationale_block, (dialog, id) -> mCameraPermissionRequest.denny());
         builder.show();
     }
-
 
     /**
      * Loads starting authorization request url into WebView.
