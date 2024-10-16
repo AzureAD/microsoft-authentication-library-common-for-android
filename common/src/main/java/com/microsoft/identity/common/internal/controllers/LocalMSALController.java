@@ -27,7 +27,6 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
-import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.commands.RefreshOnCommand;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
@@ -49,7 +48,6 @@ import com.microsoft.identity.common.java.controllers.CommandDispatcher;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.eststelemetry.PublicApiId;
 import com.microsoft.identity.common.java.exception.ArgumentException;
-import com.microsoft.identity.common.java.exception.BrokerRequiredException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
@@ -539,14 +537,10 @@ public class LocalMSALController extends BaseController {
      *
      */
     @Override
-    public PreferredAuthMethod getPreferredAuthMethod() throws BrokerRequiredException {
+    public PreferredAuthMethod getPreferredAuthMethod() {
         final String methodTag = TAG + ":getPreferredAuthMethod";
-        final BrokerRequiredException exception = new BrokerRequiredException(
-                BrokerData.getProdMicrosoftAuthenticator().getPackageName(),
-                null
-        );
-        Logger.error(methodTag, "Broker required.", exception);
-        throw exception;
+        Logger.warn(methodTag, "BrokerController is required, return PreferredAuthMethod.NONE");
+        return PreferredAuthMethod.NONE;
     }
 
     @Override
