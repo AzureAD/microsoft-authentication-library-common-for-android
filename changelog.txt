@@ -1,3 +1,7 @@
+vNext
+---------
+- [MINOR] Camera permission request behavior changes for QR + PIN Auth (#2524)
+
 Version 18.1.0
 ----------
 (common4j 15.1.0)
