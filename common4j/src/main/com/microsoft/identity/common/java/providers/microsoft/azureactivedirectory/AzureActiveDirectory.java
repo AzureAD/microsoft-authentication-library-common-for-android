@@ -201,13 +201,13 @@ public class AzureActiveDirectory
             // until the app is killed.
             HttpCache.flush();
 
-            Logger.info(TAG + methodName, "Parsing response.");
-            AzureActiveDirectoryInstanceResponse instanceResponse =
+            final AzureActiveDirectoryInstanceResponse instanceResponse =
                     ObjectMapper.deserializeJsonStringToObject(
                             response.getBody(),
                             AzureActiveDirectoryInstanceResponse.class
                     );
-            Logger.info(TAG + methodName, "Discovered ["
+
+            Logger.verbose(TAG + methodName, "Discovered ["
                     + instanceResponse.getClouds().size() + "] clouds.");
 
             for (final AzureActiveDirectoryCloud cloud : instanceResponse.getClouds()) {
