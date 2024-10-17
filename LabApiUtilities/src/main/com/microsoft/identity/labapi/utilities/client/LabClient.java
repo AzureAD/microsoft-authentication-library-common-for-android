@@ -70,6 +70,26 @@ public class LabClient implements ILabClient {
 
     @Override
     public ILabAccount getLabAccount(@NonNull final LabQuery labQuery) throws LabApiException {
+        // Adding a second attempt here, api sometimes fails to fetch the user.
+        try {
+            return getLabAccountInternalWithQuery(labQuery);
+        } catch (final Exception e){
+            // Seems new Lab API may fail temp user creation, without throwing a lab exception
+            // (we may get a non-error response, with a null temp user field)
+            // So, we will make this exception handling generic, and retry in all failure cases
+
+            // Wait for a bit
+            try {
+                Thread.sleep(LAB_API_RETRY_WAIT);
+            } catch (final InterruptedException e2) {
+                e2.printStackTrace();
+            }
+
+            return getLabAccountInternalWithQuery(labQuery);
+        }
+    }
+    
+    private ILabAccount getLabAccountInternalWithQuery(@NonNull final LabQuery labQuery) throws LabApiException {
         final List<ConfigInfo> configInfos = fetchConfigsFromLab(labQuery);
         // for each query, lab actually returns a list of accounts..all of which fit the criteria..
         // usually we only need one such account, and hence over here we are just picking the first
