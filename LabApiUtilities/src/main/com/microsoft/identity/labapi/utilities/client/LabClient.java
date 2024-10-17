@@ -64,7 +64,7 @@ public class LabClient implements ILabClient {
      * Temp users API provided by Lab team can often take more than 10 seconds to return...hence, we
      * are overriding the read timeout.
      */
-    private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(15);
+    private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(35);
 
     public static final long TEMP_USER_WAIT_TIME = TimeUnit.SECONDS.toMillis(35);
 
@@ -88,7 +88,7 @@ public class LabClient implements ILabClient {
             return getLabAccountInternalWithQuery(labQuery);
         }
     }
-    
+
     private ILabAccount getLabAccountInternalWithQuery(@NonNull final LabQuery labQuery) throws LabApiException {
         final List<ConfigInfo> configInfos = fetchConfigsFromLab(labQuery);
         // for each query, lab actually returns a list of accounts..all of which fit the criteria..
