@@ -36,9 +36,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.util.*;
 import java.util.Map.Entry;
@@ -826,31 +824,12 @@ public class ApiClient {
      */
     public <T> ApiResponse<T> execute(Call call, Type returnType) throws ApiException {
         try {
-            return executeInternal(call, returnType);
+            Response response = call.execute();
+            T data = handleResponse(response, returnType);
+            return new ApiResponse<T>(response.code(), response.headers().toMultimap(), data);
         } catch (final IOException exception) {
-            // If we receive an IO Exception, we should retry once, to avoid inconsistent
-            // network causing test failures. The timeout has been reduced to allow this.
-
-            try {
-                // Wait for a bit
-                try {
-                    Thread.sleep(LAB_API_RETRY_WAIT);
-                } catch (final InterruptedException interruptedException) {
-                    interruptedException.printStackTrace();
-                }
-                return executeInternal(call, returnType);
-            } catch (final IOException secondException) {
-                // If we get another IO Exception, we should fail. Most likely another retry
-                // will not resolve the issue.
-                throw new ApiException(secondException);
-            }
+            throw new ApiException(exception);
         }
-    }
-
-    private <T> ApiResponse<T> executeInternal(Call call, Type returnType) throws ApiException, IOException {
-        Response response = call.execute();
-        T data = handleResponse(response, returnType);
-        return new ApiResponse<T>(response.code(), response.headers().toMultimap(), data);
     }
 
     /**
