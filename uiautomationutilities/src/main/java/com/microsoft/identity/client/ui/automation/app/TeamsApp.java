@@ -59,7 +59,10 @@ public class TeamsApp extends App implements IFirstPartyApp {
 
     @Override
     public void handleFirstRun() {
-        // nothing needed here
+        if (shouldHandleFirstRun) {
+            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Get started");
+            shouldHandleFirstRun = false;
+        }
     }
 
     @Override

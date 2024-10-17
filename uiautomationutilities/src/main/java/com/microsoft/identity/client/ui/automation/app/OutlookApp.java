@@ -83,16 +83,20 @@ public class OutlookApp extends App implements IFirstPartyApp {
     @Override
     public void onAccountAdded() {
         Logger.i(TAG, "Handling UI after account is added on the App..");
+
+        // Sometime Outlook asks user to choose account type after entering password. I'm not sure what
+        // causes this UI to pop up, but adding a safe check here to choose Office account
+        UiAutomatorUtils.handleButtonClickSafely("com.microsoft.office.outlook:id/btn_add_account_o365_rest", CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
+
         // Make sure we are on add another account (shows up after an account is added)
         final UiObject addAnotherAccountScreen = UiAutomatorUtils.obtainUiObjectWithText("Add another account");
+
         Assert.assertTrue(
-                "Add another account screen doesn't appear in Outlook.",
-                addAnotherAccountScreen.waitForExists(FIND_UI_ELEMENT_TIMEOUT_LONG)
+                "Add another account screen doesn't appear in Outlook.", addAnotherAccountScreen.exists()
         );
 
         // click may be later
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/bottom_flow_navigation_start_button");
-
     }
 
     @Override
@@ -116,6 +120,9 @@ public class OutlookApp extends App implements IFirstPartyApp {
     @Override
     public void confirmAccount(@NonNull final String username) {
         Logger.i(TAG, "Confirming account with supplied username is signed in..");
+
+        handleIntroDialogueAfterSignIn();
+
         // Click the account drawer
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/account_button", FIND_UI_ELEMENT_TIMEOUT_LONG);
 
@@ -125,6 +132,10 @@ public class OutlookApp extends App implements IFirstPartyApp {
                 "Provided user account exists in Outlook App.",
                 testAccountLabel.waitForExists(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG)
         );
+    }
+
+    private void handleIntroDialogueAfterSignIn() {
+        UiAutomatorUtils.handleButtonClickSafely("com.microsoft.office.outlook:id/btn_primary_button", CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
     }
 
     private void signIn(@NonNull final String username,
@@ -152,7 +163,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
         // Click start btn
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/btn_primary_button");
 
-        Assert.assertTrue("Not on Accounts found page", UiAutomatorUtils.obtainUiObjectWithExactText("Accounts found").exists());
+        Assert.assertTrue("Not on Accounts found page", UiAutomatorUtils.obtainUiObjectWithExactText("Accounts found", CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT).exists());
         Assert.assertTrue("Couldn't find account:" + username, UiAutomatorUtils.obtainUiObjectWithText(username).exists());
 
         // Click Continue btn
@@ -169,6 +180,8 @@ public class OutlookApp extends App implements IFirstPartyApp {
     public void signInThroughSnackBar(@NonNull final String username,
                                       @NonNull final String password,
                                       @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+        handleIntroDialogueAfterSignIn();
+
         // Click SIGN IN Button in snackBar
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/snackbar_action");
 
