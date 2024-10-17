@@ -50,7 +50,7 @@ public class LabUserHelper {
     private static final Map<LabUserQuery, LabConfig> sLabConfigCache = new HashMap<>();
     private volatile static ConfidentialClientHelper instance = LabAuthenticationHelper.getInstance();
 
-    private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(15);
+    private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(35);
 
     /**
      * Reset the secret in use by the lab authentication helper.  This will rewrite the instance

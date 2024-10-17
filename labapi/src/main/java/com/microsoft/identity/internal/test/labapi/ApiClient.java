@@ -54,7 +54,6 @@ public class ApiClient {
     private final String AUTH_TYPE = "Access Token";
 
     private static final String DEFAULT_BASE_PATH = "https://msidlab.com";
-    private final long LAB_API_RETRY_WAIT = TimeUnit.SECONDS.toMillis(5);
     private String basePath;
     private boolean debugging = false;
     private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
