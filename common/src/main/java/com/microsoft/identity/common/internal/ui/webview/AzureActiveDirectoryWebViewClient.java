@@ -48,6 +48,7 @@ import com.microsoft.identity.common.internal.fido.AuthFidoChallengeHandler;
 import com.microsoft.identity.common.internal.fido.IFidoManager;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiManager;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationFragment;
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
