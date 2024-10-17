@@ -37,9 +37,6 @@ public class RetryTestRule implements TestRule {
 
     private final static String TAG = RetryTestRule.class.getSimpleName();
 
-    // Default number of retries if the test does not specify with retry annotation
-    private final static int DEFAULT_RETRY = 1;
-
     @Override
     public Statement apply(final Statement base, final Description description) {
         return new Statement() {
@@ -62,9 +59,6 @@ public class RetryTestRule implements TestRule {
                     final int retryCount = retryOnFailure.retryCount();
                     Logger.i(TAG, "Received retry count annotation with value: " + retryCount);
                     numAttempts += retryCount;
-                } else {
-                    Logger.i(TAG, "Test has no retry count annotation, adding default retry count value of: " + DEFAULT_RETRY);
-                    numAttempts += DEFAULT_RETRY;
                 }
 
                 for (int i = 0; i < numAttempts; i++) {
