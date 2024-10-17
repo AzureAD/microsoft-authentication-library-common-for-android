@@ -28,10 +28,16 @@ import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory
 import com.microsoft.identity.common.internal.controllers.LocalMSALController
 import com.microsoft.identity.common.internal.util.capture
 import com.microsoft.identity.common.java.AuthenticationConstants
-import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters
+import com.microsoft.identity.common.java.dto.AccountRecord
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents
+import com.microsoft.identity.common.java.nativeauth.BuildValues
+import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.GetAuthMethodsCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFADefaultChallengeCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFASubmitChallengeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordResendCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
@@ -47,12 +53,10 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.MFACommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.ResetPasswordCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignInCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpCommandResult
-import com.microsoft.identity.common.java.dto.AccountRecord
-import com.microsoft.identity.common.java.interfaces.IPlatformComponents
-import com.microsoft.identity.common.java.nativeauth.BuildValues
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResult
 import com.microsoft.identity.common.java.request.SdkType
@@ -85,6 +89,7 @@ import java.util.UUID
 @RunWith(RobolectricTestRunner::class)
 class NativeAuthControllerTest {
     private val code = "12345"
+    private val challenge = "12345"
     private val username = "user@email.com"
     private val password = "verySafePassword".toCharArray()
     private val defaultScopes: List<String> = AuthenticationConstants.DEFAULT_SCOPES.toList()
@@ -528,6 +533,206 @@ class NativeAuthControllerTest {
         assert(result is INativeAuthCommandResult.Redirect)
     }
     //endregion
+
+    // region sign in MFA
+    @Test
+    fun `testMFAChallenge challenge returns introspect_required and introspect returns success should return SelectionRequiredResult`() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INTROSPECT_REQUIRED
+        )
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.Introspect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INTROSPECT_SUCCESS
+        )
+
+        val parameters = createMFAChallengeCommandParameters(correlationId)
+        val result = controller.signInChallenge(parameters)
+        assert(result is MFACommandResult.SelectionRequired)
+    }
+
+    @Test
+    fun `testMFAChallenge challenge returns introspect_required and introspect returns redirect should return RedirectResult`() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INTROSPECT_REQUIRED
+        )
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.Introspect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+        )
+
+        val parameters = createMFAChallengeCommandParameters(correlationId)
+        val result = controller.signInChallenge(parameters)
+        assert(result is INativeAuthCommandResult.Redirect)
+    }
+
+    @Test
+    fun `testMFAChallenge challenge returns redirect should return RedirectResult`() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+        )
+
+        val parameters = createMFAChallengeCommandParameters(correlationId)
+        val result = controller.signInChallenge(parameters)
+        assert(result is INativeAuthCommandResult.Redirect)
+    }
+
+    @Test
+    fun `testMFAChallenge challenge returns success should return VerificationRequired`() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
+        )
+
+        val parameters = createMFAChallengeCommandParameters(correlationId)
+        val result = controller.signInChallenge(parameters)
+        assert(result is MFACommandResult.VerificationRequired)
+    }
+
+    @Test
+    fun testMFAChallengeWithInvalidResponseShouldReturnAPIError() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
+        )
+
+        val parameters = createMFAChallengeCommandParameters(correlationId)
+        val result = controller.signInChallenge(parameters)
+        assert(result is INativeAuthCommandResult.APIError)
+    }
+
+
+    @Test
+    fun testMFAChallengeWithInvalidIntrospectResponseShouldReturnAPIError() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INTROSPECT_REQUIRED
+        )
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.Introspect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.EXPIRED_TOKEN
+        )
+
+        val parameters = createMFAChallengeCommandParameters(correlationId)
+        val result = controller.signInChallenge(parameters)
+        assert(result is INativeAuthCommandResult.APIError)
+    }
+
+    @Test
+    fun testMFASubmitChallengeWithSuccessShouldReturnSignInComplete() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.TOKEN_SUCCESS
+        )
+
+        val parameters = createMFASubmitChallengeCommandParameters(correlationId)
+        val result = controller.signInSubmitChallenge(parameters)
+        assert(result is SignInCommandResult.Complete)
+    }
+
+    @Test
+    fun testMFASubmitChallengeWithInvalidCodeShouldReturnInvalidChallenge() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INVALID_OOB_VALUE
+        )
+
+        val parameters = createMFASubmitChallengeCommandParameters(correlationId)
+        val result = controller.signInSubmitChallenge(parameters)
+        assert(result is SignInCommandResult.IncorrectCode)
+    }
+
+    @Test
+    fun testMFASubmitChallengeWithMFARequiredShouldReturnAPIError() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.MFA_REQUIRED
+        )
+
+        val parameters = createMFASubmitChallengeCommandParameters(correlationId)
+        val result = controller.signInSubmitChallenge(parameters)
+        assert(result is INativeAuthCommandResult.APIError)
+    }
+
+    @Test
+    fun testMFASubmitChallengeWithUnexpectedResponseShouldReturnError() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.SIGNIN_INVALID_PASSWORD
+        )
+
+        val parameters = createMFASubmitChallengeCommandParameters(correlationId)
+        val result = controller.signInSubmitChallenge(parameters)
+        assert(result is INativeAuthCommandResult.APIError)
+    }
+
+    @Test
+    fun testMFAGetAuthMethodsSuccess() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.Introspect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INTROSPECT_SUCCESS
+        )
+
+        val parameters = createGetAuthMethodsCommandParameters(correlationId)
+        val result = controller.getAuthMethods(parameters)
+        assert(result is MFACommandResult.SelectionRequired)
+    }
+
+    @Test
+    fun testMFAGetAuthMethodsWithRedirectResponseShouldReturnRedirect() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.Introspect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+        )
+
+        val parameters = createGetAuthMethodsCommandParameters(correlationId)
+        val result = controller.getAuthMethods(parameters)
+        assert(result is INativeAuthCommandResult.Redirect)
+    }
+
+    @Test
+    fun testMFAGetAuthMethodsWithInvalidResponseShouldReturnAPIError() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.Introspect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.EXPIRED_TOKEN
+        )
+
+        val parameters = createGetAuthMethodsCommandParameters(correlationId)
+        val result = controller.getAuthMethods(parameters)
+        assert(result is INativeAuthCommandResult.APIError)
+    }
+    // endregion
 
     // region Sign out
     @Test
@@ -1281,6 +1486,71 @@ class NativeAuthControllerTest {
             .correlationId(correlationId)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .build()
+    }
+
+    private fun createMFAChallengeCommandParameters(
+        correlationId: String
+    ): MFADefaultChallengeCommandParameters {
+        val authenticationScheme = AuthenticationSchemeFactory.createScheme(
+            AndroidPlatformComponentsFactory.createFromContext(context),
+            null
+        )
+
+        return MFADefaultChallengeCommandParameters.builder()
+            .clientId(clientId)
+            .oAuth2TokenCache(createCache())
+            .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .sdkType(SdkType.MSAL)
+            .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
+            .authenticationScheme(authenticationScheme)
+            .continuationToken(continuationToken)
+            .platformComponents(platformComponents)
+            .scopes(scopes)
+            .correlationId(correlationId)
+            .build();
+    }
+
+    private fun createMFASubmitChallengeCommandParameters(
+        correlationId: String,
+    ): MFASubmitChallengeCommandParameters {
+        val authenticationScheme = AuthenticationSchemeFactory.createScheme(
+            AndroidPlatformComponentsFactory.createFromContext(context),
+            null
+        )
+
+        return MFASubmitChallengeCommandParameters.builder()
+            .clientId(clientId)
+            .oAuth2TokenCache(createCache())
+            .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .sdkType(SdkType.MSAL)
+            .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
+            .authenticationScheme(authenticationScheme)
+            .continuationToken(continuationToken)
+            .platformComponents(platformComponents)
+            .scopes(scopes)
+            .challenge(challenge)
+            .correlationId(correlationId)
+            .build();
+    }
+
+    private fun createGetAuthMethodsCommandParameters(
+        correlationId: String,
+    ): GetAuthMethodsCommandParameters {
+        val authenticationScheme = AuthenticationSchemeFactory.createScheme(
+            AndroidPlatformComponentsFactory.createFromContext(context),
+            null
+        )
+
+        return GetAuthMethodsCommandParameters.builder()
+            .clientId(clientId)
+            .oAuth2TokenCache(createCache())
+            .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .sdkType(SdkType.MSAL)
+            .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
+            .continuationToken(continuationToken)
+            .platformComponents(platformComponents)
+            .correlationId(correlationId)
+            .build();
     }
 
     private fun createSsprStartCommandParameters(correlationId: String): ResetPasswordStartCommandParameters {

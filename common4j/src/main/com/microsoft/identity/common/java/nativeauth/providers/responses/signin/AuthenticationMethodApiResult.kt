@@ -14,5 +14,5 @@ data class AuthenticationMethodApiResult(
             "challenge_type=$challengeType, login_hint=$loginHint, " +
             "challenge_channel=$challengeChannel)"
 
-    override fun toString()= "AuthenticationMethod(id=$id)"
+    override fun toString()= "AuthenticationMethod(id=$id, challenge_channel=$challengeChannel)"
 }

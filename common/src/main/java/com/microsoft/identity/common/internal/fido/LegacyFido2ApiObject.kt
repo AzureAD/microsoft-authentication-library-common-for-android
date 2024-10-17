@@ -20,20 +20,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils.nativeauth
+package com.microsoft.identity.common.internal.fido
+
+import android.app.PendingIntent
 
 /**
- * Test configuration retrieved from Labs KeyVault and used in native auth tests.
+ * A data class which holds the PendingIntent from the legacy FIDO2 API and the callbacks which handle its results.
  */
-enum class ConfigType(val stringValue: String) {
-    SSPR("SSPR"),
-    SIGN_UP_PASSWORD("SIGN_UP_PASSWORD"),
-    SIGN_IN_PASSWORD("SIGN_IN_PASSWORD"),
-    SIGN_UP_OTP("SIGN_UP_OTP"),
-    SIGN_IN_OTP("SIGN_IN_OTP"),
-    SIGN_UP_PASSWORD_ATTRIBUTES("SIGN_UP_PASSWORD_ATTRIBUTES"),
-    SIGN_UP_OTP_ATTRIBUTES("SIGN_UP_OTP_ATTRIBUTES"),
-    SIGN_IN_MFA_SINGLE_AUTH("SIGN_IN_MFA_SINGLE_AUTH"),
-    SIGN_IN_MFA_MULTI_AUTH("SIGN_IN_MFA_MULTI_AUTH"),
-    ACCESS_TOKEN("ACCESS_TOKEN")
+data class LegacyFido2ApiObject(
+    val assertionCallback: (result: String) -> Unit,
+    val errorCallback: (exception: LegacyFido2ApiException) -> Unit,
+    val pendingIntent: PendingIntent
+) {
+
 }

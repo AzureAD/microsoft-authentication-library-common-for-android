@@ -1,5 +1,11 @@
-V.Next
+Version 18.1.0
 ----------
+(common4j 15.1.0)
+- [MINOR] Use legacy FIDO2 API to provide security key support to Android 13 devices (#2508)
+
+Version 18.0.0 
+----------
+(Common4j 15.0.0)
 - [PATCH] Add purpose claim to JwtRequestBody (#2454)
 - [MINOR] Changes needed for token binding CA policy error handling (#2453)
 - [MINOR] Allow OneAuth to set Max MSAL-Broker Protocol version (#2490)
@@ -13,6 +19,7 @@ V.Next
 - [PATCH] Move MS STS Response handling to separate class (#2471)
 - [MINOR] Add support for email OTP MFA in native authentication (#2468)
 - [MINOR] Moving OS version check for passkeys (#2450)
+- [MINOR] Support for email OTP MFA in native authentication (#2489)
 - [PATCH] Change LTW debug signature hash (#2492)
 - [MINOR] Add new span name for OnUpgradeReceiver (#2494)
 

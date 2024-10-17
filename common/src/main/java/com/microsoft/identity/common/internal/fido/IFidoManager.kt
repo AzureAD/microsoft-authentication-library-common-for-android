@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
+import io.opentelemetry.api.trace.Span
+
 /**
  * Representation of a manager that handles interactions with a passkey provider (usually through an API).
  */
@@ -32,11 +34,13 @@ interface IFidoManager {
      * @param relyingPartyIdentifier
      * @param allowedCredentials
      * @param userVerificationPolicy
+     * @param span
      * @return assertion
      * @throws Exception
      */
     suspend fun authenticate(challenge: String,
                              relyingPartyIdentifier: String,
                              allowedCredentials: List<String>?,
-                             userVerificationPolicy: String): String
+                             userVerificationPolicy: String,
+                             span: Span) : String
 }

@@ -540,4 +540,25 @@ public final class ErrorStrings {
      * Unexpected content type received in http response.
      */
     public static final String UNEXPECTED_HTTP_RESPONSE_CONTENT_TYPE = "unexpected_http_response_content_type";
+
+    /**
+     * An object was unexpectedly null. Used for explicit null checks, whereas NULL_POINTER_ERROR classifies NPEs.
+     */
+    public static final String NULL_OBJECT = "null_object";
+
+    /**
+     * Received a result code other than "ok" from an activity.
+     */
+    public static final String BAD_ACTIVITY_RESULT_CODE = "bad_activity_result_code";
+
+    /**
+     * Error occurred while attempting to get PendingIntent.
+     */
+    public static final String GET_PENDING_INTENT_ERROR = "get_pending_intent_error";
+
+    /**
+     * Operation cancelled while attempting to get PendingIntent.
+     */
+    public static final String GET_PENDING_INTENT_CANCELED = "get_pending_intent_canceled";
+
 }

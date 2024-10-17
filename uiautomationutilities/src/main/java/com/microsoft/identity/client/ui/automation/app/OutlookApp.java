@@ -185,4 +185,28 @@ public class OutlookApp extends App implements IFirstPartyApp {
         // Check if the sign in SnackBar is present
         return UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.office.outlook:id/snackbar_action", TimeUnit.SECONDS.toMillis(5)).exists();
     }
+
+    /**
+     * Check that outlook does not have an option for phone sign-up
+     * @return true if the option is not available, false otherwise
+     */
+    public boolean checkPhoneSignUpIsNotAvailable() {
+        launch();
+
+        Logger.i(TAG, "Checking that sign-up through phone number is not available in Outlook...");
+        // Click start btn
+        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/btn_secondary_button");
+
+        // Check for "phone" UI option
+        final Boolean check1 = UiAutomatorUtils.obtainUiObjectWithText("phone").exists();
+
+        // Check for "Phone" UI option
+        final Boolean check2 = UiAutomatorUtils.obtainUiObjectWithText("Phone").exists();
+
+        // Check for "PHONE" UI option
+        final Boolean check3 = UiAutomatorUtils.obtainUiObjectWithText("PHONE").exists();
+
+        // If none of those options are found, we can conclude phone option is not available
+        return !(check1 || check2 || check3);
+    }
 }
