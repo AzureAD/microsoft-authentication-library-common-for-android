@@ -65,7 +65,7 @@ public class SilentTokenCommand extends TokenCommand {
         final String methodName = ":execute";
 
         final Span span = SpanExtension.current();
-
+        Logger.info(TAG + methodName, "Start" + methodName);
         span.setAttribute(AttributeName.application_name.name(), getParameters().getApplicationName());
         span.setAttribute(AttributeName.public_api_id.name(), getPublicApiId());
 
@@ -139,7 +139,7 @@ public class SilentTokenCommand extends TokenCommand {
                     span.setStatus(StatusCode.ERROR, "empty exception");
                 }
             }
-
+            Logger.info(TAG + methodName, "End" + methodName);
             return result;
         } catch (final Throwable throwable) {
             span.setStatus(StatusCode.ERROR);
