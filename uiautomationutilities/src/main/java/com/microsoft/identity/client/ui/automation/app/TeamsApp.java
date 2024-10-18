@@ -59,7 +59,12 @@ public class TeamsApp extends App implements IFirstPartyApp {
 
     @Override
     public void handleFirstRun() {
-        // nothing needed here
+        if (shouldHandleFirstRun) {
+            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Get started");
+
+            UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.teams:id/sign_in_text");
+            shouldHandleFirstRun = false;
+        }
     }
 
     @Override
