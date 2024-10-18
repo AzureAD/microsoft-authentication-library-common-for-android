@@ -100,6 +100,7 @@ class TemporaryEmailService {
         var count = 0
         var latestEmailId: String?
         var otpValue = ""
+        var apiException: Exception? = null
 
         while (count < 3) {
             try {
@@ -125,14 +126,15 @@ class TemporaryEmailService {
                 previousEmailIds.addAll(newEmailIds)
 
                 // Wait before retrying
-                Thread.sleep(3000)
+                Thread.sleep(8000)
 
                 // Max 3 retries
                 count++
             } catch (e: Exception) {
                 //1secmail server occasionally returns an internal server error which causes the API client to throw an exception
                 //In this case, wait, then retry the operation
-                Thread.sleep(3000)
+                apiException = e
+                Thread.sleep(8000)
 
                 // Max 3 retries
                 count++
@@ -141,7 +143,7 @@ class TemporaryEmailService {
 
         // After the retries we still weren't able to retrieve a valid code from the inbox, so fail and restart the test.
         if (!validCodeRetrieved) {
-            throw IllegalStateException("Unable to fetch valid code for user")
+            throw apiException ?: IllegalStateException("Unable to fetch valid code for user")
         }
 
         return otpValue
