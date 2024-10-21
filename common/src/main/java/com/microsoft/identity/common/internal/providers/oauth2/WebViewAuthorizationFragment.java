@@ -238,7 +238,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (response != null && response.contains("exit")) {
             finish();
         }
-        //finish();
     }
 
 
