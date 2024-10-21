@@ -1,8 +1,11 @@
+vNext
+----------
+- [MINOR] Add Child Spans for Interactive Span (#2516)
+
 Version 18.1.0
 ----------
 (common4j 15.1.0)
 - [MINOR] Use legacy FIDO2 API to provide security key support to Android 13 devices (#2508)
-- [MINOR] Add Child Spans for Interactive Span (#2516)
 
 Version 18.0.0 
 ----------
