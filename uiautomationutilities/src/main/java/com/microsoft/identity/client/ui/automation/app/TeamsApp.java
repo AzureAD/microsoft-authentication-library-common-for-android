@@ -23,6 +23,8 @@
 package com.microsoft.identity.client.ui.automation.app;
 
 import androidx.annotation.NonNull;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
@@ -144,16 +146,12 @@ public class TeamsApp extends App implements IFirstPartyApp {
                                  @NonNull final String password,
                                  @NonNull final MicrosoftStsPromptHandlerParameters promptHandlerParameters) {
         Logger.i(TAG, "Sign-In on the APP..");
-        // Enter email in email field
-        UiAutomatorUtils.handleInputByClass("android.widget.EditText", username);
+
+        // Enter email in email field and press enter
+        UiAutomatorUtils.handleInput("com.microsoft.teams:id/edit_email_refresh", username);
 
         // Click Sign in btn
-        try {
-            UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/sign_in_button_refresh", CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
-        }
-        catch (AssertionError e){
-            UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/sign_in_button", CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
-        }
+        UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/sign_in_button_refresh", CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
 
         Logger.i(TAG, "Handle Sign-In with Email Prompt on the APP..");
         // handle prompt
