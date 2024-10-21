@@ -111,6 +111,7 @@ public class AuthorizationActivityFactory {
         final LibraryConfiguration libraryConfig = LibraryConfiguration.getInstance();
         if (ProcessUtil.isBrokerProcess(context)) {
             intent = new Intent(context, BrokerAuthorizationActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         } else if (libraryConfig.isAuthorizationInCurrentTask() && !authorizationAgent.equals(AuthorizationAgent.WEBVIEW)) {
         // We exclude the case when the authorization agent is already selected as WEBVIEW because of confusion
         // that results from attempting to use the CurrentTaskAuthorizationActivity in that case, because as webview
