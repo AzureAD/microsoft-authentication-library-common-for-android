@@ -94,9 +94,6 @@ public class MicrosoftAuthorizationErrorResponse extends AuthorizationErrorRespo
     /**
      * Error string to indicate that the device needs to be registered
      */
-
-    public static final String SWITH_TO_BROWSER = "switch_to_browser";
-
     public static final String DEVICE_REGISTRATION_NEEDED = "device_registration_needed";
     public static final String DEVICE_REGISTRATION_NEEDED_ERROR_DESCRIPTION = "Device needs to be registered to access the resource";
 
