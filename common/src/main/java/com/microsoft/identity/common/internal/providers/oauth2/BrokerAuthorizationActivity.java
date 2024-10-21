@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.content.Intent;
+
 /**
  * Declares as a separate class so that we can specify attributes exclusively to :auth process
  * in AndroidManifest without overriding MSAL's (In case where MSAL and broker is shipped together).
@@ -33,4 +35,13 @@ public class BrokerAuthorizationActivity extends AuthorizationActivity {
     protected void onResume() {
         super.onResume();
     }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        // set intent from the new launch
+        setIntent(intent);
+        // Do further stuff here
+    }
+
 }

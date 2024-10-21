@@ -230,6 +230,18 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        final String response = getActivity().getIntent().getExtras().getString("key_string");
+        Logger.info("ewq", response);
+        if (response != null && response.contains("exit")) {
+            finish();
+        }
+        //finish();
+    }
+
+
     /**
      * Set up the web view configurations.
      *
