@@ -33,7 +33,7 @@ public enum SpanName {
     GetAccounts,
     RemoveAccount,
     WorkplaceJoin,
-    ATIIntereactively,
+    ATIInteractively,
     ATISilently,
     DoDiscovery,
     WorkplaceLeave,
