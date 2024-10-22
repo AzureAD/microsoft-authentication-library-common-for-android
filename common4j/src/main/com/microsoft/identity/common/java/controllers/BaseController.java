@@ -361,8 +361,9 @@ public abstract class BaseController {
         ).setWebViewZoomControlsEnabled(
                 interactiveTokenCommandParameters.isWebViewZoomControlsEnabled()
         );
-
+Logger.info(TAG, "1.setting builder props "+ interactiveTokenCommandParameters.getLoginHint());
         if (builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
+            Logger.info(TAG, "2.setting builder props "+ interactiveTokenCommandParameters.getLoginHint());
             final MicrosoftStsAuthorizationRequest.Builder msBuilder = (MicrosoftStsAuthorizationRequest.Builder) builder;
             msBuilder
                     .setLoginHint(interactiveTokenCommandParameters.getLoginHint())
