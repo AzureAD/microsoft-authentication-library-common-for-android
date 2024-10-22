@@ -152,6 +152,7 @@ Version 16.1.0
 Version 16.0.1
 ----------
 - [MINOR] Add LTW as prod broker app (#2179)
+- [MINOR] Fix possible NPE in isFullBrowser() (#2085)
 
 Version 16.0.0
 ----------
