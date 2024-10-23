@@ -182,6 +182,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 new OnPageLoadedCallback() {
                     @Override
                     public void onPageLoaded(final String url) {
+                        Logger.info(methodTag, "OnPageLoaded with url "+url);
                         // Reset the camera permission request when a new page is loaded.
                         mCameraPermissionRequest = null;
                         final String[] javascriptToExecute = new String[1];
