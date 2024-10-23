@@ -79,7 +79,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
     @Override
     public Future<AuthorizationResult> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
                                                             GenericOAuth2Strategy oAuth2Strategy) throws ClientException {
-        WebViewUtil.removeCookiesFromWebView(getApplicationContext());
+        // WebViewUtil.removeCookiesFromWebView(getApplicationContext());
         final String methodTag = TAG + ":requestAuthorization";
         mAuthorizationResultFuture = new ResultFuture<>();
         mOAuth2Strategy = oAuth2Strategy;
@@ -118,6 +118,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
             @Nullable final String sourceLibraryVersion) {
         // RedirectURI used to get the auth code in nested app auth is that of a hub app (brkRedirectURI)       
         final String redirectUri = mAuthorizationRequest.getBrkRedirectUri() != null ? mAuthorizationRequest.getBrkRedirectUri() : mAuthorizationRequest.getRedirectUri();
+        Logger.info(TAG, "final redirectURI being used "+ redirectUri);
         return AuthorizationActivityFactory.getAuthorizationActivityIntent(
                     getApplicationContext(),
                     null,

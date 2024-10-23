@@ -257,6 +257,8 @@ public abstract class OAuth2Strategy
         }
 
         final URL requestUrl = new URL(getTokenEndpoint());
+        Logger.info(TAG, "requestUrl for token request "+ requestUrl.toString());
+        Logger.info(TAG, "requestBody for token request "+ requestBody);
         final long networkStartTime = System.currentTimeMillis();
         final HttpResponse response = httpClient.post(
                 requestUrl,
