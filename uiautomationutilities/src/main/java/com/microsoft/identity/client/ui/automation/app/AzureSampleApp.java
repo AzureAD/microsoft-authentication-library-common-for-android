@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.browser.IBrowser;
@@ -33,6 +34,7 @@ import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -118,12 +120,14 @@ public class AzureSampleApp extends App {
                                                         @NonNull final ITestBroker broker,
                                                         final boolean shouldHandleBrowserFirstRun) {
         Logger.i(TAG, "Signing in into Azure Sample App with Single Account Mode Fragment..");
-        // Click Sign In in Single Account Fragment
-        UiAutomatorUtils.handleButtonClick("com.azuresamples.msalandroidapp:id/btn_signIn");
 
-        if (broker == null && browser != null && shouldHandleBrowserFirstRun) {
-            // handle browser first run as applicable
-            ((IApp) browser).handleFirstRun();
+        try {
+            // Click Sign In in Single Account Fragment
+            UiAutomatorUtils.obtainUiObjectWithUiSelector(new UiSelector().resourceId(
+                            "com.azuresamples.msalandroidapp:id/btn_signIn").clickable(true),
+                    CommonUtils.FIND_UI_ELEMENT_TIMEOUT).click();
+        } catch (UiObjectNotFoundException exception) {
+            throw new AssertionError(exception);
         }
     }
 
