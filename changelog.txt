@@ -1,3 +1,7 @@
+vNext
+----------
+- [MINOR] Migrate URIbuilder to httpcore5 (#2522)
+
 Version 18.1.0
 ----------
 (common4j 15.1.0)

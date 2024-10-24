@@ -220,7 +220,7 @@ class NativeAuthOAuth2Configuration(
     private fun getEndpointUrlFromRootAndTenantAndSuffix(root: URL, endpointSuffix: String): URL {
         return try {
             if (BuildValues.getDC().isNotEmpty()) {
-                UrlUtil.appendPathAndQueryToURL(root, endpointSuffix, "dc=${BuildValues.getDC()}")
+                UrlUtil.appendPathAndQueryToURL(root, endpointSuffix, mapOf("dc" to BuildValues.getDC()))
             } else {
                 UrlUtil.appendPathToURL(root, endpointSuffix)
             }

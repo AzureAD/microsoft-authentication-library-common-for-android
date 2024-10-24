@@ -23,6 +23,7 @@
 
 package com.microsoft.identity.common.java.util;
 
+import org.apache.hc.core5.http.NameValuePair;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,8 +34,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import cz.msebera.android.httpclient.NameValuePair;
 
 @RunWith(JUnit4.class)
 public class CommonURIBuilderTest {
