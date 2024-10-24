@@ -24,8 +24,6 @@ package com.microsoft.identity.common.java.opentelemetry;
 
 public enum SpanName {
     AcquirePrtUsingBrt,
-    RefreshPrt,
-    AcquireAtUsingPrt,
     AcquireTokenInteractive,
     AcquireTokenSilent,
     CryptoFactoryEvent,
@@ -42,8 +40,6 @@ public enum SpanName {
     MSAL_PerformIpcStrategy,
     DeviceRegistrationApi,
     WorkplaceJoinApi,
-    AcquirePrtInteractively,
-    PrtUpgrade,
     AcquireTokenDcf,
     AcquireTokenDcfAuthRequest,
     AcquireTokenDcfFetchToken,
