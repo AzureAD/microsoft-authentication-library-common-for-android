@@ -1,3 +1,7 @@
+vNext
+----------
+- [MINOR] Add Child Spans for Interactive Span (#2516)
+
 Version 18.1.0
 ----------
 (common4j 15.1.0)
