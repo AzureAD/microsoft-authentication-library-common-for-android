@@ -81,15 +81,25 @@ public class CommonURIBuilderTest {
 
     @Test
     public void testCallingAddParametersIfAbsent_WithNullMap(){
-        final CommonURIBuilder builder = new CommonURIBuilder().addParametersIfAbsent((Map<String, ?>) null);
-        Assert.assertEquals(0, builder.getQueryParams().size());
+        final CommonURIBuilder builder = new CommonURIBuilder()
+                .setParameter("Test1", "Value1")
+                .addParametersIfAbsent((Map<String, ?>) null);
+        
+        Assert.assertEquals(1, builder.getQueryParams().size());
+        Assert.assertEquals("Test1", builder.getQueryParams().get(0).getName());
+        Assert.assertEquals("Value1", builder.getQueryParams().get(0).getValue());
     }
     
     @Test
     public void testCallingAddParametersIfAbsent_WithEmptyMap(){
         final Map<String, String> map = new HashMap<>();
-        final CommonURIBuilder builder = new CommonURIBuilder().addParametersIfAbsent(map);
-        Assert.assertEquals(0, builder.getQueryParams().size());
+        final CommonURIBuilder builder = new CommonURIBuilder()
+                .setParameter("Test1", "Value1")
+                .addParametersIfAbsent(map);
+
+        Assert.assertEquals(1, builder.getQueryParams().size());
+        Assert.assertEquals("Test1", builder.getQueryParams().get(0).getName());
+        Assert.assertEquals("Value1", builder.getQueryParams().get(0).getValue());
     }
 
     @Test
