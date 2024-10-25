@@ -84,8 +84,7 @@ public class CommonURIBuilderTest {
         final CommonURIBuilder builder = new CommonURIBuilder().addParametersIfAbsent((Map<String, ?>) null);
         Assert.assertEquals(0, builder.getQueryParams().size());
     }
-
-
+    
     @Test
     public void testCallingAddParametersIfAbsent_WithEmptyMap(){
         final Map<String, String> map = new HashMap<>();
