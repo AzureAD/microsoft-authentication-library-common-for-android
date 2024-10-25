@@ -80,6 +80,20 @@ public class CommonURIBuilderTest {
     }
 
     @Test
+    public void testCallingAddParametersIfAbsent_WithNullMap(){
+        final CommonURIBuilder builder = new CommonURIBuilder().addParametersIfAbsent((Map<String, ?>) null);
+        Assert.assertEquals(0, builder.getQueryParams().size());
+    }
+
+
+    @Test
+    public void testCallingAddParametersIfAbsent_WithEmptyMap(){
+        final Map<String, String> map = new HashMap<>();
+        final CommonURIBuilder builder = new CommonURIBuilder().addParametersIfAbsent(map);
+        Assert.assertEquals(0, builder.getQueryParams().size());
+    }
+
+    @Test
     public void testCallingAddParametersIfAbsent_WithMap(){
         final Map<String, String> map = new HashMap<>();
         map.put("Test1", "Value1");
