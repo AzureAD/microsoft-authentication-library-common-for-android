@@ -27,6 +27,7 @@ import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.util.ObjectMapper
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import java.net.URL
 import java.util.TreeMap
@@ -90,7 +91,7 @@ class MockApi private constructor(
             headers,
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
-        assertTrue(result.statusCode == 200)
+        assertEquals(200, result.statusCode)
     }
 }
 

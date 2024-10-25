@@ -24,8 +24,6 @@ package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
 
-import java.util.Map;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -34,10 +32,7 @@ import lombok.experimental.Accessors;
 @Getter
 @Accessors(prefix = "m")
 public class MicrosoftStsTokenRequest extends MicrosoftTokenRequest {
-    /**
-     * Additional JWT claims which would be used to create JWT based token requests
-     */
-    private transient Map<String, String> mJwtClaims;
+
     public MicrosoftStsTokenRequest() {
         super();
     }

@@ -103,6 +103,10 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         UiAutomatorUtils.handleButtonClick("idSIButton9", mFindLoginUiElementTimeout);
     }
 
+    public void handleAcceptButtonByText() {
+        UiAutomatorUtils.handleButtonClickForObjectWithExactText("Accept");
+    }
+
     public void handleNextButtonByText() {
         UiAutomatorUtils.handleButtonClickForObjectWithText("Next");
     }
@@ -163,7 +167,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
             e.printStackTrace();
         }
         confirmConsentPageReceived();
-        handleNextButton();
+        handleAcceptButtonByText();
     }
 
     public void declineConsent() {

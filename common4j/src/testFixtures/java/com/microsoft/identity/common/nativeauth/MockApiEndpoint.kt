@@ -29,6 +29,7 @@ package com.microsoft.identity.common.nativeauth
 enum class MockApiEndpoint(val stringValue: String) {
     SignInInitiate("SignInInitiate"),
     SignInChallenge("SignInChallenge"),
+    Introspect("SignInIntrospect"),
     SignInToken("SignInToken"),
     SignUpStart("SignUpStart"),
     SignUpChallenge("SignUpChallenge"),

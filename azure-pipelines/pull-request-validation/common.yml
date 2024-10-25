@@ -6,14 +6,6 @@ name: $(date:yyyyMMdd)$(rev:.r)
 variables:
   - group: devex-ciam-test
 
-trigger:
-  branches:
-    include:
-    - dev
-    - master
-    - release/*
-  batch: True
-
 resources:
   repositories:
   - repository: self

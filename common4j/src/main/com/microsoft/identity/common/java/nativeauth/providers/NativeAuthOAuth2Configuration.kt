@@ -60,6 +60,7 @@ class NativeAuthOAuth2Configuration(
         private const val RESET_PASSWORD_SUBMIT_ENDPOINT_SUFFIX = "/resetpassword/v1.0/submit"
         private const val RESET_PASSWORD_COMPLETE_ENDPOINT_SUFFIX = "/resetpassword/v1.0/poll_completion"
         private const val SIGN_IN_INITIATE_ENDPOINT_SUFFIX = "/oauth2/v2.0/initiate"
+        private const val SIGN_IN_INTROSPECT_ENDPOINT_SUFFIX = "/oauth2/v2.0/introspect"
         private const val SIGN_IN_CHALLENGE_ENDPOINT_SUFFIX = "/oauth2/v2.0/challenge"
         private const val SIGN_IN_TOKEN_ENDPOINT_SUFFIX = "/oauth2/v2.0/token"
     }
@@ -169,7 +170,7 @@ class NativeAuthOAuth2Configuration(
     }
 
     /**
-     * Get the endpoint to be used for making a signin/initiate request.
+     * Get the endpoint to be used for making an oauth2/v2.0/initiate request.
      *
      * @return URL the endpoint
      */
@@ -181,7 +182,7 @@ class NativeAuthOAuth2Configuration(
     }
 
     /**
-     * Get the endpoint to be used for making a signin/challenge request.
+     * Get the endpoint to be used for making an oauth2/v2.0/challenge request.
      *
      * @return URL the endpoint
      */
@@ -193,7 +194,19 @@ class NativeAuthOAuth2Configuration(
     }
 
     /**
-     * Get the endpoint to be used for making a signin/token request.
+     * Get the endpoint to be used for making an oauth2/v2.0/introspect request.
+     *
+     * @return URL the endpoint
+     */
+    fun getSignInIntrospectEndpoint(): URL {
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = SIGN_IN_INTROSPECT_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making an oauth2/v2.0/token request.
      *
      * @return URL the endpoint
      */

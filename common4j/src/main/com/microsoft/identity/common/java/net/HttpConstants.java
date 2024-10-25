@@ -69,5 +69,13 @@ public final class HttpConstants {
          * @see <a href="https://tools.ietf.org/html/rfc7159">RFC-7159</a>
          */
         public static final String APPLICATION_JSON = "application/json";
+        public static final String APPLICATION_JOSE = "application/jose";
+    }
+
+    /**
+     * Identifiers for character encodings which can be used in the Content-Type header parameters
+     */
+    public static final class Charset {
+        public static final String UTF8 = "charset=utf-8";
     }
 }

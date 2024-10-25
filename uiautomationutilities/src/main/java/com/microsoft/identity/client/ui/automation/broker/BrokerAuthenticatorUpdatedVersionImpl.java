@@ -23,6 +23,7 @@
 package com.microsoft.identity.client.ui.automation.broker;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG;
 
 import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -37,8 +38,6 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * A model for interacting with the Microsoft Authenticator Broker App during UI Test
  * when version number of Authenticator app under test is >= "6.2206.3949"
@@ -47,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthenticator {
 
     private static final String TAG = BrokerAuthenticatorUpdatedVersionImpl.class.getSimpleName();
-    public static boolean shouldUseDeviceSettingsPage = true;
+    public static boolean shouldUseDeviceSettingsPage = false;
 
     @Override
     public void performDeviceRegistration(@NonNull final String username,
@@ -76,23 +75,13 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
             );
 
 
-            // after device registration, make sure that we see the unregister btn to confirm successful
-            // registration
-
-            // relaunch device registration page
-            openDeviceRegistrationPage();
-
-            // Click the registered account domain
-            UiAutomatorUtils.handleButtonClickForObjectWithText(
-                    username.split("@")[1]
-            );
-
-            final UiObject unRegisterBtn = UiAutomatorUtils.obtainUiObjectWithExactText(
-                    "Unregister device", TimeUnit.SECONDS.toMillis(20)
-            );
+            // After device registration, make sure that we see device is registered string to
+            // confirm registration.
+            final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+            UiObject registeredString = device.findObject(new UiSelector().text("Your device is currently registered with:"));
             Assert.assertTrue(
-                    "Microsoft Authenticator - Unregister Button appears.",
-                    unRegisterBtn.exists()
+                    "Microsoft Authenticator - Device registered confirmation string appears.",
+                    registeredString.waitForExists(FIND_UI_ELEMENT_TIMEOUT_LONG)
             );
         }
     }

@@ -27,6 +27,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses
  */
 abstract class ApiErrorResult(
     open val error: String?,
+    open val subError: String? = null,
     open val errorDescription: String?,
     open val errorCodes: List<Int>? = null,
     override val correlationId: String

@@ -351,6 +351,17 @@ public final class ErrorStrings {
     public static final String DEVICE_REGISTRATION_FAILED = "Device registration failed";
 
     /**
+     * Device registration upgrade failed.
+     */
+    public static final String UPGRADE_DEVICE_REGISTRATION_FAILED = "Upgrading Device registration failed";
+
+    /**
+     * Strong Device registration not enabled.
+     */
+    public static final String STRONG_DEVICE_REGISTRATION_NOT_ENABLED_ERROR_CODE = "Strong_device_registration_not_enabled";
+    public static final String STRONG_DEVICE_REGISTRATION_NOT_ENABLED_ERROR_MESSAGE = "Strong device registration required, but is not yet enabled in broker";
+
+    /**
      * Device unregistration/leave failed.
      */
     public static final String DEVICE_LEAVE_FAILED = "device_leave_failed";
@@ -524,4 +535,30 @@ public final class ErrorStrings {
      * Access token doesn't exist and is required for NativeAuth token refresh
      */
     public static final String NATIVE_AUTH_NO_ACCESS_TOKEN_FOUND = "native_auth_no_access_token_found";
+
+    /**
+     * Unexpected content type received in http response.
+     */
+    public static final String UNEXPECTED_HTTP_RESPONSE_CONTENT_TYPE = "unexpected_http_response_content_type";
+
+    /**
+     * An object was unexpectedly null. Used for explicit null checks, whereas NULL_POINTER_ERROR classifies NPEs.
+     */
+    public static final String NULL_OBJECT = "null_object";
+
+    /**
+     * Received a result code other than "ok" from an activity.
+     */
+    public static final String BAD_ACTIVITY_RESULT_CODE = "bad_activity_result_code";
+
+    /**
+     * Error occurred while attempting to get PendingIntent.
+     */
+    public static final String GET_PENDING_INTENT_ERROR = "get_pending_intent_error";
+
+    /**
+     * Operation cancelled while attempting to get PendingIntent.
+     */
+    public static final String GET_PENDING_INTENT_CANCELED = "get_pending_intent_canceled";
+
 }

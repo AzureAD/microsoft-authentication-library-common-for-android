@@ -20,38 +20,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
+package com.microsoft.identity.common.java.providers.oauth2;
 
-import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
-import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.net.HttpResponse;
 
 import lombok.NonNull;
 
 /**
- * Acquire token strategy for Microsoft STS
- * T is expected to be either {@link InteractiveTokenCommandParameters} or {@link SilentTokenCommandParameters}
+ * Interface for handling token response. Implementations should be able to handle token response and return a TokenResult.
+ * Implementation can be provided to OAuth2Strategy requestToken method to provide response handler that can handle response.
+ * @param <GenericTokenResult>
  */
-public interface IAcquireMicrosoftStsTokenStrategy<T extends TokenCommandParameters> {
+public interface ITokenResponseHandler<GenericTokenResult extends TokenResult> {
 
     /**
-     * Create a token request
-     * @param parameters Silent or Interactive request parameters
-     * @return a token request
+     * Handles raw token http response and transform to TokenResult and return.
      */
-    @NonNull
-    MicrosoftStsTokenRequest createTokenRequest(@NonNull final T parameters) throws BaseException;
-
-    /**
-     * Acquire token given the request
-     * @param tokenRequest Token request
-     * @return Token result
-     * @throws ClientException
-     */
-    @NonNull
-    TokenResult acquireToken(@NonNull final MicrosoftStsTokenRequest tokenRequest) throws ClientException;
+    GenericTokenResult handleTokenResponse(@NonNull final HttpResponse response) throws ClientException;
 }
-

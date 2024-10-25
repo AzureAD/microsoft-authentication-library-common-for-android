@@ -22,54 +22,93 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import android.app.Activity;
-
-import androidx.test.core.app.ApplicationProvider;
-
 import com.microsoft.identity.common.java.constants.FidoConstants;
-import com.microsoft.identity.common.java.util.IPlatformUtil;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 
 @RunWith(RobolectricTestRunner.class)
 public class AndroidPlatformUtilTest {
 
-    private final IPlatformUtil mPlatformUtil = new AndroidPlatformUtil(ApplicationProvider.getApplicationContext(), new Activity());
-    private final Map.Entry<String, String> webauthnEntry = new AbstractMap.SimpleEntry<>(FidoConstants.WEBAUTHN_QUERY_PARAMETER_FIELD, FidoConstants.WEBAUTHN_QUERY_PARAMETER_VALUE);
+    final Map.Entry<String, String> webauthnParam = new AbstractMap.SimpleEntry<>(
+    FidoConstants.WEBAUTHN_QUERY_PARAMETER_FIELD,
+    FidoConstants.WEBAUTHN_QUERY_PARAMETER_VALUE
+    );
+    final ArrayList<Map.Entry<String, String>> emptyList = new ArrayList<>();
+    final ArrayList<Map.Entry<String, String>> singleList = new ArrayList<>(Collections.singletonList(new AbstractMap.SimpleEntry<>("foo", "1")));
+    final ArrayList<Map.Entry<String, String>> alreadyInList = new ArrayList<>(Collections.singletonList((webauthnParam)));
 
     @Test
-    public void testSetPlatformSpecificExtraQueryParameters_list() {
-        final List <Map.Entry<String, String>> list = new ArrayList<>();
-        list.add(new AbstractMap.SimpleEntry<>("foo", "1"));
-
-        assertTrue(mPlatformUtil.updateWithAndGetPlatformSpecificExtraQueryParameters(list).contains(webauthnEntry));
+    @Config(sdk = 28)
+    public void testUpdateWithOrDeleteWebAuthnParam_emptyListWebAuthnCapable() {
+        final ArrayList<Map.Entry<String, String>> list = AndroidPlatformUtil.updateWithOrDeleteWebAuthnParam(emptyList, true);
+        assertTrue(list.contains(webauthnParam));
     }
 
     @Test
-    public void testSetPlatformSpecificExtraQueryParameters_emptyList() {
-        assertTrue(mPlatformUtil.updateWithAndGetPlatformSpecificExtraQueryParameters(null).contains(webauthnEntry));
+    @Config(sdk = 28)
+    public void testUpdateWithOrDeleteWebAuthnParam_emptyListNotWebAuthnCapable() {
+        final ArrayList<Map.Entry<String, String>> list = AndroidPlatformUtil.updateWithOrDeleteWebAuthnParam(emptyList, false);
+        assertFalse(list.contains(webauthnParam));
     }
 
     @Test
-    public void testSetPlatformSpecificExtraQueryParameters_alreadyHasParameter() {
-        final List <Map.Entry<String, String>> list = new ArrayList<>();
-        list.add(new AbstractMap.SimpleEntry<>("foo", "1"));
-        list.add(webauthnEntry);
-        final List <Map.Entry<String, String>> result = mPlatformUtil.updateWithAndGetPlatformSpecificExtraQueryParameters(list);
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertTrue(result.contains(webauthnEntry));
-        assertTrue(result.contains(new AbstractMap.SimpleEntry<>("foo", "1")));
+    @Config(sdk = 28)
+    public void testUpdateWithOrDeleteWebAuthnParam_singleListWebAuthnCapable() {
+        final ArrayList<Map.Entry<String, String>> list = AndroidPlatformUtil.updateWithOrDeleteWebAuthnParam(singleList, true);
+        assertTrue(list.contains(webauthnParam));
+    }
+
+    @Test
+    @Config(sdk = 28)
+    public void testUpdateWithOrDeleteWebAuthnParam_singleListNotWebAuthnCapable() {
+        final ArrayList<Map.Entry<String, String>> list = AndroidPlatformUtil.updateWithOrDeleteWebAuthnParam(singleList, false);
+        assertFalse(list.contains(webauthnParam));
+    }
+
+    @Test
+    @Config(sdk = 28)
+    public void testUpdateWithOrDeleteWebAuthnParam_alreadyInListWebAuthnCapable() {
+        final ArrayList<Map.Entry<String, String>> list = AndroidPlatformUtil.updateWithOrDeleteWebAuthnParam(alreadyInList, true);
+        assertTrue(list.contains(webauthnParam));
+    }
+
+    @Test
+    @Config(sdk = 28)
+    public void testUpdateWithOrDeleteWebAuthnParam_alreadyListNotWebAuthnCapable() {
+        final ArrayList<Map.Entry<String, String>> list = AndroidPlatformUtil.updateWithOrDeleteWebAuthnParam(alreadyInList, false);
+        // We don't remove, since the app could be doing the per-request option and manually adding the param.
+        assertTrue(list.contains(webauthnParam));
+    }
+
+    @Test
+    @Config(sdk = 26)
+    public void testUpdateWithOrDeleteWebAuthnParam_emptyListWebAuthnCapableLowOs() {
+        final ArrayList<Map.Entry<String, String>> list = AndroidPlatformUtil.updateWithOrDeleteWebAuthnParam(emptyList, true);
+        assertFalse(list.contains(webauthnParam));
+    }
+
+    @Test
+    @Config(sdk = 26)
+    public void testUpdateWithOrDeleteWebAuthnParam_singleListWebAuthnCapableLowOs() {
+        final ArrayList<Map.Entry<String, String>> list = AndroidPlatformUtil.updateWithOrDeleteWebAuthnParam(singleList, true);
+        assertFalse(list.contains(webauthnParam));
+    }
+
+    @Test
+    @Config(sdk = 26)
+    public void testUpdateWithOrDeleteWebAuthnParam_alreadyInListWebAuthnCapableLowOs() {
+        final ArrayList<Map.Entry<String, String>> list = AndroidPlatformUtil.updateWithOrDeleteWebAuthnParam(alreadyInList, true);
+        assertFalse(list.contains(webauthnParam));
     }
 }

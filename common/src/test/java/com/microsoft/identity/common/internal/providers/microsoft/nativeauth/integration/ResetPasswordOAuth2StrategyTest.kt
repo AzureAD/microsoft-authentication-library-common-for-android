@@ -107,6 +107,7 @@ class ResetPasswordOAuth2StrategyTest {
         whenever(mockConfig.getSignUpContinueEndpoint()).thenReturn(ApiConstants.MockApi.signUpContinueRequestUrl)
         whenever(mockConfig.getSignInInitiateEndpoint()).thenReturn(ApiConstants.MockApi.signInInitiateRequestUrl)
         whenever(mockConfig.getSignInChallengeEndpoint()).thenReturn(ApiConstants.MockApi.signInChallengeRequestUrl)
+        whenever(mockConfig.getSignInIntrospectEndpoint()).thenReturn(ApiConstants.MockApi.signInIntrospectRequestUrl)
         whenever(mockConfig.getSignInTokenEndpoint()).thenReturn(ApiConstants.MockApi.signInTokenRequestUrl)
         whenever(mockConfig.getResetPasswordStartEndpoint()).thenReturn(ApiConstants.MockApi.ssprStartRequestUrl)
         whenever(mockConfig.getResetPasswordChallengeEndpoint()).thenReturn(ApiConstants.MockApi.ssprChallengeRequestUrl)

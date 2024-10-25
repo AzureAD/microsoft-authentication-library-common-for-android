@@ -7,8 +7,6 @@ name: $(date:yyyyMMdd)$(rev:.r)
 variables:
   - group: devex-ciam-test
 
-trigger: none
-
 resources:
   repositories:
   - repository: self

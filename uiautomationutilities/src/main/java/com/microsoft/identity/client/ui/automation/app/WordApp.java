@@ -97,8 +97,10 @@ public class WordApp extends App implements IFirstPartyApp {
         Logger.i(TAG, "Adding Another Account..");
         // Click account drawer
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_me_image");
+        // Click Add or switch account
+        UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_account_list_item_people_card");
         // Click add account
-        UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_account_list_add_account");
+        UiAutomatorUtils.handleButtonClickForObjectWithText("Add an account");
         // sing in with supplied username/password
         signIn(username, password, promptHandlerParameters);
     }
@@ -140,17 +142,6 @@ public class WordApp extends App implements IFirstPartyApp {
     public void confirmAccount(@NonNull final String username) {
         Logger.i(TAG, "Confirming account with supplied username is signed in..");
 
-        // Had a screen for microsoft 365 pop up occasionally
-        final UiObject msft365Object = UiAutomatorUtils.obtainUiObjectWithText("Go Premium with Microsoft 365 Personal");
-        if (msft365Object.exists()) {
-            final UiObject skipObject = UiAutomatorUtils.obtainUiObjectWithText("SKIP FOR NOW");
-            try {
-                skipObject.click();
-            } catch (UiObjectNotFoundException e) {
-                Logger.i(TAG, "Ignoring failure to find confirm account UI");
-            }
-        }
-
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_me_image");
 
         final UiObject testAccountLabelWord = UiAutomatorUtils.obtainUiObjectWithText(username);
@@ -158,5 +149,18 @@ public class WordApp extends App implements IFirstPartyApp {
                 "Provided user account exists in Word App.",
                 testAccountLabelWord.exists()
         );
+    }
+
+    /**
+     * Check that word (as an office app) has an option for phone sign-up
+     * @return true if the option is available, false otherwise
+     */
+    public boolean checkPhoneSignUpIsAvailable() {
+        launch();
+
+        Logger.i(TAG, "Checking that sign-up through phone number is available in Word...");
+
+        // Check for "phone" UI option, we can conclude phone option is available
+        return UiAutomatorUtils.obtainUiObjectWithText("phone").exists();
     }
 }

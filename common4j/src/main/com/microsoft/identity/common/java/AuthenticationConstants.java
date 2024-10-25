@@ -501,6 +501,13 @@ public class AuthenticationConstants {
          * Device Registration redirect url host name
          */
         public static final String DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME = "wpj";
+
+        /**
+         * Upgrade Device Registration redirect url host name
+         */
+        public static final String UPGRADE_DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME = "upgradeReg";
+
+        public static final String TOKEN_PROTECTION_REQUIRED_KEY = "token_protection_required";
     }
 
     /**

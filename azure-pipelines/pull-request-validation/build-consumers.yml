@@ -6,8 +6,6 @@
 # Variable: 'skipConsumerValidationLabel' PR label used to skip the checks in this pipeline
 name: $(date:yyyyMMdd)$(rev:.r)
 
-trigger: none
-
 parameters:
   - name: shouldSkipLongRunningTest
     displayName: Should skip long running test?

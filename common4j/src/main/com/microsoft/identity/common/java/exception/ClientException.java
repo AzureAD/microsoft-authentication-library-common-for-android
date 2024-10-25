@@ -481,6 +481,11 @@ public class ClientException extends BaseException {
     public static final String INSTALL_CERT_ERROR = "install_cert_error";
 
     /**
+     * Error occurred in the process loading a key from underlying storage.
+     */
+    public static final String KEY_LOAD_FAILURE = "key_load_failure";
+
+    /**
      * Constructor of ClientException.
      *
      * @param errorCode String

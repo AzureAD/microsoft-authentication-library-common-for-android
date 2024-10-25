@@ -28,8 +28,12 @@ import androidx.test.uiautomator.UiObject;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import com.microsoft.identity.common.java.util.ThreadUtils;
 
+import org.junit.Assert;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A representation of the Broker API Fragment that handles the interactions with UI.
@@ -39,6 +43,7 @@ public class BrokerApiFragment extends AbstractBrokerHost {
     // Resource Id for the buttons
     private final static String GET_ACCOUNTS_BUTTON_ID = "button_get_accounts";
     private final static String REMOVE_ACCOUNTS_BUTTON_ID = "button_remove_account";
+    private final static String RESTORE_MSA_ACCOUNTS_BUTTON_ID = "button_restore_accounts";
     private final static String GET_SSO_TOKEN_BUTTON_ID = "button_get_sso_token";
     // Resource Id for the edit text
     private final static String SSO_TOKEN_EDIT_TEXT_ID = "edit_sso_token";
@@ -73,6 +78,43 @@ public class BrokerApiFragment extends AbstractBrokerHost {
         fillTextBox(USERNAME_EDIT_TEXT, username);
         clickButton(REMOVE_ACCOUNTS_BUTTON_ID);
         dismissDialogBoxAndGetText();
+    }
+
+    /**
+     * Restores the MSA accounts.
+     *
+     * @param expectedRestoreAccountNames the expected number of the accounts restored.
+     */
+    public void restoreMsaAccounts(final List<String> expectedRestoreAccountNames) {
+        clickButton(RESTORE_MSA_ACCOUNTS_BUTTON_ID);
+        UiObject dialogBox;
+        final List<String> restoredAccountsNames = new ArrayList<>();
+        do {
+            final String restoreAccountsText = dismissDialogBoxAndGetText();
+            if (!expectedRestoreAccountNames.isEmpty() && restoreAccountsText != null && restoreAccountsText.contains("No accounts")) {
+                Assert.fail("No accounts restored");
+            } else if (restoreAccountsText != null) {
+                Pattern pattern = Pattern.compile("AccountName\\s*:\\s*([\\w.@]+)");
+                Matcher matcher = pattern.matcher(restoreAccountsText);
+
+                if (matcher.find()) {
+                    // Extract the account name
+                    String accountName = matcher.group(1);
+                    restoredAccountsNames.add(accountName);
+                }
+            }
+            ThreadUtils.sleepSafely(2000, TAG, "Waiting for the dialog box to disappear");
+            dialogBox = UiAutomatorUtils.obtainUiObjectWithResourceId(DIALOG_BOX_RESOURCE_ID);
+        } while (dialogBox.exists());
+
+        if (expectedRestoreAccountNames.isEmpty() && !restoredAccountsNames.isEmpty()) {
+            Assert.fail("Expected to not restore any accounts but 1 or more accounts were restored!");
+        }
+        for (String expectedRestoreAccountName : expectedRestoreAccountNames) {
+          if (!restoredAccountsNames.contains(expectedRestoreAccountName)) {
+              Assert.fail("Expected account "+ expectedRestoreAccountName + " not restored!");
+          }
+        }
     }
 
     /**

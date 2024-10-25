@@ -144,17 +144,7 @@ public class BrokerMsalController extends BaseController {
 
     private BrokerOperationExecutor mOperationExecutor;
 
-    @VisibleForTesting
-    public BrokerMsalController(@NonNull final Context applicationContext,
-                                @NonNull final IPlatformComponents components,
-                                @NonNull final String activeBrokerPackageName,
-                                @Nullable final List<IIpcStrategy> ipcStrategies) {
-        mComponents = components;
-        mApplicationContext = applicationContext;
-        mActiveBrokerPackageName = activeBrokerPackageName;
-        this.ipcStrategies = ipcStrategies;
-        mHelloCache = getHelloCache();
-    }
+    private String mMaxMsalBrokerProtocolVersion;
 
     public BrokerMsalController(@NonNull final Context applicationContext,
                                 @NonNull final IPlatformComponents components,
@@ -162,7 +152,46 @@ public class BrokerMsalController extends BaseController {
         this(applicationContext,
                 components,
                 activeBrokerPackageName,
-                null);
+                CLIENT_MAX_PROTOCOL_VERSION);
+    }
+
+    // Exposed to OneAuth.
+    // This will allow them to run full test pass for the new "max MSAL-Broker protocol version"
+    // before increasing it on their side.
+    public BrokerMsalController(@NonNull final Context applicationContext,
+                                @NonNull final IPlatformComponents components,
+                                @NonNull final String activeBrokerPackageName,
+                                final String maxMsalBrokerProtocolVersion) {
+        this(applicationContext,
+                components,
+                activeBrokerPackageName,
+                null,
+                maxMsalBrokerProtocolVersion);
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    public BrokerMsalController(@NonNull final Context applicationContext,
+                                @NonNull final IPlatformComponents components,
+                                @NonNull final String activeBrokerPackageName,
+                                @Nullable final List<IIpcStrategy> ipcStrategies) {
+        this(applicationContext,
+                components,
+                activeBrokerPackageName,
+                ipcStrategies,
+                CLIENT_MAX_PROTOCOL_VERSION);
+    }
+
+    private BrokerMsalController(@NonNull final Context applicationContext,
+                                 @NonNull final IPlatformComponents components,
+                                 @NonNull final String activeBrokerPackageName,
+                                 @Nullable final List<IIpcStrategy> ipcStrategies,
+                                 final String maxMsalBrokerProtocolVersion) {
+        mComponents = components;
+        mApplicationContext = applicationContext;
+        mActiveBrokerPackageName = activeBrokerPackageName;
+        this.ipcStrategies = ipcStrategies;
+        mHelloCache = getHelloCache();
+        mMaxMsalBrokerProtocolVersion = maxMsalBrokerProtocolVersion;
     }
 
     /** Should only be invoked in Background thread, given that getIpcStrategies could be a long running operation. */
@@ -201,7 +230,7 @@ public class BrokerMsalController extends BaseController {
     public @NonNull
     String hello(final @NonNull IIpcStrategy strategy,
                  final @Nullable String minRequestedVersion) throws BaseException {
-        return hello(strategy, minRequestedVersion, CLIENT_MAX_PROTOCOL_VERSION);
+        return hello(strategy, minRequestedVersion, mMaxMsalBrokerProtocolVersion);
     }
 
     /**

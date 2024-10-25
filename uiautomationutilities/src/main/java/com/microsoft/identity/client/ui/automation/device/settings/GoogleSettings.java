@@ -22,6 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.device.settings;
 
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG;
+import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.handleButtonClick;
+import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
+
 import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
@@ -39,10 +43,6 @@ import org.junit.Assert;
 
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
-
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG;
-import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.handleButtonClick;
-import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
 
 /**
  * A model representing the Settings app on a Google device. Please note that this class is
@@ -158,21 +158,22 @@ public class GoogleSettings extends BaseSettings {
 
             // Find the cert installer and make sure it exists
             UiObject certInstaller = device.findObject(new UiSelector().packageName("com.android.certinstaller"));
-            Assert.assertTrue(
-                    "Cert Installer appears while adding work account",
-                    certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT_LONG)
-            );
+            if (certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT_LONG)) {
 
-            // Confirm install cert
-            UiAutomatorUtils.handleButtonClick("android:id/button1");
+                // Confirm install cert
+                UiAutomatorUtils.handleButtonClick("android:id/button1");
 
-            // Confirm cert name (API 30+ only)
-            if (android.os.Build.VERSION.SDK_INT >= 30) {
-                UiAutomatorUtils.handleButtonClickSafely("android:id/button1");
+                // Confirm cert name (API 30+ only)
+                if (android.os.Build.VERSION.SDK_INT >= 30) {
+                    UiAutomatorUtils.handleButtonClickSafely("android:id/button1");
+                }
+                // Make sure account appears in Join Activity afterwards
+                broker.confirmJoinInJoinActivity(username);
+            } else {
+                // Click OK button
+                UiAutomatorUtils.handleButtonClickForObjectWithExactText("OK");
             }
 
-            // Make sure account appears in Join Activity afterwards
-            broker.confirmJoinInJoinActivity(username);
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }

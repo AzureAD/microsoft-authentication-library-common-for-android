@@ -75,4 +75,15 @@ public final class HttpResponseTests {
         Assert.assertNull(response.getHeaderValue("xms-ccs-requestid", -3));
         Assert.assertNull(response.getHeaderValue("", 0));
     }
+
+    @Test
+    public void testIsContentTypeMediaType() {
+        final HashMap<String, List<String>> responseHeaders = new HashMap<>();
+        responseHeaders.put("Content-Type", new ArrayList<>((Collections.singleton("application/jose"))));
+        HttpResponse response = new HttpResponse(HttpURLConnection.HTTP_OK, RESPONSE_BODY, responseHeaders);
+        Assert.assertTrue(response.isContentTypeMediaType("application/jose"));
+        responseHeaders.put("Content-Type", new ArrayList<>((Collections.singleton("application/jose; charset=utf-8"))));
+        response = new HttpResponse(HttpURLConnection.HTTP_OK, RESPONSE_BODY, responseHeaders);
+        Assert.assertTrue(response.isContentTypeMediaType("application/jose"));
+    }
 }

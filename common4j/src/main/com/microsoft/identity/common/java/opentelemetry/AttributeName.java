@@ -260,6 +260,11 @@ public enum AttributeName {
     fido_challenge_handler,
 
     /**
+     * Fido manager type.
+     */
+    fido_manager,
+
+    /**
      * Indicates the request sequence used by cached credential service (if used) on server side
      */
     ccs_request_sequence,
@@ -285,12 +290,7 @@ public enum AttributeName {
     home_cloud_name,
 
     /**
-     * Indicates the time to retrieve blockstore data.
+     * Specify the result (or error stack trace) when determining if RT should be returned with AT response.
      */
-    elapsed_time_retrieve_all_from_blockstore,
-
-    /**
-     * Indicates the number of entries retrieved from blockstore.
-     */
-     no_of_entries_retrieved_from_blockstore;
+    stop_returning_rt_result
 }

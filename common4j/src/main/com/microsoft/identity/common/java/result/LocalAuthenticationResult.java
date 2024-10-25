@@ -76,6 +76,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
 
         if (cacheRecord.getRefreshToken() != null) {
             mRefreshToken = cacheRecord.getRefreshToken().getSecret();
+            mFamilyId = cacheRecord.getRefreshToken().getFamilyId();
         }
 
         final IdTokenRecord idTokenRecord = sdkType == SdkType.ADAL ?
@@ -83,7 +84,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
                 cacheRecord.getIdToken();
         if (idTokenRecord != null) {
             mRawIdToken = idTokenRecord.getSecret();
-            Logger.info(TAG, "Id Token type: " +
+            Logger.verbose(TAG, "Id Token type: " +
                     idTokenRecord.getCredentialType());
         } else if (cacheRecord.getV1IdToken() != null) {
             // For all AAD requests, we hit the V2 endpoint, so the id token returned will be of version 2.0 (V2 )

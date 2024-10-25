@@ -44,13 +44,16 @@ class IpcStrategyWithBackup (
         return try {
             primary.communicateToBroker(bundle)
         } catch (t: Throwable) {
+            Logger.info(methodTag, "Primary ipc failed : ${t.message}")
+            val usedStrategies = mutableListOf<String>()
             for(ipc in backup) {
                 try {
-                    val result = ipc.communicateToBroker(bundle)
+                    usedStrategies.add(ipc.getType().name)
                     SpanExtension.current().setAttribute(
                         AttributeName.backup_ipc_used.name,
-                        ipc.getType().name
+                        usedStrategies.joinToString(",")
                     )
+                    val result = ipc.communicateToBroker(bundle)
                     Logger.info(methodTag, "${ipc.getType().name} backup ipc succeeded.")
                     return result
                 } catch (t: Throwable) {
