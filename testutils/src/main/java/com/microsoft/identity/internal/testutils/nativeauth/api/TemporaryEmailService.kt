@@ -82,13 +82,13 @@ class TemporaryEmailService {
                 val currentTime = ZonedDateTime.ofInstant(Instant.now(), ZoneOffset.UTC)
 
                 val inboxEmails = api.retrieveMailbox(emailAddress)
-                val newEmailIds = inboxEmails
+                val newEmailId = inboxEmails
                     .filter { Duration.between(LocalDateTime.parse(it.date, dateFormatter), currentTime).seconds < newEmailCutoff }
                     .map { it.id }
                     .firstOrNull()
 
-                if (newEmailIds != null) {
-                    latestEmailId = newEmailIds
+                if (newEmailId != null) {
+                    latestEmailId = newEmailId
 
                     val emailContent = api.retrieveEmail(emailAddress, latestEmailId)
                     otpValue = retrieveOtpFromEmailBody(emailContent.textBody)
