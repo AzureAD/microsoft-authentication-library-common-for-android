@@ -205,7 +205,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
                               final Bitmap favicon) {
         final String methodTag = TAG + ":onPageStarted";
         checkStartUrl(url);
-        Logger.info(methodTag,"WebView starts loading.");
+        Logger.info(methodTag,"WebView starts loading. "+ url);
         super.onPageStarted(view, url, favicon);
     }
 

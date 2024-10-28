@@ -221,6 +221,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         Logger.info(methodTag, "Back button is pressed");
 
         if (mWebView.canGoBack()) {
+            Logger.info(methodTag, "Can go back true when current url is "+ mWebView.getUrl());
             mWebView.goBack();
         } else {
             cancelAuthorization(true);
