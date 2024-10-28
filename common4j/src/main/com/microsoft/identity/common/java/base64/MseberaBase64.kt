@@ -1,0 +1,64 @@
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+package com.microsoft.identity.common.java.base64
+
+import cz.msebera.android.httpclient.extras.Base64
+
+/**
+ * Msebera HttpClient library is no longer maintained,
+ * and some part of the library (**that we don't use**) is flagged by an apk scanning tool,
+ * so we need to move away from it.
+ *
+ * The solution is to exclude Msebera Base64 in Android module (and have them consume the Android Base64 instead).
+ *
+ * NOTE: Base64 implementation in both Android OS and Msebera is a clone of an (old version of) apache commons-codec.
+ * (read: Msebera Base64 should produce the exact same result that Android Base64 returns),
+ *
+ * We would still use Msebera's Base64 in places where Android Base64 is not available.
+ * (e.g. 4j tests, android unit tests, Linux Broker)
+ **/
+class MseberaBase64 : IBase64 {
+    override fun encode(input: ByteArray, vararg flags: Base64Flags): ByteArray {
+        return Base64.encode(input, combineFlags(*flags))
+    }
+
+    override fun decode(input: ByteArray, vararg flags: Base64Flags): ByteArray {
+        return Base64.decode(input, combineFlags(*flags))
+    }
+
+    private fun combineFlags(vararg flags: Base64Flags): Int {
+        var combinedFlag = Base64.DEFAULT
+
+        if (flags.contains(Base64Flags.URL_SAFE)) {
+            combinedFlag = combinedFlag or Base64.URL_SAFE
+        }
+        if (flags.contains(Base64Flags.NO_WRAP)) {
+            combinedFlag = combinedFlag or Base64.NO_WRAP
+        }
+        if (flags.contains(Base64Flags.NO_PADDING)) {
+            combinedFlag = combinedFlag or Base64.NO_PADDING
+        }
+
+        return combinedFlag
+    }
+}

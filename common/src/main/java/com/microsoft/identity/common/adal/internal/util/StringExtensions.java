@@ -26,6 +26,8 @@ import android.net.Uri;
 import android.util.Base64;
 import android.util.Log;
 
+import com.microsoft.identity.common.java.base64.Base64Flags;
+import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -110,20 +112,6 @@ public final class StringExtensions {
 
         // Decode everything else
         return URLDecoder.decode(source, ENCODING_UTF8);
-    }
-
-    /**
-     * Encode Base64 URL Safe String.
-     *
-     * @param bytes byte[]
-     * @return String
-     * @throws UnsupportedEncodingException throws if encoding not supported.
-     */
-    public static String encodeBase64URLSafeString(final byte[] bytes)
-            throws UnsupportedEncodingException {
-        return new String(
-                Base64.encode(bytes, Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE),
-                ENCODING_UTF8);
     }
 
     /**
@@ -238,16 +226,6 @@ public final class StringExtensions {
     public static boolean hasPrefixInHeader(final String value, final String prefix) {
         return value.startsWith(prefix) && value.length() > prefix.length() + 2
                 && Character.isWhitespace(value.charAt(prefix.length()));
-    }
-
-    /**
-     * Based64URL encode the input string.
-     *
-     * @param message String
-     * @return String
-     */
-    public static String base64UrlEncodeToString(final String message) {
-        return Base64.encodeToString(message.getBytes(Charset.forName(ENCODING_UTF8)), Base64.URL_SAFE | Base64.NO_WRAP);
     }
 
     /**

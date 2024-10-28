@@ -22,8 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.authorities.Authority;
+import com.microsoft.identity.common.java.base64.Base64Flags;
+import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.java.dto.CredentialType;
@@ -49,10 +50,7 @@ import com.nimbusds.jwt.SignedJWT;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -60,10 +58,6 @@ import java.security.SecureRandom;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashSet;
-import java.util.Set;
-
-import cz.msebera.android.httpclient.extras.Base64;
 
 import static com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount.AUTHORITY_TYPE_MS_STS;
 import static org.junit.Assert.assertEquals;
@@ -292,6 +286,6 @@ public class MicrosoftStsAccountCredentialAdapterTest {
 
     static String createRawClientInfo(final String uid, final String utid) {
         final String claims = "{\"uid\":\"" + uid + "\",\"utid\":\"" + utid + "\"}";
-        return Base64.encodeToString(StringUtil.toByteArray(claims), Base64.URL_SAFE);
+        return Base64Util.encodeToString(StringUtil.toByteArray(claims), Base64Flags.URL_SAFE);
     }
 }
