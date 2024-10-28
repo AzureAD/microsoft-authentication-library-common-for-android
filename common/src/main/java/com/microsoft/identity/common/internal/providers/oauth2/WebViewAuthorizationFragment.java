@@ -308,8 +308,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // The image to use can be specified by the poster attribute of the video tag in HTML.
                 // If the attribute is absent, then a default poster will be used.
                 // This method allows the ChromeClient to provide that default image.
-                // On our case when an invalid QR code is provided,  we will return a 10x10 empty image.
-                // Instead of the default grey playback image. #2424
+                // We will return a 10x10 empty image, instead of the default grey playback image. #2424
                 return Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
             }
         });
