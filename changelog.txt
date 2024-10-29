@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Migrate Base64 away from Msebera httpclient (#2389)
 - [MINOR] Migrate URIbuilder to httpcore5 (#2522)
 
 Version 18.1.0
