@@ -80,6 +80,7 @@ ext {
     blockstoreVersion="16.2.0"
     lifecycleKtxVersion="2.5.1"
     AndroidCredentialsVersion="1.2.2"
+    LegacyFidoApiVersion="20.1.0"
 
     // microsoft-diagnostics-uploader app versions
     powerliftVersion = "0.14.7"

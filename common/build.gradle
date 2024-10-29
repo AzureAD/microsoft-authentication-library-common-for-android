@@ -155,6 +155,7 @@ dependencies {
 
     implementation(group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
+    implementation 'org.apache.httpcomponents.core5:httpcore5:5.3'
     implementation "cz.msebera.android:httpclient:$rootProject.ext.mseberaApacheHttpClientVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation "androidx.appcompat:appcompat:$rootProject.ext.appCompatVersion"
@@ -169,6 +170,7 @@ dependencies {
     implementation "androidx.credentials:credentials:$rootProject.ext.AndroidCredentialsVersion"
     //needed for credentials support from play services, for devices running
     implementation "androidx.credentials:credentials-play-services-auth:$rootProject.ext.AndroidCredentialsVersion"
+    implementation "com.google.android.gms:play-services-fido:$rootProject.ext.LegacyFidoApiVersion"
 
     constraints {
         implementation ("com.squareup.okio:okio:3.4.0") {

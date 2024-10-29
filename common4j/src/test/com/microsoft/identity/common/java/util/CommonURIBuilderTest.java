@@ -23,6 +23,7 @@
 
 package com.microsoft.identity.common.java.util;
 
+import org.apache.hc.core5.http.NameValuePair;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,8 +34,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import cz.msebera.android.httpclient.NameValuePair;
 
 @RunWith(JUnit4.class)
 public class CommonURIBuilderTest {
@@ -74,6 +73,29 @@ public class CommonURIBuilderTest {
         final CommonURIBuilder builder = new CommonURIBuilder()
                 .setParameter("Test1", "Value1")
                 .addParameterIfAbsent("Test1", "Value2");
+
+        Assert.assertEquals(1, builder.getQueryParams().size());
+        Assert.assertEquals("Test1", builder.getQueryParams().get(0).getName());
+        Assert.assertEquals("Value1", builder.getQueryParams().get(0).getValue());
+    }
+
+    @Test
+    public void testCallingAddParametersIfAbsent_WithNullMap(){
+        final CommonURIBuilder builder = new CommonURIBuilder()
+                .setParameter("Test1", "Value1")
+                .addParametersIfAbsent((Map<String, ?>) null);
+        
+        Assert.assertEquals(1, builder.getQueryParams().size());
+        Assert.assertEquals("Test1", builder.getQueryParams().get(0).getName());
+        Assert.assertEquals("Value1", builder.getQueryParams().get(0).getValue());
+    }
+    
+    @Test
+    public void testCallingAddParametersIfAbsent_WithEmptyMap(){
+        final Map<String, String> map = new HashMap<>();
+        final CommonURIBuilder builder = new CommonURIBuilder()
+                .setParameter("Test1", "Value1")
+                .addParametersIfAbsent(map);
 
         Assert.assertEquals(1, builder.getQueryParams().size());
         Assert.assertEquals("Test1", builder.getQueryParams().get(0).getName());

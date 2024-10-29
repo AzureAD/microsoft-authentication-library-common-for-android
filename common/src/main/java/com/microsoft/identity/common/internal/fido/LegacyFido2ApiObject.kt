@@ -22,25 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
-import io.opentelemetry.api.trace.Span
+import android.app.PendingIntent
 
 /**
- * Representation of a manager that handles interactions with a passkey provider (usually through an API).
+ * A data class which holds the PendingIntent from the legacy FIDO2 API and the callbacks which handle its results.
  */
-interface IFidoManager {
-    /**
-     * Interacts with the FIDO credential provider and returns an assertion.
-     * @param challenge
-     * @param relyingPartyIdentifier
-     * @param allowedCredentials
-     * @param userVerificationPolicy
-     * @param span
-     * @return assertion
-     * @throws Exception
-     */
-    suspend fun authenticate(challenge: String,
-                             relyingPartyIdentifier: String,
-                             allowedCredentials: List<String>?,
-                             userVerificationPolicy: String,
-                             span: Span) : String
+data class LegacyFido2ApiObject(
+    val assertionCallback: (result: String) -> Unit,
+    val errorCallback: (exception: LegacyFido2ApiException) -> Unit,
+    val pendingIntent: PendingIntent
+) {
+
 }

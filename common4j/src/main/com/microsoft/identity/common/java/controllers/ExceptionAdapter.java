@@ -436,7 +436,8 @@ public class ExceptionAdapter {
         if (e instanceof NullPointerException) {
             return new ClientException(
                     ClientException.NULL_POINTER_ERROR,
-                    e.getMessage()
+                    e.getMessage(),
+                    e
             );
         }
 

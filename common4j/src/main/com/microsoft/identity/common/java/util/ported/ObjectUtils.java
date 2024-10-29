@@ -56,9 +56,9 @@ public final class ObjectUtils {
      */
     public static void throwIfArgumentIsNull(final @Nullable Object argument,
                                              final @NonNull String argumentName,
-                                             final @NonNull String methodName) throws NullPointerException {
+                                             final @NonNull String methodTag) throws NullPointerException {
         if (argument == null) {
-            Logger.error(TAG + methodName, argumentName + " is null.", null);
+            Logger.error(methodTag, argumentName + " is null.", null);
             throw new NullPointerException(argumentName + " is null.");
         }
     }

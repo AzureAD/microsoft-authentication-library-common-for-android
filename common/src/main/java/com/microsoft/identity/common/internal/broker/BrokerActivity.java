@@ -138,7 +138,7 @@ public final class BrokerActivity extends Activity {
         Logger.info(methodTag,
                 "Result received from Broker "
                         + "Request code: " + requestCode
-                        + " Result code: " + requestCode
+                        + " Result code: " + resultCode
         );
 
         mBrokerResultReceived = true;
