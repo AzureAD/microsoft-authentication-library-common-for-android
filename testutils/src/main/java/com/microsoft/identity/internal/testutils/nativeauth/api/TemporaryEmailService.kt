@@ -115,8 +115,7 @@ class TemporaryEmailService {
     private fun retrieveOtpFromEmailBody(emailBody: String): String {
         val otpRegex = "Account verification code:\n(?<otc>[0-9]*)\n".toRegex()
         val match = otpRegex.find(emailBody)
-        val otp = match!!.groups["otc"]!!.value
-        return otp
+        return match!!.groups["otc"]!!.value
     }
 
     class TemporaryEmailApi {
