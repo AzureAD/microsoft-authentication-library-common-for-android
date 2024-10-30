@@ -314,7 +314,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (mCameraPermissionRequest.isGranted()) {
             duplicatedRequest.grant();
         } else {
-            duplicatedRequest.denny();
+            duplicatedRequest.deny();
         }
     }
 
@@ -336,7 +336,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     mCameraPermissionRequest.grant();
                 }
                 else {
-                    mCameraPermissionRequest.denny();
+                    mCameraPermissionRequest.deny();
                 }
             }
     );
@@ -361,7 +361,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 .setTitle(R.string.qr_code_rationale_header)
                 .setCancelable(false)
                 .setPositiveButton(R.string.qr_code_rationale_allow, (dialog, id) -> launchCameraRequestActivity())
-                .setNegativeButton(R.string.qr_code_rationale_block, (dialog, id) -> mCameraPermissionRequest.denny());
+                .setNegativeButton(R.string.qr_code_rationale_block, (dialog, id) -> mCameraPermissionRequest.deny());
         builder.show();
     }
 
