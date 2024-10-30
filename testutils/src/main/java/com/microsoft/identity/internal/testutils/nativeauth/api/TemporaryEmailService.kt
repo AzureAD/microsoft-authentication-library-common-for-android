@@ -88,16 +88,12 @@ class TemporaryEmailService {
                     .map { it.id }
                     .firstOrNull()
 
-                if (latestEmailId == null) {
-                    if (newEmailId != null) {
-                        latestEmailId = newEmailId
-                    }
-                } else {
-                    if (newEmailId != latestEmailId) {
-                        val emailContent = api.retrieveEmail(emailAddress, latestEmailId)
-                        otpValue = retrieveOtpFromEmailBody(emailContent.textBody)
-                        validCodeRetrieved = true
-                    }
+                if (newEmailId != null && latestEmailId != newEmailId) {
+                    latestEmailId = newEmailId
+
+                    val emailContent = api.retrieveEmail(emailAddress, latestEmailId)
+                    otpValue = retrieveOtpFromEmailBody(emailContent.textBody)
+                    validCodeRetrieved = true
                 }
 
                 count++
