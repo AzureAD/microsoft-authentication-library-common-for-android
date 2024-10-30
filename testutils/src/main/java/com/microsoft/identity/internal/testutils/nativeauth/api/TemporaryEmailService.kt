@@ -31,7 +31,13 @@ import com.microsoft.identity.internal.test.labapi.Pair
 import com.microsoft.identity.internal.testutils.nativeauth.api.models.EmailContent
 import com.microsoft.identity.internal.testutils.nativeauth.api.models.InboxContent
 import com.squareup.okhttp.Call
-import java.lang.IllegalStateException
+import java.time.Duration
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+
 
 /**
  *
@@ -39,6 +45,10 @@ import java.lang.IllegalStateException
 class TemporaryEmailService {
 
     private val api = TemporaryEmailApi()
+    private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    private val numberOfRetries = 3
+    private val retryDelayMs: Long = 4000
+    private val newEmailCutoff = 5.0
 
     fun generateRandomEmailAddress(): String {
         val generatedUsers = api.generateRandomEmailAddress()
@@ -57,32 +67,48 @@ class TemporaryEmailService {
      * To cater for email send and arrival delays, this is retried several times.
      */
     fun retrieveCodeFromInbox(emailAddress: String): String {
-        var retrievedMailbox = api.retrieveMailbox(emailAddress)
-
-        var mailBoxEmpty = retrievedMailbox.isEmpty()
+        var validCodeRetrieved = false
         var count = 0
-        while (mailBoxEmpty && count < 3) {
-            // Wait 3 seconds
-            Thread.sleep(3000)
+        var latestEmailId: String? = null
+        var otpValue = ""
+        var apiException: Exception? = null
 
-            // Attempt to retrieve mailbox again.
-            retrievedMailbox = api.retrieveMailbox(emailAddress)
-            mailBoxEmpty = retrievedMailbox.isEmpty()
+        while (count < numberOfRetries && !validCodeRetrieved) {
+            try {
+                //wait before calling the email endpoint
+                Thread.sleep(retryDelayMs)
 
-            // Max 3 retries
-            count++
+                //API returns dates in the UTC timezone, so system time should also be converted
+                val currentTime = ZonedDateTime.ofInstant(Instant.now(), ZoneOffset.UTC)
+
+                val inboxEmails = api.retrieveMailbox(emailAddress)
+
+                val newEmailId = inboxEmails
+                    .filter { Duration.between(LocalDateTime.parse(it.date, dateFormatter), currentTime).seconds < newEmailCutoff }
+                    .map { it.id }
+                    .firstOrNull()
+
+                if (newEmailId != null && latestEmailId != newEmailId) {
+                    latestEmailId = newEmailId
+
+                    val emailContent = api.retrieveEmail(emailAddress, latestEmailId)
+                    otpValue = retrieveOtpFromEmailBody(emailContent.textBody)
+                    validCodeRetrieved = true
+                }
+
+                count++
+            } catch (e: Exception) {
+                //1secmail server occasionally returns an internal server error which causes the API client to throw an exception
+                //In this case, retry the operation
+                apiException = e
+                count++
+            }
         }
-        // After the retries we still weren't able to retrieve the inbox, so fail and restart the test.
-        if (mailBoxEmpty) {
-            throw IllegalStateException("Unable to fetch inbox for user $emailAddress")
+
+        // After the retries we still weren't able to retrieve a valid code from the inbox, so fail and restart the test.
+        if (!validCodeRetrieved) {
+            throw apiException ?: IllegalStateException("Unable to fetch valid code for user")
         }
-
-        // TODO ID seems to work, but using timestamp-based sorting is more robust.
-        retrievedMailbox.sortedByDescending { it.id }
-
-        val emailId = retrievedMailbox[0].id
-        val emailContent = api.retrieveEmail(emailAddress, emailId)
-        val otpValue = retrieveOtpFromEmailBody(emailContent.textBody)
 
         return otpValue
     }
