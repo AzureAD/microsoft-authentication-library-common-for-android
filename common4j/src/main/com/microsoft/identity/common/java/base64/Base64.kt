@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.base64
 
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.util.StringUtil
+import java.lang.IllegalStateException
 import java.nio.charset.StandardCharsets
 
 class Base64Util {
@@ -32,28 +33,55 @@ class Base64Util {
 
         private var base64: IBase64 = initialize()
 
-        /**
-         * If this is executed on Android, then we'll use Android's Base64.
-         * Otherwise, we'll keep using Msebera.
-         *
-         * NOTE2: msebera is not in common's dependency chain (common ingest common4j with transitive = false),
-         *       so we'll need to add that in the test module
-         *       (currently done through testfixtures, which consumes common4j with transitive = true)
-         * */
         fun initialize() : IBase64 {
+            val androidBase64 = tryLoadAndroidBase64()
+            if (androidBase64 != null){
+                return androidBase64
+            }
+
+            val linuxBase64 = tryLoadMseberaBase64InLinux()
+            if (linuxBase64 != null){
+                return linuxBase64
+            }
+
+            val testUtilsBase64 = tryLoadMseberaBase64InTestUtils()
+            if (testUtilsBase64 != null){
+                return testUtilsBase64
+            }
+
+            throw IllegalStateException("Cannot find a Base64 to initialize.")
+        }
+
+        private fun tryLoadAndroidBase64(): IBase64? {
             return try {
-                // If the class is not included in the final product, ClassNotFoundException will be thrown.
-                // (e.g. when executing common4j unit tests, or in Linux Broker)
                 val androidBase64 = Class.forName("com.microsoft.identity.common.base64.AndroidBase64").getDeclaredConstructor().newInstance() as IBase64
 
                 // If executed in Android Unit tests, androidBase64 will fail (mocking required) with a RuntimeException.
                 androidBase64.encode(ByteArray(0), Base64Flags.DEFAULT)
 
                 return androidBase64
-            } catch (e: ClassNotFoundException){
-                MseberaBase64()
+            } catch (e: ClassNotFoundException) {
+                null
             } catch (e: RuntimeException){
-                MseberaBase64()
+                null
+            }
+        }
+
+        private fun tryLoadMseberaBase64InLinux(): IBase64? {
+            return try {
+                Class.forName("com.microsoft.identity.broker.base64.MseberaBase64")
+                        .getDeclaredConstructor().newInstance() as IBase64
+            } catch (e: ClassNotFoundException) {
+                null
+            }
+        }
+
+        private fun tryLoadMseberaBase64InTestUtils(): IBase64? {
+            return try {
+                Class.forName("com.microsoft.broker.sharedtestclasses.TestUtils.MseberaBase64")
+                    .getDeclaredConstructor().newInstance() as IBase64
+            } catch (e: ClassNotFoundException) {
+                null
             }
         }
 
