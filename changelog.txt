@@ -1,5 +1,7 @@
 vNext
-----------
+---------
+- [PATCH] Provide empty image when no video is present on QR +PIN auth (#2424)
+- [MINOR] On GetPreferredAuthMethod return NONE when Authenticator is not installed (#2523)
 - [MINOR] Migrate URIbuilder to httpcore5 (#2522)
 
 Version 18.1.0
