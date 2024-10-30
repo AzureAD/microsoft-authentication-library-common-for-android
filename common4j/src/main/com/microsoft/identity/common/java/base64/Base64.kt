@@ -78,7 +78,7 @@ class Base64Util {
 
         private fun tryLoadMseberaBase64InTestUtils(): IBase64? {
             return try {
-                Class.forName("com.microsoft.broker.sharedtestclasses.TestUtils.MseberaBase64")
+                Class.forName("com.microsoft.identity.internal.testutils.MseberaBase64")
                     .getDeclaredConstructor().newInstance() as IBase64
             } catch (e: ClassNotFoundException) {
                 null
