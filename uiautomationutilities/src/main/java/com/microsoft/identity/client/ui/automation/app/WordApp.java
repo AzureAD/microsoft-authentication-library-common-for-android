@@ -97,8 +97,10 @@ public class WordApp extends App implements IFirstPartyApp {
         Logger.i(TAG, "Adding Another Account..");
         // Click account drawer
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_me_image");
+        // Click Add or switch account
+        UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_account_list_item_people_card");
         // Click add account
-        UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_account_list_add_account");
+        UiAutomatorUtils.handleButtonClickForObjectWithText("Add an account");
         // sing in with supplied username/password
         signIn(username, password, promptHandlerParameters);
     }
@@ -139,17 +141,6 @@ public class WordApp extends App implements IFirstPartyApp {
     @Override
     public void confirmAccount(@NonNull final String username) {
         Logger.i(TAG, "Confirming account with supplied username is signed in..");
-
-        // Had a screen for microsoft 365 pop up occasionally
-        final UiObject msft365Object = UiAutomatorUtils.obtainUiObjectWithText("Go Premium with Microsoft 365 Personal");
-        if (msft365Object.exists()) {
-            final UiObject skipObject = UiAutomatorUtils.obtainUiObjectWithText("SKIP FOR NOW");
-            try {
-                skipObject.click();
-            } catch (UiObjectNotFoundException e) {
-                Logger.i(TAG, "Ignoring failure to find confirm account UI");
-            }
-        }
 
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_me_image");
 

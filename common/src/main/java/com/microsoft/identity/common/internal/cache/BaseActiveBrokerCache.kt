@@ -27,7 +27,7 @@ import com.microsoft.identity.common.java.interfaces.INameValueStorage
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import net.jcip.annotations.ThreadSafe
+import javax.annotation.concurrent.ThreadSafe
 
 /**
  * A cache for storing the active broker as known by the caller.

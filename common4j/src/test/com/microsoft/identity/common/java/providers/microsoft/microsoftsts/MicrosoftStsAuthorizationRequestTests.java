@@ -56,7 +56,7 @@ public class MicrosoftStsAuthorizationRequestTests {
     private static final String DEFAULT_TEST_REDIRECT_URI_ENCODED = "some%3A%2F%2Fredirect.uri";
     private static final String DEFAULT_TEST_LOGIN_HINT = "someLoginHint";
     private static final String DEFAULT_TEST_SCOPE = "scope1 scope2";
-    private static final String DEFAULT_TEST_SCOPE_ENCODED = "scope1+scope2";
+    private static final String DEFAULT_TEST_SCOPE_ENCODED = "scope1%20scope2";
     private static final String DEFAULT_TEST_AUTHORIZATION_ENDPOINT = "https://login.microsoftonline.com/common/oAuth2/v2.0/authorize";
     private static final UUID DEFAULT_TEST_CORRELATION_ID = UUID.randomUUID();
     private static final List<Map.Entry<String, String>> DEFAULT_TEST_EXTRA_QP = new ArrayList<Map.Entry<String, String>>() {{
