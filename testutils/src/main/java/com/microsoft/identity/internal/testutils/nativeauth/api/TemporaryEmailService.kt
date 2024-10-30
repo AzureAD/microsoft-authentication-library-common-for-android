@@ -69,7 +69,7 @@ class TemporaryEmailService {
     fun retrieveCodeFromInbox(emailAddress: String): String {
         var validCodeRetrieved = false
         var count = 0
-        var latestEmailId: String?
+        var latestEmailId: String? = null
         var otpValue = ""
         var apiException: Exception? = null
 
@@ -82,17 +82,22 @@ class TemporaryEmailService {
                 val currentTime = ZonedDateTime.ofInstant(Instant.now(), ZoneOffset.UTC)
 
                 val inboxEmails = api.retrieveMailbox(emailAddress)
+
                 val newEmailId = inboxEmails
                     .filter { Duration.between(LocalDateTime.parse(it.date, dateFormatter), currentTime).seconds < newEmailCutoff }
                     .map { it.id }
                     .firstOrNull()
 
-                if (newEmailId != null) {
-                    latestEmailId = newEmailId
-
-                    val emailContent = api.retrieveEmail(emailAddress, latestEmailId)
-                    otpValue = retrieveOtpFromEmailBody(emailContent.textBody)
-                    validCodeRetrieved = true
+                if (latestEmailId == null) {
+                    if (newEmailId != null) {
+                        latestEmailId = newEmailId
+                    }
+                } else {
+                    if (newEmailId != latestEmailId) {
+                        val emailContent = api.retrieveEmail(emailAddress, latestEmailId)
+                        otpValue = retrieveOtpFromEmailBody(emailContent.textBody)
+                        validCodeRetrieved = true
+                    }
                 }
 
                 count++
