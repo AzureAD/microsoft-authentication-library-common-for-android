@@ -155,6 +155,7 @@ dependencies {
 
     implementation(group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
+    implementation 'org.apache.httpcomponents.core5:httpcore5:5.3'
     implementation "cz.msebera.android:httpclient:$rootProject.ext.mseberaApacheHttpClientVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation "androidx.appcompat:appcompat:$rootProject.ext.appCompatVersion"
