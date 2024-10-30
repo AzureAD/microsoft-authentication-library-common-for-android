@@ -40,7 +40,7 @@ import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;
 
 /**
- * An class which provide components for each platforms.
+ * A class which provides components for each platform.
  */
 @Getter
 @SuperBuilder

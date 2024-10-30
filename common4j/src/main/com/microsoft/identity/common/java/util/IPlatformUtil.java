@@ -22,9 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
+import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 
 import java.security.NoSuchAlgorithmException;
@@ -136,4 +138,6 @@ public interface IPlatformUtil {
      */
     @Nullable
     List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList);
+
+    boolean removeAccountFromBroker(@NonNull final IBrokerAccount brokerAccount, @NonNull final IPlatformComponents components, @NonNull String methodTag);
 }

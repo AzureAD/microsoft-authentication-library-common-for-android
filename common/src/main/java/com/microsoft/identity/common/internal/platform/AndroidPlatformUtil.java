@@ -45,6 +45,7 @@ import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.IntuneMAMEnrollmentIdGateway;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
+import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
@@ -52,6 +53,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
@@ -82,7 +84,7 @@ public class AndroidPlatformUtil implements IPlatformUtil {
 
     /**
      * List of System Browsers which can be used from broker, currently only Chrome is supported.
-     * This information here is populated from the default browser safelist in MSAL.
+     * This information here is populated from the default browser safe-list in MSAL.
      *
      * @return
      */
@@ -228,6 +230,12 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     @Override
     public List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList) {
         return originalList;
+    }
+
+    @Override
+    public boolean removeAccountFromBroker(@NonNull IBrokerAccount brokerAccount, @NonNull IPlatformComponents components, @NonNull String methodTag) {
+        // No-op
+        return false;
     }
 
     /**
