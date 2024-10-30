@@ -1,5 +1,3 @@
-package com.microsoft.identity.internal.testutils
-
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -22,6 +20,7 @@ package com.microsoft.identity.internal.testutils
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.java
 
 import com.microsoft.identity.common.java.base64.Base64Flags
 import com.microsoft.identity.common.java.base64.IBase64
@@ -40,7 +39,7 @@ import cz.msebera.android.httpclient.extras.Base64
  * We would still use Msebera's Base64 in places where Android Base64 is not available.
  * (e.g. 4j tests, android unit tests, Linux Broker)
  **/
-class MseberaBase64ForTestUtils : IBase64 {
+class MseberaBase64ForCommon4jTests : IBase64 {
     override fun encode(input: ByteArray, vararg flags: Base64Flags): ByteArray {
         return Base64.encode(input, combineFlags(*flags))
     }

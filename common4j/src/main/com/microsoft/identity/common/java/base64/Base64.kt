@@ -44,6 +44,11 @@ class Base64Util {
                 return linuxBase64
             }
 
+            val common4jUnitTestBase64 = tryLoadMseberaBase64InCommon4jUnitTest()
+            if (common4jUnitTestBase64 != null){
+                return common4jUnitTestBase64
+            }
+
             val testUtilsBase64 = tryLoadMseberaBase64InTestUtils()
             if (testUtilsBase64 != null){
                 return testUtilsBase64
@@ -69,8 +74,17 @@ class Base64Util {
 
         private fun tryLoadMseberaBase64InLinux(): IBase64? {
             return try {
-                Class.forName("com.microsoft.identity.broker.base64.MseberaBase64")
+                Class.forName("com.microsoft.identity.broker.base64.MseberaBase64ForLinux")
                         .getDeclaredConstructor().newInstance() as IBase64
+            } catch (e: ClassNotFoundException) {
+                null
+            }
+        }
+
+        private fun tryLoadMseberaBase64InCommon4jUnitTest(): IBase64? {
+            return try {
+                Class.forName("com.microsoft.identity.common.java.MseberaBase64ForCommon4jTests")
+                    .getDeclaredConstructor().newInstance() as IBase64
             } catch (e: ClassNotFoundException) {
                 null
             }
@@ -78,7 +92,7 @@ class Base64Util {
 
         private fun tryLoadMseberaBase64InTestUtils(): IBase64? {
             return try {
-                Class.forName("com.microsoft.identity.internal.testutils.MseberaBase64")
+                Class.forName("com.microsoft.identity.internal.testutils.MseberaBase64ForTestUtils")
                     .getDeclaredConstructor().newInstance() as IBase64
             } catch (e: ClassNotFoundException) {
                 null
