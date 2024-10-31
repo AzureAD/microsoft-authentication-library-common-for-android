@@ -66,6 +66,11 @@ class Base64Util {
                 return common4jUnitTestBase64
             }
 
+            val broker4jUnitTestBase64 = tryLoadMseberaBase64InBroker4jUnitTest()
+            if (broker4jUnitTestBase64 != null){
+                return broker4jUnitTestBase64
+            }
+
             val testUtilsBase64 = tryLoadMseberaBase64InTestUtils()
             if (testUtilsBase64 != null){
                 return testUtilsBase64
@@ -101,6 +106,15 @@ class Base64Util {
         private fun tryLoadMseberaBase64InCommon4jUnitTest(): IBase64? {
             return try {
                 Class.forName("com.microsoft.identity.common.java.MseberaBase64ForCommon4jTests")
+                    .getDeclaredConstructor().newInstance() as IBase64
+            } catch (e: ClassNotFoundException) {
+                null
+            }
+        }
+
+        private fun tryLoadMseberaBase64InBroker4jUnitTest(): IBase64? {
+            return try {
+                Class.forName("com.microsoft.identity.broker4j.MseberaBase64ForBroker4jTests")
                     .getDeclaredConstructor().newInstance() as IBase64
             } catch (e: ClassNotFoundException) {
                 null
