@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.base64
 
+/**
+ * Flags for Base64 encoding/decoding options.
+ **/
 enum class Base64Flags {
 
     /**

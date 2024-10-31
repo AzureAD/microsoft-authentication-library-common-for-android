@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.base64
 
+/**
+ * Interface of Base64 implementations.
+ */
 interface IBase64 {
 
     /**

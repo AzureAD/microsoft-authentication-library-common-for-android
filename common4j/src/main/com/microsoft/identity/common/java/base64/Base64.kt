@@ -27,12 +27,29 @@ import com.microsoft.identity.common.java.util.StringUtil
 import java.lang.IllegalStateException
 import java.nio.charset.StandardCharsets
 
+/**
+ * A class consolidating all Base64 operations in our code base.
+ **/
 class Base64Util {
     companion object {
         private val TAG = Base64Util::class.java.simpleName
 
         private var base64: IBase64 = initialize()
 
+        /**
+         * In Android, we'll use Android's own Base64 implementation.
+         * In other places, we'll use Msebera's Base64.
+         *
+         * Both are forked from a legacy version of apache commons-codec.
+         * (we had to use Msebera instead because the ClassLoader would throw an error due to a conflict between
+         * the classes in commons-codec library and the one in the OS.)
+         *
+         * Msebera library is no longer maintained, and it was recently flagged with an Android apk tool.
+         * Even if the flagged part is NOT the code path we use.
+         * It's better that we migrate away from it (so that our customer don't see the false alarm).
+         *
+         * .. so we put them in LinuxBroker and test projects instead.
+         **/
         fun initialize() : IBase64 {
             val androidBase64 = tryLoadAndroidBase64()
             if (androidBase64 != null){
