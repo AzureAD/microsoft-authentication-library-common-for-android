@@ -129,7 +129,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     @Getter
     @Accessors(prefix = "m")
     @SerializedName("switch_browser")
-    private final int mSwitchBrowser;
+    private final Integer mSwitchBrowser;
 
 
     public static final class Prompt {
@@ -194,7 +194,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         private Map<String, String> mFlightParameters = new HashMap<>();
         private OpenIdProviderConfiguration mOpenIdProviderConfiguration;
 
-        private int mSwitchBrowser;
+        private Integer mSwitchBrowser;
 
         public MicrosoftStsAuthorizationRequest.Builder setUid(String uid) {
             mUid = uid;

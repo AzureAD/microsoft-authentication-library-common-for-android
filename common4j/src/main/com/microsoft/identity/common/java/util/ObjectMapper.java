@@ -26,6 +26,7 @@ import lombok.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.ToNumberPolicy;
 import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
@@ -61,6 +62,7 @@ public final class ObjectMapper {
     public static final String ENCODING_SCHEME = "UTF-8";
     public static final String TAG = ObjectMapper.class.getSimpleName();
     public static final Gson GSON = new GsonBuilder()
+            .setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)
             .registerTypeAdapterFactory(new UnknownParamTypeAdapterFactory())
             .create();
 
