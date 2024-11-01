@@ -291,11 +291,15 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 }
                 Logger.info(methodTag, "New camera request.");
                 mCameraPermissionRequest = new CameraPermissionRequest(request);
+                // The current camera behavior is based on the principle of only prompt once and prompt always.
+                // If the OS level permission is not granted, we show the system prompt.
+                // If the OS level permission was granted previously, we show the rationale to confirm the consent witth the current user.
+                // If the OS level permission was denied previously, we just denny the request.
                 if (isAppCameraPermissionGranted()) {
                     Logger.info(methodTag, "Camera permission already granted.");
                     showCameraRationale();
                 } else {
-                    launchCameraRequestActivity();
+                    requestCameraPermission();
                 }
             }
 
@@ -354,10 +358,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     /**
      * Launches the camera permission request for the app.
+     * Note: if the permission was already granted or denied,
+     * the user will not be prompted and it will go directly to the callback.
+     * Using the current state of the permission.
+     *
      */
-    private void launchCameraRequestActivity() {
-        final String methodTAG = TAG + ":launchCameraRequestActivity";
-        Logger.info(methodTAG, "Requesting camera permission.");
+    private void requestCameraPermission() {
         cameraRequestActivity.launch(Manifest.permission.CAMERA);
     }
 
@@ -371,7 +377,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         builder.setMessage(R.string.qr_code_rationale_message)
                 .setTitle(R.string.qr_code_rationale_header)
                 .setCancelable(false)
-                .setPositiveButton(R.string.qr_code_rationale_allow, (dialog, id) -> launchCameraRequestActivity())
+                .setPositiveButton(R.string.qr_code_rationale_allow, (dialog, id) -> requestCameraPermission())
                 .setNegativeButton(R.string.qr_code_rationale_block, (dialog, id) -> mCameraPermissionRequest.deny());
         builder.show();
     }
