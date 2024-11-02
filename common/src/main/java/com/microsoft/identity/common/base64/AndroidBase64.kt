@@ -23,10 +23,16 @@
 package com.microsoft.identity.common.base64
 
 import com.microsoft.identity.common.java.base64.Base64Flags
+import com.microsoft.identity.common.java.base64.Base64Util
 import com.microsoft.identity.common.java.base64.IBase64
 
 /**
  * Base64 implementation based on android.util.Base64
+ *
+ * If you need to rename or change the namespace of this class,
+ * you'll need to make change in [Base64Util] too.
+ *
+ * see [Base64Util] for more info.
  **/
 
 class AndroidBase64 : IBase64 {

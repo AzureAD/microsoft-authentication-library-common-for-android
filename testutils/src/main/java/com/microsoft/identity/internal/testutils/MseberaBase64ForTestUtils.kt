@@ -24,21 +24,15 @@ package com.microsoft.identity.internal.testutils
 // THE SOFTWARE.
 
 import com.microsoft.identity.common.java.base64.Base64Flags
+import com.microsoft.identity.common.java.base64.Base64Util
 import com.microsoft.identity.common.java.base64.IBase64
 import cz.msebera.android.httpclient.extras.Base64
 
 /**
- * Msebera HttpClient library is no longer maintained,
- * and some part of the library (**that we don't use**) is flagged by an apk scanning tool,
- * so we need to move away from it.
+ * If you need to rename or change the namespace of this class,
+ * you'll need to make change in [Base64Util] too.
  *
- * The solution is to exclude Msebera Base64 in Android module (and have them consume the Android Base64 instead).
- *
- * NOTE: Base64 implementation in both Android OS and Msebera is a clone of an (old version of) apache commons-codec.
- * (read: Msebera Base64 should produce the exact same result that Android Base64 returns),
- *
- * We would still use Msebera's Base64 in places where Android Base64 is not available.
- * (e.g. 4j tests, android unit tests, Linux Broker)
+ * see [Base64Util] for more info.
  **/
 class MseberaBase64ForTestUtils : IBase64 {
     override fun encode(input: ByteArray, vararg flags: Base64Flags): ByteArray {

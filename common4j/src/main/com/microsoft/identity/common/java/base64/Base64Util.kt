@@ -37,6 +37,17 @@ class Base64Util {
         private var base64: IBase64 = initialize()
 
         /**
+         * Class paths of Base64 implementation.
+         * (Common4j doesn't have its own Base64 implementation.
+         * The consuming library must supply it - in this case, Android and Linux common,msal/oneauth,broker)
+         */
+        private const val ANDROID_BASE64_CLASS_PATH = "com.microsoft.identity.common.base64.AndroidBase64"
+        private const val LINUX_BASE64_CLASS_PATH = "com.microsoft.identity.broker.base64.MseberaBase64ForLinux"
+        private const val COMMON4J_UNIT_TEST_BASE64_CLASS_PATH = "com.microsoft.identity.common.java.MseberaBase64ForCommon4jTests"
+        private const val BROKER4J_UNIT_TEST_BASE64_CLASS_PATH = "com.microsoft.identity.broker4j.MseberaBase64ForBroker4jTests"
+        private const val TESTUTILS_BASE64_CLASS_PATH = "com.microsoft.identity.internal.testutils.MseberaBase64ForTestUtils"
+
+        /**
          * In Android, we'll use Android's own Base64 implementation.
          * In other places, we'll use Msebera's Base64.
          *
@@ -76,12 +87,12 @@ class Base64Util {
                 return testUtilsBase64
             }
 
-            throw IllegalStateException("Cannot find a Base64 to initialize.")
+            throw IllegalStateException("Cannot find a Base64 implementation to initialize.")
         }
 
         private fun tryLoadAndroidBase64(): IBase64? {
             return try {
-                val androidBase64 = Class.forName("com.microsoft.identity.common.base64.AndroidBase64").getDeclaredConstructor().newInstance() as IBase64
+                val androidBase64 = Class.forName(ANDROID_BASE64_CLASS_PATH).getDeclaredConstructor().newInstance() as IBase64
 
                 // If executed in Android Unit tests, androidBase64 will fail (mocking required) with a RuntimeException.
                 androidBase64.encode(ByteArray(0), Base64Flags.DEFAULT)
@@ -96,7 +107,7 @@ class Base64Util {
 
         private fun tryLoadMseberaBase64InLinux(): IBase64? {
             return try {
-                Class.forName("com.microsoft.identity.broker.base64.MseberaBase64ForLinux")
+                Class.forName(LINUX_BASE64_CLASS_PATH)
                         .getDeclaredConstructor().newInstance() as IBase64
             } catch (e: ClassNotFoundException) {
                 null
@@ -105,7 +116,7 @@ class Base64Util {
 
         private fun tryLoadMseberaBase64InCommon4jUnitTest(): IBase64? {
             return try {
-                Class.forName("com.microsoft.identity.common.java.MseberaBase64ForCommon4jTests")
+                Class.forName(COMMON4J_UNIT_TEST_BASE64_CLASS_PATH)
                     .getDeclaredConstructor().newInstance() as IBase64
             } catch (e: ClassNotFoundException) {
                 null
@@ -114,7 +125,7 @@ class Base64Util {
 
         private fun tryLoadMseberaBase64InBroker4jUnitTest(): IBase64? {
             return try {
-                Class.forName("com.microsoft.identity.broker4j.MseberaBase64ForBroker4jTests")
+                Class.forName(BROKER4J_UNIT_TEST_BASE64_CLASS_PATH)
                     .getDeclaredConstructor().newInstance() as IBase64
             } catch (e: ClassNotFoundException) {
                 null
@@ -123,7 +134,7 @@ class Base64Util {
 
         private fun tryLoadMseberaBase64InTestUtils(): IBase64? {
             return try {
-                Class.forName("com.microsoft.identity.internal.testutils.MseberaBase64ForTestUtils")
+                Class.forName(TESTUTILS_BASE64_CLASS_PATH)
                     .getDeclaredConstructor().newInstance() as IBase64
             } catch (e: ClassNotFoundException) {
                 null
