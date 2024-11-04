@@ -22,20 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto.key;
 
-import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.util.StringUtil;
 
-import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import javax.annotation.Nullable;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-import cz.msebera.android.httpclient.extras.Base64;
 import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
@@ -115,7 +111,7 @@ public class KeyUtil {
             final Mac thumbprintMac = Mac.getInstance(HMAC_ALGORITHM);
             thumbprintMac.init(hmacKey);
             byte[] thumbPrintFinal = thumbprintMac.doFinal(thumbprintBytes);
-            return StringUtil.encodeUrlSafeString(thumbPrintFinal);
+            return Base64Util.encodeUrlSafeString(thumbPrintFinal);
         } catch (final Throwable e) {
             Logger.warn(TAG + methodName, "failed to calculate thumbprint:" + e.getMessage());
             return UNKNOWN_THUMBPRINT;

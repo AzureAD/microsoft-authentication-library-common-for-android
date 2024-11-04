@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto.key;
 
+import com.microsoft.identity.common.java.base64.Base64Flags;
+import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.crypto.StorageEncryptionManager;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -33,7 +35,6 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-import cz.msebera.android.httpclient.extras.Base64;
 import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
@@ -131,13 +132,13 @@ public abstract class AbstractSecretKeyLoader {
      * Serializes a {@link SecretKey} into a {@link String}.
      */
     public String serializeSecretKey(@NonNull final SecretKey key) {
-        return Base64.encodeToString(key.getEncoded(), Base64.DEFAULT);
+        return Base64Util.encodeToString(key.getEncoded(), Base64Flags.DEFAULT);
     }
 
     /**
      * Deserializes a {@link String} into a {@link SecretKey}.
      */
     public SecretKey deserializeSecretKey(@NonNull final String serializedKey) {
-        return generateKeyFromRawBytes(Base64.decode(serializedKey, Base64.DEFAULT));
+        return generateKeyFromRawBytes(Base64Util.decode(serializedKey, Base64Flags.DEFAULT));
     }
 }
