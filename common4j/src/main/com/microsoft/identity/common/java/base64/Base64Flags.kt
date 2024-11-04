@@ -20,27 +20,35 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.fido
-
-import io.opentelemetry.api.trace.Span
+package com.microsoft.identity.common.java.base64
 
 /**
- * Representation of a manager that handles interactions with a passkey provider (usually through an API).
- */
-interface IFidoManager {
+ * Flags for Base64 encoding/decoding options.
+ **/
+enum class Base64Flags {
+
     /**
-     * Interacts with the FIDO credential provider and returns an assertion.
-     * @param challenge
-     * @param relyingPartyIdentifier
-     * @param allowedCredentials
-     * @param userVerificationPolicy
-     * @param span
-     * @return assertion
-     * @throws Exception
+     * Default values for encoder/decoder flags.
      */
-    suspend fun authenticate(challenge: String,
-                             relyingPartyIdentifier: String,
-                             allowedCredentials: List<String>?,
-                             userVerificationPolicy: String,
-                             span: Span) : String
+    DEFAULT,
+
+    /**
+     * Encoder flag bit to omit the padding '=' characters at the end
+     * of the output (if any).
+     */
+    NO_PADDING,
+
+    /**
+     * Encoder flag bit to omit all line terminators (i.e., the output
+     * will be on one long line).
+     */
+    NO_WRAP,
+
+    /**
+     * Encoder/decoder flag bit to indicate using the "URL and
+     * filename safe" variant of Base64 (see RFC 3548 section 4) where
+     * `-` and `_` are used in place of `+` and
+     * `/`.
+     */
+    URL_SAFE
 }

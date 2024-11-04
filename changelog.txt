@@ -1,5 +1,15 @@
 vNext
 ----------
+- [MINOR] Migrate Base64 away from Msebera httpclient (#2389)
+- [PATCH] Provide empty image when no video is present on QR +PIN auth (#2424)
+- [MINOR] On GetPreferredAuthMethod return NONE when Authenticator is not installed (#2523)
+- [MINOR] Migrate URIbuilder to httpcore5 (#2522)
+
+Version 18.1.0
+----------
+(common4j 15.1.0)
+- [MINOR] Use legacy FIDO2 API to provide security key support to Android 13 devices (#2508)
+- [MINOR] Merge PRT related spans into Acquire Token spans (#2525)
 
 Version 18.0.0 
 ----------

@@ -36,9 +36,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.util.*;
 import java.util.Map.Entry;
@@ -69,7 +67,6 @@ public class ApiClient {
     private int dateLength;
 
     private InputStream sslCaCert;
-    private boolean verifyingSsl;
     private KeyManager[] keyManagers;
 
     private OkHttpClient httpClient;
@@ -91,8 +88,6 @@ public class ApiClient {
         httpClient = new OkHttpClient();
 
         basePath = basePathParam;
-
-        verifyingSsl = true;
 
         json = new JSON();
 
@@ -165,29 +160,6 @@ public class ApiClient {
      */
     public ApiClient setJSON(JSON json) {
         this.json = json;
-        return this;
-    }
-
-    /**
-     * True if isVerifyingSsl flag is on
-     *
-     * @return True if isVerifySsl flag is on
-     */
-    public boolean isVerifyingSsl() {
-        return verifyingSsl;
-    }
-
-    /**
-     * Configure whether to verify certificate and hostname when making https requests.
-     * Default to true.
-     * NOTE: Do NOT set to false in production code, otherwise you would face multiple types of cryptographic attacks.
-     *
-     * @param verifyingSsl True to verify TLS/SSL connection
-     * @return ApiClient
-     */
-    public ApiClient setVerifyingSsl(boolean verifyingSsl) {
-        this.verifyingSsl = verifyingSsl;
-        applySslSettings();
         return this;
     }
 
@@ -854,8 +826,8 @@ public class ApiClient {
             Response response = call.execute();
             T data = handleResponse(response, returnType);
             return new ApiResponse<T>(response.code(), response.headers().toMultimap(), data);
-        } catch (IOException e) {
-            throw new ApiException(e);
+        } catch (final IOException exception) {
+            throw new ApiException(exception);
         }
     }
 
@@ -1159,28 +1131,13 @@ public class ApiClient {
 
     /**
      * Apply SSL related settings to httpClient according to the current values of
-     * verifyingSsl and sslCaCert.
+     * sslCaCert.
      */
     private void applySslSettings() {
         try {
             TrustManager[] trustManagers = null;
             HostnameVerifier hostnameVerifier = null;
-            if (!verifyingSsl) {
-                TrustManager trustAll = new X509TrustManager() {
-                    @Override
-                    public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {}
-                    @Override
-                    public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {}
-                    @Override
-                    public X509Certificate[] getAcceptedIssuers() { return null; }
-                };
-                SSLContext sslContext = SSLContext.getInstance("TLS");
-                trustManagers = new TrustManager[]{ trustAll };
-                hostnameVerifier = new HostnameVerifier() {
-                    @Override
-                    public boolean verify(String hostname, SSLSession session) { return true; }
-                };
-            } else if (sslCaCert != null) {
+            if (sslCaCert != null) {
                 char[] password = null; // Any password will work.
                 CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
                 Collection<? extends Certificate> certificates = certificateFactory.generateCertificates(sslCaCert);

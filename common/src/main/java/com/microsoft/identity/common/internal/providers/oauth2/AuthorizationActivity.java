@@ -43,6 +43,9 @@ public class AuthorizationActivity extends DualScreenActivity {
     @Getter
     @Accessors(prefix = "m")
     private SpanContext mSpanContext;
+
+    @Getter
+    @Accessors(prefix = "m")
     private AuthorizationFragment mFragment;
 
     @Override

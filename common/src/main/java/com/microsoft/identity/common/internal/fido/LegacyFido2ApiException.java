@@ -20,27 +20,35 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.fido
+package com.microsoft.identity.common.internal.fido;
 
-import io.opentelemetry.api.trace.Span
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 
 /**
- * Representation of a manager that handles interactions with a passkey provider (usually through an API).
+ * An exception class which holds attributes from the legacy FIDO2 API error responses.
  */
-interface IFidoManager {
-    /**
-     * Interacts with the FIDO credential provider and returns an assertion.
-     * @param challenge
-     * @param relyingPartyIdentifier
-     * @param allowedCredentials
-     * @param userVerificationPolicy
-     * @param span
-     * @return assertion
-     * @throws Exception
-     */
-    suspend fun authenticate(challenge: String,
-                             relyingPartyIdentifier: String,
-                             allowedCredentials: List<String>?,
-                             userVerificationPolicy: String,
-                             span: Span) : String
+public class LegacyFido2ApiException extends BaseException {
+
+    public static final String NULL_OBJECT = ErrorStrings.NULL_OBJECT;
+
+    public static final String BAD_ACTIVITY_RESULT_CODE = ErrorStrings.BAD_ACTIVITY_RESULT_CODE;
+
+    public static final String UNKNOWN_ERROR = ErrorStrings.UNKNOWN_ERROR;
+
+    public static final String GET_PENDING_INTENT_ERROR = ErrorStrings.GET_PENDING_INTENT_ERROR;
+
+    public static final String GET_PENDING_INTENT_CANCELED = ErrorStrings.GET_PENDING_INTENT_CANCELED;
+
+    public LegacyFido2ApiException(final String errorCode) {
+        super(errorCode);
+    }
+
+    public LegacyFido2ApiException(final String errorCode, final String errorMessage) {
+        super(errorCode, errorMessage);
+    }
+
+    public LegacyFido2ApiException(final String errorCode, final String errorMessage, final Throwable throwable) {
+        super(errorCode, errorMessage, throwable);
+    }
 }

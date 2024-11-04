@@ -26,8 +26,8 @@ package com.microsoft.identity.common.java.jwt;
 import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
 
 import com.google.gson.Gson;
+import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.util.StringUtil;
 
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -56,7 +56,7 @@ public final class JwtUtils {
         final String headerJson = new Gson().toJson(header);
         final String bodyJson = new Gson().toJson(body);
         final String encodedJwt =
-                StringUtil.encodeUrlSafeString(headerJson.getBytes(ENCODING_UTF8)) + "." + StringUtil.encodeUrlSafeString(bodyJson.getBytes(ENCODING_UTF8));
+                Base64Util.encodeUrlSafeString(headerJson.getBytes(ENCODING_UTF8)) + "." + Base64Util.encodeUrlSafeString(bodyJson.getBytes(ENCODING_UTF8));
         return encodedJwt;
     }
 }

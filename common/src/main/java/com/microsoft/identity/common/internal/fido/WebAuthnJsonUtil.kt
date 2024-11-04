@@ -93,6 +93,29 @@ class WebAuthnJsonUtil {
         }
 
         /**
+         * Given WebAuthn response values, create a string representation of the JSON assertion response that ESTS is expecting.
+         * @clientDataJson clientDataJson string
+         * @authenticatorData authenticatorData string
+         * @signature signature string
+         * @userHandle userHandle string
+         * @id id string
+         */
+        @JvmStatic
+        fun createAssertionString(clientDataJson: String,
+                                  authenticatorData: String,
+                                  signature: String,
+                                  userHandle: String,
+                                  id: String): String {
+            val assertionResult = JSONObject();
+            assertionResult.put(WEBAUTHN_RESPONSE_ID_JSON_KEY, id)
+            assertionResult.put(WEBAUTHN_RESPONSE_AUTHENTICATOR_DATA_JSON_KEY, authenticatorData)
+            assertionResult.put(WEBAUTHN_RESPONSE_CLIENT_DATA_JSON_KEY, clientDataJson)
+            assertionResult.put(WEBAUTHN_RESPONSE_SIGNATURE_JSON_KEY, signature)
+            assertionResult.put(WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY, userHandle)
+            return assertionResult.toString()
+        }
+
+        /**
          * Returns a base64URL encoding of the string.
          * @return String
          */

@@ -35,10 +35,11 @@ import static com.microsoft.identity.common.java.exception.ClientException.NO_SU
 import static com.microsoft.identity.common.java.exception.ClientException.UNEXPECTED_HMAC_LENGTH;
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_CRYPTO_ERROR;
 
+import com.microsoft.identity.common.java.base64.Base64Flags;
+import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.java.crypto.key.AbstractSecretKeyLoader;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
-import com.microsoft.identity.common.java.crypto.key.PredefinedKeyLoader;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -59,7 +60,6 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 
-import cz.msebera.android.httpclient.extras.Base64;
 import lombok.NonNull;
 
 /**
@@ -395,7 +395,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
      * and prefix it with{@link StorageEncryptionManager#ENCODE_VERSION}.
      */
     private byte[] prefixWithEncodeVersion(final byte[] encryptedData) {
-        final String encryptedText = Base64.encodeToString(encryptedData, Base64.NO_WRAP);
+        final String encryptedText = Base64Util.encodeToString(encryptedData, Base64Flags.NO_WRAP);
         final String result = getEncodeVersionLengthPrefix() + ENCODE_VERSION + encryptedText;
         return result.getBytes(ENCODING_UTF8);
     }
@@ -417,7 +417,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
         validateEncodeVersion(cipherString, encodeVersionLength);
 
         final String encryptedData = cipherString.substring(1 + encodeVersionLength);
-        return Base64.decode(encryptedData, Base64.DEFAULT);
+        return Base64Util.decode(encryptedData, Base64Flags.DEFAULT);
     }
 
     /**

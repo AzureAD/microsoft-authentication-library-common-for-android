@@ -59,7 +59,7 @@ public class BrokerHost extends AbstractTestBroker {
 
     // flight to enable/disable the multiple wpj feature
     private final static String FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER = "ENABLE_MULTIPLE_WORKPLACE_JOIN_PP";
-    private final static String FLIGHT_PRT_V3 = "EnablePrtV3";
+    private final static String FLIGHT_GENERATE_AND_SAVE_TRANSFER_TOKEN = "EnableGenerateAndStoreTransferTokens";
 
     // name for broker host APKs
     public final static String BROKER_HOST_APK = "BrokerHost.apk";
@@ -329,19 +329,19 @@ public class BrokerHost extends AbstractTestBroker {
 
     /**
      * Changes flight provider to local flights provider and sets
-     * PRTv3 flight flag to true.
+     * transfer token generation flight flag to true.
      */
-    public void enablePrtV3() {
-        Logger.i(TAG, "Enable PRTv3");
-        setLocalFlight(FLIGHT_PRT_V3, Boolean.toString(true));
+    public void enableGenerateAndSaveTransferToken() {
+        Logger.i(TAG, "Enable Transfer token generation");
+        setLocalFlight(FLIGHT_GENERATE_AND_SAVE_TRANSFER_TOKEN, Boolean.toString(true));
     }
 
     /**
      * Restores the MSA accounts.
      */
-    public void restoreMsaAccounts(final int expectedNumberOfRestoredAccounts) {
+    public void restoreMsaAccounts(List<String> expectedRestoreAccountNames) {
         brokerApiFragment.launch();
-        brokerApiFragment.restoreMsaAccounts(expectedNumberOfRestoredAccounts);
+        brokerApiFragment.restoreMsaAccounts(expectedRestoreAccountNames);
     }
 
     /**

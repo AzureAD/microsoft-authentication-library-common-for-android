@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.util.LruCache;
 
 import androidx.annotation.GuardedBy;

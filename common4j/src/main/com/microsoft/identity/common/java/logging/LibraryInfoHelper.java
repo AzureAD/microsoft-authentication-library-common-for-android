@@ -25,7 +25,6 @@ package com.microsoft.identity.common.java.logging;
 import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.util.StringUtil;
 
-import cz.msebera.httpclient.android.BuildConfig;
 import lombok.NonNull;
 
 /**
@@ -73,7 +72,7 @@ public class LibraryInfoHelper {
         final String version = DiagnosticContext.INSTANCE.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.VERSION);
         if (StringUtil.isNullOrEmpty(version)) {
             Logger.warn(TAG + methodName, "Product version is not set.", null);
-            return StringUtil.isNullOrEmpty(BuildConfig.VERSION_NAME) ? "1.5.9-default" : BuildConfig.VERSION_NAME + "-default";
+            return "1.5.9-default";
         } else {
             return version;
         }
