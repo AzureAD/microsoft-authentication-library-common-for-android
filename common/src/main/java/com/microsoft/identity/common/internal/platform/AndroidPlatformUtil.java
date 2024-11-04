@@ -232,12 +232,6 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         return originalList;
     }
 
-    @Override
-    public boolean removeAccountFromBroker(@NonNull IBrokerAccount brokerAccount, @NonNull IPlatformComponents components, @NonNull String methodTag) {
-        // No-op
-        return false;
-    }
-
     /**
      * Updates the query string parameters with the WebAuthn capability parameter (or removes the parameter) if applicable.
      *

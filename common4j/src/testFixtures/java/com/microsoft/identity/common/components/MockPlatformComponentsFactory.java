@@ -196,10 +196,5 @@ public class MockPlatformComponentsFactory {
         public List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList) {
             return originalList;
         }
-
-        @Override
-        public boolean removeAccountFromBroker(@NonNull IBrokerAccount brokerAccount, @NonNull IPlatformComponents components, @NonNull String methodTag) {
-            return false;
-        }
     };
 }
