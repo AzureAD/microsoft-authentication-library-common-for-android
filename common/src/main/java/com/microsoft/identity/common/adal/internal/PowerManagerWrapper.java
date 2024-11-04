@@ -68,6 +68,59 @@ public class PowerManagerWrapper {
     }
 
     /**
+     * Gets a string representing Device Idle status.
+     * Will return an empty string if the device is not in any idle mode.
+     * (Possible Values: "Idle", "LightIdle", "Unknown" , "")
+     */
+    public String getDeviceIdleMode(final Context context){
+        try {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                return "Unknown";
+            }
+
+            final PowerManager powerManager = ((PowerManager) context.getSystemService(Context.POWER_SERVICE));
+            if (powerManager.isDeviceIdleMode()) {
+                return "Idle";
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (powerManager.isDeviceLightIdleMode()) {
+                    return "LightIdle";
+                }
+            }
+        } catch (Exception e){
+            // Swallow all exception!
+            return "Unknown";
+        }
+
+        return "";
+    }
+
+    /**
+     * Gets a string representing Power Optimization settings of the calling app
+     * Will return an empty string if the app isn't opting out.
+     * (Possible Values: "OptOut", "Unknown" , "")
+     */
+    public String getPowerOptimizationSettings(final Context context){
+        try {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                return "Unknown";
+            }
+
+            final PowerManager powerManager = ((PowerManager) context.getSystemService(Context.POWER_SERVICE));
+            if (powerManager.isIgnoringBatteryOptimizations(context.getPackageName())){
+                return "OptOut";
+            } else {
+                return "";
+            }
+
+        } catch (Exception e){
+            // Swallow all exception!
+            return "Unknown";
+        }
+    }
+
+    /**
      * Wrap the calling to method isIgnoringBatteryOptimizations() of final class PowerManager.
      *
      * @param connectionContext Context used to query if app is ignoring battery optimizations.
