@@ -78,7 +78,7 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
     private final String accountTransferToken;
 
     /**
-     * Should broker present account picker
+     * Should suppress broker native account picker UX.
      */
     private final boolean suppressBrokerAccountPicker;
 

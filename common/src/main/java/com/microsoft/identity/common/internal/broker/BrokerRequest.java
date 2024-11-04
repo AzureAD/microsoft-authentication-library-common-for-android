@@ -259,6 +259,11 @@ public class BrokerRequest implements Serializable {
     @SerializedName(SerializedNames.ACCOUNT_TRANSFER_TOKEN)
     private String mAccountTransferToken;
 
+    /**
+     * Boolean indicating whether account Broker's native picker UX should be suppressed.
+     * E.g. This could pe passed in case if an app shows its own account picker before starting
+     * interactive request.
+     */
     @SerializedName(SerializedNames.SUPPRESS_ACCOUNT_PICKER)
     private boolean mSuppressAccountPicker;
 }
