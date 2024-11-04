@@ -35,6 +35,7 @@ public class PowerManagerWrapper {
 
     private static PowerManagerWrapper sInstance;
 
+    private static final String UNKNOWN_STATUS = "Unknown";
     /**
      * Set instance of PowerManagerWrapper.
      *
@@ -75,7 +76,7 @@ public class PowerManagerWrapper {
     public String getDeviceIdleMode(final Context context){
         try {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                return "Unknown";
+                return UNKNOWN_STATUS;
             }
 
             final PowerManager powerManager = ((PowerManager) context.getSystemService(Context.POWER_SERVICE));
@@ -83,14 +84,13 @@ public class PowerManagerWrapper {
                 return "Idle";
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                if (powerManager.isDeviceLightIdleMode()) {
-                    return "LightIdle";
-                }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    powerManager.isDeviceLightIdleMode()) {
+                return "LightIdle";
             }
         } catch (Exception e){
             // Swallow all exception!
-            return "Unknown";
+            return UNKNOWN_STATUS;
         }
 
         return "";
@@ -104,7 +104,7 @@ public class PowerManagerWrapper {
     public String getPowerOptimizationSettings(final Context context){
         try {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                return "Unknown";
+                return UNKNOWN_STATUS;
             }
 
             final PowerManager powerManager = ((PowerManager) context.getSystemService(Context.POWER_SERVICE));
@@ -116,7 +116,7 @@ public class PowerManagerWrapper {
 
         } catch (Exception e){
             // Swallow all exception!
-            return "Unknown";
+            return UNKNOWN_STATUS;
         }
     }
 
