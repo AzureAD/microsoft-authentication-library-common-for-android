@@ -291,10 +291,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 }
                 Logger.info(methodTag, "New camera request.");
                 mCameraPermissionRequest = new CameraPermissionRequest(request);
-                // The current camera behavior is based on the principle of only prompt once and prompt always.
-                // If the OS level permission is not granted, we show the system prompt.
-                // If the OS level permission was granted previously, we show the rationale to confirm the consent witth the current user.
-                // If the OS level permission was denied previously, we just denny the request.
+                // If the OS level permission was granted previously,
+                // we show the rationale to confirm the consent with the current user.
+                // Otherwise, show the system prompt.
                 if (isAppCameraPermissionGranted()) {
                     Logger.info(methodTag, "Camera permission already granted.");
                     showCameraRationale();
