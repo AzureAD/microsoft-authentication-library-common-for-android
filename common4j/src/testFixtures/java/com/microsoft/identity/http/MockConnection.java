@@ -20,7 +20,7 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.net.util;
+package com.microsoft.identity.http;
 
 import com.microsoft.identity.common.java.net.HttpResponse;
 
@@ -94,6 +94,12 @@ public class MockConnection {
         assertNotNull(httpResponse);
         assertEquals(httpResponse.getStatusCode(), HttpURLConnection.HTTP_OK);
         assertEquals(httpResponse.getBody(), ResponseBody.SUCCESS);
+    }
+
+    public static void verifyFailureHttpResponseWithGenericResponse(@NonNull final HttpResponse httpResponse) {
+        assertNotNull(httpResponse);
+        assertEquals(httpResponse.getStatusCode(), HttpURLConnection.HTTP_INTERNAL_ERROR);
+        assertEquals(httpResponse.getBody(), ResponseBody.GENERIC_ERROR);
     }
 
     private static InputStream createInputStream(final String input) {
