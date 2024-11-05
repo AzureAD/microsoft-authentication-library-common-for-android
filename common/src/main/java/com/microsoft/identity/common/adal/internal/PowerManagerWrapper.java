@@ -27,6 +27,8 @@ import android.content.Context;
 import android.os.Build;
 import android.os.PowerManager;
 
+import androidx.annotation.NonNull;
+
 /**
  * Wrapper class for PowerManager.
  */
@@ -73,7 +75,8 @@ public class PowerManagerWrapper {
      * Will return an empty string if the device is not in any idle mode.
      * (Possible Values: "Idle", "LightIdle", "Unknown" , "")
      */
-    public String getDeviceIdleMode(final Context context){
+    @NonNull
+    public String getDeviceIdleMode(@NonNull final Context context){
         try {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
                 return UNKNOWN_STATUS;
@@ -88,7 +91,7 @@ public class PowerManagerWrapper {
                     powerManager.isDeviceLightIdleMode()) {
                 return "LightIdle";
             }
-        } catch (Exception e){
+        } catch (final Exception e){
             // Swallow all exception!
             return UNKNOWN_STATUS;
         }
@@ -101,7 +104,8 @@ public class PowerManagerWrapper {
      * Will return an empty string if the app isn't opting out.
      * (Possible Values: "OptOut", "Unknown" , "")
      */
-    public String getPowerOptimizationSettings(final Context context){
+    @NonNull
+    public String getPowerOptimizationSettings(@NonNull final Context context){
         try {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
                 return UNKNOWN_STATUS;
@@ -114,7 +118,7 @@ public class PowerManagerWrapper {
                 return "";
             }
 
-        } catch (Exception e){
+        } catch (final Exception e){
             // Swallow all exception!
             return UNKNOWN_STATUS;
         }
