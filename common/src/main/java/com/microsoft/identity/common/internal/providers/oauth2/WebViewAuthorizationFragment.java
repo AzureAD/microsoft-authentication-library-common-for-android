@@ -116,7 +116,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private boolean webViewZoomEnabled;
 
-    private PermissionRequest mCameraPermissionRequest;
+    private CameraPermissionRequest mCameraPermissionRequest;
 
     // This is used by LegacyFido2ApiManager to launch a PendingIntent received by the legacy API.
     private ActivityResultLauncher<LegacyFido2ApiObject> mFidoLauncher;
@@ -277,7 +277,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // We can only grant or deny permissions for video capture/camera.
                 // To avoid unintentionally granting requests for not defined permissions
                 // we check if the request is for camera.
-                if (!isPermissionRequestForCamera(request)) {
+                if (!CameraPermissionRequest.isValidRequest(request)) {
                     Logger.warn(methodTag, "Permission request is not for camera.");
                     request.deny();
                     return;
@@ -285,21 +285,21 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // There is a issue in ESTS UX where it sends multiple camera permission requests.
                 // So, if there is already a camera permission request in progress we handle it here.
                 if (mCameraPermissionRequest != null) {
-                    handleRepeatedRequests(request);
+                    Logger.info(methodTag, "Repeated request, granted? " + mCameraPermissionRequest.isGranted());
+                    handleRepeatedCameraRequests(request);
                     return;
                 }
                 Logger.info(methodTag, "New camera request.");
-                mCameraPermissionRequest = request;
-                if (isCameraPermissionGranted()) {
+                mCameraPermissionRequest = new CameraPermissionRequest(request);
+                // If the OS level permission was granted previously,
+                // we show the rationale to confirm the consent with the current user.
+                // Otherwise, show the system prompt.
+                if (isAppCameraPermissionGranted()) {
                     Logger.info(methodTag, "Camera permission already granted.");
-                    acceptCameraRequest();
-                } else if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
-                    Logger.info(methodTag, "Show camera rationale.");
                     showCameraRationale();
                 } else {
-                    requestCameraPermissionFromUser();
+                    requestCameraPermission();
                 }
-
             }
 
             @Override
@@ -323,47 +323,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      *
      * @param request The permission request.
      */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private void handleRepeatedRequests(@NonNull final PermissionRequest request) {
-        final String methodTag = TAG + ":handleRepeatedRequests";
-        if (isCameraPermissionGranted()) {
-            Logger.info(methodTag, "Repeated request, granting the permission.");
-            final String[] cameraPermission = new String[] {
-                    PermissionRequest.RESOURCE_VIDEO_CAPTURE
-            };
-            request.grant(cameraPermission);
+    private void handleRepeatedCameraRequests(@NonNull final PermissionRequest request) {
+        final CameraPermissionRequest duplicatedRequest = new CameraPermissionRequest(request);
+        if (mCameraPermissionRequest.isGranted()) {
+            duplicatedRequest.grant();
         } else {
-            Logger.info(methodTag, "Repeated request, denying the permission");
-            request.deny();
-        }
-    }
-
-    /**
-     * Call this method to grant the permission to access the camera resource.
-     * The granted permission is only valid for the current WebView.
-     * <p>
-     * Note: This method is only available on API level 21 or higher.
-     */
-    private void acceptCameraRequest() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            final String[] cameraPermission = new String[] {
-                    PermissionRequest.RESOURCE_VIDEO_CAPTURE
-            };
-            if (mCameraPermissionRequest != null) {
-                mCameraPermissionRequest.grant(cameraPermission);
-            }
-        }
-    }
-
-    /**
-     * Call this method to deny the permission to access the camera resource.
-     * <p>
-     * Note: This method is only available on API level 21 or higher.
-     */
-    private void denyCameraRequest() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &&
-                mCameraPermissionRequest != null) {
-            mCameraPermissionRequest.deny();
+            duplicatedRequest.deny();
         }
     }
 
@@ -372,29 +337,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      *
      * @return true if the camera permission has been granted, false otherwise.
      */
-    private boolean isCameraPermissionGranted() {
+    private boolean isAppCameraPermissionGranted() {
         return ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED;
-    }
-
-    /**
-     * Determines whatever if the given permission request is for the camera resource.
-     * <p>
-     * Note: This method is only available on API level 21 or higher.
-     * Devices running on lower API levels will not be able to grant or deny camera permission requests.
-     * getResources() method is only available on API level 21 or higher.
-     *
-     * @param request The permission request.
-     * @return true if the given permission request is for camera, false otherwise.
-     */
-    private boolean isPermissionRequestForCamera(final PermissionRequest request) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            return request.getResources().length == 1 &&
-                    PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(request.getResources()[0]);
-        }
-        Logger.warn(TAG, "PermissionRequest.getResources() method is not available on API:"
-                + Build.VERSION.SDK_INT + ". We cannot determine if the request is for camera.");
-        return false;
     }
 
     private final ActivityResultLauncher<String> cameraRequestActivity = registerForActivityResult(
@@ -402,20 +347,22 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             permissionGranted   -> {
                 Logger.info(TAG, "Camera permission granted: " + permissionGranted);
                 if (permissionGranted) {
-                    acceptCameraRequest();
+                    mCameraPermissionRequest.grant();
                 }
                 else {
-                    denyCameraRequest();
+                    mCameraPermissionRequest.deny();
                 }
             }
     );
 
     /**
      * Launches the camera permission request for the app.
+     * Note: if the permission was already granted or denied,
+     * the user will not be prompted and it will go directly to the callback.
+     * Using the current state of the permission.
+     *
      */
-    private void requestCameraPermissionFromUser() {
-        final String methodTAG = TAG + ":requestCameraPermissionFromUser";
-        Logger.info(methodTAG, "Requesting camera permission.");
+    private void requestCameraPermission() {
         cameraRequestActivity.launch(Manifest.permission.CAMERA);
     }
 
@@ -429,11 +376,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         builder.setMessage(R.string.qr_code_rationale_message)
                 .setTitle(R.string.qr_code_rationale_header)
                 .setCancelable(false)
-                .setPositiveButton(R.string.qr_code_rationale_allow, (dialog, id) -> requestCameraPermissionFromUser())
-                .setNegativeButton(R.string.qr_code_rationale_block, (dialog, id) -> denyCameraRequest());
+                .setPositiveButton(R.string.qr_code_rationale_allow, (dialog, id) -> requestCameraPermission())
+                .setNegativeButton(R.string.qr_code_rationale_block, (dialog, id) -> mCameraPermissionRequest.deny());
         builder.show();
     }
-
 
     /**
      * Loads starting authorization request url into WebView.
