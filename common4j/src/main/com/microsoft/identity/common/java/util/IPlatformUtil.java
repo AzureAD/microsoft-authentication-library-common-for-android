@@ -136,5 +136,4 @@ public interface IPlatformUtil {
      */
     @Nullable
     List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList);
-
 }

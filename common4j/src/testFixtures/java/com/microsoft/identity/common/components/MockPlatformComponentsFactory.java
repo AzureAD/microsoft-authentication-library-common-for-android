@@ -23,14 +23,9 @@
 package com.microsoft.identity.common.components;
 
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.java.commands.ICommand;
-import com.microsoft.identity.common.java.crypto.CryptoSuite;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
-import com.microsoft.identity.common.java.crypto.IKeyAccessor;
-import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.IPopManagerSupplier;
 import com.microsoft.identity.common.java.interfaces.PlatformComponents;
 import com.microsoft.identity.common.java.net.DefaultHttpClientWrapper;
