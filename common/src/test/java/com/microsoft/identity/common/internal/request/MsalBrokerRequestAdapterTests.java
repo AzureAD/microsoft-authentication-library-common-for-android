@@ -25,12 +25,18 @@ package com.microsoft.identity.common.internal.request;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.REQUEST_AUTHORITY;
 
+import static org.junit.Assert.assertEquals;
+
 import android.os.Bundle;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.components.MockPlatformComponentsFactory;
+import com.microsoft.identity.common.internal.broker.BrokerRequest;
+import com.microsoft.identity.common.internal.commands.parameters.AndroidActivityInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryB2CAuthority;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
@@ -38,6 +44,8 @@ import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCo
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.java.request.SdkType;
+import com.microsoft.identity.common.java.ui.BrowserDescriptor;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -76,14 +84,14 @@ public class MsalBrokerRequestAdapterTests {
         final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
         final Bundle requestBundle = msalBrokerRequestAdapter.getRequestBundleForSsoToken(params, negotiatedBrokerProtocolVersion);
 
-        Assert.assertEquals(anAccountName, requestBundle.getString(AuthenticationConstants.Broker.ACCOUNT_NAME));
-        Assert.assertEquals(aHomeAccountId, requestBundle.getString(AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID));
-        Assert.assertEquals(aLocalAccountId, requestBundle.getString(AuthenticationConstants.Broker.ACCOUNT_LOCAL_ACCOUNT_ID));
-        Assert.assertEquals(aClientId, requestBundle.getString(AuthenticationConstants.Broker.SSO_TOKEN_CLIENT_ID));
-        Assert.assertEquals(accountAuthority, requestBundle.getString(REQUEST_AUTHORITY));
-        Assert.assertEquals(ssoUrl, requestBundle.getString(AuthenticationConstants.Broker.BROKER_SSO_URL_KEY));
-        Assert.assertEquals(negotiatedBrokerProtocolVersion, requestBundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY));
-        Assert.assertEquals(aCorrelationId, requestBundle.getString(ACCOUNT_CORRELATIONID));
+        assertEquals(anAccountName, requestBundle.getString(AuthenticationConstants.Broker.ACCOUNT_NAME));
+        assertEquals(aHomeAccountId, requestBundle.getString(AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID));
+        assertEquals(aLocalAccountId, requestBundle.getString(AuthenticationConstants.Broker.ACCOUNT_LOCAL_ACCOUNT_ID));
+        assertEquals(aClientId, requestBundle.getString(AuthenticationConstants.Broker.SSO_TOKEN_CLIENT_ID));
+        assertEquals(accountAuthority, requestBundle.getString(REQUEST_AUTHORITY));
+        assertEquals(ssoUrl, requestBundle.getString(AuthenticationConstants.Broker.BROKER_SSO_URL_KEY));
+        assertEquals(negotiatedBrokerProtocolVersion, requestBundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY));
+        assertEquals(aCorrelationId, requestBundle.getString(ACCOUNT_CORRELATIONID));
     }
 
     @Test
@@ -112,12 +120,13 @@ public class MsalBrokerRequestAdapterTests {
                 .scopes(scopes)
                 .authenticationScheme(new BearerAuthenticationSchemeInternal())
                 .prompt(OpenIdConnectPromptParameter.LOGIN)
+                .suppressBrokerAccountPicker(true)
                 .build();
 
         final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
         final Bundle requestBundle = msalBrokerRequestAdapter.getRequestBundleForAcquireTokenInteractive(params, negotiatedBrokerProtocolVersion);
 
-        Assert.assertEquals(negotiatedBrokerProtocolVersion, requestBundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY));
+        assertEquals(negotiatedBrokerProtocolVersion, requestBundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY));
     }
 
     @Test
@@ -153,6 +162,63 @@ public class MsalBrokerRequestAdapterTests {
         final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
         final Bundle requestBundle = msalBrokerRequestAdapter.getRequestBundleForAcquireTokenInteractive(params, negotiatedBrokerProtocolVersion);
 
-        Assert.assertEquals(negotiatedBrokerProtocolVersion, requestBundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY));
+        assertEquals(negotiatedBrokerProtocolVersion, requestBundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY));
+    }
+
+    @Test
+    public void test_BrokerRequestFromAcquireTokenParameters() {
+        test_BrokerRequestFromAcquireTokenParametersInternal(false);
+    }
+
+    @Test
+    public void test_BrokerRequestFromAcquireTokenParameters_SuppressBrokerPicker() {
+        test_BrokerRequestFromAcquireTokenParametersInternal(true);
+    }
+
+    private void test_BrokerRequestFromAcquireTokenParametersInternal(final boolean suppressBrokerAccountPicker) {
+        final Set<String> scopes = new HashSet<>();
+        scopes.add("user.read");
+
+        final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
+
+        final InteractiveTokenCommandParameters params = InteractiveTokenCommandParameters.builder()
+                .platformComponents(components)
+                .correlationId("987d8962-3f4d-4054-a852-ac0c4b6a602e")
+                .clientId("4b0db8c2-9f26-4417-8bde-3f0e3656f8e0")
+                .redirectUri("msauth://com.microsoft.identity.client.sample.local/1wIqXSqBj7w%2Bh11ZifsnqwgyKrY%3D")
+                .applicationName("com.microsoft.identity.client.sample.local")
+                .applicationVersion("1.0.0")
+                .childClientId("child_client_id")
+                .childRedirectUri("child_redirect_uri")
+                .loginHint("login_hint")
+                .sdkType(SdkType.MSAL)
+                .sdkVersion("5.4.0")
+                .authority(new AzureActiveDirectoryAuthority())
+                .scopes(scopes)
+                .authenticationScheme(new BearerAuthenticationSchemeInternal())
+                .prompt(OpenIdConnectPromptParameter.LOGIN)
+                .requiredBrokerProtocolVersion("10.0")
+                .suppressBrokerAccountPicker(suppressBrokerAccountPicker)
+                .preferredBrowser(new BrowserDescriptor("chrome", "signature", null, null))
+                .claimsRequestJson("claims_request")
+                .brokerBrowserSupportEnabled(true)
+                .build();
+        final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
+        final BrokerRequest brokerRequest = msalBrokerRequestAdapter.brokerRequestFromAcquireTokenParameters(params);
+        assertEquals(params.getCorrelationId(), brokerRequest.getCorrelationId());
+        assertEquals(params.getClientId(), brokerRequest.getClientId());
+        assertEquals(params.getRedirectUri(), brokerRequest.getRedirect());
+        assertEquals(params.getApplicationName(), brokerRequest.getApplicationName());
+        assertEquals(params.getApplicationVersion(), brokerRequest.getApplicationVersion());
+        assertEquals(params.getChildClientId(), brokerRequest.getChildClientId());
+        assertEquals(params.getChildRedirectUri(), brokerRequest.getChildRedirectUri());
+        assertEquals(params.getLoginHint(), brokerRequest.getUserName());
+        assertEquals(params.getSdkType(), brokerRequest.getSdkType());
+        assertEquals(params.getSdkVersion(), brokerRequest.getMsalVersion());
+        assertEquals(params.getAuthority().getAuthorityURL().toString(), brokerRequest.getAuthority());
+        assertEquals(StringUtil.join(" ", scopes), brokerRequest.getScope());
+        assertEquals(params.getAuthenticationScheme(), brokerRequest.getAuthenticationScheme());
+        assertEquals(params.getPrompt().name(), brokerRequest.getPrompt());
+        assertEquals(params.isSuppressBrokerAccountPicker(), brokerRequest.isSuppressAccountPicker());
     }
 }
