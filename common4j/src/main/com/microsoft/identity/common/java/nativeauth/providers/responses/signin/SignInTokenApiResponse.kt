@@ -83,7 +83,7 @@ class SignInTokenApiResponse(
                         )
                     }
                     errorCodes[0].isPasswordChangeRequired() -> {
-                        val customDescription = "Password change is required, which can't be fulfilled as part of this flow. " +
+                        val customDescription = "User password change is required, which can't be fulfilled as part of this flow. " +
                                 "Please reset the password and perform a new sign in operation. More information:" + errorDescription.orEmpty()
                         SignInTokenApiResult.UnknownError(
                             error = error.orEmpty(),

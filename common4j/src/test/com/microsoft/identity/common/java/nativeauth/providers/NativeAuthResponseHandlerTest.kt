@@ -3021,7 +3021,7 @@ class NativeAuthResponseHandlerTest {
 
         val apiResult = signInTokenApiResponse.toErrorResult()
 
-        val expectedDescription = "Password change is required, which can't be fulfilled as part of this flow. " +
+        val expectedDescription = "User password change is required, which can't be fulfilled as part of this flow. " +
                 "Please reset the password and perform a new sign in operation. More information:" + resetPasswordRequiredErrorDescription
         assertTrue(apiResult is SignInTokenApiResult.UnknownError)
         assertEquals(expectedDescription, (apiResult as SignInTokenApiResult.UnknownError).errorDescription)
