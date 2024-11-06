@@ -242,7 +242,7 @@ public class ExceptionAdapter {
                     errorResponse.getErrorDescription(),
                     null);
 
-            String developerDescription = "Password change is required, which can't be fulfilled as part of this flow."+
+            String developerDescription = "User password change is required, which can't be fulfilled as part of this flow."+
                     "Please reset the password and perform a new sign in operation. Please see exception details for more information.";
             outErr = new ServiceException(
                     errorResponse.getError(),
