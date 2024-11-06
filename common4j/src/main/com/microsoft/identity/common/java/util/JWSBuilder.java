@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.util;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.challengehandlers.IDeviceCertificate;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
@@ -32,7 +33,6 @@ import com.microsoft.identity.common.java.logging.Logger;
 
 import java.security.cert.CertificateEncodingException;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
@@ -84,7 +84,7 @@ public class JWSBuilder {
     }
 
     protected String encodeUrlSafeString(final byte[] dataToEncode){
-        return StringUtil.encodeUrlSafeString(dataToEncode);
+        return Base64Util.encodeUrlSafeString(dataToEncode);
     }
 
     /**
@@ -155,7 +155,7 @@ public class JWSBuilder {
             // to digitally sign the JWS MUST be the first certificate
             // http://tools.ietf.org/html/draft-ietf-jose-json-web-signature-27
             header.mCert = new String[1];
-            header.mCert[0] = StringUtil.base64Encode(deviceCert.getX509().getEncoded());
+            header.mCert[0] = Base64Util.encodeToStringNoWrap(deviceCert.getX509().getEncoded());
 
             // redundant but current ADFS code base is looking for
             final String headerJsonString = gson.toJson(header);
