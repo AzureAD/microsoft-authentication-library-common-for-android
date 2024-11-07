@@ -96,12 +96,6 @@ public class MockConnection {
         assertEquals(httpResponse.getBody(), ResponseBody.SUCCESS);
     }
 
-    public static void verifyFailureHttpResponseWithGenericResponse(@NonNull final HttpResponse httpResponse) {
-        assertNotNull(httpResponse);
-        assertEquals(httpResponse.getStatusCode(), HttpURLConnection.HTTP_INTERNAL_ERROR);
-        assertEquals(httpResponse.getBody(), ResponseBody.GENERIC_ERROR);
-    }
-
     private static InputStream createInputStream(final String input) {
         return input == null ? null : new ByteArrayInputStream(input.getBytes());
     }
