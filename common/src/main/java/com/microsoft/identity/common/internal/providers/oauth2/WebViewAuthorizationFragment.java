@@ -28,12 +28,14 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Insets;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowInsets;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -258,6 +260,19 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 return false;
             }
         });
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            mWebView.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+                @Override
+                public WindowInsets onApplyWindowInsets(@NonNull View view, @NonNull WindowInsets insets) {
+                    Insets systemInsets = null;
+                        systemInsets = insets.getInsets(WindowInsets.Type.systemBars());
+                        view.setPadding(systemInsets.left, systemInsets.top, systemInsets.right, systemInsets.bottom);
+                    return insets; // Return the insets so other views can use them as well.
+                }
+            });
+        }
+
 
         mWebView.getSettings().setLoadWithOverviewMode(true);
         mWebView.getSettings().setDomStorageEnabled(true);
