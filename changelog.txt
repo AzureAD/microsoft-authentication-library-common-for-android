@@ -1,5 +1,7 @@
 vNext
 ----------
+- [PATCH] Add native auth instructions to error description when reset password required is returned (#2532)
+- [MINOR] Add support for suppressing broker account picker (#2529)
 - [MINOR] Camera permission request behavior changes for QR + PIN Auth (#2524)
 - [MINOR] Migrate Base64 away from Msebera httpclient (#2389)
 - [PATCH] Provide empty image when no video is present on QR +PIN auth (#2424)

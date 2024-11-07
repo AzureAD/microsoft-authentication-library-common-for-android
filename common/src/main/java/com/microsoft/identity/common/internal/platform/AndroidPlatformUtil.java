@@ -82,7 +82,7 @@ public class AndroidPlatformUtil implements IPlatformUtil {
 
     /**
      * List of System Browsers which can be used from broker, currently only Chrome is supported.
-     * This information here is populated from the default browser safelist in MSAL.
+     * This information here is populated from the default browser safe-list in MSAL.
      *
      * @return
      */

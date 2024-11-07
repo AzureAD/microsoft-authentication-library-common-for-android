@@ -63,5 +63,6 @@ public enum SpanName {
     DeleteTransferToken,
     RestoreMsaAccounts,
     OnUpgradeReceiver,
-    UpgradeDeviceRegistration
+    UpgradeDeviceRegistration,
+    RemoveBrokerAccount,
 }

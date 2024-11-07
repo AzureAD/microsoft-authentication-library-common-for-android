@@ -236,6 +236,19 @@ public class ExceptionAdapter {
                     developerDescription,
                     apiError
             );
+        } else if (isNativeAuthenticationResetPasswordRequiredError(errorResponse)) {
+            ServiceException apiError = new ServiceException(
+                    errorResponse.getError(),
+                    errorResponse.getErrorDescription(),
+                    null);
+
+            String developerDescription = "User password change is required, which can't be fulfilled as part of this flow."+
+                    "Please reset the password and perform a new sign in operation. Please see exception details for more information.";
+            outErr = new ServiceException(
+                    errorResponse.getError(),
+                    developerDescription,
+                    apiError
+            );
         }
         else if (shouldBeConvertedToUiRequiredException(errorResponse.getError())) {
             outErr = new UiRequiredException(
@@ -506,6 +519,28 @@ public class ExceptionAdapter {
      */
     private static boolean isNativeAuthenticationMFAError(
             @NonNull final TokenErrorResponse errorResponse) {
+        return doesErrorContainsErrorCode(50076, errorResponse);
+    }
+
+    /**
+     * Identifies whether an error is specific to native authentication reset password required scenarios.
+     * @param errorResponse
+     * @return true if errorResponse is a native authentication reset password required error
+     */
+    private static boolean isNativeAuthenticationResetPasswordRequiredError(
+            @NonNull final TokenErrorResponse errorResponse) {
+        return doesErrorContainsErrorCode(50142, errorResponse);
+    }
+
+    /**
+     * Identifies whether an error contains a specific error code.
+     * @param errorCode Error code to check
+     * @param errorResponse A TokenErrorResponse from which we will check the error code
+     * @return true if errorResponse contains the error code
+     */
+    private static boolean doesErrorContainsErrorCode(
+            int errorCode,
+            @NonNull final TokenErrorResponse errorResponse) {
         if (!(errorResponse instanceof MicrosoftTokenErrorResponse)) {
             return false;
         }
@@ -513,6 +548,6 @@ public class ExceptionAdapter {
         MicrosoftTokenErrorResponse microsoftTokenErrorResponse = ((MicrosoftTokenErrorResponse) errorResponse);
         return microsoftTokenErrorResponse.getErrorCodes() != null &&
                 !microsoftTokenErrorResponse.getErrorCodes().isEmpty() &&
-                microsoftTokenErrorResponse.getErrorCodes().contains((long) 50076);
+                microsoftTokenErrorResponse.getErrorCodes().contains((long) errorCode);
     }
 }
