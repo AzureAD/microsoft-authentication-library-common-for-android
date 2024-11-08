@@ -486,6 +486,26 @@ public class ClientException extends BaseException {
     public static final String KEY_LOAD_FAILURE = "key_load_failure";
 
     /**
+     * Error occurred when calling MSA DR register device api
+     */
+    public static final String MSA_DEVICE_REGISTRATION_FAILURE = "msa_device_registration_failure";
+
+    /**
+     * Error occurred when calling MSA get device token api
+     */
+    public static final String MSA_GET_DEVICE_TOKEN_FAILURE = "msa_get_device_token_failure";
+
+    /**
+     * Error occurred when calling MSA sign with device key api
+     */
+    public static final String MSA_SIGN_WITH_DEVICE_KEY_FAILURE = "msa_sign_with_device_key_failre";
+
+    /**
+     * Error occurred when calling MSA sign with device key api
+     */
+    public static final String MSA_DECRYPT_WITH_DEVICE_KEY_FAILURE = "msa_decrypt_with_device_key_failure";
+
+    /**
      * Constructor of ClientException.
      *
      * @param errorCode String
