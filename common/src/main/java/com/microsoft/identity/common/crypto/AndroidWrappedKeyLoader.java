@@ -205,13 +205,24 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                 mKeyCache.clear();
                 return null;
             }
+            try {
+                final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, getKeySpecAlgorithm(), keyPair, WRAP_ALGORITHM);
+                Logger.info(methodTag, "Key is loaded with thumbprint: " +
+                        KeyUtil.getKeyThumbPrint(key));
 
-            final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, getKeySpecAlgorithm(), keyPair, WRAP_ALGORITHM);
+                return key;
+            } catch (ClientException e) {
+                if (e.getErrorCode().contains("invalid_key")) {
+                    Logger.info(methodTag, "try once again!");
+                    final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, getKeySpecAlgorithm(), keyPair, WRAP_ALGORITHM);
+                    Logger.info(methodTag, "Key is loaded with thumbprint: " +
+                            KeyUtil.getKeyThumbPrint(key));
 
-            Logger.info(methodTag, "Key is loaded with thumbprint: " +
-                    KeyUtil.getKeyThumbPrint(key));
+                    return key;
+                }
+                throw e;
+            }
 
-            return key;
         } catch (final ClientException e) {
             // Reset KeyPair info so that new request will generate correct KeyPairs.
             // All tokens with previous SecretKey are not possible to decrypt.

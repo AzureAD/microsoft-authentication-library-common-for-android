@@ -52,6 +52,7 @@ import javax.crypto.SecretKey;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
+import lombok.Synchronized;
 
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_CRYPTO_ERROR;
 import static com.microsoft.identity.common.java.util.ported.DateUtilities.LOCALE_CHANGE_LOCK;
@@ -342,7 +343,7 @@ public class AndroidKeyStoreUtil {
      * @param wrapAlgorithm the algorithm used to wrap the key.
      * @return the wrapped key data blob.
      */
-    public static byte[] wrap(@NonNull final SecretKey key,
+    public static synchronized byte[] wrap(@NonNull final SecretKey key,
                               @NonNull final KeyPair keyToWrap,
                               @NonNull final String wrapAlgorithm)
             throws ClientException {
@@ -397,7 +398,7 @@ public class AndroidKeyStoreUtil {
      * @param wrapAlgorithm        the algorithm used to wrap the key.
      * @return the unwrapped key.
      */
-    public static SecretKey unwrap(@NonNull final byte[] wrappedKeyBlob,
+    public static synchronized SecretKey unwrap(@NonNull final byte[] wrappedKeyBlob,
                                    @NonNull final String wrappedKeyAlgorithm,
                                    @NonNull final KeyPair keyPairForUnwrapping,
                                    @NonNull final String wrapAlgorithm) throws ClientException {
