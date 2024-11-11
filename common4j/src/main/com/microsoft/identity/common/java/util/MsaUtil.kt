@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.util
 
+import com.microsoft.identity.common.java.authorities.Authority
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority
 import java.util.Locale
@@ -34,11 +35,16 @@ class MsaUtil {
         /**
          * Given an authority, check if this is an MSA request
          */
-        fun isMsaRequest(authority : AzureActiveDirectoryAuthority) : Boolean{
-            val audience = authority.audience.tenantId.lowercase(Locale.ROOT)
+        fun isMsaRequest(authority : Authority) : Boolean{
+            return if (authority !is AzureActiveDirectoryAuthority) {
+                false
+            } else {
+                // authority has been silently casted to AzureActiveDirectoryAuthority
+                val audience = authority.audience.tenantId.lowercase(Locale.ROOT)
 
-            // Check if audience is consumers or the MSA Mega Tenant
-            return audience == AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID || audience == AzureActiveDirectoryAudience.CONSUMERS
+                // Check if audience is consumers or the MSA Mega Tenant
+                audience == AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID || audience == AzureActiveDirectoryAudience.CONSUMERS
+            }
         }
     }
 }
