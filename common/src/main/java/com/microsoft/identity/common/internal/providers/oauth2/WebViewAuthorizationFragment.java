@@ -179,13 +179,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (activity == null) {
             return null;
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-        if (activity.getActionBar()!=null) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && activity.getActionBar()!=null) {
             Logger.info(methodTag, "Hiding the action bar!");
             activity.getActionBar().hide();
-        }
-
-
         }
 
         mAADWebViewClient = new AzureActiveDirectoryWebViewClient(
