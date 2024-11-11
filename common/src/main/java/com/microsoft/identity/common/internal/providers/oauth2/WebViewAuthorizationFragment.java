@@ -28,12 +28,14 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Insets;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowInsets;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -177,6 +179,15 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (activity == null) {
             return null;
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        if (activity.getActionBar()!=null) {
+            Logger.info(methodTag, "Hiding the action bar!");
+            activity.getActionBar().hide();
+        }
+
+
+        }
+
         mAADWebViewClient = new AzureActiveDirectoryWebViewClient(
                 activity,
                 new AuthorizationCompletionCallback(),
@@ -246,7 +257,17 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 userAgent + AuthenticationConstants.Broker.CLIENT_TLS_NOT_SUPPORTED);
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.requestFocus(View.FOCUS_DOWN);
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            mWebView.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+                @NonNull
+                @Override
+                public WindowInsets onApplyWindowInsets(@NonNull View view, @NonNull WindowInsets insets) {
+                    Insets systemInsets = insets.getInsets(WindowInsets.Type.systemBars());
+                    view.setPadding(systemInsets.left, systemInsets.top, systemInsets.right, systemInsets.bottom);
+                    return insets;
+                }
+            });
+        }
         // Set focus to the view for touch event
         mWebView.setOnTouchListener(new View.OnTouchListener() {
             @Override
