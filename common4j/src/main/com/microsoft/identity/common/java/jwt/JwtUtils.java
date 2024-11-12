@@ -59,5 +59,18 @@ public final class JwtUtils {
                 Base64Util.encodeUrlSafeString(headerJson.getBytes(ENCODING_UTF8)) + "." + Base64Util.encodeUrlSafeString(bodyJson.getBytes(ENCODING_UTF8));
         return encodedJwt;
     }
+
+    @NonNull
+    public static JwtRequestHeader generateJwtRequestHeaderForMsaDR(final byte[] keyContext) {
+
+
+        return new JwtRequestHeader();
+    }
+
+    @NonNull
+    public static JwtRequestBody generateJwtRequestBodyForMsaDR(final String deviceToken) {
+
+        return new JwtRequestBody();
+    }
 }
 
