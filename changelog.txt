@@ -1,5 +1,6 @@
-vNext
+Version 18.2.0
 ----------
+(common4j 15.2.0)
 - [PATCH] Add native auth instructions to error description when reset password required is returned (#2532)
 - [MINOR] Add support for suppressing broker account picker (#2529)
 - [MINOR] Camera permission request behavior changes for QR + PIN Auth (#2524)
