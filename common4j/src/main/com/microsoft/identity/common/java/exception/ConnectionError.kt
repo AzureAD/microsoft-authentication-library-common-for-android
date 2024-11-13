@@ -20,27 +20,37 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.net;
+package com.microsoft.identity.common.java.exception
 
-import com.microsoft.identity.common.java.exception.ClientException;
+enum class ConnectionError(val value: String) {
+    FAILED_TO_OPEN_CONNECTION("ce_failed_to_open_connection"),
+    FAILED_TO_SET_REQUEST_METHOD("ce_failed_to_set_request_method"),
+    FAILED_TO_WRITE_TO_OUTPUT_STREAM("ce_failed_to_write_to_output_stream"),
+    FAILED_TO_READ_FROM_INPUT_STREAM("ce_failed_to_read_from_input_stream"),
+    FAILED_TO_GET_RESPONSE_CODE("ce_failed_to_get_response_code"),
+    CONNECTION_TIMEOUT("ce_connection_timeout");
 
-import net.jcip.annotations.Immutable;
-import net.jcip.annotations.ThreadSafe;
+    /**
+     * Converts this [ConnectionError] into a [ClientException]
+     **/
+    fun getClientException(cause: Throwable): ClientException {
+        val e = ClientException(
+            ClientException.IO_ERROR,
+            "An IO error occurred in the network layer: " + cause.message,
+            cause
+        )
+        e.subErrorCode = value
+        return e
+    }
 
-import java.io.IOException;
-import java.util.concurrent.Callable;
+    /**
+     * Returns true if the given [Throwable] is a connection error.
+     **/
+    fun compare(throwable: Throwable): Boolean {
+        if (throwable !is ClientException){
+            return false
+        }
 
-import lombok.SneakyThrows;
-
-/**
- * A retry policy that, by default, does nothing.
- */
-@ThreadSafe
-@Immutable
-public class NoRetryPolicy implements IRetryPolicy<HttpResponse> {
-    @Override
-    @SneakyThrows
-    public HttpResponse attempt(Callable<HttpResponse> supplier) throws ClientException {
-        return supplier.call();
+        return this.value == throwable.subErrorCode
     }
 }

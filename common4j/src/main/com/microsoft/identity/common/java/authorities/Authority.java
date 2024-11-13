@@ -303,7 +303,7 @@ public abstract class Authority {
     private static final Object sLock = new Object();
 
     private static void performCloudDiscovery()
-            throws IOException, URISyntaxException {
+            throws ClientException {
         final String methodName = ":performCloudDiscovery";
         Logger.verbose(
                 TAG + methodName,
@@ -389,18 +389,8 @@ public abstract class Authority {
 
         try {
             performCloudDiscovery();
-        } catch (final IOException ex) {
-            clientException = new ClientException(
-                    ClientException.IO_ERROR,
-                    "Unable to perform cloud discovery",
-                    ex
-            );
-        } catch (final URISyntaxException ex) {
-            clientException = new ClientException(
-                    ClientException.MALFORMED_URL,
-                    "Unable to construct cloud discovery URL",
-                    ex
-            );
+        } catch (final ClientException ex) {
+            clientException = ex;
         }
 
         Logger.info(TAG + methodName, "Cloud discovery complete.");

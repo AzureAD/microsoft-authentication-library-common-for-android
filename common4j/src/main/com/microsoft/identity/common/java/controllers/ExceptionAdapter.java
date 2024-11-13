@@ -261,7 +261,7 @@ public class ExceptionAdapter {
                     null);
         }
 
-        outErr.setOauthSubErrorCode(errorResponse.getSubError());
+        outErr.setSubErrorCode(errorResponse.getSubError());
         setHttpResponseUsingTokenErrorResponse(outErr, errorResponse);
         return outErr;
     }
@@ -282,7 +282,7 @@ public class ExceptionAdapter {
                 exception.getHttpStatusCode(),
                 exception
         );
-        outErr.setOauthSubErrorCode(exception.getOAuthSubErrorCode());
+        outErr.setSubErrorCode(exception.getSubErrorCode());
         outErr.setHttpResponseHeaders(exception.getHttpResponseHeaders());
         outErr.setHttpResponseBody(exception.getHttpResponseBody());
         return outErr;
@@ -311,7 +311,7 @@ public class ExceptionAdapter {
                         (BrokerSilentTokenCommandParameters) commandParameters
                 );
             }
-            policyRequiredException.setOauthSubErrorCode(errorResponse.getSubError());
+            policyRequiredException.setSubErrorCode(errorResponse.getSubError());
             setHttpResponseUsingTokenErrorResponse(policyRequiredException, errorResponse);
 
             return policyRequiredException;

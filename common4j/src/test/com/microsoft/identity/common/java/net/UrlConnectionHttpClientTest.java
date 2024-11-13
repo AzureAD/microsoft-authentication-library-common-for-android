@@ -28,6 +28,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.http.MockConnection;
 import com.microsoft.identity.http.ResponseBody;
 
@@ -86,7 +87,7 @@ public final class UrlConnectionHttpClientTest {
      * Verify the expected exception is thrown when sending get request with null url.
      */
     @Test(expected = NullPointerException.class)
-    public void testNullRequestUrl() throws IOException {
+    public void testNullRequestUrl() throws ClientException, IOException {
         sNoRetryClient.get(null, Collections.<String, String>emptyMap());
     }
 
@@ -1113,7 +1114,7 @@ public final class UrlConnectionHttpClientTest {
      */
 
     @Test
-    public void testNoSSL() throws IOException {
+    public void testNoSSL() throws ClientException, IOException {
         final HttpResponse response = sNoRetryClient.method(
                 HttpClient.HttpMethod.GET,
                 new URL("http://http.badssl.com/"),
@@ -1127,7 +1128,7 @@ public final class UrlConnectionHttpClientTest {
 
     @Test
     @Ignore("Ignored because our pipeline doesn't support TLS1.0 and TLS1.1. This still can be run locally.")
-    public void testTLS1() throws IOException {
+    public void testTLS1() throws ClientException, IOException {
         final HttpResponse response = sNoRetryClient.method(
                 HttpClient.HttpMethod.GET,
                 new URL("https://tls-v1-0.badssl.com:1010/"),
@@ -1141,7 +1142,7 @@ public final class UrlConnectionHttpClientTest {
 
     @Test
     @Ignore("Ignored because our pipeline doesn't support TLS1.0 and TLS1.1. This still can be run locally.")
-    public void testTLS11() throws IOException, NoSuchAlgorithmException, KeyManagementException {
+    public void testTLS11() throws ClientException, IOException {
         final HttpResponse response = sNoRetryClient.method(
                 HttpClient.HttpMethod.GET,
                 new URL("https://tls-v1-1.badssl.com:1011/"),
@@ -1154,7 +1155,7 @@ public final class UrlConnectionHttpClientTest {
     }
 
     @Test
-    public void testTLS12() throws IOException {
+    public void testTLS12() throws ClientException, IOException {
         final HttpResponse response = sNoRetryClient.method(
                 HttpClient.HttpMethod.GET,
                 new URL("https://tls-v1-2.badssl.com:1012/"),
@@ -1167,7 +1168,7 @@ public final class UrlConnectionHttpClientTest {
     }
 
     @Test
-    public void testTLSWithTLS11Context() throws IOException, NoSuchAlgorithmException, KeyManagementException {
+    public void testTLSWithTLS11Context() throws ClientException, IOException, NoSuchAlgorithmException, KeyManagementException {
         final SSLContext context = SSLContext.getInstance("TLSv1.1");
         context.init(null, null, new SecureRandom());
 
@@ -1192,7 +1193,7 @@ public final class UrlConnectionHttpClientTest {
     }
 
     @Test
-    public void testPickHighestTLS() throws IOException {
+    public void testPickHighestTLS() throws ClientException, IOException {
         final HttpResponse response = sNoRetryClient.method(
                 HttpClient.HttpMethod.GET,
                 new URL("https://tls13.akamai.io/"),
@@ -1205,7 +1206,7 @@ public final class UrlConnectionHttpClientTest {
     }
 
     @Test(expected = SSLHandshakeException.class)
-    public void testConnectingToTLS13ServerWhileEnforcing12OnClientSide() throws IOException {
+    public void testConnectingToTLS13ServerWhileEnforcing12OnClientSide() throws ClientException, IOException {
         final UrlConnectionHttpClient client = UrlConnectionHttpClient.builder()
                 .supportedSslProtocols(Arrays.asList("TLSv1.3"))
                 .build();
@@ -1221,7 +1222,7 @@ public final class UrlConnectionHttpClientTest {
     }
 
     @Test
-    public void testSpecifyingSupportedSSLVersion() throws IOException {
+    public void testSpecifyingSupportedSSLVersion() throws ClientException, IOException {
         final UrlConnectionHttpClient client = UrlConnectionHttpClient.builder()
                 .supportedSslProtocols(Arrays.asList("TLSv1.2"))
                 .build();
@@ -1238,7 +1239,7 @@ public final class UrlConnectionHttpClientTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testConnectingToHttpsButGetHttpUrlConnection() throws IOException {
+    public void testConnectingToHttpsButGetHttpUrlConnection() throws ClientException, IOException {
         HttpUrlConnectionFactory.addMockedConnection(MockConnection.getMockedHttpConnection());
         final HttpResponse response = sNoRetryClient.method(
                 HttpClient.HttpMethod.GET,
@@ -1251,7 +1252,7 @@ public final class UrlConnectionHttpClientTest {
     }
 
     @Test
-    public void testConnectingToHttp() throws IOException {
+    public void testConnectingToHttp() throws ClientException, IOException {
         HttpUrlConnectionFactory.addMockedConnection(MockConnection.getMockedHttpConnection());
         final HttpResponse response = sNoRetryClient.method(
                 HttpClient.HttpMethod.GET,

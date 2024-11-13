@@ -22,7 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
+import static com.microsoft.identity.common.java.exception.ClientException.IO_ERROR;
+
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ConnectionError;
 import com.microsoft.identity.common.java.logging.Logger;
 
 import java.io.UnsupportedEncodingException;
@@ -246,6 +249,8 @@ public class UrlUtil {
 
     /**
      * This creates a url from a String, rewriting any malformedUrlExceptions to runtime.
+     * Should be use for tests only.
+     *
      * @param urlString the string to convert.
      * @return the corresponding {@link URL}.
      */
@@ -257,7 +262,26 @@ public class UrlUtil {
         }
     }
 
+    public static URL makeUrl(String urlString) throws ClientException {
+        try {
+            return new URL(urlString);
+        } catch (MalformedURLException e) {
+            throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
+        }
+    }
+
     public static String removeTrailingSlash(@NonNull final String urlString) {
         return urlString.replaceFirst("/*$", "");
+    }
+
+
+    public static ClientException getNetworkLayerClientException(
+            final ConnectionError connectionSubError,
+            final Throwable cause) {
+        final ClientException e = new ClientException(IO_ERROR,
+                "An IO error occurred in the network layer: ${cause.message}",
+                cause);
+        e.setSubErrorCode(connectionSubError.name());
+        return e;
     }
 }

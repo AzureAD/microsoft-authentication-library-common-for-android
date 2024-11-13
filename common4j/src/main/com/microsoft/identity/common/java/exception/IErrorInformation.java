@@ -39,4 +39,7 @@ public interface IErrorInformation {
      */
     @NonNull
     String getErrorCode();
+
+    @Nullable
+    String getSubErrorCode();
 }
