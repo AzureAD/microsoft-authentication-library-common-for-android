@@ -85,7 +85,7 @@ public final class JwtUtils {
      * @return a request body object
      */
     @NonNull
-    public static JwtRequestBody generateJwtRequestBodyForMsaDR(final String deviceToken, final String audienceUrl, final String nonce) {
+    public static JwtRequestBody generateJwtRequestBodyForMsaDR(final String audienceUrl, final String nonce, final String deviceToken) {
         final JwtRequestBody jwtRequestBody = new JwtRequestBody();
         jwtRequestBody.setAudience(audienceUrl); //TODO: Can i hard code this to login.microsoftonline.com instead of passing parameter?
         jwtRequestBody.setNonce(nonce);

@@ -28,11 +28,14 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODIN
 import com.google.gson.Gson;
 import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.java.util.MsaUtil;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import java.util.Arrays;
 
 @RunWith(JUnit4.class)
 public class JwtUtilsTest {
@@ -58,5 +61,35 @@ public class JwtUtilsTest {
 
         final String encodedJwt = JwtUtils.generateJWT(jwtRequestHeader, jwtRequestBody);
         Assert.assertEquals(expectedJwt, encodedJwt);;
+    }
+
+    @Test
+    public void testGenerateJwtForMsaDR() {
+        final byte[] mockContext = "mockContext".getBytes();
+        final String mockAudience = "mockAudience";
+        final String mockNonce = "mockNonce";
+        final String mockDeviceToken = "mockDeviceToken";
+
+        final JwtRequestHeader expectedJwtRequestHeader = new JwtRequestHeader();
+        expectedJwtRequestHeader.setAlg(JwtRequestHeader.ALG_VALUE_HS256);
+        expectedJwtRequestHeader.setKId(JwtRequestHeader.KID_VALUE_ECDH);
+        expectedJwtRequestHeader.setCtx(Arrays.toString(mockContext));
+        final JwtRequestBody expectedJwtRequestBody = new JwtRequestBody();
+        expectedJwtRequestBody.setAudience(mockAudience);
+        expectedJwtRequestBody.setNonce(mockNonce);
+        expectedJwtRequestBody.setPurpose(MsaUtil.Companion.getJwtPurpose());
+        expectedJwtRequestBody.setGrantType(TokenRequest.GrantTypes.DEVICE_AUTH);
+        expectedJwtRequestBody.setDeviceToken(mockDeviceToken);
+        final String headerJson = new Gson().toJson(expectedJwtRequestHeader);
+        final String bodyJson = new Gson().toJson(expectedJwtRequestBody);
+
+        final String expectedJwt =
+                Base64Util.encodeUrlSafeString(headerJson.getBytes(ENCODING_UTF8)) + "." + Base64Util.encodeUrlSafeString(bodyJson.getBytes(ENCODING_UTF8));
+
+        final String encodedJwt = JwtUtils.generateJWT(
+                JwtUtils.generateJwtRequestHeaderForMsaDR(mockContext),
+                JwtUtils.generateJwtRequestBodyForMsaDR(mockAudience, mockNonce, mockDeviceToken)
+        );
+        Assert.assertEquals(expectedJwt, encodedJwt);
     }
 }

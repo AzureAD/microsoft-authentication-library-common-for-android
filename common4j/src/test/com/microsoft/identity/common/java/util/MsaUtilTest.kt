@@ -22,35 +22,40 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.util
 
-import com.microsoft.identity.common.java.authorities.Authority
+import com.microsoft.identity.common.java.authorities.AccountsInOneOrganization
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority
-import java.util.Locale
+import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryB2CAuthority
+import org.junit.Assert
+import org.junit.Test
 
-/**
- * Class for various MSA-related utility methods
- */
-class MsaUtil {
+class MsaUtilTest {
 
-    companion object {
-        // Header names used when adding device token in headers to /authorize and /token, respectively
-        val msaAuthorizeEndpointHeader = "x-ms-DeviceCredential"
-        val msaTokenEndpointHeader = "device_credential"
-        val jwtPurpose = "v2sso"
+    @Test
+    fun isMsaRequestWithMsaMegaTenantAuthority() {
+        val msaMegaTenantAuthority = AzureActiveDirectoryAuthority(AccountsInOneOrganization(AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID))
 
-        /**
-         * Given an authority, check if this is an MSA request
-         */
-        fun isMsaRequest(authority : Authority) : Boolean {
-            return if (authority !is AzureActiveDirectoryAuthority) {
-                false
-            } else {
-                // authority has been silently casted to AzureActiveDirectoryAuthority
-                val audience = authority.mAudience.tenantId.lowercase(Locale.ROOT)
+        Assert.assertTrue(MsaUtil.isMsaRequest(msaMegaTenantAuthority))
+    }
 
-                // Check if audience is consumers or the MSA Mega Tenant
-                audience == AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID || audience == AzureActiveDirectoryAudience.CONSUMERS
-            }
-        }
+    @Test
+    fun isMsaRequestWithConsumersAuthority() {
+        val consumersTenantAuthority = AzureActiveDirectoryAuthority(AccountsInOneOrganization(AzureActiveDirectoryAudience.CONSUMERS))
+
+        Assert.assertTrue(MsaUtil.isMsaRequest(consumersTenantAuthority))
+    }
+
+    @Test
+    fun isMsaRequestWithNonMsaAuthority() {
+        val nonMsaAuthority = AzureActiveDirectoryAuthority(AccountsInOneOrganization(AzureActiveDirectoryAudience.ALL))
+
+        Assert.assertFalse(MsaUtil.isMsaRequest(nonMsaAuthority))
+    }
+
+    @Test
+    fun isMsaRequestWithNonAzureAuthority() {
+        val nonAzureActiveDirectoryAuthority = AzureActiveDirectoryB2CAuthority("mockUrl")
+
+        Assert.assertFalse(MsaUtil.isMsaRequest(nonAzureActiveDirectoryAuthority))
     }
 }
