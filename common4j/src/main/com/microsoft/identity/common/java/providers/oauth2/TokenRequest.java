@@ -305,6 +305,7 @@ public class TokenRequest implements IHasExtraParameters {
         // e.g. used in Primary Refresh Token acquisition flows
         public static final String JWT_BEARER = "urn:ietf:params:oauth:grant-type:jwt-bearer";
         public static final String TRANSFER_TOKEN = "transfer_token";
+        public static final String DEVICE_AUTH = "device_auth";
     }
 
     public static class TokenType {

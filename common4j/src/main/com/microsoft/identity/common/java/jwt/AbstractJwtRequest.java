@@ -62,6 +62,8 @@ public abstract class AbstractJwtRequest {
         public static final String JWE_CRYPTO = "jwe_crypto";
         public static final String SESSION_KEY_CRYPTO = "session_key_crypto";
         public static final String PURPOSE = "purpose";
+
+        public static final String DEVICE_TOKEN = "device_token";
     }
 
     @SerializedName(ClaimNames.REFRESH_TOKEN)

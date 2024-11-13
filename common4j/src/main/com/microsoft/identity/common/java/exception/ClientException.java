@@ -501,7 +501,7 @@ public class ClientException extends BaseException {
     public static final String MSA_SIGN_WITH_DEVICE_KEY_FAILURE = "msa_sign_with_device_key_failre";
 
     /**
-     * Error occurred when calling MSA sign with device key api
+     * Error occurred when calling MSA decrypt with device key api
      */
     public static final String MSA_DECRYPT_WITH_DEVICE_KEY_FAILURE = "msa_decrypt_with_device_key_failure";
 

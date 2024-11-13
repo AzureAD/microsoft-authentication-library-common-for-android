@@ -32,10 +32,16 @@ import java.util.Locale
  */
 class MsaUtil {
     companion object {
+
+        // Header names used when adding device token in headers to /authorize and /token, respectively
+        val msaAuthorizeEndpointHeader = "x-ms-DeviceCredential"
+        val msaTokenEndpointHeader = "device_credential"
+        val jwtPurpose = "v2sso"
+
         /**
          * Given an authority, check if this is an MSA request
          */
-        fun isMsaRequest(authority : Authority) : Boolean{
+        fun isMsaRequest(authority : Authority) : Boolean {
             return if (authority !is AzureActiveDirectoryAuthority) {
                 false
             } else {

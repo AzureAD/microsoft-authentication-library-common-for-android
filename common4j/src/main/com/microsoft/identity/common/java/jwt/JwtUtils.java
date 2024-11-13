@@ -28,6 +28,10 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODIN
 import com.google.gson.Gson;
 import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.java.util.MsaUtil;
+
+import java.util.Arrays;
 
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -60,17 +64,36 @@ public final class JwtUtils {
         return encodedJwt;
     }
 
+    /**
+     * Generate a JWT request header to be used in MSA DR flows
+     * @param keyContext key context to include in header
+     * @return a request headers object
+     */
     @NonNull
     public static JwtRequestHeader generateJwtRequestHeaderForMsaDR(final byte[] keyContext) {
+        final JwtRequestHeader jwtRequestHeader = new JwtRequestHeader();
+        jwtRequestHeader.setAlg(JwtRequestHeader.ALG_VALUE_HS256);
+        jwtRequestHeader.setKId(JwtRequestHeader.KID_VALUE_ECDH);
+        jwtRequestHeader.setCtx(Arrays.toString(keyContext));
 
-
-        return new JwtRequestHeader();
+        return jwtRequestHeader;
     }
 
+    /**
+     * Generate a JWT request body to be used in MSA DR flows
+     * @param deviceToken device token to include in body
+     * @return a request body object
+     */
     @NonNull
-    public static JwtRequestBody generateJwtRequestBodyForMsaDR(final String deviceToken) {
+    public static JwtRequestBody generateJwtRequestBodyForMsaDR(final String deviceToken, final String audienceUrl, final String nonce) {
+        final JwtRequestBody jwtRequestBody = new JwtRequestBody();
+        jwtRequestBody.setAudience(audienceUrl); //TODO: Can i hard code this to login.microsoftonline.com instead of passing parameter?
+        jwtRequestBody.setNonce(nonce);
+        jwtRequestBody.setPurpose(MsaUtil.Companion.getJwtPurpose());
+        jwtRequestBody.setGrantType(TokenRequest.GrantTypes.DEVICE_AUTH);
+        jwtRequestBody.setDeviceToken(deviceToken);
 
-        return new JwtRequestBody();
+        return jwtRequestBody;
     }
 }
 

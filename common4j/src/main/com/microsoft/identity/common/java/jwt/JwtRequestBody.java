@@ -88,6 +88,9 @@ public final class JwtRequestBody extends AbstractJwtRequest {
     @SerializedName(ClaimNames.PURPOSE)
     private String mPurpose;
 
+    @SerializedName(ClaimNames.DEVICE_TOKEN)
+    private String mDeviceToken;
+
     public void setIat(final long iat) {
         mIat = String.valueOf(iat);
     }

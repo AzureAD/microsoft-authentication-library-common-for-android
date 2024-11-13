@@ -45,6 +45,8 @@ public final class JwtRequestHeader extends AbstractJwtRequest {
     // RSA using SHA256 - asymmetric key signing algorithm
     public static final String ALG_VALUE_RS256 = "RS256";
 
+    public static final String KID_VALUE_ECDH = "ecdh";
+
     @Setter(AccessLevel.NONE)
     @SerializedName(ClaimNames.TYPE)
     private String mType;
