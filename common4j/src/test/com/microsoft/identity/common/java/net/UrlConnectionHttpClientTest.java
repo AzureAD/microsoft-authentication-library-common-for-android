@@ -29,6 +29,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ConnectionError;
 import com.microsoft.identity.http.MockConnection;
 import com.microsoft.identity.http.ResponseBody;
 
@@ -57,7 +58,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLHandshakeException;
 
 /**
  * Tests for {@link UrlConnectionHttpClient}.
@@ -921,7 +921,7 @@ public final class UrlConnectionHttpClientTest {
      * Verify that initial http post fails with {@link SocketTimeoutException}, when we're not
      * running in legacy retry mode the socket timeout exception propagates to the caller.
      */
-    @Test(expected = SocketTimeoutException.class)
+    @Test
     public void testHttpPostFailedWithSocketTimeoutNoRetriesDoesNotRetry() throws Exception {
         // The first connection fails with retryable SocketTimeout, the retry connection fails with 400.
         final HttpURLConnection firstConnection = MockConnection.getMockedConnectionWithSocketTimeout();
@@ -936,11 +936,9 @@ public final class UrlConnectionHttpClientTest {
         try {
             assertEquals(2, HttpUrlConnectionFactory.getMockedConnectionCountInQueue());
             sendWithMethodWithoutRetry(HttpTestMethod.POST);
-        } catch (final IOException e) {
-            if (!(e instanceof SocketTimeoutException)) {
-                fail();
-            }
-            throw e;
+            fail();
+        } catch (final ClientException e) {
+            Assert.assertTrue(ConnectionError.CONNECTION_TIMEOUT.compare(e));
         } finally {
             assertEquals(1, HttpUrlConnectionFactory.getMockedConnectionCountInQueue());
             final InOrder inOrder = Mockito.inOrder(firstConnection, secondConnection);
@@ -1205,20 +1203,23 @@ public final class UrlConnectionHttpClientTest {
         Assert.assertEquals("TLSv1.3", SSLSocketFactoryWrapper.getLastHandshakeTLSversion());
     }
 
-    @Test(expected = SSLHandshakeException.class)
+    @Test
     public void testConnectingToTLS13ServerWhileEnforcing12OnClientSide() throws ClientException, IOException {
         final UrlConnectionHttpClient client = UrlConnectionHttpClient.builder()
                 .supportedSslProtocols(Arrays.asList("TLSv1.3"))
                 .build();
 
-        final HttpResponse response = client.method(
-                HttpClient.HttpMethod.GET,
-                new URL("https://tls-v1-2.badssl.com:1012/"),
-                new LinkedHashMap<String, String>(),
-                null
-        );
-
-        Assert.fail();
+        try {
+            final HttpResponse response = client.method(
+                    HttpClient.HttpMethod.GET,
+                    new URL("https://tls-v1-2.badssl.com:1012/"),
+                    new LinkedHashMap<String, String>(),
+                    null
+            );
+            Assert.fail();
+        } catch (ClientException e){
+            Assert.assertTrue(ConnectionError.FAILED_TO_GET_RESPONSE_CODE.compare(e));
+        }
     }
 
     @Test
