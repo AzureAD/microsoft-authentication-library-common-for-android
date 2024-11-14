@@ -1,3 +1,8 @@
+Version 18.1.3
+----------
+(common4j 15.1.3)
+- [PATCH] Translate MFA token error to UIRequiredException instead of ServiceException (#2538)
+
 Version 18.1.0
 ----------
 (common4j 15.1.0)
