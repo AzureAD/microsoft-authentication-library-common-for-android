@@ -26,12 +26,17 @@ package com.microsoft.identity.common.java.controllers;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.TerminalException;
+import com.microsoft.identity.common.java.exception.UiRequiredException;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
+import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.TimeoutException;
 
 @RunWith(JUnit4.class)
@@ -43,6 +48,20 @@ public class ExceptionAdapterTests {
         BaseException e = ExceptionAdapter.baseExceptionFromException(t);
         Assert.assertEquals(e.getErrorCode(), t.getErrorCode());
         Assert.assertEquals(e.getCause(), t);
+    }
+
+    @Test
+    public void testMFATokenErrorResponse_IsTranslatedTOUIRequiredException() throws Exception{
+        final MicrosoftTokenErrorResponse tokenErrorResponse = new MicrosoftTokenErrorResponse();
+        tokenErrorResponse.setError("invalid_grant");
+        tokenErrorResponse.setErrorDescription("AADSTS50076: Due to a configuration change made by your administrator, or because you moved to a new location, you must use multi-factor authentication to access '7ae46e1'. Trace ID: 01276277-3a30020d900900 Correlation ID: 6209e18a-f89b-4f14-a05e-0371c6757adb Timestamp: 2024-11-14 13:09:18Z");
+        tokenErrorResponse.setErrorCodes(new ArrayList<Long>(Arrays.asList(50076L)));
+        tokenErrorResponse.setSubError("basic_action");
+
+        BaseException e = ExceptionAdapter.getExceptionFromTokenErrorResponse(tokenErrorResponse);
+        Assert.assertTrue("Expected exception of UiRequiredException type", e instanceof UiRequiredException);
+        Assert.assertEquals(e.getErrorCode(), tokenErrorResponse.getError());
+        Assert.assertEquals(e.getMessage(), tokenErrorResponse.getErrorDescription());
     }
 
     @Test
