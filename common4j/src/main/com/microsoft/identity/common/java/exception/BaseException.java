@@ -135,8 +135,7 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     }
 
     /**
-     * @return The error code of the exception, could be null. {@link BaseException} is the top level base exception, for the
-     * constants value of all the error code.
+     * @return The error code of the exception, may not be null.
      */
     public String getErrorCode() {
         return mErrorCode;
