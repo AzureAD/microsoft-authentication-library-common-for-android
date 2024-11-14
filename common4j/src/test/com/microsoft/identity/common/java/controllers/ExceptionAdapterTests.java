@@ -25,10 +25,10 @@ package com.microsoft.identity.common.java.controllers;
 
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.TerminalException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
-import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -51,7 +51,7 @@ public class ExceptionAdapterTests {
     }
 
     @Test
-    public void testMFATokenErrorResponse_IsTranslatedTOUIRequiredException() throws Exception{
+    public void testMFATokenErrorResponse_IsTranslatedToUIRequiredException() {
         final MicrosoftTokenErrorResponse tokenErrorResponse = new MicrosoftTokenErrorResponse();
         tokenErrorResponse.setError("invalid_grant");
         tokenErrorResponse.setErrorDescription("AADSTS50076: Due to a configuration change made by your administrator, or because you moved to a new location, you must use multi-factor authentication to access '7ae46e1'. Trace ID: 01276277-3a30020d900900 Correlation ID: 6209e18a-f89b-4f14-a05e-0371c6757adb Timestamp: 2024-11-14 13:09:18Z");
@@ -62,6 +62,24 @@ public class ExceptionAdapterTests {
         Assert.assertTrue("Expected exception of UiRequiredException type", e instanceof UiRequiredException);
         Assert.assertEquals(e.getErrorCode(), tokenErrorResponse.getError());
         Assert.assertEquals(e.getMessage(), tokenErrorResponse.getErrorDescription());
+    }
+
+    @Test
+    public void testNativeAuthMFAException_ContainsCorrectDescription() {
+        String description = "description";
+        ServiceException outErr = new ServiceException("errorCode", description, null);
+        outErr.setCliTelemErrorCode("50076");
+        ServiceException result = ExceptionAdapter.convertToNativeAuthException(outErr);
+        Assert.assertEquals("Multi-factor authentication is required, which can't be fulfilled as part of this flow. Please sign out and perform a new sign in operation. Please see exception details for more information." + description, result.getMessage());
+    }
+
+    @Test
+    public void testNativeAuthResetPasswordRequiredException_ContainsCorrectDescription() {
+        String description = "description";
+        ServiceException outErr = new ServiceException("errorCode", description, null);
+        outErr.setCliTelemErrorCode("50142");
+        ServiceException result = ExceptionAdapter.convertToNativeAuthException(outErr);
+        Assert.assertEquals("User password change is required, which can't be fulfilled as part of this flow.Please reset the password and perform a new sign in operation. Please see exception details for more information." + description, result.getMessage());
     }
 
     @Test
