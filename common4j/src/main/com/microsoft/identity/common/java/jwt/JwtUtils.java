@@ -72,6 +72,7 @@ public final class JwtUtils {
     @NonNull
     public static JwtRequestHeader generateJwtRequestHeaderForMsaDR(final byte[] keyContext) {
         final JwtRequestHeader jwtRequestHeader = new JwtRequestHeader();
+        jwtRequestHeader.setType();
         jwtRequestHeader.setAlg(JwtRequestHeader.ALG_VALUE_HS256);
         jwtRequestHeader.setKId(JwtRequestHeader.KID_VALUE_ECDH);
         jwtRequestHeader.setCtx(Arrays.toString(keyContext));
