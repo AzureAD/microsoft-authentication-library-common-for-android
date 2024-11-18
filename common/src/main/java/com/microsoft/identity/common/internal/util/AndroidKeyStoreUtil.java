@@ -352,7 +352,7 @@ public class AndroidKeyStoreUtil {
      * @param wrapAlgorithm the algorithm used to wrap the key.
      * @return the wrapped key data blob.
      */
-    public static byte[] wrap(@NonNull final SecretKey key,
+    public static synchronized byte[] wrap(@NonNull final SecretKey key,
                               @NonNull final KeyPair keyToWrap,
                               @NonNull final String wrapAlgorithm)
             throws ClientException {
