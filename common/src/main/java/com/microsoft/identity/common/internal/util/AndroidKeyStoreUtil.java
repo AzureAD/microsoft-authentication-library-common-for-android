@@ -397,7 +397,7 @@ public class AndroidKeyStoreUtil {
      * @param wrapAlgorithm        the algorithm used to wrap the key.
      * @return the unwrapped key.
      */
-    public static SecretKey unwrap(@NonNull final byte[] wrappedKeyBlob,
+    public static synchronized SecretKey unwrap(@NonNull final byte[] wrappedKeyBlob,
                                    @NonNull final String wrappedKeyAlgorithm,
                                    @NonNull final KeyPair keyPairForUnwrapping,
                                    @NonNull final String wrapAlgorithm) throws ClientException {
