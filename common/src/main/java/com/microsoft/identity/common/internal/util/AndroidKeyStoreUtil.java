@@ -450,13 +450,15 @@ public class AndroidKeyStoreUtil {
                 exception.getMessage(),
                 exception
         );
-        final Attributes attributes = Attributes.builder()
-                .put(AttributeName.keystore_operation.name(), "unwap")
-                .put(AttributeName.error_code.name(), errCode)
-                .put(AttributeName.error_type.name(), clientException.getClass().getSimpleName())
-                .put(AttributeName.keystore_exception_stack_trace.name(), ThrowableUtil.getStackTraceAsString(clientException))
-                .build();
-        sFailedAndroidKeyStoreUnwrapOperationCount.add(1, attributes);
+        if (exception instanceof InvalidKeyException) {
+            final Attributes attributes = Attributes.builder()
+                    .put(AttributeName.keystore_operation.name(), "unwap")
+                    .put(AttributeName.error_code.name(), errCode)
+                    .put(AttributeName.error_type.name(), clientException.getClass().getSimpleName())
+                    .put(AttributeName.keystore_exception_stack_trace.name(), ThrowableUtil.getStackTraceAsString(clientException))
+                    .build();
+            sFailedAndroidKeyStoreUnwrapOperationCount.add(1, attributes);
+        }
         Logger.error(
                 methodTag,
                 errCode,
