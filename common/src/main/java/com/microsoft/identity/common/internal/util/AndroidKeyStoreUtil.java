@@ -417,7 +417,8 @@ public class AndroidKeyStoreUtil {
         try {
             final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm);
             wrapCipher.init(Cipher.UNWRAP_MODE, keyPairForUnwrapping.getPrivate());
-            return (SecretKey) wrapCipher.unwrap(wrappedKeyBlob, wrappedKeyAlgorithm, Cipher.SECRET_KEY);
+            throw new ClientException("bla");
+          //  return (SecretKey) wrapCipher.unwrap(wrappedKeyBlob, wrappedKeyAlgorithm, Cipher.SECRET_KEY);
         } catch (final IllegalArgumentException e) {
             // There is issue with Android KeyStore when lock screen type is changed which could
             // potentially wipe out keystore.
@@ -450,6 +451,7 @@ public class AndroidKeyStoreUtil {
                 exception.getMessage(),
                 exception
         );
+
         if (exception instanceof InvalidKeyException) {
             final Attributes attributes = Attributes.builder()
                     .put(AttributeName.keystore_operation.name(), "unwrap")
