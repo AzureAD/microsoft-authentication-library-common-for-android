@@ -26,6 +26,9 @@ import android.os.Build;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.util.ThrowableUtil;
 import com.microsoft.identity.common.java.util.ported.DateUtilities;
 
 import java.io.IOException;
@@ -51,6 +54,8 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.LongCounter;
 import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_CRYPTO_ERROR;
@@ -83,6 +88,11 @@ public class AndroidKeyStoreUtil {
     }
 
     private static KeyStore mKeyStore;
+
+    private static final LongCounter sFailedAndroidKeyStoreUnwrapOperationCount = OTelUtility.createLongCounter(
+            "failed_keystore_key_unwrap_operation_count",
+            "Number of failed Android KeyStore unwrap operations"
+    );
 
     private static synchronized KeyStore getKeyStore()
             throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
@@ -407,7 +417,8 @@ public class AndroidKeyStoreUtil {
         try {
             final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm);
             wrapCipher.init(Cipher.UNWRAP_MODE, keyPairForUnwrapping.getPrivate());
-            return (SecretKey) wrapCipher.unwrap(wrappedKeyBlob, wrappedKeyAlgorithm, Cipher.SECRET_KEY);
+            throw new ClientException("bla");
+          //  return (SecretKey) wrapCipher.unwrap(wrappedKeyBlob, wrappedKeyAlgorithm, Cipher.SECRET_KEY);
         } catch (final IllegalArgumentException e) {
             // There is issue with Android KeyStore when lock screen type is changed which could
             // potentially wipe out keystore.
@@ -440,7 +451,13 @@ public class AndroidKeyStoreUtil {
                 exception.getMessage(),
                 exception
         );
-
+        final Attributes attributes = Attributes.builder()
+                .put(AttributeName.keystore_operation.name(), "unwap")
+                .put(AttributeName.error_code.name(), errCode)
+                .put(AttributeName.error_type.name(), clientException.getClass().getSimpleName())
+                .put(AttributeName.keystore_exception_stack_trace.name(), ThrowableUtil.getStackTraceAsString(clientException))
+                .build();
+        sFailedAndroidKeyStoreUnwrapOperationCount.add(1, attributes);
         Logger.error(
                 methodTag,
                 errCode,
