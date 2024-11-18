@@ -452,7 +452,7 @@ public class AndroidKeyStoreUtil {
         );
         if (exception instanceof InvalidKeyException) {
             final Attributes attributes = Attributes.builder()
-                    .put(AttributeName.keystore_operation.name(), "unwap")
+                    .put(AttributeName.keystore_operation.name(), "unwrap")
                     .put(AttributeName.error_code.name(), errCode)
                     .put(AttributeName.error_type.name(), clientException.getClass().getSimpleName())
                     .put(AttributeName.keystore_exception_stack_trace.name(), ThrowableUtil.getStackTraceAsString(clientException))
