@@ -1,3 +1,8 @@
+Version 18.2.2
+----------
+(common4j 15.2.2)
+- [PATCH] Debug errors in Keystore layer (#2544)
+
 Version 18.2.1
 ----------
 (common4j 15.2.1)
