@@ -450,7 +450,6 @@ public class AndroidKeyStoreUtil {
                 exception.getMessage(),
                 exception
         );
-
         if (exception instanceof InvalidKeyException) {
             final Attributes attributes = Attributes.builder()
                     .put(AttributeName.keystore_operation.name(), "unwrap")
