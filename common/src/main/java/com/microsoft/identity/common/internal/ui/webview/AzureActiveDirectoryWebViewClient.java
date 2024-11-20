@@ -405,9 +405,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processAmazonAppUri(@NonNull final String url) {
         final String methodTag = TAG + ":processAmazonAppUri";
 
-        final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-        getActivity().startActivity(intent);
-        Logger.info(methodTag, "Sent Intent to launch Amazon app");
+        try {
+            final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            getActivity().startActivity(intent);
+            Logger.info(methodTag, "Sent Intent to launch Amazon app");
+        } catch (android.content.ActivityNotFoundException e) {
+            Logger.error(methodTag, "Failed to launch Amazon app.", e);
+        }
     }
 
     private void openLinkInBrowser(final String url) {
