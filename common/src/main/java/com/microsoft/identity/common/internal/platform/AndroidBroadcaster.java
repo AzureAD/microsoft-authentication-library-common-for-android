@@ -30,6 +30,7 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.java.util.IBroadcaster;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
+import com.microsoft.identity.common.logging.Logger;
 
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -39,12 +40,15 @@ import lombok.NonNull;
  */
 @AllArgsConstructor
 public class AndroidBroadcaster implements IBroadcaster {
+    private static final String TAG = AndroidBroadcaster.class.getSimpleName();
 
     @NonNull
     private final Context mContext;
 
     @Override
     public void sendBroadcast(@NonNull final String broadcastId, @Nullable final PropertyBag propertyBag) {
+        final String methodTag = AndroidBroadcaster.class.getSimpleName() + ":sendBroadcast";
+        Logger.info(methodTag, "Sending broadcast with broadcastId: " + broadcastId);
         final Intent intent = new Intent();
         intent.setAction(broadcastId);
         if(propertyBag != null) {
