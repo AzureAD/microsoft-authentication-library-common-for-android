@@ -47,7 +47,7 @@ public class AndroidBroadcaster implements IBroadcaster {
 
     @Override
     public void sendBroadcast(@NonNull final String broadcastId, @Nullable final PropertyBag propertyBag) {
-        final String methodTag = AndroidBroadcaster.class.getSimpleName() + ":sendBroadcast";
+        final String methodTag = TAG + ":sendBroadcast";
         Logger.info(methodTag, "Sending broadcast with broadcastId: " + broadcastId);
         final Intent intent = new Intent();
         intent.setAction(broadcastId);
