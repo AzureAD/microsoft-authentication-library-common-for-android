@@ -148,7 +148,7 @@ public class MsalCppOAuth2TokenCache
             }
         }
 
-        saveCredentialsInternal(credentials);
+        saveCredentialsInternal(true, credentials);
     }
 
     /**
