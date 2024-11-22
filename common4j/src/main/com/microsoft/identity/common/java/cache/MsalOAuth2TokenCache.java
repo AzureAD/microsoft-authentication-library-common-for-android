@@ -1740,7 +1740,7 @@ public class MsalOAuth2TokenCache
                         TAG + ":" + methodName,
                         "Removing credential: " + accessToken
                 );
-                //mAccountCredentialCache.removeCredential(accessToken);
+                mAccountCredentialCache.removeCredential(accessToken);
             }
         }
     }
