@@ -101,6 +101,9 @@ internal fun Int?.isInvalidCredentials(): Boolean {
     return this == 50126
 }
 
+internal fun Int?.isPasswordChangeRequired(): Boolean {
+    return this == 50142
+}
 
 internal fun Int?.isInvalidAuthenticationType(): Boolean {
     return this == 400002

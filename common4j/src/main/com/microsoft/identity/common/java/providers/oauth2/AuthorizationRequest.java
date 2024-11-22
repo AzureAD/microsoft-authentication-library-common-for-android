@@ -25,10 +25,10 @@ package com.microsoft.identity.common.java.providers.oauth2;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.ObjectMapper;
-import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.io.Serializable;
 import java.net.URI;
@@ -150,7 +150,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         mResponseType = builder.mResponseType;
         mClientId = builder.mClientId;
         mRedirectUri = builder.mRedirectUri;
-        mState = builder.mState == null ? null : StringUtil.encodeUrlSafeString(builder.mState);
+        mState = builder.mState == null ? null : Base64Util.encodeUrlSafeString(builder.mState);
         mScope = builder.mScope;
 
         mBrkClientId = builder.mBrkClientId;

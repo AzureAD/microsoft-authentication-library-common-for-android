@@ -29,14 +29,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import net.jcip.annotations.Immutable;
 
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.List;
-
-import cz.msebera.android.httpclient.util.TextUtils;
 
 @Immutable
 public class AuthorityDeserializer implements JsonDeserializer<Authority> {
@@ -65,7 +63,7 @@ public class AuthorityDeserializer implements JsonDeserializer<Authority> {
                             final CommonURIBuilder uri = new CommonURIBuilder(URI.create(aadAuthority.mAuthorityUrlString));
                             final String cloudUrl = uri.getScheme() + "://" + uri.getHost();
                             final String tenant = uri.getLastPathSegment();
-                            if (!TextUtils.isEmpty(tenant)) {
+                            if (!StringUtil.isNullOrEmpty(tenant)) {
                                 aadAuthority.mAudience = AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(cloudUrl, tenant);
                             }
                         } catch (final IllegalArgumentException e) {

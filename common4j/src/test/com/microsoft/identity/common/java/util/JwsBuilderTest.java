@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.util;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.challengehandlers.IDeviceCertificate;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
@@ -154,7 +155,7 @@ public class JwsBuilderTest {
         when(
                 x509.getEncoded()
         ).thenReturn(
-                StringUtil.base64Decode(encodedCertValue)
+                Base64Util.decodeNoWrap(encodedCertValue)
         );
 
         return getMockCertificate(x509, signature);

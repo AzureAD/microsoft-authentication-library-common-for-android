@@ -28,8 +28,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.microsoft.identity.common.java.net.util.MockConnection;
-import com.microsoft.identity.common.java.net.util.ResponseBody;
+import com.microsoft.identity.http.MockConnection;
+import com.microsoft.identity.http.ResponseBody;
 
 import org.junit.After;
 import org.junit.Assert;

@@ -32,6 +32,7 @@ import com.microsoft.identity.common.java.nativeauth.util.isInvalidGrant
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidOOBValue
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidRequest
 import com.microsoft.identity.common.java.nativeauth.util.isMFARequired
+import com.microsoft.identity.common.java.nativeauth.util.isPasswordChangeRequired
 import com.microsoft.identity.common.java.nativeauth.util.isUserNotFound
 
 /**
@@ -78,6 +79,16 @@ class SignInTokenApiResponse(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
                             errorCodes = errorCodes.orEmpty(),
+                            correlationId = correlationId
+                        )
+                    }
+                    errorCodes[0].isPasswordChangeRequired() -> {
+                        val customDescription = "User password change is required, which can't be fulfilled as part of this flow. " +
+                                "Please reset the password and perform a new sign in operation. More information:" + errorDescription.orEmpty()
+                        SignInTokenApiResult.UnknownError(
+                            error = error.orEmpty(),
+                            errorDescription = customDescription,
+                            errorCodes = errorCodes,
                             correlationId = correlationId
                         )
                     }
