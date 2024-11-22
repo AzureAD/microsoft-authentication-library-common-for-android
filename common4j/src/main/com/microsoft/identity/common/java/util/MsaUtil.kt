@@ -33,9 +33,6 @@ import java.util.Locale
 class MsaUtil {
 
     companion object {
-        // Header names used when adding device token in headers to /authorize and /token, respectively
-        val msaAuthorizeEndpointHeader = "x-ms-DeviceCredential"
-        val msaTokenEndpointHeader = "device_credential"
         val jwtPurpose = "v2sso"
 
         /**
