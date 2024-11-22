@@ -394,11 +394,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             public void run() {
                 Logger.info(methodTag, "Launching embedded WebView for acquiring auth code.");
                 Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
-                if (getActivity() != null) {
-                    Logger.info(methodTag, "In work profile: " + AndroidPlatformUtil.isWorkProfileApp(getActivity()));
+                final FragmentActivity activity = getActivity();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && activity != null) {
+                    Logger.info(methodTag, "In work profile: " + AndroidPlatformUtil.isWorkProfileApp(activity));
                 } else {
-                    Logger.info(methodTag, "Activity is null.");
-
+                    Logger.info(methodTag, "OS level is below Lollipop, or Activity is null.");
                 }
 
                 mAADWebViewClient.setRequestHeaders(mRequestHeaders);

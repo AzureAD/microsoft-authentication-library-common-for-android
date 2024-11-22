@@ -39,6 +39,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 
+import androidx.annotation.RequiresApi;
+
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.DefaultConnectionService;
@@ -262,12 +264,15 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         return result;
     }
 
+    /**
+     * Check if the host app is a work profile app.
+     * @param activity current activity.
+     * @return true if app is in work profile, false if in personal profile or OS is below Lollipop.
+     */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public static boolean isWorkProfileApp(@NonNull Activity activity) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            DevicePolicyManager dpm = (DevicePolicyManager) activity.getSystemService(Context.DEVICE_POLICY_SERVICE);
-            return dpm != null && dpm.isProfileOwnerApp(activity.getBaseContext().getPackageName());
-        }
-        return false;
+        final DevicePolicyManager dpm = (DevicePolicyManager) activity.getSystemService(Context.DEVICE_POLICY_SERVICE);
+        return dpm != null && dpm.isProfileOwnerApp(activity.getBaseContext().getPackageName());
     }
 
     /**
