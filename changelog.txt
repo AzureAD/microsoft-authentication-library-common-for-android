@@ -1,6 +1,7 @@
 vNext
 ----------
 - [PATCH] Translate MFA token error to UIRequiredException instead of ServiceException (#2538)
+- [MINOR] Add Child Spans for Interactive Span (#2516)
 
 Version 18.2.2
 ----------
@@ -17,7 +18,6 @@ Version 18.2.0
 - [PATCH] Provide empty image when no video is present on QR +PIN auth (#2424)
 - [MINOR] On GetPreferredAuthMethod return NONE when Authenticator is not installed (#2523)
 - [MINOR] Migrate URIbuilder to httpcore5 (#2522)
-- [MINOR] Add Child Spans for Interactive Span (#2516)
 
 Version 18.1.0
 ----------
