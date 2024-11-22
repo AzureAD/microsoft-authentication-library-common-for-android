@@ -274,6 +274,8 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
 
     public void enableScreenCapture() {
+        launch(); // launch Authenticator app
+        handleFirstRun(); // handle first run experience
         try {
             // click the 3 dot menu icon in top right
             UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
