@@ -52,6 +52,7 @@ import androidx.fragment.app.FragmentActivity;
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
+import com.microsoft.identity.common.internal.platform.AndroidPlatformUtil;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -183,10 +184,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 new OnPageLoadedCallback() {
                     @Override
                     public void onPageLoaded(final String url) {
+                        final String methodTag = TAG + ":onPageLoaded";
+                        Logger.info(methodTag, "Beginning of onPageLoaded.");
                         // Reset the camera permission request when a new page is loaded.
                         mCameraPermissionRequest = null;
                         final String[] javascriptToExecute = new String[1];
                         mProgressBar.setVisibility(View.INVISIBLE);
+                        Logger.info(methodTag, "Made spinner invisible.");
                         try {
                             javascriptToExecute[0] = String.format("window.expectedUrl = '%s';%n%s",
                                     URLEncoder.encode(url, "UTF-8"),
@@ -391,6 +395,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             public void run() {
                 Logger.info(methodTag, "Launching embedded WebView for acquiring auth code.");
                 Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
+                if (getActivity() != null) {
+                    Logger.info(methodTag, "In work profile: " + AndroidPlatformUtil.isWorkProfileApp(getActivity()));
+                } else {
+                    Logger.info(methodTag, "Activity is null.");
+
+                }
 
                 mAADWebViewClient.setRequestHeaders(mRequestHeaders);
                 mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);

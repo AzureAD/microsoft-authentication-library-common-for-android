@@ -188,6 +188,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     public void onPageFinished(final WebView view,
                                final String url) {
         super.onPageFinished(view, url);
+        Logger.info(TAG + ":onPageFinished", "WebView finished loading.");
         mPageLoadedCallback.onPageLoaded(url);
 
         //Supports UI Automation... informing that the webview resource is now idle

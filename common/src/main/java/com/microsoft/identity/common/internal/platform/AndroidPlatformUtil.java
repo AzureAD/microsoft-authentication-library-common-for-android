@@ -28,6 +28,7 @@ import static com.microsoft.identity.common.java.constants.FidoConstants.WEBAUTH
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
@@ -259,6 +260,14 @@ public class AndroidPlatformUtil implements IPlatformUtil {
             result.add(webauthnParam);
         }
         return result;
+    }
+
+    public static boolean isWorkProfileApp(@NonNull Activity activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            DevicePolicyManager dpm = (DevicePolicyManager) activity.getSystemService(Context.DEVICE_POLICY_SERVICE);
+            return dpm != null && dpm.isProfileOwnerApp(activity.getBaseContext().getPackageName());
+        }
+        return false;
     }
 
     /**
