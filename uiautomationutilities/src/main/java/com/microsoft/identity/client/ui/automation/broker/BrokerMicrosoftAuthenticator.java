@@ -274,7 +274,6 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
 
     public void enableScreenCapture() {
-        // scroll down the recycler view to find device registration btn
         try {
             // click the 3 dot menu icon in top right
             UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
