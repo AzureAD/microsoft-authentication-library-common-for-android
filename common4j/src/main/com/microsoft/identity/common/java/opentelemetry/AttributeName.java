@@ -292,5 +292,15 @@ public enum AttributeName {
     /**
      * Specify the result (or error stack trace) when determining if RT should be returned with AT response.
      */
-    stop_returning_rt_result
+    stop_returning_rt_result,
+
+    /**
+     * Indicates the operation name for Android KeyStore.
+     */
+    keystore_operation,
+
+    /**
+     * Indicates the stack trace from a Android KeyStore operation exception.
+     */
+    keystore_exception_stack_trace,
 }

@@ -107,6 +107,7 @@ class NativeAuthResponseHandlerTest {
     private val userAlreadyExistsError = "user_already_exists"
     private val invalidErrorCode = 0
     private val invalidParameterErrorCode = 90100
+    private val resetPasswordRequiredErrorCode = 50142
     private val userNotFoundErrorCode = 50034
     private val errorStatusCode = 400
     private val successStatusCode = 200
@@ -160,6 +161,7 @@ class NativeAuthResponseHandlerTest {
     private val incorrectOtpDescription = "Incorrect OTP code"
     private val credentialRequiredTokenErrorDescription = "Credential is required by the API"
     private val mfaRequiredTokenErrorDescription = "MFA is required by the API"
+    private val resetPasswordRequiredErrorDescription = "Password change is required due to a conditional access policy."
     private val tokenType = "Bearer"
     private val scope = "openid profile"
     private val refreshToken = "5678"
@@ -3002,6 +3004,27 @@ class NativeAuthResponseHandlerTest {
         assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.MFARequired).error)
         assertEquals(mfaRequiredTokenErrorDescription, apiResult.errorDescription)
         assertEquals(mfaRequiredSubError, apiResult.subError)
+    }
+
+    @Test
+    fun testSignInTokenApiResponseResetPasswordRequired() {
+        val signInTokenApiResponse = SignInTokenApiResponse(
+            statusCode = errorStatusCode,
+            continuationToken = continuationToken,
+            error = invalidRequestError,
+            errorCodes = listOf(resetPasswordRequiredErrorCode),
+            errorDescription = resetPasswordRequiredErrorDescription,
+            errorUri = null,
+            subError = null,
+            correlationId = correlationId
+        )
+
+        val apiResult = signInTokenApiResponse.toErrorResult()
+
+        val expectedDescription = "User password change is required, which can't be fulfilled as part of this flow. " +
+                "Please reset the password and perform a new sign in operation. More information:" + resetPasswordRequiredErrorDescription
+        assertTrue(apiResult is SignInTokenApiResult.UnknownError)
+        assertEquals(expectedDescription, (apiResult as SignInTokenApiResult.UnknownError).errorDescription)
     }
 
     @Test
