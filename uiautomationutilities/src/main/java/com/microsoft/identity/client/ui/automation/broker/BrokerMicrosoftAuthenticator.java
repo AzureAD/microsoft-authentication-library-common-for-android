@@ -272,6 +272,30 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         }
     }
 
+
+    public void enableScreenCapture() {
+        // scroll down the recycler view to find device registration btn
+        try {
+            // click the 3 dot menu icon in top right
+            UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
+
+            // select Settings from drop down
+            final UiObject settings = UiAutomatorUtils.obtainUiObjectWithText("Settings");
+            settings.click();
+
+            final UiObject screenCapture = UiAutomatorUtils.obtainChildInScrollable(
+                    "settingsScrollView",
+                    "Screen Capture"
+            );
+
+            screenCapture.click();
+
+            forceStop();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
     @Override
     public DeviceAdmin getAdminName() {
         Logger.i(TAG, "Get Admin Name..");
@@ -404,6 +428,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/frx_skip_button");
             // This is required for auth app as it has increased the compile sdk version to 34
             UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("NOT NOW");
+
             shouldHandleFirstRun = false;
         }
     }

@@ -218,4 +218,9 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
                 .loginHint(username)
                 .build();
     }
+
+    @Override
+    public void enableScreenCapture() {
+        // Default implementation, Do nothing.
+    }
 }

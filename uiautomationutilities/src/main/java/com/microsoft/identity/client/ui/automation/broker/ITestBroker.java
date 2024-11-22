@@ -142,4 +142,6 @@ public interface ITestBroker extends IApp {
      * @return the flight information set for this broker app
      */
     String getFlights();
+
+    void enableScreenCapture();
 }
