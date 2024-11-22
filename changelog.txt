@@ -1,3 +1,12 @@
+vNext
+----------
+- [PATCH] Translate MFA token error to UIRequiredException instead of ServiceException (#2538)
+
+Version 18.2.2
+----------
+(common4j 15.2.2)
+- [PATCH] Debug errors in Keystore layer (#2544)
+
 Version 18.2.0
 ----------
 (common4j 15.2.0)

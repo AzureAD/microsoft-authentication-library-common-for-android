@@ -186,7 +186,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      * @return SecretKey. Null if there isn't any.
      */
     @Nullable
-    /* package */ SecretKey readSecretKeyFromStorage() throws ClientException {
+    /* package */ synchronized SecretKey readSecretKeyFromStorage() throws ClientException {
         final String methodTag = TAG + ":readSecretKeyFromStorage";
         try {
             final KeyPair keyPair = AndroidKeyStoreUtil.readKey(mAlias);
