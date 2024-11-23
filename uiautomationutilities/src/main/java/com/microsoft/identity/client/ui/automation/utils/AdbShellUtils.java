@@ -35,6 +35,8 @@ import java.io.IOException;
 
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
+import android.util.Log;
+
 /**
  * This class contains utility methods that can be used to interact with the ADB Shell from within
  * code during the execution of a UI Test.
@@ -146,8 +148,13 @@ public class AdbShellUtils {
      * @param packageName the package to force stop
      */
     public static void forceStopPackage(@NonNull final String packageName) {
-        Logger.i(TAG, "Force stop the " + packageName + " App..");
+        Log.i(TAG, "Force stop the " + packageName + " App..");
         executeShellCommand("am force-stop " + packageName);
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void putGlobalSettings(final String settingName, final String value) {
