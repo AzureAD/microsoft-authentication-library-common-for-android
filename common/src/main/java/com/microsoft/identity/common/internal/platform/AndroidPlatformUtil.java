@@ -37,6 +37,9 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.os.UserManager;
+
+import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -259,6 +262,17 @@ public class AndroidPlatformUtil implements IPlatformUtil {
             result.add(webauthnParam);
         }
         return result;
+    }
+
+    /**
+     * Check if the host app is a work profile app.
+     * @param appContext current application context.
+     * @return true if app is in work profile, false if in personal profile or OS is below R.
+     */
+    @RequiresApi(api = Build.VERSION_CODES.R)
+    public static boolean isWorkProfileApp(@NonNull final Context appContext) {
+        final UserManager um = (UserManager) appContext.getSystemService(Context.USER_SERVICE);
+        return um.isManagedProfile();
     }
 
     /**
