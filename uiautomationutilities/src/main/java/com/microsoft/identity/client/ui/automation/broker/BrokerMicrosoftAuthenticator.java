@@ -29,6 +29,7 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -274,9 +275,11 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
 
     public void enableScreenCapture() {
-        launch(); // launch Authenticator app
-        handleFirstRun(); // handle first run experience
+        Log.i(TAG, "Enable Screen Capture..");
         try {
+            launch(); // launch Authenticator app
+            handleFirstRun(); // handle first run experience
+
             // click the 3 dot menu icon in top right
             UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
 
@@ -290,8 +293,9 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             );
 
             screenCapture.click();
-
+            Log.i(TAG, "Screen Capture is enabled..");
             forceStop();
+            Log.i(TAG, "App is force stopped..");
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
@@ -307,10 +311,10 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
      * Open the device registration page in the Authenticator App
      */
     public void openDeviceRegistrationPage() {
-        Logger.i(TAG, "Open the device registration page in the Authenticator App..");
+        Log.i(TAG, "Open the device registration page in the Authenticator App..");
         launch(); // launch Authenticator app
 
-        handleFirstRun(); // handle first run experience
+        //handleFirstRun(); // handle first run experience
         goToDeviceRegistrationPage();
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
