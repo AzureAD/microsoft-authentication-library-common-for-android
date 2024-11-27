@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Add switch_browser toMicrosoftStsAuthorizationRequest (#2550)
 - [PATCH] Translate MFA token error to UIRequiredException instead of ServiceException (#2538)
 - [MINOR] Add Child Spans for Interactive Span (#2516)
 - [MINOR] For MSAL CPP flows, match exact claims when deleting AT with intersecting scopes (#2548)
