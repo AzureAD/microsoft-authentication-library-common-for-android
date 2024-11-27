@@ -26,6 +26,8 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 import android.security.KeyPairGeneratorSpec;
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyProperties;
 
 import androidx.annotation.RequiresApi;
 
@@ -44,6 +46,7 @@ import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 
 import javax.crypto.SecretKey;
@@ -273,18 +276,40 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      * @param context an Android {@link Context} object.
      * @return a {@link AlgorithmParameterSpec} for the keystore key (that we'll use to wrap the secret key).
      */
+    private static AlgorithmParameterSpec getSpecForKeyStoreKey(
+            @NonNull final Context context, @NonNull final String alias) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            return getSpecForModernKeyStore(alias);
+        } else {
+            return getSpecForLegacyKeyStore(context, alias);
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.P)
+    private static AlgorithmParameterSpec getSpecForModernKeyStore(@NonNull final String alias) {
+        return new KeyGenParameterSpec.Builder(
+                alias,
+                KeyProperties.PURPOSE_WRAP_KEY | KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT
+        )
+                .setKeySize(2048)
+                .setCertificateSubject(new X500Principal("CN=" + alias))
+                .setCertificateSerialNumber(BigInteger.ONE)
+                .setCertificateNotBefore(Calendar.getInstance().getTime())
+                .setCertificateNotAfter(getValidUntilDate())
+                .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
+                .build();
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private static AlgorithmParameterSpec getSpecForKeyStoreKey(@NonNull final Context context,
-                                                                @NonNull final String alias) {
-        // Generate a self-signed cert.
+    private static AlgorithmParameterSpec getSpecForLegacyKeyStore(
+            @NonNull final Context context, @NonNull final String alias) {
         final String certInfo = String.format(Locale.ROOT, "CN=%s, OU=%s",
                 alias,
                 context.getPackageName());
-
         final Calendar start = Calendar.getInstance();
         final Calendar end = Calendar.getInstance();
-        final int certValidYears = 100;
-        end.add(Calendar.YEAR, certValidYears);
+        end.add(Calendar.YEAR, 100); // Valid for 100 years
 
         return new KeyPairGeneratorSpec.Builder(context)
                 .setAlias(alias)
@@ -293,6 +318,12 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                 .setStartDate(start.getTime())
                 .setEndDate(end.getTime())
                 .build();
+    }
+
+    private static Date getValidUntilDate() {
+        Calendar end = Calendar.getInstance();
+        end.add(Calendar.YEAR, 100); // Valid for 100 years
+        return end.getTime();
     }
 
     /**
