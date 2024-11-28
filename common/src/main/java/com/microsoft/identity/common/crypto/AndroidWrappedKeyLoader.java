@@ -287,6 +287,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
 
     @RequiresApi(api = Build.VERSION_CODES.P)
     private static AlgorithmParameterSpec getSpecForModernKeyStore(@NonNull final String alias) {
+        Logger.info(TAG, "In getSpecForModernKeyStore using updated spec");
         return new KeyGenParameterSpec.Builder(
                 alias,
                 KeyProperties.PURPOSE_WRAP_KEY | KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT
@@ -304,6 +305,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private static AlgorithmParameterSpec getSpecForLegacyKeyStore(
             @NonNull final Context context, @NonNull final String alias) {
+        Logger.info(TAG, "In getSpecForModernKeyStore using deprecated spec");
         final String certInfo = String.format(Locale.ROOT, "CN=%s, OU=%s",
                 alias,
                 context.getPackageName());

@@ -439,6 +439,7 @@ public class AndroidKeyStoreUtil {
         } catch (final InvalidKeyException e) {
             errCode = INVALID_KEY;
             exception = e;
+            Logger.info(methodTag, "Failed :/ " + ThrowableUtil.getStackTraceAsString(exception));
         } catch (final Throwable e) {
             // For catching any unknown crypto error that might be thrown by the keystore layer.
             errCode = UNKNOWN_CRYPTO_ERROR;
