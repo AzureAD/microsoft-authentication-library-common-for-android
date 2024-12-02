@@ -48,6 +48,7 @@ import com.microsoft.identity.common.internal.fido.IFidoManager;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiManager;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
@@ -100,7 +101,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private AbstractCertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
 
     private HashMap<String, String> mRequestHeaders;
-
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
@@ -166,7 +166,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean handleUrl(final WebView view, final String url) {
         final String methodTag = TAG + ":handleUrl";
         final String formattedURL = url.toLowerCase(Locale.US);
-
         try {
             if (isPkeyAuthUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for pkeyauth challenge.");
@@ -192,7 +191,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                         spanContext,
                         ViewTreeLifecycleOwner.get(view));
                 challengeHandler.processChallenge(challenge);
-            } else if (isRedirectUrl(formattedURL)) {
+            } else if (isNonceRedirect(formattedURL)) {
+                 Logger.info(methodTag,"Navigation contains new nonce within the redirect uri. "+ url);
+                 processNonceAndReattachHeaders(view, url);
+             }
+             else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
                 processRedirectUrl(view, url);
             } else if (isWebsiteRequestUrl(formattedURL)) {
@@ -269,6 +272,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isRedirectUrl(@NonNull final String url) {
         return url.startsWith(mRedirectUrl.toLowerCase(Locale.US));
+    }
+
+    private boolean isNonceRedirect(@NonNull final String url) {
+        return url.contains("sso_nonce");
     }
 
     private boolean isWebsiteRequestUrl(@NonNull final String url) {
@@ -513,6 +520,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 + removeQueryParametersOrRedact(url) + "' with original requestHeaders appended.");
 
         view.loadUrl(url, mRequestHeaders);
+    }
+
+    private void processNonceAndReattachHeaders(@NonNull final WebView view, @NonNull final String url) {
+        final HashMap<String, String> queryParams = StringExtensions.getUrlParameters(url);
+        final String nonceQueryParam = queryParams.get("sso_nonce");
+        HashMap<String, String> updatedHeadersMap = mRequestHeaders;
+        if (nonceQueryParam !=null) {
+            final NonceRedirectHandler nonceRedirect = new NonceRedirectHandler();
+            updatedHeadersMap = (HashMap<String, String>) nonceRedirect.getHeadersWithNewRefreshTokenCredential(mRequestHeaders, nonceQueryParam, url , getActivity());
+
+        }
+        view.loadUrl(url, updatedHeadersMap);
     }
 
     private String removeQueryParametersOrRedact(@NonNull final String url) {
