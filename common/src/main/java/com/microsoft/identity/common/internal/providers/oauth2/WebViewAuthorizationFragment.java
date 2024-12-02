@@ -25,6 +25,9 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -72,6 +75,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.List;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
@@ -386,6 +390,38 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      */
     private void launchWebView() {
         final String methodTag = TAG + ":launchWebView";
+        // Start of temporary logging code
+        if (getActivity() != null) {
+            final Context appContext = getActivity().getApplicationContext();
+            final DevicePolicyManager dpm =
+                    (DevicePolicyManager) appContext.getSystemService(Context.DEVICE_POLICY_SERVICE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                    && dpm.isProfileOwnerApp(appContext.getPackageName())) {
+                Logger.info(methodTag, "Current app, " + appContext.getPackageName() +  " is profile owner app.");
+                // Continue with turning on network logging.
+                final List<ComponentName> activeAdmins = dpm.getActiveAdmins();
+                if (activeAdmins != null) {
+                    for (final ComponentName admin : activeAdmins) {
+                        Logger.info(methodTag, "Active admin: " + admin.getPackageName());
+                        if (admin.getPackageName().equals(appContext.getPackageName())) {
+                            if (dpm.isNetworkLoggingEnabled(admin)) {
+                                Logger.info(methodTag, "Network logging is already enabled for the profile owner app.");
+                            } else {
+                                Logger.info(methodTag, "Enabling network logging for the profile owner app.");
+                                dpm.setNetworkLoggingEnabled(admin, true);
+                            }
+                        }
+                    }
+                } else {
+                    Logger.info(methodTag, "No active admins.");
+                }
+            } else {
+                Logger.info(methodTag, "Not a profile owner app, or API level is below O.");
+            }
+        } else {
+            Logger.info(methodTag, "getActivity() returned null.");
+        }
+        // End of temporary logging code.
         mWebView.post(new Runnable() {
             @Override
             public void run() {
