@@ -31,6 +31,8 @@ public enum SpanName {
     GetAccounts,
     RemoveAccount,
     WorkplaceJoin,
+    ATIInteractively,
+    ATISilently,
     DoDiscovery,
     WorkplaceLeave,
     DeviceState,

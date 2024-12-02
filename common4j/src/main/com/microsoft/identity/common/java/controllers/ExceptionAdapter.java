@@ -42,7 +42,6 @@ import com.microsoft.identity.common.java.exception.UserCancelException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
@@ -224,33 +223,7 @@ public class ExceptionAdapter {
 
         final ServiceException outErr;
 
-        if (isNativeAuthenticationMFAError(errorResponse)) {
-            ServiceException apiError = new ServiceException(
-                    errorResponse.getError(),
-                    errorResponse.getErrorDescription(),
-                    null);
-
-            String developerDescription = "Multi-factor authentication is required, which can't be fulfilled as part of this flow. Please sign out and perform a new sign in operation. Please see exception details for more information.";
-            outErr = new ServiceException(
-                    errorResponse.getError(),
-                    developerDescription,
-                    apiError
-            );
-        } else if (isNativeAuthenticationResetPasswordRequiredError(errorResponse)) {
-            ServiceException apiError = new ServiceException(
-                    errorResponse.getError(),
-                    errorResponse.getErrorDescription(),
-                    null);
-
-            String developerDescription = "User password change is required, which can't be fulfilled as part of this flow."+
-                    "Please reset the password and perform a new sign in operation. Please see exception details for more information.";
-            outErr = new ServiceException(
-                    errorResponse.getError(),
-                    developerDescription,
-                    apiError
-            );
-        }
-        else if (shouldBeConvertedToUiRequiredException(errorResponse.getError())) {
+        if (shouldBeConvertedToUiRequiredException(errorResponse.getError())) {
             outErr = new UiRequiredException(
                     errorResponse.getError(),
                     errorResponse.getErrorDescription());
@@ -275,10 +248,17 @@ public class ExceptionAdapter {
      */
     public static ServiceException convertToNativeAuthException(@NonNull final ServiceException exception) {
         final ServiceException outErr;
+        String customDescription = "";
+        if (isNativeAuthenticationMFAException(exception)) {
+            customDescription = "Multi-factor authentication is required, which can't be fulfilled as part of this flow. Please sign out and perform a new sign in operation. Please see exception details for more information.";
+        } else if (isNativeAuthenticationResetPasswordRequiredException(exception)) {
+            customDescription = "User password change is required, which can't be fulfilled as part of this flow."+
+                    "Please reset the password and perform a new sign in operation. Please see exception details for more information.";
+        }
 
         outErr = new ServiceException(
                 exception.getErrorCode(),
-                exception.getMessage(),
+                customDescription + exception.getMessage(),
                 exception.getHttpStatusCode(),
                 exception
         );
@@ -514,40 +494,34 @@ public class ExceptionAdapter {
 
     /**
      * Identifies whether an error is specific to native authentication MFA scenarios.
-     * @param errorResponse
+     * @param exception A ServiceException from which we will check the error code
      * @return true if errorResponse is a native authentication MFA error
      */
-    private static boolean isNativeAuthenticationMFAError(
-            @NonNull final TokenErrorResponse errorResponse) {
-        return doesErrorContainsErrorCode(50076, errorResponse);
+    private static boolean isNativeAuthenticationMFAException(
+            @NonNull final ServiceException exception) {
+        return doesExceptionContainsErrorCode(50076, exception);
     }
 
     /**
      * Identifies whether an error is specific to native authentication reset password required scenarios.
-     * @param errorResponse
+     * @param exception A ServiceException from which we will check the error code
      * @return true if errorResponse is a native authentication reset password required error
      */
-    private static boolean isNativeAuthenticationResetPasswordRequiredError(
-            @NonNull final TokenErrorResponse errorResponse) {
-        return doesErrorContainsErrorCode(50142, errorResponse);
+    private static boolean isNativeAuthenticationResetPasswordRequiredException(
+            @NonNull final ServiceException exception) {
+        return doesExceptionContainsErrorCode(50142, exception);
     }
 
     /**
      * Identifies whether an error contains a specific error code.
      * @param errorCode Error code to check
-     * @param errorResponse A TokenErrorResponse from which we will check the error code
+     * @param exception A ServiceException from which we will check the error code
      * @return true if errorResponse contains the error code
      */
-    private static boolean doesErrorContainsErrorCode(
+    private static boolean doesExceptionContainsErrorCode(
             int errorCode,
-            @NonNull final TokenErrorResponse errorResponse) {
-        if (!(errorResponse instanceof MicrosoftTokenErrorResponse)) {
-            return false;
-        }
-
-        MicrosoftTokenErrorResponse microsoftTokenErrorResponse = ((MicrosoftTokenErrorResponse) errorResponse);
-        return microsoftTokenErrorResponse.getErrorCodes() != null &&
-                !microsoftTokenErrorResponse.getErrorCodes().isEmpty() &&
-                microsoftTokenErrorResponse.getErrorCodes().contains((long) errorCode);
+            @NonNull final ServiceException exception) {
+        return exception.getCliTelemErrorCode() != null &&
+                exception.getCliTelemErrorCode().equalsIgnoreCase(String.valueOf(errorCode));
     }
 }

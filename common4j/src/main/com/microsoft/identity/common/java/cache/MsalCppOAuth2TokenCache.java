@@ -128,6 +128,15 @@ public class MsalCppOAuth2TokenCache
      * @throws ClientException  If the supplied Account or Credential are null or schema invalid.
      */
     public synchronized void saveCredentials(@NonNull final Credential... credentials) throws ClientException {
+        saveCredentials(false, credentials);
+    }
+
+    /**
+     * @param credentials          list of Credential which can include AccessTokenRecord, IdTokenRecord and RefreshTokenRecord.
+     * @param mustMatchExactClaims If true, match exact claims when deleting AT with intersecting scopes.
+     * @throws ClientException  If the supplied Account or Credential are null or schema invalid.
+     */
+    public synchronized void saveCredentials(boolean mustMatchExactClaims, @NonNull final Credential... credentials) throws ClientException {
         if (credentials.length == 0) {
             throw new ClientException("Credential array passed in is null or empty");
         }
@@ -148,7 +157,7 @@ public class MsalCppOAuth2TokenCache
             }
         }
 
-        saveCredentialsInternal(credentials);
+        saveCredentialsInternal(mustMatchExactClaims, credentials);
     }
 
     /**
