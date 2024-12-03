@@ -486,7 +486,7 @@ public class ClientException extends BaseException {
     public static final String KEY_LOAD_FAILURE = "key_load_failure";
 
     /**
-     * Error occurred when calling MSA DR register device api
+     * Error occurred when calling MSA DR register device api.
      */
     public static final String MSA_DEVICE_REGISTRATION_FAILURE = "msa_device_registration_failure";
 
