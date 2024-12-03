@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
@@ -391,8 +392,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private void launchWebView() {
         final String methodTag = TAG + ":launchWebView";
         // Start of temporary logging code
-        if (getActivity() != null) {
-            final Context appContext = getActivity().getApplicationContext();
+        final Activity activity = getActivity();
+        if (activity != null) {
+            final Context appContext = activity.getApplicationContext();
             final DevicePolicyManager dpm =
                     (DevicePolicyManager) appContext.getSystemService(Context.DEVICE_POLICY_SERVICE);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
@@ -404,6 +406,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     for (final ComponentName admin : activeAdmins) {
                         Logger.info(methodTag, "Active admin: " + admin.getPackageName());
                         if (admin.getPackageName().equals(appContext.getPackageName())) {
+                            Logger.info(methodTag, "Found match in admin list.");
                             if (dpm.isNetworkLoggingEnabled(admin)) {
                                 Logger.info(methodTag, "Network logging is already enabled for the profile owner app.");
                             } else {
