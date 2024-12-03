@@ -66,8 +66,10 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.security.Principal;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 
@@ -194,7 +196,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 challengeHandler.processChallenge(challenge);
             } else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
-                processRedirectUrl(view, url);
+                if (isSwitchBrowserRequestUrl(formattedURL)) {
+                    Logger.info(methodTag,"Request to switch browser.");
+                    redirectToBrowser(view, url);
+                } else {
+                    Logger.info(methodTag,"It is a redirect request.");
+                    processRedirectUrl(view, url);
+                }
             } else if (isWebsiteRequestUrl(formattedURL)) {
                 Logger.info(methodTag,"It is an external website request");
                 processWebsiteRequest(view, url);
@@ -305,6 +313,25 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return urlIsTrustedToReceiveHeaders && originalRequestHasHeaders;
     }
 
+    private boolean isSwitchBrowserRequestUrl(@NonNull final String url) {
+        final String methodTag = TAG + ":isSwitchBrowserRequestUrl";
+        try {
+            final String query = new URL(url).getQuery();
+            final HashSet<String> queryParams = new HashSet<>();
+            for (final String pair :  query.split("&")) {
+                final String[] keyValue = pair.split("=");
+                if (keyValue.length == 1) {
+                    queryParams.add(keyValue[0]);
+                }
+            }
+            return queryParams.contains(AuthenticationConstants.DUNA.ENDPOINT) &&
+                    queryParams.contains(AuthenticationConstants.DUNA.SESSION_TOKEN);
+        } catch (final Throwable throwable) {
+            Logger.error(methodTag, "Failed to parse the URL.", throwable);
+            return false;
+        }
+    }
+
     // This function is only called when the client received a redirect that starts with the apps
     // redirect uri.
     protected void processRedirectUrl(@NonNull final WebView view, @NonNull final String url) {
@@ -315,6 +342,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         getCompletionCallback().onChallengeResponseReceived(data);
         view.stopLoading();
         //the TokenTask should be processed at after the authorization process in the upper calling layer.
+    }
+
+    protected void redirectToBrowser(@NonNull final WebView view, @NonNull final String url) {
+       // (WebViewAuthorizationFragment)((AuthorizationActivity)getActivity()).getFragment()).redirectToBrowser(url);
+        final AuthorizationActivity activity = (AuthorizationActivity) (getActivity());
+        final WebViewAuthorizationFragment fragment = (WebViewAuthorizationFragment) activity.getFragment();
+        fragment.launchWebBrowserIntent(url);
+        //final String methodTag = TAG + ":redirectToBrowser";
+        //Logger.info(methodTag, "Redirecting to browser.");
+        //Intent intent = new Intent(Intent.ACTION_VIEW);
+        //intent.setPackage("com.android.chrome"); // Force Chrome to be used
+        //intent.setData(Uri.parse("http://www.google.com"));
+        //view.getContext().startActivity(intent);
     }
 
     private void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {

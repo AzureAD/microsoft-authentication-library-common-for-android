@@ -28,6 +28,7 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -72,6 +73,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Objects;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
@@ -458,6 +460,16 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     public ActivityResultLauncher<LegacyFido2ApiObject> getFidoLauncher() {
         return mFidoLauncher;
     }
+
+    public void launchWebBrowserIntent(@NonNull final String uri) {
+        final String methodTag = TAG + ":launchWebBrowserIntent";
+        Logger.info(methodTag, "Launching web browser intent for DUNA flow.");
+        if (mAuthIntent != null) {
+            mAuthIntent.setData(Uri.parse(uri));
+            requireContext().startActivity(mAuthIntent);
+        }
+    }
+
 
     /**
      * Helper method to check if the authorization request is being made through broker.

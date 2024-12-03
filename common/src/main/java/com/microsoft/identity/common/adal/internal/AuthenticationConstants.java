@@ -530,6 +530,23 @@ public final class AuthenticationConstants {
     }
 
     /**
+     * Represents the constants value for the DUNA flow.
+     */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static final class DUNA {
+
+        /**
+         * String Query parameter key for the session token.
+         */
+        public static final String SESSION_TOKEN = "session_token";
+
+        /**
+         * String Query parameter key for the endpoint.
+         */
+        public static final String ENDPOINT = "endpoint";
+    }
+
+    /**
      * Represents the constants for broker.
      */
     @NoArgsConstructor(access = AccessLevel.PRIVATE)

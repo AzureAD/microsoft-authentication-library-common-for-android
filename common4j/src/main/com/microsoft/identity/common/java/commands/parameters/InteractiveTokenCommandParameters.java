@@ -29,6 +29,7 @@ import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,6 +96,6 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
     }
 
     public List<BrowserDescriptor> getBrowserSafeList() {
-        return this.browserSafeList == null ? null : new ArrayList<>(this.browserSafeList);
+        return this.browserSafeList == null ? Collections.emptyList() : new ArrayList<>(this.browserSafeList);
     }
 }
