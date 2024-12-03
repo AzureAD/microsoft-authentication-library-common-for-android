@@ -28,7 +28,7 @@ import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthor
 import java.util.Locale
 
 /**
- * Class for various MSA-related utility methods
+ * Class for various MSA-related utility methods.
  */
 class MsaUtil {
 

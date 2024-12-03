@@ -65,7 +65,7 @@ public final class JwtUtils {
     }
 
     /**
-     * Generate a JWT request header to be used in MSA DR flows
+     * Generate a JWT request header to be used in MSA DR flows.
      * @param keyContext key context to include in header
      * @return a request headers object
      */
@@ -81,7 +81,7 @@ public final class JwtUtils {
     }
 
     /**
-     * Generate a JWT request body to be used in MSA DR flows
+     * Generate a JWT request body to be used in MSA DR flows.
      * @param deviceToken device token to include in body
      * @return a request body object
      */
