@@ -20,27 +20,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.exception
-
+package com.microsoft.identity.common.java.base64
 
 /**
- * Representing exceptions that occur when broker is required but not installed.
+ * Interface of Base64 implementations.
  */
-class BrokerRequiredException(
-    brokerPackageName: String? = null,
-    cause: Throwable? = null,
-) : BaseException(ERROR_CODE, getErrorMessage(brokerPackageName), cause) {
+interface IBase64 {
 
-    companion object {
-        public const val ERROR_CODE = "broker_required"
-        private const val DEFAULT_ERROR_MESSAGE = "Broker is required but not installed."
+    /**
+     * Given a byte array, return a base64-encoded ByteArray.
+     */
+    fun encode(input: ByteArray,
+               vararg flags: Base64Flags
+    ): ByteArray
 
-        private fun getErrorMessage(brokerPackageName: String?): String {
-            return if (brokerPackageName != null) {
-                "$DEFAULT_ERROR_MESSAGE Please install $brokerPackageName."
-            } else {
-                DEFAULT_ERROR_MESSAGE
-            }
-        }
-    }
+    /**
+     * Given a base64-encoded byte array, return a decoded ByteArray.
+     */
+    fun decode(input: ByteArray,
+               vararg flags: Base64Flags
+    ): ByteArray
 }

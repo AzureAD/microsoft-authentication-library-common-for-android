@@ -1635,13 +1635,17 @@ public class MsalOAuth2TokenCache
     }
 
     void saveCredentialsInternal(final Credential... credentials) {
+        saveCredentialsInternal(false, credentials);
+    }
+
+    void saveCredentialsInternal(boolean mustMatchExactClaims, final Credential... credentials) {
         for (final Credential credential : credentials) {
             if (credential == null) {
                 continue;
             }
 
             if (credential instanceof AccessTokenRecord) {
-                deleteAccessTokensWithIntersectingScopes((AccessTokenRecord) credential);
+                deleteAccessTokensWithIntersectingScopes((AccessTokenRecord) credential, mustMatchExactClaims);
             }
 
             mAccountCredentialCache.saveCredential(credential);
@@ -1707,7 +1711,7 @@ public class MsalOAuth2TokenCache
     }
 
     private void deleteAccessTokensWithIntersectingScopes(
-            final AccessTokenRecord referenceToken) {
+            final AccessTokenRecord referenceToken, boolean mustMatchExactClaims) {
         final String methodName = "deleteAccessTokensWithIntersectingScopes";
 
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
@@ -1721,6 +1725,7 @@ public class MsalOAuth2TokenCache
                 null, // Wildcard (*)
                 referenceToken.getAccessTokenType(),
                 referenceToken.getRequestedClaims(),
+                mustMatchExactClaims,
                 mAccountCredentialCache.getCredentials()
         );
 

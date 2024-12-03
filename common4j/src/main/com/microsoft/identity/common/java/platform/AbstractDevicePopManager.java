@@ -49,12 +49,13 @@ import static com.microsoft.identity.common.java.platform.AbstractKeyStoreKeyMan
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.java.AuthenticationConstants;
+import com.microsoft.identity.common.java.base64.Base64Flags;
+import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -64,7 +65,6 @@ import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
@@ -90,7 +90,6 @@ import java.security.SignatureException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
-import java.security.interfaces.RSAPublicKey;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -103,7 +102,6 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
-import cz.msebera.android.httpclient.extras.Base64;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
@@ -465,7 +463,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     public @NonNull
     String sign(@NonNull final SigningAlgorithm alg,
                 @NonNull final String input) throws ClientException {
-        return Base64.encodeToString(sign(alg, input.getBytes(UTF8)), Base64.NO_WRAP);
+        return Base64Util.encodeToString(sign(alg, input.getBytes(UTF8)), Base64Flags.NO_WRAP);
     }
 
     @Override
@@ -525,8 +523,8 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     public boolean verify(@NonNull final SigningAlgorithm alg,
                           @NonNull final String plainText,
                           @NonNull final String signatureStr) {
-        // TODO: Base64.decode can throw an illegal argument.
-        return verify(alg, plainText.getBytes(UTF8), Base64.decode(signatureStr, Base64.NO_WRAP));
+        // TODO: Base64Util.decode can throw an illegal argument.
+        return verify(alg, plainText.getBytes(UTF8), Base64Util.decode(signatureStr, Base64Flags.NO_WRAP));
     }
 
     @Override
@@ -580,7 +578,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     @Override
     public String encrypt(@NonNull final Cipher cipher,
                           @NonNull final String plaintext) throws ClientException {
-        return Base64.encodeToString(encrypt(cipher, plaintext.getBytes(UTF8)), Base64.NO_PADDING | Base64.NO_WRAP);
+        return Base64Util.encodeToString(encrypt(cipher, plaintext.getBytes(UTF8)), Base64Flags.NO_PADDING, Base64Flags.NO_WRAP);
     }
 
     @Override
@@ -648,7 +646,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     @Override
     public String decrypt(@NonNull final Cipher cipher,
                           @NonNull final String ciphertext) throws ClientException {
-        return new String(decrypt(cipher, Base64.decode(ciphertext, Base64.NO_PADDING | Base64.NO_WRAP)), UTF8);
+        return new String(decrypt(cipher, Base64Util.decode(ciphertext, Base64Flags.NO_PADDING , Base64Flags.NO_WRAP)), UTF8);
     }
 
     @Override
@@ -828,7 +826,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
             final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
             final PublicKey publicKey = rsaKeyPair.getPublic();
             final byte[] publicKeybytes = publicKey.getEncoded();
-            final byte[] bytesBase64Encoded = Base64.encode(publicKeybytes, Base64.DEFAULT);
+            final byte[] bytesBase64Encoded = Base64Util.encode(publicKeybytes, Base64Flags.DEFAULT);
             return new String(bytesBase64Encoded, AuthenticationConstants.CHARSET_UTF8);
         } catch (final KeyStoreException e) {
             exception = e;
@@ -1095,9 +1093,9 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
      */
     private static String base64UrlEncode(@NonNull final String input) {
         byte[] encodeBytes = input.getBytes(UTF8);
-        return Base64.encodeToString(
+        return Base64Util.encodeToString(
                 encodeBytes,
-                Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE
+                Base64Flags.NO_PADDING, Base64Flags.NO_WRAP, Base64Flags.URL_SAFE
         );
     }
 

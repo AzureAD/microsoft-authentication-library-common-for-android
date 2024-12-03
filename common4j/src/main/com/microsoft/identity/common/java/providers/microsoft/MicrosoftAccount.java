@@ -22,11 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft;
 
-import cz.msebera.android.httpclient.extras.Base64;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 import com.microsoft.identity.common.java.BaseAccount;
+import com.microsoft.identity.common.java.base64.Base64Flags;
+import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryIdToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
@@ -255,9 +256,9 @@ public abstract class MicrosoftAccount extends BaseAccount {
     @Override
     public synchronized String getUniqueIdentifier() {
 
-        return Base64.encodeToString(StringUtil.toByteArray(mUid), Base64.URL_SAFE | Base64.NO_WRAP)
+        return Base64Util.encodeToString(StringUtil.toByteArray(mUid), Base64Flags.URL_SAFE, Base64Flags.NO_WRAP)
                 + "." +
-                Base64.encodeToString(StringUtil.toByteArray(mUtid), Base64.URL_SAFE | Base64.NO_WRAP);
+                Base64Util.encodeToString(StringUtil.toByteArray(mUtid), Base64Flags.URL_SAFE, Base64Flags.NO_WRAP);
     }
 
     @Override

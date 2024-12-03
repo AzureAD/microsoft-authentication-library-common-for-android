@@ -202,6 +202,7 @@ dependencies {
 
     implementation project(":LabApiUtilities")
 
+    implementation "cz.msebera.android:httpclient:4.5.8"
     implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"

@@ -31,6 +31,8 @@ public enum SpanName {
     GetAccounts,
     RemoveAccount,
     WorkplaceJoin,
+    ATIInteractively,
+    ATISilently,
     DoDiscovery,
     WorkplaceLeave,
     DeviceState,
@@ -63,5 +65,6 @@ public enum SpanName {
     DeleteTransferToken,
     RestoreMsaAccounts,
     OnUpgradeReceiver,
-    UpgradeDeviceRegistration
+    UpgradeDeviceRegistration,
+    RemoveBrokerAccount,
 }

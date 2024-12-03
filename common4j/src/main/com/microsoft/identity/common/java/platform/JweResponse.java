@@ -24,7 +24,8 @@
 package com.microsoft.identity.common.java.platform;
 
 import com.microsoft.identity.common.java.AuthenticationConstants;
-import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.base64.Base64Flags;
+import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -32,7 +33,6 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import cz.msebera.android.httpclient.extras.Base64;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.opentelemetry.api.trace.Span;
 import lombok.Builder;
@@ -101,20 +101,20 @@ public class JweResponse {
     }
 
     public byte[] getEncryptedKey() {
-        return StringUtil.base64Decode(this.mEncryptedKey, Base64.URL_SAFE, "Encrypted key is not base64 url-encoded");
+        return Base64Util.decode("Encrypted key is not base64 url-encoded", this.mEncryptedKey, Base64Flags.URL_SAFE);
     }
 
     public byte[] getIv() {
-        return StringUtil.base64Decode(this.mIv, Base64.URL_SAFE, "IV not base64 url-encoded.");
+        return Base64Util.decode("IV not base64 url-encoded.", this.mIv, Base64Flags.URL_SAFE);
     }
 
     public byte[] getPayload() {
-        return StringUtil.base64Decode(this.mPayload, Base64.URL_SAFE, "Payload is not base64 url-encoded.");
+        return Base64Util.decode("Payload is not base64 url-encoded.", this.mPayload, Base64Flags.URL_SAFE);
     }
 
     public byte[] getAuthenticationTag() {
         if (this.mAuthenticationTag != null) {
-            return StringUtil.base64Decode(this.mAuthenticationTag, Base64.URL_SAFE, "Tag is not base64 url-encoded");
+            return Base64Util.decode("Tag is not base64 url-encoded", this.mAuthenticationTag, Base64Flags.URL_SAFE);
         }
 
         return null;
@@ -149,7 +149,7 @@ public class JweResponse {
             response.mAuthenticationTag = split[4];
         }
 
-        final byte[] headerDecodedBytes = StringUtil.base64Decode(header, Base64.URL_SAFE, "Header is not base url-encoded");
+        final byte[] headerDecodedBytes = Base64Util.decode("Header is not base url-encoded", header, Base64Flags.URL_SAFE);
         final String decodedHeader = StringUtil.fromByteArray(headerDecodedBytes);
 
         final JSONObject jsonObject = new JSONObject(decodedHeader);
