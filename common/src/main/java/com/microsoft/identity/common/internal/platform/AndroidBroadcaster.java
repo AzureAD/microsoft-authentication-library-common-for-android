@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.platform;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Parcelable;
 
 import androidx.annotation.Nullable;
 
@@ -53,7 +52,7 @@ public class AndroidBroadcaster implements IBroadcaster {
         intent.setAction(broadcastId);
         if(propertyBag != null) {
             for (final String key : propertyBag.keySet()) {
-                intent.putExtra(key, propertyBag.<Parcelable[]>get(key));
+                intent.putExtra(key, propertyBag.<String>get(key));
             }
         }
         mContext.sendBroadcast(intent);
