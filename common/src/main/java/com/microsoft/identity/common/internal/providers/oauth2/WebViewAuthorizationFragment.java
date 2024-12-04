@@ -461,11 +461,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         return mFidoLauncher;
     }
 
-    public void launchWebBrowserIntent(@NonNull final String uri) {
+    public void launchWebBrowserIntent(@NonNull final Uri uri) {
         final String methodTag = TAG + ":launchWebBrowserIntent";
         Logger.info(methodTag, "Launching web browser intent for DUNA flow.");
         if (mAuthIntent != null) {
-            mAuthIntent.setData(Uri.parse(uri));
+            mAuthIntent.setData(uri);
             requireContext().startActivity(mAuthIntent);
         }
     }

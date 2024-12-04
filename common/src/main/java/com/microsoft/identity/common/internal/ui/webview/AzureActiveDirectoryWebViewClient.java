@@ -65,11 +65,10 @@ import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.security.Principal;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 
@@ -167,7 +166,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     private boolean handleUrl(final WebView view, final String url) {
         final String methodTag = TAG + ":handleUrl";
-        final String formattedURL = url.toLowerCase(Locale.US);
+        //final String formattedURL = url.toLowerCase(Locale.US);
+        //test
+        final String formattedURL = "msauth://microsoft.aad.brokerplugin?endpoint=login.microsoftonline.com/duna/process&session_token=SwitchBrowserSessionToken";
 
         try {
             if (isPkeyAuthUrl(formattedURL)) {
@@ -196,9 +197,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 challengeHandler.processChallenge(challenge);
             } else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
-                if (isSwitchBrowserRequestUrl(formattedURL)) {
+                final HashMap<String, String> queryParams = getQueryParameters(formattedURL);
+                if (isSwitchBrowserRequest(queryParams)) {
                     Logger.info(methodTag,"Request to switch browser.");
-                    redirectToBrowser(view, url);
+                    redirectToBrowser(queryParams);
                 } else {
                     Logger.info(methodTag,"It is a redirect request.");
                     processRedirectUrl(view, url);
@@ -313,23 +315,27 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return urlIsTrustedToReceiveHeaders && originalRequestHasHeaders;
     }
 
-    private boolean isSwitchBrowserRequestUrl(@NonNull final String url) {
-        final String methodTag = TAG + ":isSwitchBrowserRequestUrl";
+    private HashMap<String, String> getQueryParameters(@NonNull final String url) {
+        final String methodTag = TAG + ":getQueryParameters";
+        final HashMap<String, String> queryParams = new HashMap<>();
         try {
-            final String query = new URL(url).getQuery();
-            final HashSet<String> queryParams = new HashSet<>();
+            final URI uri = new URI(url);
+            final String query = uri.getQuery();
             for (final String pair :  query.split("&")) {
                 final String[] keyValue = pair.split("=");
-                if (keyValue.length == 1) {
-                    queryParams.add(keyValue[0]);
+                if (keyValue.length == 2 || keyValue.length == 1) {
+                    queryParams.put(keyValue[0], keyValue.length == 2 ? keyValue[1] : "");
                 }
             }
-            return queryParams.contains(AuthenticationConstants.DUNA.ENDPOINT) &&
-                    queryParams.contains(AuthenticationConstants.DUNA.SESSION_TOKEN);
         } catch (final Throwable throwable) {
-            Logger.error(methodTag, "Failed to parse the URL.", throwable);
-            return false;
+            Logger.warn(methodTag, "Failed to parse the URL." + throwable.getMessage());
         }
+        return queryParams;
+    }
+
+    private boolean isSwitchBrowserRequest(@NonNull final HashMap<String, String> queryParams) {
+        return queryParams.containsKey(AuthenticationConstants.DUNA.ENDPOINT) &&
+                queryParams.containsKey(AuthenticationConstants.DUNA.SESSION_TOKEN);
     }
 
     // This function is only called when the client received a redirect that starts with the apps
@@ -344,17 +350,27 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         //the TokenTask should be processed at after the authorization process in the upper calling layer.
     }
 
-    protected void redirectToBrowser(@NonNull final WebView view, @NonNull final String url) {
-       // (WebViewAuthorizationFragment)((AuthorizationActivity)getActivity()).getFragment()).redirectToBrowser(url);
-        final AuthorizationActivity activity = (AuthorizationActivity) (getActivity());
+    protected void redirectToBrowser(@NonNull final HashMap<String, String> queryParams) {
+        final AuthorizationActivity activity = (AuthorizationActivity) getActivity();
         final WebViewAuthorizationFragment fragment = (WebViewAuthorizationFragment) activity.getFragment();
-        fragment.launchWebBrowserIntent(url);
-        //final String methodTag = TAG + ":redirectToBrowser";
-        //Logger.info(methodTag, "Redirecting to browser.");
-        //Intent intent = new Intent(Intent.ACTION_VIEW);
-        //intent.setPackage("com.android.chrome"); // Force Chrome to be used
-        //intent.setData(Uri.parse("http://www.google.com"));
-        //view.getContext().startActivity(intent);
+        final String dunaEndpoint = queryParams.get(AuthenticationConstants.DUNA.ENDPOINT);
+        if (dunaEndpoint == null) {
+            Logger.error(TAG, "Duna endpoint is not present in the query parameters.", null);
+            return;
+        }
+        final String[] paths = dunaEndpoint.split("/");
+        final String authority = paths[0];
+
+        final String sessionToken = queryParams.get(AuthenticationConstants.DUNA.SESSION_TOKEN);
+        final Uri.Builder builder = new Uri.Builder()
+                .scheme("https")
+                .authority(authority)
+                .appendQueryParameter(AuthenticationConstants.DUNA.SESSION_TOKEN, sessionToken);
+
+        for (int i = 1; i < paths.length; i++) {
+            builder.appendPath(paths[i]);
+        }
+        fragment.launchWebBrowserIntent(builder.build());
     }
 
     private void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
