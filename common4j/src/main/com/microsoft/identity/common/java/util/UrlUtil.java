@@ -273,15 +273,4 @@ public class UrlUtil {
     public static String removeTrailingSlash(@NonNull final String urlString) {
         return urlString.replaceFirst("/*$", "");
     }
-
-
-    public static ClientException getNetworkLayerClientException(
-            final ConnectionError connectionSubError,
-            final Throwable cause) {
-        final ClientException e = new ClientException(IO_ERROR,
-                "An IO error occurred in the network layer: ${cause.message}",
-                cause);
-        e.setSubErrorCode(connectionSubError.name());
-        return e;
-    }
 }
