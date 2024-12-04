@@ -93,7 +93,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String TAG = AzureActiveDirectoryWebViewClient.class.getSimpleName();
 
     public static final String ERROR = "error";
-    public static final String ERROR_SUBCODE = "error_subcode";
     public static final String ERROR_DESCRIPTION = "error_description";
     private static final String DEVICE_CERT_ISSUER = "CN=MS-Organization-Access";
     private final String mRedirectUrl;
@@ -166,9 +165,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     private boolean handleUrl(final WebView view, final String url) {
         final String methodTag = TAG + ":handleUrl";
-        //final String formattedURL = url.toLowerCase(Locale.US);
+        final String formattedURL = url.toLowerCase(Locale.US);
         //test
-        final String formattedURL = "msauth://microsoft.aad.brokerplugin?endpoint=login.microsoftonline.com/duna/process&session_token=SwitchBrowserSessionToken";
+        //final String formattedURL = "msauth://microsoft.aad.brokerplugin?endpoint=login.microsoftonline.com/duna/process&session_token=SwitchBrowserSessionToken";
 
         try {
             if (isPkeyAuthUrl(formattedURL)) {
@@ -354,23 +353,22 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final AuthorizationActivity activity = (AuthorizationActivity) getActivity();
         final WebViewAuthorizationFragment fragment = (WebViewAuthorizationFragment) activity.getFragment();
         final String dunaEndpoint = queryParams.get(AuthenticationConstants.DUNA.ENDPOINT);
-        if (dunaEndpoint == null) {
-            Logger.error(TAG, "Duna endpoint is not present in the query parameters.", null);
+        final String sessionToken = queryParams.get(AuthenticationConstants.DUNA.SESSION_TOKEN);
+        if (dunaEndpoint == null || sessionToken == null) {
+            // This should never happen, but if it does, we should log it and return.
+            Logger.error(TAG, "Duna endpoint or session token is null. Cannot switch browser.", null);
             return;
         }
         final String[] paths = dunaEndpoint.split("/");
         final String authority = paths[0];
-
-        final String sessionToken = queryParams.get(AuthenticationConstants.DUNA.SESSION_TOKEN);
-        final Uri.Builder builder = new Uri.Builder()
+        final Uri.Builder uriBuilder = new Uri.Builder()
                 .scheme("https")
                 .authority(authority)
                 .appendQueryParameter(AuthenticationConstants.DUNA.SESSION_TOKEN, sessionToken);
-
         for (int i = 1; i < paths.length; i++) {
-            builder.appendPath(paths[i]);
+            uriBuilder.appendPath(paths[i]);
         }
-        fragment.launchWebBrowserIntent(builder.build());
+        fragment.launchWebBrowserIntent(uriBuilder.build());
     }
 
     private void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
