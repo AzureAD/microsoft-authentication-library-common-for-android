@@ -491,11 +491,6 @@ public class ClientException extends BaseException {
     public static final String MSA_DEVICE_REGISTRATION_FAILURE = "msa_device_registration_failure";
 
     /**
-     * Error occurred when calling MSA get device token api.
-     */
-    public static final String MSA_GET_DEVICE_TOKEN_FAILURE = "msa_get_device_token_failure";
-
-    /**
      * Error occurred when calling MSA finalize msa v1 request api.
      */
     public static final String MSA_FINALIZE_MSA_V1_REQUEST = "msa_finalize_msa_v1_request";
@@ -509,6 +504,11 @@ public class ClientException extends BaseException {
      * Error occurred when calling MSA handle msa v1 error api.
      */
     public static final String MSA_HANDLE_MSA_V1_ERROR = "msa_handle_msa_v1_error";
+
+    /**
+     * Error occurred when calling MSA get device token api.
+     */
+    public static final String MSA_GET_DEVICE_TOKEN_FAILURE = "msa_get_device_token_failure";
 
     /**
      * Error occurred when calling MSA sign with device key api.
