@@ -262,7 +262,13 @@ public class UrlUtil {
         }
     }
 
-    public static URL makeUrl(String urlString) throws ClientException {
+    /**
+     * This creates a url from a String, rewriting any malformedUrlExceptions to ClientException.
+     *
+     * @param urlString the string to convert.
+     * @return the corresponding {@link URL}.
+     */
+    public static URL makeUrl(@NonNull final String urlString) throws ClientException {
         try {
             return new URL(urlString);
         } catch (MalformedURLException e) {
