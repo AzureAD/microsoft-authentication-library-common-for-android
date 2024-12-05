@@ -73,7 +73,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.Objects;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
@@ -461,6 +460,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         return mFidoLauncher;
     }
 
+    /**
+     * Launches the web browser intent for the given uri.
+     *
+     * @param uri The uri to launch the web browser intent.
+     */
     public void launchWebBrowserIntent(@NonNull final Uri uri) {
         final String methodTag = TAG + ":launchWebBrowserIntent";
         Logger.info(methodTag, "Launching web browser intent for DUNA flow.");
@@ -469,7 +473,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             requireContext().startActivity(mAuthIntent);
         }
     }
-
 
     /**
      * Helper method to check if the authorization request is being made through broker.

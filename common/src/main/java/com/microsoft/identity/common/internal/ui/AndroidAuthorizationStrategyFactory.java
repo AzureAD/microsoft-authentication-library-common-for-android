@@ -32,7 +32,6 @@ import androidx.fragment.app.Fragment;
 import com.microsoft.identity.common.internal.ui.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.DefaultBrowserAuthorizationStrategy;
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
@@ -70,7 +69,6 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
             @NonNull final InteractiveTokenCommandParameters parameters) {
         final String methodTag = TAG + ":getAuthorizationStrategy";
 
-        //Valid if available browser installed. Will fallback to embedded webView if no browser available.
         Browser browser;
         try {
              browser = BrowserSelector.select(
@@ -82,6 +80,7 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
             browser = null;
         }
 
+        // Use embedded webView if no browser available or authorization agent is webView
         if (parameters.getAuthorizationAgent() == AuthorizationAgent.WEBVIEW || browser == null) {
             Logger.info(methodTag, "Use webView for authorization.");
             return getGenericAuthorizationStrategy(browser);

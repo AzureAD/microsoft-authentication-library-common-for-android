@@ -166,8 +166,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean handleUrl(final WebView view, final String url) {
         final String methodTag = TAG + ":handleUrl";
         final String formattedURL = url.toLowerCase(Locale.US);
-        //test
-        //final String formattedURL = "msauth://microsoft.aad.brokerplugin?endpoint=login.microsoftonline.com/duna/process&session_token=SwitchBrowserSessionToken";
 
         try {
             if (isPkeyAuthUrl(formattedURL)) {
@@ -199,7 +197,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 final HashMap<String, String> queryParams = getQueryParameters(formattedURL);
                 if (isSwitchBrowserRequest(queryParams)) {
                     Logger.info(methodTag,"Request to switch browser.");
-                    redirectToBrowser(queryParams);
+                    processSwitchToBrowserRequest(queryParams);
                 } else {
                     Logger.info(methodTag,"It is a redirect request.");
                     processRedirectUrl(view, url);
@@ -314,6 +312,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return urlIsTrustedToReceiveHeaders && originalRequestHasHeaders;
     }
 
+    /**
+     *  Get the query parameters from the URL.
+     *
+     * @param url
+     * @return the query parameters from the URL.
+     */
     private HashMap<String, String> getQueryParameters(@NonNull final String url) {
         final String methodTag = TAG + ":getQueryParameters";
         final HashMap<String, String> queryParams = new HashMap<>();
@@ -349,7 +353,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         //the TokenTask should be processed at after the authorization process in the upper calling layer.
     }
 
-    protected void redirectToBrowser(@NonNull final HashMap<String, String> queryParams) {
+    /**
+     * Launch the browser with the given duna endpoint and session token.
+     * <p>
+     * From the query parameters, extract the duna endpoint and session token,
+     * then launch the browser with the duna endpoint and session token.
+     *
+     * @param queryParams The query parameters from the URL.
+     */
+    protected void processSwitchToBrowserRequest(@NonNull final HashMap<String, String> queryParams) {
         final AuthorizationActivity activity = (AuthorizationActivity) getActivity();
         final WebViewAuthorizationFragment fragment = (WebViewAuthorizationFragment) activity.getFragment();
         final String dunaEndpoint = queryParams.get(AuthenticationConstants.DUNA.ENDPOINT);

@@ -89,7 +89,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         mAuthorizationResultFuture = new ResultFuture<>();
         mOAuth2Strategy = oAuth2Strategy;
         mAuthorizationRequest = authorizationRequest;
-        Logger.info(methodTag,"Perform the authorization request with embedded webView.");
+        Logger.info(methodTag, "Perform the authorization request with embedded webView.");
         final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
 
         String sourceLibraryName = null;
@@ -110,8 +110,9 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
 
     /**
      * Method to build the intent to be used in web view authorization request.
-     * @param requestUrl url to which the request will be sent
-     * @param sourceLibraryName the source library making the request
+     *
+     * @param requestUrl           url to which the request will be sent
+     * @param sourceLibraryName    the source library making the request
      * @param sourceLibraryVersion version of the source library making the request
      * @return the intent to be used in web view authorization request
      */
@@ -121,42 +122,19 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
             URI requestUrl,
             @Nullable final String sourceLibraryName,
             @Nullable final String sourceLibraryVersion) {
-        final String methodTag = TAG + ":buildAuthorizationActivityStartIntent";
-        final Context context = getApplicationContext();
-
-        Intent browserIntent = null;
-        if (mBrowser != null) {
-            if (mBrowser.isCustomTabsServiceSupported()) {
-                Logger.info(methodTag, "CustomTabsService is supported.");
-                //create customTabsIntent
-                mCustomTabManager = new CustomTabsManager(context);
-                if (!mCustomTabManager.bind(context, mBrowser.getPackageName())) {
-                    //create browser auth intent
-                    browserIntent = new Intent(Intent.ACTION_VIEW);
-                } else {
-                    browserIntent = mCustomTabManager.getCustomTabsIntent().intent;
-                }
-            } else {
-                Logger.warn(methodTag, "CustomTabsService is NOT supported");
-                //create browser auth intent
-                browserIntent = new Intent(Intent.ACTION_VIEW);
-            }
-            browserIntent.setPackage(mBrowser.getPackageName());
-        }
-
         // RedirectURI used to get the auth code in nested app auth is that of a hub app (brkRedirectURI)       
         final String redirectUri = mAuthorizationRequest.getBrkRedirectUri() != null ? mAuthorizationRequest.getBrkRedirectUri() : mAuthorizationRequest.getRedirectUri();
         return AuthorizationActivityFactory.getAuthorizationActivityIntent(
-                    getApplicationContext(),
-                    browserIntent,
-                    requestUrl.toString(),
-                    redirectUri,
-                    mAuthorizationRequest.getRequestHeaders(),
-                    AuthorizationAgent.WEBVIEW,
-                    mAuthorizationRequest.isWebViewZoomEnabled(),
-                    mAuthorizationRequest.isWebViewZoomControlsEnabled(),
-                    sourceLibraryName,
-                    sourceLibraryVersion);
+                getApplicationContext(),
+                getBrowserIntent(),
+                requestUrl.toString(),
+                redirectUri,
+                mAuthorizationRequest.getRequestHeaders(),
+                AuthorizationAgent.WEBVIEW,
+                mAuthorizationRequest.isWebViewZoomEnabled(),
+                mAuthorizationRequest.isWebViewZoomControlsEnabled(),
+                sourceLibraryName,
+                sourceLibraryVersion);
     }
 
     @Override
@@ -177,14 +155,45 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
                         );
                 mAuthorizationResultFuture.setResult(result);
             } else {
-                Logger.warn(methodTag,"SDK Cancel triggering before request is sent out. " +
+                Logger.warn(methodTag, "SDK Cancel triggering before request is sent out. " +
                         "Potentially due to an stale activity state, " +
                         "oAuth2Strategy null ? [" + (mOAuth2Strategy == null) + "]" +
                         "mAuthorizationResultFuture ? [" + (mAuthorizationResultFuture == null) + "]"
                 );
             }
         } else {
-            Logger.warnPII(methodTag,"Unknown request code " + requestCode);
+            Logger.warnPII(methodTag, "Unknown request code " + requestCode);
         }
+    }
+
+    /**
+     * Get a intent to launch the browser.
+     *
+     * @return the intent to launch the browser or null if the browser is not supported.
+     */
+    @Nullable
+    private Intent getBrowserIntent() {
+        final String methodTag = TAG + ":getBrowserIntent";
+        final Context context = getApplicationContext();
+        final Intent browserIntent;
+        if (mBrowser != null) {
+            if (mBrowser.isCustomTabsServiceSupported()) {
+                Logger.info(methodTag, "CustomTabsService is supported.");
+                //create customTabsIntent
+                mCustomTabManager = new CustomTabsManager(context);
+                if (!mCustomTabManager.bind(context, mBrowser.getPackageName())) {
+                    Logger.warn(methodTag, "Failed to bind CustomTabsService.");
+                    browserIntent = new Intent(Intent.ACTION_VIEW);
+                } else {
+                    browserIntent = mCustomTabManager.getCustomTabsIntent().intent;
+                }
+            } else {
+                Logger.warn(methodTag, "CustomTabsService is NOT supported");
+                browserIntent = new Intent(Intent.ACTION_VIEW);
+            }
+            browserIntent.setPackage(mBrowser.getPackageName());
+            return browserIntent;
+        }
+        return null;
     }
 }
