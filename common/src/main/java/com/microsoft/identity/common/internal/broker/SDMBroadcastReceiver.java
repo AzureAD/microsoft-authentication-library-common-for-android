@@ -57,7 +57,7 @@ public class SDMBroadcastReceiver {
      * @param context application context.
      * @param sharedDeviceModeCallback a callback to be called when SDM broadcast is received.
      */
-    public static void initialize( @NonNull final Context context,
+    synchronized public static void initialize( @NonNull final Context context,
                                    @NonNull final SharedDeviceModeCallback sharedDeviceModeCallback) {
         if (sSDMBroadcastReceiver == null) {
             sSDMBroadcastReceiver = new BroadcastReceiver() {
