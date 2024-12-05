@@ -101,6 +101,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private AbstractCertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
 
     private HashMap<String, String> mRequestHeaders;
+
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
@@ -166,6 +167,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean handleUrl(final WebView view, final String url) {
         final String methodTag = TAG + ":handleUrl";
         final String formattedURL = url.toLowerCase(Locale.US);
+
         try {
             if (isPkeyAuthUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for pkeyauth challenge.");
@@ -193,7 +195,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 challengeHandler.processChallenge(challenge);
             } else if (isNonceRedirect(formattedURL)) {
                  Logger.info(methodTag,"Navigation contains new nonce within the redirect uri. "+ url);
-                 processNonceAndReattachHeaders(view, url);
+                processNonceAndReAttachHeaders(view, url);
              }
              else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
@@ -522,11 +524,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         view.loadUrl(url, mRequestHeaders);
     }
 
-    private void processNonceAndReattachHeaders(@NonNull final WebView view, @NonNull final String url) {
+    private void processNonceAndReAttachHeaders(@NonNull final WebView view, @NonNull final String url) {
         final HashMap<String, String> queryParams = StringExtensions.getUrlParameters(url);
         final String nonceQueryParam = queryParams.get("sso_nonce");
         HashMap<String, String> updatedHeadersMap = mRequestHeaders;
-        if (nonceQueryParam !=null) {
+        if (nonceQueryParam != null) {
             final NonceRedirectHandler nonceRedirect = new NonceRedirectHandler();
             updatedHeadersMap = (HashMap<String, String>) nonceRedirect.getHeadersWithNewRefreshTokenCredential(mRequestHeaders, nonceQueryParam, url , getActivity());
 
