@@ -30,7 +30,6 @@ import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -647,7 +646,7 @@ public class BrokerResult {
             return this;
         }
 
-        public Builder oauthSubErrorCode(final String subErrorCode) {
+        public Builder subErrorCode(final String subErrorCode) {
             this.mSubErrorCode = subErrorCode;
             return this;
         }
