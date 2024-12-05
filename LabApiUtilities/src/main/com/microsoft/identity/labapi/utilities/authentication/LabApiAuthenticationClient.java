@@ -47,8 +47,8 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
     private final static String AUTHORITY = "https://login.microsoftonline.com/" + TENANT_ID;
     private final static String KEYSTORE_TYPE = "Windows-MY";
     private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
-    private final int DEFAULT_ACCESS_TOKEN_RETRIES = 2;
-    private final int ATTEMPT_RETRY_WAIT = 3;
+    private final static int DEFAULT_ACCESS_TOKEN_RETRIES = 2;
+    private final static int ATTEMPT_RETRY_WAIT = 3;
     private final String mLabCredential;
     private final String mLabCertPassword;
     private final String mScope;

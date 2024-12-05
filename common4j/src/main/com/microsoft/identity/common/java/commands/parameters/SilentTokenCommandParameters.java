@@ -31,9 +31,6 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
@@ -90,12 +87,9 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
             }
             final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloudFromHostName(getAccount().getEnvironment());
             return cloud != null && cloud.getPreferredNetworkHostName().equals(getAuthority().getAuthorityURL().getAuthority());
-        } catch (final IOException e) {
+        } catch (final ClientException e) {
             cause = e;
-            errorCode = ClientException.IO_ERROR;
-        } catch (final URISyntaxException e) {
-            cause = e;
-            errorCode = ClientException.MALFORMED_URL;
+            errorCode = e.getErrorCode();
         }
 
         Logger.error(
@@ -109,7 +103,7 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
     }
 
     private static void performCloudDiscovery()
-            throws IOException, URISyntaxException {
+            throws ClientException {
         final String methodName = ":performCloudDiscovery";
         Logger.verbose(
                 TAG + methodName,

@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.shadow;
 
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.net.AbstractHttpClient;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
@@ -57,7 +58,7 @@ public class ShadowHttpClient {
     public HttpResponse method(@NonNull HttpClient.HttpMethod httpMethod,
                                @NonNull URL requestUrl,
                                @NonNull Map<String, String> requestHeaders,
-                               @Nullable byte[] requestContent) throws IOException {
+                               @Nullable byte[] requestContent) throws ClientException {
         final HttpRequestInterceptor interceptor = MockHttpClient.getInterceptor(httpMethod, requestUrl, requestHeaders, requestContent);
         if (interceptor == null) {
             return UrlConnectionHttpClient.getDefaultInstance().method(httpMethod, requestUrl, requestHeaders, requestContent);
@@ -69,52 +70,52 @@ public class ShadowHttpClient {
     @Implementation
     public HttpResponse put(@NonNull URL requestUrl,
                             @NonNull Map<String, String> requestHeaders,
-                            @Nullable byte[] requestContent) throws IOException {
+                            @Nullable byte[] requestContent) throws ClientException {
         return method(HttpClient.HttpMethod.PUT, requestUrl, requestHeaders, requestContent);
     }
 
     @Implementation
     public HttpResponse patch(@NonNull URL requestUrl,
                               @NonNull Map<String, String> requestHeaders,
-                              @Nullable byte[] requestContent) throws IOException {
+                              @Nullable byte[] requestContent) throws ClientException {
         return method(HttpClient.HttpMethod.PATCH, requestUrl, requestHeaders, requestContent);
     }
 
     @Implementation
     public HttpResponse options(@NonNull URL requestUrl,
-                                @NonNull Map<String, String> requestHeaders) throws IOException {
+                                @NonNull Map<String, String> requestHeaders) throws ClientException {
         return method(HttpClient.HttpMethod.OPTIONS, requestUrl, requestHeaders, null);
     }
 
     @Implementation
     protected HttpResponse post(@NonNull URL requestUrl,
                                 @NonNull Map<String, String> requestHeaders,
-                                @Nullable byte[] requestContent) throws IOException {
+                                @Nullable byte[] requestContent) throws ClientException {
         return method(HttpClient.HttpMethod.POST, requestUrl, requestHeaders, requestContent);
     }
 
     @Implementation
     public HttpResponse delete(@NonNull URL requestUrl,
                                @NonNull Map<String, String> requestHeaders,
-                               @Nullable byte[] requestContent) throws IOException {
+                               @Nullable byte[] requestContent) throws ClientException {
         return method(HttpClient.HttpMethod.DELETE, requestUrl, requestHeaders, requestContent);
     }
 
     @Implementation
     public HttpResponse get(@NonNull URL requestUrl,
-                            @NonNull Map<String, String> requestHeaders) throws IOException {
+                            @NonNull Map<String, String> requestHeaders) throws ClientException {
         return method(HttpClient.HttpMethod.GET, requestUrl, requestHeaders, null);
     }
 
     @Implementation
     public HttpResponse head(@NonNull URL requestUrl,
-                             @NonNull Map<String, String> requestHeaders) throws IOException {
+                             @NonNull Map<String, String> requestHeaders) throws ClientException {
         return method(HttpClient.HttpMethod.HEAD, requestUrl, requestHeaders, null);
     }
 
     @Implementation
     public HttpResponse trace(@NonNull URL requestUrl,
-                              @NonNull Map<String, String> requestHeaders) throws IOException {
+                              @NonNull Map<String, String> requestHeaders) throws ClientException {
         return method(HttpClient.HttpMethod.TRACE, requestUrl, requestHeaders, null);
     }
 }

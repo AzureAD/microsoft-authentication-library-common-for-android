@@ -23,11 +23,14 @@
 package com.microsoft.identity.common.java.net;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
+import static com.microsoft.identity.common.java.exception.ClientException.IO_ERROR;
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.CONTENT_TYPE;
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_ID;
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_SEQUENCE;
 
 import com.microsoft.identity.common.java.AuthenticationConstants;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ConnectionError;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -50,6 +53,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.ProtocolException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.Date;
@@ -57,7 +61,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
@@ -92,7 +95,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     public static final int DEFAULT_READ_TIME_OUT_MS = 30000;
     protected static final int DEFAULT_STREAM_BUFFER_SIZE_BYTE = 1024;
 
-    private static final transient AtomicReference<UrlConnectionHttpClient> defaultReference = new AtomicReference<>(null);
+    private static final AtomicReference<UrlConnectionHttpClient> defaultReference = new AtomicReference<>(null);
 
     /**
      * Retry policy of this HttpClient. Default is {@link NoRetryPolicy}.
@@ -195,7 +198,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                             })
                             .isRetryableException(new Function<Exception, Boolean>() {
                                 public Boolean apply(Exception e) {
-                                    return e instanceof SocketTimeoutException;
+                                    return ConnectionError.CONNECTION_TIMEOUT.compare(e);
                                 }
                             })
                             .build())
@@ -243,25 +246,16 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
      * @param requestHeaders Headers used to send the http request.
      * @param requestContent Optional request body, if applicable.
      * @return HttpResponse  The response for this request.
-     * @throws IOException If an error is encountered while servicing this request.
+     * @throws ClientException If an error is encountered while servicing this request.
      */
     @Override
     public HttpResponse method(@NonNull final HttpClient.HttpMethod httpMethod,
                                @NonNull final URL requestUrl,
                                @NonNull final Map<String, String> requestHeaders,
-                               final byte[] requestContent) throws IOException {
+                               final byte[] requestContent) throws ClientException {
         recordHttpTelemetryEventStart(httpMethod.name(), requestUrl, requestHeaders.get(CLIENT_REQUEST_ID));
         final HttpRequest request = constructHttpRequest(httpMethod, requestUrl, requestHeaders, requestContent);
-        return retryPolicy.attempt(new Callable<HttpResponse>() {
-            public HttpResponse call() throws IOException {
-                return executeHttpSend(request, new Consumer<HttpResponse>() {
-                    @Override
-                    public void accept(HttpResponse httpResponse) {
-                        recordHttpTelemetryEventEnd(httpResponse);
-                    }
-                });
-            }
-        });
+        return retryPolicy.attempt(() -> executeHttpSend(request, UrlConnectionHttpClient::recordHttpTelemetryEventEnd));
     }
 
     /**
@@ -270,12 +264,12 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
      * @param requestHeaders the headers for the request.
      * @param requestContent the body content of the request, if applicable.  May be null.
      * @return an HttpResponse with the result of the call.
-     * @throws IOException if there was a communication problem.
+     * @throws ClientException if there was a communication problem.
      */
     @Override
     public HttpResponse patch(@NonNull final URL requestUrl,
                               @NonNull final Map<String, String> requestHeaders,
-                              @edu.umd.cs.findbugs.annotations.Nullable final byte[] requestContent) throws IOException {
+                              @Nullable final byte[] requestContent) throws ClientException {
         recordHttpTelemetryEventStart(HttpMethod.PATCH.name(), requestUrl, requestHeaders.get(CLIENT_REQUEST_ID));
         final HttpRequest request = new HttpRequest(
                 requestUrl,
@@ -284,16 +278,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 requestContent,
                 null
         );
-        return retryPolicy.attempt(new Callable<HttpResponse>() {
-            public HttpResponse call() throws IOException {
-                return executeHttpSend(request, new Consumer<HttpResponse>() {
-                    @Override
-                    public void accept(HttpResponse httpResponse) {
-                        recordHttpTelemetryEventEnd(httpResponse);
-                    }
-                });
-            }
-        });
+        return retryPolicy.attempt(() -> executeHttpSend(request, UrlConnectionHttpClient::recordHttpTelemetryEventEnd));
     }
 
     private static HttpRequest constructHttpRequest(@NonNull HttpClient.HttpMethod httpMethod,
@@ -328,7 +313,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
      * @return The converted string
      * @throws IOException Thrown when failing to access inputStream stream.
      */
-    private String convertStreamToString(final InputStream inputStream) throws IOException {
+    private String convertStreamToString(final InputStream inputStream) throws ClientException {
         try {
             final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream,
                     AuthenticationConstants.CHARSET_UTF8));
@@ -341,6 +326,8 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
             }
 
             return stringBuilder.toString();
+        } catch (IOException e) {
+            throw ConnectionError.FAILED_TO_READ_FROM_INPUT_STREAM.getClientException(e);
         } finally {
             safeCloseStream(inputStream);
         }
@@ -365,7 +352,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         }
     }
 
-    private HttpResponse executeHttpSend(HttpRequest request, Consumer<HttpResponse> completionCallback) throws IOException {
+    private HttpResponse executeHttpSend(HttpRequest request, Consumer<HttpResponse> completionCallback) throws ClientException {
         final HttpURLConnection urlConnection = setupConnection(request);
 
         sendRequest(urlConnection, request.getRequestContent(), request.getRequestHeaders().get(HttpConstants.HeaderField.CONTENT_TYPE));
@@ -375,17 +362,23 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         try {
             try {
                 responseStream = urlConnection.getInputStream();
-            } catch (final SocketTimeoutException socketTimeoutException) {
+            } catch (final SocketTimeoutException e) {
                 // SocketTimeoutExcetion is thrown when connection timeout happens. For connection
                 // timeout, we want to retry once. Throw the exception to the upper layer, and the
                 // upper layer will handle the retry.
-                throw socketTimeoutException;
+                throw ConnectionError.CONNECTION_TIMEOUT.getClientException(e);
             } catch (final IOException ioException) {
                 // 404, for example, will generate an exception.  We should catch it.
                 responseStream = urlConnection.getErrorStream();
             }
 
-            final int statusCode = urlConnection.getResponseCode();
+            final int statusCode;
+            try {
+                statusCode = urlConnection.getResponseCode();
+            } catch (IOException e) {
+                throw ConnectionError.FAILED_TO_GET_RESPONSE_CODE.getClientException(e);
+            }
+
             final Date date = new Date(urlConnection.getDate());
 
             final String responseBody = responseStream == null
@@ -435,9 +428,14 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         return response;
     }
 
-    private HttpURLConnection setupConnection(HttpRequest request) throws IOException {
+    private HttpURLConnection setupConnection(HttpRequest request) throws ClientException {
         final String methodName = ":setupConnection";
-        final HttpURLConnection urlConnection = HttpUrlConnectionFactory.createHttpURLConnection(request.getRequestUrl());
+        final HttpURLConnection urlConnection;
+        try {
+            urlConnection = HttpUrlConnectionFactory.createHttpURLConnection(request.getRequestUrl());
+        } catch (IOException e) {
+            throw ConnectionError.FAILED_TO_OPEN_CONNECTION.getClientException(e);
+        }
 
         // Apply request headers and update the headers with default attributes first
         final Set<Map.Entry<String, String>> headerEntries = request.getRequestHeaders().entrySet();
@@ -456,7 +454,12 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
             Logger.warn(TAG + methodName, "gets a request from an unexpected protocol: " + request.getRequestUrl().getProtocol());
         }
 
-        urlConnection.setRequestMethod(request.getRequestMethod());
+        try {
+            urlConnection.setRequestMethod(request.getRequestMethod());
+        } catch (ProtocolException e) {
+            throw ConnectionError.FAILED_TO_SET_REQUEST_METHOD.getClientException(e);
+        }
+
         urlConnection.setConnectTimeout(getConnectTimeoutMs());
         urlConnection.setReadTimeout(getReadTimeoutMs());
         urlConnection.setInstanceFollowRedirects(true);
@@ -476,7 +479,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
 
     private static void sendRequest(@NonNull final HttpURLConnection connection,
                                     final byte[] contentRequest,
-                                    final String requestContentType) throws IOException {
+                                    final String requestContentType) throws ClientException {
         if (contentRequest == null) {
             return;
         }
@@ -494,6 +497,8 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         try {
             out = connection.getOutputStream();
             out.write(contentRequest);
+        } catch (IOException e) {
+            throw ConnectionError.FAILED_TO_WRITE_TO_OUTPUT_STREAM.getClientException(e);
         } finally {
             safeCloseStream(out);
         }
@@ -510,5 +515,4 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 || statusCode == HttpURLConnection.HTTP_GATEWAY_TIMEOUT
                 || statusCode == HttpURLConnection.HTTP_UNAVAILABLE;
     }
-
 }
