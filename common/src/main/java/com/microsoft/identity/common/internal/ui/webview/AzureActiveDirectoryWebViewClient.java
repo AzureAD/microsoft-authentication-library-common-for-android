@@ -65,12 +65,12 @@ import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AMAZON_APP_REDIRECT_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
@@ -194,10 +194,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 challengeHandler.processChallenge(challenge);
             } else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
-                final HashMap<String, String> queryParams = getQueryParameters(formattedURL);
-                if (isSwitchBrowserRequest(queryParams)) {
+                final Uri formattedUri = Uri.parse(formattedURL);
+                if (isSwitchBrowserRequest(formattedUri)) {
                     Logger.info(methodTag,"Request to switch browser.");
-                    processSwitchToBrowserRequest(queryParams);
+                    return processSwitchToBrowserRequest(formattedUri);
                 } else {
                     Logger.info(methodTag,"It is a redirect request.");
                     processRedirectUrl(view, url);
@@ -313,32 +313,22 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     *  Get the query parameters from the URL.
+     * Check if the request is to switch the browser.
+     * <p>
+     * The request is to switch the browser if the URL contains the duna endpoint and session token.
      *
-     * @param url
-     * @return the query parameters from the URL.
+     * @param uri The URI of the request.
+     * @return True if the request contains the duna endpoint and session token, false otherwise.
      */
-    private HashMap<String, String> getQueryParameters(@NonNull final String url) {
-        final String methodTag = TAG + ":getQueryParameters";
-        final HashMap<String, String> queryParams = new HashMap<>();
-        try {
-            final URI uri = new URI(url);
-            final String query = uri.getQuery();
-            for (final String pair :  query.split("&")) {
-                final String[] keyValue = pair.split("=");
-                if (keyValue.length == 2 || keyValue.length == 1) {
-                    queryParams.put(keyValue[0], keyValue.length == 2 ? keyValue[1] : "");
-                }
-            }
-        } catch (final Throwable throwable) {
-            Logger.warn(methodTag, "Failed to parse the URL." + throwable.getMessage());
+    private boolean isSwitchBrowserRequest(@Nullable final Uri uri) {
+        final Set<String> requiredParams = Set.of(
+                AuthenticationConstants.DUNA.ENDPOINT,
+                AuthenticationConstants.DUNA.SESSION_TOKEN
+        );
+        if (uri == null) {
+            return false;
         }
-        return queryParams;
-    }
-
-    private boolean isSwitchBrowserRequest(@NonNull final HashMap<String, String> queryParams) {
-        return queryParams.containsKey(AuthenticationConstants.DUNA.ENDPOINT) &&
-                queryParams.containsKey(AuthenticationConstants.DUNA.SESSION_TOKEN);
+        return uri.getQueryParameterNames().containsAll(requiredParams);
     }
 
     // This function is only called when the client received a redirect that starts with the apps
@@ -359,17 +349,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * From the query parameters, extract the duna endpoint and session token,
      * then launch the browser with the duna endpoint and session token.
      *
-     * @param queryParams The query parameters from the URL.
+     * @param uri The URI of the request.
      */
-    protected void processSwitchToBrowserRequest(@NonNull final HashMap<String, String> queryParams) {
+    protected boolean processSwitchToBrowserRequest(@NonNull final Uri uri) {
         final AuthorizationActivity activity = (AuthorizationActivity) getActivity();
         final WebViewAuthorizationFragment fragment = (WebViewAuthorizationFragment) activity.getFragment();
-        final String dunaEndpoint = queryParams.get(AuthenticationConstants.DUNA.ENDPOINT);
-        final String sessionToken = queryParams.get(AuthenticationConstants.DUNA.SESSION_TOKEN);
+        final String dunaEndpoint = uri.getQueryParameter(AuthenticationConstants.DUNA.ENDPOINT);
+        final String sessionToken = uri.getQueryParameter(AuthenticationConstants.DUNA.SESSION_TOKEN);
         if (dunaEndpoint == null || sessionToken == null) {
             // This should never happen, but if it does, we should log it and return.
             Logger.error(TAG, "Duna endpoint or session token is null. Cannot switch browser.", null);
-            return;
+            return false;
         }
         final String[] paths = dunaEndpoint.split("/");
         final String authority = paths[0];
@@ -380,7 +370,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         for (int i = 1; i < paths.length; i++) {
             uriBuilder.appendPath(paths[i]);
         }
-        fragment.launchWebBrowserIntent(uriBuilder.build());
+        return fragment.launchWebBrowserIntent(uriBuilder.build());
     }
 
     private void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {

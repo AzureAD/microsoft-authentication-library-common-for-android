@@ -465,13 +465,15 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      *
      * @param uri The uri to launch the web browser intent.
      */
-    public void launchWebBrowserIntent(@NonNull final Uri uri) {
+    public boolean launchWebBrowserIntent(@NonNull final Uri uri) {
         final String methodTag = TAG + ":launchWebBrowserIntent";
-        Logger.info(methodTag, "Launching web browser intent for DUNA flow.");
         if (mAuthIntent != null) {
+            Logger.info(methodTag, "Launching web browser intent for DUNA flow.");
             mAuthIntent.setData(uri);
             requireContext().startActivity(mAuthIntent);
+            return true;
         }
+        return false;
     }
 
     /**

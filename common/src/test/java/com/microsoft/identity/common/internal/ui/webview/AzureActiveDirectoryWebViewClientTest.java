@@ -22,21 +22,22 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview;
 
-import android.app.Activity;
 import android.content.Context;
+import android.net.Uri;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
+import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTHENTICATOR_MFA_LINKING_PREFIX;
@@ -44,6 +45,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
 
@@ -52,9 +55,7 @@ import java.util.HashMap;
 public class AzureActiveDirectoryWebViewClientTest {
     private WebView mMockWebView;
     private AzureActiveDirectoryWebViewClient mWebViewClient;
-    private Context mContext;
-    private Activity mActivity;
-    private static final String TEST_REDIRECT_URI = "abc12";
+    private static final String TEST_REDIRECT_URI = "msauth://test.redirect.url";
 
     // Test strings initialized.
     private static final String TEST_PLAY_STORE_INSTALL_AUTH_APP_URL =
@@ -78,14 +79,30 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_INVALID_URL = "https://play.google.com/store/apps/details?id=com.azure.authenticator";
     private static final String TEST_MSA_HEADER_FORWARDING_POSITIVE_URL = "https://login.live.com/oauth20_authorize.srf";
     private static final String TEST_MSA_HEADER_FORWARDING_NEGATIVE_URL = "https://login.blah.com/oauth20_authorize.srf";
+    private static final String SWITCH_BROWSER_SESSION_TOKEN = "switchbrowsersessiontoken";
+    private static final String SWITCH_BROWSER_ENDPOINT = "login.microsoftonline.com";
+    private static final String SWITCH_BROWSER_ENDPOINT_PATHS = "/duna/process";
+    private static final String TEST_SWITCH_BROWSER_REDIRECT_URL =
+            TEST_REDIRECT_URI+ "?" +
+            AuthenticationConstants.DUNA.ENDPOINT + "=" + SWITCH_BROWSER_ENDPOINT + SWITCH_BROWSER_ENDPOINT_PATHS + "&" +
+            AuthenticationConstants.DUNA.SESSION_TOKEN + "=" + SWITCH_BROWSER_SESSION_TOKEN;
+
+    private static final String TEST_SWITCH_BROWSER_URL =
+            "https://" + SWITCH_BROWSER_ENDPOINT + SWITCH_BROWSER_ENDPOINT_PATHS + "?" +
+                    AuthenticationConstants.DUNA.SESSION_TOKEN + "=" + SWITCH_BROWSER_SESSION_TOKEN;
 
     @Before
     public void setup() {
-        mContext = ApplicationProvider.getApplicationContext();
-        mMockWebView = new WebView(mContext);
-        mActivity = Robolectric.buildActivity(Activity.class).get();
+        final AuthorizationActivity activity = mock(AuthorizationActivity.class);
+        final WebViewAuthorizationFragment fragment = mock(WebViewAuthorizationFragment.class);
+        final Context context = ApplicationProvider.getApplicationContext();
+        when(activity.getApplicationContext()).thenReturn(context);
+        when(activity.getFragment()).thenReturn(fragment);
+        when(activity.getPackageManager()).thenReturn(context.getPackageManager());
+        when(fragment.launchWebBrowserIntent(Uri.parse(TEST_SWITCH_BROWSER_URL))).thenReturn(true);
+        mMockWebView = new WebView(context);
         mWebViewClient = new AzureActiveDirectoryWebViewClient(
-                mActivity,
+                activity,
                 new IAuthorizationCompletionCallback() {
                     @Override
                     public void onChallengeResponseReceived(@NonNull RawAuthorizationResult response) {
@@ -94,14 +111,9 @@ public class AzureActiveDirectoryWebViewClientTest {
 
                     @Override
                     public void setPKeyAuthStatus(boolean status) {
-                        return;
                     }
                 },
-                new OnPageLoadedCallback() {
-                    @Override
-                    public void onPageLoaded(final String url) {
-                        return;
-                    }
+                url -> {
                 },
                 TEST_REDIRECT_URI);
         HashMap<String, String> dummyHeaders = new HashMap<>();
@@ -184,5 +196,24 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_MSA_HEADER_FORWARDING_NEGATIVE_URL));
     }
 
+    @Test
+    public void testUrlOverrideHandlesSwitchBrowserValidURL() {
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_SWITCH_BROWSER_REDIRECT_URL));
+    }
 
+    @Test
+    public void testUrlOverrideHandlesSwitchBrowserMissingSessionToken() {
+        final String switchBrowserInvalidUrl = TEST_REDIRECT_URI+ "?" +
+                AuthenticationConstants.DUNA.ENDPOINT + "=" + SWITCH_BROWSER_ENDPOINT + SWITCH_BROWSER_ENDPOINT_PATHS + "&" +
+                AuthenticationConstants.DUNA.SESSION_TOKEN + "=";
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, switchBrowserInvalidUrl));
+    }
+
+    @Test
+    public void testUrlOverrideHandlesSwitchBrowserMissingDunaEndpoint() {
+        final String switchBrowserInvalidUrl = TEST_REDIRECT_URI+ "?" +
+                AuthenticationConstants.DUNA.ENDPOINT + "=" + "&" +
+                AuthenticationConstants.DUNA.SESSION_TOKEN + "=";
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, switchBrowserInvalidUrl));
+    }
 }
