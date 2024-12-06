@@ -22,16 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.StringUtil;
 import lombok.NonNull;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
 
 /**
  * An interface providing access to resources backed by web requests.  This provides access to only
@@ -47,12 +44,12 @@ public interface HttpClient {
      * @param requestHeaders the headers for the request.
      * @param requestContent the body content of the request, if applicable.  May be null.
      * @return an HttpResponse with the result of the call.
-     * @throws IOException if there was a communication problem.
+     * @throws ClientException if there was a communication problem.
      */
     HttpResponse method(@NonNull String httpMethod,
                         @NonNull URL requestUrl,
                         @NonNull Map<String, String> requestHeaders,
-                        byte[] requestContent) throws IOException;
+                        byte[] requestContent) throws ClientException;
 
     /**
      * Execute an arbitrary method.
@@ -61,12 +58,12 @@ public interface HttpClient {
      * @param requestHeaders the headers for the request.
      * @param requestContent the body content of the request, if applicable.  May be null.
      * @return an HttpResponse with the result of the call.
-     * @throws IOException if there was a communication problem.
+     * @throws ClientException if there was a communication problem.
      */
     HttpResponse method(@NonNull HttpMethod httpMethod,
                         @NonNull URL requestUrl,
                         @NonNull Map<String, String> requestHeaders,
-                        byte[] requestContent) throws IOException;
+                        byte[] requestContent) throws ClientException;
 
     /**
      * Execute an HTTP PUT request.
@@ -74,11 +71,11 @@ public interface HttpClient {
      * @param requestHeaders the headers for the request.
      * @param requestContent the body content of the request, if applicable.  May be null.
      * @return an HttpResponse with the result of the call.
-     * @throws IOException if there was a communication problem.
+     * @throws ClientException if there was a communication problem.
      */
     HttpResponse put(@NonNull URL requestUrl,
                      @NonNull Map<String, String> requestHeaders,
-                     byte[] requestContent) throws IOException;
+                     byte[] requestContent) throws ClientException;
 
     /**
      * Execute an HTTP PATCH request.
@@ -86,21 +83,21 @@ public interface HttpClient {
      * @param requestHeaders the headers for the request.
      * @param requestContent the body content of the request, if applicable.  May be null.
      * @return an HttpResponse with the result of the call.
-     * @throws IOException if there was a communication problem.
+     * @throws ClientException if there was a communication problem.
      */
     HttpResponse patch(@NonNull URL requestUrl,
                        @NonNull Map<String, String> requestHeaders,
-                       byte[] requestContent) throws IOException;
+                       byte[] requestContent) throws ClientException;
 
     /**
      * Execute an HTTP OPTIONS request.
      * @param requestUrl the URL of the resource to operate on.
      * @param requestHeaders the headers for the request.
      * @return an HttpResponse with the result of the call.
-     * @throws IOException if there was a communication problem.
+     * @throws ClientException if there was a communication problem.
      */
     HttpResponse options(@NonNull final URL requestUrl,
-                         @NonNull final Map<String, String> requestHeaders) throws IOException;
+                         @NonNull final Map<String, String> requestHeaders) throws ClientException;
 
     /**
      * Execute an HTTP POST request.
@@ -108,11 +105,11 @@ public interface HttpClient {
      * @param requestHeaders the headers for the request.
      * @param requestContent the body content of the request, if applicable.  May be null.
      * @return an HttpResponse with the result of the call.
-     * @throws IOException if there was a communication problem.
+     * @throws ClientException if there was a communication problem.
      */
     HttpResponse post(@NonNull URL requestUrl,
                       @NonNull Map<String, String> requestHeaders,
-                      byte[] requestContent) throws IOException;
+                      byte[] requestContent) throws ClientException;
 
     /**
      * Execute an HTTP PATCH request.
@@ -120,41 +117,41 @@ public interface HttpClient {
      * @param requestHeaders the headers for the request.
      * @param requestContent the body content of the request, if applicable.  May be null.
      * @return an HttpResponse with the result of the call.
-     * @throws IOException if there was a communication problem.
+     * @throws ClientException if there was a communication problem.
      */
     HttpResponse delete(@NonNull final URL requestUrl,
                         @NonNull final Map<String, String> requestHeaders,
-                        byte[] requestContent) throws IOException;
+                        byte[] requestContent) throws ClientException;
 
     /**
      * Execute an HTTP GET request.
      * @param requestUrl the URL of the resource to operate on.
      * @param requestHeaders the headers for the request.
      * @return an HttpResponse with the result of the call.
-     * @throws IOException if there was a communication problem.
+     * @throws ClientException if there was a communication problem.
      */
     HttpResponse get(@NonNull final URL requestUrl,
-                     @NonNull final Map<String, String> requestHeaders) throws IOException;
+                     @NonNull final Map<String, String> requestHeaders) throws ClientException;
 
     /**
      * Execute an HTTP HEAD request.
      * @param requestUrl the URL of the resource to operate on.
      * @param requestHeaders the headers for the request.
      * @return an HttpResponse with the result of the call.
-     * @throws IOException if there was a communication problem.
+     * @throws ClientException if there was a communication problem.
      */
     HttpResponse head(@NonNull final URL requestUrl,
-                      @NonNull final Map<String, String> requestHeaders) throws IOException;
+                      @NonNull final Map<String, String> requestHeaders) throws ClientException;
 
     /**
      * Execute an HTTP TRACE request.
      * @param requestUrl the URL of the resource to operate on.
      * @param requestHeaders the headers for the request.
      * @return an HttpResponse with the result of the call.
-     * @throws IOException if there was a communication problem.
+     * @throws ClientException if there was a communication problem.
      */
     HttpResponse trace(@NonNull final URL requestUrl,
-                       @NonNull final Map<String, String> requestHeaders) throws IOException;
+                       @NonNull final Map<String, String> requestHeaders) throws ClientException;
 
     /**
      * An enumeration of the HTTP verbs supported by this client interface.

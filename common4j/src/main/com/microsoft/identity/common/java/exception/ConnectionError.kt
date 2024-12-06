@@ -20,35 +20,37 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.http;
+package com.microsoft.identity.common.java.exception
 
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.net.HttpClient;
-import com.microsoft.identity.common.java.net.HttpResponse;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.Map;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
-
-/**
- * Intercepting http requests at runtime when the {@link HttpClient} is shadowed with {@link com.microsoft.identity.shadow.ShadowHttpClient}.
- */
-public interface HttpRequestInterceptor {
+enum class ConnectionError(val value: String) {
+    FAILED_TO_OPEN_CONNECTION("ce_failed_to_open_connection"),
+    FAILED_TO_SET_REQUEST_METHOD("ce_failed_to_set_request_method"),
+    FAILED_TO_WRITE_TO_OUTPUT_STREAM("ce_failed_to_write_to_output_stream"),
+    FAILED_TO_READ_FROM_INPUT_STREAM("ce_failed_to_read_from_input_stream"),
+    FAILED_TO_GET_RESPONSE_CODE("ce_failed_to_get_response_code"),
+    CONNECTION_TIMEOUT("ce_connection_timeout");
 
     /**
-     * @param httpMethod     the http method
-     * @param requestUrl     the request url
-     * @param requestHeaders the request headers
-     * @param requestContent the request content
-     * @return the http response object
-     * @throws ClientException throws an exception when something went wrong during the http request
-     */
-    HttpResponse performIntercept(@NonNull HttpClient.HttpMethod httpMethod,
-                                  @NonNull URL requestUrl,
-                                  @NonNull Map<String, String> requestHeaders,
-                                  @Nullable byte[] requestContent) throws ClientException;
+     * Converts this [ConnectionError] into a [ClientException]
+     **/
+    fun getClientException(cause: Throwable): ClientException {
+        val e = ClientException(
+            ClientException.IO_ERROR,
+            "An IO error occurred in the network layer: " + cause.message,
+            cause
+        )
+        e.subErrorCode = value
+        return e
+    }
 
+    /**
+     * Returns true if the given [Throwable] is a connection error.
+     **/
+    fun compare(throwable: Throwable): Boolean {
+        if (throwable !is ClientException){
+            return false
+        }
+
+        return this.value == throwable.subErrorCode
+    }
 }

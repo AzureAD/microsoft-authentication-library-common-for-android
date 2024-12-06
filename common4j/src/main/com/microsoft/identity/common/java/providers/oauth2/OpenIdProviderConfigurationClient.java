@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.providers.oauth2;
 import static com.microsoft.identity.common.java.exception.ServiceException.OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD;
 
 import com.google.gson.Gson;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpClient;
@@ -36,6 +37,7 @@ import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -194,7 +196,7 @@ public class OpenIdProviderConfigurationClient {
             cacheConfiguration(configUrl, parsedConfig);
 
             return parsedConfig;
-        } catch (final IOException | URISyntaxException e) {
+        } catch (final ClientException | MalformedURLException | URISyntaxException e) {
             throw new ServiceException(
                     OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD,
                     "IOException while requesting metadata",

@@ -35,6 +35,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
@@ -239,7 +240,7 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
         if (!AzureActiveDirectory.isInitialized()) {
             try {
                 AzureActiveDirectory.performCloudDiscovery();
-            } catch (final IOException | URISyntaxException e) {
+            } catch (final ClientException e) {
                 Logger.error(
                         methodTag,
                         "Failed to load instance discovery metadata",
