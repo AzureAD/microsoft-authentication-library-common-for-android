@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.http;
 
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.net.AbstractHttpClient;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
@@ -47,7 +48,7 @@ public class InterceptedHttpClient extends AbstractHttpClient {
     public HttpResponse method(@NonNull final HttpMethod httpMethod,
                                @NonNull final URL requestUrl,
                                @NonNull final Map<String, String> requestHeaders,
-                               @Nullable final byte[] requestContent) throws IOException {
+                               @Nullable final byte[] requestContent) throws ClientException {
         final HttpRequestInterceptor interceptor = MockHttpClient.getInterceptor(httpMethod, requestUrl, requestHeaders, requestContent);
         if (interceptor == null) {
             return mClient.method(httpMethod, requestUrl, requestHeaders, requestContent);

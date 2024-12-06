@@ -39,12 +39,14 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParamet
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
+import com.microsoft.identity.common.java.util.UrlUtil;
 
 import org.json.JSONException;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -182,16 +184,21 @@ public class AzureActiveDirectory
     }
 
     public static synchronized void performCloudDiscovery()
-            throws IOException, URISyntaxException {
+            throws ClientException {
         final String methodName = ":performCloudDiscovery";
-        final URI instanceDiscoveryRequestUri = new CommonURIBuilder(getDefaultCloudUrl() + AAD_INSTANCE_DISCOVERY_ENDPOINT)
-                .setParameter(API_VERSION, API_VERSION_VALUE)
-                .setParameter(AUTHORIZATION_ENDPOINT, AUTHORIZATION_ENDPOINT_VALUE)
-                .build();
+        final URI instanceDiscoveryRequestUri;
+        try {
+            instanceDiscoveryRequestUri = new CommonURIBuilder(getDefaultCloudUrl() + AAD_INSTANCE_DISCOVERY_ENDPOINT)
+                    .setParameter(API_VERSION, API_VERSION_VALUE)
+                    .setParameter(AUTHORIZATION_ENDPOINT, AUTHORIZATION_ENDPOINT_VALUE)
+                    .build();
+        } catch (URISyntaxException e) {
+            throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
+        }
 
-        final HttpResponse response =
-                httpClient.get(new URL(instanceDiscoveryRequestUri.toString()),
-                        new HashMap<String, String>());
+        final HttpResponse response = httpClient.get(
+                UrlUtil.makeUrl(instanceDiscoveryRequestUri.toString()),
+                new HashMap<>());
 
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
             Logger.warn(TAG + methodName, "Error getting cloud information");

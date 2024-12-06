@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.ported.Function;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
@@ -72,7 +73,7 @@ public class StatusCodeAndExceptionRetry implements IRetryPolicy<HttpResponse> {
     private final int extensionFactor = 2;
 
     @Override
-    public HttpResponse attempt(Callable<HttpResponse> supplier) throws IOException {
+    public HttpResponse attempt(Callable<HttpResponse> supplier) throws ClientException {
         int attemptNumber = number;
         int cumulativeDelay = initialDelay;
         do {
@@ -84,8 +85,8 @@ public class StatusCodeAndExceptionRetry implements IRetryPolicy<HttpResponse> {
                 }
             } catch (final Exception e) {
                 if (attemptNumber <= 0 || !isRetryableException.apply(e)) {
-                    if (e instanceof IOException) {
-                        throw (IOException) e;
+                    if (e instanceof ClientException) {
+                        throw (ClientException) e;
                     }
                     else {
                         throw new RetryFailedException(e);

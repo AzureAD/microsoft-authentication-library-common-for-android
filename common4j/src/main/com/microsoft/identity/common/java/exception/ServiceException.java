@@ -30,8 +30,6 @@ import org.json.JSONException;
 import java.util.HashMap;
 import java.util.List;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-
 public class ServiceException extends BaseException {
 
     // This is needed for backward compatibility with older versions of MSAL (pre 3.0.0)
@@ -98,8 +96,6 @@ public class ServiceException extends BaseException {
      */
     public static final String MsaGrantedRefreshTokenNotSupportedOnAadTenantErrorCode = "1000030";
 
-    private String mOauthSubErrorCode;
-
     private int mHttpStatusCode;
 
     private HashMap<String, String> mHttpResponseBody = null;
@@ -120,13 +116,6 @@ public class ServiceException extends BaseException {
     }
 
     /**
-     * @return The OAuth sub error code for the exception, could be null.
-     */
-    public String getOAuthSubErrorCode() {
-        return mOauthSubErrorCode;
-    }
-
-    /**
      * Gets the response body that may be returned by the service.
      *
      * @return response body map, null if not initialized.
@@ -142,13 +131,6 @@ public class ServiceException extends BaseException {
      */
     public HashMap<String, List<String>> getHttpResponseHeaders() {
         return mHttpResponseHeaders;
-    }
-
-    /**
-     * @param subErrorCode - The sub error code for the exception.
-     */
-    public void setOauthSubErrorCode(@Nullable final String subErrorCode) {
-        mOauthSubErrorCode = subErrorCode;
     }
 
     /**
