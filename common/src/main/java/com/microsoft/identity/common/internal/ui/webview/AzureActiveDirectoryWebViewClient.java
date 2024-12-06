@@ -194,7 +194,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                         ViewTreeLifecycleOwner.get(view));
                 challengeHandler.processChallenge(challenge);
             } else if (isNonceRedirect(formattedURL)) {
-                 Logger.info(methodTag,"Navigation contains new nonce within the redirect uri. "+ url);
+                Logger.info(methodTag,"Navigation contains new nonce within the redirect uri. "+ url);
                 processNonceAndReAttachHeaders(view, url);
              }
              else if (isRedirectUrl(formattedURL)) {
