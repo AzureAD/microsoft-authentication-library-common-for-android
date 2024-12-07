@@ -79,17 +79,17 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_INVALID_URL = "https://play.google.com/store/apps/details?id=com.azure.authenticator";
     private static final String TEST_MSA_HEADER_FORWARDING_POSITIVE_URL = "https://login.live.com/oauth20_authorize.srf";
     private static final String TEST_MSA_HEADER_FORWARDING_NEGATIVE_URL = "https://login.blah.com/oauth20_authorize.srf";
-    private static final String SWITCH_BROWSER_SESSION_TOKEN = "switchbrowsersessiontoken";
-    private static final String SWITCH_BROWSER_ENDPOINT = "login.microsoftonline.com";
-    private static final String SWITCH_BROWSER_ENDPOINT_PATHS = "/duna/process";
+    private static final String SWITCH_BROWSER_CODE = "switchbrowsercode";
+    private static final String SWITCH_BROWSER_ACTION_URI = "login.microsoftonline.com";
+    private static final String SWITCH_BROWSER_ACTION_URI_PATHS = "/switchbrowser/process";
     private static final String TEST_SWITCH_BROWSER_REDIRECT_URL =
             TEST_REDIRECT_URI+ "?" +
-            AuthenticationConstants.DUNA.ENDPOINT + "=" + SWITCH_BROWSER_ENDPOINT + SWITCH_BROWSER_ENDPOINT_PATHS + "&" +
-            AuthenticationConstants.DUNA.SESSION_TOKEN + "=" + SWITCH_BROWSER_SESSION_TOKEN;
+            AuthenticationConstants.SWITCH_BROWSER.ACTION_URI + "=" + SWITCH_BROWSER_ACTION_URI + SWITCH_BROWSER_ACTION_URI_PATHS + "&" +
+            AuthenticationConstants.SWITCH_BROWSER.CODE + "=" + SWITCH_BROWSER_CODE;
 
     private static final String TEST_SWITCH_BROWSER_URL =
-            "https://" + SWITCH_BROWSER_ENDPOINT + SWITCH_BROWSER_ENDPOINT_PATHS + "?" +
-                    AuthenticationConstants.DUNA.SESSION_TOKEN + "=" + SWITCH_BROWSER_SESSION_TOKEN;
+            "https://" + SWITCH_BROWSER_ACTION_URI + SWITCH_BROWSER_ACTION_URI_PATHS + "?" +
+                    AuthenticationConstants.SWITCH_BROWSER.CODE + "=" + SWITCH_BROWSER_CODE;
 
     @Before
     public void setup() {
@@ -204,16 +204,16 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     public void testUrlOverrideHandlesSwitchBrowserMissingSessionToken() {
         final String switchBrowserInvalidUrl = TEST_REDIRECT_URI+ "?" +
-                AuthenticationConstants.DUNA.ENDPOINT + "=" + SWITCH_BROWSER_ENDPOINT + SWITCH_BROWSER_ENDPOINT_PATHS + "&" +
-                AuthenticationConstants.DUNA.SESSION_TOKEN + "=";
+                AuthenticationConstants.SWITCH_BROWSER.ACTION_URI + "=" + SWITCH_BROWSER_ACTION_URI + SWITCH_BROWSER_ACTION_URI_PATHS + "&" +
+                AuthenticationConstants.SWITCH_BROWSER.CODE + "=";
         assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, switchBrowserInvalidUrl));
     }
 
     @Test
     public void testUrlOverrideHandlesSwitchBrowserMissingDunaEndpoint() {
         final String switchBrowserInvalidUrl = TEST_REDIRECT_URI+ "?" +
-                AuthenticationConstants.DUNA.ENDPOINT + "=" + "&" +
-                AuthenticationConstants.DUNA.SESSION_TOKEN + "=";
+                AuthenticationConstants.SWITCH_BROWSER.ACTION_URI + "=" + "&" +
+                AuthenticationConstants.SWITCH_BROWSER.CODE + "=";
         assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, switchBrowserInvalidUrl));
     }
 }

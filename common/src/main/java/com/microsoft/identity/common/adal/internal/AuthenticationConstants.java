@@ -533,17 +533,22 @@ public final class AuthenticationConstants {
      * Represents the constants value for the DUNA flow.
      */
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static final class DUNA {
+    public static final class SWITCH_BROWSER {
 
         /**
          * String Query parameter key for the session token.
          */
-        public static final String SESSION_TOKEN = "session_token";
+        public static final String CODE = "code";
 
         /**
          * String Query parameter key for the endpoint.
          */
-        public static final String ENDPOINT = "endpoint";
+        public static final String ACTION_URI = "action_uri";
+
+        /**
+         * String Query parameter key for the endpoint.
+         */
+        public static final String ACTION = "action";
     }
 
     /**

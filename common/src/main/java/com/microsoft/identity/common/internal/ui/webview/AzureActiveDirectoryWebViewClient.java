@@ -315,15 +315,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     /**
      * Check if the request is to switch the browser.
      * <p>
-     * The request is to switch the browser if the URL contains the duna endpoint and session token.
+     * The request is considered "switch_browser" if the URL contains the action URI, code, and action parameters.
      *
      * @param uri The URI of the request.
-     * @return True if the request contains the duna endpoint and session token, false otherwise.
+     * @return True if the request contains the required parameters, false otherwise.
      */
     private boolean isSwitchBrowserRequest(@Nullable final Uri uri) {
         final Set<String> requiredParams = Set.of(
-                AuthenticationConstants.DUNA.ENDPOINT,
-                AuthenticationConstants.DUNA.SESSION_TOKEN
+                AuthenticationConstants.SWITCH_BROWSER.ACTION_URI,
+                AuthenticationConstants.SWITCH_BROWSER.CODE,
+                AuthenticationConstants.SWITCH_BROWSER.ACTION
         );
         if (uri == null) {
             return false;
@@ -344,29 +345,29 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * Launch the browser with the given duna endpoint and session token.
+     * Launch the browser with the given action URI and code.
      * <p>
-     * From the query parameters, extract the duna endpoint and session token,
-     * then launch the browser with the duna endpoint and session token.
+     * From the query parameters, extract the action URI and code,
+     * The constructs the URI with the action URI and code.
      *
      * @param uri The URI of the request.
      */
     protected boolean processSwitchToBrowserRequest(@NonNull final Uri uri) {
         final AuthorizationActivity activity = (AuthorizationActivity) getActivity();
         final WebViewAuthorizationFragment fragment = (WebViewAuthorizationFragment) activity.getFragment();
-        final String dunaEndpoint = uri.getQueryParameter(AuthenticationConstants.DUNA.ENDPOINT);
-        final String sessionToken = uri.getQueryParameter(AuthenticationConstants.DUNA.SESSION_TOKEN);
-        if (dunaEndpoint == null || sessionToken == null) {
+        final String action_uri = uri.getQueryParameter(AuthenticationConstants.SWITCH_BROWSER.ACTION_URI);
+        final String code = uri.getQueryParameter(AuthenticationConstants.SWITCH_BROWSER.CODE);
+        if (action_uri == null || code == null) {
             // This should never happen, but if it does, we should log it and return.
-            Logger.error(TAG, "Duna endpoint or session token is null. Cannot switch browser.", null);
+            Logger.error(TAG, "Switch browser action URI or code is null. Cannot switch browser.", null);
             return false;
         }
-        final String[] paths = dunaEndpoint.split("/");
+        final String[] paths = action_uri.split("/");
         final String authority = paths[0];
         final Uri.Builder uriBuilder = new Uri.Builder()
                 .scheme("https")
                 .authority(authority)
-                .appendQueryParameter(AuthenticationConstants.DUNA.SESSION_TOKEN, sessionToken);
+                .appendQueryParameter(AuthenticationConstants.SWITCH_BROWSER.CODE, code);
         for (int i = 1; i < paths.length; i++) {
             uriBuilder.appendPath(paths[i]);
         }
