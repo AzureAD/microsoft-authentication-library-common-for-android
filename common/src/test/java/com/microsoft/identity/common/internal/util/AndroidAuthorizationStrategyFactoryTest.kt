@@ -58,7 +58,8 @@ class AndroidAuthorizationStrategyFactoryTest {
         private const val PACKAGE_NAME = "com.android.chrome"
         private const val BROWSER_NAME = "Chrome"
         private const val SIGNATURE_HASH_HEX = "3082010A0282010100C3B3A700D1E020302020034A7B8888"
-        private const val SIGNATURE_HASH_BASE_64 = "Lu2NRuBdl7odm7sAKREJMShwDFWO7piPO_K69PxPWghQSaboLhOI2fvJt-Q17dW9NTgyPhOopWS6Cxgi9wrTew=="
+        private const val SIGNATURE_HASH_BASE_64 =
+            "Lu2NRuBdl7odm7sAKREJMShwDFWO7piPO_K69PxPWghQSaboLhOI2fvJt-Q17dW9NTgyPhOopWS6Cxgi9wrTew=="
         private const val VERSION_LOWER_BOUND = "0"
         private const val VERSION_UPPER_BOUND = "1"
         private val fakeBrowser = BrowserDescriptor(
@@ -100,7 +101,7 @@ class AndroidAuthorizationStrategyFactoryTest {
     fun `test getAuthorizationStrategy with authorization agent BROWSER, fakeBrowser in safe list`() {
         val strategy = getAuthorizationStrategy(
             authorizationAgent = AuthorizationAgent.BROWSER,
-            browserSafeList= listOf(fakeBrowser)
+            browserSafeList = listOf(fakeBrowser)
         )
         assert(strategy is DefaultBrowserAuthorizationStrategy)
     }
