@@ -22,26 +22,18 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.exception
 
-enum class ConnectionError(val value: String) {
-    FAILED_TO_OPEN_CONNECTION("ce_failed_to_open_connection"),
-    FAILED_TO_SET_REQUEST_METHOD("ce_failed_to_set_request_method"),
-    FAILED_TO_WRITE_TO_OUTPUT_STREAM("ce_failed_to_write_to_output_stream"),
-    FAILED_TO_READ_FROM_INPUT_STREAM("ce_failed_to_read_from_input_stream"),
-    FAILED_TO_GET_RESPONSE_CODE("ce_failed_to_get_response_code"),
-    CONNECTION_TIMEOUT("ce_connection_timeout");
+import java.io.EOFException
+import java.net.ConnectException
+import java.net.SocketException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+import javax.net.ssl.SSLException
 
-    /**
-     * Converts this [ConnectionError] into a [ClientException]
-     **/
-    fun getClientException(cause: Throwable): ClientException {
-        val e = ClientException(
-            ClientException.IO_ERROR,
-            "An IO error occurred in the network layer: " + cause.message,
-            cause
-        )
-        e.subErrorCode = value
-        return e
-    }
+enum class ConnectionError(val value: String) {
+    NO_NETWORK("ce_no_network"),
+    NETWORK_TEMPORARILY_UNAVAILABLE("ce_network_temporarily_unavailable"),
+    UNEXPECTED_EXCEPTION("ce_unexpected_exception"),
+    CONNECTION_TIMEOUT("ce_connection_timeout");
 
     /**
      * Returns true if the given [Throwable] is a connection error.
@@ -52,5 +44,47 @@ enum class ConnectionError(val value: String) {
         }
 
         return this.value == throwable.subErrorCode
+    }
+
+    companion object {
+        /**
+         * Converts this [ConnectionError] into a [ClientException]
+         **/
+        @JvmStatic
+        fun getClientException(cause: Throwable): ClientException {
+            val e = ClientException(
+                ClientException.IO_ERROR,
+                "An IO error occurred in the network layer: " + cause.message,
+                cause
+            )
+
+            e.subErrorCode = getConnectionError(cause).value
+            return e
+        }
+
+        /**
+         * Converts a [Throwable] into a suberrorCode
+         **/
+        private fun getConnectionError(cause: Throwable): ConnectionError {
+            if (cause is SocketTimeoutException) {
+                // Slow or unreliable network
+                return CONNECTION_TIMEOUT
+            }
+
+            if (cause is EOFException // Unexpected disconnect
+                || cause is SSLException // SSL Handshake failed
+                || cause is ConnectException // Remote socket connection failed
+            ) {
+                return NETWORK_TEMPORARILY_UNAVAILABLE
+            }
+
+            if (cause is UnknownHostException // Unable to query DNS for hostname
+                || cause is SocketException // No conn to remote socket, or Airplane mode, or no internet permission will hit this
+            ) {
+                return NO_NETWORK
+            }
+
+            return UNEXPECTED_EXCEPTION
+        }
     }
 }
