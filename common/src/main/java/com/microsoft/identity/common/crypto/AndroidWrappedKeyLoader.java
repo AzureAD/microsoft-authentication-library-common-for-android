@@ -26,6 +26,8 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 import android.security.KeyPairGeneratorSpec;
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyProperties;
 
 import androidx.annotation.RequiresApi;
 
@@ -44,7 +46,9 @@ import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.SecretKey;
 import javax.security.auth.x500.X500Principal;
@@ -273,25 +277,43 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      * @param context an Android {@link Context} object.
      * @return a {@link AlgorithmParameterSpec} for the keystore key (that we'll use to wrap the secret key).
      */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private static AlgorithmParameterSpec getSpecForKeyStoreKey(@NonNull final Context context,
-                                                                @NonNull final String alias) {
+//    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+//    private static AlgorithmParameterSpec getLegacySpecForKeyStoreKey(@NonNull final Context context,
+//                                                                @NonNull final String alias) {
+//        // Generate a self-signed cert.
+//        final String certInfo = String.format(Locale.ROOT, "CN=%s, OU=%s",
+//                alias,
+//                context.getPackageName());
+//
+//        final Calendar start = Calendar.getInstance();
+//        final Calendar end = Calendar.getInstance();
+//        final int certValidYears = 100;
+//        end.add(Calendar.YEAR, certValidYears);
+//
+//        return new KeyPairGeneratorSpec.Builder(context)
+//                .setAlias(alias)
+//                .setSubject(new X500Principal(certInfo))
+//                .setSerialNumber(BigInteger.ONE)
+//                .setStartDate(start.getTime())
+//                .setEndDate(end.getTime())
+//                .build();
+//    }
+
+
+    private static AlgorithmParameterSpec getSpecForKeyStoreKey(@NonNull final Context context, @NonNull final String alias) {
         // Generate a self-signed cert.
         final String certInfo = String.format(Locale.ROOT, "CN=%s, OU=%s",
                 alias,
                 context.getPackageName());
-
-        final Calendar start = Calendar.getInstance();
-        final Calendar end = Calendar.getInstance();
         final int certValidYears = 100;
-        end.add(Calendar.YEAR, certValidYears);
-
-        return new KeyPairGeneratorSpec.Builder(context)
-                .setAlias(alias)
-                .setSubject(new X500Principal(certInfo))
-                .setSerialNumber(BigInteger.ONE)
-                .setStartDate(start.getTime())
-                .setEndDate(end.getTime())
+        return new KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_WRAP_KEY | KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+                .setCertificateSubject(new X500Principal(certInfo))
+                .setCertificateSerialNumber(BigInteger.ONE)
+                .setCertificateNotBefore(new Date())
+                .setCertificateNotAfter(new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(365 * certValidYears)))
+                .setKeySize(2048)
+                .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
                 .build();
     }
 
