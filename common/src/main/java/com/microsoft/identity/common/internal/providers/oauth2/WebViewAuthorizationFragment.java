@@ -188,27 +188,24 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 AuthenticationConstants.SWITCH_BROWSER.CODE,
                 null
         );
-
         if (resume_uri == null || proofToken == null) {
             // This should never happen, but if it does, we should log it and return.
             Logger.error(methodTag, "Action URI or code is null. Cannot resume.", null);
             return;
         }
-        final String[] paths = resume_uri.split("/");
-        final String authority = paths[0];
-        final Uri.Builder uriBuilder = new Uri.Builder()
-                .scheme("https")
-                .encodedAuthority(authority)
-                .appendQueryParameter(AuthenticationConstants.OAuth2.CLIENT_ID, mClientId)
-                .appendQueryParameter(AuthenticationConstants.OAuth2.REDIRECT_URI, mRedirectUri);
-        for (int i = 1; i < paths.length; i++) {
-            uriBuilder.appendPath(paths[i]);
-        }
-        Logger.info(methodTag, "Resuming DUNA flow.");
-        Logger.infoPII(methodTag, "The resume uri is " + uriBuilder.toString());
-        mAuthorizationRequestUrl = uriBuilder.build().toString();
+        // Query parameters for the resume uri.
+        final HashMap<String, String> queryParams = new HashMap<>();
+        queryParams.put(AuthenticationConstants.OAuth2.CLIENT_ID, mClientId);
+        queryParams.put(AuthenticationConstants.OAuth2.REDIRECT_URI, mRedirectUri);
+        // Headers for the resume uri.
         final HashMap<String, String> requestHeaders = new HashMap<>();
         requestHeaders.put(CHALLENGE_RESPONSE_HEADER, proofToken);
+        // Construct the uri to resume the flow.
+        final Uri swithBrowserUri = constructSwithBrowserUri(resume_uri, queryParams);
+        // Update the request headers and uri , and launch the webview.
+        Logger.info(methodTag, "Resuming DUNA flow.");
+        Logger.infoPII(methodTag, "The resume uri is " + swithBrowserUri.toString());
+        mAuthorizationRequestUrl = swithBrowserUri.toString();
         mRequestHeaders = requestHeaders;
         launchWebView();
     }
