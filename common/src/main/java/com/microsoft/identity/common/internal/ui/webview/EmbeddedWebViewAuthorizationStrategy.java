@@ -34,6 +34,8 @@ import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidAuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityFactory;
+import com.microsoft.identity.common.internal.ui.browser.Browser;
+import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
@@ -60,6 +62,8 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
     private ResultFuture<AuthorizationResult> mAuthorizationResultFuture;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
+    private final Browser mBrowser;
+    private CustomTabsManager mCustomTabManager = null;
 
     /**
      * Constructor of EmbeddedWebViewAuthorizationStrategy.
@@ -68,8 +72,10 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
      */
     public EmbeddedWebViewAuthorizationStrategy(@NonNull Context applicationContext,
                                                 @NonNull Activity activity,
-                                                @Nullable Fragment fragment) {
+                                                @Nullable Fragment fragment,
+                                                @Nullable Browser browser) {
         super(applicationContext, activity, fragment);
+        mBrowser = browser;
     }
 
     /**
@@ -83,7 +89,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         mAuthorizationResultFuture = new ResultFuture<>();
         mOAuth2Strategy = oAuth2Strategy;
         mAuthorizationRequest = authorizationRequest;
-        Logger.info(methodTag,"Perform the authorization request with embedded webView.");
+        Logger.info(methodTag, "Perform the authorization request with embedded webView.");
         final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
 
         String sourceLibraryName = null;
@@ -104,10 +110,11 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
 
     /**
      * Method to build the intent to be used in web view authorization request.
-     * @param requestUrl url to which the request will be sent
-     * @param sourceLibraryName the source library making the request
+     *
+     * @param requestUrl           url to which the request will be sent
+     * @param sourceLibraryName    the source library making the request
      * @param sourceLibraryVersion version of the source library making the request
-     * @return
+     * @return the intent to be used in web view authorization request
      */
     // Suppressing unchecked warnings during casting to HashMap<String,String> due to no generic type with mAuthorizationRequest
     @SuppressWarnings(WarningType.unchecked_warning)
@@ -118,22 +125,25 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         // RedirectURI used to get the auth code in nested app auth is that of a hub app (brkRedirectURI)       
         final String redirectUri = mAuthorizationRequest.getBrkRedirectUri() != null ? mAuthorizationRequest.getBrkRedirectUri() : mAuthorizationRequest.getRedirectUri();
         return AuthorizationActivityFactory.getAuthorizationActivityIntent(
-                    getApplicationContext(),
-                    null,
-                    requestUrl.toString(),
-                    redirectUri,
-                    mAuthorizationRequest.getRequestHeaders(),
-                    AuthorizationAgent.WEBVIEW,
-                    mAuthorizationRequest.isWebViewZoomEnabled(),
-                    mAuthorizationRequest.isWebViewZoomControlsEnabled(),
-                    sourceLibraryName,
-                    sourceLibraryVersion);
+                getApplicationContext(),
+                getBrowserIntent(),
+                requestUrl.toString(),
+                redirectUri,
+                mAuthorizationRequest.getRequestHeaders(),
+                AuthorizationAgent.WEBVIEW,
+                mAuthorizationRequest.isWebViewZoomEnabled(),
+                mAuthorizationRequest.isWebViewZoomControlsEnabled(),
+                sourceLibraryName,
+                sourceLibraryVersion);
     }
 
     @Override
     public void completeAuthorization(int requestCode, @NonNull final RawAuthorizationResult data) {
         final String methodTag = TAG + ":completeAuthorization";
         if (requestCode == BROWSER_FLOW) {
+            if (mCustomTabManager != null) {
+                mCustomTabManager.unbind();
+            }
             if (mOAuth2Strategy != null && mAuthorizationResultFuture != null) {
 
                 //Suppressing unchecked warnings due to method createAuthorizationResult being a member of the raw type AuthorizationResultFactory
@@ -145,14 +155,45 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
                         );
                 mAuthorizationResultFuture.setResult(result);
             } else {
-                Logger.warn(methodTag,"SDK Cancel triggering before request is sent out. " +
+                Logger.warn(methodTag, "SDK Cancel triggering before request is sent out. " +
                         "Potentially due to an stale activity state, " +
                         "oAuth2Strategy null ? [" + (mOAuth2Strategy == null) + "]" +
                         "mAuthorizationResultFuture ? [" + (mAuthorizationResultFuture == null) + "]"
                 );
             }
         } else {
-            Logger.warnPII(methodTag,"Unknown request code " + requestCode);
+            Logger.warnPII(methodTag, "Unknown request code " + requestCode);
         }
+    }
+
+    /**
+     * Get a intent to launch the browser.
+     *
+     * @return the intent to launch the browser or null if the browser is not supported.
+     */
+    @Nullable
+    private Intent getBrowserIntent() {
+        final String methodTag = TAG + ":getBrowserIntent";
+        final Context context = getApplicationContext();
+        final Intent browserIntent;
+        if (mBrowser != null) {
+            if (mBrowser.isCustomTabsServiceSupported()) {
+                Logger.info(methodTag, "CustomTabsService is supported.");
+                //create customTabsIntent
+                mCustomTabManager = new CustomTabsManager(context);
+                if (!mCustomTabManager.bind(context, mBrowser.getPackageName())) {
+                    Logger.warn(methodTag, "Failed to bind CustomTabsService.");
+                    browserIntent = new Intent(Intent.ACTION_VIEW);
+                } else {
+                    browserIntent = mCustomTabManager.getCustomTabsIntent().intent;
+                }
+            } else {
+                Logger.warn(methodTag, "CustomTabsService is NOT supported");
+                browserIntent = new Intent(Intent.ACTION_VIEW);
+            }
+            browserIntent.setPackage(mBrowser.getPackageName());
+            return browserIntent;
+        }
+        return null;
     }
 }

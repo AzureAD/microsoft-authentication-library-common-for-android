@@ -528,6 +528,22 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     }
 
     /**
+     * Launches the web browser intent for the given uri.
+     *
+     * @param uri The uri to launch the web browser intent.
+     */
+    public boolean launchWebBrowserIntent(@NonNull final Uri uri) {
+        final String methodTag = TAG + ":launchWebBrowserIntent";
+        if (mAuthIntent != null) {
+            Logger.info(methodTag, "Launching web browser intent for DUNA flow.");
+            mAuthIntent.setData(uri);
+            requireContext().startActivity(mAuthIntent);
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Helper method to check if the authorization request is being made through broker.
      * Done by checking for broker version key in the url
      */

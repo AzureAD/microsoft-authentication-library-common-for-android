@@ -70,6 +70,7 @@ import java.security.Principal;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AMAZON_APP_REDIRECT_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
@@ -92,7 +93,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String TAG = AzureActiveDirectoryWebViewClient.class.getSimpleName();
 
     public static final String ERROR = "error";
-    public static final String ERROR_SUBCODE = "error_subcode";
     public static final String ERROR_DESCRIPTION = "error_description";
     private static final String DEVICE_CERT_ISSUER = "CN=MS-Organization-Access";
     private final String mRedirectUrl;
@@ -194,7 +194,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 challengeHandler.processChallenge(challenge);
             } else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
-                processRedirectUrl(view, url);
+                final Uri formattedUri = Uri.parse(formattedURL);
+                if (isSwitchBrowserRequest(formattedUri)) {
+                    Logger.info(methodTag,"Request to switch browser.");
+                    return processSwitchToBrowserRequest(formattedUri);
+                } else {
+                    Logger.info(methodTag,"It is a redirect request.");
+                    processRedirectUrl(view, url);
+                }
             } else if (isWebsiteRequestUrl(formattedURL)) {
                 Logger.info(methodTag,"It is an external website request");
                 processWebsiteRequest(view, url);
@@ -305,6 +312,26 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return urlIsTrustedToReceiveHeaders && originalRequestHasHeaders;
     }
 
+    /**
+     * Check if the request is to switch the browser.
+     * <p>
+     * The request is considered "switch_browser" if the URL contains the action URI, code, and action parameters.
+     *
+     * @param uri The URI of the request.
+     * @return True if the request contains the required parameters, false otherwise.
+     */
+    private boolean isSwitchBrowserRequest(@Nullable final Uri uri) {
+        final Set<String> requiredParams = Set.of(
+                AuthenticationConstants.SWITCH_BROWSER.ACTION_URI,
+                AuthenticationConstants.SWITCH_BROWSER.CODE,
+                AuthenticationConstants.SWITCH_BROWSER.ACTION
+        );
+        if (uri == null) {
+            return false;
+        }
+        return uri.getQueryParameterNames().containsAll(requiredParams);
+    }
+
     // This function is only called when the client received a redirect that starts with the apps
     // redirect uri.
     protected void processRedirectUrl(@NonNull final WebView view, @NonNull final String url) {
@@ -315,6 +342,36 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         getCompletionCallback().onChallengeResponseReceived(data);
         view.stopLoading();
         //the TokenTask should be processed at after the authorization process in the upper calling layer.
+    }
+
+    /**
+     * Launch the browser with the given action URI and code.
+     * <p>
+     * From the query parameters, extract the action URI and code,
+     * The constructs the URI with the action URI and code.
+     *
+     * @param uri The URI of the request.
+     */
+    protected boolean processSwitchToBrowserRequest(@NonNull final Uri uri) {
+        final AuthorizationActivity activity = (AuthorizationActivity) getActivity();
+        final WebViewAuthorizationFragment fragment = (WebViewAuthorizationFragment) activity.getFragment();
+        final String action_uri = uri.getQueryParameter(AuthenticationConstants.SWITCH_BROWSER.ACTION_URI);
+        final String code = uri.getQueryParameter(AuthenticationConstants.SWITCH_BROWSER.CODE);
+        if (action_uri == null || code == null) {
+            // This should never happen, but if it does, we should log it and return.
+            Logger.error(TAG, "Switch browser action URI or code is null. Cannot switch browser.", null);
+            return false;
+        }
+        final String[] paths = action_uri.split("/");
+        final String authority = paths[0];
+        final Uri.Builder uriBuilder = new Uri.Builder()
+                .scheme("https")
+                .authority(authority)
+                .appendQueryParameter(AuthenticationConstants.SWITCH_BROWSER.CODE, code);
+        for (int i = 1; i < paths.length; i++) {
+            uriBuilder.appendPath(paths[i]);
+        }
+        return fragment.launchWebBrowserIntent(uriBuilder.build());
     }
 
     private void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
