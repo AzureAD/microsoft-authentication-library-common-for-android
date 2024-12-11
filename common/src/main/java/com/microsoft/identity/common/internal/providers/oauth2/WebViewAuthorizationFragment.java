@@ -24,10 +24,12 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -80,6 +82,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CHALLENGE_RESPONSE_HEADER;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 
@@ -138,6 +141,71 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     }
             );
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        final String methodTag = TAG + ":onResume";
+        final Activity activity = getActivity();
+        if (activity == null) {
+            return;
+        }
+        final Intent intent = activity.getIntent();
+        if (intent == null) {
+            return;
+        }
+        final Bundle extras = intent.getExtras();
+        if (extras == null) {
+            return;
+        }
+        final String action = extras.getString(
+                AuthenticationConstants.SWITCH_BROWSER.ACTION,
+                null
+        );
+        if (action != null ) {
+            Logger.info(methodTag, "Switching browser resume flow.");
+            dunaResume(extras);
+        }
+    }
+
+    /**
+     * Invoke the resume flow for DUNA.
+     *
+     * @param extras The extras from the intent.
+     */
+    private void dunaResume(@NonNull final Bundle extras) {
+        final String methodTag = TAG + ":dunaResume";
+
+        final String resume_uri = extras.getString(
+                AuthenticationConstants.SWITCH_BROWSER.ACTION_URI,
+                 null
+        );
+        final String proofToken = extras.getString(
+                AuthenticationConstants.SWITCH_BROWSER.CODE,
+                null
+        );
+
+        if (resume_uri == null || proofToken == null) {
+            // This should never happen, but if it does, we should log it and return.
+            Logger.error(methodTag, "Action URI or code is null. Cannot resume.", null);
+            return;
+        }
+        final String[] paths = resume_uri.split("/");
+        final String authority = paths[0];
+        final Uri.Builder uriBuilder = new Uri.Builder()
+                .scheme("https")
+                .authority(authority);
+        for (int i = 1; i < paths.length; i++) {
+            uriBuilder.appendPath(paths[i]);
+        }
+        Logger.info(methodTag, "Resuming DUNA flow.");
+        Logger.infoPII(methodTag, "The resume uri is " + uriBuilder.toString());
+        mAuthorizationRequestUrl = uriBuilder.build().toString();
+        final HashMap<String, String> requestHeaders = new HashMap<>();
+        requestHeaders.put(CHALLENGE_RESPONSE_HEADER, proofToken);
+        mRequestHeaders = requestHeaders;
+        launchWebView();
     }
 
     @Override
