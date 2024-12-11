@@ -470,7 +470,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (mAuthIntent != null) {
             Logger.info(methodTag, "Launching web browser intent for DUNA flow.");
             mAuthIntent.setData(uri);
-            requireContext().startActivity(mAuthIntent);
+            startActivity(mAuthIntent);
             return true;
         }
         return false;
