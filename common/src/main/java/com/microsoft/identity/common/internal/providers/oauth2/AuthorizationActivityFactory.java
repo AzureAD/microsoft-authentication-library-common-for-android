@@ -49,6 +49,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.CLIENT_ID;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 import static com.microsoft.identity.common.java.logging.DiagnosticContext.CORRELATION_ID;
@@ -79,7 +80,7 @@ public class AuthorizationActivityFactory {
                                                         final AuthorizationAgent authorizationAgent,
                                                         final boolean webViewZoomEnabled,
                                                         final boolean webViewZoomControlsEnabled) {
-        return getAuthorizationActivityIntent(context, authIntent, requestUrl, redirectUri, requestHeaders, authorizationAgent, webViewZoomEnabled, webViewZoomControlsEnabled, null, null);
+        return getAuthorizationActivityIntent(context, authIntent, requestUrl, redirectUri, requestHeaders, authorizationAgent, webViewZoomEnabled, webViewZoomControlsEnabled, null, null, null);
     }
 
     /**
@@ -106,7 +107,8 @@ public class AuthorizationActivityFactory {
                                                         final boolean webViewZoomEnabled,
                                                         final boolean webViewZoomControlsEnabled,
                                                         final String sourceLibraryName,
-                                                        final String sourceLibraryVersion) {
+                                                        final String sourceLibraryVersion,
+                                                        final String clientId) {
         final Intent intent;
         final LibraryConfiguration libraryConfig = LibraryConfiguration.getInstance();
         if (ProcessUtil.isBrokerProcess(context)) {
@@ -126,6 +128,7 @@ public class AuthorizationActivityFactory {
 
         intent.putExtra(AUTH_INTENT, authIntent);
         intent.putExtra(REQUEST_URL, requestUrl);
+        intent.putExtra(CLIENT_ID, clientId);
         intent.putExtra(REDIRECT_URI, redirectUri);
         intent.putExtra(REQUEST_HEADERS, requestHeaders);
         intent.putExtra(AUTHORIZATION_AGENT, authorizationAgent);

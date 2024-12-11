@@ -76,6 +76,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.CLIENT_ID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
@@ -109,6 +110,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private String mAuthorizationRequestUrl;
 
     private String mRedirectUri;
+
+    private String mClientId;
 
     private HashMap<String, String> mRequestHeaders;
 
@@ -195,7 +198,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final String authority = paths[0];
         final Uri.Builder uriBuilder = new Uri.Builder()
                 .scheme("https")
-                .authority(authority);
+                .encodedAuthority(authority)
+                .appendQueryParameter(AuthenticationConstants.OAuth2.CLIENT_ID, mClientId)
+                .appendQueryParameter(AuthenticationConstants.OAuth2.REDIRECT_URI, mRedirectUri);
         for (int i = 1; i < paths.length; i++) {
             uriBuilder.appendPath(paths[i]);
         }
@@ -219,6 +224,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedJavascript);
         outState.putBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         outState.putBoolean(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
+        outState.putString(CLIENT_ID, mClientId);
     }
 
     @Override
@@ -232,6 +238,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mPostPageLoadedJavascript = state.getString(POST_PAGE_LOADED_URL);
         webViewZoomEnabled = state.getBoolean(WEB_VIEW_ZOOM_ENABLED, true);
         webViewZoomControlsEnabled = state.getBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
+        mClientId = state.getString(CLIENT_ID);
     }
 
     @Nullable

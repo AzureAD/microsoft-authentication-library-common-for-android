@@ -91,6 +91,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         mAuthorizationRequest = authorizationRequest;
         Logger.info(methodTag, "Perform the authorization request with embedded webView.");
         final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
+        final String clientId = authorizationRequest.getClientId();
 
         String sourceLibraryName = null;
         String sourceLibraryVersion = null;
@@ -102,7 +103,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
             sourceLibraryVersion = ((MicrosoftAuthorizationRequest) mAuthorizationRequest).getLibraryVersion();
         }
 
-        final Intent authIntent = buildAuthorizationActivityStartIntent(requestUrl, sourceLibraryName, sourceLibraryVersion);
+        final Intent authIntent = buildAuthorizationActivityStartIntent(requestUrl, sourceLibraryName, sourceLibraryVersion, clientId);
 
         launchIntent(authIntent);
         return mAuthorizationResultFuture;
@@ -121,7 +122,8 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
     private Intent buildAuthorizationActivityStartIntent(
             URI requestUrl,
             @Nullable final String sourceLibraryName,
-            @Nullable final String sourceLibraryVersion) {
+            @Nullable final String sourceLibraryVersion,
+            @Nullable final String clientId) {
         // RedirectURI used to get the auth code in nested app auth is that of a hub app (brkRedirectURI)       
         final String redirectUri = mAuthorizationRequest.getBrkRedirectUri() != null ? mAuthorizationRequest.getBrkRedirectUri() : mAuthorizationRequest.getRedirectUri();
         return AuthorizationActivityFactory.getAuthorizationActivityIntent(
@@ -134,7 +136,9 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
                 mAuthorizationRequest.isWebViewZoomEnabled(),
                 mAuthorizationRequest.isWebViewZoomControlsEnabled(),
                 sourceLibraryName,
-                sourceLibraryVersion);
+                sourceLibraryVersion,
+                clientId
+        );
     }
 
     @Override
