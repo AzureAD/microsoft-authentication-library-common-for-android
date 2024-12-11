@@ -70,13 +70,13 @@ import java.security.Principal;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AMAZON_APP_REDIRECT_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER.isSwitchBrowserRequest;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
 
 import io.opentelemetry.api.trace.SpanContext;
@@ -312,26 +312,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return urlIsTrustedToReceiveHeaders && originalRequestHasHeaders;
     }
 
-    /**
-     * Check if the request is to switch the browser.
-     * <p>
-     * The request is considered "switch_browser" if the URL contains the action URI, code, and action parameters.
-     *
-     * @param uri The URI of the request.
-     * @return True if the request contains the required parameters, false otherwise.
-     */
-    private boolean isSwitchBrowserRequest(@Nullable final Uri uri) {
-        final Set<String> requiredParams = Set.of(
-                AuthenticationConstants.SWITCH_BROWSER.ACTION_URI,
-                AuthenticationConstants.SWITCH_BROWSER.CODE,
-                AuthenticationConstants.SWITCH_BROWSER.ACTION
-        );
-        if (uri == null) {
-            return false;
-        }
-        return uri.getQueryParameterNames().containsAll(requiredParams);
-    }
-
     // This function is only called when the client received a redirect that starts with the apps
     // redirect uri.
     protected void processRedirectUrl(@NonNull final WebView view, @NonNull final String url) {
@@ -362,16 +342,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Logger.error(TAG, "Switch browser action URI or code is null. Cannot switch browser.", null);
             return false;
         }
-        final String[] paths = action_uri.split("/");
-        final String authority = paths[0];
-        final Uri.Builder uriBuilder = new Uri.Builder()
-                .scheme("https")
-                .authority(authority)
-                .appendQueryParameter(AuthenticationConstants.SWITCH_BROWSER.CODE, code);
-        for (int i = 1; i < paths.length; i++) {
-            uriBuilder.appendPath(paths[i]);
-        }
-        return fragment.launchWebBrowserIntent(uriBuilder.build());
+        final HashMap<String, String> queryParams = new HashMap<>();
+        queryParams.put(AuthenticationConstants.SWITCH_BROWSER.CODE, code);
+        queryParams.put(AuthenticationConstants.OAuth2.REDIRECT_URI, mRedirectUrl);
+        final Uri swithBrowserUri = fragment.constructSwithBrowserUri(action_uri, queryParams);
+        return fragment.launchWebBrowserIntent(swithBrowserUri);
     }
 
     private void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
