@@ -476,6 +476,23 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         return false;
     }
 
+    public Uri constructSwithBrowserUri(@NonNull final String action_uri, @Nullable final HashMap<String, String> params) {
+        final String[] paths = action_uri.split("/");
+        final String authority = paths[0];
+        final Uri.Builder uriBuilder = new Uri.Builder()
+                .scheme("https")
+                .encodedAuthority(authority);
+        for (int i = 1; i < paths.length; i++) {
+            uriBuilder.appendPath(paths[i]);
+        }
+        if (params != null) {
+            for (HashMap.Entry<String, String> entry : params.entrySet()) {
+                uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
+            }
+        }
+        return uriBuilder.build();
+    }
+
     /**
      * Helper method to check if the authorization request is being made through broker.
      * Done by checking for broker version key in the url
