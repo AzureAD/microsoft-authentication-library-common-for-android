@@ -476,6 +476,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         return false;
     }
 
+    /**
+     * Constructs the switch browser uri with the given action uri and parameters.
+     *
+     * @param action_uri The action uri.
+     * @param params     The parameters.
+     * @return The constructed uri.
+     */
     public Uri constructSwithBrowserUri(@NonNull final String action_uri, @Nullable final HashMap<String, String> params) {
         final String[] paths = action_uri.split("/");
         final String authority = paths[0];
