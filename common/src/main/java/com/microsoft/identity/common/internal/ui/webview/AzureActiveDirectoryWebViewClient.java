@@ -366,8 +366,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String authority = paths[0];
         final Uri.Builder uriBuilder = new Uri.Builder()
                 .scheme("https")
-                .authority(authority)
-                .appendQueryParameter(AuthenticationConstants.SWITCH_BROWSER.CODE, code);
+                .encodedAuthority(authority)
+                .appendQueryParameter(AuthenticationConstants.SWITCH_BROWSER.CODE, code)
+                .appendQueryParameter(AuthenticationConstants.OAuth2.REDIRECT_URI, mRedirectUrl);
         for (int i = 1; i < paths.length; i++) {
             uriBuilder.appendPath(paths[i]);
         }
