@@ -22,7 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
+import static com.microsoft.identity.common.java.exception.ClientException.IO_ERROR;
+
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ConnectionError;
 import com.microsoft.identity.common.java.logging.Logger;
 
 import java.io.UnsupportedEncodingException;
@@ -246,6 +249,8 @@ public class UrlUtil {
 
     /**
      * This creates a url from a String, rewriting any malformedUrlExceptions to runtime.
+     * Should be use for tests only.
+     *
      * @param urlString the string to convert.
      * @return the corresponding {@link URL}.
      */
@@ -254,6 +259,20 @@ public class UrlUtil {
             return new URL(urlString);
         } catch (final MalformedURLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * This creates a url from a String, rewriting any malformedUrlExceptions to ClientException.
+     *
+     * @param urlString the string to convert.
+     * @return the corresponding {@link URL}.
+     */
+    public static URL makeUrl(@NonNull final String urlString) throws ClientException {
+        try {
+            return new URL(urlString);
+        } catch (MalformedURLException e) {
+            throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
         }
     }
 

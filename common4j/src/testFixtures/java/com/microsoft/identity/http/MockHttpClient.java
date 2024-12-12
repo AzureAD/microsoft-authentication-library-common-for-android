@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.http;
 
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpClient.HttpMethod;
 import com.microsoft.identity.common.java.net.HttpRequest;
@@ -124,7 +125,7 @@ public class MockHttpClient {
                 final HttpRequestInterceptor httpRequestInterceptor = interceptors.get(matcher);
                 return new HttpRequestInterceptor() {
                     @Override
-                    public HttpResponse performIntercept(@NonNull HttpClient.HttpMethod httpMethod, @NonNull URL requestUrl, @NonNull Map<String, String> requestHeaders, @Nullable byte[] requestContent) throws IOException {
+                    public HttpResponse performIntercept(@NonNull HttpClient.HttpMethod httpMethod, @NonNull URL requestUrl, @NonNull Map<String, String> requestHeaders, @Nullable byte[] requestContent) throws ClientException {
                         if (sSaveRequests.get()) {
                             sInterceptedRequests.add(new HttpRequest(url, requestHeaders, method.name(), requestContent, null));
                         }
@@ -150,7 +151,7 @@ public class MockHttpClient {
                     @NonNull HttpMethod httpMethod,
                     @NonNull URL requestUrl,
                     @NonNull Map<String, String> requestHeaders,
-                    @Nullable byte[] requestContent) throws IOException {
+                    @Nullable byte[] requestContent) throws ClientException {
                 return httpResponse;
             }
         });
@@ -252,7 +253,7 @@ public class MockHttpClient {
                             @NonNull HttpMethod httpMethod,
                             @NonNull URL requestUrl,
                             @NonNull Map<String, String> requestHeaders,
-                            @Nullable byte[] requestContent) throws IOException {
+                            @Nullable byte[] requestContent) throws ClientException {
                         return httpResponse;
                     }
                 }
