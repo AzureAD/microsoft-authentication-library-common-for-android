@@ -48,14 +48,19 @@ import net.jcip.annotations.ThreadSafe;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
+import java.net.NoRouteToHostException;
 import java.net.ProtocolException;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -66,6 +71,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSocketFactory;
 
 import io.opentelemetry.api.trace.Span;
@@ -313,7 +319,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
      * @return The converted string
      * @throws IOException Thrown when failing to access inputStream stream.
      */
-    private String convertStreamToString(final InputStream inputStream) throws ClientException {
+    private String convertStreamToString(final InputStream inputStream) throws IOException {
         try {
             final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream,
                     AuthenticationConstants.CHARSET_UTF8));
@@ -326,8 +332,6 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
             }
 
             return stringBuilder.toString();
-        } catch (IOException e) {
-            throw ConnectionError.FAILED_TO_READ_FROM_INPUT_STREAM.getClientException(e);
         } finally {
             safeCloseStream(inputStream);
         }
@@ -353,10 +357,17 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     }
 
     private HttpResponse executeHttpSend(HttpRequest request, Consumer<HttpResponse> completionCallback) throws ClientException {
-        final HttpURLConnection urlConnection = setupConnection(request);
+        try {
+            final HttpURLConnection urlConnection = setupConnection(request);
+            sendRequest(urlConnection, request.getRequestContent(), request.getRequestHeaders().get(HttpConstants.HeaderField.CONTENT_TYPE));
+            return getHttpResponse(completionCallback, urlConnection);
+        }  catch (final IOException e) {
+            throw ConnectionError.getClientException(e);
+        }
+    }
 
-        sendRequest(urlConnection, request.getRequestContent(), request.getRequestHeaders().get(HttpConstants.HeaderField.CONTENT_TYPE));
-
+    private HttpResponse getHttpResponse(Consumer<HttpResponse> completionCallback,
+                                         HttpURLConnection urlConnection) throws IOException {
         InputStream responseStream = null;
         HttpResponse response = null;
         try {
@@ -366,18 +377,13 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 // SocketTimeoutExcetion is thrown when connection timeout happens. For connection
                 // timeout, we want to retry once. Throw the exception to the upper layer, and the
                 // upper layer will handle the retry.
-                throw ConnectionError.CONNECTION_TIMEOUT.getClientException(e);
+                throw e;
             } catch (final IOException ioException) {
                 // 404, for example, will generate an exception.  We should catch it.
                 responseStream = urlConnection.getErrorStream();
             }
 
-            final int statusCode;
-            try {
-                statusCode = urlConnection.getResponseCode();
-            } catch (IOException e) {
-                throw ConnectionError.FAILED_TO_GET_RESPONSE_CODE.getClientException(e);
-            }
+            final int statusCode = urlConnection.getResponseCode();
 
             final Date date = new Date(urlConnection.getDate());
 
@@ -401,12 +407,12 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 );
 
                 span.setAttribute(
-                        com.microsoft.identity.common.java.opentelemetry.AttributeName.ccs_request_id.name(),
+                        AttributeName.ccs_request_id.name(),
                         response.getHeaderValue(XMS_CCS_REQUEST_ID, 0)
                 );
 
                 span.setAttribute(
-                        com.microsoft.identity.common.java.opentelemetry.AttributeName.ccs_request_sequence.name(),
+                        AttributeName.ccs_request_sequence.name(),
                         response.getHeaderValue(XMS_CCS_REQUEST_SEQUENCE, 0)
                 );
             }
@@ -419,7 +425,6 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                     AttributeName.http_status_code.name(),
                     response.getStatusCode()
             );
-
         } finally {
             completionCallback.accept(response);
             safeCloseStream(responseStream);
@@ -428,14 +433,9 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         return response;
     }
 
-    private HttpURLConnection setupConnection(HttpRequest request) throws ClientException {
+    private HttpURLConnection setupConnection(HttpRequest request) throws IOException {
         final String methodName = ":setupConnection";
-        final HttpURLConnection urlConnection;
-        try {
-            urlConnection = HttpUrlConnectionFactory.createHttpURLConnection(request.getRequestUrl());
-        } catch (IOException e) {
-            throw ConnectionError.FAILED_TO_OPEN_CONNECTION.getClientException(e);
-        }
+        final HttpURLConnection urlConnection = HttpUrlConnectionFactory.createHttpURLConnection(request.getRequestUrl());
 
         // Apply request headers and update the headers with default attributes first
         final Set<Map.Entry<String, String>> headerEntries = request.getRequestHeaders().entrySet();
@@ -454,12 +454,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
             Logger.warn(TAG + methodName, "gets a request from an unexpected protocol: " + request.getRequestUrl().getProtocol());
         }
 
-        try {
-            urlConnection.setRequestMethod(request.getRequestMethod());
-        } catch (ProtocolException e) {
-            throw ConnectionError.FAILED_TO_SET_REQUEST_METHOD.getClientException(e);
-        }
-
+        urlConnection.setRequestMethod(request.getRequestMethod());
         urlConnection.setConnectTimeout(getConnectTimeoutMs());
         urlConnection.setReadTimeout(getReadTimeoutMs());
         urlConnection.setInstanceFollowRedirects(true);
@@ -479,7 +474,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
 
     private static void sendRequest(@NonNull final HttpURLConnection connection,
                                     final byte[] contentRequest,
-                                    final String requestContentType) throws ClientException {
+                                    final String requestContentType) throws IOException {
         if (contentRequest == null) {
             return;
         }
@@ -497,8 +492,6 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         try {
             out = connection.getOutputStream();
             out.write(contentRequest);
-        } catch (IOException e) {
-            throw ConnectionError.FAILED_TO_WRITE_TO_OUTPUT_STREAM.getClientException(e);
         } finally {
             safeCloseStream(out);
         }
