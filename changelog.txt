@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Add switch_browser toMicrosoftStsAuthorizationRequest (#2550)
 - [MAJOR] Add suberror for network errors (#2537)
 - [PATCH] Translate MFA token error to UIRequiredException instead of ServiceException (#2538)
 - [MINOR] Add Child Spans for Interactive Span (#2516)

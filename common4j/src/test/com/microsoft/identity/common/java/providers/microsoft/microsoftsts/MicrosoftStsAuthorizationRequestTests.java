@@ -296,4 +296,15 @@ public class MicrosoftStsAuthorizationRequestTests {
         assertTrue("Flight Param 1", actualCodeRequestUrl.contains(MOCK_FLIGHT_QUERY_1 + "=" + MOCK_FLIGHT_VALUE_1));
         assertTrue("Flight Param 2", actualCodeRequestUrl.contains(MOCK_FLIGHT_QUERY_2 + "=" + MOCK_FLIGHT_VALUE_2));
     }
+
+    @Test
+    public void testRequestWithSwitchBrowser() throws ClientException, MalformedURLException {
+        final MicrosoftStsAuthorizationRequest request = new MicrosoftStsAuthorizationRequest.Builder()
+                .setAuthority(getValidRequestUrl())
+                .setSwitchBrowser("1")
+                .build();
+
+        final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
+        assertTrue(actualCodeRequestUrl.contains("switch_browser=1"));
+    }
 }
