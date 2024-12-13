@@ -23,6 +23,7 @@ package com.microsoft.identity.common.java.opentelemetry;
 // THE SOFTWARE.
 
 public enum SpanName {
+    AcquirePrtUsingBrt,
     AcquireTokenInteractive,
     AcquireTokenSilent,
     SetScopeForDMAgentForFoci,
