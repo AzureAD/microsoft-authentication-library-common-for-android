@@ -98,9 +98,14 @@ public class AzureActiveDirectoryWebViewClientTest {
         final AuthorizationActivity activity = mock(AuthorizationActivity.class);
         final WebViewAuthorizationFragment fragment = mock(WebViewAuthorizationFragment.class);
         final Context context = ApplicationProvider.getApplicationContext();
+        final HashMap<String,String> params = new HashMap<>();
+        params.put(AuthenticationConstants.OAuth2.REDIRECT_URI, TEST_REDIRECT_URI);
+        params.put(AuthenticationConstants.SWITCH_BROWSER.CODE, SWITCH_BROWSER_CODE);
+        when(activity.getIntent()).thenReturn(null);
         when(activity.getApplicationContext()).thenReturn(context);
         when(activity.getFragment()).thenReturn(fragment);
         when(activity.getPackageManager()).thenReturn(context.getPackageManager());
+        when(fragment.constructSwithBrowserUri(SWITCH_BROWSER_ACTION_URI + SWITCH_BROWSER_ACTION_URI_PATHS, params)).thenReturn(Uri.parse(TEST_SWITCH_BROWSER_URL));
         when(fragment.launchWebBrowserIntent(Uri.parse(TEST_SWITCH_BROWSER_URL))).thenReturn(true);
         mMockWebView = new WebView(context);
         mWebViewClient = new AzureActiveDirectoryWebViewClient(
