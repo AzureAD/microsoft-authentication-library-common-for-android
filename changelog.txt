@@ -5,6 +5,7 @@ vNext
 - [PATCH] Translate MFA token error to UIRequiredException instead of ServiceException (#2538)
 - [MINOR] Add Child Spans for Interactive Span (#2516)
 - [MINOR] For MSAL CPP flows, match exact claims when deleting AT with intersecting scopes (#2548)
+- [MINOR] Replace Deprecated Keystore API for Android 28+ (#2558)
 
 Version 18.2.2
 ----------
