@@ -47,7 +47,7 @@ import lombok.experimental.Accessors;
 @SuppressWarnings(WarningType.rawtype_warning)
 @Builder
 @Accessors(prefix = "m")
-public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrategyFactory<IAuthorizationStrategy>{
+public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrategyFactory<IAuthorizationStrategy> {
     private static final String TAG = AndroidAuthorizationStrategyFactory.class.getSimpleName();
 
     private final Context mContext;
@@ -58,9 +58,8 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
      * Get the authorization strategy.
      *
      * @param authorizationAgent The authorization agent provided by the caller.
-     * @param browser The browser to use for authorization.
-     * @param isBrowserRequest True if the request is from browser.
-     *
+     * @param browser            The browser to use for authorization.
+     * @param isBrowserRequest   True if the request is from browser.
      * @return The authorization strategy.
      */
     @Override
@@ -72,7 +71,7 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
         final String methodTag = TAG + ":getAuthorizationStrategy";
 
         // Use embedded webView if no browser available or authorization agent is webView
-        if (authorizationAgent== AuthorizationAgent.WEBVIEW || browser == null) {
+        if (authorizationAgent == AuthorizationAgent.WEBVIEW || browser == null) {
             Logger.info(methodTag, "Use webView for authorization.");
             return getGenericAuthorizationStrategy(browser);
         }
@@ -85,7 +84,7 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
      * Get current task browser authorization strategy or default browser authorization strategy.
      * If the authorization is in current task, use current task browser authorization strategy.
      *
-     * @param browser The browser to use for authorization.
+     * @param browser         The browser to use for authorization.
      * @param isBrokerRequest True if the request is from broker.
      * @return The browser authorization strategy.
      */

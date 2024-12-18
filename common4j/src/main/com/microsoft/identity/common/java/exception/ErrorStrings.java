@@ -311,11 +311,6 @@ public final class ErrorStrings {
     public static final String AUTHORIZATION_INTENT_IS_NULL = "Authorization intent is null.";
 
     /**
-     * No available browser installed on the device.
-     */
-    public static final String NO_AVAILABLE_BROWSER_FOUND = "No available browser installed on the device.";
-
-    /**
      * Refresh token request failed.
      */
     public static final String AUTH_REFRESH_FAILED = "Refresh token request failed";

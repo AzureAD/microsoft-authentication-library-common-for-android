@@ -22,7 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.browser;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.robolectric.Shadows.shadowOf;
@@ -41,8 +43,6 @@ import android.os.Build;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.java.browser.Browser;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 
 import org.junit.Assert;
@@ -113,12 +113,8 @@ public class BrowserSelectorTest {
         setBrowserList(CHROME, FIREFOX);
 
         final List<BrowserDescriptor> browserSafelist = new ArrayList<>();
-        try {
-            new BrowserSelector(ApplicationProvider.getApplicationContext()).select(browserSafelist, null);
-        } catch (final ClientException exception) {
-            assertNotNull(exception);
-            assert (exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND));
-        }
+        final Browser browser = new BrowserSelector(ApplicationProvider.getApplicationContext()).select(browserSafelist, null);
+        assertNull(browser);
     }
 
     @Test
@@ -134,12 +130,9 @@ public class BrowserSelectorTest {
                         null)
         );
 
-        try {
-            new BrowserSelector(ApplicationProvider.getApplicationContext()).select(browserSafelist, null);
-        } catch (final ClientException exception) {
-            assertNotNull(exception);
-            assert (exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND));
-        }
+
+        final Browser browser = new BrowserSelector(ApplicationProvider.getApplicationContext()).select(browserSafelist, null);
+        assertNull(browser);
     }
 
     @Test
@@ -154,15 +147,11 @@ public class BrowserSelectorTest {
                         null,
                         null)
         );
-
-        try {
-            new BrowserSelector(ApplicationProvider.getApplicationContext()).select(browserSafelist, null);
-        } catch (final ClientException exception) {
-            assertNotNull(exception);
-            assert (exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND));
-        }
-
+        final Browser browser = new BrowserSelector(ApplicationProvider.getApplicationContext()).select(browserSafelist, null);
+        assertNotNull(browser);
+        assertEquals(browser.getPackageName(), FIREFOX_NO_CUSTOM_TAB.mPackageName);
     }
+
     @Test
     public void testSelect_preferredBrowserSelected() {
         setBrowserList(CHROME, DOLPHIN, FIREFOX);
@@ -189,15 +178,10 @@ public class BrowserSelectorTest {
                         "10",
                         null)
         );
+        final Browser browser = new BrowserSelector(ApplicationProvider.getApplicationContext()).select(browserSafelist, preferredBrowser);
+        Assert.assertEquals(preferredBrowser.getPackageName(), browser.getPackageName());
+        Assert.assertEquals(preferredBrowser.getSignatureHashes(), browser.getSignatureHashes());
 
-
-        try {
-            final Browser browser = new BrowserSelector(ApplicationProvider.getApplicationContext()).select(browserSafelist, preferredBrowser);
-            Assert.assertEquals(preferredBrowser.getPackageName(), browser.getPackageName());
-            Assert.assertEquals(preferredBrowser.getSignatureHashes(), browser.getSignatureHashes());
-        } catch (final ClientException exception) {
-            Assert.fail();
-        }
     }
 
     @Test
@@ -227,14 +211,9 @@ public class BrowserSelectorTest {
                         null)
         );
 
-
-        try {
-            // It should return the first installed browser.
-            final Browser browser = new BrowserSelector(ApplicationProvider.getApplicationContext()).select(browserSafelist, preferredBrowser);
-            Assert.assertEquals(CHROME.mPackageName, browser.getPackageName());
-        } catch (final ClientException exception) {
-            Assert.fail();
-        }
+        // It should return the first installed browser.
+        final Browser browser = new BrowserSelector(ApplicationProvider.getApplicationContext()).select(browserSafelist, preferredBrowser);
+        Assert.assertEquals(CHROME.mPackageName, browser.getPackageName());
     }
 
     @Test
@@ -262,16 +241,10 @@ public class BrowserSelectorTest {
                         "10",
                         null)
         );
-
-
-        try {
-            // The safe list shouldn't matter, given that we've already specified all info in preferredBrowser's BrowserDescriptor.
-            final Browser browser = new BrowserSelector(ApplicationProvider.getApplicationContext()).select(browserSafelist, preferredBrowser);
-            Assert.assertEquals(preferredBrowser.getPackageName(), browser.getPackageName());
-            Assert.assertEquals(preferredBrowser.getSignatureHashes(), browser.getSignatureHashes());
-        } catch (final ClientException exception) {
-            Assert.fail();
-        }
+        // The safe list shouldn't matter, given that we've already specified all info in preferredBrowser's BrowserDescriptor.
+        final Browser browser = new BrowserSelector(ApplicationProvider.getApplicationContext()).select(browserSafelist, preferredBrowser);
+        Assert.assertEquals(preferredBrowser.getPackageName(), browser.getPackageName());
+        Assert.assertEquals(preferredBrowser.getSignatureHashes(), browser.getSignatureHashes());
     }
 
     /**
