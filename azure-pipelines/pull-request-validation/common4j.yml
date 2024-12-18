@@ -3,6 +3,7 @@
 # Variable: 'MOCK_API_URL' was defined in the Variables tab
 # Uses Java 11
 name: $(date:yyyyMMdd)$(rev:.r)
+trigger: none
 
 variables:
   - group: devex-ciam-test
