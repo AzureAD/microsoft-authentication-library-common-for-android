@@ -29,30 +29,43 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.pm.Signature;
 import android.net.Uri;
 import android.os.Build;
+import android.util.Base64;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.browser.Browser;
+import com.microsoft.identity.common.java.browser.IBrowserSelector;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
-public class BrowserSelector {
+public class BrowserSelector implements IBrowserSelector {
     private static final String TAG = BrowserSelector.class.getSimpleName();
     private static final String SCHEME_HTTP = "http";
     private static final String SCHEME_HTTPS = "https";
+    private static final String DIGEST_SHA_512 = "SHA-512";
 
     // Added to avoid "avoidduplicateliterals" issues in pmd.
     private static final String LOGGING_MSG_BROWSER = "Browser: ";
+
+    private final PackageManager mPackageManager;
+
+    public BrowserSelector(@NonNull final Context context) {
+        mPackageManager = context.getPackageManager();
+    }
 
     /**
      * Searches through all browsers for the best match.
@@ -60,29 +73,30 @@ public class BrowserSelector {
      * which should indirectly match the user's preferences.
      * First matched browser in the list will be preferred no matter weather or not the custom tabs supported.
      *
-     * @param context {@link Context} to use for accessing {@link PackageManager}.
      * @return Browser selected to use.
      */
-    public static Browser select(@NonNull final Context context,
-                                 @NonNull final List<BrowserDescriptor> browserSafeList,
-                                 @Nullable final BrowserDescriptor preferredBrowserDescriptor) throws ClientException {
+    @Nullable
+    @Override
+    public Browser select(
+            @NonNull final List<BrowserDescriptor> browserSafeList,
+            @Nullable final BrowserDescriptor preferredBrowserDescriptor) {
         final String methodTag = TAG + ":select";
         Logger.verbose(methodTag, "Select the browser to launch.");
 
         if (preferredBrowserDescriptor != null){
-            final Browser preferredBrowser = getPreferredBrowser(context, preferredBrowserDescriptor);
+            final Browser preferredBrowser = getPreferredBrowser(preferredBrowserDescriptor);
             if (preferredBrowser != null) {
                 return preferredBrowser;
             }
         }
 
-        final Browser defaultBrowser = getDefaultBrowser(context, browserSafeList);
+        final Browser defaultBrowser = getDefaultBrowser(browserSafeList);
         if (defaultBrowser != null) {
             return defaultBrowser;
         }
 
-        Logger.error(methodTag, "No available browser installed on the device.", null);
-        throw new ClientException(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND, "No available browser installed on the device.");
+        Logger.warn(methodTag, "No available browser installed on the device.");
+        return null;
     }
 
     private static boolean matches(@NonNull final BrowserDescriptor descriptor,
@@ -117,11 +131,10 @@ public class BrowserSelector {
         return true;
     }
 
-    private static Browser getPreferredBrowser(@NonNull final Context context,
-                                              @NonNull final BrowserDescriptor preferredBrowserDescriptor){
+    private Browser getPreferredBrowser(@NonNull final BrowserDescriptor preferredBrowserDescriptor){
         final String methodTag = TAG + ":getPreferredBrowser";
 
-        final List<Browser> allBrowsers = getBrowsers(context, preferredBrowserDescriptor);
+        final List<Browser> allBrowsers = getBrowsers(preferredBrowserDescriptor);
         for (final Browser browser : allBrowsers) {
             if (matches(preferredBrowserDescriptor, browser)) {
                 Logger.info(
@@ -137,11 +150,10 @@ public class BrowserSelector {
         return null;
     }
 
-    private static Browser getDefaultBrowser(@NonNull final Context context,
-                                             @NonNull final List<BrowserDescriptor> browserSafeList) {
+    private Browser getDefaultBrowser(@NonNull final List<BrowserDescriptor> browserSafeList) {
         final String methodTag = TAG + ":getDefaultBrowser";
 
-        final List<Browser> allBrowsers = getBrowsers(context, null);
+        final List<Browser> allBrowsers = getBrowsers(null);
         for (final Browser browser : allBrowsers) {
             for (final BrowserDescriptor browserDescriptor : browserSafeList) {
                 if (matches(browserDescriptor, browser)) {
@@ -167,8 +179,7 @@ public class BrowserSelector {
      * order returned by the package manager, so indirectly reflects the user's preferences
      * (i.e. their default browser, if set, should be the first entry in the list).
      */
-    protected static List<Browser> getBrowsers(@NonNull final Context context,
-                                               @Nullable final BrowserDescriptor preferredBrowserDescriptor) {
+    protected  List<Browser> getBrowsers(@Nullable final BrowserDescriptor preferredBrowserDescriptor) {
         final String methodTag = TAG + ":getBrowsers";
 
         //get the list of browsers
@@ -181,15 +192,13 @@ public class BrowserSelector {
             BROWSER_INTENT.setPackage(preferredBrowserDescriptor.getPackageName());
         }
 
-        final PackageManager pm = context.getPackageManager();
-
         int queryFlag = PackageManager.GET_RESOLVED_FILTER;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             queryFlag |= PackageManager.MATCH_DEFAULT_ONLY;
         }
 
         final List<ResolveInfo> resolvedActivityList =
-                pm.queryIntentActivities(BROWSER_INTENT, queryFlag);
+                mPackageManager.queryIntentActivities(BROWSER_INTENT, queryFlag);
 
         Logger.verbose(methodTag, "Querying browsers. Got back " + resolvedActivityList.size() + " browsers.");
 
@@ -202,16 +211,19 @@ public class BrowserSelector {
             }
 
             try {
-                final PackageInfo packageInfo = PackageHelper.getPackageInfo(pm, info.activityInfo.packageName);
-                //TODO if the browser is in the block list, do not add it into the return browserList.
-                if (isCustomTabsServiceSupported(context, packageInfo)) {
-                    //if the browser has custom tab enabled, set the custom tab support as true.
-                    Logger.verbose(methodTag,LOGGING_MSG_BROWSER + info.activityInfo.packageName + " supports custom tab.");
-                    browserList.add(new Browser(packageInfo, true));
-                } else {
-                    Logger.verbose(methodTag,LOGGING_MSG_BROWSER + info.activityInfo.packageName + " does NOT support custom tab.");
-                    browserList.add(new Browser(packageInfo, false));
-                }
+                final PackageInfo packageInfo = PackageHelper.getPackageInfo(mPackageManager, info.activityInfo.packageName);
+                final boolean isCustomTabsServiceSupported = isCustomTabsServiceSupported(packageInfo);
+                Logger.verbose(methodTag, LOGGING_MSG_BROWSER + info.activityInfo.packageName +
+                        " supports custom tab: " + isCustomTabsServiceSupported);
+
+                final Browser browser = new Browser(
+                        packageInfo.packageName,
+                        generateSignatureHashes(PackageHelper.getSignatures(packageInfo)),
+                        packageInfo.versionName,
+                        isCustomTabsServiceSupported
+                );
+
+                browserList.add(browser);
             } catch (PackageManager.NameNotFoundException e) {
                 // a browser cannot be generated without the package info
                 Logger.warn(methodTag,LOGGING_MSG_BROWSER + info.activityInfo.packageName + " cannot be generated without the package info.");
@@ -222,16 +234,37 @@ public class BrowserSelector {
         return browserList;
     }
 
-    private static boolean isCustomTabsServiceSupported(@NonNull final Context context, @NonNull final PackageInfo packageInfo) {
+    /**
+     * Generates a set of SHA-512, Base64 url-safe encoded signature hashes from the provided
+     * array of signatures.
+     */
+    @NonNull
+    public static Set<String> generateSignatureHashes(@NonNull Signature[] signatures) {
+        Set<String> signatureHashes = new HashSet<>();
+        for (Signature signature : signatures) {
+            try {
+                MessageDigest digest = MessageDigest.getInstance(DIGEST_SHA_512);
+                byte[] hashBytes = digest.digest(signature.toByteArray());
+                signatureHashes.add(Base64.encodeToString(hashBytes, Base64.URL_SAFE | Base64.NO_WRAP));
+            } catch (final NoSuchAlgorithmException e) {
+                throw new IllegalStateException(
+                        "Platform does not support" + DIGEST_SHA_512 + " hashing");
+            }
+        }
+
+        return signatureHashes;
+    }
+
+    private boolean isCustomTabsServiceSupported(@NonNull final PackageInfo packageInfo) {
         // https://issuetracker.google.com/issues/119183822
         // When above AndroidX issue is fixed, switch back to CustomTabsService.ACTION_CUSTOM_TABS_CONNECTION
-        Intent serviceIntent = new Intent(new StringBuilder("android").append(".support.customtabs.action.CustomTabsService").toString());
+        Intent serviceIntent = new Intent("android.support.customtabs.action.CustomTabsService");
         serviceIntent.setPackage(packageInfo.packageName);
-        List<ResolveInfo> resolveInfos = context.getPackageManager().queryIntentServices(serviceIntent, 0);
+        List<ResolveInfo> resolveInfos = mPackageManager.queryIntentServices(serviceIntent, 0);
         return !(resolveInfos == null || resolveInfos.isEmpty());
     }
 
-    private static boolean isFullBrowser(final ResolveInfo resolveInfo) {
+    private boolean isFullBrowser(final ResolveInfo resolveInfo) {
         // The filter must match ACTION_VIEW, CATEGORY_BROWSEABLE, and at least one scheme,
         if (!resolveInfo.filter.hasAction(Intent.ACTION_VIEW)
                 || !resolveInfo.filter.hasCategory(Intent.CATEGORY_BROWSABLE)

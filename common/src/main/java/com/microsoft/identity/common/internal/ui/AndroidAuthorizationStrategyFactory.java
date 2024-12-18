@@ -29,15 +29,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.microsoft.identity.common.internal.ui.browser.Browser;
+import com.microsoft.identity.common.java.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.DefaultBrowserAuthorizationStrategy;
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
-import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthorizationStrategy;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.logging.Logger;
@@ -51,7 +47,7 @@ import lombok.experimental.Accessors;
 @SuppressWarnings(WarningType.rawtype_warning)
 @Builder
 @Accessors(prefix = "m")
-public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrategyFactory{
+public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrategyFactory<IAuthorizationStrategy>{
     private static final String TAG = AndroidAuthorizationStrategyFactory.class.getSimpleName();
 
     private final Context mContext;
@@ -61,36 +57,28 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
     /**
      * Get the authorization strategy.
      *
-     * @param parameters The parameters for the command.
+     * @param authorizationAgent The authorization agent provided by the caller.
+     * @param browser The browser to use for authorization.
+     * @param isBrowserRequest True if the request is from browser.
+     *
      * @return The authorization strategy.
      */
     @Override
+    @NonNull
     public IAuthorizationStrategy getAuthorizationStrategy(
-            @NonNull final InteractiveTokenCommandParameters parameters) {
+            @NonNull final AuthorizationAgent authorizationAgent,
+            @Nullable final Browser browser,
+            final boolean isBrowserRequest) {
         final String methodTag = TAG + ":getAuthorizationStrategy";
 
-        Browser browser;
-        try {
-             browser = BrowserSelector.select(
-                    mContext,
-                    parameters.getBrowserSafeList(),
-                    parameters.getPreferredBrowser());
-        } catch (final Throwable throwable) {
-            Logger.warn(methodTag, ErrorStrings.NO_AVAILABLE_BROWSER_FOUND);
-            browser = null;
-        }
-
         // Use embedded webView if no browser available or authorization agent is webView
-        if (parameters.getAuthorizationAgent() == AuthorizationAgent.WEBVIEW || browser == null) {
+        if (authorizationAgent== AuthorizationAgent.WEBVIEW || browser == null) {
             Logger.info(methodTag, "Use webView for authorization.");
             return getGenericAuthorizationStrategy(browser);
         }
 
         Logger.info(methodTag, "Use browser for authorization.");
-        return getBrowserAuthorizationStrategy(
-                browser,
-                (parameters instanceof BrokerInteractiveTokenCommandParameters));
-
+        return getBrowserAuthorizationStrategy(browser, isBrowserRequest);
     }
 
     /**

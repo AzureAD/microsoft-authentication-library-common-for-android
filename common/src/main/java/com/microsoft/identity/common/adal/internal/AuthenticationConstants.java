@@ -534,7 +534,7 @@ public final class AuthenticationConstants {
     }
 
     /**
-     * Represents the constants value for the DUNA flow.
+     * Represents the constants value for the SwitchBrowser protocol.
      */
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class SWITCH_BROWSER {

@@ -133,6 +133,11 @@ public class MockPlatformComponentsFactory {
             throw new UnsupportedOperationException();
         }
 
+        @Override
+        public List<BrowserDescriptor> getBrowserSafeListForSwitchBrowser() {
+            throw new UnsupportedOperationException();
+        }
+
         @Nullable
         @Override
         public String getInstalledCompanyPortalVersion() {

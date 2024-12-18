@@ -125,7 +125,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     // TODO private transient InstanceDiscoveryMetadata mInstanceDiscoveryMetadata;
     // TODO private boolean mIsExtendedLifetimeEnabled = false;
 
-    // The value 1 indicates that client supports DUNA flow.
+    // The value 1 indicates that client supports SwitchBrowser protocol.
     @Getter
     @Accessors(prefix = "m")
     @SerializedName("switch_browser")

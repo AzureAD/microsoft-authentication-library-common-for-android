@@ -468,7 +468,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     public boolean launchWebBrowserIntent(@NonNull final Uri uri) {
         final String methodTag = TAG + ":launchWebBrowserIntent";
         if (mAuthIntent != null) {
-            Logger.info(methodTag, "Launching web browser intent for DUNA flow.");
+            Logger.info(methodTag, "Launching web browser intent for SwitchBrowserProtocol.");
             mAuthIntent.setData(uri);
             startActivity(mAuthIntent);
             return true;

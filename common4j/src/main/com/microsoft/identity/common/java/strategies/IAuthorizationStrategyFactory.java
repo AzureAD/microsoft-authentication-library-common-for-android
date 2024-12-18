@@ -23,15 +23,19 @@
 package com.microsoft.identity.common.java.strategies;
 
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
-import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
+import com.microsoft.identity.common.java.browser.Browser;import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
+import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 
-import lombok.NonNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 // Suppressing rawtype warnings due to the generic types IAuthorizationStrategy
 @SuppressWarnings(WarningType.rawtype_warning)
 public interface IAuthorizationStrategyFactory<GenericAuthorizationStrategy extends IAuthorizationStrategy> {
 
     GenericAuthorizationStrategy getAuthorizationStrategy(
-            @NonNull final InteractiveTokenCommandParameters parameters);
+            @NonNull final AuthorizationAgent authorizationAgent,
+            @Nullable final Browser browser,
+            final boolean isBrowserRequest
+    );
 }
