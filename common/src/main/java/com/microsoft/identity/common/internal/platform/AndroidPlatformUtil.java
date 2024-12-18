@@ -60,7 +60,6 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -85,21 +84,12 @@ public class AndroidPlatformUtil implements IPlatformUtil {
      * List of System Browsers which can be used from broker, currently only Chrome is supported.
      * This information here is populated from the default browser safe-list in MSAL.
      *
-     * @return
+     * @return List of BrowserDescriptors which are considered safe for the broker.
      */
     @Override
     public List<BrowserDescriptor> getBrowserSafeListForBroker() {
         List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
-        final HashSet<String> signatureHashes = new HashSet<String>();
-        signatureHashes.add("7fmduHKTdHHrlMvldlEqAIlSfii1tl35bxj1OXN5Ve8c4lU6URVu4xtSHc3BVZxS6WWJnxMDhIfQN0N0K2NDJg==");
-        final BrowserDescriptor chrome = new BrowserDescriptor(
-                "com.android.chrome",
-                signatureHashes,
-                null,
-                null
-        );
-        browserDescriptors.add(chrome);
-
+        browserDescriptors.add(getBrowserDescriptorForChrome());
         return browserDescriptors;
     }
 
@@ -109,28 +99,31 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     @Override
     public List<BrowserDescriptor> getBrowserSafeListForSwitchBrowser() {
         List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
-        // Chrome
-        final HashSet<String> chromeSignatureHashes = new HashSet<>();
-        chromeSignatureHashes.add("7fmduHKTdHHrlMvldlEqAIlSfii1tl35bxj1OXN5Ve8c4lU6URVu4xtSHc3BVZxS6WWJnxMDhIfQN0N0K2NDJg==");
-        final BrowserDescriptor chrome = new BrowserDescriptor(
-                "com.android.chrome",
-                chromeSignatureHashes,
-                null,
-                null
-        );
-        // Edge
-        final HashSet<String> edgeSignatureHashes = new HashSet<>();
-        chromeSignatureHashes.add("Ivy-Rk6ztai_IudfbyUrSHugzRqAtHWslFvHT0PTvLMsEKLUIgv7ZZbVxygWy_M5mOPpfjZrd3vOx3t-cA6fVQ==");
-        final BrowserDescriptor edge = new BrowserDescriptor(
-                "com.microsoft.emmx",
-                chromeSignatureHashes,
-                null,
-                null
-        );
-        // Add browsers
-        browserDescriptors.add(chrome);
-        browserDescriptors.add(edge);
+        browserDescriptors.add(getBrowserDescriptorForChrome());
+        browserDescriptors.add(getBrowserDescriptorForEdge());
         return browserDescriptors;
+    }
+
+    private BrowserDescriptor getBrowserDescriptorForChrome() {
+        final HashSet<String> signatureHashes = new HashSet<>();
+        signatureHashes.add("7fmduHKTdHHrlMvldlEqAIlSfii1tl35bxj1OXN5Ve8c4lU6URVu4xtSHc3BVZxS6WWJnxMDhIfQN0N0K2NDJg==");
+        return new BrowserDescriptor(
+                "com.android.chrome",
+                signatureHashes,
+                null,
+                null
+        );
+    }
+
+    private BrowserDescriptor getBrowserDescriptorForEdge() {
+        final HashSet<String> edgeSignatureHashes = new HashSet<>();
+        edgeSignatureHashes.add("Ivy-Rk6ztai_IudfbyUrSHugzRqAtHWslFvHT0PTvLMsEKLUIgv7ZZbVxygWy_M5mOPpfjZrd3vOx3t-cA6fVQ==");
+        return new BrowserDescriptor(
+                "com.microsoft.emmx",
+                edgeSignatureHashes,
+                null,
+                null
+        );
     }
 
     @Nullable
