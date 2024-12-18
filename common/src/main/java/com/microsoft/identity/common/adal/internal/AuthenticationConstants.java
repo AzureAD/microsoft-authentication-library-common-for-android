@@ -545,12 +545,12 @@ public final class AuthenticationConstants {
         public static final String CODE = "code";
 
         /**
-         * String Query parameter key for the endpoint.
+         * String Query parameter key for the switchBrowser action uri.
          */
         public static final String ACTION_URI = "action_uri";
 
         /**
-         * String Query parameter key for the endpoint.
+         * String Query parameter key for the switchBrowser action.
          */
         public static final String ACTION = "action";
 

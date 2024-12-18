@@ -339,7 +339,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String code = uri.getQueryParameter(AuthenticationConstants.SWITCH_BROWSER.CODE);
         if (action_uri == null || code == null) {
             // This should never happen, but if it does, we should log it and return.
-            Logger.error(TAG, "Switch browser action URI or code is null. Cannot switch browser.", null);
+            Logger.error(TAG, "Switch browser action URI is null: " + StringUtil.isNullOrEmpty(action_uri), null);
+            Logger.error(TAG, "Switch browser code is null: " + StringUtil.isNullOrEmpty(code), null);
             return false;
         }
         final HashMap<String, String> queryParams = new HashMap<>();
