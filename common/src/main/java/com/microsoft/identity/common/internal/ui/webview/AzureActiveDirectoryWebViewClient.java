@@ -197,7 +197,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 final Uri formattedUri = Uri.parse(formattedURL);
                 if (isSwitchBrowserRequest(formattedUri)) {
                     Logger.info(methodTag,"Request to switch browser.");
-                    return processSwitchToBrowserRequest(formattedUri);
+                    return processSwitchBrowserRequest(formattedUri);
                 } else {
                     Logger.info(methodTag,"It is a redirect request.");
                     processRedirectUrl(view, url);
@@ -332,7 +332,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      *
      * @param uri The URI of the request.
      */
-    protected boolean processSwitchToBrowserRequest(@NonNull final Uri uri) {
+    protected boolean processSwitchBrowserRequest(@NonNull final Uri uri) {
         final AuthorizationActivity activity = (AuthorizationActivity) getActivity();
         final WebViewAuthorizationFragment fragment = (WebViewAuthorizationFragment) activity.getFragment();
         final String action_uri = uri.getQueryParameter(AuthenticationConstants.SWITCH_BROWSER.ACTION_URI);
@@ -346,7 +346,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final HashMap<String, String> queryParams = new HashMap<>();
         queryParams.put(AuthenticationConstants.SWITCH_BROWSER.CODE, code);
         queryParams.put(AuthenticationConstants.OAuth2.REDIRECT_URI, mRedirectUrl);
-        final Uri swithBrowserUri = fragment.constructSwithBrowserUri(action_uri, queryParams);
+        final Uri swithBrowserUri = fragment.constructSwitchBrowserUri(action_uri, queryParams);
         return fragment.launchWebBrowserIntent(swithBrowserUri);
     }
 

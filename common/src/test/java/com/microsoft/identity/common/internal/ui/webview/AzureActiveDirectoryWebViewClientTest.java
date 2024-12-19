@@ -105,7 +105,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         when(activity.getApplicationContext()).thenReturn(context);
         when(activity.getFragment()).thenReturn(fragment);
         when(activity.getPackageManager()).thenReturn(context.getPackageManager());
-        when(fragment.constructSwithBrowserUri(SWITCH_BROWSER_ACTION_URI + SWITCH_BROWSER_ACTION_URI_PATHS, params)).thenReturn(Uri.parse(TEST_SWITCH_BROWSER_URL));
+        when(fragment.constructSwitchBrowserUri(SWITCH_BROWSER_ACTION_URI + SWITCH_BROWSER_ACTION_URI_PATHS, params)).thenReturn(Uri.parse(TEST_SWITCH_BROWSER_URL));
         when(fragment.launchWebBrowserIntent(Uri.parse(TEST_SWITCH_BROWSER_URL))).thenReturn(true);
         mMockWebView = new WebView(context);
         mWebViewClient = new AzureActiveDirectoryWebViewClient(

@@ -483,7 +483,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      * @param params     The parameters.
      * @return The constructed uri.
      */
-    public Uri constructSwithBrowserUri(@NonNull final String action_uri, @Nullable final HashMap<String, String> params) {
+    public Uri constructSwitchBrowserUri(@NonNull final String action_uri, @Nullable final HashMap<String, String> params) {
         final String[] paths = action_uri.split("/");
         final String authority = paths[0];
         final Uri.Builder uriBuilder = new Uri.Builder()
