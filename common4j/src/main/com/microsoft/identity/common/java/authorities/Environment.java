@@ -24,5 +24,6 @@ package com.microsoft.identity.common.java.authorities;
 
 public enum Environment {
     PreProduction,
-    Production
+    Production,
+    OneBox // local ests setup
 }

@@ -250,10 +250,17 @@ public abstract class Authority {
         return null != getEquivalentConfiguredAuthority(authorityStr);
     }
 
-    private static Authority createAadAuthority(@NonNull final CommonURIBuilder authorityCommonUriBuilder,
+    private static Authority createAadAuthority(@NonNull final CommonURIBuilder uriBuilder,
                                                 @NonNull final List<String> pathSegments) {
+        final String cloudUrl;
+        if (uriBuilder.getPort() != -1) {
+            cloudUrl = uriBuilder.getScheme() + "://" + uriBuilder.getHost() + ":" + uriBuilder.getPort();
+        } else {
+            cloudUrl = uriBuilder.getScheme() + "://" + uriBuilder.getHost();
+        }
+
         AzureActiveDirectoryAudience audience = AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(
-                authorityCommonUriBuilder.getScheme() + "://" + authorityCommonUriBuilder.getHost(),
+                cloudUrl,
                 pathSegments.get(0)
         );
 
