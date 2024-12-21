@@ -87,4 +87,10 @@ public class TerminalException extends RuntimeException implements IErrorInforma
         super(message);
         this.mErrorCode = errorCode;
     }
+
+    @Nullable
+    @Override
+    public String getSubErrorCode() {
+        return null;
+    }
 }

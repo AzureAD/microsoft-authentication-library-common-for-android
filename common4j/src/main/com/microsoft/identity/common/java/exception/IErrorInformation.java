@@ -39,4 +39,11 @@ public interface IErrorInformation {
      */
     @NonNull
     String getErrorCode();
+
+    /**
+     * Get the sub error code associated with this operation.  May be null.
+     * @return the associated error code.
+     */
+    @Nullable
+    String getSubErrorCode();
 }

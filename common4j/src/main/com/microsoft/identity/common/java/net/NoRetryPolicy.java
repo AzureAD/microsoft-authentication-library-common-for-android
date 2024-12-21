@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
+import com.microsoft.identity.common.java.exception.ClientException;
+
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
 
@@ -38,7 +40,7 @@ import lombok.SneakyThrows;
 public class NoRetryPolicy implements IRetryPolicy<HttpResponse> {
     @Override
     @SneakyThrows
-    public HttpResponse attempt(Callable<HttpResponse> supplier) throws IOException {
+    public HttpResponse attempt(Callable<HttpResponse> supplier) throws ClientException {
         return supplier.call();
     }
 }

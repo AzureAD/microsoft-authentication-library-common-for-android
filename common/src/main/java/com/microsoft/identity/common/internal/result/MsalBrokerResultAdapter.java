@@ -76,7 +76,6 @@ import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.request.SdkType;
@@ -308,6 +307,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final BrokerResult.Builder builder = new BrokerResult.Builder()
                 .success(false)
                 .errorCode(exception.getErrorCode())
+                .subErrorCode(exception.getSubErrorCode())
                 .errorMessage(exception.getMessage())
                 .exceptionType(exception.getExceptionName())
                 .correlationId(exception.getCorrelationId())
@@ -318,7 +318,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         if (exception instanceof ServiceException) {
             final ServiceException serviceException = (ServiceException) exception;
-            builder.oauthSubErrorCode(serviceException.getOAuthSubErrorCode())
+            builder.subErrorCode(serviceException.getSubErrorCode())
                     .httpStatusCode(serviceException.getHttpStatusCode())
                     .httpResponseBody(AuthenticationSchemeTypeAdapter.getGsonInstance().toJson(
                             serviceException.getHttpResponseBody()));
@@ -522,6 +522,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             );
         }
 
+        baseException.setSubErrorCode(brokerResult.getSubErrorCode());
         baseException.setCliTelemErrorCode(brokerResult.getCliTelemErrorCode());
         baseException.setCliTelemSubErrorCode(brokerResult.getCliTelemSubErrorCode());
         baseException.setCorrelationId(brokerResult.getCorrelationId());
@@ -595,6 +596,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             );
         }
 
+        baseException.setSubErrorCode(brokerResult.getSubErrorCode());
         baseException.setCliTelemErrorCode(brokerResult.getCliTelemErrorCode());
         baseException.setCliTelemSubErrorCode(brokerResult.getCliTelemSubErrorCode());
         baseException.setCorrelationId(brokerResult.getCorrelationId());
@@ -620,7 +622,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         exception.setAuthorityUrl(brokerResult.getAuthority());
         exception.setAccountUserId(brokerResult.getLocalAccountId());
         exception.setAccountUpn(brokerResult.getUserName());
-        exception.setOauthSubErrorCode(brokerResult.getSubErrorCode());
+        exception.setSubErrorCode(brokerResult.getSubErrorCode());
         try {
             exception.setHttpResponseBody(HashMapExtensions.jsonStringAsMap(
                     brokerResult.getHttpResponseBody())
@@ -648,8 +650,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 brokerResult.getErrorMessage(),
                 null
         );
-
-        serviceException.setOauthSubErrorCode(brokerResult.getSubErrorCode());
 
         try {
             serviceException.setHttpResponseBody(
@@ -686,7 +686,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         );
         if (OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(errorCode) ||
                 OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode)) {
-            exception.setOauthSubErrorCode(brokerResult.getSubErrorCode());
+            exception.setSubErrorCode(brokerResult.getSubErrorCode());
         }
         return exception;
     }

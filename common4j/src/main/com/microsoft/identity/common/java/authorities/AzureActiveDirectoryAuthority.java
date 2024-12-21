@@ -38,7 +38,6 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParamet
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.StringUtil;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -177,7 +176,7 @@ public class AzureActiveDirectoryAuthority extends Authority {
      */
     //@WorkerThread
     public synchronized boolean isSameCloudAsAuthority(@NonNull final AzureActiveDirectoryAuthority authorityToCheck)
-            throws IOException, URISyntaxException {
+            throws ClientException {
         if (!AzureActiveDirectory.isInitialized()) {
             // Cloud discovery is needed in order to make sure that we have a preferred_network_host_name to cloud aliases mappings
             AzureActiveDirectory.performCloudDiscovery();
