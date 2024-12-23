@@ -22,6 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.msafederation
 
+/**
+ * Interface for Federated Credential Callback. Helps calling sign methods
+ * async from java.
+ */
 interface IFederatedCredentialCallback<R : FederatedCredential> {
+    /**
+     * Called when the sign in is successful.
+     */
     fun onSuccess(credential: R)
 }

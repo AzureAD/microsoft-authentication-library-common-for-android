@@ -22,6 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.msafederation
 
+/**
+ * Enum class for Federated Sign In Provider Name like Google, Apple
+ * Currently only Google is supported.
+ */
 enum class FederatedSignInProviderName {
     GOOGLE,
     APPLE // would be used later

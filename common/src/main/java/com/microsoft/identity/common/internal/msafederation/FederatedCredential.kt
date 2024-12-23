@@ -22,4 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.msafederation
 
+/**
+ * Represents credential artifact as result of successful sign in into a federated sign in provider
+ * (Google/Apple). It can contain id token and/or auth code. See implementations for more details.
+ */
 abstract class FederatedCredential(val federatedSignInProviderName: FederatedSignInProviderName)

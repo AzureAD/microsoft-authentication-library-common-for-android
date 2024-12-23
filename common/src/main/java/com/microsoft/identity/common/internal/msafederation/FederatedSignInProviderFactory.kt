@@ -26,8 +26,15 @@ import com.microsoft.identity.common.internal.msafederation.MsaFederationConstan
 import com.microsoft.identity.common.internal.msafederation.google.GoogleSignInProvider
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters
 
+/**
+ * Factory class to get the Federated Sign In Provider based on provider type in parameters
+ * Currently only Google is supported.
+ */
 internal object FederatedSignInProviderFactory {
 
+    /**
+     * Get the Federated Sign In Provider based on provider type in parameters.
+     */
     fun getProvider(parameters: FederatedSignInParameters): IFederatedSignInProvider {
         return when (parameters.providerType) {
             FederatedSignInProviderName.GOOGLE -> GoogleSignInProvider.create(parameters as SignInWithGoogleParameters, GOOGLE_MSA_WEB_CLIENT_ID)

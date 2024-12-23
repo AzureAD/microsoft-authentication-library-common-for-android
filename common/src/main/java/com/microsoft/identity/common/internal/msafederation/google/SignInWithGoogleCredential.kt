@@ -26,9 +26,16 @@ import com.microsoft.identity.common.internal.msafederation.MsaFederationConstan
 import com.microsoft.identity.common.internal.msafederation.FederatedCredential
 import com.microsoft.identity.common.internal.msafederation.FederatedSignInProviderName
 
-data class SignInWithGoogleCredential internal constructor(internal val idToken: String)
-    : FederatedCredential(FederatedSignInProviderName.GOOGLE) {
+/**
+ * Represents credential artifact as result of successful sign in with google
+ * It can contain id token.
+ */
+data class SignInWithGoogleCredential internal constructor(internal val idToken: String) : FederatedCredential(FederatedSignInProviderName.GOOGLE) {
 
+    /**
+     * Helper method to create header that can be used in MSA
+     * authorization. (Move to better place.)
+     */
     fun asHeaders(): Map<String, String> {
         return mapOf(MSA_ID_TOKEN_HEADER_KEY to idToken)
     }

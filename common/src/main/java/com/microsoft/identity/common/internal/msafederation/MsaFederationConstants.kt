@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.msafederation
 
+/**
+ * Constants used in MSA federation.
+ */
 internal object MsaFederationConstants {
     internal const val SIWG_TEST_WEBCLIENT_ID = "421268256362-r39ud27ddaajrcio0c8iq6snv3po43fb.apps.googleusercontent.com"
     internal const val GOOGLE_MSA_WEB_CLIENT_ID = "1057459215779-l3uvdm899ucea09atcc09d9rq6uvkilv.apps.googleusercontent.com"

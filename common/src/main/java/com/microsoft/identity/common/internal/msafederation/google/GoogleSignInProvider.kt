@@ -37,6 +37,13 @@ import com.microsoft.identity.common.java.base64.Base64Util
 import com.microsoft.identity.common.java.exception.ClientException
 import java.security.SecureRandom
 
+/**
+ * GoogleSignInProvider is an implementation of the IFederatedSignInProvider interface
+ * that handles sign-in operations with Google using credential manager in Android.
+ * The class is internal and should not be used outside of the SDK. OneAuth should use
+ * [SignInWithGoogleApi]
+ * Call [GoogleSignInProvider.create] to create an instance of GoogleSignInProvider.
+ */
 internal class GoogleSignInProvider(private val credentialManager: CredentialManager,
                            private val parameters: SignInWithGoogleParameters,
                            private val webClientId: String
@@ -45,12 +52,27 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
     companion object {
         private const val TAG = "GoogleSignInProvider"
 
+        /**
+         * Creates an instance of GoogleSignInProvider.
+         *
+         * @param parameters The parameters required for signing in with Google.
+         * @param webClientId The web client ID for Google sign-in.
+         * @return A new instance of GoogleSignInProvider. Prod must use MSA client ID.
+         */
         @JvmStatic
         fun create(parameters: SignInWithGoogleParameters, webClientId: String): GoogleSignInProvider {
             return GoogleSignInProvider(CredentialManager.create(parameters.activity.applicationContext), parameters, webClientId)
         }
     }
 
+    /**
+     * Signs in with Google using the specified parameters.
+     * if useBottomSheet is true, it will use GetGoogleIdOption based flow as
+     * suggested by google. Otherwise, it will use GetSignInWithGoogleOption based flow.
+     *
+     * @return A Result containing the SignInWithGoogleCredential on success,
+     * or an exception on failure.
+     */
     override suspend fun signIn(): Result<SignInWithGoogleCredential> {
         return if (parameters.useBottomSheet) {
             signInWithGoogleBottomSheet()
@@ -59,6 +81,11 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
         }
     }
 
+    /**
+     * Signs in with Google using a bottom sheet UI.
+     *
+     * @return A Result containing the SignInWithGoogleCredential on success, or an exception on failure.
+     */
     private suspend fun signInWithGoogleBottomSheet(): Result<SignInWithGoogleCredential> {
         val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
@@ -70,6 +97,11 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
         return getCredential(googleIdOption)
     }
 
+    /**
+     * Signs in with Google using a standard UI.
+     *
+     * @return A Result containing the SignInWithGoogleCredential on success, or an exception on failure.
+     */
     private suspend fun signInWithGoogle(): Result<SignInWithGoogleCredential> {
         val signInWithGoogleOption = GetSignInWithGoogleOption.Builder(webClientId)
             .setNonce(generateNonce())
@@ -78,10 +110,19 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
         return getCredential(signInWithGoogleOption) // why not GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_SIWG_CREDENTIAL?
     }
 
+    /**
+     * Signs out from Google for this app.
+     */
     override suspend fun signOut() {
         credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }
 
+    /**
+     * Retrieves the credential using the specified option.
+     *
+     * @param option The GetCustomCredentialOption to use for retrieving the credential.
+     * @return A Result containing the SignInWithGoogleCredential on success, or an exception on failure.
+     */
     private suspend fun getCredential(
         option: GetCustomCredentialOption
     ) : Result<SignInWithGoogleCredential> {
@@ -139,6 +180,12 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
         }
     }
 
+    /**
+     * Generates a nonce for the sign-in request.
+     *
+     * @param size The size of the nonce to generate. Default is 16.
+     * @return A URL-safe base64 encoded nonce.
+     */
     private fun generateNonce(size: Int = 16): String {
         val secureRandom = SecureRandom()
         val nonceBytes = ByteArray(size)

@@ -26,15 +26,34 @@ import android.app.Activity
 import com.microsoft.identity.common.internal.msafederation.FederatedSignInParameters
 import com.microsoft.identity.common.internal.msafederation.FederatedSignInProviderName
 
+/**
+ * SignInWithGoogleParameters holds the parameters required for signing in with Google.
+ *
+ * @property activity The Activity context used for the sign-in process.
+ * UI for the sign-in process.
+ */
 data class SignInWithGoogleParameters(
     internal val activity: Activity
 ) : FederatedSignInParameters() {
+
+    /**
+     * Secondary constructor to initialize the parameters with an option to use a bottom sheet UI.
+     * Current requirement do not use bottom sheet UI, so this constructor is kept internal
+     * @param activity The Activity context used for the sign-in process.
+     * @param useBottomSheet A flag indicating whether to use a bottom sheet UI for the sign-in process.
+     */
     internal constructor(activity: Activity, useBottomSheet: Boolean) : this(activity) {
         this.useBottomSheet = useBottomSheet
     }
 
+    /**
+     * A flag indicating whether to use a bottom sheet UI for the sign-in process.
+     */
     internal var useBottomSheet: Boolean = false
 
+    /**
+     * The provider type for the federated sign-in, which is Google in this case.
+     */
     override val providerType: FederatedSignInProviderName
         get() = FederatedSignInProviderName.GOOGLE
 }

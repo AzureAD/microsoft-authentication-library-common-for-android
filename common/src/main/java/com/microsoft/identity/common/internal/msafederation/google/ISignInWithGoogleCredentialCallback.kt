@@ -24,6 +24,10 @@ package com.microsoft.identity.common.internal.msafederation.google
 
 import com.microsoft.identity.common.internal.msafederation.IFederatedCredentialCallback
 
+/**
+ * Interface for Federated Credential Callback. Helps calling sign methods
+ * async from java.
+ */
 interface ISignInWithGoogleCredentialCallback :
     IFederatedCredentialCallback<SignInWithGoogleCredential> {
     override fun onSuccess(credential: SignInWithGoogleCredential)
