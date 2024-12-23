@@ -93,15 +93,15 @@ class WebAuthnJsonUtil {
                 WEBAUTHN_RESPONSE_CLIENT_DATA_JSON_KEY))
             assertionResult.put(WEBAUTHN_RESPONSE_SIGNATURE_JSON_KEY, authResponseJsonObject.get(
                 WEBAUTHN_RESPONSE_SIGNATURE_JSON_KEY))
-            try {
+            // UserHandle is optional if allowCredentials was provided in the request (username flow).
+            if (authResponseJsonObject.isNull(WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY)) {
+                Logger.info(methodTag, "UserHandle not found in assertion response.")
+            } else {
                 assertionResult.put(
                     WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY, authResponseJsonObject.get(
                         WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY
                     )
                 )
-            } catch (e: JSONException) {
-                // UserHandle is optional if allowCredentials was provided in the request (username flow).
-                Logger.info(methodTag, "UserHandle not found in assertion response.")
             }
             return assertionResult.toString()
         }
