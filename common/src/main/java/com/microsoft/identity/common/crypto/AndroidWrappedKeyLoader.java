@@ -26,6 +26,8 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 import android.security.KeyPairGeneratorSpec;
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyProperties;
 
 import androidx.annotation.RequiresApi;
 
@@ -44,7 +46,9 @@ import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.SecretKey;
 import javax.security.auth.x500.X500Principal;
@@ -269,12 +273,13 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     /**
      * Generate a self-signed cert and derive an AlgorithmParameterSpec from that.
      * This is for the key to be generated in {@link KeyStore} via {@link KeyPairGenerator}
+     * Note : This is now only for API level < 28
      *
      * @param context an Android {@link Context} object.
      * @return a {@link AlgorithmParameterSpec} for the keystore key (that we'll use to wrap the secret key).
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private static AlgorithmParameterSpec getSpecForKeyStoreKey(@NonNull final Context context,
+    private static AlgorithmParameterSpec getLegacySpecForKeyStoreKey(@NonNull final Context context,
                                                                 @NonNull final String alias) {
         // Generate a self-signed cert.
         final String certInfo = String.format(Locale.ROOT, "CN=%s, OU=%s",
@@ -293,6 +298,34 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                 .setStartDate(start.getTime())
                 .setEndDate(end.getTime())
                 .build();
+    }
+
+    /**
+     * Generate a self-signed cert and derive an AlgorithmParameterSpec from that.
+     * This is for the key to be generated in {@link KeyStore} via {@link KeyPairGenerator}
+     *
+     * @param context an Android {@link Context} object.
+     * @return a {@link AlgorithmParameterSpec} for the keystore key (that we'll use to wrap the secret key).
+     */
+    private static AlgorithmParameterSpec getSpecForKeyStoreKey(@NonNull final Context context, @NonNull final String alias) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            return getLegacySpecForKeyStoreKey(context, alias);
+        } else {
+            final String certInfo = String.format(Locale.ROOT, "CN=%s, OU=%s",
+                    alias,
+                    context.getPackageName());
+            final int certValidYears = 100;
+            int purposes = KeyProperties.PURPOSE_WRAP_KEY | KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT;
+            return new KeyGenParameterSpec.Builder(alias, purposes)
+                    .setCertificateSubject(new X500Principal(certInfo))
+                    .setCertificateSerialNumber(BigInteger.ONE)
+                    .setCertificateNotBefore(new Date())
+                    .setCertificateNotAfter(new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(365 * certValidYears)))
+                    .setKeySize(2048)
+                    .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
+                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
+                    .build();
+        }
     }
 
     /**
