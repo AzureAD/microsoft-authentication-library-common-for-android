@@ -36,7 +36,7 @@ internal object FederatedSignInProviderFactory {
      * Get the Federated Sign In Provider based on provider type in parameters.
      */
     fun getProvider(parameters: FederatedSignInParameters): IFederatedSignInProvider {
-        return when (parameters.providerType) {
+        return when (parameters.providerName) {
             FederatedSignInProviderName.GOOGLE -> GoogleSignInProvider.create(parameters as SignInWithGoogleParameters, GOOGLE_MSA_WEB_CLIENT_ID)
 
             else -> {

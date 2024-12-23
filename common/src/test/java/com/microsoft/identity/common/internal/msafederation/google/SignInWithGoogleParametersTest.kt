@@ -42,7 +42,7 @@ class SignInWithGoogleParametersTest {
     fun testSignInWithGoogleParameters() {
         val activity = Robolectric.buildActivity(Activity::class.java).get()
         val signInWithGoogleParameters = SignInWithGoogleParameters(activity)
-        assertEquals(FederatedSignInProviderName.GOOGLE, signInWithGoogleParameters.providerType)
+        assertEquals(FederatedSignInProviderName.GOOGLE, signInWithGoogleParameters.providerName)
         assertEquals(activity, signInWithGoogleParameters.activity)
         assertFalse(signInWithGoogleParameters.useBottomSheet)
     }
@@ -51,7 +51,7 @@ class SignInWithGoogleParametersTest {
     fun testSignInWithGoogleParametersUseBottomSheet() {
         val activity = Robolectric.buildActivity(Activity::class.java).get()
         val signInWithGoogleParameters = SignInWithGoogleParameters(activity, true)
-        assertEquals(FederatedSignInProviderName.GOOGLE, signInWithGoogleParameters.providerType)
+        assertEquals(FederatedSignInProviderName.GOOGLE, signInWithGoogleParameters.providerName)
         assertEquals(activity, signInWithGoogleParameters.activity)
         assertTrue(signInWithGoogleParameters.useBottomSheet)
     }

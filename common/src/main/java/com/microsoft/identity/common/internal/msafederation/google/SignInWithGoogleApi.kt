@@ -69,6 +69,10 @@ class SignInWithGoogleApi internal constructor(
         return signInWithGoogleCredential
     }
 
+    /**
+     * Entry method to perform sign in with google synchronously.
+     * Refer [signIn] for more details.
+     */
     fun signInSync(
         signInWithGoogleParameters: SignInWithGoogleParameters
     ): SignInWithGoogleCredential {
@@ -77,6 +81,10 @@ class SignInWithGoogleApi internal constructor(
         }
     }
 
+    /**
+     * Entry method to perform sign in with google asynchronously for java.
+     * Refer [signIn] for more details.
+     */
     fun signInAsync(
         signInWithGoogleParameters: SignInWithGoogleParameters,
         callback: ISignInWithGoogleCredentialCallback

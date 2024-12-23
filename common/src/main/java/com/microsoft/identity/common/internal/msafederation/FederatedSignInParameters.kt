@@ -26,5 +26,5 @@ package com.microsoft.identity.common.internal.msafederation
  * Parameters for Federated Sign In. e.g. SignInWithGoogleParameters for Google.
  */
 abstract class FederatedSignInParameters {
-    abstract val providerType: FederatedSignInProviderName
+    abstract val providerName: FederatedSignInProviderName
 }

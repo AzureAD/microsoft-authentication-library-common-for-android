@@ -54,6 +54,6 @@ data class SignInWithGoogleParameters(
     /**
      * The provider type for the federated sign-in, which is Google in this case.
      */
-    override val providerType: FederatedSignInProviderName
+    override val providerName: FederatedSignInProviderName
         get() = FederatedSignInProviderName.GOOGLE
 }
