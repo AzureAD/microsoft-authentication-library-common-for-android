@@ -28,8 +28,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.internal.activebrokerdiscovery.BrokerDiscoveryClientFactory;
@@ -68,7 +70,11 @@ public class SDMBroadcastReceiver {
             };
 
             final IntentFilter filter = new IntentFilter(SharedDeviceModeConstants.CURRENT_ACCOUNT_CHANGED_BROADCAST_IDENTIFIER);
-            context.registerReceiver(sSDMBroadcastReceiver, filter);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.registerReceiver(sSDMBroadcastReceiver, filter, Context.RECEIVER_EXPORTED);
+            } else {
+                context.registerReceiver(sSDMBroadcastReceiver, filter);
+            }
         }
     }
 
