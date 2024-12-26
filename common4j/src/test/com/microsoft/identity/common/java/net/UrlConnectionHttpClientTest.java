@@ -1218,7 +1218,7 @@ public final class UrlConnectionHttpClientTest {
             );
             Assert.fail();
         } catch (ClientException e){
-            Assert.assertTrue(ConnectionError.FAILED_TO_GET_RESPONSE_CODE.compare(e));
+            Assert.assertTrue(ConnectionError.NETWORK_TEMPORARILY_UNAVAILABLE.compare(e));
         }
     }
 

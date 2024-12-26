@@ -1,10 +1,12 @@
 vNext
 ----------
 - [MINOR] Add SDMBroadcastReceiver for applications to register callbacks for SDM broadcasts (#2547)
-- [MINOR] Add suberror for network errors (#2537)
+- [MINOR] Add switch_browser toMicrosoftStsAuthorizationRequest (#2550)
+- [MAJOR] Add suberror for network errors (#2537)
 - [PATCH] Translate MFA token error to UIRequiredException instead of ServiceException (#2538)
 - [MINOR] Add Child Spans for Interactive Span (#2516)
 - [MINOR] For MSAL CPP flows, match exact claims when deleting AT with intersecting scopes (#2548)
+- [MINOR] Replace Deprecated Keystore API for Android 28+ (#2558)
 
 Version 18.2.2
 ----------
