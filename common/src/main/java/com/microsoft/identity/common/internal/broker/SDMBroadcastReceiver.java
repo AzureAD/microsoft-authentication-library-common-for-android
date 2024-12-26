@@ -31,7 +31,6 @@ import android.content.IntentFilter;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.internal.activebrokerdiscovery.BrokerDiscoveryClientFactory;
