@@ -351,6 +351,10 @@ public abstract class Authority {
             return false;
         }
 
+        if (BuildConfig.ALLOW_ONEBOX_AUTHORITIES) {
+            return true; // onebox authorities are always considered to be known.
+        }
+
         //Check if authority was added to configuration
         for (final Authority currentAuthority : knownAuthorities) {
             if (currentAuthority.mAuthorityUrlString != null &&
