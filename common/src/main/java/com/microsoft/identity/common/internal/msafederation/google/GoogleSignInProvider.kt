@@ -107,7 +107,7 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
             .setNonce(generateNonce())
             .build()
 
-        return getCredential(signInWithGoogleOption) // why not GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_SIWG_CREDENTIAL?
+        return getCredential(signInWithGoogleOption)
     }
 
     /**

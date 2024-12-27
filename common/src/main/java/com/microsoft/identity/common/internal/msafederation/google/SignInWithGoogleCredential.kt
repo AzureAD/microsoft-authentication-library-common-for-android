@@ -40,4 +40,3 @@ data class SignInWithGoogleCredential internal constructor(internal val idToken:
         return mapOf(MSA_ID_TOKEN_HEADER_KEY to idToken)
     }
 }
-
