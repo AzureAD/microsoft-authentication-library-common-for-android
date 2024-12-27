@@ -69,6 +69,8 @@ public class BaseException extends Exception implements IErrorInformation, ITele
 
     private String mErrorCode;
 
+    private String mSubErrorCode;
+
     private String mCorrelationId;
 
     // The username of the account that owns the flow.
@@ -133,11 +135,22 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     }
 
     /**
-     * @return The error code for the exception, could be null. {@link BaseException} is the top level base exception, for the
-     * constants value of all the error code.
+     * @return The error code of the exception, may not be null.
      */
     public String getErrorCode() {
         return mErrorCode;
+    }
+
+    /**
+     * @return Sub error code of the exception, could be null.
+     */
+    public String getSubErrorCode() { return mSubErrorCode; }
+
+    /**
+     * @param subErrorCode - The sub error code for the exception.
+     */
+    public void setSubErrorCode(@Nullable final String subErrorCode) {
+        mSubErrorCode = subErrorCode;
     }
 
     /**

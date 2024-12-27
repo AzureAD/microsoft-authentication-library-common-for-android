@@ -73,7 +73,8 @@ public class ClientException extends BaseException {
     public static final String MULTIPLE_MATCHING_TOKENS_DETECTED = "multiple_matching_tokens_detected";
 
     /**
-     * No active network is available on the device.
+     * Failed to make a network request from the device.
+     * See {@link BaseException#getSubErrorCode()} for more details.
      */
     public static final String DEVICE_NETWORK_NOT_AVAILABLE = "device_network_not_available";
 

@@ -125,6 +125,13 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     // TODO private transient InstanceDiscoveryMetadata mInstanceDiscoveryMetadata;
     // TODO private boolean mIsExtendedLifetimeEnabled = false;
 
+    // The value 1 indicates that client supports DUNA flow.
+    @Getter
+    @Accessors(prefix = "m")
+    @SerializedName("switch_browser")
+    private final String mSwitchBrowser;
+
+
     public static final class Prompt {
         /**
          * AcquireToken will send prompt=select_account to the authorize endpoint. Shows a list of users from which can be
@@ -170,6 +177,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         mApplicationIdentifier = builder.mApplicationIdentifier;
         mMamEnrollmentIdentifier = builder.mMamEnrollmentIdentifier;
         mOpenIdProviderConfiguration = builder.mOpenIdProviderConfiguration;
+        mSwitchBrowser = builder.mSwitchBrowser;
     }
 
     public static class Builder extends MicrosoftAuthorizationRequest.Builder<MicrosoftStsAuthorizationRequest.Builder> {
@@ -185,6 +193,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         private AzureActiveDirectorySlice mSlice;
         private Map<String, String> mFlightParameters = new HashMap<>();
         private OpenIdProviderConfiguration mOpenIdProviderConfiguration;
+
+        private String mSwitchBrowser;
 
         public MicrosoftStsAuthorizationRequest.Builder setUid(String uid) {
             mUid = uid;
@@ -238,6 +248,11 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
         public MicrosoftStsAuthorizationRequest.Builder setOpenIdProviderConfiguration(OpenIdProviderConfiguration config) {
             mOpenIdProviderConfiguration = config;
+            return self();
+        }
+
+        public MicrosoftStsAuthorizationRequest.Builder setSwitchBrowser(final String value) {
+            mSwitchBrowser = value;
             return self();
         }
 

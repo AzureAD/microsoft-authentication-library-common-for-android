@@ -295,7 +295,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
         // so adding values to these constants as well
         resultBundle.putString(AuthenticationConstants.OAuth2.ERROR, serviceException.getErrorCode());
         resultBundle.putString(AuthenticationConstants.OAuth2.ERROR_DESCRIPTION, serviceException.getMessage());
-        resultBundle.putString(AuthenticationConstants.OAuth2.SUBERROR, serviceException.getOAuthSubErrorCode());
+        resultBundle.putString(AuthenticationConstants.OAuth2.SUBERROR, serviceException.getSubErrorCode());
 
         if (null != serviceException.getHttpResponseBody()) {
             resultBundle.putSerializable(

@@ -534,4 +534,40 @@ public class MsalCppOAuth2TokenCacheTest {
                 mTestBundle.mGeneratedRefreshToken
         );
     }
+
+    @Test
+    public void saveCredentialsWithSameTargetAndDifferentClaims() throws ClientException {
+        mTestBundle.mGeneratedAccessToken.setRequestedClaims("TestClaims");
+        mCppCache.saveCredentials(
+                false,
+                mTestBundle.mGeneratedAccessToken
+        );
+
+        mTestBundle.mGeneratedAccessToken.setRequestedClaims(null);
+        mCppCache.saveCredentials(
+                false,
+                mTestBundle.mGeneratedAccessToken
+        );
+
+        List<Credential> credentials = mCppCache.getCredentials();
+        Assert.assertEquals(credentials.size(), 1);
+
+        //Clear credentials and now match exact claims
+        mCppCache.clearCache();
+
+        mTestBundle.mGeneratedAccessToken.setRequestedClaims("TestClaims");
+        mCppCache.saveCredentials(
+                true,
+                mTestBundle.mGeneratedAccessToken
+        );
+
+        mTestBundle.mGeneratedAccessToken.setRequestedClaims(null);
+        mCppCache.saveCredentials(
+                true,
+                mTestBundle.mGeneratedAccessToken
+        );
+
+        credentials = mCppCache.getCredentials();
+        Assert.assertEquals(credentials.size(), 2);
+    }
 }

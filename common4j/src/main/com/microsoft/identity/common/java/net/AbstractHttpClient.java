@@ -22,11 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
-import java.io.IOException;
+import com.microsoft.identity.common.java.exception.ClientException;
+
 import java.net.URL;
 import java.util.Map;
-
-import javax.net.ssl.SSLContext;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -41,65 +40,65 @@ public abstract class AbstractHttpClient implements HttpClient {
     public HttpResponse method(@NonNull final String httpMethod,
                                @NonNull final URL requestUrl,
                                @NonNull final Map<String, String> requestHeaders,
-                               @Nullable final byte[] requestContent) throws IOException {
-        return method(HttpClient.HttpMethod.validateAndNormalizeMethod(httpMethod), requestUrl, requestHeaders, requestContent);
+                               @Nullable final byte[] requestContent) throws ClientException {
+        return method(HttpMethod.validateAndNormalizeMethod(httpMethod), requestUrl, requestHeaders, requestContent);
     }
 
     @Override
     public abstract HttpResponse method(@NonNull final HttpMethod httpMethod,
                                         @NonNull final URL requestUrl,
                                         @NonNull final Map<String, String> requestHeaders,
-                                        @Nullable final byte[] requestContent) throws IOException;
+                                        @Nullable final byte[] requestContent) throws ClientException;
 
     @Override
     public HttpResponse put(@NonNull final URL requestUrl,
                             @NonNull final Map<String, String> requestHeaders,
-                            @Nullable final byte[] requestContent) throws IOException {
+                            @Nullable final byte[] requestContent) throws ClientException {
         return method(HttpMethod.PUT, requestUrl, requestHeaders, requestContent);
     }
 
     @Override
     public HttpResponse patch(@NonNull final URL requestUrl,
                               @NonNull final Map<String, String> requestHeaders,
-                              @Nullable final byte[] requestContent) throws IOException {
+                              @Nullable final byte[] requestContent) throws ClientException {
         return method(HttpMethod.PATCH, requestUrl, requestHeaders, requestContent);
     }
 
     @Override
     public HttpResponse options(@NonNull final URL requestUrl,
-                                @NonNull final Map<String, String> requestHeaders) throws IOException {
+                                @NonNull final Map<String, String> requestHeaders) throws ClientException {
         return method(HttpMethod.OPTIONS, requestUrl, requestHeaders, null);
     }
 
     @Override
     public HttpResponse post(@NonNull final URL requestUrl,
                              @NonNull final Map<String, String> requestHeaders,
-                             @Nullable final byte[] requestContent) throws IOException {
+                             @Nullable final byte[] requestContent) throws ClientException {
         return method(HttpMethod.POST, requestUrl, requestHeaders, requestContent);
     }
 
     @Override
     public HttpResponse delete(@NonNull final URL requestUrl,
                                @NonNull final Map<String, String> requestHeaders,
-                               @Nullable final byte[] requestContent) throws IOException {
+                               @Nullable final byte[] requestContent) throws ClientException {
         return method(HttpMethod.DELETE, requestUrl, requestHeaders, requestContent);
     }
 
     @Override
     public HttpResponse get(@NonNull final URL requestUrl,
-                            @NonNull final Map<String, String> requestHeaders) throws IOException {
+                            @NonNull final Map<String, String> requestHeaders) throws ClientException {
         return method(HttpMethod.GET, requestUrl, requestHeaders, null);
     }
 
     @Override
     public HttpResponse head(@NonNull final URL requestUrl,
-                             @NonNull final Map<String, String> requestHeaders) throws IOException {
+                             @NonNull final Map<String, String> requestHeaders) throws ClientException {
         return method(HttpMethod.HEAD, requestUrl, requestHeaders, null);
     }
 
     @Override
     public HttpResponse trace(@NonNull final URL requestUrl,
-                              @NonNull final Map<String, String> requestHeaders) throws IOException {
+                              @NonNull final Map<String, String> requestHeaders) throws ClientException {
         return method(HttpMethod.TRACE, requestUrl, requestHeaders, null);
     }
 }

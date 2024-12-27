@@ -23,6 +23,8 @@
 
 package com.microsoft.identity.common.java.net;
 
+import com.microsoft.identity.common.java.exception.ClientException;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Ignore;

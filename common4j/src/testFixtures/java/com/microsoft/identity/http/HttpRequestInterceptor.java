@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.http;
 
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
 
@@ -43,11 +44,11 @@ public interface HttpRequestInterceptor {
      * @param requestHeaders the request headers
      * @param requestContent the request content
      * @return the http response object
-     * @throws IOException throws an exception when something went wrong during the http request
+     * @throws ClientException throws an exception when something went wrong during the http request
      */
     HttpResponse performIntercept(@NonNull HttpClient.HttpMethod httpMethod,
                                   @NonNull URL requestUrl,
                                   @NonNull Map<String, String> requestHeaders,
-                                  @Nullable byte[] requestContent) throws IOException;
+                                  @Nullable byte[] requestContent) throws ClientException;
 
 }

@@ -22,7 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
-import java.io.IOException;
+import com.microsoft.identity.common.java.exception.ClientException;
+
 import java.util.concurrent.Callable;
 
 /**
@@ -37,7 +38,7 @@ public interface IRetryPolicy<T> {
      * Evaluate the object returned from a callable and return the result.
      * @param supplier an object to call for a result.
      * @return the result of calling the supplier.
-     * @throws IOException if an IO error occurs.
+     * @throws ClientException if a Network exception error occurs.
      */
-    T attempt (Callable<T> supplier) throws IOException;
+    T attempt (Callable<T> supplier) throws ClientException;
 }
