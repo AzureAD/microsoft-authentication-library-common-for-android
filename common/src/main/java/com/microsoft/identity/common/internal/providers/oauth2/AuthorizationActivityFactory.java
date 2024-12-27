@@ -167,7 +167,6 @@ public class AuthorizationActivityFactory {
         final LibraryConfiguration libraryConfig = LibraryConfiguration.getInstance();
 
         if (authorizationAgent == AuthorizationAgent.WEBVIEW) {
-            //fragment = new GcmAuthorizationFragment(new WebViewAuthorizationFragment(), SignInWithGoogleApiFactory.INSTANCE);
             fragment = new WebViewAuthorizationFragment();
         } else {
             if (libraryConfig.isAuthorizationInCurrentTask()) {
