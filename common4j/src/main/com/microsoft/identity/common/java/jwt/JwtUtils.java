@@ -33,6 +33,9 @@ import com.microsoft.identity.common.java.util.MsaUtil;
 
 import java.util.Arrays;
 
+
+import javax.annotation.Nullable;
+
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
@@ -70,7 +73,7 @@ public final class JwtUtils {
      * @return a request headers object
      */
     @NonNull
-    public static JwtRequestHeader generateJwtRequestHeaderForMsaDR(final byte[] keyContext) {
+    public static JwtRequestHeader generateJwtRequestHeaderForMsaDR(@Nullable final byte[] keyContext) {
         final JwtRequestHeader jwtRequestHeader = new JwtRequestHeader();
         jwtRequestHeader.setType();
         jwtRequestHeader.setAlg(JwtRequestHeader.ALG_VALUE_HS256);
@@ -86,9 +89,9 @@ public final class JwtUtils {
      * @return a request body object
      */
     @NonNull
-    public static JwtRequestBody generateJwtRequestBodyForMsaDR(final String audienceUrl, final String nonce, final String deviceToken) {
+    public static JwtRequestBody generateJwtRequestBodyForMsaDR(@Nullable final String audienceUrl, @Nullable final String nonce, @Nullable final String deviceToken) {
         final JwtRequestBody jwtRequestBody = new JwtRequestBody();
-        jwtRequestBody.setAudience(audienceUrl); //TODO: Can i hard code this to login.microsoftonline.com instead of passing parameter?
+        jwtRequestBody.setAudience(audienceUrl);
         jwtRequestBody.setNonce(nonce);
         jwtRequestBody.setPurpose(MsaUtil.Companion.getJwtPurpose());
         jwtRequestBody.setGrantType(TokenRequest.GrantTypes.DEVICE_AUTH);
