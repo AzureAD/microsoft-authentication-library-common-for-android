@@ -279,7 +279,9 @@ public class AndroidPlatformUtil implements IPlatformUtil {
                 // If any active admin apps are the profile owner, then the current calling app is in work profile.
                 for (final ComponentName admin : activeAdmins) {
                     final String packageName = admin.getPackageName();
-                    if (dpm.isProfileOwnerApp(packageName)) return true;
+                    if (dpm.isProfileOwnerApp(packageName)) {
+                        return true;
+                    }
                 }
             }
         }
