@@ -76,13 +76,13 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
         );
 
         // Use embedded webView if no browser available or authorization agent is webView
-        if (parameters.getAuthorizationAgent() == AuthorizationAgent.WEBVIEW || browser == null) {
-            Logger.info(methodTag, "WebView for authorization, browser = " + browser);
+        if (authorizationAgent == AuthorizationAgent.WEBVIEW || browser == null) {
+            Logger.info(methodTag, "WebView authorization, browser: " + browser);
             return getGenericAuthorizationStrategy();
         }
 
-        Logger.info(methodTag, "Use browser for authorization, browser = " + browser);
-        return getBrowserAuthorizationStrategy(browser, isBrokerRequest);
+        Logger.info(methodTag, "Browser authorization, browser: " + browser);
+        return getBrowserAuthorizationStrategy(browser, isBrowserRequest);
     }
 
     /**
