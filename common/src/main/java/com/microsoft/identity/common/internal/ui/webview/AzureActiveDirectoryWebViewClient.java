@@ -49,12 +49,14 @@ import com.microsoft.identity.common.internal.fido.IFidoManager;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiManager;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
+import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserHandler;
+import com.microsoft.identity.common.java.browser.Browser;
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
@@ -71,6 +73,7 @@ import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URISyntaxException;
 import java.security.Principal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -337,11 +340,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @param uri The URI of the request.
      */
     protected boolean processSwitchBrowserRequest(@NonNull final WebView view, @NonNull final Uri uri) {
-        final SwitchBrowserChallenge challenge = SwitchBrowserChallenge.constructFromUri(uri);
         final Context context = view.getContext();
         final CustomTabsManager ctManager = new CustomTabsManager(context);
-        final SwitchBrowserHandler handler = new SwitchBrowserHandler(context,ctManager, null);
-        return handler.processChallenge(challenge);
+        final SwitchBrowserChallenge challenge = SwitchBrowserChallenge.constructFromUri(uri);
+        final Browser browser = new BrowserSelector(context).select(Collections.emptyList(), null);
+        if (browser != null && challenge != null) {
+            final SwitchBrowserHandler handler = new SwitchBrowserHandler(context,ctManager, browser);
+            return handler.processChallenge(challenge);
+        }
+        return false;
     }
 
     private void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
