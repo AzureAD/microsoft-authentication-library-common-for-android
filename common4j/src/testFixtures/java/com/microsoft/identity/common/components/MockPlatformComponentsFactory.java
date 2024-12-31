@@ -133,6 +133,14 @@ public class MockPlatformComponentsFactory {
             throw new UnsupportedOperationException();
         }
 
+        /**
+         * Return a list of BrowserDescriptors that are considered safe for the Switch to browser flow.
+         */
+        @Override
+        public List<BrowserDescriptor> getBrowserSafeListForSwitchBrowser() {
+            throw new UnsupportedOperationException();
+        }
+
         @Nullable
         @Override
         public String getInstalledCompanyPortalVersion() {
