@@ -350,6 +350,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final SwitchBrowserHandler handler = new SwitchBrowserHandler(context,ctManager, browser);
             return handler.processChallenge(challenge);
         }
+        return false;
     }
 
     private void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
