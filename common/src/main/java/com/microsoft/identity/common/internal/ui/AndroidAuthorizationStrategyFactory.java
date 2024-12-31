@@ -72,11 +72,11 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
 
         // Use embedded webView if no browser available or authorization agent is webView
         if (authorizationAgent == AuthorizationAgent.WEBVIEW || browser == null) {
-            Logger.info(methodTag, "Use webView for authorization.");
-            return getGenericAuthorizationStrategy(browser);
+            Logger.info(methodTag, "WebView authorization, browser: " + browser);
+            return getGenericAuthorizationStrategy();
         }
 
-        Logger.info(methodTag, "Use browser for authorization.");
+        Logger.info(methodTag, "Browser authorization, browser: " + browser);
         return getBrowserAuthorizationStrategy(browser, isBrowserRequest);
     }
 
@@ -110,14 +110,12 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
     /**
      * Get the generic authorization strategy.
      *
-     * @param browser The browser to use in case we need to use a browser.
      * @return The embedded web view authorization strategy.
      */
-    private IAuthorizationStrategy getGenericAuthorizationStrategy(@Nullable final Browser browser) {
+    private IAuthorizationStrategy getGenericAuthorizationStrategy() {
         return new EmbeddedWebViewAuthorizationStrategy(
                 mContext,
                 mActivity,
-                mFragment,
-                browser);
+                mFragment);
     }
 }

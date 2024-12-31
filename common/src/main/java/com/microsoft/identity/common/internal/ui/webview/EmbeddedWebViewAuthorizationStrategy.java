@@ -34,8 +34,6 @@ import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidAuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityFactory;
-import com.microsoft.identity.common.java.browser.Browser;
-import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
@@ -62,8 +60,6 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
     private ResultFuture<AuthorizationResult> mAuthorizationResultFuture;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
-    private final Browser mBrowser;
-    private CustomTabsManager mCustomTabManager = null;
 
     /**
      * Constructor of EmbeddedWebViewAuthorizationStrategy.
@@ -72,10 +68,8 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
      */
     public EmbeddedWebViewAuthorizationStrategy(@NonNull Context applicationContext,
                                                 @NonNull Activity activity,
-                                                @Nullable Fragment fragment,
-                                                @Nullable Browser browser) {
+                                                @Nullable Fragment fragment) {
         super(applicationContext, activity, fragment);
-        mBrowser = browser;
     }
 
     /**
@@ -126,7 +120,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         final String redirectUri = mAuthorizationRequest.getBrkRedirectUri() != null ? mAuthorizationRequest.getBrkRedirectUri() : mAuthorizationRequest.getRedirectUri();
         return AuthorizationActivityFactory.getAuthorizationActivityIntent(
                 getApplicationContext(),
-                getBrowserIntent(),
+                null,
                 requestUrl.toString(),
                 redirectUri,
                 mAuthorizationRequest.getRequestHeaders(),
@@ -141,9 +135,6 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
     public void completeAuthorization(int requestCode, @NonNull final RawAuthorizationResult data) {
         final String methodTag = TAG + ":completeAuthorization";
         if (requestCode == BROWSER_FLOW) {
-            if (mCustomTabManager != null) {
-                mCustomTabManager.unbind();
-            }
             if (mOAuth2Strategy != null && mAuthorizationResultFuture != null) {
 
                 //Suppressing unchecked warnings due to method createAuthorizationResult being a member of the raw type AuthorizationResultFactory
@@ -164,36 +155,5 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         } else {
             Logger.warnPII(methodTag, "Unknown request code " + requestCode);
         }
-    }
-
-    /**
-     * Get a intent to launch the browser.
-     *
-     * @return the intent to launch the browser or null if the browser is not supported.
-     */
-    @Nullable
-    private Intent getBrowserIntent() {
-        final String methodTag = TAG + ":getBrowserIntent";
-        final Context context = getApplicationContext();
-        final Intent browserIntent;
-        if (mBrowser != null) {
-            if (mBrowser.isCustomTabsServiceSupported()) {
-                Logger.info(methodTag, "CustomTabsService is supported.");
-                //create customTabsIntent
-                mCustomTabManager = new CustomTabsManager(context);
-                if (!mCustomTabManager.bind(context, mBrowser.getPackageName())) {
-                    Logger.warn(methodTag, "Failed to bind CustomTabsService.");
-                    browserIntent = new Intent(Intent.ACTION_VIEW);
-                } else {
-                    browserIntent = mCustomTabManager.getCustomTabsIntent().intent;
-                }
-            } else {
-                Logger.warn(methodTag, "CustomTabsService is NOT supported");
-                browserIntent = new Intent(Intent.ACTION_VIEW);
-            }
-            browserIntent.setPackage(mBrowser.getPackageName());
-            return browserIntent;
-        }
-        return null;
     }
 }

@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.ui.webview;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -48,9 +49,12 @@ import com.microsoft.identity.common.internal.fido.IFidoManager;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiManager;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
+import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserChallenge;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserHandler;
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
@@ -197,7 +201,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 final Uri formattedUri = Uri.parse(formattedURL);
                 if (isSwitchBrowserRequest(formattedUri)) {
                     Logger.info(methodTag,"Request to switch browser.");
-                    return processSwitchBrowserRequest(formattedUri);
+                    return processSwitchBrowserRequest(view, formattedUri);
                 } else {
                     Logger.info(methodTag,"It is a redirect request.");
                     processRedirectUrl(view, url);
@@ -332,22 +336,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      *
      * @param uri The URI of the request.
      */
-    protected boolean processSwitchBrowserRequest(@NonNull final Uri uri) {
-        final AuthorizationActivity activity = (AuthorizationActivity) getActivity();
-        final WebViewAuthorizationFragment fragment = (WebViewAuthorizationFragment) activity.getFragment();
-        final String action_uri = uri.getQueryParameter(AuthenticationConstants.SWITCH_BROWSER.ACTION_URI);
-        final String code = uri.getQueryParameter(AuthenticationConstants.SWITCH_BROWSER.CODE);
-        if (action_uri == null || code == null) {
-            // This should never happen, but if it does, we should log it and return.
-            Logger.error(TAG, "Switch browser action URI is null: " + StringUtil.isNullOrEmpty(action_uri), null);
-            Logger.error(TAG, "Switch browser code is null: " + StringUtil.isNullOrEmpty(code), null);
-            return false;
-        }
-        final HashMap<String, String> queryParams = new HashMap<>();
-        queryParams.put(AuthenticationConstants.SWITCH_BROWSER.CODE, code);
-        queryParams.put(AuthenticationConstants.OAuth2.REDIRECT_URI, mRedirectUrl);
-        final Uri swithBrowserUri = fragment.constructSwitchBrowserUri(action_uri, queryParams);
-        return fragment.launchWebBrowserIntent(swithBrowserUri);
+    protected boolean processSwitchBrowserRequest(@NonNull final WebView view, @NonNull final Uri uri) {
+        final SwitchBrowserChallenge challenge = SwitchBrowserChallenge.constructFromUri(uri);
+        final Context context = view.getContext();
+        final CustomTabsManager ctManager = new CustomTabsManager(context);
+        final SwitchBrowserHandler handler = new SwitchBrowserHandler(context,ctManager, null);
+        return handler.processChallenge(challenge);
     }
 
     private void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
