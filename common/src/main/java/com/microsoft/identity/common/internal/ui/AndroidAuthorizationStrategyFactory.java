@@ -26,12 +26,14 @@ import android.app.Activity;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.java.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.DefaultBrowserAuthorizationStrategy;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthorizationStrategy;
@@ -57,27 +59,30 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
     /**
      * Get the authorization strategy.
      *
-     * @param authorizationAgent The authorization agent provided by the caller.
-     * @param browser            The browser to use for authorization.
-     * @param isBrowserRequest   True if the request is from browser.
+     * @param parameters The parameters for the interactive token command.
+     *                   authorizationAgent        The authorization agent provided by the caller.
+     *                   browser                   The browser to use for authorization.
+     *                   isBrokerRequest           True if the request is from browser.
      * @return The authorization strategy.
      */
     @Override
     @NonNull
-    public IAuthorizationStrategy getAuthorizationStrategy(
-            @NonNull final AuthorizationAgent authorizationAgent,
-            @Nullable final Browser browser,
-            final boolean isBrowserRequest) {
+    public IAuthorizationStrategy getAuthorizationStrategy(@NonNull final InteractiveTokenCommandParameters parameters) {
         final String methodTag = TAG + ":getAuthorizationStrategy";
+        final boolean isBrokerRequest = parameters instanceof BrokerInteractiveTokenCommandParameters;
+        final Browser browser = new BrowserSelector(mContext).select(
+                parameters.getBrowserSafeList(),
+                parameters.getPreferredBrowser()
+        );
 
         // Use embedded webView if no browser available or authorization agent is webView
-        if (authorizationAgent == AuthorizationAgent.WEBVIEW || browser == null) {
-            Logger.info(methodTag, "Use webView for authorization.");
-            return getGenericAuthorizationStrategy(browser);
+        if (parameters.getAuthorizationAgent() == AuthorizationAgent.WEBVIEW || browser == null) {
+            Logger.info(methodTag, "WebView for authorization, browser = " + browser);
+            return getGenericAuthorizationStrategy();
         }
 
-        Logger.info(methodTag, "Use browser for authorization.");
-        return getBrowserAuthorizationStrategy(browser, isBrowserRequest);
+        Logger.info(methodTag, "Use browser for authorization, browser = " + browser);
+        return getBrowserAuthorizationStrategy(browser, isBrokerRequest);
     }
 
     /**
@@ -110,14 +115,9 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
     /**
      * Get the generic authorization strategy.
      *
-     * @param browser The browser to use in case we need to use a browser.
      * @return The embedded web view authorization strategy.
      */
-    private IAuthorizationStrategy getGenericAuthorizationStrategy(@Nullable final Browser browser) {
-        return new EmbeddedWebViewAuthorizationStrategy(
-                mContext,
-                mActivity,
-                mFragment,
-                browser);
+    private IAuthorizationStrategy getGenericAuthorizationStrategy() {
+        return new EmbeddedWebViewAuthorizationStrategy(mContext, mActivity, mFragment);
     }
 }

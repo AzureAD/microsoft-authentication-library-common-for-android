@@ -23,8 +23,6 @@
 package com.microsoft.identity.common.components;
 
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.browser.Browser;
-import com.microsoft.identity.common.java.browser.IBrowserSelector;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -68,7 +66,6 @@ public class MockPlatformComponentsFactory {
                 .authorizationStrategyFactory(NON_FUNCTIONAL_AUTH_STRATEGY_FACTORY)
                 .stateGenerator(NON_FUNCTIONAL_STATE_GENERATOR)
                 .platformUtil(NON_FUNCTIONAL_PLATFORM_UTIL)
-                .browserSelector(NON_FUNCTIONAL_BROWSER_SELECTOR)
                 .httpClientWrapper(new DefaultHttpClientWrapper());
         return builder;
     }
@@ -118,7 +115,7 @@ public class MockPlatformComponentsFactory {
     };
 
     @SuppressWarnings(WarningType.rawtype_warning)
-    public static final IAuthorizationStrategyFactory NON_FUNCTIONAL_AUTH_STRATEGY_FACTORY = (authorizationAgent, browser, isBrokerRequest) -> {
+    public static final IAuthorizationStrategyFactory NON_FUNCTIONAL_AUTH_STRATEGY_FACTORY = parameters -> {
         throw new UnsupportedOperationException();
     };
 
@@ -133,11 +130,6 @@ public class MockPlatformComponentsFactory {
     public static final IPlatformUtil NON_FUNCTIONAL_PLATFORM_UTIL = new IPlatformUtil() {
         @Override
         public List<BrowserDescriptor> getBrowserSafeListForBroker() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public List<BrowserDescriptor> getBrowserSafeListForSwitchBrowser() {
             throw new UnsupportedOperationException();
         }
 
@@ -200,15 +192,4 @@ public class MockPlatformComponentsFactory {
             return originalList;
         }
     };
-
-    public static final IBrowserSelector NON_FUNCTIONAL_BROWSER_SELECTOR = new IBrowserSelector() {
-
-        @Nullable
-        @Override
-        public Browser select(@NonNull List<BrowserDescriptor> browserSafeList, @Nullable BrowserDescriptor preferredBrowserDescriptor) {
-            return null;
-        }
-    };
-
-
 }

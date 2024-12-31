@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.java.interfaces;
 
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.browser.IBrowserSelector;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
@@ -72,9 +71,6 @@ public class PlatformComponents implements IPlatformComponents {
 
     @NonNull
     private final IHttpClientWrapper mHttpClientWrapper;
-
-    @NonNull
-    private final IBrowserSelector mBrowserSelector;
 
     // TODO: Remove these methods and have the caller invoke IPopManagerSupplier directly.
     // Keeping this for now to minimize the PR size.

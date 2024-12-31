@@ -28,7 +28,6 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -458,46 +457,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Nullable
     public ActivityResultLauncher<LegacyFido2ApiObject> getFidoLauncher() {
         return mFidoLauncher;
-    }
-
-    /**
-     * Launches the web browser intent for the given uri.
-     *
-     * @param uri The uri to launch the web browser intent.
-     */
-    public boolean launchWebBrowserIntent(@NonNull final Uri uri) {
-        final String methodTag = TAG + ":launchWebBrowserIntent";
-        if (mAuthIntent != null) {
-            Logger.info(methodTag, "Launching web browser intent for SwitchBrowserProtocol.");
-            mAuthIntent.setData(uri);
-            startActivity(mAuthIntent);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Constructs the switch browser uri with the given action uri and parameters.
-     *
-     * @param action_uri The action uri.
-     * @param params     The parameters.
-     * @return The constructed uri.
-     */
-    public Uri constructSwitchBrowserUri(@NonNull final String action_uri, @Nullable final HashMap<String, String> params) {
-        final String[] paths = action_uri.split("/");
-        final String authority = paths[0];
-        final Uri.Builder uriBuilder = new Uri.Builder()
-                .scheme("https")
-                .encodedAuthority(authority);
-        for (int i = 1; i < paths.length; i++) {
-            uriBuilder.appendPath(paths[i]);
-        }
-        if (params != null) {
-            for (HashMap.Entry<String, String> entry : params.entrySet()) {
-                uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
-            }
-        }
-        return uriBuilder.build();
     }
 
     /**
