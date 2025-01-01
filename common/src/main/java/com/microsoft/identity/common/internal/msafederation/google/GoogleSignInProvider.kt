@@ -35,6 +35,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingExcept
 import com.microsoft.identity.common.internal.msafederation.IFederatedSignInProvider
 import com.microsoft.identity.common.java.base64.Base64Util
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.logging.Logger
 import java.security.SecureRandom
 
 /**
@@ -126,6 +127,7 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
     private suspend fun getCredential(
         option: GetCustomCredentialOption
     ) : Result<SignInWithGoogleCredential> {
+        val methodTag = "$TAG:getCredential"
         val getCredentialRequest: GetCredentialRequest = GetCredentialRequest.Builder()
             .addCredentialOption(option)
             .build()
@@ -151,26 +153,37 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
                         )
                     } catch (e: GoogleIdTokenParsingException) {
                         // error parsing Google ID Token
-                        return Result.failure(e)
+                        Logger.warn(TAG, "Error parsing Google ID Token, $e.message")
+                        val clientException = ClientException(
+                            ClientException.SIGN_IN_WITH_GOOGLE_FAILED,
+                            e.message,
+                            e
+                        )
+                        return Result.failure(clientException)
                     }
                 } else {
                     // unsupported credential type
+                    val errorMessage = "Unsupported credential type, " + credential.type
+                    Logger.warn(TAG, errorMessage)
                     val clientException = ClientException(
                         ClientException.SIGN_IN_WITH_GOOGLE_FAILED,
-                        "Unsupported credential type" + credential.type
+                        errorMessage
                     )
                     return Result.failure(clientException)
                 }
             } else {
                 // Unexpected credential type
+                val errorMessage = "Unexpected credential type" + credential.javaClass.simpleName
+                Logger.warn(TAG, errorMessage)
                 val clientException = ClientException(
                     ClientException.SIGN_IN_WITH_GOOGLE_FAILED,
-                    "Unexpected credential type" + credential.javaClass.simpleName
+                    errorMessage
                 )
                 return Result.failure(clientException)
             }
         } catch (e: GetCredentialException) {
             // failure
+            Logger.warn(TAG, "Error getting google id token credential, $e.message")
             val clientException = ClientException(
                 ClientException.SIGN_IN_WITH_GOOGLE_FAILED,
                 e.message,

@@ -33,6 +33,6 @@ class MockGoogleSignInProvider : IFederatedSignInProvider {
     }
 
     override suspend fun signOut() {
-        TODO("Not yet implemented")
+        // No-op
     }
 }

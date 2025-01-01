@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.msafederation.google
 
 import android.app.Activity
+import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
@@ -31,6 +32,7 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.microsoft.identity.common.internal.msafederation.MsaFederationConstants
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.runBlocking
@@ -83,7 +85,7 @@ class GoogleSignInProviderTest {
     }
 
     @Test
-    fun testSignInWithBottomSheet() {
+    fun testSignInBottomSheet() {
         val mockCredentialManager = mockk<CredentialManager>()
         val mockActivity = mockk<Activity>()
         val mockParameters = SignInWithGoogleParameters(mockActivity, true)
@@ -118,5 +120,18 @@ class GoogleSignInProviderTest {
         assertEquals(false, capturedGoogleIdOption.autoSelectEnabled)
         val capturedActivity = activitySlot.captured
         assertSame(mockActivity, capturedActivity)
+    }
+
+    @Test
+    fun testSignOut() {
+        val mockCredentialManager = mockk<CredentialManager>()
+        val mockActivity = mockk<Activity>()
+        val mockParameters = SignInWithGoogleParameters(mockActivity)
+        val webClientId = MsaFederationConstants.GOOGLE_MSA_WEB_CLIENT_ID
+        val googleSignInProvider = GoogleSignInProvider(mockCredentialManager, mockParameters, webClientId)
+
+        coEvery { mockCredentialManager.clearCredentialState(any()) } returns Unit
+        runBlocking { googleSignInProvider.signOut() }
+        coVerify { mockCredentialManager.clearCredentialState(any<ClearCredentialStateRequest>()) }
     }
 }

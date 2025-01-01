@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.msafederation.google
 
+import android.app.Activity
 import com.microsoft.identity.common.internal.msafederation.FederatedSignInProviderFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -95,5 +96,13 @@ class SignInWithGoogleApi internal constructor(
                 callback.onSuccess(credential)
             }
         }
+    }
+
+    suspend fun signOut(activity: Activity) {
+        val signInWithGoogleParameters = SignInWithGoogleParameters(activity)
+        val googleSignInProvider = federatedSignInProviderFactory.getProvider(
+            signInWithGoogleParameters
+        )
+        googleSignInProvider.signOut()
     }
 }

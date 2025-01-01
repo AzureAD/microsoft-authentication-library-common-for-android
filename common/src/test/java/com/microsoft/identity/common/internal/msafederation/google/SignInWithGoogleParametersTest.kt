@@ -33,7 +33,7 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Tests for []SignInWithGoogleParameters].
+ * Tests for [SignInWithGoogleParameters].
  */
 @RunWith(RobolectricTestRunner::class)
 class SignInWithGoogleParametersTest {
