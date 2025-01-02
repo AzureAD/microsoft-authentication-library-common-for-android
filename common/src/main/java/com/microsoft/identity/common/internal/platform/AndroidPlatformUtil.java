@@ -264,11 +264,13 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     }
 
     /**
-     * Check if the host app is running within work profile.
+     * Check if the host app is running within a managed profile.
      * @param appContext current application context.
-     * @return true if app is in work profile, false if in personal profile or OS is below LOLLIPOP.
+     * @return true if app is in a managed profile, false if in personal profile or OS is below LOLLIPOP.
      */
-    public static boolean isInWorkProfile(@NonNull final Context appContext) {
+    public static boolean isInManagedProfile(@NonNull final Context appContext) {
+        // If the device is running on Android R or above, we can use the UserManager method isManagedProfile.
+        // Otherwise, if the device is running on Lollipop or above, we'll use DPM's isProfileOwnerApp. We return false for lower versions.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             final UserManager um = (UserManager) appContext.getSystemService(Context.USER_SERVICE);
             return um.isManagedProfile();
@@ -276,7 +278,7 @@ public class AndroidPlatformUtil implements IPlatformUtil {
             final DevicePolicyManager dpm = (DevicePolicyManager) appContext.getSystemService(Context.DEVICE_POLICY_SERVICE);
             final List<ComponentName> activeAdmins = dpm.getActiveAdmins();
             if (activeAdmins != null) {
-                // If any active admin apps are the profile owner, then the current calling app is in work profile.
+                // If any active admin apps are the profile owner, then the current calling app is in a managed profile.
                 for (final ComponentName admin : activeAdmins) {
                     final String packageName = admin.getPackageName();
                     if (dpm.isProfileOwnerApp(packageName)) {

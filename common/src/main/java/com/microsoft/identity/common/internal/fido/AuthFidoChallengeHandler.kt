@@ -68,7 +68,7 @@ class AuthFidoChallengeHandler (
             AttributeName.fido_challenge_handler.name,
             TAG
         )
-        Logger.info(methodTag, "Is app in work profile?: " + AndroidPlatformUtil.isInWorkProfile(webView.context))
+        Logger.info(methodTag, "Is app in work profile?: " + AndroidPlatformUtil.isInManagedProfile(webView.context))
         // First verify submitUrl and context. Without these two, we can't respond back to the server.
         // If either one of these are missing or malformed, throw an exception and let the main WebViewClient handle it.
         val submitUrl = fidoChallenge.submitUrl.getOrThrow()
