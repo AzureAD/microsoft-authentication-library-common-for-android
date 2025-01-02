@@ -22,10 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 
-import android.app.Activity
 import android.webkit.WebView
-import com.microsoft.identity.common.CommonRefreshTokenCredentialProvider
+import com.microsoft.identity.common.java.broker.CommonRefreshTokenCredentialProvider
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.SSO_NONCE_PARAMETER
 import com.microsoft.identity.common.adal.internal.util.StringExtensions
 import com.microsoft.identity.common.logging.Logger
 import java.net.URL
@@ -34,7 +34,7 @@ import java.net.URL
  * Handler for processing nonce from redirect and attaching new prt credential header on web view.
  */
 class NonceRedirectHandler(
-    private val webview: WebView? = null,
+    private val webView: WebView,
     private val headers: HashMap<String, String>
 ) : IChallengeHandler<URL, Void> {
     private val TAG = NonceRedirectHandler::class.java.simpleName
@@ -44,13 +44,13 @@ class NonceRedirectHandler(
         if (nonce != null) {
             modifyHeadersWithNewRefreshTokenCredential(nonce, input.toString())
         }
-        webview?.loadUrl(input.toString(), headers)
+        webView.loadUrl(input.toString(), headers)
         return null
     }
 
     private fun getNonceFromRedirectUrl(url: URL): String? {
         val parameters = StringExtensions.getUrlParameters(url.toString())
-        return parameters["sso_nonce"]
+        return parameters[SSO_NONCE_PARAMETER]
     }
 
     private fun getPrtHeader(requestHeaders: HashMap<String, String>): String? {
@@ -71,8 +71,7 @@ class NonceRedirectHandler(
                 val updatedRefreshTokenCredentialHeader =
                     CommonRefreshTokenCredentialProvider.getRefreshTokenCredentialUsingNewNonce(
                         url, username,
-                        nonce,
-                        webview?.context as Activity
+                        nonce
                     )
                 if (updatedRefreshTokenCredentialHeader != null) {
                     headers[AuthenticationConstants.Broker.PRT_RESPONSE_HEADER] =

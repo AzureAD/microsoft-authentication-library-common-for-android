@@ -20,19 +20,33 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common;
+package com.microsoft.identity.common.java.broker
 
-import android.app.Activity
+import com.microsoft.identity.common.java.interfaces.IRefreshTokenCredentialProvider
+import com.microsoft.identity.common.java.logging.Logger
 
 /**
  * Consumer of commons needs to implement [IRefreshTokenCredentialProvider] interface
  * and set it using CommonRefreshTokenCredentialProvider.initializeCommonRefreshTokenCredentialProvider(@NonNull refreshTokenCredentialProvider: IRefreshTokenCredentialProvider)
  * to provide prtCredentialHolder to common module.
  */
-interface IRefreshTokenCredentialProvider {
+object CommonRefreshTokenCredentialProvider : IRefreshTokenCredentialProvider {
+    private val TAG = CommonRefreshTokenCredentialProvider::class.java.simpleName
+    private var mRefreshTokenCredentialProvider: IRefreshTokenCredentialProvider? = null
 
-    /**
-     * Gets refresh token credential using nonce retrieved from webview.
-     */
-    fun getRefreshTokenCredentialUsingNewNonce(authorityStr : String, username : String, nonce : String, activity : Activity) : String?
+    // Note : This method should only be invoked by broker module.
+    fun initializeCommonRefreshTokenCredentialProvider(refreshTokenCredentialProvider: IRefreshTokenCredentialProvider) {
+        val methodTag = "$TAG:initializeCommonRefreshTokenCredentialProvider"
+        Logger.info(methodTag, "Initializing common prt credential provider with " + refreshTokenCredentialProvider.javaClass.simpleName)
+        mRefreshTokenCredentialProvider = refreshTokenCredentialProvider
+    }
+
+    override fun getRefreshTokenCredentialUsingNewNonce(authorityStr : String, username : String, nonce : String) : String? {
+        val methodTag = "$TAG:getRefreshTokenCredentialUsingNewNonce";
+        if (mRefreshTokenCredentialProvider != null) {
+            return mRefreshTokenCredentialProvider!!.getRefreshTokenCredentialUsingNewNonce(authorityStr, username, nonce)
+        }
+        Logger.warn(methodTag, "mRefreshTokenCredentialHolder is not initialized!")
+        return null
+    }
 }
