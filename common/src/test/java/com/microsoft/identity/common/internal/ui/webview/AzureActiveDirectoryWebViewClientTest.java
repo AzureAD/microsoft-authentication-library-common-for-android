@@ -23,13 +23,13 @@
 package com.microsoft.identity.common.internal.ui.webview;
 
 import android.content.Context;
-import android.net.Uri;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.ipc.mock.ShadowBrowserSelector;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
@@ -39,6 +39,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTHENTICATOR_MFA_LINKING_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
@@ -52,6 +53,7 @@ import java.util.HashMap;
 
 
 @RunWith(RobolectricTestRunner.class)
+@Config(shadows = {ShadowBrowserSelector.class})
 public class AzureActiveDirectoryWebViewClientTest {
     private WebView mMockWebView;
     private AzureActiveDirectoryWebViewClient mWebViewClient;
@@ -89,10 +91,6 @@ public class AzureActiveDirectoryWebViewClientTest {
                     AuthenticationConstants.SWITCH_BROWSER.CODE + "=" + SWITCH_BROWSER_CODE + "&" +
                     AuthenticationConstants.SWITCH_BROWSER.ACTION + "=" + SWITCH_BROWSER_ACTION;
 
-    private static final String TEST_SWITCH_BROWSER_URL =
-            "https://" + SWITCH_BROWSER_ACTION_URI + SWITCH_BROWSER_ACTION_URI_PATHS + "?" +
-                    AuthenticationConstants.SWITCH_BROWSER.CODE + "=" + SWITCH_BROWSER_CODE;
-
     @Before
     public void setup() {
         final AuthorizationActivity activity = mock(AuthorizationActivity.class);
@@ -105,8 +103,6 @@ public class AzureActiveDirectoryWebViewClientTest {
         when(activity.getApplicationContext()).thenReturn(context);
         when(activity.getFragment()).thenReturn(fragment);
         when(activity.getPackageManager()).thenReturn(context.getPackageManager());
-        //when(fragment.constructSwitchBrowserUri(SWITCH_BROWSER_ACTION_URI + SWITCH_BROWSER_ACTION_URI_PATHS, params)).thenReturn(Uri.parse(TEST_SWITCH_BROWSER_URL));
-        //when(fragment.launchWebBrowserIntent(Uri.parse(TEST_SWITCH_BROWSER_URL))).thenReturn(true);
         mMockWebView = new WebView(context);
         mWebViewClient = new AzureActiveDirectoryWebViewClient(
                 activity,

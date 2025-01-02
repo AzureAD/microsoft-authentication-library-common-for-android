@@ -60,6 +60,7 @@ import com.microsoft.identity.common.java.browser.Browser;
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -73,7 +74,6 @@ import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URISyntaxException;
 import java.security.Principal;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -343,7 +343,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final Context context = view.getContext();
         final CustomTabsManager ctManager = new CustomTabsManager(context);
         final SwitchBrowserChallenge challenge = SwitchBrowserChallenge.constructFromUri(uri);
-        final Browser browser = new BrowserSelector(context).select(Collections.emptyList(), null);
+        final Browser browser = new BrowserSelector(context).select(
+                BrowserDescriptor.getBrowserSafeListForSwitchBrowser(),
+                null
+        );
         if (browser != null && challenge != null) {
             final SwitchBrowserHandler handler = new SwitchBrowserHandler(context,ctManager, browser);
             return handler.processChallenge(challenge);

@@ -131,16 +131,6 @@ public class MockPlatformComponentsFactory {
     };
 
     public static final IPlatformUtil NON_FUNCTIONAL_PLATFORM_UTIL = new IPlatformUtil() {
-        @Override
-        public List<BrowserDescriptor> getBrowserSafeListForBroker() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public List<BrowserDescriptor> getBrowserSafeListForSwitchBrowser() {
-            throw new UnsupportedOperationException();
-        }
-
         @Nullable
         @Override
         public String getInstalledCompanyPortalVersion() {

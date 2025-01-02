@@ -63,6 +63,7 @@ class SwitchBrowserHandler(
         }
         browserIntent.setPackage(browser.packageName)
         browserIntent.setData(challenge.uri)
+        browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(browserIntent)
         return true
     }
