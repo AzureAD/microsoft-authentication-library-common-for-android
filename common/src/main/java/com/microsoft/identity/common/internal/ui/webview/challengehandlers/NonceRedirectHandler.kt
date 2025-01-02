@@ -27,7 +27,9 @@ import com.microsoft.identity.common.java.broker.CommonRefreshTokenCredentialPro
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.SSO_NONCE_PARAMETER
 import com.microsoft.identity.common.adal.internal.util.StringExtensions
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.logging.Logger
+import io.opentelemetry.api.trace.Span
 import java.net.URL
 
 /**
@@ -35,7 +37,8 @@ import java.net.URL
  */
 class NonceRedirectHandler(
     private val webView: WebView,
-    private val headers: HashMap<String, String>
+    private val headers: HashMap<String, String>,
+    private val span : Span
 ) : IChallengeHandler<URL, Void> {
     private val TAG = NonceRedirectHandler::class.java.simpleName
 
@@ -76,6 +79,7 @@ class NonceRedirectHandler(
                 if (updatedRefreshTokenCredentialHeader != null) {
                     headers[AuthenticationConstants.Broker.PRT_RESPONSE_HEADER] =
                         updatedRefreshTokenCredentialHeader
+                    span.setAttribute(AttributeName.is_new_refresh_token_cred_header_attached.name, true)
                 }
             }
         }

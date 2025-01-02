@@ -58,4 +58,5 @@ public enum SpanName {
     OnUpgradeReceiver,
     UpgradeDeviceRegistration,
     RemoveBrokerAccount,
+    ProcessNonceFromEstsRedirect
 }
