@@ -41,6 +41,8 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.microsoft.identity.common.internal.msafederation.FederatedSignInProviderName;
+import com.microsoft.identity.common.internal.msafederation.MsaFederationConstants;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleApi;
@@ -53,7 +55,9 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
+import java.net.URISyntaxException;
 import java.util.HashMap;
 
 /**
@@ -274,12 +278,24 @@ public class AuthorizationActivityFactory {
                                                         final String sourceLibraryVersion,
                                                         @NonNull final SignInWithGoogleCredential signInWithGoogleCredential
     ) {
+        // add header
         final HashMap<String, String> requestHeadersWithGoogleAuthCredential = requestHeaders == null? new HashMap<>() : new HashMap<>(requestHeaders);
         requestHeadersWithGoogleAuthCredential.putAll(signInWithGoogleCredential.asHeaders());
+
+        // add id provider query parameter
+        String requestUrlWithIdProvider = null;
+        try {
+            final CommonURIBuilder uriBuilder = new CommonURIBuilder(requestUrl);
+            uriBuilder.addParameterIfAbsent(MsaFederationConstants.MSA_ID_PROVIDER_EXTRA_QUERY_PARAM_KEY, FederatedSignInProviderName.GOOGLE.getIdProviderName());
+            requestUrlWithIdProvider = uriBuilder.build().toString();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+
         return getAuthorizationActivityIntent(
                 context,
                 authIntent,
-                requestUrl,
+                requestUrlWithIdProvider,
                 redirectUri,
                 requestHeadersWithGoogleAuthCredential,
                 authorizationAgent,
