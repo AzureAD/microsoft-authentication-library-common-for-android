@@ -97,6 +97,7 @@ class WebAuthnJsonUtil {
             if (authResponseJsonObject.isNull(WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY)) {
                 Logger.info(methodTag, "UserHandle not found in assertion response.")
             } else {
+                Logger.info(methodTag, "UserHandle was included in assertion response.")
                 assertionResult.put(
                     WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY, authResponseJsonObject.get(
                         WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY
