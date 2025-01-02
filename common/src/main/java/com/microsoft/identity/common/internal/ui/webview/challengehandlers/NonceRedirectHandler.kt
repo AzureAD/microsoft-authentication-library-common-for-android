@@ -1,70 +1,89 @@
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 
 import android.app.Activity
-import androidx.annotation.VisibleForTesting
-import com.microsoft.identity.common.CommonPrtCredentialHolder
+import android.webkit.WebView
+import com.microsoft.identity.common.CommonRefreshTokenCredentialProvider
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.adal.internal.util.StringExtensions
-import com.microsoft.identity.common.java.util.StringUtil
 import com.microsoft.identity.common.logging.Logger
-import java.net.MalformedURLException
 import java.net.URL
 
 /**
  * Handler for processing nonce from redirect and attaching new prt credential header on web view.
  */
-class NonceRedirectHandler {
+class NonceRedirectHandler(
+    private val webview: WebView? = null,
+    private val headers: HashMap<String, String>
+) : IChallengeHandler<URL, Void> {
     private val TAG = NonceRedirectHandler::class.java.simpleName
 
+    override fun processChallenge(input: URL) : Void? {
+        val nonce = getNonceFromRedirectUrl(input)
+        if (nonce != null) {
+            modifyHeadersWithNewRefreshTokenCredential(nonce, input.toString())
+        }
+        webview?.loadUrl(input.toString(), headers)
+        return null
+    }
+
+    private fun getNonceFromRedirectUrl(url: URL): String? {
+        val parameters = StringExtensions.getUrlParameters(url.toString())
+        return parameters["sso_nonce"]
+    }
+
     private fun getPrtHeader(requestHeaders: HashMap<String, String>): String? {
-        return requestHeaders["x-ms-RefreshTokenCredential"]
+        return requestHeaders[AuthenticationConstants.Broker.PRT_RESPONSE_HEADER]
     }
 
     // Updates the headers by attaching a new refresh token credential header (Generated using the new nonce).
-    fun getHeadersWithNewRefreshTokenCredential(
-        requestHeaders: HashMap<String, String>,
+    private fun modifyHeadersWithNewRefreshTokenCredential(
         nonce: String,
-        url: String,
-        activity: Activity
-    ): Map<String, String> {
+        url: String
+    ) {
         val methodTag = "$TAG:getHeadersWithNewRefreshTokenCredential"
-        val prtHeader = getPrtHeader(requestHeaders)
-        if (!StringUtil.isNullOrEmpty(prtHeader)) {
-            Logger.info(methodTag, "PRT credential header found in headers! ")
-            val authorityStr = getAuthorityFromWebViewUrl(url, methodTag)
+        val prtHeader = getPrtHeader(headers)
+        if (!prtHeader.isNullOrEmpty()) {
+            Logger.info(methodTag, "PRT credential header found in headers!")
             val username = getUserNameFromWebViewUrl(url)
-            if (authorityStr != null && username != null) {
+            if (username != null) {
                 val updatedRefreshTokenCredentialHeader =
-                    CommonPrtCredentialHolder.getRefreshTokenCredentialUsingNewNonce(
-                        authorityStr, username,
+                    CommonRefreshTokenCredentialProvider.getRefreshTokenCredentialUsingNewNonce(
+                        url, username,
                         nonce,
-                        prtHeader!!,
-                        activity
+                        webview?.context as Activity
                     )
                 if (updatedRefreshTokenCredentialHeader != null) {
-                    requestHeaders["x-ms-RefreshTokenCredential"] =
+                    headers[AuthenticationConstants.Broker.PRT_RESPONSE_HEADER] =
                         updatedRefreshTokenCredentialHeader
                 }
-
             }
-        } // Else it is a no-op.
-        return requestHeaders
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun getAuthorityFromWebViewUrl(url: String, methodTag: String): String? {
-        try {
-            val parsedUrl = URL(url)
-            return parsedUrl.protocol + "://" + parsedUrl.host + parsedUrl.path
-        } catch (e: MalformedURLException) {
-            Logger.error(methodTag, "Could not parse webview url to get the authority", e)
-            return null
         }
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun getUserNameFromWebViewUrl(url: String): String? {
+    private fun getUserNameFromWebViewUrl(url: String): String? {
         val parameters: Map<String, String> = StringExtensions.getUrlParameters(url)
-        val username = parameters["login_hint"]
-        return username
+        return parameters["login_hint"]
     }
 }

@@ -48,10 +48,10 @@ import com.microsoft.identity.common.internal.fido.IFidoManager;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiManager;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
@@ -66,7 +66,9 @@ import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Locale;
@@ -277,7 +279,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private boolean isNonceRedirect(@NonNull final String url) {
-        return url.contains("sso_nonce");
+        return url.contains(AuthenticationConstants.Broker.SSO_NONCE_PARAMETER);
     }
 
     private boolean isWebsiteRequestUrl(@NonNull final String url) {
@@ -525,15 +527,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private void processNonceAndReAttachHeaders(@NonNull final WebView view, @NonNull final String url) {
+        final  String methodTag = TAG + ":processNonceAndReAttachHeaders";
         final HashMap<String, String> queryParams = StringExtensions.getUrlParameters(url);
         final String nonceQueryParam = queryParams.get("sso_nonce");
-        HashMap<String, String> updatedHeadersMap = mRequestHeaders;
         if (nonceQueryParam != null) {
-            final NonceRedirectHandler nonceRedirect = new NonceRedirectHandler();
-            updatedHeadersMap = (HashMap<String, String>) nonceRedirect.getHeadersWithNewRefreshTokenCredential(mRequestHeaders, nonceQueryParam, url , getActivity());
-
+            final NonceRedirectHandler nonceRedirect = new NonceRedirectHandler(view, mRequestHeaders);
+            try {
+                nonceRedirect.processChallenge(new URL(url));
+            } catch (MalformedURLException e) {
+                // No need to throw the error as we don't want to break the original flow.
+                Logger.error(methodTag,"Redirect URI has invalid syntax, unable to parse", e);
+            }
         }
-        view.loadUrl(url, updatedHeadersMap);
     }
 
     private String removeQueryParametersOrRedact(@NonNull final String url) {
