@@ -36,7 +36,7 @@ internal object FederatedSignInProviderFactory {
      */
     fun getProvider(parameters: FederatedSignInParameters): IFederatedSignInProvider {
         return when (parameters.providerName) {
-            FederatedSignInProviderName.GOOGLE -> GoogleSignInProvider.create(parameters as SignInWithGoogleParameters, MsaFederationConstants.SIWG_TEST_WEBCLIENT_ID)
+            FederatedSignInProviderName.GOOGLE -> GoogleSignInProvider.create(parameters as SignInWithGoogleParameters, MsaFederationConstants.GOOGLE_MSA_WEB_CLIENT_ID)
 
             else -> {
                 throw IllegalArgumentException("Unsupported provider type")
