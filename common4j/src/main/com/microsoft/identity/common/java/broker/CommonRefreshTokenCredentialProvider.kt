@@ -41,10 +41,10 @@ object CommonRefreshTokenCredentialProvider : IRefreshTokenCredentialProvider {
         mRefreshTokenCredentialProvider = refreshTokenCredentialProvider
     }
 
-    override fun getRefreshTokenCredentialUsingNewNonce(authorityStr : String, username : String, nonce : String) : String? {
+    override fun getRefreshTokenCredentialUsingNewNonce(inputUrl : String, username : String, nonce : String) : String? {
         val methodTag = "$TAG:getRefreshTokenCredentialUsingNewNonce";
         if (mRefreshTokenCredentialProvider != null) {
-            return mRefreshTokenCredentialProvider!!.getRefreshTokenCredentialUsingNewNonce(authorityStr, username, nonce)
+            return mRefreshTokenCredentialProvider!!.getRefreshTokenCredentialUsingNewNonce(inputUrl, username, nonce)
         }
         Logger.warn(methodTag, "mRefreshTokenCredentialHolder is not initialized!")
         return null
