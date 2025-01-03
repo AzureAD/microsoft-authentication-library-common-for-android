@@ -28,7 +28,6 @@ import static com.microsoft.identity.common.java.constants.FidoConstants.WEBAUTH
 
 import android.app.Activity;
 import android.app.ActivityManager;
-import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
@@ -38,7 +37,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
-import android.os.UserManager;
 
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -55,14 +53,12 @@ import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -81,28 +77,6 @@ public class AndroidPlatformUtil implements IPlatformUtil {
 
     @Nullable
     private final Activity mActivity;
-
-    /**
-     * List of System Browsers which can be used from broker, currently only Chrome is supported.
-     * This information here is populated from the default browser safe-list in MSAL.
-     *
-     * @return
-     */
-    @Override
-    public List<BrowserDescriptor> getBrowserSafeListForBroker() {
-        List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
-        final HashSet<String> signatureHashes = new HashSet<String>();
-        signatureHashes.add("7fmduHKTdHHrlMvldlEqAIlSfii1tl35bxj1OXN5Ve8c4lU6URVu4xtSHc3BVZxS6WWJnxMDhIfQN0N0K2NDJg==");
-        final BrowserDescriptor chrome = new BrowserDescriptor(
-                "com.android.chrome",
-                signatureHashes,
-                null,
-                null
-        );
-        browserDescriptors.add(chrome);
-
-        return browserDescriptors;
-    }
 
     @Nullable
     @Override
@@ -261,33 +235,6 @@ public class AndroidPlatformUtil implements IPlatformUtil {
             result.add(webauthnParam);
         }
         return result;
-    }
-
-    /**
-     * Check if the host app is running within a managed profile.
-     * @param appContext current application context.
-     * @return true if app is in a managed profile, false if in personal profile or OS is below LOLLIPOP.
-     */
-    public static boolean isInManagedProfile(@NonNull final Context appContext) {
-        // If the device is running on Android R or above, we can use the UserManager method isManagedProfile.
-        // Otherwise, if the device is running on Lollipop or above, we'll use DPM's isProfileOwnerApp. We return false for lower versions.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            final UserManager um = (UserManager) appContext.getSystemService(Context.USER_SERVICE);
-            return um.isManagedProfile();
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            final DevicePolicyManager dpm = (DevicePolicyManager) appContext.getSystemService(Context.DEVICE_POLICY_SERVICE);
-            final List<ComponentName> activeAdmins = dpm.getActiveAdmins();
-            if (activeAdmins != null) {
-                // If any active admin apps are the profile owner, then the current calling app is in a managed profile.
-                for (final ComponentName admin : activeAdmins) {
-                    final String packageName = admin.getPackageName();
-                    if (dpm.isProfileOwnerApp(packageName)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
     }
 
     /**

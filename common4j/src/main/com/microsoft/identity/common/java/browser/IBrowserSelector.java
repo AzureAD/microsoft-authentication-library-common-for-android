@@ -20,22 +20,30 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.strategies;
+package com.microsoft.identity.common.java.browser;
 
-import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.browser.Browser;import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
-import com.microsoft.identity.common.java.ui.AuthorizationAgent;
+import com.microsoft.identity.common.java.ui.BrowserDescriptor;
+
+import java.util.List;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
-// Suppressing rawtype warnings due to the generic types IAuthorizationStrategy
-@SuppressWarnings(WarningType.rawtype_warning)
-public interface IAuthorizationStrategyFactory<GenericAuthorizationStrategy extends IAuthorizationStrategy> {
+/**
+ * Interface for selecting a browser.
+ */
+public interface IBrowserSelector {
 
-    GenericAuthorizationStrategy getAuthorizationStrategy(
-            @NonNull final AuthorizationAgent authorizationAgent,
-            @Nullable final Browser browser,
-            final boolean isBrowserRequest
-    );
+    /**
+     * Selects a valid installed browser from the list of safe browsers.
+     * If no browser is present in the list of safe browser, null is returned.
+     *
+     * @param browserSafeList             The list of browsers to choose from.
+     * @param preferredBrowserDescriptor  The preferred browser descriptor.
+     * @return The selected browser.
+     */
+    @Nullable
+    Browser select(
+            @NonNull List<BrowserDescriptor> browserSafeList,
+            @Nullable BrowserDescriptor preferredBrowserDescriptor);
 }

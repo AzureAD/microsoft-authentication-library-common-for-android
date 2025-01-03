@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.ui.browser;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.java.browser.Browser;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Arrays;
