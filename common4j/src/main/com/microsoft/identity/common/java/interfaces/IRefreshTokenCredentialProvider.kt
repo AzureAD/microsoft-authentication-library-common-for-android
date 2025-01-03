@@ -1,4 +1,3 @@
-package com.microsoft.identity.common.java.opentelemetry;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -21,42 +20,18 @@ package com.microsoft.identity.common.java.opentelemetry;
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.java.interfaces;
 
-public enum SpanName {
-    AcquirePrtUsingBrt,
-    AcquireTokenInteractive,
-    AcquireTokenSilent,
-    SetScopeForDMAgentForFoci,
-    GetAccounts,
-    RemoveAccount,
-    WorkplaceJoin,
-    ATIInteractively,
-    ATISilently,
-    WorkplaceLeave,
-    DeviceState,
-    CertBasedAuth,
-    MSAL_PerformIpcStrategy,
-    DeviceRegistrationApi,
-    WorkplaceJoinApi,
-    AcquireTokenDcf,
-    AcquireTokenDcfAuthRequest,
-    AcquireTokenDcfFetchToken,
-    EncryptionManager,
-    Passthrough,
-    BrokerOperationRequestDispatcher,
-    BrokerDiscoveryManagerPerformDiscoveryProcess,
-    Fido,
-    BrokerAccountServiceRemoveAccounts,
-    AcquirePrtUsingTransferToken,
-    AcquireTransferTokenUsingPrt,
-    SaveTransferTokenToBlockstore,
-    GetBackedUpMsaAccounts,
-    RefreshTransferToken,
-    IsLtwPreInstalled,
-    DeleteTransferToken,
-    RestoreMsaAccounts,
-    OnUpgradeReceiver,
-    UpgradeDeviceRegistration,
-    RemoveBrokerAccount,
-    ProcessNonceFromEstsRedirect
+
+/**
+ * Consumer of commons needs to implement [IRefreshTokenCredentialProvider] interface
+ * and set it using CommonRefreshTokenCredentialProvider.initializeCommonRefreshTokenCredentialProvider(@NonNull refreshTokenCredentialProvider: IRefreshTokenCredentialProvider)
+ * to provide prtCredentialHolder to common module.
+ */
+interface IRefreshTokenCredentialProvider {
+
+    /**
+     * Gets refresh token credential using nonce retrieved from webview.
+     */
+    fun getRefreshTokenCredentialUsingNewNonce(inputUrl : String, username : String, nonce : String) : String?
 }

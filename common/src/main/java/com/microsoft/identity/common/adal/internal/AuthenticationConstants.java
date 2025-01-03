@@ -1218,6 +1218,8 @@ public final class AuthenticationConstants {
          */
         public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = Broker.COMPANY_PORTAL_APP_PACKAGE_NAME + ".views.SplashActivity";
 
+        public static final String SSO_NONCE_PARAMETER = "sso_nonce";
+
         /**
          * PRT nonce.
          */
