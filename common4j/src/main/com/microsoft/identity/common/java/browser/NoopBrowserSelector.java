@@ -20,25 +20,28 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.browser
+package com.microsoft.identity.common.java.browser;
 
-import com.microsoft.identity.common.java.ui.BrowserDescriptor
+import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 
-/**
- * Noop implementation of [IBrowserSelector].
- */
-class NoopBrowserSelector : IBrowserSelector {
+import java.util.List;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+public class NoopBrowserSelector implements IBrowserSelector {
 
     /**
      * Selects a valid installed browser from the list of safe browsers.
      * If no browser is present in the list of safe browser, null is returned.
      *
-     * @param browserSafeList             The list of browsers to choose from.
-     * @param preferredBrowserDescriptor  The preferred browser descriptor.
+     * @param browserSafeList            The list of browsers to choose from.
+     * @param preferredBrowserDescriptor The preferred browser descriptor.
      * @return The selected browser.
      */
-    override fun select(
-        browserSafeList: MutableList<BrowserDescriptor>,
-        preferredBrowserDescriptor: BrowserDescriptor?
-    ) = null
+    @Nullable
+    @Override
+    public Browser select(@NonNull List<BrowserDescriptor> browserSafeList, @Nullable BrowserDescriptor preferredBrowserDescriptor) {
+        return null;
+    }
 }
