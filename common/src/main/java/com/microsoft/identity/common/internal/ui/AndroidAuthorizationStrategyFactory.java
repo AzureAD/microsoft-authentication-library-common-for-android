@@ -59,7 +59,7 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
      *
      * @param authorizationAgent The authorization agent provided by the caller.
      * @param browser            The browser to use for authorization.
-     * @param isBrowserRequest   True if the request is from browser.
+     * @param isBrokerRequest   True if the request is from broker.
      * @return The authorization strategy.
      */
     @Override
@@ -67,7 +67,7 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
     public IAuthorizationStrategy getAuthorizationStrategy(
             @NonNull final AuthorizationAgent authorizationAgent,
             @Nullable final Browser browser,
-            final boolean isBrowserRequest) {
+            final boolean isBrokerRequest) {
         final String methodTag = TAG + ":getAuthorizationStrategy";
 
         // Use embedded webView if no browser available or authorization agent is webView
@@ -77,7 +77,7 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
         }
 
         Logger.info(methodTag, "Browser authorization, browser: " + browser);
-        return getBrowserAuthorizationStrategy(browser, isBrowserRequest);
+        return getBrowserAuthorizationStrategy(browser, isBrokerRequest);
     }
 
     /**

@@ -36,6 +36,6 @@ public interface IAuthorizationStrategyFactory<GenericAuthorizationStrategy exte
     GenericAuthorizationStrategy getAuthorizationStrategy(
             @NonNull final AuthorizationAgent authorizationAgent,
             @Nullable final Browser browser,
-            final boolean isBrowserRequest
+            final boolean isBrokerRequest
     );
 }
