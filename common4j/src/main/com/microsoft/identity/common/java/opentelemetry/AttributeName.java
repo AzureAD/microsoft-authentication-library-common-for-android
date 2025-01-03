@@ -303,4 +303,14 @@ public enum AttributeName {
      * Indicates the stack trace from a Android KeyStore operation exception.
      */
     keystore_exception_stack_trace,
+
+    /**
+     * Indicates the new nonce found in the eSTS request.
+     */
+    is_sso_nonce_found_in_ests_request,
+
+    /**
+     * Indicates the new refresh token credential header attached in the eSTS request.
+     */
+    is_new_refresh_token_cred_header_attached
 }
