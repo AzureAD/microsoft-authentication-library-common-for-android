@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Add Sign in With Google component for MSA federation (#2551)
 - [MINOR] Add SDMBroadcastReceiver for applications to register callbacks for SDM broadcasts (#2547)
 - [MINOR] Add switch_browser toMicrosoftStsAuthorizationRequest (#2550)
 - [MAJOR] Add suberror for network errors (#2537)

@@ -23,25 +23,6 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-
-import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter;
-import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
-import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
-import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
-import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
-import com.microsoft.identity.common.java.ui.AuthorizationAgent;
-import com.microsoft.identity.common.internal.util.ProcessUtil;
-import com.microsoft.identity.common.java.logging.DiagnosticContext;
-
-import java.util.HashMap;
-
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
@@ -52,6 +33,33 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 import static com.microsoft.identity.common.java.logging.DiagnosticContext.CORRELATION_ID;
+
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+
+import com.microsoft.identity.common.internal.msafederation.FederatedSignInProviderName;
+import com.microsoft.identity.common.internal.msafederation.MsaFederationConstants;
+import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential;
+import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters;
+import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleApi;
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
+import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter;
+import com.microsoft.identity.common.internal.util.ProcessUtil;
+import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.ui.AuthorizationAgent;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
+
+import java.net.URISyntaxException;
+import java.util.HashMap;
 
 /**
  * Constructs intents and/or fragments for interactive requests based on library configuration and current request.
@@ -112,13 +120,13 @@ public class AuthorizationActivityFactory {
         if (ProcessUtil.isBrokerProcess(context)) {
             intent = new Intent(context, BrokerAuthorizationActivity.class);
         } else if (libraryConfig.isAuthorizationInCurrentTask() && !authorizationAgent.equals(AuthorizationAgent.WEBVIEW)) {
-        // We exclude the case when the authorization agent is already selected as WEBVIEW because of confusion
-        // that results from attempting to use the CurrentTaskAuthorizationActivity in that case, because as webview
-        // already uses the current task, attempting to manually simulate that behavior ends up supplying an incorrect
-        // Fragment to the activity.
-                intent = new Intent(context, CurrentTaskAuthorizationActivity.class);
+            // We exclude the case when the authorization agent is already selected as WEBVIEW because of confusion
+            // that results from attempting to use the CurrentTaskAuthorizationActivity in that case, because as webview
+            // already uses the current task, attempting to manually simulate that behavior ends up supplying an incorrect
+            // Fragment to the activity.
+            intent = new Intent(context, CurrentTaskAuthorizationActivity.class);
         } else {
-                intent = new Intent(context, AuthorizationActivity.class);
+            intent = new Intent(context, AuthorizationActivity.class);
         }
 
         intent.putExtra(AUTH_INTENT, authIntent);
@@ -136,11 +144,11 @@ public class AuthorizationActivityFactory {
             intent.putExtra(VERSION, sourceLibraryVersion);
         }
         intent.putExtra(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT, new CommonMoshiJsonAdapter().toJson(
-                SerializableSpanContext.builder()
-                        .traceId(SpanExtension.current().getSpanContext().getTraceId())
-                        .spanId(SpanExtension.current().getSpanContext().getSpanId())
-                        .traceFlags(SpanExtension.current().getSpanContext().getTraceFlags().asByte())
-                        .build()
+                        SerializableSpanContext.builder()
+                                .traceId(SpanExtension.current().getSpanContext().getTraceId())
+                                .spanId(SpanExtension.current().getSpanContext().getSpanId())
+                                .traceFlags(SpanExtension.current().getSpanContext().getTraceFlags().asByte())
+                                .build()
                 )
         );
         return intent;
@@ -196,5 +204,106 @@ public class AuthorizationActivityFactory {
             authFragment.setInstanceState(bundle);
         }
         return fragment;
+    }
+
+    /**
+     * This method first starts sign in with google flow displaying UX for user add/select a google account
+     * and after success creates intent with result obtained from successful google sign in and other input
+     * parameters.
+     *
+     * @param context                    Android application context
+     * @param authIntent                 Android intent used by the authorization activity to launch the specific implementation of authorization (BROWSER, EMBEDDED)
+     * @param requestUrl                 The authorization request in URL format
+     * @param redirectUri                The expected redirect URI associated with the authorization request
+     * @param requestHeaders             Additional HTTP headers included with the authorization request
+     * @param authorizationAgent         The means by which authorization should be performed (EMBEDDED, WEBVIEW) NOTE: This should move to library configuration
+     * @param webViewZoomEnabled         This parameter is specific to embedded and controls whether webview zoom is enabled... NOTE: Needs refactoring
+     * @param webViewZoomControlsEnabled This parameter is specific to embedded and controls whether webview zoom controls are enabled... NOTE: Needs refactoring
+     * @param sourceLibraryName                    Product name to be of library making the request
+     * @param sourceLibraryVersion             Product version to be of library making the request
+     * @param signInWithGoogleParameters Parameters to first start sign in with google flow before creating the intent
+     * @return An android Intent which will be used by Android to create an AuthorizationActivity
+     */
+    public static Intent signInWithGoogleAndGetAuthorizationActivityIntent(final Context context,
+                                                                           final Intent authIntent,
+                                                                           final String requestUrl,
+                                                                           final String redirectUri,
+                                                                           final HashMap<String, String> requestHeaders,
+                                                                           final AuthorizationAgent authorizationAgent,
+                                                                           final boolean webViewZoomEnabled,
+                                                                           final boolean webViewZoomControlsEnabled,
+                                                                           final String sourceLibraryName,
+                                                                           final String sourceLibraryVersion,
+                                                                           @NonNull final SignInWithGoogleParameters signInWithGoogleParameters) throws ClientException {
+        final SignInWithGoogleCredential signInWithGoogleCredential = SignInWithGoogleApi.getInstance().signInSync(signInWithGoogleParameters);
+        return getAuthorizationActivityIntent(
+                context,
+                authIntent,
+                requestUrl,
+                redirectUri,
+                requestHeaders,
+                authorizationAgent,
+                webViewZoomEnabled,
+                webViewZoomControlsEnabled,
+                sourceLibraryName,
+                sourceLibraryVersion,
+                signInWithGoogleCredential
+        );
+    }
+
+    /**
+     * Return the correct authorization activity based on library configuration.
+     *
+     * @param context                    Android application context
+     * @param authIntent                 Android intent used by the authorization activity to launch the specific implementation of authorization (BROWSER, EMBEDDED)
+     * @param requestUrl                 The authorization request in URL format
+     * @param redirectUri                The expected redirect URI associated with the authorization request
+     * @param requestHeaders             Additional HTTP headers included with the authorization request
+     * @param authorizationAgent         The means by which authorization should be performed (EMBEDDED, WEBVIEW) NOTE: This should move to library configuration
+     * @param webViewZoomEnabled         This parameter is specific to embedded and controls whether webview zoom is enabled... NOTE: Needs refactoring
+     * @param webViewZoomControlsEnabled This parameter is specific to embedded and controls whether webview zoom controls are enabled... NOTE: Needs refactoring
+     * @param sourceLibraryName                    Product name to be of library making the request
+     * @param sourceLibraryVersion             Product version to be of library making the request
+     * @param signInWithGoogleCredential object returned previously to caller as result of performing sign in with google flow (SignInWithGoogleApi.signIn)
+     * @return An android Intent which will be used by Android to create an AuthorizationActivity
+     */
+    public static Intent getAuthorizationActivityIntent(final Context context,
+                                                        final Intent authIntent,
+                                                        final String requestUrl,
+                                                        final String redirectUri,
+                                                        final HashMap<String, String> requestHeaders,
+                                                        final AuthorizationAgent authorizationAgent,
+                                                        final boolean webViewZoomEnabled,
+                                                        final boolean webViewZoomControlsEnabled,
+                                                        final String sourceLibraryName,
+                                                        final String sourceLibraryVersion,
+                                                        @NonNull final SignInWithGoogleCredential signInWithGoogleCredential
+    ) throws ClientException {
+        // add header
+        final HashMap<String, String> requestHeadersWithGoogleAuthCredential = requestHeaders == null? new HashMap<>() : new HashMap<>(requestHeaders);
+        requestHeadersWithGoogleAuthCredential.putAll(signInWithGoogleCredential.asHeaders());
+
+        // add id provider query parameter
+        String requestUrlWithIdProvider = null;
+        try {
+            final CommonURIBuilder uriBuilder = new CommonURIBuilder(requestUrl);
+            uriBuilder.addParameterIfAbsent(MsaFederationConstants.MSA_ID_PROVIDER_EXTRA_QUERY_PARAM_KEY, FederatedSignInProviderName.GOOGLE.getIdProviderName());
+            requestUrlWithIdProvider = uriBuilder.build().toString();
+        } catch (final URISyntaxException e) {
+            throw new ClientException(ClientException.MALFORMED_URL, "Failed to add id provider query parameter to request URL", e);
+        }
+
+        return getAuthorizationActivityIntent(
+                context,
+                authIntent,
+                requestUrlWithIdProvider,
+                redirectUri,
+                requestHeadersWithGoogleAuthCredential,
+                authorizationAgent,
+                webViewZoomEnabled,
+                webViewZoomControlsEnabled,
+                sourceLibraryName,
+                sourceLibraryVersion
+        );
     }
 }
