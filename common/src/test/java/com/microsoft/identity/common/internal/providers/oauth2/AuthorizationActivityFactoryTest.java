@@ -47,12 +47,15 @@ import org.robolectric.RuntimeEnvironment;
 
 import java.util.HashMap;
 
+import lombok.SneakyThrows;
+
 /**
  * Tests for @link{AuthorizationActivityFactory}.
  */
 @RunWith(RobolectricTestRunner.class)
 public class AuthorizationActivityFactoryTest {
 
+    @SneakyThrows
     @Test
     public void testGetAuthorizationActivityIntent() {
         // Arrange

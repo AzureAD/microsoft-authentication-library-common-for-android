@@ -51,6 +51,7 @@ import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
 import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
@@ -233,7 +234,7 @@ public class AuthorizationActivityFactory {
                                                                            final boolean webViewZoomControlsEnabled,
                                                                            final String sourceLibraryName,
                                                                            final String sourceLibraryVersion,
-                                                                           @NonNull final SignInWithGoogleParameters signInWithGoogleParameters) {
+                                                                           @NonNull final SignInWithGoogleParameters signInWithGoogleParameters) throws ClientException {
         final SignInWithGoogleCredential signInWithGoogleCredential = SignInWithGoogleApi.getInstance().signInSync(signInWithGoogleParameters);
         return getAuthorizationActivityIntent(
                 context,
@@ -277,7 +278,7 @@ public class AuthorizationActivityFactory {
                                                         final String sourceLibraryName,
                                                         final String sourceLibraryVersion,
                                                         @NonNull final SignInWithGoogleCredential signInWithGoogleCredential
-    ) {
+    ) throws ClientException {
         // add header
         final HashMap<String, String> requestHeadersWithGoogleAuthCredential = requestHeaders == null? new HashMap<>() : new HashMap<>(requestHeaders);
         requestHeadersWithGoogleAuthCredential.putAll(signInWithGoogleCredential.asHeaders());
@@ -288,8 +289,8 @@ public class AuthorizationActivityFactory {
             final CommonURIBuilder uriBuilder = new CommonURIBuilder(requestUrl);
             uriBuilder.addParameterIfAbsent(MsaFederationConstants.MSA_ID_PROVIDER_EXTRA_QUERY_PARAM_KEY, FederatedSignInProviderName.GOOGLE.getIdProviderName());
             requestUrlWithIdProvider = uriBuilder.build().toString();
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
+        } catch (final URISyntaxException e) {
+            throw new ClientException(ClientException.MALFORMED_URL, "Failed to add id provider query parameter to request URL", e);
         }
 
         return getAuthorizationActivityIntent(
