@@ -23,8 +23,8 @@
 package com.microsoft.identity.common.components;
 
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.browser.Browser;
 import com.microsoft.identity.common.java.browser.IBrowserSelector;
+import com.microsoft.identity.common.java.browser.NoopBrowserSelector;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -33,7 +33,6 @@ import com.microsoft.identity.common.java.interfaces.PlatformComponents;
 import com.microsoft.identity.common.java.net.DefaultHttpClientWrapper;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
-import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.util.IBroadcaster;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
@@ -191,14 +190,5 @@ public class MockPlatformComponentsFactory {
         }
     };
 
-    public static final IBrowserSelector NON_FUNCTIONAL_BROWSER_SELECTOR = new IBrowserSelector() {
-
-        @Nullable
-        @Override
-        public Browser select(@NonNull List<BrowserDescriptor> browserSafeList, @Nullable BrowserDescriptor preferredBrowserDescriptor) {
-            return null;
-        }
-    };
-
-
+    public static final IBrowserSelector NON_FUNCTIONAL_BROWSER_SELECTOR = new NoopBrowserSelector();
 }
