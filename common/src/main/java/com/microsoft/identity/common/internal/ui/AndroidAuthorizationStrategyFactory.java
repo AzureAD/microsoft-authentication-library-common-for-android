@@ -113,9 +113,6 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
      * @return The embedded web view authorization strategy.
      */
     private IAuthorizationStrategy getGenericAuthorizationStrategy() {
-        return new EmbeddedWebViewAuthorizationStrategy(
-                mContext,
-                mActivity,
-                mFragment);
+        return new EmbeddedWebViewAuthorizationStrategy(mContext, mActivity, mFragment);
     }
 }
