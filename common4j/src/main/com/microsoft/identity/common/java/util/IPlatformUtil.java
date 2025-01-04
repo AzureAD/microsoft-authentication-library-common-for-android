@@ -37,11 +37,6 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 
 public interface IPlatformUtil {
     /**
-     * Return a list of BrowserDescriptors that are considered safe for the Switch to browser flow.
-     */
-    List<BrowserDescriptor> getBrowserSafeListForSwitchBrowser();
-
-    /**
      * Gets version of the installed Company Portal app.
      * Returns null if the app is not installed, the value cannot be retrieved, or this operation is not supported.
      */

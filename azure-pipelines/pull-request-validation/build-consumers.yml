@@ -5,7 +5,6 @@
 # Variable: 'commonBranchName' common branch to be used when running the pipeline manually
 # Variable: 'skipConsumerValidationLabel' PR label used to skip the checks in this pipeline
 name: $(date:yyyyMMdd)$(rev:.r)
-trigger: none
 
 parameters:
   - name: shouldSkipLongRunningTest
