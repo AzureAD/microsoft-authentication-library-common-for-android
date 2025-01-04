@@ -93,6 +93,8 @@ public class AzureActiveDirectoryWebViewClientTest {
             "https://" + SWITCH_BROWSER_ACTION_URI + SWITCH_BROWSER_ACTION_URI_PATHS + "?" +
                     AuthenticationConstants.SWITCH_BROWSER.CODE + "=" + SWITCH_BROWSER_CODE;
 
+    private static final String TEST_NONCE_REDIRECT_URL = "https://login.microsoftonline.com/organizations/oAuth2/v2.0/authorize?&sso_nonce=ABCD";
+
     @Before
     public void setup() {
         final AuthorizationActivity activity = mock(AuthorizationActivity.class);
@@ -224,5 +226,10 @@ public class AzureActiveDirectoryWebViewClientTest {
                 AuthenticationConstants.SWITCH_BROWSER.CODE + "=" + SWITCH_BROWSER_CODE + "&" +
                 AuthenticationConstants.SWITCH_BROWSER.ACTION + "=" + SWITCH_BROWSER_ACTION;
         assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, switchBrowserInvalidUrl));
+    }
+
+    @Test
+    public void testUrlOverrideHandlesNonceRedirectUrl() {
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_NONCE_REDIRECT_URL));
     }
 }

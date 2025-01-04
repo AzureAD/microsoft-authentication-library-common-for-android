@@ -1,4 +1,3 @@
-package com.microsoft.identity.common.java.opentelemetry;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -21,42 +20,11 @@ package com.microsoft.identity.common.java.opentelemetry;
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.internal.msafederation
 
-public enum SpanName {
-    AcquirePrtUsingBrt,
-    AcquireTokenInteractive,
-    AcquireTokenSilent,
-    SetScopeForDMAgentForFoci,
-    GetAccounts,
-    RemoveAccount,
-    WorkplaceJoin,
-    ATIInteractively,
-    ATISilently,
-    WorkplaceLeave,
-    DeviceState,
-    CertBasedAuth,
-    MSAL_PerformIpcStrategy,
-    DeviceRegistrationApi,
-    WorkplaceJoinApi,
-    AcquireTokenDcf,
-    AcquireTokenDcfAuthRequest,
-    AcquireTokenDcfFetchToken,
-    EncryptionManager,
-    Passthrough,
-    BrokerOperationRequestDispatcher,
-    BrokerDiscoveryManagerPerformDiscoveryProcess,
-    Fido,
-    BrokerAccountServiceRemoveAccounts,
-    AcquirePrtUsingTransferToken,
-    AcquireTransferTokenUsingPrt,
-    SaveTransferTokenToBlockstore,
-    GetBackedUpMsaAccounts,
-    RefreshTransferToken,
-    IsLtwPreInstalled,
-    DeleteTransferToken,
-    RestoreMsaAccounts,
-    OnUpgradeReceiver,
-    UpgradeDeviceRegistration,
-    RemoveBrokerAccount,
-    ProcessNonceFromEstsRedirect
+/**
+ * Parameters for Federated Sign In. e.g. SignInWithGoogleParameters for Google.
+ */
+abstract class FederatedSignInParameters {
+    abstract val providerName: FederatedSignInProviderName
 }

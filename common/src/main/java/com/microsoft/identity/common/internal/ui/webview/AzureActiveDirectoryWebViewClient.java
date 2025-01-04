@@ -57,9 +57,14 @@ import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBased
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserHandler;
 import com.microsoft.identity.common.java.browser.Browser;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -71,7 +76,9 @@ import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.security.Principal;
 import java.util.Collection;
 import java.util.Collections;
@@ -88,7 +95,10 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER.isSwitchBrowserRequest;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Scope;
 
 /**
  * For web view client, we do not distinguish V1 from V2.
@@ -201,7 +211,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                         spanContext,
                         ViewTreeLifecycleOwner.get(view));
                 challengeHandler.processChallenge(challenge);
-            } else if (isRedirectUrl(formattedURL)) {
+            } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED) && isNonceRedirect(formattedURL)) {
+                Logger.info(methodTag,"Navigation contains new nonce within the redirect uri. "+ url);
+                processNonceAndReAttachHeaders(view, url);
+             }
+             else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
                 final Uri formattedUri = Uri.parse(formattedURL);
                 if (isSwitchBrowserRequest(formattedUri)) {
@@ -285,6 +299,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isRedirectUrl(@NonNull final String url) {
         return url.startsWith(mRedirectUrl.toLowerCase(Locale.US));
+    }
+
+    private boolean isNonceRedirect(@NonNull final String url) {
+        return url.contains(AuthenticationConstants.Broker.SSO_NONCE_PARAMETER);
     }
 
     private boolean isWebsiteRequestUrl(@NonNull final String url) {
@@ -549,6 +567,38 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 + removeQueryParametersOrRedact(url) + "' with original requestHeaders appended.");
 
         view.loadUrl(url, mRequestHeaders);
+    }
+
+    private void processNonceAndReAttachHeaders(@NonNull final WebView view, @NonNull final String url) {
+        final String methodTag = TAG + ":processNonceAndReAttachHeaders";
+
+        final HashMap<String, String> queryParams = StringExtensions.getUrlParameters(url);
+        final String nonceQueryParam = queryParams.get("sso_nonce");
+        SpanExtension.current().setAttribute(
+                AttributeName.is_sso_nonce_found_in_ests_request.name(), nonceQueryParam != null
+        );
+        if (nonceQueryParam != null) {
+            final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
+            final Span span = spanContext != null ?
+                    OTelUtility.createSpanFromParent(SpanName.ProcessNonceFromEstsRedirect.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessNonceFromEstsRedirect.name());
+            try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+                final NonceRedirectHandler nonceRedirect = new NonceRedirectHandler(view, mRequestHeaders, span);
+                nonceRedirect.processChallenge(new URL(url));
+                span.setStatus(StatusCode.OK);
+            } catch (MalformedURLException e) {
+                // No need to throw the error as we don't want to break the original flow.
+                Logger.errorPII(methodTag, "Redirect URI has invalid syntax, unable to parse", e);
+                span.setStatus(StatusCode.ERROR, "Redirect URI has invalid syntax, unable to parse");
+                span.recordException(e);
+            } catch (final Throwable throwable) {
+                // No need to throw the error as we don't want to break the original flow.
+                Logger.error(methodTag, "Error processing nonce and re-attaching headers", throwable);
+                span.setStatus(StatusCode.ERROR, "Error processing nonce and re-attaching headers");
+                span.recordException(throwable);
+            } finally {
+                span.end();
+            }
+        }
     }
 
     private String removeQueryParametersOrRedact(@NonNull final String url) {

@@ -1,4 +1,3 @@
-package com.microsoft.identity.common.java.opentelemetry;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -21,42 +20,30 @@ package com.microsoft.identity.common.java.opentelemetry;
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.internal.msafederation.google
 
-public enum SpanName {
-    AcquirePrtUsingBrt,
-    AcquireTokenInteractive,
-    AcquireTokenSilent,
-    SetScopeForDMAgentForFoci,
-    GetAccounts,
-    RemoveAccount,
-    WorkplaceJoin,
-    ATIInteractively,
-    ATISilently,
-    WorkplaceLeave,
-    DeviceState,
-    CertBasedAuth,
-    MSAL_PerformIpcStrategy,
-    DeviceRegistrationApi,
-    WorkplaceJoinApi,
-    AcquireTokenDcf,
-    AcquireTokenDcfAuthRequest,
-    AcquireTokenDcfFetchToken,
-    EncryptionManager,
-    Passthrough,
-    BrokerOperationRequestDispatcher,
-    BrokerDiscoveryManagerPerformDiscoveryProcess,
-    Fido,
-    BrokerAccountServiceRemoveAccounts,
-    AcquirePrtUsingTransferToken,
-    AcquireTransferTokenUsingPrt,
-    SaveTransferTokenToBlockstore,
-    GetBackedUpMsaAccounts,
-    RefreshTransferToken,
-    IsLtwPreInstalled,
-    DeleteTransferToken,
-    RestoreMsaAccounts,
-    OnUpgradeReceiver,
-    UpgradeDeviceRegistration,
-    RemoveBrokerAccount,
-    ProcessNonceFromEstsRedirect
+import com.microsoft.identity.common.internal.msafederation.MsaFederationConstants
+import com.microsoft.identity.common.internal.msafederation.FederatedSignInProviderName
+import org.junit.Assert.assertEquals
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.JUnit4
+
+/**
+ * Tests for [SignInWithGoogleCredential].
+ */
+@RunWith(JUnit4::class)
+class SignInWithGoogleCredentialTest {
+
+    @Test
+    fun testSignInWithGoogleCredential() {
+        val testIdToken = "test-id-token"
+        val credential = SignInWithGoogleCredential(testIdToken)
+        assertEquals(FederatedSignInProviderName.GOOGLE, credential.federatedSignInProviderName)
+        assertEquals(testIdToken, credential.idToken)
+
+        val headers = credential.asHeaders();
+        assertEquals(1, headers.size)
+        assertEquals(testIdToken, headers[MsaFederationConstants.MSA_ID_TOKEN_HEADER_KEY])
+    }
 }

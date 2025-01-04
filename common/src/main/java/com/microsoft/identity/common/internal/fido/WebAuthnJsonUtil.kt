@@ -30,13 +30,18 @@ import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBA
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_RESPONSE_ID_JSON_KEY
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_RESPONSE_SIGNATURE_JSON_KEY
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY
+import com.microsoft.identity.common.logging.Logger
+import org.json.JSONException
 import org.json.JSONObject
 
 /**
  * A utility class to help convert to and from strings in WebAuthn json format.
  */
 class WebAuthnJsonUtil {
-    companion object {
+        companion object {
+
+            private val TAG = WebAuthnJsonUtil::class.simpleName.toString()
+
         /**
          * Takes applicable parameters and creates a string representation of
          *  PublicKeyCredentialRequestOptionsJSON (https://w3c.github.io/webauthn/#dictdef-publickeycredentialrequestoptionsjson)
@@ -74,6 +79,7 @@ class WebAuthnJsonUtil {
          * @throws JSONException if a value is not present that should be.
          */
         fun extractAuthenticatorAssertionResponseJson(fullResponseJson : String): String {
+            val methodTag = "$TAG:extractAuthenticatorAssertionResponseJson"
             val fullResponseJsonObject = JSONObject(fullResponseJson);
             val authResponseJsonObject = fullResponseJsonObject
                 .getJSONObject(FidoConstants.WEBAUTHN_AUTHENTICATION_ASSERTION_RESPONSE_JSON_KEY)
@@ -87,8 +93,17 @@ class WebAuthnJsonUtil {
                 WEBAUTHN_RESPONSE_CLIENT_DATA_JSON_KEY))
             assertionResult.put(WEBAUTHN_RESPONSE_SIGNATURE_JSON_KEY, authResponseJsonObject.get(
                 WEBAUTHN_RESPONSE_SIGNATURE_JSON_KEY))
-            assertionResult.put(WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY, authResponseJsonObject.get(
-                WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY))
+            // UserHandle is optional if allowCredentials was provided in the request (username flow).
+            if (authResponseJsonObject.isNull(WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY)) {
+                Logger.info(methodTag, "UserHandle not found in assertion response.")
+            } else {
+                Logger.info(methodTag, "UserHandle was included in assertion response.")
+                assertionResult.put(
+                    WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY, authResponseJsonObject.get(
+                        WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY
+                    )
+                )
+            }
             return assertionResult.toString()
         }
 
