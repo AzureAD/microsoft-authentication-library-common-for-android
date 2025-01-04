@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.components;
 
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.browser.IBrowserSelector;
+import com.microsoft.identity.common.java.browser.NoopBrowserSelector;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -31,7 +33,6 @@ import com.microsoft.identity.common.java.interfaces.PlatformComponents;
 import com.microsoft.identity.common.java.net.DefaultHttpClientWrapper;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
-import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.util.IBroadcaster;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
@@ -66,6 +67,7 @@ public class MockPlatformComponentsFactory {
                 .authorizationStrategyFactory(NON_FUNCTIONAL_AUTH_STRATEGY_FACTORY)
                 .stateGenerator(NON_FUNCTIONAL_STATE_GENERATOR)
                 .platformUtil(NON_FUNCTIONAL_PLATFORM_UTIL)
+                .browserSelector(NON_FUNCTIONAL_BROWSER_SELECTOR)
                 .httpClientWrapper(new DefaultHttpClientWrapper());
         return builder;
     }
@@ -115,7 +117,7 @@ public class MockPlatformComponentsFactory {
     };
 
     @SuppressWarnings(WarningType.rawtype_warning)
-    public static final IAuthorizationStrategyFactory NON_FUNCTIONAL_AUTH_STRATEGY_FACTORY = parameters -> {
+    public static final IAuthorizationStrategyFactory NON_FUNCTIONAL_AUTH_STRATEGY_FACTORY = (authorizationAgent, browser, isBrokerRequest) -> {
         throw new UnsupportedOperationException();
     };
 
@@ -128,19 +130,6 @@ public class MockPlatformComponentsFactory {
     };
 
     public static final IPlatformUtil NON_FUNCTIONAL_PLATFORM_UTIL = new IPlatformUtil() {
-        @Override
-        public List<BrowserDescriptor> getBrowserSafeListForBroker() {
-            throw new UnsupportedOperationException();
-        }
-
-        /**
-         * Return a list of BrowserDescriptors that are considered safe for the Switch to browser flow.
-         */
-        @Override
-        public List<BrowserDescriptor> getBrowserSafeListForSwitchBrowser() {
-            throw new UnsupportedOperationException();
-        }
-
         @Nullable
         @Override
         public String getInstalledCompanyPortalVersion() {
@@ -200,4 +189,6 @@ public class MockPlatformComponentsFactory {
             return originalList;
         }
     };
+
+    public static final IBrowserSelector NON_FUNCTIONAL_BROWSER_SELECTOR = new NoopBrowserSelector();
 }

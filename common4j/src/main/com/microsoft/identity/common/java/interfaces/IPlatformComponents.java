@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.interfaces;
 
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.browser.IBrowserSelector;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
@@ -86,4 +87,7 @@ public interface IPlatformComponents extends IPopManagerSupplier {
 
     @NonNull
     IStorageSupplier getStorageSupplier();
+
+    @NonNull
+    IBrowserSelector getBrowserSelector();
 }
