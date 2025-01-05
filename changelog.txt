@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Add Sign in With Google component for MSA federation (#2551)
 - [MINOR] Add SDMBroadcastReceiver for applications to register callbacks for SDM broadcasts (#2547)
 - [MINOR] Add switch_browser toMicrosoftStsAuthorizationRequest (#2550)
 - [MAJOR] Add suberror for network errors (#2537)
@@ -8,6 +9,9 @@ vNext
 - [MINOR] For MSAL CPP flows, match exact claims when deleting AT with intersecting scopes (#2548)
 - [MINOR] Replace Deprecated Keystore API for Android 28+ (#2558)
 - [MINOR] Add support for OneBox Environment (#2559)
+- [MINOR] Managed profile Android util method (#2561)
+- [PATCH] Make userHandle response field optional (#2560)
+- [MINOR] Nonce redirect changes (#2552)
 
 Version 18.2.2
 ----------

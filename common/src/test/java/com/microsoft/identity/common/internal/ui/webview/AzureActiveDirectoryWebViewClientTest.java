@@ -79,6 +79,8 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_MSA_HEADER_FORWARDING_POSITIVE_URL = "https://login.live.com/oauth20_authorize.srf";
     private static final String TEST_MSA_HEADER_FORWARDING_NEGATIVE_URL = "https://login.blah.com/oauth20_authorize.srf";
 
+    private static final String TEST_NONCE_REDIRECT_URL = "https://login.microsoftonline.com/organizations/oAuth2/v2.0/authorize?&sso_nonce=ABCD";
+
     @Before
     public void setup() {
         mContext = ApplicationProvider.getApplicationContext();
@@ -184,5 +186,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_MSA_HEADER_FORWARDING_NEGATIVE_URL));
     }
 
-
+    @Test
+    public void testUrlOverrideHandlesNonceRedirectUrl() {
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_NONCE_REDIRECT_URL));
+    }
 }

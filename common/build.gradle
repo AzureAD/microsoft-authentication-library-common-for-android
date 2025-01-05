@@ -170,6 +170,7 @@ dependencies {
     //needed for credentials support from play services, for devices running
     implementation "androidx.credentials:credentials-play-services-auth:$rootProject.ext.AndroidCredentialsVersion"
     implementation "com.google.android.gms:play-services-fido:$rootProject.ext.LegacyFidoApiVersion"
+    implementation "com.google.android.libraries.identity.googleid:googleid:$rootProject.ext.GoogleIdVersion"
 
     constraints {
         implementation ("com.squareup.okio:okio:3.4.0") {

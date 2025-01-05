@@ -1,4 +1,3 @@
-package com.microsoft.identity.common.java.opentelemetry;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -21,42 +20,23 @@ package com.microsoft.identity.common.java.opentelemetry;
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.internal.msafederation.google
 
-public enum SpanName {
-    AcquirePrtUsingBrt,
-    AcquireTokenInteractive,
-    AcquireTokenSilent,
-    SetScopeForDMAgentForFoci,
-    GetAccounts,
-    RemoveAccount,
-    WorkplaceJoin,
-    ATIInteractively,
-    ATISilently,
-    WorkplaceLeave,
-    DeviceState,
-    CertBasedAuth,
-    MSAL_PerformIpcStrategy,
-    DeviceRegistrationApi,
-    WorkplaceJoinApi,
-    AcquireTokenDcf,
-    AcquireTokenDcfAuthRequest,
-    AcquireTokenDcfFetchToken,
-    EncryptionManager,
-    Passthrough,
-    BrokerOperationRequestDispatcher,
-    BrokerDiscoveryManagerPerformDiscoveryProcess,
-    Fido,
-    BrokerAccountServiceRemoveAccounts,
-    AcquirePrtUsingTransferToken,
-    AcquireTransferTokenUsingPrt,
-    SaveTransferTokenToBlockstore,
-    GetBackedUpMsaAccounts,
-    RefreshTransferToken,
-    IsLtwPreInstalled,
-    DeleteTransferToken,
-    RestoreMsaAccounts,
-    OnUpgradeReceiver,
-    UpgradeDeviceRegistration,
-    RemoveBrokerAccount,
-    ProcessNonceFromEstsRedirect
+import com.microsoft.identity.common.internal.msafederation.MsaFederationConstants.MSA_ID_TOKEN_HEADER_KEY
+import com.microsoft.identity.common.internal.msafederation.FederatedCredential
+import com.microsoft.identity.common.internal.msafederation.FederatedSignInProviderName
+
+/**
+ * Represents credential artifact as result of successful sign in with google
+ * It can contain id token.
+ */
+data class SignInWithGoogleCredential internal constructor(internal val idToken: String) : FederatedCredential(FederatedSignInProviderName.GOOGLE) {
+
+    /**
+     * Helper method to create header that can be used in MSA
+     * authorization. (Move to better place.)
+     */
+    fun asHeaders(): Map<String, String> {
+        return mapOf(MSA_ID_TOKEN_HEADER_KEY to idToken)
+    }
 }
