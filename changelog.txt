@@ -1,3 +1,8 @@
+Version 18.2.3
+----------
+(common4j 15.2.3)
+- [PATCH] Add SDMBroadcastReceiver for applications to register callbacks for SDM broadcasts (#2547)
+
 Version 18.2.2
 ----------
 (common4j 15.2.2)
