@@ -43,7 +43,7 @@ public interface IBrowserSelector {
      * @return The selected browser.
      */
     @Nullable
-    Browser select(
+    Browser selectBrowser(
             @NonNull List<BrowserDescriptor> browserSafeList,
             @Nullable BrowserDescriptor preferredBrowserDescriptor);
 }

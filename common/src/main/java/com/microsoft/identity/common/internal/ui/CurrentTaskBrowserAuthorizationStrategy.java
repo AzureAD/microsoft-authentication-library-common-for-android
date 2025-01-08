@@ -42,9 +42,9 @@ public class CurrentTaskBrowserAuthorizationStrategy<
         GenericOAuth2Strategy extends OAuth2Strategy,
         GenericAuthorizationRequest extends AuthorizationRequest>
         extends BrowserAuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
-    public CurrentTaskBrowserAuthorizationStrategy(@NonNull Context applicationContext,
-                                                   @NonNull Activity activity,
-                                                   @Nullable Fragment fragment,
+    public CurrentTaskBrowserAuthorizationStrategy(@NonNull final Context applicationContext,
+                                                   @NonNull final Activity activity,
+                                                   @Nullable final Fragment fragment,
                                                    @NonNull final Browser browser) {
         super(applicationContext, activity, fragment, browser);
     }

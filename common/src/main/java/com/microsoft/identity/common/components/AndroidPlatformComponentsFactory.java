@@ -35,7 +35,7 @@ import com.microsoft.identity.common.internal.platform.AndroidDeviceMetadata;
 import com.microsoft.identity.common.internal.platform.AndroidPlatformUtil;
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidTaskStateGenerator;
 import com.microsoft.identity.common.internal.ui.AndroidAuthorizationStrategyFactory;
-import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
+import com.microsoft.identity.common.internal.ui.browser.AndroidBrowserSelector;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.PlatformComponents;
@@ -129,7 +129,7 @@ public class AndroidPlatformComponentsFactory {
                         new AndroidAuthSdkStorageEncryptionManager(context)))
                 .platformUtil(new AndroidPlatformUtil(context, activity))
                 .httpClientWrapper(new DefaultHttpClientWrapper())
-                .browserSelector(new BrowserSelector(context));
+                .browserSelector(new AndroidBrowserSelector(context));
 
         if (activity != null){
             builder.authorizationStrategyFactory(

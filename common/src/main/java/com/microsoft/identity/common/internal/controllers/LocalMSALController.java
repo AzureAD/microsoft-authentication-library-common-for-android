@@ -227,7 +227,7 @@ public class LocalMSALController extends BaseController {
                 .getPlatformUtil()
                 .throwIfNetworkNotAvailable(parameters.isPowerOptCheckEnabled());
 
-        final Browser browser = parameters.getPlatformComponents().getBrowserSelector().select(
+        final Browser browser = parameters.getPlatformComponents().getBrowserSelector().selectBrowser(
                 parameters.getBrowserSafeList(),
                 parameters.getPreferredBrowser()
         );

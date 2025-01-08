@@ -55,7 +55,10 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
     private final Fragment mFragment;
 
     /**
-     * Get the authorization strategy.
+     * Get the authorization strategy based on the authorization agent and browser.
+     * If the authorization agent is WEBVIEW or the browser is null,
+     * return the embedded web view authorization strategy.
+     * Otherwise, return the browser authorization strategy.
      *
      * @param authorizationAgent The authorization agent provided by the caller.
      * @param browser            The browser to use for authorization.
@@ -70,7 +73,6 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
             final boolean isBrokerRequest) {
         final String methodTag = TAG + ":getAuthorizationStrategy";
 
-        // Use embedded webView if no browser available or authorization agent is webView
         if (authorizationAgent == AuthorizationAgent.WEBVIEW || browser == null) {
             Logger.info(methodTag, "WebView authorization, browser: " + browser);
             return getGenericAuthorizationStrategy();
