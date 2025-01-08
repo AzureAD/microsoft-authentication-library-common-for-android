@@ -52,6 +52,7 @@ android {
     }
 
     defaultConfig {
+        namespace "com.microsoft.identity.internal.testutils"
         multiDexEnabled true
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
@@ -61,6 +62,7 @@ android {
         buildConfigField("String", "LAB_CLIENT_SECRET", "\"$labClientSecret\"")
         buildConfigField("String", "RUN_ID", "\"$runId\"")
         buildConfigField("boolean", "SAVE_TEST_RESULTS_TO_CSV", "$saveTestResultsToCsv")
+        buildFeatures.buildConfig true
 
         // Specifies a sorted list of flavors that the plugin should try to use from
         // a given dimension. The following tells the plugin that, when encountering
@@ -97,7 +99,7 @@ android {
 
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
-    classifier 'sources'
+    archiveClassifier.set("sources")
 }
 
 tasks.whenTaskAdded { task ->

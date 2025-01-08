@@ -60,6 +60,8 @@ android {
         buildConfigField("boolean", "newBrokerDiscoveryEnabledFlag", "$newBrokerDiscoveryEnabledFlag")
         buildConfigField("boolean", "trustDebugBrokerFlag", "$trustDebugBrokerFlag")
         buildConfigField("boolean", "bypassRedirectUriCheck", "$bypassRedirectUriCheck")
+        buildFeatures.buildConfig true
+        buildFeatures.aidl true
     }
 
     buildTypes {
@@ -240,7 +242,7 @@ android.libraryVariants.all { variant ->
 // Create tasks to generate javadoc jar
 android.libraryVariants.all { variant ->
     task("${variant.name}JavadocJar", type: Jar, dependsOn: "${variant.name}Javadoc") {
-        classifier 'javadoc'
+        archiveClassifier.set("javadoc")
         from tasks["${variant.name}Javadoc"].destinationDir
     }
 }
@@ -248,7 +250,7 @@ android.libraryVariants.all { variant ->
 
 tasks.register('sourcesJar', Jar) {
     from android.sourceSets.main.java.srcDirs
-    classifier 'sources'
+    archiveClassifier.set("sources")
     destinationDirectory = reporting.file("$project.buildDir/outputs/jar/")
 }
 
