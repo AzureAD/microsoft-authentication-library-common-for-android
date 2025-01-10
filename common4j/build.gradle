@@ -150,6 +150,7 @@ def dcParameter = "" // will be blank unless specified by developer
 def useMockApiForNativeAuthParameter = false // will be false unless specified by developer
 def mockApiUrlParameter = "" // will be blank unless specified by developer
 def disableAcquireTokenSilentTimeoutParameter = false // will be false unless specified by developer
+def allowOneboxAuthorities = false // will be false unless specified by developer
 
 if (project.hasProperty("slice")) {
     sliceParameter = slice
@@ -175,6 +176,10 @@ if (project.hasProperty("disableAcquireTokenSilentTimeout")) {
     disableAcquireTokenSilentTimeoutParameter = true
 }
 
+if (project.hasProperty("allowOneboxAuthorities")) {
+    allowOneboxAuthorities = true
+}
+
 sourceSets {
     main {
         java.srcDirs = ['src/main', "$project.buildDir/generated/source/buildConfig/main"]
@@ -183,6 +188,7 @@ sourceSets {
         buildConfigField("boolean", "USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY", "${useMockApiForNativeAuthParameter}")
         buildConfigField("String", "MOCK_API_URL", "\"$mockApiUrlParameter\"")
         buildConfigField("boolean", "DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT", "${disableAcquireTokenSilentTimeoutParameter}")
+        buildConfigField("boolean", "ALLOW_ONEBOX_AUTHORITIES", "${allowOneboxAuthorities}")
     }
     test {
         java.srcDirs = ['src/test']
