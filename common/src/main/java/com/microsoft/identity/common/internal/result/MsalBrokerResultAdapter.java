@@ -416,6 +416,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         if (BrokerProtocolVersionUtil.canCompressBrokerPayloads(negotiatedBrokerProtocolVersion)) {
             try {
                 byte[] compressedBytes = compressString(brokerResultString);
+                Logger.infoPII(methodTag, brokerResultString);
                 Logger.info(methodTag, "Broker Result, raw payload size:"
                         + brokerResultString.getBytes(AuthenticationConstants.CHARSET_UTF8).length + " ,compressed bytes " + compressedBytes.length
                 );
@@ -613,6 +614,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     private IntuneAppProtectionPolicyRequiredException getIntuneProtectionRequiredException(
             @NonNull final BrokerResult brokerResult) {
         final String methodTag = TAG + ":getIntuneProtectionRequiredException";
+        Logger.infoPII(methodTag, brokerResult.toString());
         final IntuneAppProtectionPolicyRequiredException exception =
                 new IntuneAppProtectionPolicyRequiredException(
                         brokerResult.getErrorCode(),
