@@ -312,5 +312,10 @@ public enum AttributeName {
     /**
      * Indicates the new refresh token credential header attached in the eSTS request.
      */
-    is_new_refresh_token_cred_header_attached
+    is_new_refresh_token_cred_header_attached,
+
+    /**
+     * Records the stacktrace for an out-of-memory exception.
+     */
+    out_of_memory_exception_stacktrace
 }

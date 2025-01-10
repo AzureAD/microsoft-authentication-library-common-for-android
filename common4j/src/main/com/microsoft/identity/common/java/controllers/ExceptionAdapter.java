@@ -41,6 +41,8 @@ import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpResponse;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
@@ -66,6 +68,8 @@ import java.util.concurrent.TimeoutException;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
 import lombok.NonNull;
 
 public class ExceptionAdapter {
@@ -436,11 +440,27 @@ public class ExceptionAdapter {
 
 
         if (e instanceof OutOfMemoryError) {
-            return new ClientException(
-                    ClientException.OUT_OF_MEMORY,
-                    e.getMessage(),
-                    e
-            );
+            // When receiving an out of memory error, instead of gracefully returning a failure result, we should shut down
+            // current broker process, to allow a new broker process to be launched at the next request from client app.
+            // This will result in a new broker process with fresh memory allocation, rather than repeating out of memory
+            // errors. In the case that this is an msal-only scenario, and this code is running inside client app, then
+            // client app will be shut down and will need to be launched again.
+
+            // Log status code and record exception in span
+            final Span currentSpan = SpanExtension.current();
+            currentSpan.setStatus(StatusCode.ERROR);
+            currentSpan.recordException(e);
+
+            // Attach the stack trace, to debug in telemetry later
+            currentSpan.setAttribute(AttributeName.out_of_memory_exception_stacktrace.name(),
+                    StringUtil.getStacktraceAsStringFromElementArray(e.getStackTrace()));
+
+            Logger.error(TAG, "Received an out of memory error, shutting broker process so a new one can be launched.", e);
+
+            // Shut down current process
+            // Calling client app will receive "killed unexpectedly" error from MSAL if broker is shut down with this statement
+            // Calling application should not crash, and should be able to make another call, which will result in a new broker process.
+            System.exit(0);
         }
 
         if (e instanceof GeneralSecurityException) {
