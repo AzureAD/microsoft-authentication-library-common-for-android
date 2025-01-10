@@ -12,6 +12,7 @@ vNext
 - [MINOR] Managed profile Android util method (#2561)
 - [PATCH] Make userHandle response field optional (#2560)
 - [MINOR] Nonce redirect changes (#2552)
+- [PATCH] Fix OOM error handling (#2567)
 
 Version 18.2.2
 ----------
