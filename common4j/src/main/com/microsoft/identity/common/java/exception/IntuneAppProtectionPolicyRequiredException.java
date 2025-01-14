@@ -67,8 +67,8 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
                                                       final String errorMessage,
                                                       final BrokerInteractiveTokenCommandParameters originalParameters) {
         super(errorCode, errorMessage, null);
-        //REMOVE
-        Logger.info(TAG, "BrokerInteractiveTokenCommandParameters" + originalParameters.toString());
+        Logger.info(TAG, "Login hint" + originalParameters.getLoginHint());
+
 
         final String upn = (originalParameters.getBrokerAccount() != null) ?
                 originalParameters.getBrokerAccount().getUsername() :
@@ -125,8 +125,7 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
         final String upn = (originalParameters.getBrokerAccount() != null) ?
                 originalParameters.getBrokerAccount().getUsername() :
                 originalParameters.getLoginHint();
-        //REMOVE
-        Logger.info(TAG, "BrokerSilentTokenCommandParameters" + originalParameters.toString());
+        Logger.info(TAG, "Login hint" + originalParameters.getLoginHint());
 
         setAccountUpn(upn);
 

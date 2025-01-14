@@ -614,7 +614,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     private IntuneAppProtectionPolicyRequiredException getIntuneProtectionRequiredException(
             @NonNull final BrokerResult brokerResult) {
         final String methodTag = TAG + ":getIntuneProtectionRequiredException";
-        Logger.infoPII(methodTag, brokerResult.toString());
         final IntuneAppProtectionPolicyRequiredException exception =
                 new IntuneAppProtectionPolicyRequiredException(
                         brokerResult.getErrorCode(),
