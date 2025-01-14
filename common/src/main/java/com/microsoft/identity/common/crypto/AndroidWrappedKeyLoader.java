@@ -192,15 +192,17 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     @Nullable
     /* package */ synchronized SecretKey readSecretKeyFromStorage() throws ClientException {
         final String methodTag = TAG + ":readSecretKeyFromStorage";
+        final KeyPair keyPair = AndroidKeyStoreUtil.readKey(mAlias);
+        final byte[] wrappedSecretKey = FileUtil.readFromFile(getKeyFile(), KEY_FILE_SIZE);
         try {
-            final KeyPair keyPair = AndroidKeyStoreUtil.readKey(mAlias);
+
             if (keyPair == null) {
                 Logger.info(methodTag, "key does not exist in keystore");
                 deleteSecretKeyFromStorage();
                 return null;
             }
 
-            final byte[] wrappedSecretKey = FileUtil.readFromFile(getKeyFile(), KEY_FILE_SIZE);
+            //final byte[] wrappedSecretKey = FileUtil.readFromFile(getKeyFile(), KEY_FILE_SIZE);
             if (wrappedSecretKey == null) {
                 Logger.warn(methodTag, "Key file is empty");
                 // Do not delete the KeyStoreKeyPair even if the key file is empty. This caused credential cache
@@ -221,8 +223,24 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
             // All tokens with previous SecretKey are not possible to decrypt.
             Logger.warn(methodTag, "Error when loading key from Storage, " +
                     "wipe all existing key data ");
-            deleteSecretKeyFromStorage();
-            throw e;
+            try {
+                Thread.sleep(10000);
+                Logger.warn(methodTag, "Attempting to unwrap again");
+                assert keyPair != null;
+                final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, getKeySpecAlgorithm(), keyPair, WRAP_ALGORITHM);
+
+                Logger.info(methodTag, "Key is loaded with thumbprint: " +
+                        KeyUtil.getKeyThumbPrint(key));
+
+                return key;
+            } catch (InterruptedException ex) {
+                Logger.info(methodTag, "Thread interrupted while sleeping");
+                throw new RuntimeException(ex);
+            } catch (final ClientException e1) {
+                Logger.warn(methodTag, "Again same exception but we won't retry again.");
+                 //deleteSecretKeyFromStorage();
+                throw e;
+            }
         }
     }
 
@@ -311,19 +329,24 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             return getLegacySpecForKeyStoreKey(context, alias);
         } else {
-            final String certInfo = String.format(Locale.ROOT, "CN=%s, OU=%s",
-                    alias,
-                    context.getPackageName());
-            final int certValidYears = 100;
-            int purposes = KeyProperties.PURPOSE_WRAP_KEY | KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT;
+            Logger.info(TAG, "Using KeyGenParameterSpec for generating KeyStore key");
+//            final String certInfo = String.format(Locale.ROOT, "CN=%s, OU=%s",
+//                    alias,
+//                    context.getPackageName());
+//            final int certValidYears = 100;
+            int purposes = KeyProperties.PURPOSE_WRAP_KEY  | KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT;
             return new KeyGenParameterSpec.Builder(alias, purposes)
-                    .setCertificateSubject(new X500Principal(certInfo))
-                    .setCertificateSerialNumber(BigInteger.ONE)
-                    .setCertificateNotBefore(new Date())
-                    .setCertificateNotAfter(new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(365 * certValidYears)))
+//                    .setCertificateSubject(new X500Principal(certInfo))
+//                    .setCertificateSerialNumber(BigInteger.ONE)
+//                    .setCertificateNotBefore(new Date())
+//                    .setCertificateNotAfter(new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(365 * certValidYears)))
                     .setKeySize(2048)
                     .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
+                    .setBlockModes(KeyProperties.BLOCK_MODE_ECB) // Ensure compatibility with RSA
                     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
+                    .setUserAuthenticationRequired(false)
+                    .setUnlockedDeviceRequired(false)
+                    .setIsStrongBoxBacked(false)
                     .build();
         }
     }
