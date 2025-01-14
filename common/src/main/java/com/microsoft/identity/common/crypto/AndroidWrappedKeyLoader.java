@@ -46,9 +46,10 @@ import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.crypto.SecretKey;
 import javax.security.auth.x500.X500Principal;
@@ -194,6 +195,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         final String methodTag = TAG + ":readSecretKeyFromStorage";
         final KeyPair keyPair = AndroidKeyStoreUtil.readKey(mAlias);
         final byte[] wrappedSecretKey = FileUtil.readFromFile(getKeyFile(), KEY_FILE_SIZE);
+        Logger.info(methodTag, "KeyPair is loaded: " + (keyPair != null));
         try {
 
             if (keyPair == null) {
@@ -223,24 +225,8 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
             // All tokens with previous SecretKey are not possible to decrypt.
             Logger.warn(methodTag, "Error when loading key from Storage, " +
                     "wipe all existing key data ");
-            try {
-                Thread.sleep(10000);
-                Logger.warn(methodTag, "Attempting to unwrap again");
-                assert keyPair != null;
-                final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, getKeySpecAlgorithm(), keyPair, WRAP_ALGORITHM);
-
-                Logger.info(methodTag, "Key is loaded with thumbprint: " +
-                        KeyUtil.getKeyThumbPrint(key));
-
-                return key;
-            } catch (InterruptedException ex) {
-                Logger.info(methodTag, "Thread interrupted while sleeping");
-                throw new RuntimeException(ex);
-            } catch (final ClientException e1) {
-                Logger.warn(methodTag, "Again same exception but we won't retry again.");
-                 //deleteSecretKeyFromStorage();
-                throw e;
-            }
+           // deleteSecretKeyFromStorage();
+            throw e;
         }
     }
 
