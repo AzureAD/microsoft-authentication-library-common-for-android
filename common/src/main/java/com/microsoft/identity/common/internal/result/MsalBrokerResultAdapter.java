@@ -416,7 +416,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         if (BrokerProtocolVersionUtil.canCompressBrokerPayloads(negotiatedBrokerProtocolVersion)) {
             try {
                 byte[] compressedBytes = compressString(brokerResultString);
-                Logger.infoPII(methodTag, brokerResultString);
+                Logger.verbosePII(methodTag, brokerResultString);
                 Logger.info(methodTag, "Broker Result, raw payload size:"
                         + brokerResultString.getBytes(AuthenticationConstants.CHARSET_UTF8).length + " ,compressed bytes " + compressedBytes.length
                 );
