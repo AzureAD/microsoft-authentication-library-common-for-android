@@ -38,11 +38,9 @@ import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.window.layout.WindowMetricsCalculator;
 
-import com.microsoft.device.display.DisplayMask;
 import com.microsoft.identity.common.R;
-
-import java.util.List;
 
 // This activity readjusts its child layouts so that they're displayed on both single-screen and dual-screen device correctly.
 public class DualScreenActivity extends FragmentActivity {
@@ -165,30 +163,29 @@ public class DualScreenActivity extends FragmentActivity {
         final String feature = "com.microsoft.device.display.displaymask";
         final PackageManager pm = context.getPackageManager();
 
-        if (pm.hasSystemFeature(feature)) {
-            return true;
-        } else {
-            return false;
-        }
+        return pm.hasSystemFeature(feature);
     }
 
     /**
      * Returns the area of the display that is not functional for displaying content.
      *
-     * @param Context
+     * @param  context Context
      * @param rotation Surface.ROTATION_0, Surface.ROTATION_90, Surface.ROTATION_180 or Surface.ROTATION_270
      */
-    private Rect getHinge(final Context context,
-                          int rotation) {
-        // Hinge's coordinates of its 4 edges in different mode
-        // Double Landscape Rect(0, 1350 - 1800, 1434)
-        // Double Portrait  Rect(1350, 0 - 1434, 1800)
-        final DisplayMask displayMask = DisplayMask.fromResourcesRect(context);
-        List<Rect> boundings = displayMask.getBoundingRectsForRotation(rotation);
-        if (boundings.size() == 0) {
-            return new Rect(0, 0, 0, 0);
+    private Rect getHinge(final Context context, final int rotation) {
+        final Rect bounds = WindowMetricsCalculator
+                .getOrCreate()
+                .computeCurrentWindowMetrics(context)
+                .getBounds();
+        switch (rotation) {
+            case Surface.ROTATION_90:
+            case Surface.ROTATION_270:
+                return new Rect(0, 0, bounds.height(), bounds.width()); // Swap width and height for 90/270
+            case Surface.ROTATION_0:
+            case Surface.ROTATION_180:
+            default:
+                return new Rect(0, 0, bounds.width(), bounds.height()); // Original dimensions for 0/180
         }
-        return boundings.get(0);
     }
 
     /**
