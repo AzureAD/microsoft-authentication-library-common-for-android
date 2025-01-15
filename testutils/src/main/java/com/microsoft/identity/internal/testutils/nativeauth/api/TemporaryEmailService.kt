@@ -37,6 +37,7 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 
 /**
@@ -50,7 +51,7 @@ class TemporaryEmailService {
     private val retryDelayMs: Long = 4000
     private val newEmailCutoff = 5.0
 
-    fun generateRandomEmailAddress(): String {
+    fun generateRandomEmailAddressWithAPI(): String {
         val generatedUsers = api.generateRandomEmailAddress()
         if (generatedUsers.isEmpty()) {
             throw ApiException("No generated users returned from TemporaryEmailApi")
@@ -60,6 +61,11 @@ class TemporaryEmailService {
             throw ApiException("No valid user returned from TemporaryEmailApi")
         }
         return user
+    }
+
+    fun generateRandomEmailAddressLocally(): String {
+        val randomId = UUID.randomUUID().toString().substring(0, 8)
+        return "native-auth-signup-$randomId@1secmail.org"
     }
 
     /**
