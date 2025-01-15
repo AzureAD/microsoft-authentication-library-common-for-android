@@ -51,6 +51,11 @@ class TemporaryEmailService {
     private val retryDelayMs: Long = 4000
     private val newEmailCutoff = 5.0
 
+    fun generateRandomEmailAddressLocally(): String {
+        val randomId = UUID.randomUUID().toString().substring(0, 8)
+        return "native-auth-signup-$randomId@1secmail.org"
+    }
+
     fun generateRandomEmailAddressWithAPI(): String {
         val generatedUsers = api.generateRandomEmailAddress()
         if (generatedUsers.isEmpty()) {
@@ -61,11 +66,6 @@ class TemporaryEmailService {
             throw ApiException("No valid user returned from TemporaryEmailApi")
         }
         return user
-    }
-
-    fun generateRandomEmailAddressLocally(): String {
-        val randomId = UUID.randomUUID().toString().substring(0, 8)
-        return "native-auth-signup-$randomId@1secmail.org"
     }
 
     /**
