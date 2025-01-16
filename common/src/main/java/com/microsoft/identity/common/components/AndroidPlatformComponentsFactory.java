@@ -137,6 +137,7 @@ public class AndroidPlatformComponentsFactory {
                                     .context(activity.getApplicationContext())
                                     .activity(activity)
                                     .fragment(fragment)
+                                    .browserSelector(new AndroidBrowserSelector(context))
                                     .build())
                     .stateGenerator(new AndroidTaskStateGenerator(activity.getTaskId()));
         }

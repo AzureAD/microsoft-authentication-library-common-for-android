@@ -227,13 +227,14 @@ public class LocalMSALController extends BaseController {
                 .getPlatformUtil()
                 .throwIfNetworkNotAvailable(parameters.isPowerOptCheckEnabled());
 
-        final Browser browser = parameters.getPlatformComponents().getBrowserSelector().selectBrowser(
-                parameters.getBrowserSafeList(),
-                parameters.getPreferredBrowser()
-        );
         mAuthorizationStrategy = parameters.getPlatformComponents()
                 .getAuthorizationStrategyFactory()
-                .getAuthorizationStrategy(parameters.getAuthorizationAgent(),browser, false);
+                .getAuthorizationStrategy(
+                        parameters.getAuthorizationAgent(),
+                        parameters.getBrowserSafeList(),
+                        parameters.getPreferredBrowser(),
+                        false
+                );
         mAuthorizationRequest = getAuthorizationRequest(strategy, parameters);
 
         // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and AuthorizationStrategy to GenericAuthorizationStrategy in the arguments of call to requestAuthorization method

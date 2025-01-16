@@ -44,6 +44,6 @@ public interface IBrowserSelector {
      */
     @Nullable
     Browser selectBrowser(
-            @NonNull List<BrowserDescriptor> browserSafeList,
-            @Nullable BrowserDescriptor preferredBrowserDescriptor);
+            @NonNull final List<BrowserDescriptor> browserSafeList,
+            @Nullable final BrowserDescriptor preferredBrowserDescriptor);
 }

@@ -88,6 +88,9 @@ public interface IPlatformComponents extends IPopManagerSupplier {
     @NonNull
     IStorageSupplier getStorageSupplier();
 
+    /**
+     * Returns a implementation of browser selector.
+     */
     @NonNull
     IBrowserSelector getBrowserSelector();
 }
