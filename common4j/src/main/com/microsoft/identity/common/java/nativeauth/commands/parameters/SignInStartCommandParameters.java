@@ -54,6 +54,12 @@ public class SignInStartCommandParameters extends BaseSignInTokenCommandParamete
     @Nullable
     public final char[] password;
 
+    /**
+     * Claims to send to the token endpoint.
+     */
+    @Nullable
+    public final String claimsRequestJson;
+
     @NonNull
     @Override
     public String toUnsanitizedString() {
