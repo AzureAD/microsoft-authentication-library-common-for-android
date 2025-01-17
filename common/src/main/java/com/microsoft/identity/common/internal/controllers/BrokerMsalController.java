@@ -464,10 +464,13 @@ public class BrokerMsalController extends BaseController {
                 new BrokerOperation<Intent>() {
                     private String negotiatedBrokerProtocolVersion;
 
+                    private Bundle mBundleForInteractiveRequest;
+
                     @Override
                     public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
                         verifyTokenParametersAreSupported(parameters);
                         negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+                        mBundleForInteractiveRequest = mRequestAdapter.getRequestBundleForAcquireTokenInteractive(parameters, negotiatedBrokerProtocolVersion);
                     }
 
                     @Override
@@ -476,7 +479,8 @@ public class BrokerMsalController extends BaseController {
                         return new BrokerOperationBundle(
                                 MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST,
                                 mActiveBrokerPackageName,
-                                null);
+                                mBundleForInteractiveRequest
+                        );
                     }
 
                     @Override
@@ -490,7 +494,7 @@ public class BrokerMsalController extends BaseController {
                                 resultBundle,
                                 negotiatedBrokerProtocolVersion);
                         intent.putExtras(
-                                mRequestAdapter.getRequestBundleForAcquireTokenInteractive(parameters, negotiatedBrokerProtocolVersion)
+                                mBundleForInteractiveRequest
                         );
                         return intent;
                     }

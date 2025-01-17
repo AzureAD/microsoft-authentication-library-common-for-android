@@ -36,6 +36,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PREFERRED_AUTH_METHOD_CODE;
 import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
 import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BROKER_BUNDLE;
+import static com.microsoft.identity.common.java.exception.ClientException.OUT_OF_MEMORY;
 import static com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil.isFirstVersionOlderOrEqual;
 
 import android.accounts.AccountManager;
@@ -304,6 +305,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final String methodTag = TAG + ":bundleFromBaseException";
         Logger.info(methodTag, "Constructing result bundle from ClientException");
 
+        if (OUT_OF_MEMORY.equals(exception.getErrorCode())) {
+            android.os.Process.killProcess(android.os.Process.myPid());
+            return new Bundle();
+        }
         final BrokerResult.Builder builder = new BrokerResult.Builder()
                 .success(false)
                 .errorCode(exception.getErrorCode())

@@ -85,7 +85,7 @@ public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthServic
                 return microsoftAuthService.hello(inputBundle);
 
             case MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST:
-                final Intent intent = microsoftAuthService.getIntentForInteractiveRequest();
+                final Intent intent = microsoftAuthService.getIntentForInteractiveRequestWithBundle(inputBundle);
                 final Bundle bundle = intent.getExtras();
 
                 //older brokers (pre-ContentProvider) are ONLY sending these values in the intent itself.

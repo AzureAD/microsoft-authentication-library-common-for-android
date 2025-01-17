@@ -70,6 +70,10 @@ public abstract class AndroidAuthorizationStrategy<
         return mReferencedApplicationContext.get();
     }
 
+    protected Activity getReferencedActivity() {
+        return mReferencedActivity.get();
+    }
+
     /**
      * If fragment is provided, add AuthorizationFragment on top of that fragment.
      * Otherwise, launch AuthorizationActivity.

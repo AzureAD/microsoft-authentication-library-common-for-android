@@ -86,6 +86,11 @@ public class ShadowBoundServiceClientWithLegacyBroker<T extends IInterface> {
             public Bundle generateSignedHttpRequest(Bundle bundle) throws RemoteException {
                 throw new RemoteException("Not Implemented");
             }
+
+            @Override
+            public Intent getIntentForInteractiveRequestWithBundle(Bundle bundle) throws RemoteException {
+                throw new RemoteException("Not Implemented");
+            }
         };
 
         @SuppressWarnings("unchecked")

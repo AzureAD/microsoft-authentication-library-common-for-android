@@ -87,6 +87,11 @@ public class ShadowBoundServiceClientWithSuccessResult<T extends IInterface> {
             public Bundle generateSignedHttpRequest(Bundle bundle) throws RemoteException {
                 return IpcStrategyTests.getMockIpcResultBundle();
             }
+
+            @Override
+            public Intent getIntentForInteractiveRequestWithBundle(Bundle bundle) throws RemoteException {
+                return this.getIntentForInteractiveRequest();
+            }
         };
 
         @SuppressWarnings("unchecked")

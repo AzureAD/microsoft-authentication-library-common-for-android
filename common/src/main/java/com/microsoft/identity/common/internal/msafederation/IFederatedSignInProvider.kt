@@ -26,6 +26,14 @@ package com.microsoft.identity.common.internal.msafederation
  * Internal interface for Federated Sign In Providers.
  */
 internal interface IFederatedSignInProvider {
+    /**
+     * Sign in and return credential after successful sign in. Implementation
+     * would have their own way of sign-in in.
+     */
     suspend fun signIn(): Result<FederatedCredential>
+
+    /**
+     * Sign out. Implementation would have their own way of sign-out.
+     */
     suspend fun signOut()
 }

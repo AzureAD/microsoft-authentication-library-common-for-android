@@ -19,7 +19,8 @@
         <!-- Activity to invoke an interactive request to the intent passed by ad-accounts(Broker) -->
         <activity
             android:name="com.microsoft.identity.common.internal.broker.BrokerActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|screenLayout|keyboard" />
+            android:configChanges="orientation|keyboardHidden|screenSize|screenLayout|keyboard"
+            android:theme="@style/TransparentTheme"/>
         <!-- Activity to launch a install WPJ certificate activity and get the result -->
         <activity
             android:name="com.microsoft.identity.common.internal.broker.InstallCertActivityLauncher"

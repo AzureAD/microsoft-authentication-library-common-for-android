@@ -82,6 +82,8 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
      */
     private final boolean suppressBrokerAccountPicker;
 
+    private final boolean isSignInWithGoogleRequest;
+
     public boolean getHandleNullTaskAffinity(){
         return handleNullTaskAffinity;
     }

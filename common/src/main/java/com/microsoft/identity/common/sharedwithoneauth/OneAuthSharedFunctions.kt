@@ -82,17 +82,17 @@ class OneAuthSharedFunctions {
                 strategies.add(contentProviderStrategy)
             }
 
-            val boundServiceStrategy = BoundServiceStrategy(MicrosoftAuthClient(context))
-            if (boundServiceStrategy.isSupportedByTargetedBroker(activeBrokerPackageName)) {
-                sb.append("BoundServiceStrategy, ")
-                strategies.add(boundServiceStrategy)
-            }
-
-            val accountManagerStrategy = AccountManagerAddAccountStrategy(context)
-            if (accountManagerStrategy.isSupportedByTargetedBroker(activeBrokerPackageName)) {
-                sb.append("AccountManagerStrategy.")
-                strategies.add(accountManagerStrategy)
-            }
+//            val boundServiceStrategy = BoundServiceStrategy(MicrosoftAuthClient(context))
+//            if (boundServiceStrategy.isSupportedByTargetedBroker(activeBrokerPackageName)) {
+//                sb.append("BoundServiceStrategy, ")
+//                strategies.add(boundServiceStrategy)
+//            }
+//
+//            val accountManagerStrategy = AccountManagerAddAccountStrategy(context)
+//            if (accountManagerStrategy.isSupportedByTargetedBroker(activeBrokerPackageName)) {
+//                sb.append("AccountManagerStrategy.")
+//                strategies.add(accountManagerStrategy)
+//            }
 
             Logger.info(methodTag, sb.toString())
             return strategies

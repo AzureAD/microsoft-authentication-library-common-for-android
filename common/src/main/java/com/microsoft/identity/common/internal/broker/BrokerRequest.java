@@ -79,6 +79,7 @@ public class BrokerRequest implements Serializable {
         final static String PREFERRED_AUTH_METHOD = "preferred_auth_method";
         final static String ACCOUNT_TRANSFER_TOKEN = "account_transfer_token";
         final static String SUPPRESS_ACCOUNT_PICKER = "suppress_account_picker";
+        final static String IS_SIGN_IN_WITH_GOOGLE_REQUEST = "is_sign_in_with_google_request";
     }
 
     /**
@@ -266,4 +267,7 @@ public class BrokerRequest implements Serializable {
      */
     @SerializedName(SerializedNames.SUPPRESS_ACCOUNT_PICKER)
     private boolean mSuppressAccountPicker;
+
+    @SerializedName(SerializedNames.IS_SIGN_IN_WITH_GOOGLE_REQUEST)
+    private boolean mIsSignInWithGoogleRequest;
 }
