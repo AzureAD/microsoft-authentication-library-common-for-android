@@ -49,6 +49,7 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
+import com.microsoft.identity.common.internal.commands.parameters.AndroidInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
@@ -96,7 +97,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final String extraOptions = parameters.getExtraOptions() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
 
-        final BrokerRequest brokerRequest = BrokerRequest.builder()
+        final BrokerRequest.BrokerRequestBuilder brokerRequestBuilder = BrokerRequest.builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
                 .scope(TextUtils.join(" ", parameters.getScopes()))
                 .redirect(parameters.getRedirectUri())
@@ -131,10 +132,14 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .preferredBrowser(parameters.getPreferredBrowser())
                 .preferredAuthMethod(parameters.getPreferredAuthMethod())
                 .accountTransferToken(parameters.getAccountTransferToken())
-                .suppressAccountPicker(parameters.isSuppressBrokerAccountPicker())
-                .build();
+                .suppressAccountPicker(parameters.isSuppressBrokerAccountPicker());
 
-        return brokerRequest;
+        if (parameters instanceof AndroidInteractiveTokenCommandParameters) {
+            final AndroidInteractiveTokenCommandParameters androidInteractiveTokenCommandParameters = (AndroidInteractiveTokenCommandParameters) parameters;
+            brokerRequestBuilder.signInWithGoogleCredential(androidInteractiveTokenCommandParameters.getSignInWithGoogleCredential());
+        }
+
+        return brokerRequestBuilder.build();
     }
 
     @Override

@@ -67,7 +67,7 @@ import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.cache.ClientActiveBrokerCache;
 import com.microsoft.identity.common.internal.cache.HelloCache;
 import com.microsoft.identity.common.internal.cache.HelloCacheResult;
-import com.microsoft.identity.common.internal.commands.parameters.AndroidActivityInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.AndroidInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter;
 import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
@@ -358,8 +358,8 @@ public class BrokerMsalController extends BaseController {
         final Intent interactiveRequestIntent = getBrokerAuthorizationIntent(parameters);
 
         Activity activity = null;
-        if (parameters instanceof AndroidActivityInteractiveTokenCommandParameters) {
-            activity = ((AndroidActivityInteractiveTokenCommandParameters) parameters).getActivity();
+        if (parameters instanceof AndroidInteractiveTokenCommandParameters) {
+            activity = ((AndroidInteractiveTokenCommandParameters) parameters).getActivity();
         }
 
         //Pass this intent to the BrokerActivity which will be used to start this activity

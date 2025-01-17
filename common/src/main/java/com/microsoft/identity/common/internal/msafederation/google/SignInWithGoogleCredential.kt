@@ -22,15 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.msafederation.google
 
-import com.microsoft.identity.common.internal.msafederation.MsaFederationConstants.MSA_ID_TOKEN_HEADER_KEY
 import com.microsoft.identity.common.internal.msafederation.FederatedCredential
 import com.microsoft.identity.common.internal.msafederation.FederatedSignInProviderName
+import com.microsoft.identity.common.internal.msafederation.MsaFederationConstants.MSA_ID_TOKEN_HEADER_KEY
+import java.io.Serializable
 
 /**
  * Represents credential artifact as result of successful sign in with google
  * It can contain id token.
  */
-data class SignInWithGoogleCredential internal constructor(internal val idToken: String) : FederatedCredential(FederatedSignInProviderName.GOOGLE) {
+data class SignInWithGoogleCredential internal constructor(internal val idToken: String) : FederatedCredential(FederatedSignInProviderName.GOOGLE), Serializable {
 
     /**
      * Helper method to create header that can be used in MSA
