@@ -138,7 +138,7 @@ public class CommandUtil {
                         .password(parameters.getPassword())
                         .scopes(parameters.getScopes())
                         .correlationId(correlationId)
-                        .claimsRequestJson(parameters.claimsRequestJson)
+                        .claimsRequestJson(parameters.getClaimsRequestJson())
                         .challengeType(parameters.getChallengeType())
                         .build();
 
