@@ -45,11 +45,7 @@ class SignInWithGoogleCredentialTest {
         val headers = credential.asHeaders();
         assertEquals(1, headers.size)
         assertEquals(testIdToken, headers[MsaFederationConstants.MSA_ID_TOKEN_HEADER_KEY])
-    }
 
-    @Test
-    fun testGetIdProviderExtraQueryParam() {
-        val credential = SignInWithGoogleCredential("test-id-token")
         val idProviderExtraQueryParam = credential.getIdProviderExtraQueryParam()
         assertEquals(MsaFederationConstants.MSA_ID_PROVIDER_EXTRA_QUERY_PARAM_KEY, idProviderExtraQueryParam.key)
         assertEquals(FederatedSignInProviderName.GOOGLE.getIdProviderName(), idProviderExtraQueryParam.value)

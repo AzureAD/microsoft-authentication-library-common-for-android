@@ -48,6 +48,11 @@ class SignInWithGoogleApi internal constructor(
                 instance ?: SignInWithGoogleApi(FederatedSignInProviderFactory).also { instance = it }
             }
         }
+
+        @JvmStatic
+        fun setInstance(api: SignInWithGoogleApi) {
+            instance = api
+        }
     }
 
     /**
