@@ -160,10 +160,9 @@ public class DualScreenActivity extends FragmentActivity {
      * Returns true if this device supports dual screen mode.
      */
     private boolean isDualScreenDevice(final Context context) {
-        final String feature = "com.microsoft.device.display.displaymask";
         final PackageManager pm = context.getPackageManager();
 
-        return pm.hasSystemFeature(feature);
+        return pm.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE);
     }
 
     /**
