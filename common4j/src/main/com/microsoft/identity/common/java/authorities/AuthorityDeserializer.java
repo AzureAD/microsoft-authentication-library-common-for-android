@@ -61,7 +61,13 @@ public class AuthorityDeserializer implements JsonDeserializer<Authority> {
                     if (aadAuthority != null && aadAuthority.mAuthorityUrlString != null) {
                         try {
                             final CommonURIBuilder uri = new CommonURIBuilder(URI.create(aadAuthority.mAuthorityUrlString));
-                            final String cloudUrl = uri.getScheme() + "://" + uri.getHost();
+                            final String cloudUrl;
+                            if (uri.getPort() != -1) {
+                                cloudUrl = uri.getScheme() + "://" + uri.getHost() + ":" + uri.getPort();
+                            } else {
+                                cloudUrl = uri.getScheme() + "://" + uri.getHost();
+                            }
+
                             final String tenant = uri.getLastPathSegment();
                             if (!StringUtil.isNullOrEmpty(tenant)) {
                                 aadAuthority.mAudience = AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(cloudUrl, tenant);
