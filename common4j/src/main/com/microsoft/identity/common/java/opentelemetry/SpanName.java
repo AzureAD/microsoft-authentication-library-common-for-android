@@ -65,4 +65,5 @@ public enum SpanName {
     OnUpgradeReceiver,
     UpgradeDeviceRegistration,
     RemoveBrokerAccount,
+    DataStoreCorruptionException
 }
