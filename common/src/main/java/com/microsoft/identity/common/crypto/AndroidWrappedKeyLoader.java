@@ -225,7 +225,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
             // All tokens with previous SecretKey are not possible to decrypt.
             Logger.warn(methodTag, "Error when loading key from Storage, " +
                     "wipe all existing key data ");
-           // deleteSecretKeyFromStorage();
+            deleteSecretKeyFromStorage();
             throw e;
         }
     }
@@ -331,8 +331,8 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                     .setBlockModes(KeyProperties.BLOCK_MODE_ECB) // Ensure compatibility with RSA
                     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
                     .setUserAuthenticationRequired(false)
-                    .setUnlockedDeviceRequired(false)
-                    .setIsStrongBoxBacked(false)
+//                    .setUnlockedDeviceRequired(false)
+//                    .setIsStrongBoxBacked(false)
                     .build();
         }
     }
