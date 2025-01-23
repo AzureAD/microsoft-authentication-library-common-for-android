@@ -24,7 +24,12 @@ package com.microsoft.identity.common.sharedwithoneauth
 
 import android.content.Context
 import androidx.annotation.WorkerThread
+
+import android.os.IInterface
+
+
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory
+import com.microsoft.identity.common.internal.broker.BoundServiceClient
 import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient
 import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccountStrategy
 import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy
@@ -81,12 +86,13 @@ class OneAuthSharedFunctions {
                 sb.append("ContentProviderStrategy, ")
                 strategies.add(contentProviderStrategy)
             }
+//            val boundServiceStrategy = BoundServiceStrategy(MicrosoftAuthClient(context) as BoundServiceClient<IMicrosoftAuthService>)
+//            val boundServiceStrategy = BoundServiceStrategy(MicrosoftAuthClient(context))
 
-            val boundServiceStrategy = BoundServiceStrategy(MicrosoftAuthClient(context))
-            if (boundServiceStrategy.isSupportedByTargetedBroker(activeBrokerPackageName)) {
-                sb.append("BoundServiceStrategy, ")
-                strategies.add(boundServiceStrategy)
-            }
+//            if (boundServiceStrategy.isSupportedByTargetedBroker(activeBrokerPackageName)) {
+//                sb.append("BoundServiceStrategy, ")
+//                strategies.add(boundServiceStrategy)
+//            }
 
             val accountManagerStrategy = AccountManagerAddAccountStrategy(context)
             if (accountManagerStrategy.isSupportedByTargetedBroker(activeBrokerPackageName)) {
