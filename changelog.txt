@@ -1,6 +1,7 @@
 vNext
 ----------
 - [MINOR] Add support for OneBox Environment (#2559)
+- [MINOR] Add support for claims requests for native authentication (#2572)
 
 Version 19.0.0
 ----------
