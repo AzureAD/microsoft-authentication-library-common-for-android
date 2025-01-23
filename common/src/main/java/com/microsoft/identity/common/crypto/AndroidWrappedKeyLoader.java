@@ -197,7 +197,8 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         final byte[] wrappedSecretKey = FileUtil.readFromFile(getKeyFile(), KEY_FILE_SIZE);
         Logger.info(methodTag, "KeyPair is loaded: " + (keyPair != null));
         try {
-
+            boolean isPixel5 = "Google".equalsIgnoreCase(Build.MANUFACTURER) && "Pixel 5".equalsIgnoreCase(Build.MODEL);
+            Logger.info(TAG, "is it a pixel 5 device? "+ isPixel5 + Build.MANUFACTURER + " "+ Build.MODEL);
             if (keyPair == null) {
                 Logger.info(methodTag, "key does not exist in keystore");
                 deleteSecretKeyFromStorage();
@@ -320,6 +321,9 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
 //                    alias,
 //                    context.getPackageName());
 //            final int certValidYears = 100;
+            // Check if the device is a Pixel 5
+            boolean isPixel5 = "Google".equalsIgnoreCase(Build.MANUFACTURER) && "Pixel 5".equalsIgnoreCase(Build.MODEL);
+            Logger.info(TAG, "is it a pixel 5 device? "+ isPixel5 + Build.MANUFACTURER + " "+ Build.MODEL);
             int purposes = KeyProperties.PURPOSE_WRAP_KEY  | KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT;
             return new KeyGenParameterSpec.Builder(alias, purposes)
 //                    .setCertificateSubject(new X500Principal(certInfo))
