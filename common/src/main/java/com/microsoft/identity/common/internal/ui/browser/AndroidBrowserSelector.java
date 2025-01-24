@@ -52,8 +52,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-public class BrowserSelector implements IBrowserSelector {
-    private static final String TAG = BrowserSelector.class.getSimpleName();
+public class AndroidBrowserSelector implements IBrowserSelector {
+    private static final String TAG = AndroidBrowserSelector.class.getSimpleName();
     private static final String SCHEME_HTTP = "http";
     private static final String SCHEME_HTTPS = "https";
     private static final String DIGEST_SHA_512 = "SHA-512";
@@ -63,7 +63,7 @@ public class BrowserSelector implements IBrowserSelector {
 
     private final PackageManager mPackageManager;
 
-    public BrowserSelector(@NonNull final Context context) {
+    public AndroidBrowserSelector(@NonNull final Context context) {
         mPackageManager = context.getPackageManager();
     }
 
@@ -77,7 +77,7 @@ public class BrowserSelector implements IBrowserSelector {
      */
     @Nullable
     @Override
-    public Browser select(
+    public Browser selectBrowser(
             @NonNull final List<BrowserDescriptor> browserSafeList,
             @Nullable final BrowserDescriptor preferredBrowserDescriptor) {
         final String methodTag = TAG + ":select";
@@ -240,15 +240,14 @@ public class BrowserSelector implements IBrowserSelector {
      */
     @NonNull
     public static Set<String> generateSignatureHashes(@NonNull Signature[] signatures) {
-        Set<String> signatureHashes = new HashSet<>();
-        for (Signature signature : signatures) {
+        final Set<String> signatureHashes = new HashSet<>();
+        for (final Signature signature : signatures) {
             try {
-                MessageDigest digest = MessageDigest.getInstance(DIGEST_SHA_512);
-                byte[] hashBytes = digest.digest(signature.toByteArray());
+                final MessageDigest digest = MessageDigest.getInstance(DIGEST_SHA_512);
+                final byte[] hashBytes = digest.digest(signature.toByteArray());
                 signatureHashes.add(Base64.encodeToString(hashBytes, Base64.URL_SAFE | Base64.NO_WRAP));
             } catch (final NoSuchAlgorithmException e) {
-                throw new IllegalStateException(
-                        "Platform does not support" + DIGEST_SHA_512 + " hashing");
+                throw new IllegalStateException("Platform does not support" + DIGEST_SHA_512 + " hashing");
             }
         }
 

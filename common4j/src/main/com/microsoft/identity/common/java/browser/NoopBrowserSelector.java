@@ -29,6 +29,9 @@ import java.util.List;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
+/**
+ * A no-op implementation of {@link IBrowserSelector}.
+ */
 public class NoopBrowserSelector implements IBrowserSelector {
 
     /**
@@ -41,7 +44,7 @@ public class NoopBrowserSelector implements IBrowserSelector {
      */
     @Nullable
     @Override
-    public Browser select(@NonNull List<BrowserDescriptor> browserSafeList, @Nullable BrowserDescriptor preferredBrowserDescriptor) {
+    public Browser selectBrowser(@NonNull List<BrowserDescriptor> browserSafeList, @Nullable BrowserDescriptor preferredBrowserDescriptor) {
         return null;
     }
 }

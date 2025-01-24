@@ -57,7 +57,7 @@ import java.util.List;
 import java.util.Set;
 
 @RunWith(RobolectricTestRunner.class)
-public class BrowserSelectorTest {
+public class AndroidBrowserSelectorTest {
     private static final String SCHEME_HTTP = "http";
     private static final String SCHEME_HTTPS = "https";
     static final Intent BROWSER_INTENT = new Intent(
@@ -100,25 +100,25 @@ public class BrowserSelectorTest {
     //Currently package manager call returns an empty list... failing this test.  Needs investigation.
     //Ignored while updating to latest Mockito version
     @Test
-    public void testSelect_getAllBrowser()  {
+    public void testSelect_Browser_getAllBrowser()  {
         setBrowserList(CHROME, FIREFOX);
 
-        List<Browser> allBrowsers = new BrowserSelector(ApplicationProvider.getApplicationContext()).getBrowsers( null);
+        List<Browser> allBrowsers = new AndroidBrowserSelector(ApplicationProvider.getApplicationContext()).getBrowsers( null);
         assert (allBrowsers.get(0).getPackageName().equals(CHROME.mPackageName));
         assert (allBrowsers.get(1).getPackageName().equals(FIREFOX.mPackageName));
     }
 
     @Test
-    public void testSelect_noMatchingBrowser() {
+    public void testSelect_Browser_noMatchingBrowser() {
         setBrowserList(CHROME, FIREFOX);
 
         final List<BrowserDescriptor> browserSafelist = new ArrayList<>();
-        final Browser browser = new BrowserSelector(ApplicationProvider.getApplicationContext()).select(browserSafelist, null);
+        final Browser browser = new AndroidBrowserSelector(ApplicationProvider.getApplicationContext()).selectBrowser(browserSafelist, null);
         assertNull(browser);
     }
 
     @Test
-    public void testSelect_versionNotSupported() {
+    public void testSelect_Browser_versionNotSupported() {
         setBrowserList(CHROME, FIREFOX);
 
         final List<BrowserDescriptor> browserSafelist = new ArrayList<>();
@@ -131,12 +131,12 @@ public class BrowserSelectorTest {
         );
 
 
-        final Browser browser = new BrowserSelector(ApplicationProvider.getApplicationContext()).select(browserSafelist, null);
+        final Browser browser = new AndroidBrowserSelector(ApplicationProvider.getApplicationContext()).selectBrowser(browserSafelist, null);
         assertNull(browser);
     }
 
     @Test
-    public void testSelect_customTabsNotSupported() {
+    public void testSelect_Browser_customTabsNotSupported() {
         setBrowserList(FIREFOX_NO_CUSTOM_TAB);
 
         final List<BrowserDescriptor> browserSafelist = new ArrayList<>();
@@ -147,13 +147,13 @@ public class BrowserSelectorTest {
                         null,
                         null)
         );
-        final Browser browser = new BrowserSelector(ApplicationProvider.getApplicationContext()).select(browserSafelist, null);
+        final Browser browser = new AndroidBrowserSelector(ApplicationProvider.getApplicationContext()).selectBrowser(browserSafelist, null);
         assertNotNull(browser);
         assertEquals(browser.getPackageName(), FIREFOX_NO_CUSTOM_TAB.mPackageName);
     }
 
     @Test
-    public void testSelect_preferredBrowserSelected() {
+    public void testSelect_Browser_preferredBrowserSelected() {
         setBrowserList(CHROME, DOLPHIN, FIREFOX);
 
         final BrowserDescriptor preferredBrowser = new BrowserDescriptor(
@@ -178,14 +178,14 @@ public class BrowserSelectorTest {
                         "10",
                         null)
         );
-        final Browser browser = new BrowserSelector(ApplicationProvider.getApplicationContext()).select(browserSafelist, preferredBrowser);
+        final Browser browser = new AndroidBrowserSelector(ApplicationProvider.getApplicationContext()).selectBrowser(browserSafelist, preferredBrowser);
         Assert.assertEquals(preferredBrowser.getPackageName(), browser.getPackageName());
         Assert.assertEquals(preferredBrowser.getSignatureHashes(), browser.getSignatureHashes());
 
     }
 
     @Test
-    public void testSelect_preferredBrowserSelected_preferredBrowserNotInstalled() {
+    public void testSelect_Browser_preferredBrowserSelected_preferredBrowserNotInstalled() {
         setBrowserList(CHROME, FIREFOX);
 
         final BrowserDescriptor preferredBrowser = new BrowserDescriptor(
@@ -212,12 +212,12 @@ public class BrowserSelectorTest {
         );
 
         // It should return the first installed browser.
-        final Browser browser = new BrowserSelector(ApplicationProvider.getApplicationContext()).select(browserSafelist, preferredBrowser);
+        final Browser browser = new AndroidBrowserSelector(ApplicationProvider.getApplicationContext()).selectBrowser(browserSafelist, preferredBrowser);
         Assert.assertEquals(CHROME.mPackageName, browser.getPackageName());
     }
 
     @Test
-    public void testSelect_preferredBrowserSelected_preferredBrowserNotInSafeList() {
+    public void testSelect_Browser_preferredBrowserSelected_preferredBrowserNotInSafeList() {
         setBrowserList(CHROME, DOLPHIN, FIREFOX);
 
         final BrowserDescriptor preferredBrowser = new BrowserDescriptor(
@@ -242,7 +242,7 @@ public class BrowserSelectorTest {
                         null)
         );
         // The safe list shouldn't matter, given that we've already specified all info in preferredBrowser's BrowserDescriptor.
-        final Browser browser = new BrowserSelector(ApplicationProvider.getApplicationContext()).select(browserSafelist, preferredBrowser);
+        final Browser browser = new AndroidBrowserSelector(ApplicationProvider.getApplicationContext()).selectBrowser(browserSafelist, preferredBrowser);
         Assert.assertEquals(preferredBrowser.getPackageName(), browser.getPackageName());
         Assert.assertEquals(preferredBrowser.getSignatureHashes(), browser.getSignatureHashes());
     }
@@ -377,7 +377,7 @@ public class BrowserSelectorTest {
             pi.packageName = mPackageName;
             pi.versionName = mVersion;
 
-            Set<String> signatureHashes = BrowserSelector.generateSignatureHashes(pi.signatures);
+            Set<String> signatureHashes = AndroidBrowserSelector.generateSignatureHashes(pi.signatures);
 
             ResolveInfo ri = new ResolveInfo();
             ri.activityInfo = new ActivityInfo();

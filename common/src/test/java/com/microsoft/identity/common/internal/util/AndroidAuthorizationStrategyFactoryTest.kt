@@ -89,8 +89,14 @@ class AndroidAuthorizationStrategyFactoryTest {
             .context(org.robolectric.RuntimeEnvironment.getApplication())
             .activity(mock(Activity::class.java))
             .fragment(mock(Fragment::class.java))
+            .browserSelector { _, _ -> browser }
             .build()
 
-        return strategyFactory.getAuthorizationStrategy(authorizationAgent, browser, true)
+        return strategyFactory.getAuthorizationStrategy(
+            authorizationAgent,
+            emptyList(),
+            null,
+            true
+        )
     }
 }

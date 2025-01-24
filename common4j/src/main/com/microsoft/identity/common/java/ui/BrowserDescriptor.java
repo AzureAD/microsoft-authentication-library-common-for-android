@@ -101,7 +101,7 @@ public class BrowserDescriptor implements Serializable {
      * Return a list of BrowserDescriptors that are considered safe for the Switch to browser flow.
      */
     static public List<BrowserDescriptor> getBrowserSafeListForSwitchBrowser() {
-        List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
+        final List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
         browserDescriptors.add(getBrowserDescriptorForChrome());
         browserDescriptors.add(getBrowserDescriptorForEdge());
         return browserDescriptors;
@@ -114,7 +114,7 @@ public class BrowserDescriptor implements Serializable {
      * @return List of BrowserDescriptors which are considered safe for the broker.
      */
     static public List<BrowserDescriptor> getBrowserSafeListForBroker() {
-        List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
+        final List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
         browserDescriptors.add(getBrowserDescriptorForChrome());
         return browserDescriptors;
     }

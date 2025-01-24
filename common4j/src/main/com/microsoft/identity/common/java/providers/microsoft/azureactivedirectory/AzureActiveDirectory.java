@@ -178,6 +178,8 @@ public class AzureActiveDirectory
     public static synchronized String getDefaultCloudUrl() {
         if (sEnvironment == Environment.PreProduction) {
             return AzureActiveDirectoryEnvironment.PREPRODUCTION_CLOUD_URL;
+        } else if (sEnvironment == Environment.OneBox) {
+            return AzureActiveDirectoryEnvironment.ONEBOX_CLOUD_URL;
         } else {
             return AzureActiveDirectoryEnvironment.PRODUCTION_CLOUD_URL;
         }

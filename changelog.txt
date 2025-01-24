@@ -1,6 +1,12 @@
 vNext
 ----------
 - [MINOR] Organize browser selection classes and change signature for get AuthorizationStrategy (#2564)
+- [MINOR] Add support for OneBox Environment (#2559)
+- [MINOR] Add support for claims requests for native authentication (#2572)
+
+Version 19.0.0
+----------
+(common4j 16.0.0)
 - [MINOR] Add Sign in With Google component for MSA federation (#2551)
 - [MINOR] Add SDMBroadcastReceiver for applications to register callbacks for SDM broadcasts (#2547)
 - [MINOR] Add switch_browser toMicrosoftStsAuthorizationRequest (#2550)

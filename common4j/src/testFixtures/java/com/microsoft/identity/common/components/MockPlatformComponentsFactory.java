@@ -117,7 +117,7 @@ public class MockPlatformComponentsFactory {
     };
 
     @SuppressWarnings(WarningType.rawtype_warning)
-    public static final IAuthorizationStrategyFactory NON_FUNCTIONAL_AUTH_STRATEGY_FACTORY = (authorizationAgent, browser, isBrokerRequest) -> {
+    public static final IAuthorizationStrategyFactory NON_FUNCTIONAL_AUTH_STRATEGY_FACTORY = (authorizationAgent, browserSafeList, preferredBrowserDescriptor, isBrokerRequest) -> {
         throw new UnsupportedOperationException();
     };
 
