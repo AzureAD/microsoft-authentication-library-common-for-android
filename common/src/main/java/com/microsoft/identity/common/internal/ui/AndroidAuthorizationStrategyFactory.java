@@ -36,6 +36,7 @@ import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthorizationStrategy;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
+import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
 
