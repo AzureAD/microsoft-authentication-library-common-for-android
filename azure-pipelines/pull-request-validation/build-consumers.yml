@@ -10,6 +10,10 @@ resources:
       ref: main
 
 jobs:
+  - pool:
+      name: MSSecurity-1ES-Build-Agents-Pool
+      image: MSSecurity-1ES-Ubuntu-2204
+      os: linux
   - template: templates/runTests/run-instrumented-tests.yml@AuthClientAndroidPipelines
     parameters:
       gitProject: self
