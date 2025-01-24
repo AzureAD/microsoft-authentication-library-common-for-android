@@ -12,8 +12,6 @@ resources:
 stages:
   - stage: 'runInstrumentedTests'
     displayName: Instrumented Tests
-    pool:
-      image: ubuntu-latest
     jobs:
       - template: templates/runTests/run-instrumented-tests.yml@AuthClientAndroidPipelines
         parameters:
