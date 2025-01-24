@@ -7,15 +7,13 @@ resources:
     - repository: AuthClientAndroidPipelines
       type: git
       name: Engineering/AuthClientAndroidPipelines
-      ref: main
+      ref: fadi/monthly-discovery
 
 stages:
   - stage: 'runInstrumentedTests'
     displayName: Instrumented Tests
     pool:
-      name: MSSecurity-1ES-Build-Agents-Pool
-      image: MSSecurity-1ES-Ubuntu-2204
-      os: linux
+      image: ubuntu-latest
     jobs:
       - template: templates/runTests/run-instrumented-tests.yml@AuthClientAndroidPipelines
         parameters:
