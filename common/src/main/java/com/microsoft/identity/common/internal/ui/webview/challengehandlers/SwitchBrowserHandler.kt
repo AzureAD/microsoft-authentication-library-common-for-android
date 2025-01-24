@@ -22,18 +22,29 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import com.microsoft.identity.common.internal.ui.browser.AndroidBrowserSelector
 import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
-import com.microsoft.identity.common.java.browser.Browser
+import com.microsoft.identity.common.java.browser.IBrowserSelector
+import com.microsoft.identity.common.java.ui.BrowserDescriptor
 import com.microsoft.identity.common.logging.Logger
 
 class SwitchBrowserHandler(
+    private val activity: Activity,
     private val context: Context,
     private val customTabsManager: CustomTabsManager,
-    private val browser: Browser
+    private val browserSelector: IBrowserSelector
 ) : IChallengeHandler<SwitchBrowserChallenge, Boolean>  {
 
+
+    constructor( activity: Activity) : this(
+        activity,
+        activity.applicationContext,
+        CustomTabsManager(activity.applicationContext),
+        AndroidBrowserSelector(activity.applicationContext)
+    )
 
     companion object {
         private val TAG = SwitchBrowserHandler::class.simpleName
@@ -42,11 +53,21 @@ class SwitchBrowserHandler(
     /**
      * Process difference kinds of challenge request.
      *
-     * @param challenge challenge request
+     * @param switchBrowserChallenge challenge request
      * @return GenericResponse
      */
-    override fun processChallenge(challenge: SwitchBrowserChallenge): Boolean {
+    override fun processChallenge(switchBrowserChallenge: SwitchBrowserChallenge): Boolean {
         val methodTag = "$TAG:processChallenge"
+
+        val browser = browserSelector.selectBrowser(
+            BrowserDescriptor.getBrowserSafeListForSwitchBrowser(),
+            null
+        )
+        if (browser == null) {
+            Logger.warn(methodTag, "No browser found for SwitchBrowserChallenge.")
+            return false
+        }
+
         val browserIntent: Intent
         if (browser.isCustomTabsServiceSupported) {
             Logger.info(methodTag, "CustomTabsService is supported.")
@@ -62,13 +83,12 @@ class SwitchBrowserHandler(
             browserIntent = Intent(Intent.ACTION_VIEW)
         }
         browserIntent.setPackage(browser.packageName)
-        browserIntent.setData(challenge.uri)
-        context.startActivity(browserIntent)
+        browserIntent.setData(switchBrowserChallenge.uri)
+        activity.startActivity(browserIntent)
         return true
     }
 
-
-    //if (mCustomTabManager != null) {
-   //     mCustomTabManager.unbind();
-   // }
+    fun unbind() {
+        customTabsManager.unbind()
+    }
 }

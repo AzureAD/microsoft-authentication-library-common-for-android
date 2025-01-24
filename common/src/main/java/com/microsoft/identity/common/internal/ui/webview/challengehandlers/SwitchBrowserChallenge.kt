@@ -35,7 +35,7 @@ data class SwitchBrowserChallenge(
         private val TAG = SwitchBrowserChallenge::class.simpleName
 
         @JvmStatic
-        fun constructFromUri(redirectUri: Uri): SwitchBrowserChallenge? {
+        fun constructFromRedirectUri(redirectUri: Uri): SwitchBrowserChallenge? {
             val methodTag = "${TAG}:constructFromUri"
 
             val actionUri = redirectUri.getQueryParameter(
