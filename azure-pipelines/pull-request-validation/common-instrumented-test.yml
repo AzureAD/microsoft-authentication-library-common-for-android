@@ -1,0 +1,20 @@
+# File: azure-pipelines\auth-client\msal-instrumented-test.yml
+# Description: Run instrumented test for MSAL.
+name: Instrumented Tests
+
+resources:
+  repositories:
+    - repository: AuthClientAndroidPipelines
+      type: git
+      name: AuthClientAndroidPipelines
+      ref: master
+      endpoint: ANDROID_GITHUB
+
+jobs:
+  - template: templates/runTests/run-instrumented-tests.yml@AuthClientAndroidPipelines
+    parameters:
+      gitProject: self
+      projectName: common
+      accessTokenKey: ENV_VSTS_MVN_ANDROIDADACCOUNTS_ACCESSTOKEN
+      gradleOptions: -Psugar=true -PlabSecret=/data/local/tmp/LabAuth.pfx
+      continueOnError: True
