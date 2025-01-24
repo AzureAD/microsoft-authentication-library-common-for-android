@@ -1,3 +1,8 @@
+Version 19.0.1
+----------
+(common4j 16.0.1)
+- [PATCH] Span name added for corruption exception (#2574)
+
 Version 19.0.0
 ----------
 (common4j 16.0.0)
