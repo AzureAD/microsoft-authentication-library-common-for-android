@@ -25,7 +25,10 @@ package com.microsoft.identity.common.java.ui;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -39,16 +42,16 @@ public class BrowserDescriptor implements Serializable {
     private static final long serialVersionUID = 3745812401643512530L;
 
     @SerializedName("browser_package_name")
-    private String mPackageName;
+    final private String mPackageName;
 
     @SerializedName("browser_signature_hashes")
-    private Set<String> mSignatureHashes;
+    final private Set<String> mSignatureHashes;
 
     @SerializedName("browser_version_lower_bound")
-    private String mVersionLowerBound;
+    final private String mVersionLowerBound;
 
     @SerializedName("browser_version_upper_bound")
-    private String mVersionUpperBound;
+    final private String mVersionUpperBound;
 
     public BrowserDescriptor(
             @NonNull final String packageName,
@@ -70,5 +73,49 @@ public class BrowserDescriptor implements Serializable {
         mSignatureHashes = Collections.singleton(signatureHash);
         mVersionLowerBound = versionLowerBound;
         mVersionUpperBound = versionUpperBound;
+    }
+
+    static private BrowserDescriptor getBrowserDescriptorForEdge() {
+        final HashSet<String> edgeSignatureHashes = new HashSet<>();
+        edgeSignatureHashes.add("Ivy-Rk6ztai_IudfbyUrSHugzRqAtHWslFvHT0PTvLMsEKLUIgv7ZZbVxygWy_M5mOPpfjZrd3vOx3t-cA6fVQ==");
+        return new BrowserDescriptor(
+                "com.microsoft.emmx",
+                edgeSignatureHashes,
+                null,
+                null
+        );
+    }
+
+    static private BrowserDescriptor getBrowserDescriptorForChrome() {
+        final HashSet<String> signatureHashes = new HashSet<>();
+        signatureHashes.add("7fmduHKTdHHrlMvldlEqAIlSfii1tl35bxj1OXN5Ve8c4lU6URVu4xtSHc3BVZxS6WWJnxMDhIfQN0N0K2NDJg==");
+        return new BrowserDescriptor(
+                "com.android.chrome",
+                signatureHashes,
+                null,
+                null
+        );
+    }
+
+    /**
+     * Return a list of BrowserDescriptors that are considered safe for the Switch to browser flow.
+     */
+    static public List<BrowserDescriptor> getBrowserSafeListForSwitchBrowser() {
+        final List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
+        browserDescriptors.add(getBrowserDescriptorForChrome());
+        browserDescriptors.add(getBrowserDescriptorForEdge());
+        return browserDescriptors;
+    }
+
+    /**
+     * List of System Browsers which can be used from broker, currently only Chrome is supported.
+     * This information here is populated from the default browser safe-list in MSAL.
+     *
+     * @return List of BrowserDescriptors which are considered safe for the broker.
+     */
+    static public List<BrowserDescriptor> getBrowserSafeListForBroker() {
+        final List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
+        browserDescriptors.add(getBrowserDescriptorForChrome());
+        return browserDescriptors;
     }
 }
