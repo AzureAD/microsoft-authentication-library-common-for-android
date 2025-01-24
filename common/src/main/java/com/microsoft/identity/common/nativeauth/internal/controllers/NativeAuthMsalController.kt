@@ -153,7 +153,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     "Parameters has password"
                 )
                 val mergedScopes = addDefaultScopes(parameters.scopes)
-                var parametersWithScopes = CommandUtil.createSignInStartCommandParametersWithScopes(
+                val parametersWithScopes = CommandUtil.createSignInStartCommandParametersWithScopes(
                     parameters,
                     mergedScopes
                 )

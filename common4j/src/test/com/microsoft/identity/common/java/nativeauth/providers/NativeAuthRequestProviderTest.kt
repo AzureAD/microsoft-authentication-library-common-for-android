@@ -37,6 +37,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.nativeauth.providers.requests.NativeAuthRequest.Companion.toJsonString
+import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInTokenRequest
 import com.microsoft.identity.common.nativeauth.ApiConstants
 import io.mockk.every
 import io.mockk.mockk
@@ -776,6 +777,69 @@ class NativeAuthRequestProviderTest {
         nativeAuthRequestProvider.createOOBTokenRequest(
             commandParameters = commandParameters
         )
+    }
+
+    @Test
+    fun testSignInTokenOOBShouldContainsCorrectParams() {
+        val commandParameters = SignInSubmitCodeCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .continuationToken(continuationToken)
+            .correlationId(correlationId)
+            .code("code")
+            .claimsRequestJson("claims")
+            .build()
+
+        val request = nativeAuthRequestProvider.createOOBTokenRequest(
+            commandParameters = commandParameters
+        )
+        assertEquals(request.parameters.oob, commandParameters.code)
+        assertEquals(request.parameters.claimsRequestJson, commandParameters.claimsRequestJson)
+        assertEquals(request.parameters.continuationToken, commandParameters.continuationToken)
+        assertEquals(request.parameters.challengeType, mockConfig.challengeType)
+        assertNull(request.parameters.scope)
+    }
+
+    @Test
+    fun testSignInTokenPasswordShouldContainsCorrectParams() {
+        val commandParameters = SignInSubmitPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .continuationToken(continuationToken)
+            .correlationId(correlationId)
+            .password("pwd".toCharArray())
+            .claimsRequestJson("claims")
+            .build()
+
+        val request = nativeAuthRequestProvider.createPasswordTokenRequest(
+            commandParameters
+        )
+        assertEquals(request.parameters.password, commandParameters.password)
+        assertEquals(request.parameters.claimsRequestJson, commandParameters.claimsRequestJson)
+        assertEquals(request.parameters.continuationToken, commandParameters.continuationToken)
+        assertEquals(request.parameters.challengeType, mockConfig.challengeType)
+        assertNull(request.parameters.scope)
+    }
+
+    @Test
+    fun testSignInTokenContinuationShouldContainsCorrectParams() {
+        val scopes = arrayListOf("OOB", "PASSWORD")
+        val headers = mapOf("key" to "value")
+        val request = SignInTokenRequest.createContinuationTokenRequest(
+            continuationToken,
+            clientId,
+            username,
+            scopes,
+            challengeType,
+            ApiConstants.MockApi.signInTokenRequestUrl.toString(),
+            headers
+        )
+        assertNull(request.parameters.password)
+        assertNull(request.parameters.claimsRequestJson)
+        assertEquals(request.parameters.scope, "OOB PASSWORD")
+        assertEquals(request.parameters.continuationToken, continuationToken)
+        assertEquals(request.parameters.challengeType, challengeType)
+        assertEquals(request.parameters.username, username)
+        assertEquals(request.parameters.clientId, clientId)
+        assertEquals(request.headers, headers)
     }
 
     @Test(expected = ClientException::class)
