@@ -83,7 +83,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable the legacy FIDO security key additional logic. Default is true for common.
      */
-    ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC("EnableLegacyFidoSecurityKeyLogic", true),
+    ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC("EnableLegacyFidoSecurityKeyLogic", false),
 
     /**
      * Flight to enable the re-attachment of new PRT header logic. Default is true.
