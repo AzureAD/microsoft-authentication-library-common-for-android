@@ -6,7 +6,7 @@ resources:
   repositories:
     - repository: AuthClientAndroidPipelines
       type: git
-      name: https://identitydivision.visualstudio.com/DefaultCollection/Engineering/_git/AuthClientAndroidPipelines
+      name: Engineering/AuthClientAndroidPipelines
       ref: main
       endpoint: ANDROID_GITHUB
 
