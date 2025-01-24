@@ -58,7 +58,6 @@ import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
@@ -78,9 +77,6 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 
 public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
@@ -493,27 +489,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         } else {
             return false;
         }
-    }
-
-    /**
-     * List of System Browsers which can be used from broker, currently only Chrome is supported.
-     * This information here is populated from the default browser safelist in MSAL.
-     *
-     * @return
-     */
-    public static List<BrowserDescriptor> getBrowserSafeListForBroker() {
-        List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
-        final HashSet<String> signatureHashes = new HashSet<String>();
-        signatureHashes.add("7fmduHKTdHHrlMvldlEqAIlSfii1tl35bxj1OXN5Ve8c4lU6URVu4xtSHc3BVZxS6WWJnxMDhIfQN0N0K2NDJg==");
-        final BrowserDescriptor chrome = new BrowserDescriptor(
-                "com.android.chrome",
-                signatureHashes,
-                null,
-                null
-        );
-        browserDescriptors.add(chrome);
-
-        return browserDescriptors;
     }
 
     /**
