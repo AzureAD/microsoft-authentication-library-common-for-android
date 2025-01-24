@@ -8,7 +8,6 @@ resources:
       type: git
       name: Engineering/AuthClientAndroidPipelines
       ref: main
-      endpoint: AzureRepoIdentityDivision
 
 jobs:
   - template: templates/runTests/run-instrumented-tests.yml@AuthClientAndroidPipelines
