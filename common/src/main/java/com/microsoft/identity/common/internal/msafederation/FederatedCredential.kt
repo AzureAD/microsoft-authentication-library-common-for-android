@@ -22,15 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.msafederation
 
+import com.google.gson.annotations.SerializedName
 import java.util.AbstractMap
 
 /**
  * Represents credential artifact as result of successful sign in into a federated sign in provider
  * (Google/Apple). It can contain id token and/or auth code. See implementations for more details.
  */
-abstract class FederatedCredential(val federatedSignInProviderName: FederatedSignInProviderName) {
+abstract class FederatedCredential(@SerializedName("signInProviderName") val signInProviderName: FederatedSignInProviderName) {
     fun getIdProviderExtraQueryParam(): Map.Entry<String, String> {
-        return AbstractMap.SimpleEntry(MsaFederationConstants.MSA_ID_PROVIDER_EXTRA_QUERY_PARAM_KEY, federatedSignInProviderName.getIdProviderName())
+        return AbstractMap.SimpleEntry(MsaFederationConstants.MSA_ID_PROVIDER_EXTRA_QUERY_PARAM_KEY, signInProviderName.getIdProviderName())
     }
 }
 

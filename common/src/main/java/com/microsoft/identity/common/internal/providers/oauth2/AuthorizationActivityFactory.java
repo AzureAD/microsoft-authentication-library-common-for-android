@@ -281,7 +281,7 @@ public class AuthorizationActivityFactory {
     ) throws ClientException {
         // add header
         final HashMap<String, String> requestHeadersWithGoogleAuthCredential = requestHeaders == null? new HashMap<>() : new HashMap<>(requestHeaders);
-        requestHeadersWithGoogleAuthCredential.putAll(signInWithGoogleCredential.asHeaders());
+        requestHeadersWithGoogleAuthCredential.putAll(signInWithGoogleCredential.getIdProviderHeaders());
 
         // add id provider query parameter
         String requestUrlWithIdProvider = null;
