@@ -31,6 +31,10 @@ import com.microsoft.identity.common.java.browser.IBrowserSelector
 import com.microsoft.identity.common.java.ui.BrowserDescriptor
 import com.microsoft.identity.common.logging.Logger
 
+/**
+ * SwitchBrowserHandler is a challenge handler for SwitchBrowserChallenge.
+ * It handles the challenge by selecting a valid browser to launch the Switch browser URI.
+ */
 class SwitchBrowserHandler(
     private val activity: Activity,
     private val context: Context,
@@ -38,6 +42,9 @@ class SwitchBrowserHandler(
     private val browserSelector: IBrowserSelector
 ) : IChallengeHandler<SwitchBrowserChallenge, Boolean>  {
 
+    companion object {
+        private val TAG = SwitchBrowserHandler::class.simpleName
+    }
 
     constructor( activity: Activity) : this(
         activity,
@@ -46,19 +53,17 @@ class SwitchBrowserHandler(
         AndroidBrowserSelector(activity.applicationContext)
     )
 
-    companion object {
-        private val TAG = SwitchBrowserHandler::class.simpleName
-    }
-
     /**
-     * Process difference kinds of challenge request.
+     * Process the SwitchBrowserChallenge, which is a request to switch the browser.
+     * This method will select a valid browser to launch the challenge URI.
      *
      * @param switchBrowserChallenge challenge request
-     * @return GenericResponse
+     * @return true if the challenge is handled successfully, false otherwise.
      */
     override fun processChallenge(switchBrowserChallenge: SwitchBrowserChallenge): Boolean {
         val methodTag = "$TAG:processChallenge"
 
+        // Select a browser to handle the switch browser challenge
         val browser = browserSelector.selectBrowser(
             BrowserDescriptor.getBrowserSafeListForSwitchBrowser(),
             null
@@ -68,6 +73,7 @@ class SwitchBrowserHandler(
             return false
         }
 
+        // Create an intent to launch the browser
         val browserIntent: Intent
         if (browser.isCustomTabsServiceSupported) {
             Logger.info(methodTag, "CustomTabsService is supported.")
@@ -82,6 +88,7 @@ class SwitchBrowserHandler(
             Logger.warn(methodTag, "CustomTabsService is NOT supported")
             browserIntent = Intent(Intent.ACTION_VIEW)
         }
+        Logger.info(methodTag, "Launching switch browser request on browser: ${browser.packageName}")
         browserIntent.setPackage(browser.packageName)
         browserIntent.setData(switchBrowserChallenge.uri)
         activity.startActivity(browserIntent)

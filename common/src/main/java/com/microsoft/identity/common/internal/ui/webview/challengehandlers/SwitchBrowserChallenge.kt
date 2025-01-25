@@ -26,6 +26,10 @@ import android.net.Uri
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.logging.Logger
 
+/**
+ * SwitchBrowserChallenge is a challenge to switch from WebView to browser.
+ * It contains the URI to be opened in the new browser.
+ */
 data class SwitchBrowserChallenge(
     val uri: Uri,
 ) {
@@ -34,6 +38,16 @@ data class SwitchBrowserChallenge(
 
         private val TAG = SwitchBrowserChallenge::class.simpleName
 
+        /**
+         * Construct a SwitchBrowserChallenge from the redirect URI.
+         *
+         * @param redirectUri The redirect URI containing the switch browser code and action URI.
+         * e.g. msauth://com.microsoft.identity.client/your-redirect-uri?code=your-switch-browser-code&action_uri=your-action-uri
+         *
+         * @return The SwitchBrowserChallenge constructed from the redirect URI.
+         * e.g. SwitchBrowserChallenge(uri = your-action-uri?code=your-switch-browser-code)
+         * params: redirectUri: Uri
+         */
         @JvmStatic
         fun constructFromRedirectUri(redirectUri: Uri): SwitchBrowserChallenge? {
             val methodTag = "${TAG}:constructFromUri"
