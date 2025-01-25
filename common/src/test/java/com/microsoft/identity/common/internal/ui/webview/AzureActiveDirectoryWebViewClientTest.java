@@ -22,7 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.ResolveInfo;
+import android.content.pm.Signature;
 import android.net.Uri;
 import android.webkit.WebView;
 
@@ -30,29 +37,32 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
-import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.Shadows;
+import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowPackageManager;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTHENTICATOR_MFA_LINKING_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
 
 
 @RunWith(RobolectricTestRunner.class)
+@Config(shadows = {ShadowPackageManager.class})
 public class AzureActiveDirectoryWebViewClientTest {
+    private Context mContext;
+
     private WebView mMockWebView;
     private AzureActiveDirectoryWebViewClient mWebViewClient;
     private static final String TEST_REDIRECT_URI = "msauth://test.redirect.url";
@@ -97,19 +107,10 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Before
     public void setup() {
-        final AuthorizationActivity activity = mock(AuthorizationActivity.class);
-        final WebViewAuthorizationFragment fragment = mock(WebViewAuthorizationFragment.class);
-        final Context context = ApplicationProvider.getApplicationContext();
-        final HashMap<String,String> params = new HashMap<>();
-        params.put(AuthenticationConstants.OAuth2.REDIRECT_URI, TEST_REDIRECT_URI);
-        params.put(AuthenticationConstants.SWITCH_BROWSER.CODE, SWITCH_BROWSER_CODE);
-        when(activity.getIntent()).thenReturn(null);
-        when(activity.getApplicationContext()).thenReturn(context);
-        when(activity.getFragment()).thenReturn(fragment);
-        when(activity.getPackageManager()).thenReturn(context.getPackageManager());
-        when(fragment.constructSwitchBrowserUri(SWITCH_BROWSER_ACTION_URI + SWITCH_BROWSER_ACTION_URI_PATHS, params)).thenReturn(Uri.parse(TEST_SWITCH_BROWSER_URL));
-        when(fragment.launchWebBrowserIntent(Uri.parse(TEST_SWITCH_BROWSER_URL))).thenReturn(true);
-        mMockWebView = new WebView(context);
+        mContext = ApplicationProvider.getApplicationContext();
+        mMockWebView = new WebView(mContext);
+        mMockWebView = new WebView(mContext);
+        final Activity activity = Robolectric.buildActivity(Activity.class).get();
         mWebViewClient = new AzureActiveDirectoryWebViewClient(
                 activity,
                 new IAuthorizationCompletionCallback() {
@@ -207,6 +208,7 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Test
     public void testUrlOverrideHandlesSwitchBrowserValidURL() {
+        addChromePackageToPackageManager();
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_SWITCH_BROWSER_REDIRECT_URL));
     }
 
@@ -231,5 +233,35 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     public void testUrlOverrideHandlesNonceRedirectUrl() {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_NONCE_REDIRECT_URL));
+    }
+
+    private void addChromePackageToPackageManager() {
+        final String browserSignatureHashHex = "3082010A0282010100C3B3A700D1E020302020034A7B8888";
+        final PackageInfo packageInfo = new PackageInfo();
+        packageInfo.packageName = "com.android.chrome";
+        packageInfo.signatures = new Signature[]{new Signature(browserSignatureHashHex)};
+        Shadows.shadowOf(mContext.getPackageManager()).installPackage(packageInfo);
+
+        // Create a mock ResolveInfo for browser activities
+        final ActivityInfo activityInfo = new ActivityInfo();
+        activityInfo.packageName = "com.android.chrome";
+        activityInfo.name = "Chrome";
+
+        // Create a mock ResolveInfo for browser activities
+        final ResolveInfo browserResolveInfo = new ResolveInfo();
+        browserResolveInfo.activityInfo = activityInfo;
+        browserResolveInfo.isDefault = true;
+
+        // Add a filter for handling specific intents (e.g., http/https URLs)
+        final IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_VIEW); // Action to view content
+        filter.addCategory(Intent.CATEGORY_BROWSABLE); // Default category
+        filter.addDataScheme("http"); // Filter for http URLs
+        filter.addDataScheme("https"); // Filter for https URLs
+        browserResolveInfo.filter = filter;
+
+        // Add the browser to handle VIEW intents with http/https schemes
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.example.com"));
+        Shadows.shadowOf(mContext.getPackageManager()).addResolveInfoForIntent(intent, browserResolveInfo);
     }
 }
