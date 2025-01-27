@@ -20,42 +20,30 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.browser;
+package com.microsoft.identity.common.java.browser;
 
-import androidx.annotation.NonNull;
+import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 
-import com.microsoft.identity.common.logging.Logger;
-
-import java.util.Arrays;
 import java.util.List;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
+
 /**
- * A blocked list of browsers. This will reject a match for any browser on the list, and permit
- * all others.
+ * Interface for selecting a browser.
  */
-public class BrowserBlocklist {
-    private static final String TAG = BrowserBlocklist.class.getSimpleName();
-    private List<Browser> mBrowsers;
+public interface IBrowserSelector {
 
     /**
-     * Create a block list from given set of browsers.
+     * Selects a valid installed browser from the list of safe browsers.
+     * If no browser is present in the list of safe browser, null is returned.
+     *
+     * @param browserSafeList             The list of browsers to choose from.
+     * @param preferredBrowserDescriptor  The preferred browser descriptor.
+     * @return The selected browser.
      */
-    public BrowserBlocklist(Browser... browsers) {
-        mBrowsers = Arrays.asList(browsers);
-    }
-
-    /**
-     * @return true if the browser is in the block list.
-     */
-    public boolean matches(@NonNull Browser targetBrowser) {
-        final String methodTag = TAG + ":matches";
-        for (Browser browser : mBrowsers) {
-            if (browser.equals(targetBrowser)) {
-                Logger.verbose(methodTag, "The target browser is in the block list.");
-                return true;
-            }
-        }
-
-        return false;
-    }
+    @Nullable
+    Browser selectBrowser(
+            @NonNull final List<BrowserDescriptor> browserSafeList,
+            @Nullable final BrowserDescriptor preferredBrowserDescriptor);
 }

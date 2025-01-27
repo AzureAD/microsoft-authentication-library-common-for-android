@@ -138,6 +138,7 @@ public class CommandUtil {
                         .password(parameters.getPassword())
                         .scopes(parameters.getScopes())
                         .correlationId(correlationId)
+                        .claimsRequestJson(parameters.getClaimsRequestJson())
                         .challengeType(parameters.getChallengeType())
                         .build();
 
@@ -189,6 +190,7 @@ public class CommandUtil {
                         .scopes(parameters.getScopes())
                         .correlationId(parameters.getCorrelationId())
                         .challengeType(parameters.getChallengeType())
+                        .claimsRequestJson(parameters.claimsRequestJson)
                         .build();
 
         return commandParameters;
