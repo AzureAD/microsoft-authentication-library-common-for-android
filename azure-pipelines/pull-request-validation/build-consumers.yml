@@ -6,7 +6,7 @@ resources:
     - repository: AuthClientAndroidPipelines
       type: git
       name: Engineering/AuthClientAndroidPipelines
-      ref: fadi/monthly-discovery
+      ref: fadi/non-1ES-instrumented
 
 stages:
   - stage: 'runInstrumentedTests'
