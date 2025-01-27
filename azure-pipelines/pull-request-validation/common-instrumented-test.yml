@@ -16,6 +16,7 @@ stages:
         parameters:
           gitProject: self
           projectName: common
+          androidAPILevel: 28
           accessTokenKey: ENV_VSTS_MVN_ANDROIDADACCOUNTS_ACCESSTOKEN
           gradleOptions: -Psugar=true -PlabSecret=/data/local/tmp/LabAuth.pfx
           continueOnError: True
