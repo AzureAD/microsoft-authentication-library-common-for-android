@@ -43,6 +43,7 @@ import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.msafederation.MsaFederatedSignInProviderName;
 import com.microsoft.identity.common.internal.msafederation.MsaFederationConstants;
+import com.microsoft.identity.common.internal.msafederation.MsaFederationExtensions;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleApi;
@@ -60,6 +61,7 @@ import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Constructs intents and/or fragments for interactive requests based on library configuration and current request.
@@ -281,13 +283,14 @@ public class AuthorizationActivityFactory {
     ) throws ClientException {
         // add header
         final HashMap<String, String> requestHeadersWithGoogleAuthCredential = requestHeaders == null? new HashMap<>() : new HashMap<>(requestHeaders);
-        requestHeadersWithGoogleAuthCredential.putAll(signInWithGoogleCredential.getIdProviderHeaders());
+        requestHeadersWithGoogleAuthCredential.putAll(MsaFederationExtensions.getIdProviderHeadersForAuthorization(signInWithGoogleCredential));
 
         // add id provider query parameter
-        String requestUrlWithIdProvider = null;
+        String requestUrlWithIdProvider;
         try {
             final CommonURIBuilder uriBuilder = new CommonURIBuilder(requestUrl);
-            uriBuilder.addParameterIfAbsent(MsaFederationConstants.MSA_ID_PROVIDER_EXTRA_QUERY_PARAM_KEY, MsaFederatedSignInProviderName.GOOGLE.getIdProviderName());
+            final Map.Entry<String, String> extraQueryParamForAuthorization = MsaFederationExtensions.getIdProviderExtraQueryParamForAuthorization(signInWithGoogleCredential);
+            uriBuilder.addParameterIfAbsent(extraQueryParamForAuthorization.getKey(), extraQueryParamForAuthorization.getValue());
             requestUrlWithIdProvider = uriBuilder.build().toString();
         } catch (final URISyntaxException e) {
             throw new ClientException(ClientException.MALFORMED_URL, "Failed to add id provider query parameter to request URL", e);
