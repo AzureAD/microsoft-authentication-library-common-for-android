@@ -54,6 +54,7 @@ import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBased
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserUriHelper;
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
@@ -85,7 +86,6 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER.isSwitchBrowserRequest;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
 
 import io.opentelemetry.api.trace.Span;
@@ -215,7 +215,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
              else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
                 final Uri formattedUri = Uri.parse(formattedURL);
-                if (isSwitchBrowserRequest(formattedUri)) {
+                if (SwitchBrowserUriHelper.INSTANCE.isSwitchBrowserRequest(formattedUri)) {
                     Logger.info(methodTag,"Request to switch browser.");
                     return processSwitchBrowserRequest(formattedUri);
                 } else {
