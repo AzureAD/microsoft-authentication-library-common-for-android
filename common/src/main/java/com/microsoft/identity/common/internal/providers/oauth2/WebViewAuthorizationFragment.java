@@ -150,35 +150,41 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     public void onResume() {
         super.onResume();
         final String methodTag = TAG + ":onResume";
+        if (isSwitchBrowserResumeFlow()) {
+            Logger.info(methodTag, "Switching browser resume flow.");
+            dunaResume();
+        }
+    }
+
+    private boolean isSwitchBrowserResumeFlow() {
         final Activity activity = getActivity();
         if (activity == null) {
-            return;
+            return false;
         }
         final Intent intent = activity.getIntent();
         if (intent == null) {
-            return;
+            return false;
         }
         final Bundle extras = intent.getExtras();
         if (extras == null) {
-            return;
+            return false;
         }
         final String action = extras.getString(
                 AuthenticationConstants.SWITCH_BROWSER.ACTION,
                 null
         );
-        if (action != null ) {
-            Logger.info(methodTag, "Switching browser resume flow.");
-            dunaResume(extras);
-        }
+        return action != null;
     }
+
 
     /**
      * Invoke the resume flow for DUNA.
-     *
-     * @param extras The extras from the intent.
      */
-    private void dunaResume(@NonNull final Bundle extras) {
+    private void dunaResume() {
         final String methodTag = TAG + ":dunaResume";
+
+        final Bundle extras = requireActivity().getIntent().getExtras();
+        assert extras != null;
 
         final String resume_uri = extras.getString(
                 AuthenticationConstants.SWITCH_BROWSER.ACTION_URI,
