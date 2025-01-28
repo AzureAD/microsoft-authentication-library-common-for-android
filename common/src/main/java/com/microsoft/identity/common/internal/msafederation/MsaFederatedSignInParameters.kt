@@ -23,9 +23,8 @@
 package com.microsoft.identity.common.internal.msafederation
 
 /**
- * Internal interface for Federated Sign In Providers.
+ * Parameters for Federated Sign In. e.g. SignInWithGoogleParameters for Google.
  */
-internal interface IFederatedSignInProvider {
-    suspend fun signIn(): Result<FederatedCredential>
-    suspend fun signOut()
+abstract class MsaFederatedSignInParameters {
+    abstract val providerName: MsaFederatedSignInProviderName
 }

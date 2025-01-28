@@ -23,9 +23,8 @@
 package com.microsoft.identity.common.internal.msafederation.google
 
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.internal.msafederation.FederatedCredential
-import com.microsoft.identity.common.internal.msafederation.FederatedSignInProviderName
-import com.microsoft.identity.common.internal.msafederation.MsaFederationConstants.MSA_ID_TOKEN_HEADER_KEY
+import com.microsoft.identity.common.internal.msafederation.MsaFederatedCredential
+import com.microsoft.identity.common.internal.msafederation.MsaFederatedSignInProviderName
 import java.io.Serializable
 
 /**
@@ -33,13 +32,6 @@ import java.io.Serializable
  * It can contain id token.
  */
 data class SignInWithGoogleCredential internal constructor(
-    @SerializedName("idToken") internal val idToken: String) : FederatedCredential(FederatedSignInProviderName.GOOGLE), Serializable {
-
-    /**
-     * Helper method to create header that can be used in MSA
-     * authorization. (Move to better place.)
-     */
-    fun getIdProviderHeaders(): Map<String, String> {
-        return mapOf(MSA_ID_TOKEN_HEADER_KEY to idToken)
-    }
+    @SerializedName("idToken") internal val idToken: String) : MsaFederatedCredential(MsaFederatedSignInProviderName.GOOGLE), Serializable {
 }
+

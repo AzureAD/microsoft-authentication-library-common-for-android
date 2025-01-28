@@ -23,13 +23,14 @@
 package com.microsoft.identity.common.internal.msafederation.google
 
 import com.microsoft.identity.common.internal.msafederation.MsaFederationConstants
-import com.microsoft.identity.common.internal.msafederation.FederatedSignInProviderName
+import com.microsoft.identity.common.internal.msafederation.MsaFederatedSignInProviderName
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import com.google.gson.Gson
-import com.google.gson.GsonBuilder
+import com.microsoft.identity.common.internal.msafederation.getIdProviderExtraQueryParamForAuthorization
+import com.microsoft.identity.common.internal.msafederation.getIdProviderHeadersForAuthorization
 
 /**
  * Tests for [SignInWithGoogleCredential].
@@ -41,16 +42,16 @@ class SignInWithGoogleCredentialTest {
     fun testSignInWithGoogleCredential() {
         val testIdToken = "test-id-token"
         val credential = SignInWithGoogleCredential(testIdToken)
-        assertEquals(FederatedSignInProviderName.GOOGLE, credential.signInProviderName)
+        assertEquals(MsaFederatedSignInProviderName.GOOGLE, credential.signInProviderName)
         assertEquals(testIdToken, credential.idToken)
 
-        val headers = credential.getIdProviderHeaders();
+        val headers = credential.getIdProviderHeadersForAuthorization();
         assertEquals(1, headers.size)
         assertEquals(testIdToken, headers[MsaFederationConstants.MSA_ID_TOKEN_HEADER_KEY])
 
-        val idProviderExtraQueryParam = credential.getIdProviderExtraQueryParam()
+        val idProviderExtraQueryParam = credential.getIdProviderExtraQueryParamForAuthorization()
         assertEquals(MsaFederationConstants.MSA_ID_PROVIDER_EXTRA_QUERY_PARAM_KEY, idProviderExtraQueryParam.key)
-        assertEquals(FederatedSignInProviderName.GOOGLE.getIdProviderName(), idProviderExtraQueryParam.value)
+        assertEquals(MsaFederatedSignInProviderName.GOOGLE.getIdProviderName(), idProviderExtraQueryParam.value)
 
         // serialize and deserialize credential using gson
         val gson = Gson()

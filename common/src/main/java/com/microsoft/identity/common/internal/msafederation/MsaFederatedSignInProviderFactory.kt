@@ -22,17 +22,26 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.msafederation
 
-import com.google.gson.annotations.SerializedName
-import java.util.AbstractMap
+import com.microsoft.identity.common.internal.msafederation.google.GoogleSignInProvider
+import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters
 
 /**
- * Represents credential artifact as result of successful sign in into a federated sign in provider
- * (Google/Apple). It can contain id token and/or auth code. See implementations for more details.
+ * Factory class to get the Federated Sign In Provider based on provider type in parameters
+ * Currently only Google is supported.
  */
-abstract class FederatedCredential(@SerializedName("signInProviderName") val signInProviderName: FederatedSignInProviderName) {
-    fun getIdProviderExtraQueryParam(): Map.Entry<String, String> {
-        return AbstractMap.SimpleEntry(MsaFederationConstants.MSA_ID_PROVIDER_EXTRA_QUERY_PARAM_KEY, signInProviderName.getIdProviderName())
+internal object MsaFederatedSignInProviderFactory {
+
+    /**
+     * Get the Federated Sign In Provider based on provider type in parameters.
+     */
+    fun getProvider(parameters: MsaFederatedSignInParameters): IMsaFederatedSignInProvider {
+        return when (parameters.providerName) {
+            MsaFederatedSignInProviderName.GOOGLE -> GoogleSignInProvider.create(parameters as SignInWithGoogleParameters, MsaFederationConstants.GOOGLE_MSA_WEB_CLIENT_ID)
+
+            else -> {
+                throw IllegalArgumentException("Unsupported provider type")
+            }
+        }
     }
 }
-
 

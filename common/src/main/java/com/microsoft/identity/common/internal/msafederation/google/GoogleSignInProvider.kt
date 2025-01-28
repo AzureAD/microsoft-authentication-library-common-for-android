@@ -32,7 +32,7 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
-import com.microsoft.identity.common.internal.msafederation.IFederatedSignInProvider
+import com.microsoft.identity.common.internal.msafederation.IMsaFederatedSignInProvider
 import com.microsoft.identity.common.java.base64.Base64Util
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.logging.Logger
@@ -48,7 +48,7 @@ import java.security.SecureRandom
 internal class GoogleSignInProvider(private val credentialManager: CredentialManager,
                            private val parameters: SignInWithGoogleParameters,
                            private val webClientId: String
-) : IFederatedSignInProvider {
+) : IMsaFederatedSignInProvider {
 
     companion object {
         private const val TAG = "GoogleSignInProvider"

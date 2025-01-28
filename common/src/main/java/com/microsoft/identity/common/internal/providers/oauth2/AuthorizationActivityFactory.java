@@ -41,7 +41,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.microsoft.identity.common.internal.msafederation.FederatedSignInProviderName;
+import com.microsoft.identity.common.internal.msafederation.MsaFederatedSignInProviderName;
 import com.microsoft.identity.common.internal.msafederation.MsaFederationConstants;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters;
@@ -287,7 +287,7 @@ public class AuthorizationActivityFactory {
         String requestUrlWithIdProvider = null;
         try {
             final CommonURIBuilder uriBuilder = new CommonURIBuilder(requestUrl);
-            uriBuilder.addParameterIfAbsent(MsaFederationConstants.MSA_ID_PROVIDER_EXTRA_QUERY_PARAM_KEY, FederatedSignInProviderName.GOOGLE.getIdProviderName());
+            uriBuilder.addParameterIfAbsent(MsaFederationConstants.MSA_ID_PROVIDER_EXTRA_QUERY_PARAM_KEY, MsaFederatedSignInProviderName.GOOGLE.getIdProviderName());
             requestUrlWithIdProvider = uriBuilder.build().toString();
         } catch (final URISyntaxException e) {
             throw new ClientException(ClientException.MALFORMED_URL, "Failed to add id provider query parameter to request URL", e);

@@ -23,8 +23,14 @@
 package com.microsoft.identity.common.internal.msafederation
 
 /**
- * Parameters for Federated Sign In. e.g. SignInWithGoogleParameters for Google.
+ * Enum class for Federated Sign In Provider Name like Google, Apple
+ * Currently only Google is supported.
  */
-abstract class FederatedSignInParameters {
-    abstract val providerName: FederatedSignInProviderName
+enum class MsaFederatedSignInProviderName(private val idProviderName: String) {
+    GOOGLE("google.com"),
+    APPLE("apple.com"); // would be used later
+
+    fun getIdProviderName(): String {
+        return idProviderName
+    }
 }

@@ -22,15 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.msafederation
 
-/**
- * Enum class for Federated Sign In Provider Name like Google, Apple
- * Currently only Google is supported.
- */
-enum class FederatedSignInProviderName(private val idProviderName: String) {
-    GOOGLE("google.com"),
-    APPLE("apple.com"); // would be used later
+import com.google.gson.annotations.SerializedName
+import java.util.AbstractMap
 
-    fun getIdProviderName(): String {
-        return idProviderName
-    }
-}
+/**
+ * Represents credential artifact as result of successful sign in into a federated sign in provider
+ * (Google/Apple). It can contain id token and/or auth code. See implementations for more details.
+ */
+abstract class MsaFederatedCredential(@SerializedName("signInProviderName") val signInProviderName: MsaFederatedSignInProviderName)
