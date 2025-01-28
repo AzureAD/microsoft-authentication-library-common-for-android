@@ -20,42 +20,18 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.browser;
+package com.microsoft.identity.common.java.interfaces;
 
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.common.logging.Logger;
-
-import java.util.Arrays;
-import java.util.List;
 
 /**
- * A blocked list of browsers. This will reject a match for any browser on the list, and permit
- * all others.
+ * Consumer of commons needs to implement [IRefreshTokenCredentialProvider] interface
+ * and set it using CommonRefreshTokenCredentialProvider.initializeCommonRefreshTokenCredentialProvider(@NonNull refreshTokenCredentialProvider: IRefreshTokenCredentialProvider)
+ * to provide prtCredentialHolder to common module.
  */
-public class BrowserBlocklist {
-    private static final String TAG = BrowserBlocklist.class.getSimpleName();
-    private List<Browser> mBrowsers;
+interface IRefreshTokenCredentialProvider {
 
     /**
-     * Create a block list from given set of browsers.
+     * Gets refresh token credential using nonce retrieved from webview.
      */
-    public BrowserBlocklist(Browser... browsers) {
-        mBrowsers = Arrays.asList(browsers);
-    }
-
-    /**
-     * @return true if the browser is in the block list.
-     */
-    public boolean matches(@NonNull Browser targetBrowser) {
-        final String methodTag = TAG + ":matches";
-        for (Browser browser : mBrowsers) {
-            if (browser.equals(targetBrowser)) {
-                Logger.verbose(methodTag, "The target browser is in the block list.");
-                return true;
-            }
-        }
-
-        return false;
-    }
+    fun getRefreshTokenCredentialUsingNewNonce(inputUrl : String, username : String, nonce : String) : String?
 }

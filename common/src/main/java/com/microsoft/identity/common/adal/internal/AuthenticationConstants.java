@@ -534,7 +534,7 @@ public final class AuthenticationConstants {
     }
 
     /**
-     * Represents the constants value for the DUNA flow.
+     * Represents the constants value for the SwitchBrowser protocol.
      */
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class SWITCH_BROWSER {
@@ -545,12 +545,12 @@ public final class AuthenticationConstants {
         public static final String CODE = "code";
 
         /**
-         * String Query parameter key for the endpoint.
+         * String Query parameter key for the switchBrowser action uri.
          */
         public static final String ACTION_URI = "action_uri";
 
         /**
-         * String Query parameter key for the endpoint.
+         * String Query parameter key for the switchBrowser action.
          */
         public static final String ACTION = "action";
 
@@ -1260,6 +1260,8 @@ public final class AuthenticationConstants {
          * Activity name to launch company portal.
          */
         public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = Broker.COMPANY_PORTAL_APP_PACKAGE_NAME + ".views.SplashActivity";
+
+        public static final String SSO_NONCE_PARAMETER = "sso_nonce";
 
         /**
          * PRT nonce.

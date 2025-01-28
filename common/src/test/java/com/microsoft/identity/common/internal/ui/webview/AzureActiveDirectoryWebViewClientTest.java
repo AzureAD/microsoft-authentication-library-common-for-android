@@ -22,22 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview;
 
+import android.app.Activity;
 import android.content.Context;
-import android.net.Uri;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
-import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTHENTICATOR_MFA_LINKING_PREFIX;
@@ -45,8 +44,6 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
 
@@ -55,7 +52,9 @@ import java.util.HashMap;
 public class AzureActiveDirectoryWebViewClientTest {
     private WebView mMockWebView;
     private AzureActiveDirectoryWebViewClient mWebViewClient;
-    private static final String TEST_REDIRECT_URI = "msauth://test.redirect.url";
+    private Context mContext;
+    private Activity mActivity;
+    private static final String TEST_REDIRECT_URI = "abc12";
 
     // Test strings initialized.
     private static final String TEST_PLAY_STORE_INSTALL_AUTH_APP_URL =
@@ -79,32 +78,16 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_INVALID_URL = "https://play.google.com/store/apps/details?id=com.azure.authenticator";
     private static final String TEST_MSA_HEADER_FORWARDING_POSITIVE_URL = "https://login.live.com/oauth20_authorize.srf";
     private static final String TEST_MSA_HEADER_FORWARDING_NEGATIVE_URL = "https://login.blah.com/oauth20_authorize.srf";
-    private static final String SWITCH_BROWSER_CODE = "switchbrowsercode";
-    private static final String SWITCH_BROWSER_ACTION_URI = "login.microsoftonline.com";
-    private static final String SWITCH_BROWSER_ACTION = "switch_browser";
-    private static final String SWITCH_BROWSER_ACTION_URI_PATHS = "/switchbrowser/process";
-    private static final String TEST_SWITCH_BROWSER_REDIRECT_URL =
-            TEST_REDIRECT_URI + "?" +
-                    AuthenticationConstants.SWITCH_BROWSER.ACTION_URI + "=" + SWITCH_BROWSER_ACTION_URI + SWITCH_BROWSER_ACTION_URI_PATHS + "&" +
-                    AuthenticationConstants.SWITCH_BROWSER.CODE + "=" + SWITCH_BROWSER_CODE + "&" +
-                    AuthenticationConstants.SWITCH_BROWSER.ACTION + "=" + SWITCH_BROWSER_ACTION;
 
-    private static final String TEST_SWITCH_BROWSER_URL =
-            "https://" + SWITCH_BROWSER_ACTION_URI + SWITCH_BROWSER_ACTION_URI_PATHS + "?" +
-                    AuthenticationConstants.SWITCH_BROWSER.CODE + "=" + SWITCH_BROWSER_CODE;
+    private static final String TEST_NONCE_REDIRECT_URL = "https://login.microsoftonline.com/organizations/oAuth2/v2.0/authorize?&sso_nonce=ABCD";
 
     @Before
     public void setup() {
-        final AuthorizationActivity activity = mock(AuthorizationActivity.class);
-        final WebViewAuthorizationFragment fragment = mock(WebViewAuthorizationFragment.class);
-        final Context context = ApplicationProvider.getApplicationContext();
-        when(activity.getApplicationContext()).thenReturn(context);
-        when(activity.getFragment()).thenReturn(fragment);
-        when(activity.getPackageManager()).thenReturn(context.getPackageManager());
-        when(fragment.launchWebBrowserIntent(Uri.parse(TEST_SWITCH_BROWSER_URL))).thenReturn(true);
-        mMockWebView = new WebView(context);
+        mContext = ApplicationProvider.getApplicationContext();
+        mMockWebView = new WebView(mContext);
+        mActivity = Robolectric.buildActivity(Activity.class).get();
         mWebViewClient = new AzureActiveDirectoryWebViewClient(
-                activity,
+                mActivity,
                 new IAuthorizationCompletionCallback() {
                     @Override
                     public void onChallengeResponseReceived(@NonNull RawAuthorizationResult response) {
@@ -113,9 +96,14 @@ public class AzureActiveDirectoryWebViewClientTest {
 
                     @Override
                     public void setPKeyAuthStatus(boolean status) {
+                        return;
                     }
                 },
-                url -> {
+                new OnPageLoadedCallback() {
+                    @Override
+                    public void onPageLoaded(final String url) {
+                        return;
+                    }
                 },
                 TEST_REDIRECT_URI);
         HashMap<String, String> dummyHeaders = new HashMap<>();
@@ -199,25 +187,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
-    public void testUrlOverrideHandlesSwitchBrowserValidURL() {
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_SWITCH_BROWSER_REDIRECT_URL));
-    }
-
-    @Test
-    public void testUrlOverrideHandlesSwitchBrowserMissingCode() {
-        final String switchBrowserInvalidUrl = TEST_REDIRECT_URI + "?" +
-                AuthenticationConstants.SWITCH_BROWSER.ACTION_URI + "=" + SWITCH_BROWSER_ACTION_URI + SWITCH_BROWSER_ACTION_URI_PATHS + "&" +
-                AuthenticationConstants.SWITCH_BROWSER.CODE + "=" + "&" +
-                AuthenticationConstants.SWITCH_BROWSER.ACTION + "=" + SWITCH_BROWSER_ACTION;
-        assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, switchBrowserInvalidUrl));
-    }
-
-    @Test
-    public void testUrlOverrideHandlesSwitchBrowserMissingActionUrl() {
-        final String switchBrowserInvalidUrl = TEST_REDIRECT_URI + "?" +
-                AuthenticationConstants.SWITCH_BROWSER.ACTION_URI + "=" + "&" +
-                AuthenticationConstants.SWITCH_BROWSER.CODE + "=" + SWITCH_BROWSER_CODE + "&" +
-                AuthenticationConstants.SWITCH_BROWSER.ACTION + "=" + SWITCH_BROWSER_ACTION;
-        assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, switchBrowserInvalidUrl));
+    public void testUrlOverrideHandlesNonceRedirectUrl() {
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_NONCE_REDIRECT_URL));
     }
 }

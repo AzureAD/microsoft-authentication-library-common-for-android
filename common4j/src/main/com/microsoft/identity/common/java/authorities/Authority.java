@@ -29,13 +29,13 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryEnvironment;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.StringUtil;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -107,8 +107,8 @@ public abstract class Authority {
     }
 
 
-    @SuppressFBWarnings(value="RpC_REPEATED_CONDITIONAL_TEST",
-            justification="Somehow, spotbugs thinks that BuildConfig.SLICE and BuildConfig.DC are the same values.")
+    @SuppressFBWarnings(value = "RpC_REPEATED_CONDITIONAL_TEST",
+            justification = "Somehow, spotbugs thinks that BuildConfig.SLICE and BuildConfig.DC are the same values.")
     public Authority() {
         // setting slice directly here in constructor if slice provided as command line param
         if (!StringUtil.isNullOrEmpty(BuildConfig.SLICE) || !StringUtil.isNullOrEmpty(BuildConfig.DC)) {
@@ -134,7 +134,7 @@ public abstract class Authority {
      * determine the authority type and tenantid associated with it.
      *
      * @param authorityUrl
-     * @param clientId This parameter is optional and can be null. It is used to construct NativeAuthCIAMAuthority when authority type is AAD_NA.
+     * @param clientId     This parameter is optional and can be null. It is used to construct NativeAuthCIAMAuthority when authority type is AAD_NA.
      * @return
      */
     public static Authority getAuthorityFromAuthorityUrl(String authorityUrl, @Nullable String clientId) {
@@ -150,7 +150,7 @@ public abstract class Authority {
 
         // Adding check in case we have a trailing "/" at the end of the authority
         if (pathSegments.size() == 0 || (pathSegments.size() == 1 && pathSegments.get(0).equals(""))) {
-            if (authorityUrl.contains(CIAMAuthority.CIAM_LOGIN_URL_SEGMENT)){
+            if (authorityUrl.contains(CIAMAuthority.CIAM_LOGIN_URL_SEGMENT)) {
                 // This is a CIAM authority, return CIAMAuthority
                 return new CIAMAuthority(CIAMAuthority.getTenantNameVariantUrlFromAuthorityWithoutPath(authorityUrl));
             }
@@ -250,10 +250,17 @@ public abstract class Authority {
         return null != getEquivalentConfiguredAuthority(authorityStr);
     }
 
-    private static Authority createAadAuthority(@NonNull final CommonURIBuilder authorityCommonUriBuilder,
+    private static Authority createAadAuthority(@NonNull final CommonURIBuilder uriBuilder,
                                                 @NonNull final List<String> pathSegments) {
+        final String cloudUrl;
+        if (uriBuilder.getPort() != -1) {
+            cloudUrl = uriBuilder.getScheme() + "://" + uriBuilder.getHost() + ":" + uriBuilder.getPort();
+        } else {
+            cloudUrl = uriBuilder.getScheme() + "://" + uriBuilder.getHost();
+        }
+
         AzureActiveDirectoryAudience audience = AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(
-                authorityCommonUriBuilder.getScheme() + "://" + authorityCommonUriBuilder.getHost(),
+                cloudUrl,
                 pathSegments.get(0)
         );
 
@@ -342,6 +349,10 @@ public abstract class Authority {
                     "Authority is null"
             );
             return false;
+        }
+
+        if (BuildConfig.ALLOW_ONEBOX_AUTHORITIES && AzureActiveDirectoryEnvironment.ONEBOX_AUTHORITY.equals(authority.getAuthorityURL().getAuthority())) {
+            return true; // onebox authorities are always considered to be known.
         }
 
         //Check if authority was added to configuration

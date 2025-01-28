@@ -34,7 +34,6 @@ import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 
 import java.io.Serializable;
-import java.util.List;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -80,7 +79,6 @@ public class BrokerRequest implements Serializable {
         final static String PREFERRED_AUTH_METHOD = "preferred_auth_method";
         final static String ACCOUNT_TRANSFER_TOKEN = "account_transfer_token";
         final static String SUPPRESS_ACCOUNT_PICKER = "suppress_account_picker";
-        final static String BROWSER_SAFE_LIST = "browser_safe_list";
     }
 
     /**
@@ -187,6 +185,7 @@ public class BrokerRequest implements Serializable {
     /**
      * Boolean if set, will try to refresh the token instead of using it from cache.
      */
+    @Nullable
     @SerializedName(SerializedNames.FORCE_REFRESH)
     private boolean mForceRefresh;
 
@@ -228,6 +227,7 @@ public class BrokerRequest implements Serializable {
     /**
      * Boolean indicated whether app supports multiple clouds.
      */
+    @NonNull
     @SerializedName(SerializedNames.MULTIPLE_CLOUDS_SUPPORTED)
     private boolean mMultipleCloudsSupported;
 
@@ -239,6 +239,7 @@ public class BrokerRequest implements Serializable {
     @SerializedName(SerializedNames.AUTHENTICATION_SCHEME)
     private AbstractAuthenticationScheme mAuthenticationScheme;
 
+    @Nullable
     @SerializedName(SerializedNames.POWER_OPT_CHECK_ENABLED)
     private boolean mPowerOptCheckEnabled;
 
@@ -265,10 +266,4 @@ public class BrokerRequest implements Serializable {
      */
     @SerializedName(SerializedNames.SUPPRESS_ACCOUNT_PICKER)
     private boolean mSuppressAccountPicker;
-
-    /**
-     * List of browsers that are safe to use for the request.
-     */
-    @SerializedName(SerializedNames.BROWSER_SAFE_LIST)
-    private List<BrowserDescriptor> mBrowserSafeList;
 }

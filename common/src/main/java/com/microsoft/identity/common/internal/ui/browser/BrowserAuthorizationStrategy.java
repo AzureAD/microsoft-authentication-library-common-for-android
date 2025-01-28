@@ -34,6 +34,7 @@ import androidx.fragment.app.Fragment;
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidAuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityFactory;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.browser.Browser;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;

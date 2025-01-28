@@ -487,6 +487,11 @@ public class ClientException extends BaseException {
     public static final String KEY_LOAD_FAILURE = "key_load_failure";
 
     /**
+     * Error occurred while getting credential in sign in with google flow.
+     */
+    public static final String SIGN_IN_WITH_GOOGLE_FAILED = "sign_in_with_google_failed";
+
+    /**
      * Constructor of ClientException.
      *
      * @param errorCode String
