@@ -1,6 +1,12 @@
 # Description: Run instrumented test for Common.
 name: Instrumented Tests
 
+parameters:
+  # Name of the git project we want to checkout.
+  - name: androidAPILevel
+    displayName: Android Api Level
+    default: 30
+
 resources:
   repositories:
     - repository: AuthClientAndroidPipelines
@@ -16,6 +22,7 @@ stages:
         parameters:
           gitProject: self
           projectName: common
+          androidAPILevel: ${{ parameters.AndroidAPILevel }}
           accessTokenKey: ENV_VSTS_MVN_ANDROIDADACCOUNTS_ACCESSTOKEN
           gradleOptions: -Psugar=true -PlabSecret=/data/local/tmp/LabAuth.pfx
           continueOnError: True
