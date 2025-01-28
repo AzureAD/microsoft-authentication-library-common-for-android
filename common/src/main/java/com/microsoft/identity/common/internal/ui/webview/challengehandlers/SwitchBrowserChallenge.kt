@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 
 import android.net.Uri
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
 import com.microsoft.identity.common.logging.Logger
 
 /**
@@ -50,7 +51,7 @@ data class SwitchBrowserChallenge(
          */
         @JvmStatic
         fun constructFromRedirectUri(redirectUri: Uri): SwitchBrowserChallenge? {
-            val methodTag = "${TAG}:constructFromUri"
+            val methodTag = "${TAG}:constructFromRedirectUri"
 
             val actionUri = redirectUri.getQueryParameter(
                 AuthenticationConstants.SWITCH_BROWSER.ACTION_URI
@@ -71,7 +72,7 @@ data class SwitchBrowserChallenge(
 
             val queryParams = HashMap<String, String>()
             queryParams[AuthenticationConstants.SWITCH_BROWSER.CODE] = code
-            redirectUri.authority?.let { queryParams[AuthenticationConstants.OAuth2.REDIRECT_URI] = it }
+            queryParams[AuthenticationConstants.OAuth2.REDIRECT_URI] = Broker.NEW_BROKER_REDIRECT_URI
 
             val paths = actionUri.split("/")
             val authority = paths[0]
