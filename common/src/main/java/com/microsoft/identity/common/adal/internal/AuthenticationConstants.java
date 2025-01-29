@@ -22,16 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
-import android.net.Uri;
-
-import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.java.broker.BrokerAccountDataName;
 
 import java.nio.charset.Charset;
-import java.util.Set;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -540,6 +536,11 @@ public final class AuthenticationConstants {
     public static final class SWITCH_BROWSER {
 
         /**
+         * String Query parameter key to indicate support for SWITCH_BROWSER protocol.
+         */
+        public static final String SWITCH_BROWSER = "switch_browser";
+
+        /**
          * String Query parameter key for the session token.
          */
         public static final String CODE = "code";
@@ -553,23 +554,6 @@ public final class AuthenticationConstants {
          * String Query parameter key for the switchBrowser action.
          */
         public static final String ACTION = "action";
-
-        /**
-         * Check if the request is to switch the browser.
-         * <p>
-         * The request is considered "switch_browser" if the URL contains
-         * the action URI, code, and action parameters.
-         *
-         * @param uri The URI of the request.
-         * @return True if the request contains the required parameters, false otherwise.
-         */
-        public static boolean isSwitchBrowserRequest(@Nullable final Uri uri) {
-            if (uri == null) {
-                return false;
-            }
-            final Set<String> requiredParams = Set.of(ACTION_URI, CODE, ACTION);
-            return uri.getQueryParameterNames().containsAll(requiredParams);
-        }
     }
 
     /**
