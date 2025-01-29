@@ -23,9 +23,11 @@
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 
 import android.net.Uri
+import android.os.Bundle
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
+import com.microsoft.identity.common.java.AuthenticationConstants.OAuth2
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,6 +40,7 @@ class SwitchBrowserUriHelperTest {
         private const val CODE = "your-switch-browser-code"
         private const val ACTION_URI = "login.microsoftonline.com/switchbrowser/process"
         private const val ACTION = "action"
+        private const val CLIENT_ID = "test-client-id"
     }
 
     @Test
@@ -99,5 +102,53 @@ class SwitchBrowserUriHelperTest {
                     "${SWITCH_BROWSER.ACTION_URI}=$ACTION_URI"
         )
         Assert.assertTrue(SwitchBrowserUriHelper.isSwitchBrowserRequest(uri))
+    }
+
+    @Test
+    fun `test buildResumeUri valid params`() {
+        val bundle = Bundle().apply {
+            putString(SWITCH_BROWSER.ACTION_URI, ACTION_URI)
+        }
+        val uri = SwitchBrowserUriHelper.buildResumeUri(bundle, CLIENT_ID)
+        Assert.assertNotNull(uri)
+        Assert.assertEquals(
+            CLIENT_ID,
+            uri?.getQueryParameter(OAuth2.CLIENT_ID)
+        )
+        Assert.assertEquals(
+            Broker.NEW_BROKER_REDIRECT_URI,
+            uri?.getQueryParameter(OAuth2.REDIRECT_URI)
+        )
+        Assert.assertEquals(
+            ACTION_URI,
+            uri?.host + uri?.path
+        )
+    }
+
+    @Test
+    fun `test buildResumeUri empty bundle`() {
+        val bundle = Bundle()
+        val uri = SwitchBrowserUriHelper.buildResumeUri(bundle, CLIENT_ID)
+        Assert.assertNull(uri)
+    }
+
+    @Test
+    fun `test buildResumeRequestHeaders empty bundle`() {
+        val bundle = Bundle()
+        val uri = SwitchBrowserUriHelper.buildResumeRequestHeaders(bundle)
+        Assert.assertNull(uri)
+    }
+
+    @Test
+    fun `test buildResumeRequestHeaders valid bundle`() {
+        val bundle = Bundle().apply {
+            putString(SWITCH_BROWSER.CODE, CODE)
+        }
+        val headers = SwitchBrowserUriHelper.buildResumeRequestHeaders(bundle)
+        Assert.assertNotNull(headers)
+        Assert.assertEquals(
+            CODE,
+            headers?.get(SWITCH_BROWSER.CODE)
+        )
     }
 }
