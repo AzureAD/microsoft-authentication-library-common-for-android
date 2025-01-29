@@ -190,8 +190,8 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     @Nullable
     /* package */ synchronized SecretKey readSecretKeyFromStorage() throws ClientException {
         final String methodTag = TAG + ":readSecretKeyFromStorage";
-        final KeyPair keyPair = AndroidKeyStoreUtil.readKey(mAlias);
         try {
+            final KeyPair keyPair = AndroidKeyStoreUtil.readKey(mAlias);
             if (keyPair == null) {
                 Logger.info(methodTag, "key does not exist in keystore");
                 deleteSecretKeyFromStorage();
@@ -309,7 +309,6 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             return getLegacySpecForKeyStoreKey(context, alias);
         } else {
-            Logger.info(TAG, "Using KeyGenParameterSpec for generating KeyStore key");
             int purposes = KeyProperties.PURPOSE_WRAP_KEY  | KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT;
             return new KeyGenParameterSpec.Builder(alias, purposes)
                     .setKeySize(2048)
