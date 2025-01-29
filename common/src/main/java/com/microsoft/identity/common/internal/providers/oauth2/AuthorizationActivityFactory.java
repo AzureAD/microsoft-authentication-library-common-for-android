@@ -41,6 +41,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.msafederation.FederatedSignInProviderName;
 import com.microsoft.identity.common.internal.msafederation.MsaFederationConstants;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential;
@@ -119,9 +120,11 @@ public class AuthorizationActivityFactory {
         final LibraryConfiguration libraryConfig = LibraryConfiguration.getInstance();
         if (ProcessUtil.isBrokerProcess(context)) {
             intent = new Intent(context, BrokerAuthorizationActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-            // In the case of a SwitchBrowser protocol, we need to transition from the browser to the WebView.
-            // These flags ensure that we have a new task stack that allows for this transition.
+            if(requestUrl.contains(AuthenticationConstants.SWITCH_BROWSER.SWITCH_BROWSER)) {
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                // In the case of a SwitchBrowser protocol, we need to transition from the browser to the WebView.
+                // These flags ensure that we have a new task stack that allows for this transition.
+            }
         } else if (libraryConfig.isAuthorizationInCurrentTask() && !authorizationAgent.equals(AuthorizationAgent.WEBVIEW)) {
             // We exclude the case when the authorization agent is already selected as WEBVIEW because of confusion
             // that results from attempting to use the CurrentTaskAuthorizationActivity in that case, because as webview

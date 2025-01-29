@@ -536,6 +536,11 @@ public final class AuthenticationConstants {
     public static final class SWITCH_BROWSER {
 
         /**
+         * String Query parameter key to indicate support for SWITCH_BROWSER protocol.
+         */
+        public static final String SWITCH_BROWSER = "switch_browser";
+
+        /**
          * String Query parameter key for the session token.
          */
         public static final String CODE = "code";
