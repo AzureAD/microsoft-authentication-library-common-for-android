@@ -23,8 +23,8 @@
 package com.microsoft.identity.common.internal.msafederation.google
 
 import android.app.Activity
-import com.microsoft.identity.common.internal.msafederation.FederatedSignInParameters
-import com.microsoft.identity.common.internal.msafederation.FederatedSignInProviderName
+import com.microsoft.identity.common.internal.msafederation.MsaFederatedSignInParameters
+import com.microsoft.identity.common.internal.msafederation.MsaFederatedSignInProviderName
 
 /**
  * SignInWithGoogleParameters holds the parameters required for signing in with Google.
@@ -34,7 +34,7 @@ import com.microsoft.identity.common.internal.msafederation.FederatedSignInProvi
  */
 data class SignInWithGoogleParameters(
     internal val activity: Activity
-) : FederatedSignInParameters() {
+) : MsaFederatedSignInParameters() {
 
     /**
      * Secondary constructor to initialize the parameters with an option to use a bottom sheet UI.
@@ -54,6 +54,6 @@ data class SignInWithGoogleParameters(
     /**
      * The provider type for the federated sign-in, which is Google in this case.
      */
-    override val providerName: FederatedSignInProviderName
-        get() = FederatedSignInProviderName.GOOGLE
+    override val providerName: MsaFederatedSignInProviderName
+        get() = MsaFederatedSignInProviderName.GOOGLE
 }

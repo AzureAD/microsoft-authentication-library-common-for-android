@@ -22,26 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.msafederation
 
-import com.microsoft.identity.common.internal.msafederation.google.GoogleSignInProvider
-import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters
-
 /**
- * Factory class to get the Federated Sign In Provider based on provider type in parameters
- * Currently only Google is supported.
+ * Internal interface for Federated Sign In Providers.
  */
-internal object FederatedSignInProviderFactory {
-
-    /**
-     * Get the Federated Sign In Provider based on provider type in parameters.
-     */
-    fun getProvider(parameters: FederatedSignInParameters): IFederatedSignInProvider {
-        return when (parameters.providerName) {
-            FederatedSignInProviderName.GOOGLE -> GoogleSignInProvider.create(parameters as SignInWithGoogleParameters, MsaFederationConstants.GOOGLE_MSA_WEB_CLIENT_ID)
-
-            else -> {
-                throw IllegalArgumentException("Unsupported provider type")
-            }
-        }
-    }
+internal interface IMsaFederatedSignInProvider {
+    suspend fun signIn(): Result<MsaFederatedCredential>
+    suspend fun signOut()
 }
-

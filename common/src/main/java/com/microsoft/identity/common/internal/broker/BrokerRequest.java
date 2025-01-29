@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
@@ -79,6 +80,7 @@ public class BrokerRequest implements Serializable {
         final static String PREFERRED_AUTH_METHOD = "preferred_auth_method";
         final static String ACCOUNT_TRANSFER_TOKEN = "account_transfer_token";
         final static String SUPPRESS_ACCOUNT_PICKER = "suppress_account_picker";
+        final static String SIGN_IN_WITH_GOOGLE_CREDENTIAL = "sign_in_with_google_credential";
     }
 
     /**
@@ -266,4 +268,8 @@ public class BrokerRequest implements Serializable {
      */
     @SerializedName(SerializedNames.SUPPRESS_ACCOUNT_PICKER)
     private boolean mSuppressAccountPicker;
+
+    @Nullable
+    @SerializedName(SerializedNames.SIGN_IN_WITH_GOOGLE_CREDENTIAL)
+    private SignInWithGoogleCredential mSignInWithGoogleCredential;
 }

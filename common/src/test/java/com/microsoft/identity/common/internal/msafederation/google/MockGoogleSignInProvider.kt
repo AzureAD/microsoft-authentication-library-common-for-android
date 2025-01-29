@@ -22,9 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.msafederation.google
 
-import com.microsoft.identity.common.internal.msafederation.IFederatedSignInProvider
+import com.microsoft.identity.common.internal.msafederation.IMsaFederatedSignInProvider
 
-class MockGoogleSignInProvider : IFederatedSignInProvider {
+class MockGoogleSignInProvider : IMsaFederatedSignInProvider {
     companion object {
         private const val MOCK_ID_TOKEN = "mockIdToken"
     }
