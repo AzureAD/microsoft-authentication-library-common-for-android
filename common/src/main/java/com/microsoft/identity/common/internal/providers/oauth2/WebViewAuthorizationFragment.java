@@ -29,6 +29,7 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -54,6 +55,7 @@ import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserUriHelper;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -82,7 +84,6 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CHALLENGE_RESPONSE_HEADER;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 
@@ -149,25 +150,38 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     public void onResume() {
         super.onResume();
         final String methodTag = TAG + ":onResume";
-        if (isSwitchBrowserResumeFlow()) {
-            Logger.info(methodTag, "Switching browser resume flow.");
-            dunaResume();
+        final Bundle extras = getExtras();
+        if (extras != null && isSwitchBrowserResumeFlow(extras)) {
+            Logger.info(methodTag, "Resume switch browser protocol on WebView.");
+            resumeSwitchBrowser(extras);
         }
     }
 
-    private boolean isSwitchBrowserResumeFlow() {
+    /**
+     * Get the extras from the activity intent.
+     *
+     * @return Bundle
+     */
+    @Nullable
+    private Bundle getExtras() {
         final Activity activity = getActivity();
         if (activity == null) {
-            return false;
+            return new Bundle();
         }
         final Intent intent = activity.getIntent();
         if (intent == null) {
-            return false;
+            return new Bundle();
         }
-        final Bundle extras = intent.getExtras();
-        if (extras == null) {
-            return false;
-        }
+        return intent.getExtras();
+    }
+
+    /**
+     * Check if the extras indicate that the resume flow is for switching browser.
+     *
+     * @param extras Bundle
+     * @return boolean
+     */
+    private boolean isSwitchBrowserResumeFlow(@NonNull final Bundle extras) {
         final String action = extras.getString(
                 AuthenticationConstants.SWITCH_BROWSER.ACTION,
                 null
@@ -175,42 +189,25 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         return action != null;
     }
 
-
     /**
-     * Invoke the resume flow for DUNA.
+     * Resume the switch browser protocol flow.
+     *
+     * @param extras Bundle with the data to resume the switch browser protocol flow.
      */
-    private void dunaResume() {
-        final String methodTag = TAG + ":dunaResume";
-
-        final Bundle extras = requireActivity().getIntent().getExtras();
-        assert extras != null;
-
-        final String resume_uri = extras.getString(
-                AuthenticationConstants.SWITCH_BROWSER.ACTION_URI,
-                 null
-        );
-        final String proofToken = extras.getString(
-                AuthenticationConstants.SWITCH_BROWSER.CODE,
-                null
-        );
-        if (resume_uri == null || proofToken == null) {
-            // This should never happen, but if it does, we should log it and return.
-            Logger.error(methodTag, "Action URI or code is null. Cannot resume.", null);
+    private void resumeSwitchBrowser(@NonNull final Bundle extras) {
+        final String methodTag = TAG + ":resumeSwitchBrowser";
+        final Uri switchBrowserResumeUri = SwitchBrowserUriHelper.INSTANCE.buildResumeUri(extras, mClientId);
+        final HashMap<String, String> requestHeaders = SwitchBrowserUriHelper.INSTANCE.buildResumeRequestHeaders(extras);
+        if (switchBrowserResumeUri == null || requestHeaders == null) {
+            Logger.error(
+                    methodTag,
+                    "switchBrowserResumeUri is null: " + (switchBrowserResumeUri == null) +
+                            ", requestHeaders is null: " + (requestHeaders == null),
+                    null
+            );
             return;
         }
-        // Query parameters for the resume uri.
-        final HashMap<String, String> queryParams = new HashMap<>();
-        queryParams.put(AuthenticationConstants.OAuth2.CLIENT_ID, mClientId);
-        queryParams.put(AuthenticationConstants.OAuth2.REDIRECT_URI, mRedirectUri);
-        // Headers for the resume uri.
-        final HashMap<String, String> requestHeaders = new HashMap<>();
-        requestHeaders.put(CHALLENGE_RESPONSE_HEADER, proofToken);
-        // Construct the uri to resume the flow.
-        final Uri swithBrowserUri = constructSwithBrowserUri(resume_uri, queryParams);
-        // Update the request headers and uri , and launch the webview.
-        Logger.info(methodTag, "Resuming DUNA flow.");
-        Logger.infoPII(methodTag, "The resume uri is " + swithBrowserUri.toString());
-        mAuthorizationRequestUrl = swithBrowserUri.toString();
+        mAuthorizationRequestUrl = switchBrowserResumeUri.toString();
         mRequestHeaders = requestHeaders;
         launchWebView();
     }

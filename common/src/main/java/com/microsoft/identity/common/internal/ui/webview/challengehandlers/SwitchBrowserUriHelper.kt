@@ -23,8 +23,10 @@
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 
 import android.net.Uri
+import android.os.Bundle
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
+import com.microsoft.identity.common.java.AuthenticationConstants.Broker.CHALLENGE_RESPONSE_HEADER
 import com.microsoft.identity.common.java.AuthenticationConstants.OAuth2
 import com.microsoft.identity.common.logging.Logger
 
@@ -114,5 +116,52 @@ object SwitchBrowserUriHelper {
         val requiredParams =
             setOf(SWITCH_BROWSER.ACTION_URI, SWITCH_BROWSER.CODE, SWITCH_BROWSER.ACTION)
         return uri.queryParameterNames.containsAll(requiredParams)
+    }
+
+    /**
+     * Build the resume uri for the switch browser challenge.
+     *
+     * @param bundle The bundle containing the resume uri and client id.
+     * @param clientId The client id to be included in the resume uri.
+     *
+     * @return The resume uri constructed from the bundle.
+     * e.g. your-resume-uri?client_id=your-client-id&redirect_uri=your-redirect-uri
+     */
+    fun buildResumeUri(bundle: Bundle, clientId: String): Uri? {
+        val methodTag = "$TAG:buildResumeUri"
+        // Get the resume uri from bundle
+        val actionUri = bundle.getString(
+            SWITCH_BROWSER.ACTION_URI,
+            null
+        )
+        if (actionUri.isNullOrEmpty()) {
+            // This should never happen, but if it does, we should log it and return.
+            Logger.warn(methodTag, "Switch browser action URI is null or empty ")
+            return null
+        }
+        // Query parameters for the resume uri.
+        val queryParams = hashMapOf<String, String>()
+        queryParams[OAuth2.CLIENT_ID] = clientId
+        queryParams[OAuth2.REDIRECT_URI] = Broker.NEW_BROKER_REDIRECT_URI
+        // Construct the uri to the resume endpoint.
+        return buildSwitchBrowserUri(actionUri, queryParams)
+    }
+
+    /**
+     * Build the request headers for the resume endpoint.
+     *
+     * @param bundle The bundle containing the switch browser code.
+     *
+     * @return The request headers constructed from the bundle.
+     */
+    fun buildResumeRequestHeaders(bundle: Bundle): HashMap<String, String>? {
+        val requestHeaders = hashMapOf<String, String>()
+        val proofToken = bundle.getString(SWITCH_BROWSER.CODE)
+        if (proofToken.isNullOrEmpty()) {
+            return null
+        } else {
+            requestHeaders[CHALLENGE_RESPONSE_HEADER] = proofToken
+        }
+        return requestHeaders
     }
 }
