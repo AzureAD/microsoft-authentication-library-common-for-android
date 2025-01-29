@@ -47,9 +47,6 @@ import java.security.KeyStore;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Calendar;
 import java.util.Locale;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.crypto.SecretKey;
 import javax.security.auth.x500.X500Principal;
@@ -194,18 +191,14 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     /* package */ synchronized SecretKey readSecretKeyFromStorage() throws ClientException {
         final String methodTag = TAG + ":readSecretKeyFromStorage";
         final KeyPair keyPair = AndroidKeyStoreUtil.readKey(mAlias);
-        final byte[] wrappedSecretKey = FileUtil.readFromFile(getKeyFile(), KEY_FILE_SIZE);
-        Logger.info(methodTag, "KeyPair is loaded: " + (keyPair != null));
         try {
-            boolean isPixel5 = "Google".equalsIgnoreCase(Build.MANUFACTURER) && "Pixel 5".equalsIgnoreCase(Build.MODEL);
-            Logger.info(TAG, "is it a pixel 5 device? "+ isPixel5 + Build.MANUFACTURER + " "+ Build.MODEL);
             if (keyPair == null) {
                 Logger.info(methodTag, "key does not exist in keystore");
                 deleteSecretKeyFromStorage();
                 return null;
             }
 
-            //final byte[] wrappedSecretKey = FileUtil.readFromFile(getKeyFile(), KEY_FILE_SIZE);
+            final byte[] wrappedSecretKey = FileUtil.readFromFile(getKeyFile(), KEY_FILE_SIZE);
             if (wrappedSecretKey == null) {
                 Logger.warn(methodTag, "Key file is empty");
                 // Do not delete the KeyStoreKeyPair even if the key file is empty. This caused credential cache
@@ -317,26 +310,12 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
             return getLegacySpecForKeyStoreKey(context, alias);
         } else {
             Logger.info(TAG, "Using KeyGenParameterSpec for generating KeyStore key");
-//            final String certInfo = String.format(Locale.ROOT, "CN=%s, OU=%s",
-//                    alias,
-//                    context.getPackageName());
-//            final int certValidYears = 100;
-            // Check if the device is a Pixel 5
-            boolean isPixel5 = "Google".equalsIgnoreCase(Build.MANUFACTURER) && "Pixel 5".equalsIgnoreCase(Build.MODEL);
-            Logger.info(TAG, "is it a pixel 5 device? "+ isPixel5 + Build.MANUFACTURER + " "+ Build.MODEL);
             int purposes = KeyProperties.PURPOSE_WRAP_KEY  | KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT;
             return new KeyGenParameterSpec.Builder(alias, purposes)
-//                    .setCertificateSubject(new X500Principal(certInfo))
-//                    .setCertificateSerialNumber(BigInteger.ONE)
-//                    .setCertificateNotBefore(new Date())
-//                    .setCertificateNotAfter(new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(365 * certValidYears)))
                     .setKeySize(2048)
                     .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
                     .setBlockModes(KeyProperties.BLOCK_MODE_ECB) // Ensure compatibility with RSA
                     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
-                    .setUserAuthenticationRequired(false)
-//                    .setUnlockedDeviceRequired(false)
-//                    .setIsStrongBoxBacked(false)
                     .build();
         }
     }
