@@ -20,15 +20,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.msafederation.google
-
-import com.microsoft.identity.common.internal.msafederation.IMsaFederatedCredentialCallback
+package com.microsoft.identity.common.internal.msafederation
 
 /**
  * Interface for Federated Credential Callback. Helps calling sign methods
  * async from java.
  */
-interface ISignInWithGoogleCredentialCallback :
-    IMsaFederatedCredentialCallback<SignInWithGoogleCredential> {
-    override fun onSuccess(credential: SignInWithGoogleCredential)
+interface IMsaFederatedCredentialCallback<R : MsaFederatedCredential> {
+    /**
+     * Called when the sign in is successful.
+     */
+    fun onSuccess(credential: R)
 }
