@@ -455,10 +455,13 @@ public class ExceptionAdapter {
             currentSpan.setAttribute(AttributeName.out_of_memory_exception_stacktrace.name(),
                     StringUtil.getStacktraceAsStringFromElementArray(e.getStackTrace()));
 
+            // End the span
+            currentSpan.end();
+
             Logger.error(TAG, "Received an out of memory error, shutting broker process so a new one can be launched.", e);
 
             // Shut down current process
-            // Calling client app will receive "killed unexpectedly" error from MSAL if broker is shut down with this statement
+            // Calling client app will receive an MsalClientException with "Activity killed unexpectedly" from MSAL if broker is shut down with this statement
             // Calling application should not crash, and should be able to make another call, which will result in a new broker process.
             System.exit(0);
         }
