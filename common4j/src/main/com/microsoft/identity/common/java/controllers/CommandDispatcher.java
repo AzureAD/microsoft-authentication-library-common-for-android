@@ -550,6 +550,8 @@ public class CommandDispatcher {
             if (baseException instanceof UserCancelException) {
                 commandResult = CommandResult.ofNull(CommandResult.ResultStatus.CANCEL,
                         correlationId);
+            } else if (baseException.getErrorCode().equals(ClientException.OUT_OF_MEMORY)) { // If we receive an out of memory error
+                command.getParameters().getPlatformComponents().getPlatformUtil().handleShutdownForOutOfMemoryError(baseException, TAG);
             } else {
                 //Post On Error
                 commandResult = CommandResult.of(CommandResult.ResultStatus.ERROR, baseException,

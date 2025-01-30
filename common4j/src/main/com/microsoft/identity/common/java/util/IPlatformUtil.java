@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.util;
 
 import com.microsoft.identity.common.java.commands.ICommand;
+import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 
@@ -129,4 +130,7 @@ public interface IPlatformUtil {
      */
     @Nullable
     List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList);
+
+    void handleShutdownForOutOfMemoryError(@NonNull final BaseException exception, @NonNull final String tag);
+
 }

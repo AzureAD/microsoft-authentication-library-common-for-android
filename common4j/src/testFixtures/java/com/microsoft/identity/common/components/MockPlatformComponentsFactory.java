@@ -27,6 +27,7 @@ import com.microsoft.identity.common.java.browser.IBrowserSelector;
 import com.microsoft.identity.common.java.browser.NoopBrowserSelector;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.IPopManagerSupplier;
 import com.microsoft.identity.common.java.interfaces.PlatformComponents;
@@ -187,6 +188,11 @@ public class MockPlatformComponentsFactory {
         @Override
         public List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList) {
             return originalList;
+        }
+
+        @Override
+        public void handleShutdownForOutOfMemoryError(@NonNull final BaseException exception, @NonNull final String tag) {
+            throw new UnsupportedOperationException();
         }
     };
 
