@@ -20,11 +20,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+@file:JvmName("MsaFederationExtensions")
 package com.microsoft.identity.common.internal.msafederation
 
+import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential
+import java.util.AbstractMap
+
 /**
- * Parameters for Federated Sign In. e.g. SignInWithGoogleParameters for Google.
+ * Helper/Extension method to create header that can be used in MSA authorization
  */
-abstract class FederatedSignInParameters {
-    abstract val providerName: FederatedSignInProviderName
+fun SignInWithGoogleCredential.getIdProviderHeadersForAuthorization(): Map<String, String> {
+    return mapOf(MsaFederationConstants.MSA_ID_TOKEN_HEADER_KEY to this.idToken)
+}
+
+/**
+ * Helper/Extension method to create query parameter that can be used in MSA authorization
+ */
+fun SignInWithGoogleCredential.getIdProviderExtraQueryParamForAuthorization(): Map.Entry<String, String> {
+    return AbstractMap.SimpleEntry(MsaFederationConstants.MSA_ID_PROVIDER_EXTRA_QUERY_PARAM_KEY, signInProviderName.getIdProviderName())
 }

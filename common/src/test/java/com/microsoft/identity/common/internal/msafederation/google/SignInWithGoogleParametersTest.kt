@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.msafederation.google
 
 import android.app.Activity
-import com.microsoft.identity.common.internal.msafederation.FederatedSignInProviderName
+import com.microsoft.identity.common.internal.msafederation.MsaFederatedSignInProviderName
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -42,7 +42,7 @@ class SignInWithGoogleParametersTest {
     fun testSignInWithGoogleParameters() {
         val activity = Robolectric.buildActivity(Activity::class.java).get()
         val signInWithGoogleParameters = SignInWithGoogleParameters(activity)
-        assertEquals(FederatedSignInProviderName.GOOGLE, signInWithGoogleParameters.providerName)
+        assertEquals(MsaFederatedSignInProviderName.GOOGLE, signInWithGoogleParameters.providerName)
         assertEquals(activity, signInWithGoogleParameters.activity)
         assertFalse(signInWithGoogleParameters.useBottomSheet)
     }
@@ -51,7 +51,7 @@ class SignInWithGoogleParametersTest {
     fun testSignInWithGoogleParametersUseBottomSheet() {
         val activity = Robolectric.buildActivity(Activity::class.java).get()
         val signInWithGoogleParameters = SignInWithGoogleParameters(activity, true)
-        assertEquals(FederatedSignInProviderName.GOOGLE, signInWithGoogleParameters.providerName)
+        assertEquals(MsaFederatedSignInProviderName.GOOGLE, signInWithGoogleParameters.providerName)
         assertEquals(activity, signInWithGoogleParameters.activity)
         assertTrue(signInWithGoogleParameters.useBottomSheet)
     }

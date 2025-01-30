@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.msafederation.google
 
 import android.app.Activity
-import com.microsoft.identity.common.internal.msafederation.FederatedSignInProviderFactory
+import com.microsoft.identity.common.internal.msafederation.MsaFederatedSignInProviderFactory
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -40,7 +40,7 @@ import java.util.concurrent.CountDownLatch
  */
 @RunWith(RobolectricTestRunner::class)
 class SignInWithGoogleApiTest {
-    private lateinit var mockFederatedSignInProviderFactory: FederatedSignInProviderFactory
+    private lateinit var mockFederatedSignInProviderFactory: MsaFederatedSignInProviderFactory
     private lateinit var mockGoogleSignInProvider: MockGoogleSignInProvider
     private lateinit var signInWithGoogleApi: SignInWithGoogleApi
     private lateinit var mockActivity: Activity
