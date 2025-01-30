@@ -1,6 +1,6 @@
 vNext
 ----------
-- [MINOR] Add server client id to SignInWithGoogleParameters
+- [MINOR] Add server client id to SignInWithGoogleParameters (#2581)
 - [MAJOR] Pass google id token to broker for enabling Sign in with Google (#2573)
 - [MINOR] Organize browser selection classes and change signature for get AuthorizationStrategy (#2564)
 - [MINOR] Add support for OneBox Environment (#2559)
