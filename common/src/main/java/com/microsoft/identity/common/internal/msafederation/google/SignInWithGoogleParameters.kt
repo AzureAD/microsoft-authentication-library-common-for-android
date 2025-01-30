@@ -25,29 +25,39 @@ package com.microsoft.identity.common.internal.msafederation.google
 import android.app.Activity
 import com.microsoft.identity.common.internal.msafederation.MsaFederatedSignInParameters
 import com.microsoft.identity.common.internal.msafederation.MsaFederatedSignInProviderName
+import com.microsoft.identity.common.internal.msafederation.MsaFederationConstants
 
 /**
  * SignInWithGoogleParameters holds the parameters required for signing in with Google.
  *
  * @property activity The Activity context used for the sign-in process.
+ * @property serverClientId The target server OAuth2.0 client (backend) ID generated in google console project.
+ *                          Authenticates backend server with Google's APIs. Default value MSA's server client id.
  * UI for the sign-in process.
  */
-data class SignInWithGoogleParameters(
-    internal val activity: Activity
+data class SignInWithGoogleParameters @JvmOverloads constructor(
+    internal val activity: Activity,
+    internal val serverClientId: String = MsaFederationConstants.GOOGLE_MSA_SERVER_CLIENT_ID
 ) : MsaFederatedSignInParameters() {
 
     /**
      * Secondary constructor to initialize the parameters with an option to use a bottom sheet UI.
      * Current requirement do not use bottom sheet UI, so this constructor is kept internal
      * @param activity The Activity context used for the sign-in process.
+     * @param serverClientId The server client ID used for the sign-in process.
      * @param useBottomSheet A flag indicating whether to use a bottom sheet UI for the sign-in process.
      */
-    internal constructor(activity: Activity, useBottomSheet: Boolean) : this(activity) {
+    internal constructor(
+        activity: Activity,
+        serverClientId: String = MsaFederationConstants.GOOGLE_MSA_SERVER_CLIENT_ID,
+        useBottomSheet: Boolean
+    ) : this(activity, serverClientId) {
         this.useBottomSheet = useBottomSheet
     }
 
     /**
      * A flag indicating whether to use a bottom sheet UI for the sign-in process.
+     * Internal for now, as the current requirement do not use bottom sheet UI.
      */
     internal var useBottomSheet: Boolean = false
 
