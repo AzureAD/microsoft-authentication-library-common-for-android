@@ -131,6 +131,11 @@ public interface IPlatformUtil {
     @Nullable
     List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList);
 
+    /**
+     * Handles the shutdown of the current process if we receive an out of memory error
+     * @param exception out of memory exception
+     * @param tag tag to be included in log statement
+     */
     void handleShutdownForOutOfMemoryError(@NonNull final BaseException exception, @NonNull final String tag);
 
 }
