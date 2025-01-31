@@ -191,7 +191,7 @@ public class MockPlatformComponentsFactory {
         }
 
         @Override
-        public void handleShutdownForOutOfMemoryError(@NonNull final BaseException exception, @NonNull final String tag) {
+        public void handleShutdownForOutOfMemoryError(@NonNull final BaseException exception) {
             throw new UnsupportedOperationException();
         }
     };

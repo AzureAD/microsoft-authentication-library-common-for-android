@@ -93,6 +93,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
 import lombok.NonNull;
 
 public class CommandDispatcher {
@@ -551,7 +553,26 @@ public class CommandDispatcher {
                 commandResult = CommandResult.ofNull(CommandResult.ResultStatus.CANCEL,
                         correlationId);
             } else if (baseException.getErrorCode().equals(ClientException.OUT_OF_MEMORY)) { // If we receive an out of memory error
-                command.getParameters().getPlatformComponents().getPlatformUtil().handleShutdownForOutOfMemoryError(baseException, TAG);
+                // When receiving an out of memory error, instead of gracefully returning a failure result, we should shut down
+                // current broker process, to allow a new broker process to be launched at the next request from client app.
+                // This will result in a new broker process with fresh memory allocation, rather than repeating out of memory
+                // errors. In the case that this is an msal-only scenario, and this code is running inside client app, then
+                // client app will be shut down and will need to be launched again.
+
+                // Log status code and record exception in span
+                final Span currentSpan = SpanExtension.current();
+                currentSpan.setStatus(StatusCode.ERROR);
+                currentSpan.recordException(baseException);
+
+                // Attach the stack trace, to debug in telemetry later
+                currentSpan.setAttribute(AttributeName.out_of_memory_exception_stacktrace.name(),
+                        StringUtil.getStacktraceAsStringFromElementArray(baseException.getStackTrace()));
+
+                // End the span
+                currentSpan.end();
+
+                Logger.error(TAG, "Received an out of memory error, shutting broker process so a new one can be launched.", baseException);
+                command.getParameters().getPlatformComponents().getPlatformUtil().handleShutdownForOutOfMemoryError(baseException);
             } else {
                 //Post On Error
                 commandResult = CommandResult.of(CommandResult.ResultStatus.ERROR, baseException,
