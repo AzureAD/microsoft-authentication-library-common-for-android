@@ -5,6 +5,7 @@ vNext
 - [MINOR] Organize browser selection classes and change signature for get AuthorizationStrategy (#2564)
 - [MINOR] Add support for OneBox Environment (#2559)
 - [MINOR] Add support for claims requests for native authentication (#2572)
+- [MINOR] Removing unnecessary attributes from keystore wrap operation (#2578)
 
 Version 19.0.0
 ----------
