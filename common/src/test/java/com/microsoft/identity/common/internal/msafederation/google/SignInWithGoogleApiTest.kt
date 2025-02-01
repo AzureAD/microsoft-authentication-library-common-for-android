@@ -67,7 +67,7 @@ class SignInWithGoogleApiTest {
         val signInWithGoogleApi = createSignInWithGoogleApi()
         val latch = CountDownLatch(1)
         var result: SignInWithGoogleCredential? = null
-        signInWithGoogleApi.signInAsync(mockParameters).thenAccept { credential ->
+        signInWithGoogleApi.signInAsync(mockParameters).whenComplete { credential, exception ->
             result = credential
             latch.countDown()
         }
