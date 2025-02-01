@@ -29,6 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import java.util.concurrent.CompletableFuture
 
 /**
  * Entry point for signing in with Google into MSA.
@@ -92,17 +93,22 @@ class SignInWithGoogleApi internal constructor(
      * Refer [signIn] for more details.
      */
     fun signInAsync(
-        signInWithGoogleParameters: SignInWithGoogleParameters,
-        callback: ISignInWithGoogleCredentialCallback
-    ) {
+        signInWithGoogleParameters: SignInWithGoogleParameters
+    ) : CompletableFuture<SignInWithGoogleCredential> {
+        val future = CompletableFuture<SignInWithGoogleCredential>()
         CoroutineScope(Dispatchers.Default).launch {
-            val credential = signIn(signInWithGoogleParameters)
-            withContext(coroutineContext) {
-                callback.onSuccess(credential)
+            try {
+                future.complete(signIn(signInWithGoogleParameters))
+            } catch (e: Exception) {
+                future.completeExceptionally(e)
             }
         }
+        return future
     }
 
+    /**
+     * Sign out the app from google.
+     */
     suspend fun signOut(activity: Activity) {
         val signInWithGoogleParameters = SignInWithGoogleParameters(activity)
         val googleSignInProvider = federatedSignInProviderFactory.getProvider(

@@ -24,11 +24,13 @@ package com.microsoft.identity.common.internal.msafederation.google
 
 import android.app.Activity
 import com.microsoft.identity.common.internal.msafederation.MsaFederatedSignInProviderFactory
+import com.microsoft.identity.common.java.exception.BaseException
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertNotNull
-import org.junit.Before
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -40,24 +42,12 @@ import java.util.concurrent.CountDownLatch
  */
 @RunWith(RobolectricTestRunner::class)
 class SignInWithGoogleApiTest {
-    private lateinit var mockFederatedSignInProviderFactory: MsaFederatedSignInProviderFactory
-    private lateinit var mockGoogleSignInProvider: MockGoogleSignInProvider
-    private lateinit var signInWithGoogleApi: SignInWithGoogleApi
-    private lateinit var mockActivity: Activity
-    private lateinit var mockParameters: SignInWithGoogleParameters
-
-    @Before
-    fun setUp() {
-        mockGoogleSignInProvider = MockGoogleSignInProvider()
-        mockActivity = Robolectric.buildActivity(Activity::class.java).get()
-        mockParameters = SignInWithGoogleParameters(mockActivity)
-        mockFederatedSignInProviderFactory = mockk()
-        every { mockFederatedSignInProviderFactory.getProvider(any()) } returns mockGoogleSignInProvider
-        signInWithGoogleApi = SignInWithGoogleApi(mockFederatedSignInProviderFactory)
-    }
+    private val mockActivity: Activity = Robolectric.buildActivity(Activity::class.java).get()
+    private val mockParameters: SignInWithGoogleParameters = SignInWithGoogleParameters(mockActivity)
 
     @Test
     fun testSignIn() {
+        val signInWithGoogleApi = createSignInWithGoogleApi()
         val credential = runBlocking {
             signInWithGoogleApi.signIn(mockParameters)
         }
@@ -67,23 +57,46 @@ class SignInWithGoogleApiTest {
 
     @Test
     fun testSignInSync() {
+        val signInWithGoogleApi = createSignInWithGoogleApi()
         val credential = signInWithGoogleApi.signInSync(mockParameters)
-
         assertNotNull(credential)
     }
 
     @Test
     fun testSignInAsync() {
+        val signInWithGoogleApi = createSignInWithGoogleApi()
         val latch = CountDownLatch(1)
         var result: SignInWithGoogleCredential? = null
-        val callback = object : ISignInWithGoogleCredentialCallback {
-            override fun onSuccess(credential: SignInWithGoogleCredential) {
-                result = credential
-                latch.countDown()
-            }
+        signInWithGoogleApi.signInAsync(mockParameters).thenAccept { credential ->
+            result = credential
+            latch.countDown()
         }
-        signInWithGoogleApi.signInAsync(mockParameters, callback)
         latch.await()
         assertNotNull(result)
+    }
+
+    @Test
+    fun testSignInAsyncFailure() {
+        val mockResult: Result<SignInWithGoogleCredential> = Result.failure(BaseException("Mock exception"))
+        val signInWithGoogleApi = createSignInWithGoogleApi(MockGoogleSignInProvider(mockResult))
+        val latch = CountDownLatch(1)
+        var result: SignInWithGoogleCredential? = null
+        var exception: Exception? = null
+        signInWithGoogleApi.signInAsync(mockParameters).whenComplete { credential, e ->
+            result = credential
+            exception = e as Exception?
+            latch.countDown()
+        }
+        latch.await()
+        assertNull(result)
+        assertNotNull(exception)
+        assertTrue(exception is BaseException)
+    }
+
+    private fun createSignInWithGoogleApi(
+        mockGoogleSignInProvider: MockGoogleSignInProvider = MockGoogleSignInProvider()) : SignInWithGoogleApi {
+        val mockFederatedSignInProviderFactory: MsaFederatedSignInProviderFactory = mockk()
+        every { mockFederatedSignInProviderFactory.getProvider(any()) } returns mockGoogleSignInProvider
+        return SignInWithGoogleApi(mockFederatedSignInProviderFactory)
     }
 }
