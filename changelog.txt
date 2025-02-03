@@ -1,5 +1,9 @@
 vNext
 ----------
+
+Version 20.0.0-RC1
+----------
+(common4j 17.0.0-RC1)
 - [PATCH] Fix Sign in Async method for sign in with google (#2583)
 - [MINOR] Add server client id to SignInWithGoogleParameters (#2581)
 - [MAJOR] Pass google id token to broker for enabling Sign in with Google (#2573)
