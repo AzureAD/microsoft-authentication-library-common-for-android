@@ -165,7 +165,7 @@ public class CustomTabsManager {
      * if available when the {@link CustomTabsServiceConnection} is connected or the
      * {@link CustomTabsManager#CUSTOM_TABS_MAX_CONNECTION_TIMEOUT} is timed out.
      */
-    public CustomTabsClient getClient() {
+    private CustomTabsClient getClient() {
         final String methodTag = TAG + ":getClient";
         try {
             mClientLatch.await(CUSTOM_TABS_MAX_CONNECTION_TIMEOUT, TimeUnit.SECONDS);

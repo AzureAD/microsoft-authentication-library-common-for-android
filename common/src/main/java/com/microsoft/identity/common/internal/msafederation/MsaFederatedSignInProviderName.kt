@@ -23,12 +23,14 @@
 package com.microsoft.identity.common.internal.msafederation
 
 /**
- * Interface for Federated Credential Callback. Helps calling sign methods
- * async from java.
+ * Enum class for Federated Sign In Provider Name like Google, Apple
+ * Currently only Google is supported.
  */
-interface IFederatedCredentialCallback<R : FederatedCredential> {
-    /**
-     * Called when the sign in is successful.
-     */
-    fun onSuccess(credential: R)
+enum class MsaFederatedSignInProviderName(private val idProviderName: String) {
+    GOOGLE("google.com"),
+    APPLE("apple.com"); // would be used later
+
+    fun getIdProviderName(): String {
+        return idProviderName
+    }
 }

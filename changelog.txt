@@ -1,6 +1,22 @@
 vNext
 ----------
 - [MINOR] changed AGP version from 7.4.2 to 8.1.1 (#2584)
+- [PATCH] Fix Sign in Async method for sign in with google (#2583)
+- [MINOR] Add server client id to SignInWithGoogleParameters (#2581)
+- [MAJOR] Pass google id token to broker for enabling Sign in with Google (#2573)
+- [MINOR] Organize browser selection classes and change signature for get AuthorizationStrategy (#2564)
+- [MINOR] Add support for OneBox Environment (#2559)
+- [MINOR] Add support for claims requests for native authentication (#2572)
+- [MINOR] Removing unnecessary attributes from keystore wrap operation (#2578)
+
+Version 19.0.1
+----------
+(common4j 16.0.1)
+- [PATCH] Span name added for corruption exception (#2574)
+
+Version 19.0.0
+----------
+(common4j 16.0.0)
 - [MINOR] Add Sign in With Google component for MSA federation (#2551)
 - [MINOR] Add SDMBroadcastReceiver for applications to register callbacks for SDM broadcasts (#2547)
 - [MINOR] Add switch_browser toMicrosoftStsAuthorizationRequest (#2550)
@@ -9,7 +25,6 @@ vNext
 - [MINOR] Add Child Spans for Interactive Span (#2516)
 - [MINOR] For MSAL CPP flows, match exact claims when deleting AT with intersecting scopes (#2548)
 - [MINOR] Replace Deprecated Keystore API for Android 28+ (#2558)
-- [MINOR] Add support for OneBox Environment (#2559)
 - [MINOR] Managed profile Android util method (#2561)
 - [PATCH] Make userHandle response field optional (#2560)
 - [MINOR] Nonce redirect changes (#2552)

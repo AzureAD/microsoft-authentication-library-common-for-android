@@ -20,17 +20,31 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.msafederation
+package com.microsoft.identity.common.java.browser;
+
+import com.microsoft.identity.common.java.ui.BrowserDescriptor;
+
+import java.util.List;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 /**
- * Enum class for Federated Sign In Provider Name like Google, Apple
- * Currently only Google is supported.
+ * A no-op implementation of {@link IBrowserSelector}.
  */
-enum class FederatedSignInProviderName(private val idProviderName: String) {
-    GOOGLE("google.com"),
-    APPLE("apple.com"); // would be used later
+public class NoopBrowserSelector implements IBrowserSelector {
 
-    fun getIdProviderName(): String {
-        return idProviderName
+    /**
+     * Selects a valid installed browser from the list of safe browsers.
+     * If no browser is present in the list of safe browser, null is returned.
+     *
+     * @param browserSafeList            The list of browsers to choose from.
+     * @param preferredBrowserDescriptor The preferred browser descriptor.
+     * @return The selected browser.
+     */
+    @Nullable
+    @Override
+    public Browser selectBrowser(@NonNull List<BrowserDescriptor> browserSafeList, @Nullable BrowserDescriptor preferredBrowserDescriptor) {
+        return null;
     }
 }

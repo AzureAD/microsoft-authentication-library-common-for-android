@@ -56,7 +56,8 @@ data class SignInTokenRequest private constructor(
             scopes: List<String>? = null,
             challengeType: String? = null,
             requestUrl: String,
-            headers: Map<String, String?>
+            headers: Map<String, String?>,
+            claimsRequestJson: String?
         ): SignInTokenRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(oob, "oob")
@@ -74,7 +75,8 @@ data class SignInTokenRequest private constructor(
                     clientId = clientId,
                     grantType = NativeAuthConstants.GrantType.OOB,
                     challengeType = challengeType,
-                    scope = scopes?.joinToString(" ")
+                    scope = scopes?.joinToString(" "),
+                    claimsRequestJson = claimsRequestJson
                 ),
                 requestUrl = URL(requestUrl),
                 headers = headers,
@@ -96,7 +98,8 @@ data class SignInTokenRequest private constructor(
             scopes: List<String>? = null,
             challengeType: String? = null,
             requestUrl: String,
-            headers: Map<String, String?>
+            headers: Map<String, String?>,
+            claimsRequestJson: String?
         ): SignInTokenRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(password, "password")
@@ -106,7 +109,6 @@ data class SignInTokenRequest private constructor(
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
 
-
             return SignInTokenRequest(
                 parameters = NativeAuthRequestSignInTokenRequestParameters(
                     password = password,
@@ -114,7 +116,8 @@ data class SignInTokenRequest private constructor(
                     clientId = clientId,
                     grantType = NativeAuthConstants.GrantType.PASSWORD,
                     challengeType = challengeType,
-                    scope = scopes?.joinToString(" ")
+                    scope = scopes?.joinToString(" "),
+                    claimsRequestJson = claimsRequestJson
                 ),
                 requestUrl = URL(requestUrl),
                 headers = headers,
@@ -153,7 +156,8 @@ data class SignInTokenRequest private constructor(
                     username = username,
                     grantType = NativeAuthConstants.GrantType.CONTINUATION_TOKEN,
                     challengeType = challengeType,
-                    scope = scopes?.joinToString(" ")
+                    scope = scopes?.joinToString(" "),
+                    claimsRequestJson = null
                 ),
                 requestUrl = URL(requestUrl),
                 headers = headers
@@ -175,7 +179,8 @@ data class SignInTokenRequest private constructor(
         @SerializedName("grant_type") val grantType: String,
         @SerializedName("continuation_token") val continuationToken: String? = null,
         @SerializedName("scope") val scope: String?,
-        @SerializedName("challenge_type") val challengeType: String?
+        @SerializedName("challenge_type") val challengeType: String?,
+        @SerializedName("claims") val claimsRequestJson: String?
     ) : NativeAuthRequestParameters() {
         override fun toUnsanitizedString(): String = "NativeAuthRequestSignInTokenRequestParameters(nca=$nca, clientInfo=$clientInfo, clientId=$clientId, grantType=$grantType, scope=$scope, challengeType=$challengeType)"
 
