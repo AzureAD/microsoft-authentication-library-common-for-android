@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.commands.parameters;
 import android.app.Activity;
 
 import com.microsoft.identity.common.internal.controllers.BrokerMsalController;
+import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 
 import lombok.EqualsAndHashCode;
@@ -39,6 +40,8 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @SuperBuilder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
-public class AndroidActivityInteractiveTokenCommandParameters extends InteractiveTokenCommandParameters {
+public class AndroidInteractiveTokenCommandParameters extends InteractiveTokenCommandParameters {
     private transient final Activity activity;
+
+    private final SignInWithGoogleCredential signInWithGoogleCredential;
 }

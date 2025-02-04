@@ -55,9 +55,8 @@ class GoogleSignInProviderTest {
         val mockCredentialManager = mockk<CredentialManager>()
         val mockActivity = mockk<Activity>()
         val mockParameters = SignInWithGoogleParameters(mockActivity)
-        val webClientId = MsaFederationConstants.GOOGLE_MSA_WEB_CLIENT_ID
         val mockIdToken = "mockIdToken"
-        val googleSignInProvider = GoogleSignInProvider(mockCredentialManager, mockParameters, webClientId)
+        val googleSignInProvider = GoogleSignInProvider(mockCredentialManager, mockParameters)
 
         val mockCredential = GoogleIdTokenCredential(
             GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL,
@@ -79,7 +78,7 @@ class GoogleSignInProviderTest {
         val capturedRequest = getCredentialRequestSlot.captured
         assertNotNull(capturedRequest)
         assertEquals(1, capturedRequest.credentialOptions.size)
-        assertEquals(webClientId, (capturedRequest.credentialOptions[0] as GetSignInWithGoogleOption).serverClientId)
+        assertEquals(MsaFederationConstants.GOOGLE_MSA_SERVER_CLIENT_ID, (capturedRequest.credentialOptions[0] as GetSignInWithGoogleOption).serverClientId)
         val capturedActivity = activitySlot.captured
         assertSame(mockActivity, capturedActivity)
     }
@@ -88,10 +87,11 @@ class GoogleSignInProviderTest {
     fun testSignInBottomSheet() {
         val mockCredentialManager = mockk<CredentialManager>()
         val mockActivity = mockk<Activity>()
-        val mockParameters = SignInWithGoogleParameters(mockActivity, true)
-        val webClientId = MsaFederationConstants.GOOGLE_MSA_WEB_CLIENT_ID
+        val mockServerClientId = "mockServerClientId"
+        val mockParameters = SignInWithGoogleParameters(mockActivity, mockServerClientId, true)
+
         val mockIdToken = "mockIdToken"
-        val googleSignInProvider = GoogleSignInProvider(mockCredentialManager, mockParameters, webClientId)
+        val googleSignInProvider = GoogleSignInProvider(mockCredentialManager, mockParameters)
 
         val mockCredential = GoogleIdTokenCredential(
             GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL,
@@ -115,7 +115,7 @@ class GoogleSignInProviderTest {
         assertEquals(1, capturedRequest.credentialOptions.size)
 
         val capturedGoogleIdOption = capturedRequest.credentialOptions[0] as GetGoogleIdOption
-        assertEquals(webClientId, capturedGoogleIdOption.serverClientId)
+        assertEquals(mockServerClientId, capturedGoogleIdOption.serverClientId)
         assertEquals(false, capturedGoogleIdOption.filterByAuthorizedAccounts)
         assertEquals(false, capturedGoogleIdOption.autoSelectEnabled)
         val capturedActivity = activitySlot.captured
@@ -127,8 +127,7 @@ class GoogleSignInProviderTest {
         val mockCredentialManager = mockk<CredentialManager>()
         val mockActivity = mockk<Activity>()
         val mockParameters = SignInWithGoogleParameters(mockActivity)
-        val webClientId = MsaFederationConstants.GOOGLE_MSA_WEB_CLIENT_ID
-        val googleSignInProvider = GoogleSignInProvider(mockCredentialManager, mockParameters, webClientId)
+        val googleSignInProvider = GoogleSignInProvider(mockCredentialManager, mockParameters)
 
         coEvery { mockCredentialManager.clearCredentialState(any()) } returns Unit
         runBlocking { googleSignInProvider.signOut() }

@@ -102,11 +102,6 @@ public final class ErrorStrings {
     public static final String STATE_MISMATCH = "state_mismatch";
 
     /**
-     * The intent to launch Activity is not resolvable by the OS or the intent doesn't contain the required data.
-     */
-    public static final String UNRESOLVABLE_INTENT = "unresolvable_intent";
-
-    /**
      * Unsupported url, cannot perform adfs authority validation.
      */
     public static final String UNSUPPORTED_URL = "unsupported_url";
@@ -132,12 +127,6 @@ public final class ErrorStrings {
      * Extra query parameters set by the client app is already sent by the sdk.
      */
     public static final String DUPLICATE_QUERY_PARAMETER = "duplicate_query_parameter";
-
-    /**
-     * Temporary non-exposed error code to indicate that ADFS authority validation fails. ADFS as authority is not supported
-     * for preview.
-     */
-    static final String ADFS_AUTHORITY_VALIDATION_FAILED = "adfs_authority_validation_failed";
 
     /**
      * Failed to unwrap with the android keystore.
@@ -226,29 +215,9 @@ public final class ErrorStrings {
     public static final String CERTIFICATE_ENCODING_ERROR = "Certificate encoding is not generated";
 
     /**
-     * Key Chain private key exception.
-     */
-    public static final String KEY_CHAIN_PRIVATE_KEY_EXCEPTION = "Key Chain private key exception";
-
-    /**
-     * Key Chain public key exception.
-     */
-    public static final String KEY_CHAIN_PUBLIC_KEY_EXCEPTION = "Key Chain public key exception";
-
-    /**
-     * Key Chain certificate exception.
-     */
-    public static final String KEY_CHAIN_CERTIFICATE_EXCEPTION = "Key Chain certificate exception";
-
-    /**
      * Signature exception.
      */
     public static final String SIGNATURE_EXCEPTION = "Signature exception";
-
-    /**
-     * Device certificate API has exception.
-     */
-    public static final String DEVICE_CERTIFICATE_API_EXCEPTION = "Device certificate API has exception";
 
     /**
      * The redirectUri for broker is invalid.
@@ -286,45 +255,14 @@ public final class ErrorStrings {
     public static final String BROKER_VERIFICATION_FAILED = "Signature could not be verified";
 
     /**
-     * The broker app is not responding.
-     */
-    public static final String BROKER_APP_NOT_RESPONDING = "Broker application is not responding";
-
-    /**
      * Failed to bind the service in broker app.
      */
     public static final String BROKER_BIND_SERVICE_FAILED = "Failed to bind the service in broker app";
 
     /**
-     * Could not retrieve capabilities from broker apps.
-     */
-    public static final String FAILED_TO_GET_CAPABILITIES = "Could not get the capabilities";
-
-    /**
-     * Empty Context.
-     */
-    public static final String ANDROID_CONTEXT_IS_NULL = "Android Context is null.";
-
-    /**
      * Empty Authorization Intent.
      */
     public static final String AUTHORIZATION_INTENT_IS_NULL = "Authorization intent is null.";
-
-    /**
-     * No available browser installed on the device.
-     */
-    public static final String NO_AVAILABLE_BROWSER_FOUND = "No available browser installed on the device.";
-
-    /**
-     * Refresh token request failed.
-     */
-    public static final String AUTH_REFRESH_FAILED = "Refresh token request failed";
-
-    /**
-     * STK patching failed.
-     */
-    public static final String STK_PATCHING_FAILED = "STK patching failed";
-
     /**
      * Primary refresh token request failed.
      */
@@ -334,16 +272,6 @@ public final class ErrorStrings {
      * Broker RT is invalid
      */
     public static final String INVALID_BROKER_REFRESH_TOKEN = "Broker refresh token is invalid";
-
-    /**
-     * Device registration data is missing in a flow that expects it.
-     */
-    public static final String DEVICE_REGISTRATION_MISSING_FROM_CLIENT = "Device registration data not found.";
-
-    /**
-     * Failed to retreive device state.
-     */
-    public static final String ERROR_RETRIEVING_DEVICE_STATE = "Error retrieving device state";
 
     /**
      * Device registration failed.
@@ -398,11 +326,6 @@ public final class ErrorStrings {
     public static final String KEY_NOT_FOUND = "key_not_found";
 
     /**
-     * Restore MSA account using transfer token failed.
-     */
-    public static final String RESTORE_MSA_ACCOUNT_WITH_TRANSFER_TOKEN = "restore_msa_accounts_failed";
-
-    /**
      * AccountMode in configuration is set to multiple. However, the device is marked as shared (which requires single account mode).
      */
     public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_ON_SHARED_DEVICE_ERROR_CODE = "multiple_account_pca_init_fail_on_shared_device";
@@ -435,12 +358,6 @@ public final class ErrorStrings {
     public static final String SINGLE_ACCOUNT_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_MESSAGE = "A single account public client application could not be created for unknown reasons.";
 
     /**
-     * A Native Auth public client application could not be created for unknown reasons.
-     */
-    public static final String NATIVE_AUTH_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_CODE = "native_auth_pca_init_fail_unknown_reason";
-    public static final String NATIVE_AUTH_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_MESSAGE = "A native auth public client application could not be created for unknown reasons.";
-
-    /**
      * Some or all requested scopes where declined by the server. Developer should decide whether to continue
      * authentication with the granted scopes or end the authentication process.
      */
@@ -454,13 +371,6 @@ public final class ErrorStrings {
     public static final String REGISTERED_SHARED_DEVICE_DELETED_ON_SERVER_ERROR_CODE =
             "registered_shared_device_deleted_on_server";
 
-    /**
-     * The device is registered with precreate/userless WPJ, and its registration was deleted by the admin.
-     * This is an irrecoverable error, and the admin has to re-prep the device.
-     * */
-    public static final String USERLESS_DEVICE_DELETED_ON_SERVER_ERROR_CODE =
-            "userless_device_deleted_on_server";
-
     public static final String DEVICE_DELETED_ON_SERVER_IRRECOVERABLE_ERROR_MESSAGE =
             "This device was deleted from the tenant. " +
                     "This is an irrecoverable error. Only tenant administrator can re-register this device.";
@@ -472,12 +382,6 @@ public final class ErrorStrings {
             "Requested account is from a different organization. " +
                     "Please make sure to use your organizational account. " +
                     "If that doesn’t help, please return the device to your administrator.";
-
-    /**
-     * Home tenant of the BRT acccount doesn't match with WPJ account's UPN.
-     */
-    public static final String BRT_USER_MISMATCH_ERROR_MESSAGE =
-            "The signed in user doesn't match with the user this device is registered to.";
 
     /**
      * Device Code Flow only.
@@ -530,11 +434,6 @@ public final class ErrorStrings {
      * Use this message for when Device Code Flow fails with an error code that doesn't match any of the pre-defined Device Code Flow codes.
      */
     public final static String DEVICE_CODE_FLOW_DEFAULT_ERROR_MESSAGE = "Device Code Flow has failed with an unexpected error. The error code shown was received from the result object.";
-
-    /**
-     * Access token doesn't exist and is required for NativeAuth token refresh
-     */
-    public static final String NATIVE_AUTH_NO_ACCESS_TOKEN_FOUND = "native_auth_no_access_token_found";
 
     /**
      * Unexpected content type received in http response.

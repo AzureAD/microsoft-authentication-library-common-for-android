@@ -25,7 +25,6 @@ package com.microsoft.identity.common.java.util;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -37,12 +36,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
 public interface IPlatformUtil {
-
-    /**
-     * Return a list of BrowserDescriptors that are considered safe for the given platform.
-     */
-    List<BrowserDescriptor> getBrowserSafeListForBroker();
-
     /**
      * Gets version of the installed Company Portal app.
      * Returns null if the app is not installed, the value cannot be retrieved, or this operation is not supported.

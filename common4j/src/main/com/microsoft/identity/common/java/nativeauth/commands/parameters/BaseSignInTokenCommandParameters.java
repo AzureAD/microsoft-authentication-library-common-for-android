@@ -31,7 +31,7 @@ import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
 /**
- * BaseSignInTokenCommandParameters is the base class for parameters for all all Native Auth sign in related commands.
+ * BaseSignInTokenCommandParameters is the base class for parameters for all Native Auth sign in related commands.
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)

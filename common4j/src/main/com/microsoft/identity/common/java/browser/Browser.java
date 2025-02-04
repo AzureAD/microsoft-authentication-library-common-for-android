@@ -20,26 +20,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.browser;
+package com.microsoft.identity.common.java.browser;
 
-import android.content.pm.PackageInfo;
-import android.content.pm.Signature;
-import android.util.Base64;
-
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.common.internal.broker.PackageHelper;
-
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HashSet;
 import java.util.Set;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Represents a browser used for an authorization flow.
  */
 public class Browser {
-    private static final String DIGEST_SHA_512 = "SHA-512";
     private static final int PRIME_HASH_FACTOR = 92821;
 
     /**
@@ -48,7 +37,7 @@ public class Browser {
     private final String mPackageName;
 
     /**
-     * The set of {@link android.content.pm.Signature signatures} of the browser app,
+     * The set of signatures of the browser app,
      * which have been hashed with SHA-512, and Base-64 URL-safe encoded.
      */
     private final Set<String> mSignatureHashes;
@@ -59,23 +48,6 @@ public class Browser {
     private final String mVersion;
 
     private final Boolean mIsCustomTabsServiceSupported; //NOPMD
-
-    /**
-     * Creates a browser object from a {@link PackageInfo} object returned from the
-     * {@link android.content.pm.PackageManager}. The object is expected to include the
-     * signatures of the app, which can be retrieved with the
-     * {@link android.content.pm.PackageManager#GET_SIGNATURES GET_SIGNATURES} flag when
-     * calling {@link android.content.pm.PackageManager#getPackageInfo(String, int)}.
-     */
-    @SuppressWarnings("deprecation")
-    public Browser(@NonNull PackageInfo packageInfo) {
-        this(packageInfo.packageName, generateSignatureHashes(PackageHelper.getSignatures(packageInfo)), packageInfo.versionName, false);
-    }
-
-    @SuppressWarnings("deprecation")
-    public Browser(@NonNull PackageInfo packageInfo, final Boolean isCustomTabsServiceSupported) {
-        this(packageInfo.packageName, generateSignatureHashes(PackageHelper.getSignatures(packageInfo)), packageInfo.versionName, isCustomTabsServiceSupported);
-    }
 
     /**
      * Creates a browser object with the core properties.
@@ -118,27 +90,6 @@ public class Browser {
         return mVersion;
     }
 
-    /**
-     * Generates a set of SHA-512, Base64 url-safe encoded signature hashes from the provided
-     * array of signatures.
-     */
-    @NonNull
-    public static Set<String> generateSignatureHashes(@NonNull Signature[] signatures) {
-        Set<String> signatureHashes = new HashSet<>();
-        for (Signature signature : signatures) {
-            try {
-                MessageDigest digest = MessageDigest.getInstance(DIGEST_SHA_512);
-                byte[] hashBytes = digest.digest(signature.toByteArray());
-                signatureHashes.add(Base64.encodeToString(hashBytes, Base64.URL_SAFE | Base64.NO_WRAP));
-            } catch (final NoSuchAlgorithmException e) {
-                throw new IllegalStateException(
-                        "Platform does not support" + DIGEST_SHA_512 + " hashing");
-            }
-        }
-
-        return signatureHashes;
-    }
-
     public boolean isCustomTabsServiceSupported() {
         return mIsCustomTabsServiceSupported;
     }
@@ -149,7 +100,7 @@ public class Browser {
             return true;
         }
 
-        if (obj == null || !(obj instanceof Browser)) {
+        if (!(obj instanceof Browser)) {
             return false;
         }
 

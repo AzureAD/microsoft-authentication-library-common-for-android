@@ -22,6 +22,8 @@
 //THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
+import javax.annotation.Nullable;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -44,6 +46,12 @@ public class MFADefaultChallengeCommandParameters extends BaseSignInTokenCommand
      */
     @NonNull
     public final String continuationToken;
+
+    /**
+     * Claims to send to the token endpoint.
+     */
+    @Nullable
+    public final String claimsRequestJson;
 
     @NonNull
     @Override
