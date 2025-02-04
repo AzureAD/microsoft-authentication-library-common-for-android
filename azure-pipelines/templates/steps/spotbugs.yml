@@ -16,7 +16,7 @@ steps:
   displayName: 'Run Spotbugs'
   inputs:
     javaHomeSelection: JDKVersion
-    jdkVersionOption: "1.11"
+    jdkVersionOption: "1.17"
     jdkArchitecture: x64
     cwd: ${{ parameters.cwd }}
     tasks: ${{ parameters.project }}:${{ parameters.spotbugsCommand }}

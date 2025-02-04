@@ -68,6 +68,7 @@ jobs:
   - template: ../templates/steps/spotbugs.yml
     parameters:
       project: common
+    
 - job: lint
   displayName: Lint
   cancelTimeoutInMinutes: 1
