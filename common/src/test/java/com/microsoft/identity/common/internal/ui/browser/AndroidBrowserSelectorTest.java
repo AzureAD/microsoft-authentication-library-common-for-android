@@ -42,6 +42,7 @@ import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.java.browser.Browser;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 
@@ -377,7 +378,7 @@ public class AndroidBrowserSelectorTest {
             pi.packageName = mPackageName;
             pi.versionName = mVersion;
 
-            Set<String> signatureHashes = AndroidBrowserSelector.generateSignatureHashes(pi.signatures);
+            Set<String> signatureHashes = PackageHelper.generateSignatureHashes(pi);
 
             ResolveInfo ri = new ResolveInfo();
             ri.activityInfo = new ActivityInfo();
