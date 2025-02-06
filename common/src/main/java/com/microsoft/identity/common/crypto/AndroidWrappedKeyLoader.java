@@ -35,6 +35,8 @@ import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.util.CachedData;
 import com.microsoft.identity.common.java.util.FileUtil;
 import com.microsoft.identity.common.logging.Logger;
@@ -306,17 +308,16 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      * @return a {@link AlgorithmParameterSpec} for the keystore key (that we'll use to wrap the secret key).
      */
     private static AlgorithmParameterSpec getSpecForKeyStoreKey(@NonNull final Context context, @NonNull final String alias) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-            return getLegacySpecForKeyStoreKey(context, alias);
-        } else {
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             int purposes =  KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT;
             return new KeyGenParameterSpec.Builder(alias, purposes)
                     .setKeySize(2048)
-                    .setUserAuthenticationRequired(false)
                     .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
                     .setBlockModes(KeyProperties.BLOCK_MODE_ECB) // Ensure compatibility with RSA
                     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
                     .build();
+        } else {
+            return getLegacySpecForKeyStoreKey(context, alias);
         }
     }
 
