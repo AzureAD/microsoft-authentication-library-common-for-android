@@ -309,9 +309,10 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             return getLegacySpecForKeyStoreKey(context, alias);
         } else {
-            int purposes = KeyProperties.PURPOSE_WRAP_KEY  | KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT;
+            int purposes =  KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT;
             return new KeyGenParameterSpec.Builder(alias, purposes)
                     .setKeySize(2048)
+                    .setUserAuthenticationRequired(false)
                     .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
                     .setBlockModes(KeyProperties.BLOCK_MODE_ECB) // Ensure compatibility with RSA
                     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
