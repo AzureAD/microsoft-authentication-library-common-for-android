@@ -310,7 +310,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     @RequiresApi(api = Build.VERSION_CODES.P)
     private KeyPair attemptKeyPairGeneration(@NonNull final String alias, boolean useWrapPurpose, long keypairGenStartTime) throws ClientException{
         KeyPair keyPair = AndroidKeyStoreUtil.generateKeyPair(
-                WRAP_KEY_ALGORITHM, getSpecForKeyStoreKey(mContext, alias, useWrapPurpose));
+                WRAP_KEY_ALGORITHM, getSpecForKeyStoreKey(alias, useWrapPurpose));
         recordKeyGenerationTime(keypairGenStartTime);
         return keyPair;
     }
@@ -371,7 +371,6 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      * Generate a self-signed cert and derive an AlgorithmParameterSpec from that.
      * This is for the key to be generated in {@link KeyStore} via {@link KeyPairGenerator}
      *
-     * @param context an Android {@link Context} object.
      * @param alias   the alias for the key.
      * @param tryPurposeWrap whether to try to use the wrap purpose in the key generation spec.
      * @return a {@link AlgorithmParameterSpec} for the keystore key (that we'll use to wrap the secret key).

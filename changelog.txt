@@ -7,6 +7,7 @@ vNext
 - [MINOR] Add support for OneBox Environment (#2559)
 - [MINOR] Add support for claims requests for native authentication (#2572)
 - [MINOR] Removing unnecessary attributes from keystore wrap operation (#2578)
+- [MINOR] Add fallback mechanisms for keypair generation (#2586)
 
 Version 19.0.1
 ----------
