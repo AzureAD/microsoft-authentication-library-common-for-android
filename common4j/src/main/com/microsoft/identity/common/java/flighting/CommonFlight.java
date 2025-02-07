@@ -88,7 +88,12 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable the re-attachment of new PRT header logic. Default is true.
      */
-    ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED("EnableAttachNewPrtHeaderWhenNonceExpired", true);
+    ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED("EnableAttachNewPrtHeaderWhenNonceExpired", true),
+
+    /**
+     * Flight to enable the new key generation spec for wrap key. Default is true.
+     */
+    ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP("EnableNewKeyGenSpecForWrap", true);
     private String key;
     private Object defaultValue;
     CommonFlight(@NonNull String key, @NonNull Object defaultValue) {
