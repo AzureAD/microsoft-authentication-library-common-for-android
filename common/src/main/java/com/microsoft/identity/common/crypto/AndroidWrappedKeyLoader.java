@@ -279,7 +279,10 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                             // 2nd fallback to legacy keygen spec
                             Logger.error(methodTag, "Second attempt without wrap also failed. Falling back to legacy spec.", ex);
                             keyPair = generateKeyPairWithLegacySpec(mAlias, keypairGenStartTime);
-                            Span.current().setAttribute(AttributeName.key_pair_gen_successful_method.name(), "legacy_key_gen_spec");
+                            if (e.getMessage() != null) {
+                                span.setAttribute(AttributeName.keypair_gen_exception.name(), e.getMessage());
+                            }
+                            span.setAttribute(AttributeName.key_pair_gen_successful_method.name(), "legacy_key_gen_spec");
                             span.setStatus(StatusCode.OK);
                         }
                     } else {
@@ -289,9 +292,12 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                         span.setStatus(StatusCode.OK);
                     }
                 } catch (final Exception e) {
-                    Logger.warn(methodTag, "Unexpected error with new KeyPairGeneratorSpec. Falling back to legacy spec.");
+                    Logger.warn(methodTag, "Unexpected error with new KeyPairGeneratorSpec. Falling back to legacy spec. "+ e);
                     keyPair = generateKeyPairWithLegacySpec(mAlias, keypairGenStartTime);
-                    Span.current().setAttribute(AttributeName.key_pair_gen_successful_method.name(), "legacy_key_gen_spec");
+                    if (e.getMessage() != null) {
+                        span.setAttribute(AttributeName.keypair_gen_exception.name(), e.getMessage());
+                    }
+                    span.setAttribute(AttributeName.key_pair_gen_successful_method.name(), "legacy_key_gen_spec");
                     span.setStatus(StatusCode.OK);
                 } finally {
                     span.end();

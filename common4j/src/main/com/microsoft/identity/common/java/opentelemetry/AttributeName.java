@@ -322,5 +322,10 @@ public enum AttributeName {
     /**
      * Indicates the successful method used to generate a keypair.
      */
-    key_pair_gen_successful_method
+    key_pair_gen_successful_method,
+
+    /**
+     * Indicates the exception in generating a keypair.
+     */
+    keypair_gen_exception
 }
