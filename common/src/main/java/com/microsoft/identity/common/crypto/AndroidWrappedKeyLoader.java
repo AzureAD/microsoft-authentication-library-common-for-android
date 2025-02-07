@@ -262,7 +262,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
             final Span span = OTelUtility.createSpan(SpanName.KeyPairGeneration.name());
             final long keypairGenStartTime = System.currentTimeMillis();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP)) {
-                try (Scope scope = SpanExtension.makeCurrentSpan(span)) {
+                try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
                     keyPair = attemptKeyPairGeneration(mAlias, true, keypairGenStartTime);
                     Logger.info(methodTag, "Successfully generated keypair with new KeyPairGeneratorSpec with wrap purpose.");
                     Span.current().setAttribute(AttributeName.key_pair_gen_successful_method.name(), "new_key_gen_spec_with_wrap");
