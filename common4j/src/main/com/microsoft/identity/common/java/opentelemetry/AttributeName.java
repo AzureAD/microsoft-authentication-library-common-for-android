@@ -318,6 +318,7 @@ public enum AttributeName {
      * The time (in milliseconds) spent on generating a keypair.
      */
     elapsed_time_keypair_generation,
+
     /**
      * Indicates the successful method used to generate a keypair.
      */

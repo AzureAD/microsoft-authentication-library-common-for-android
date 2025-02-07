@@ -264,17 +264,29 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP)) {
                 try (Scope scope = SpanExtension.makeCurrentSpan(span)) {
                     keyPair = attemptKeyPairGeneration(mAlias, true, keypairGenStartTime);
+                    Logger.info(methodTag, "Successfully generated keypair with new KeyPairGeneratorSpec with wrap purpose.");
                     Span.current().setAttribute(AttributeName.key_pair_gen_successful_method.name(), "new_key_gen_spec_with_wrap");
                     span.setStatus(StatusCode.OK);
                 } catch (final ProviderException e) {
                     if ("SecureKeyImportUnavailableException".equals(e.getClass().getSimpleName())) {
                         Logger.warn(methodTag, "Wrap purpose may not be supported. Retrying without wrap.");
-                        keyPair = attemptKeyPairGeneration(mAlias, false, keypairGenStartTime);
-                        Span.current().setAttribute(AttributeName.key_pair_gen_successful_method.name(), "new_key_gen_spec_without_wrap");
-                        span.setStatus(StatusCode.OK);
+                        try {
+                            keyPair = attemptKeyPairGeneration(mAlias, false, keypairGenStartTime);
+                            Logger.info(methodTag, "Successfully generated keypair with new KeyPairGeneratorSpec without wrap purpose.");
+                            Span.current().setAttribute(AttributeName.key_pair_gen_successful_method.name(), "new_key_gen_spec_without_wrap");
+                            span.setStatus(StatusCode.OK);
+                        } catch (Exception ex) {
+                            // 2nd fallback to legacy keygen spec
+                            Logger.error(methodTag, "Second attempt without wrap also failed. Falling back to legacy spec.", ex);
+                            keyPair = generateKeyPairWithLegacySpec(mAlias, keypairGenStartTime);
+                            Span.current().setAttribute(AttributeName.key_pair_gen_successful_method.name(), "legacy_key_gen_spec");
+                            span.setStatus(StatusCode.OK);
+                        }
                     } else {
-                        // Some unknown exception occurred. Rethrow it so that legacy keygen spec logic can run.
-                        throw e;
+                        Logger.info(methodTag, "Some unknown exception occurred. Running legacy keygen spec logic.");
+                        keyPair = generateKeyPairWithLegacySpec(mAlias, keypairGenStartTime);
+                        Span.current().setAttribute(AttributeName.key_pair_gen_successful_method.name(), "legacy_key_gen_spec");
+                        span.setStatus(StatusCode.OK);
                     }
                 } catch (final Exception e) {
                     Logger.warn(methodTag, "Unexpected error with new KeyPairGeneratorSpec. Falling back to legacy spec.");
