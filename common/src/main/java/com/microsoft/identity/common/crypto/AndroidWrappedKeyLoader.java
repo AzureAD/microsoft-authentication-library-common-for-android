@@ -377,7 +377,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      * @return a {@link AlgorithmParameterSpec} for the keystore key (that we'll use to wrap the secret key).
      */
     @RequiresApi(api = Build.VERSION_CODES.P)
-    private static AlgorithmParameterSpec getSpecForKeyStoreKey(@NonNull final Context context, @NonNull final String alias, boolean tryPurposeWrap) {
+    private static AlgorithmParameterSpec getSpecForKeyStoreKey(@NonNull final String alias, boolean tryPurposeWrap) {
         int purposes = KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT;
         if (tryPurposeWrap) {
             purposes |= KeyProperties.PURPOSE_WRAP_KEY;
