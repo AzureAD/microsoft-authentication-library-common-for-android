@@ -24,12 +24,14 @@ package com.microsoft.identity.common.internal.msafederation.google
 
 import com.microsoft.identity.common.internal.msafederation.IMsaFederatedSignInProvider
 
-class MockGoogleSignInProvider : IMsaFederatedSignInProvider {
+class MockGoogleSignInProvider(
+    private val signInResult: Result<SignInWithGoogleCredential> = Result.success(SignInWithGoogleCredential(MOCK_ID_TOKEN))) : IMsaFederatedSignInProvider {
     companion object {
         private const val MOCK_ID_TOKEN = "mockIdToken"
     }
+
     override suspend fun signIn(): Result<SignInWithGoogleCredential> {
-        return Result.success(SignInWithGoogleCredential(MOCK_ID_TOKEN))
+        return signInResult
     }
 
     override suspend fun signOut() {
