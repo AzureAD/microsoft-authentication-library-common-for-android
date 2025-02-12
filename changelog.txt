@@ -1,7 +1,7 @@
 vNext
 ----------
 
-Version 20.0.1-RC1
+Version 20.0.1-RC2
 ----------
 
 Version 20.0.0
