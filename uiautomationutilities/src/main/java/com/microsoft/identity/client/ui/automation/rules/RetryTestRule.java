@@ -36,6 +36,7 @@ import org.junit.runners.model.Statement;
 public class RetryTestRule implements TestRule {
 
     private final static String TAG = RetryTestRule.class.getSimpleName();
+    private final static int MINIMUM_NUMBER_OF_ATTEMPTS = 3;
 
     @Override
     public Statement apply(final Statement base, final Description description) {
@@ -59,6 +60,11 @@ public class RetryTestRule implements TestRule {
                     final int retryCount = retryOnFailure.retryCount();
                     Logger.i(TAG, "Received retry count annotation with value: " + retryCount);
                     numAttempts += retryCount;
+                }
+
+                // If after evaluating annotation, we still have number of attempts less than minimum, increase number of attempts
+                if (numAttempts < MINIMUM_NUMBER_OF_ATTEMPTS) {
+                    numAttempts = MINIMUM_NUMBER_OF_ATTEMPTS;
                 }
 
                 for (int i = 0; i < numAttempts; i++) {
