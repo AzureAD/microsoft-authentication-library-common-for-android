@@ -6,6 +6,9 @@
 # Variable: 'skipConsumerValidationLabel' PR label used to skip the checks in this pipeline
 name: $(date:yyyyMMdd)$(rev:.r)
 
+pr: 
+- dev
+
 parameters:
   - name: shouldSkipLongRunningTest
     displayName: Should skip long running test?
@@ -64,39 +67,23 @@ stages:
     displayName: Setup branch
     condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
-    - checkout: none
-    - task: PowerShell@2
-      name: setvarStep
-      displayName: Set var branch
+    - checkout: self
+    - task: Gradle@3
+      displayName: Assemble common
       inputs:
-        targetType: inline
-        script: |
-          $branch = switch ( '$(Build.Reason)' )
-          {
-              PullRequest
-              {
-                '$(System.PullRequest.SourceBranch)'
-              }
-              Manual
-              {
-                '$(commonBranchName)'
-              }
-              default
-              {
-                ''
-              }
-          }
-          Write-Output "$branch"
-          echo "##vso[task.setvariable variable=commonBranch;isOutput=true]$branch"
-    - powershell: |
-        if ("$(setvarStep.commonBranch)" -eq "") {
-          Write-Output "commonBranchName is not set using default common"
-        }
-        else{
-          Write-Output "Using common branch $(setvarStep.commonBranch) in consumers"
-        }
-      name: echovar
-      displayName: Echo branch name
+        tasks: common:clean common:assembleLocal
+        publishJUnitResults: false
+        jdkArchitecture: x64
+        jdkVersionOption: "1.11"
+
+    - task: Gradle@3
+      displayName: Publish common
+      inputs:
+        tasks: common:publish -PprojVersion=0.0.$(build.buildid)
+        publishJUnitResults: false
+        jdkArchitecture: x64
+        jdkVersionOption: "1.11"
+
   # msal
   - job: msalValidation
     displayName: MSAL
@@ -104,7 +91,7 @@ stages:
       - setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
-    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
+    condition: false
     steps:
     - checkout: msal
       displayName: Checkout msal repository
@@ -143,7 +130,7 @@ stages:
       - setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
-    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
+    condition: false
     pool:
       name: 1ES-AndroidPool-EOC
     steps:
@@ -184,7 +171,7 @@ stages:
     variables:
       - name: commonBranch
         value: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
-    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
+    condition: false
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -241,7 +228,7 @@ stages:
       - setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
-    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
+    condition: false
     steps:
     - checkout: adal
       displayName: Checkout adal repository
