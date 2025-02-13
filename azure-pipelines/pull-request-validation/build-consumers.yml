@@ -69,20 +69,29 @@ stages:
     steps:
     - checkout: self
     - task: Gradle@3
-      displayName: Assemble common
+      displayName: Assemble common4j
       inputs:
-        tasks: common:clean common:assembleLocal
+        tasks: common4j:clean common4j:assemble
         publishJUnitResults: false
         jdkArchitecture: x64
         jdkVersionOption: "1.11"
-
+        options: "-PprojVersion=0.0.$(build.buildid)"
     - task: Gradle@3
       displayName: Publish common4j
       inputs:
-        tasks: common3j:publish -PprojVersion=0.0.$(build.buildid)
+        tasks: common4j:publish
         publishJUnitResults: false
         jdkArchitecture: x64
         jdkVersionOption: "1.11"
+        options: "-PprojVersion=0.0.$(build.buildid)"
+    - task: Gradle@3
+      displayName: Assemble common
+      inputs:
+        tasks: common:clean common:assembleDist
+        publishJUnitResults: false
+        jdkArchitecture: x64
+        jdkVersionOption: "1.11"
+        options: "PdistCommon4jVersion=0.0.$(build.buildid) -PprojVersion=0.0.$(build.buildid)"
     - task: Gradle@3
       displayName: Publish common
       inputs:
@@ -90,6 +99,7 @@ stages:
         publishJUnitResults: false
         jdkArchitecture: x64
         jdkVersionOption: "1.11"
+        options: "-PprojVersion=0.0.$(build.buildid)"
     - task: PowerShell@2
       inputs:
         targetType: 'inline'
