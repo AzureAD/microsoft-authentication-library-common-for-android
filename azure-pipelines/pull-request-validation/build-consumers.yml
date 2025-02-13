@@ -77,13 +77,67 @@ stages:
         jdkVersionOption: "1.11"
 
     - task: Gradle@3
+      displayName: Publish common4j
+      inputs:
+        tasks: common3j:publish -PprojVersion=0.0.$(build.buildid)
+        publishJUnitResults: false
+        jdkArchitecture: x64
+        jdkVersionOption: "1.11"
+    - task: Gradle@3
       displayName: Publish common
       inputs:
         tasks: common:publish -PprojVersion=0.0.$(build.buildid)
         publishJUnitResults: false
         jdkArchitecture: x64
         jdkVersionOption: "1.11"
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: |
+          Param (
+              [Parameter(Mandatory = $true)][String]$PackagingPAT,
+              [Parameter(Mandatory = $false)][String]$common4jVersion,
+              [Parameter(Mandatory = $false)][String]$commonVersion,
+              [Parameter(Mandatory = $false)][String]$PromoteToView = "Prerelease",
+              [Parameter(Mandatory = $false)][String]$Organization = "identitydivision",
+              [Parameter(Mandatory = $false)][String]$FeedName="AndroidADAL"
+          )
 
+          #request uri
+          $baseUri = "https://pkgs.dev.azure.com/$Organization";
+          $promotePackagesApi = "_apis/packaging/feeds/$FeedName/maven/packagesbatch?api-version=7.1-preview.1"
+          $promotePackagesUri = "$baseUri/$promotePackagesApi"
+
+          # Auth header
+          $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("token:{0}" -f $PackagingPAT)))
+          $authHeader = @{Authorization = ("Basic {0}" -f $base64AuthInfo)};
+
+
+          # Request Body
+          $MavenPackagesBatchRequest = New-Object PSObject -Property @{
+                  data = @{ viewId = $PromoteToView }
+                  operation = "promote"
+                  packages = @(
+                      @{ artifact = "common4j"; group = "com.microsoft.identity"; version = $common4jVersion},
+                      @{ artifact = "common"; group = "com.microsoft.identity"; version = $commonVersion}
+                  )
+          }
+
+          $requestBody = $MavenPackagesBatchRequest | ConvertTo-Json
+
+          # Call ADO Rest API
+          try {
+              $Result = Invoke-RestMethod -Uri $promotePackagesUri -Method Post -ContentType "application/json" -Headers $authHeader -Body $requestBody;
+          } catch {
+              if($_.ErrorDetails.Message){
+                  Write-Error $_.ErrorDetails.Message
+              }
+              throw $_.Exception
+          }
+        arguments:
+          -PackagingPAT "$(System.AccessToken)"
+          -common4jVersion "0.0.$(build.buildid)"
+          -commonVersion "0.0.$(build.buildid)"
   # msal
   - job: msalValidation
     displayName: MSAL
