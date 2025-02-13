@@ -59,5 +59,6 @@ public enum SpanName {
     UpgradeDeviceRegistration,
     RemoveBrokerAccount,
     ProcessNonceFromEstsRedirect,
-    DataStoreCorruptionException
+    DataStoreCorruptionException,
+    KeyPairGeneration
 }
