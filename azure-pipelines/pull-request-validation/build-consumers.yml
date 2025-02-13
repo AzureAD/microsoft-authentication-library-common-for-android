@@ -6,6 +6,7 @@
 # Variable: 'skipConsumerValidationLabel' PR label used to skip the checks in this pipeline
 name: $(date:yyyyMMdd)$(rev:.r)
 
+trigger: none
 pr: 
 - dev
 
@@ -53,9 +54,9 @@ stages:
     name: Hosted Windows 2019 with VS2019
   jobs:
     - template: ../templates/steps/fetch-pr-labels.yml
-- stage: validateConsumers
+- stage: publishCommon
   # Validate Consumers
-  displayName: 'Validate'
+  displayName: 'Publish common'
   dependsOn: getLabel
   pool:
     name: Hosted Windows 2019 with VS2019
@@ -63,11 +64,12 @@ stages:
     prLabels: $[ stageDependencies.getLabel.getLabelsJob.outputs['fetchPrCILabel.prLabels'] ]
   jobs:
   # setup
-  - job: setupBranch
-    displayName: Setup branch
+  - job: publishcommonlibs
+    displayName: Publish common
     condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
     - checkout: self
+    - template: ../templates/steps/automation-cert.yml
     - task: Gradle@3
       displayName: Assemble common4j
       inputs:
@@ -148,36 +150,25 @@ stages:
           -PackagingPAT "$(System.AccessToken)"
           -common4jVersion "0.0.$(build.buildid)"
           -commonVersion "0.0.$(build.buildid)"
-  # msal
+
+- stage: validateMSAL
+  displayName: 'Validate MSAL'
+  dependsOn: publishCommon
+  jobs:
   - job: msalValidation
     displayName: MSAL
-    dependsOn:
-      - setupBranch
-    variables:
-      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
-    condition: false
     steps:
     - checkout: msal
       displayName: Checkout msal repository
       clean: true
       submodules: recursive
       persistCredentials: True
-    - task: CmdLine@2
-      displayName: Checkout common submodule $(commonBranch)
-      inputs:
-        script: |
-          git fetch
-          git checkout $(commonBranch)
-          git pull
-          git status
-          git rev-parse HEAD
-        workingDirectory: $(Agent.BuildDirectory)/s/common
     - task: Gradle@3
       displayName: Assemble msal
       inputs:
         jdkArchitecture: x64
         jdkVersionOption: "1.11"
-        tasks: clean msal:assembleLocal
+        tasks: clean msal:assembleDist
     - template: ../templates/steps/automation-cert.yml
     - task: Gradle@3
       displayName: Run msal Unit tests
@@ -190,10 +181,8 @@ stages:
     displayName: Broker
     cancelTimeoutInMinutes: 1
     timeoutInMinutes: 120
-    dependsOn:
-      - setupBranch
     variables:
-      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+      commonBranch: $[ dependencies.publishcommon.outputs['setvarStep.commonBranch'] ]  # map in the variable
     condition: false
     pool:
       name: 1ES-AndroidPool-EOC
@@ -230,11 +219,6 @@ stages:
   # Linux broker
   - job: linuxBrokerValidation
     displayName: Linux Broker
-    dependsOn:
-      - setupBranch
-    variables:
-      - name: commonBranch
-        value: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     condition: false
     pool:
       vmImage: 'ubuntu-latest'
@@ -288,10 +272,6 @@ stages:
   # adal
   - job: adalValidation
     displayName: ADAL
-    dependsOn:
-      - setupBranch
-    variables:
-      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     condition: false
     steps:
     - checkout: adal
