@@ -1,3 +1,8 @@
+Version 19.0.2
+----------
+(common4j 16.0.2)
+- [PATCH] Add fallback mechanisms for keypair generation (#2586)
+
 Version 19.0.1
 ----------
 (common4j 16.0.1)
