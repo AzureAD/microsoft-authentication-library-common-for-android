@@ -169,7 +169,10 @@ stages:
         jdkArchitecture: x64
         jdkVersionOption: "1.11"
         tasks: clean msal:assembleDist
-    - template: ../templates/steps/automation-cert.yml
+    - bash: |
+        echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME]VSTS"
+        echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)"
+      displayName: 'Set Environmnet variables'
     - task: Gradle@3
       displayName: Run msal Unit tests
       inputs:
