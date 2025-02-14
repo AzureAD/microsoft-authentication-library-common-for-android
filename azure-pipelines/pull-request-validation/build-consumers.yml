@@ -94,7 +94,7 @@ stages:
           jdkArchitecture: x64
           jdkVersionOption: "1.11"
           options: "-PprojVersion=0.0.$(Build.BuildId)"
-          workingDirectory: $(Agent.SourcesDirectory)/common
+          workingDirectory: $(Build.SourcesDirectory)/common
 
       - task: Gradle@3
         displayName: Publish common4j
@@ -105,7 +105,7 @@ stages:
           jdkArchitecture: x64
           jdkVersionOption: "1.11"
           options: "-PprojVersion=0.0.$(Build.BuildId)"
-          workingDirectory: $(Agent.SourcesDirectory)/common
+          workingDirectory: $(Build.SourcesDirectory)/common
 
       - task: PowerShell@2
         inputs:
