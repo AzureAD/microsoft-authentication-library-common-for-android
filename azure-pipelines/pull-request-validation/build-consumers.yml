@@ -88,24 +88,24 @@ stages:
       - task: Gradle@3
         displayName: Assemble common4j
         inputs:
-          gradleWrapperFile: $(Build.SourcesDirectory)/common/gradlew
+          gradleWrapperFile: $(Pipeline.Workspace)/common/gradlew
           tasks: common4j:clean common4j:assemble
           publishJUnitResults: false
           jdkArchitecture: x64
           jdkVersionOption: "1.11"
           options: "-PprojVersion=0.0.$(Build.BuildId)"
-          workingDirectory: $(Build.SourcesDirectory)/common
+          workingDirectory: $(Pipeline.Workspace)/common
 
       - task: Gradle@3
         displayName: Publish common4j
         inputs:
-          gradleWrapperFile: $(Build.SourcesDirectory)/common/gradlew
+          gradleWrapperFile: $(Pipeline.Workspace)/common/gradlew
           tasks: common4j:publish
           publishJUnitResults: false
           jdkArchitecture: x64
           jdkVersionOption: "1.11"
           options: "-PprojVersion=0.0.$(Build.BuildId)"
-          workingDirectory: $(Build.SourcesDirectory)/common
+          workingDirectory: $(Pipeline.Workspace)/common
 
       - task: PowerShell@2
         inputs:
