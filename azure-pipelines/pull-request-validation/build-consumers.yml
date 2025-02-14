@@ -88,7 +88,7 @@ stages:
       - task: Gradle@3
         displayName: Assemble common4j
         inputs:
-          gradleWrapperFile: $(Agent.SourcesDirectory)/common/gradlew 
+          gradleWrapperFile: $(Build.SourcesDirectory)/common/gradlew
           tasks: common4j:clean common4j:assemble
           publishJUnitResults: false
           jdkArchitecture: x64
@@ -99,7 +99,7 @@ stages:
       - task: Gradle@3
         displayName: Publish common4j
         inputs:
-          gradleWrapperFile: $(Agent.SourcesDirectory)/common/gradlew 
+          gradleWrapperFile: $(Build.SourcesDirectory)/common/gradlew
           tasks: common4j:publish
           publishJUnitResults: false
           jdkArchitecture: x64
