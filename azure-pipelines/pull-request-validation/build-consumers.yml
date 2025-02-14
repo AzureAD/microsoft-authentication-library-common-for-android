@@ -84,6 +84,7 @@ stages:
           echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME;]VSTS"
           echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN;]$(System.AccessToken)"
         displayName: 'Set Environment Variables'
+        workingDirectory: $(Pipeline.Workspace)/common
 
       - task: Gradle@3
         displayName: Assemble common4j
