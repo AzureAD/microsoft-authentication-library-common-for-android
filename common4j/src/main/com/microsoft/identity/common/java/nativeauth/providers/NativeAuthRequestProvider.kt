@@ -162,7 +162,8 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             clientId = config.clientId,
             challengeType = config.challengeType,
             requestUrl = signInTokenEndpoint,
-            headers = getRequestHeaders(commandParameters.getCorrelationId())
+            headers = getRequestHeaders(commandParameters.getCorrelationId()),
+            claimsRequestJson = commandParameters.claimsRequestJson
         )
     }
 
@@ -198,7 +199,8 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             clientId = config.clientId,
             challengeType = config.challengeType,
             requestUrl = signInTokenEndpoint,
-            headers = getRequestHeaders(commandParameters.getCorrelationId())
+            headers = getRequestHeaders(commandParameters.getCorrelationId()),
+            claimsRequestJson = commandParameters.claimsRequestJson
         )
     }
     //endregion

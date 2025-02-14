@@ -47,12 +47,15 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Gets information about calling activity.
  */
 public class PackageHelper {
     private static final String TAG = "CallerInfo";
+    private static final String DIGEST_SHA_512 = "SHA-512";
 
     private final PackageManager mPackageManager;
 
@@ -240,6 +243,27 @@ public class PackageHelper {
 
         return packageInfo.signatures;
     }
+
+    /**
+     * Generates a set of SHA-512, Base64 url-safe encoded signature hashes from the provided
+     * array of signatures.
+     */
+    @NonNull
+    public static Set<String> generateSignatureHashes(final PackageInfo packageInfo) {
+        final Set<String> signatureHashes = new HashSet<>();
+        for (final Signature signature : getSignatures(packageInfo)) {
+            try {
+                final MessageDigest digest = MessageDigest.getInstance(DIGEST_SHA_512);
+                final byte[] hashBytes = digest.digest(signature.toByteArray());
+                signatureHashes.add(Base64.encodeToString(hashBytes, Base64.URL_SAFE | Base64.NO_WRAP));
+            } catch (final NoSuchAlgorithmException e) {
+                throw new IllegalStateException("Platform does not support" + DIGEST_SHA_512 + " hashing");
+            }
+        }
+
+        return signatureHashes;
+    }
+
 
     public static int getPackageManagerSignaturesFlag() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
