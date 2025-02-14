@@ -46,6 +46,11 @@ resources:
     name: AzureAD/azure-activedirectory-library-for-android
     ref: dev
     endpoint: ANDROID_GITHUB
+  - repository: android-complete
+    type: github
+    name: AzureAD/android-complete
+    ref: pedroro/update-scripts
+    endpoint: ANDROID_GITHUB
 
 stages:
 - stage: getLabel
@@ -70,6 +75,7 @@ stages:
     condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
     - checkout: self
+    - checkout: android-complete
     - bash: |
         echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME]VSTS"
         echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)"
@@ -90,6 +96,14 @@ stages:
         jdkArchitecture: x64
         jdkVersionOption: "1.11"
         options: "-PprojVersion=0.0.$(build.buildid)"
+
+    - task: PowerShell@2
+      inputs:
+        targetType: 'filePath'
+        filePath: 'promote-package.ps1'
+        arguments: "-PAT=$(System.AccessToken)"
+
+
     - task: Gradle@3
       displayName: Assemble common
       inputs:
