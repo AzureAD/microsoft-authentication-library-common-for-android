@@ -70,7 +70,10 @@ stages:
     condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
     - checkout: self
-    - template: ../templates/steps/automation-cert.yml
+    - bash: |
+        echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME]VSTS"
+        echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)"
+      displayName: 'Set Environmnet variables'
     - task: Gradle@3
       displayName: Assemble common4j
       inputs:
