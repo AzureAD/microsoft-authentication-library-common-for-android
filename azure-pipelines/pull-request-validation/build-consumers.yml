@@ -75,7 +75,9 @@ stages:
     condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
     - checkout: self
+      path: common
     - checkout: android-complete
+      path: android-complete
     - bash: |
         echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME]VSTS"
         echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)"
@@ -88,6 +90,7 @@ stages:
         jdkArchitecture: x64
         jdkVersionOption: "1.11"
         options: "-PprojVersion=0.0.$(build.buildid)"
+        workingDirectory: $(Agent.BuildDirectory)/common
     - task: Gradle@3
       displayName: Publish common4j
       inputs:
@@ -96,13 +99,14 @@ stages:
         jdkArchitecture: x64
         jdkVersionOption: "1.11"
         options: "-PprojVersion=0.0.$(build.buildid)"
+        workingDirectory: $(Agent.BuildDirectory)/common
 
     - task: PowerShell@2
       inputs:
         targetType: 'filePath'
         filePath: 'promote-package.ps1'
-        arguments: "-PAT=$(System.AccessToken)"
-
+        arguments: "-personalAccessToken=$(System.AccessToken) -packageName=com.microsoft.identity.common4j -packageVersion=0.0.$(build.buildid)"
+        workingDirectory: $(Agent.BuildDirectory)/android-complete/scripts/ado
 
     - task: Gradle@3
       displayName: Assemble common
