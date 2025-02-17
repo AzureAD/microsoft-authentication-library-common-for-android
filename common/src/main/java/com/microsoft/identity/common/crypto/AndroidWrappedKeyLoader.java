@@ -315,8 +315,17 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
 
     @RequiresApi(api = Build.VERSION_CODES.P)
     private KeyPair attemptKeyPairGeneration(@NonNull final String alias, boolean useWrapPurpose, long keypairGenStartTime) throws ClientException{
+        KeyGenParameterSpec spec = (KeyGenParameterSpec) getSpecForKeyStoreKey(alias, useWrapPurpose);
         KeyPair keyPair = AndroidKeyStoreUtil.generateKeyPair(
-                WRAP_KEY_ALGORITHM, getSpecForKeyStoreKey(alias, useWrapPurpose));
+                WRAP_KEY_ALGORITHM, spec);
+        Logger.info(TAG, "KeyGenParameterSpec is cert not valid after: " + spec.getCertificateNotAfter());
+        Logger.info(TAG, "KeyGenParameterSpec is created with validity: " + spec.getKeyValidityForOriginationEnd());
+        Logger.info(TAG, "KeyGenParameterSpec is consumption with validity: " + spec.getKeyValidityForConsumptionEnd());
+        Logger.info(TAG, "KeyGenParameterSpec isInvalidatedByBiometricEnrollment? " + spec.isInvalidatedByBiometricEnrollment());
+        Logger.info(TAG, "KeyGenParameterSpec isStrongBoxBacked? " + spec.isStrongBoxBacked());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Logger.info(TAG, "KeyGenParameterSpec max usage count: " + spec.getMaxUsageCount());
+        }
         recordKeyGenerationTime(keypairGenStartTime);
         return keyPair;
     }
@@ -385,12 +394,18 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     private static AlgorithmParameterSpec getSpecForKeyStoreKey(@NonNull final String alias, boolean tryPurposeWrap) {
         int purposes = KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT;
         if (tryPurposeWrap) {
-            purposes |= KeyProperties.PURPOSE_WRAP_KEY;
+            Logger.info(TAG, "No operation");
+           // purposes |= KeyProperties.PURPOSE_WRAP_KEY;
         }
         return new KeyGenParameterSpec.Builder(alias, purposes)
                 .setKeySize(2048)
                 .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
-                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
+                .setIsStrongBoxBacked(false)
+                .setInvalidatedByBiometricEnrollment(false)
+                .setUserAuthenticationRequired(false)
+                .setUnlockedDeviceRequired(false)
+                .setSignaturePaddings(KeyProperties.SIGNATURE_PADDING_RSA_PKCS1)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1, KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
                 .build();
     }
 
