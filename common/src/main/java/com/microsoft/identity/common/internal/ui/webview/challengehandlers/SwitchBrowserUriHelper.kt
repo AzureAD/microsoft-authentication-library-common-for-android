@@ -66,7 +66,7 @@ object SwitchBrowserUriHelper {
         }
         // Query parameters for the process uri.
         val queryParams = hashMapOf<String, String>()
-        queryParams[SWITCH_BROWSER.CODE] = sessionToken
+        queryParams[SWITCH_BROWSER.CODE] = code
         queryParams[OAuth2.REDIRECT_URI] = Broker.NEW_BROKER_REDIRECT_URI
         // Construct the uri to the process endpoint.
         return buildSwitchBrowserUri(actionUri, queryParams)
