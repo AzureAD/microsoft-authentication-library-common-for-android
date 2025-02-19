@@ -24,6 +24,7 @@ package com.microsoft.identity.client.ui.automation.device.settings;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG;
 import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.handleButtonClick;
+import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.handleButtonClickForObjectWithClass;
 import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.handleButtonClickForObjectWithExactText;
 import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
 
@@ -364,7 +365,7 @@ public class GoogleSettings extends BaseSettings {
         // Open Notifications page
         handleButtonClickForObjectWithExactText("Notifications");
         // Toggle notifications switch
-        handleButtonClick("com.android.settings:id/switch_widget");
+        handleButtonClickForObjectWithClass("android.widget.Switch");
     }
 
     @Override
