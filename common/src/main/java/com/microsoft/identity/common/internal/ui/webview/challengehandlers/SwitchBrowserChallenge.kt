@@ -37,10 +37,10 @@ data class SwitchBrowserChallenge(
          * Construct a SwitchBrowserChallenge from the redirect URI.
          *
          * @param redirectUrl The redirect URL containing the switch browser code and action URI.
-         * e.g. msauth://com.microsoft.identity.client/your-redirect-uri?code=your-switch-browser-code&action_uri=your-action-uri
+         * e.g. {redirectUrl}/switch_browser?code=code&action_uri=action-uri
          *
          * @return The SwitchBrowserChallenge constructed from the redirect URI.
-         * e.g. SwitchBrowserChallenge(uri = your-action-uri?code=your-switch-browser-code)
+         * e.g. SwitchBrowserChallenge(uri = action-uri?code=code)
          * params: redirectUri: Uri
          */
         @JvmStatic
