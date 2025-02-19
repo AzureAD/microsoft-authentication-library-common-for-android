@@ -541,7 +541,7 @@ public final class AuthenticationConstants {
         public static final String PATH = "switch_browser";
 
         /**
-         * String Query parameter key for the session token.
+         * String Query parameter key for the purpose token.
          */
         public static final String CODE = "code";
 
