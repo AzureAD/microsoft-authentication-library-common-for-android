@@ -31,6 +31,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -194,32 +195,28 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
 
         try {
-            // select Help from drop down
-            final UiObject settings = UiAutomatorUtils.obtainUiObjectWithText("Send Feedback");
+            // select Send Feedback from drop down
+            final UiObject settings = UiAutomatorUtils.obtainUiObjectWithExactText("Send Feedback");
             settings.click();
 
-            final UiObject sendLogs = UiAutomatorUtils.obtainUiObjectWithClassAndDescription(
-                    Button.class,
-                    "Having trouble?Report it"
-            );
+            final UiObject havingTrouble = UiAutomatorUtils.obtainUiObjectWithText("Having trouble?");
 
-            Assert.assertTrue(sendLogs.exists());
+            Assert.assertTrue(havingTrouble.exists());
 
-            // click the send logs button
-            sendLogs.click();
+            // click the havingTrouble button
+            havingTrouble.click();
 
             UiAutomatorUtils.handleButtonClickForObjectWithText("Select an option");
 
             UiAutomatorUtils.handleButtonClickForObjectWithText("Other");
 
-            final UiObject describeIssueBox = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
-                    "Please don't include your name, phone number, or other personal information.",
-                    EditText.class
+            final UiObject describeIssueBox = UiAutomatorUtils.obtainUiObjectWithDescription(
+                    "Describe the issue you are facing"
             );
 
             describeIssueBox.setText(INCIDENT_MSG);
 
-            final UiObject sendBtn = UiAutomatorUtils.obtainUiObjectWithDescription("Send feedback");
+            final UiObject sendBtn = UiAutomatorUtils.obtainUiObjectWithClass("android.widget.ImageView");
             sendBtn.click();
 
             final UiObject postLogSubmissionMsg = UiAutomatorUtils.obtainUiObjectWithResourceId(
