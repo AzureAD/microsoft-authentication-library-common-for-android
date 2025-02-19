@@ -125,7 +125,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
-        mSwitchBrowserHandler= new SwitchBrowserHandler(activity);
+        mSwitchBrowserHandler = new SwitchBrowserHandler(activity);
     }
 
     /**
