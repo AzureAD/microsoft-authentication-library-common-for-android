@@ -29,10 +29,8 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.content.pm.Signature;
 import android.net.Uri;
 import android.os.Build;
-import android.util.Base64;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -44,19 +42,14 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 public class AndroidBrowserSelector implements IBrowserSelector {
     private static final String TAG = AndroidBrowserSelector.class.getSimpleName();
     private static final String SCHEME_HTTP = "http";
     private static final String SCHEME_HTTPS = "https";
-    private static final String DIGEST_SHA_512 = "SHA-512";
 
     // Added to avoid "avoidduplicateliterals" issues in pmd.
     private static final String LOGGING_MSG_BROWSER = "Browser: ";
@@ -218,7 +211,7 @@ public class AndroidBrowserSelector implements IBrowserSelector {
 
                 final Browser browser = new Browser(
                         packageInfo.packageName,
-                        generateSignatureHashes(PackageHelper.getSignatures(packageInfo)),
+                        PackageHelper.generateSignatureHashes(packageInfo),
                         packageInfo.versionName,
                         isCustomTabsServiceSupported
                 );
@@ -232,26 +225,6 @@ public class AndroidBrowserSelector implements IBrowserSelector {
 
         Logger.verbose(methodTag, null, "Found " + browserList.size() + " browsers.");
         return browserList;
-    }
-
-    /**
-     * Generates a set of SHA-512, Base64 url-safe encoded signature hashes from the provided
-     * array of signatures.
-     */
-    @NonNull
-    public static Set<String> generateSignatureHashes(@NonNull Signature[] signatures) {
-        final Set<String> signatureHashes = new HashSet<>();
-        for (final Signature signature : signatures) {
-            try {
-                final MessageDigest digest = MessageDigest.getInstance(DIGEST_SHA_512);
-                final byte[] hashBytes = digest.digest(signature.toByteArray());
-                signatureHashes.add(Base64.encodeToString(hashBytes, Base64.URL_SAFE | Base64.NO_WRAP));
-            } catch (final NoSuchAlgorithmException e) {
-                throw new IllegalStateException("Platform does not support" + DIGEST_SHA_512 + " hashing");
-            }
-        }
-
-        return signatureHashes;
     }
 
     private boolean isCustomTabsServiceSupported(@NonNull final PackageInfo packageInfo) {

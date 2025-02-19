@@ -22,13 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.msafederation
 
+import com.google.gson.annotations.SerializedName
+import java.util.AbstractMap
+
 /**
- * Interface for Federated Credential Callback. Helps calling sign methods
- * async from java.
+ * Represents credential artifact as result of successful sign in into a federated sign in provider
+ * (Google/Apple). It can contain id token and/or auth code. See implementations for more details.
  */
-interface IFederatedCredentialCallback<R : FederatedCredential> {
-    /**
-     * Called when the sign in is successful.
-     */
-    fun onSuccess(credential: R)
-}
+abstract class MsaFederatedCredential(@SerializedName("signInProviderName") val signInProviderName: MsaFederatedSignInProviderName)

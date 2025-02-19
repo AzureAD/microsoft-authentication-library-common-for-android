@@ -1,9 +1,23 @@
 vNext
 ----------
 - [MINOR] Launch browser when a switch_browser redirect URL is present (#2553)
+
+Version 20.0.0
+----------
+(common4j 17.0.0)
+- [PATCH] Fix Sign in Async method for sign in with google (#2583)
+- [MINOR] Add server client id to SignInWithGoogleParameters (#2581)
+- [MAJOR] Pass google id token to broker for enabling Sign in with Google (#2573)
 - [MINOR] Organize browser selection classes and change signature for get AuthorizationStrategy (#2564)
 - [MINOR] Add support for OneBox Environment (#2559)
 - [MINOR] Add support for claims requests for native authentication (#2572)
+- [MINOR] Removing unnecessary attributes from keystore wrap operation (#2578)
+- [MINOR] Add fallback mechanisms for keypair generation (#2586)
+
+Version 19.0.1
+----------
+(common4j 16.0.1)
+- [PATCH] Span name added for corruption exception (#2574)
 
 Version 19.0.0
 ----------
