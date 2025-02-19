@@ -30,7 +30,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER.SWITCH_BROWSER_FLAG;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 import static com.microsoft.identity.common.java.logging.DiagnosticContext.CORRELATION_ID;
@@ -42,8 +42,6 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.microsoft.identity.common.internal.msafederation.MsaFederatedSignInProviderName;
-import com.microsoft.identity.common.internal.msafederation.MsaFederationConstants;
 import com.microsoft.identity.common.internal.msafederation.MsaFederationExtensions;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters;
@@ -122,7 +120,7 @@ public class AuthorizationActivityFactory {
         final LibraryConfiguration libraryConfig = LibraryConfiguration.getInstance();
         if (ProcessUtil.isBrokerProcess(context)) {
             intent = new Intent(context, BrokerAuthorizationActivity.class);
-            if(requestUrl.contains(SWITCH_BROWSER_FLAG)) {
+            if(requestUrl.contains(SWITCH_BROWSER.PATH)) {
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                 // In the case of a SwitchBrowser protocol, we need to transition from the browser to the WebView.
                 // These flags ensure that we have a new task stack that allows for this transition.
