@@ -46,11 +46,11 @@ object SwitchBrowserUriHelper {
      */
     fun buildProcessUri(brokerRedirectUri: Uri): Uri? {
         val methodTag = "$TAG:buildProcessUri"
-        // Get the session token from the broker redirect uri.
-        val sessionToken = brokerRedirectUri.getQueryParameter(
+        // Get the SwitchBrowser purpose token from the broker redirect uri.
+        val code = brokerRedirectUri.getQueryParameter(
             SWITCH_BROWSER.CODE
         )
-        if (sessionToken.isNullOrEmpty()) {
+        if (code.isNullOrEmpty()) {
             // This should never happen, but if it does, we should log it and return.
             Logger.warn(methodTag, "Switch browser code is null or empty ")
             return null
@@ -101,18 +101,17 @@ object SwitchBrowserUriHelper {
     /**
      * Check if the request is to switch the browser.
      *
-     * The request is considered "switch_browser" if the URL contains
-     * the action URI, code, and action parameters.
+     * The request is considered "switch_browser" if the URL
+     * matches the following pattern: msauth:// Microsoft.AAD.BrokerPlugin/switch_browser
      *
-     * @param uri The URI of the request.
+     *
+     * @param url The URL to be checked.
      * @return True if the request contains the required parameters, false otherwise.
      */
-    fun isSwitchBrowserRequest(uri: Uri?): Boolean {
-        if (uri == null) {
+    fun isSwitchBrowserRequest(url: String?): Boolean {
+        if (url == null) {
             return false
         }
-        val requiredParams =
-            setOf(SWITCH_BROWSER.ACTION_URI, SWITCH_BROWSER.CODE, SWITCH_BROWSER.ACTION)
-        return uri.queryParameterNames.containsAll(requiredParams)
+        return url == Broker.NEW_BROKER_REDIRECT_URI +  "/" + SWITCH_BROWSER.PATH
     }
 }

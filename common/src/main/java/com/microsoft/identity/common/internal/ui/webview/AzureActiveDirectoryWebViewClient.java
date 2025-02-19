@@ -214,10 +214,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
              }
              else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
-                final Uri formattedUri = Uri.parse(formattedURL);
-                if (SwitchBrowserUriHelper.INSTANCE.isSwitchBrowserRequest(formattedUri)) {
+                if (SwitchBrowserUriHelper.INSTANCE.isSwitchBrowserRequest(formattedURL)) {
                     Logger.info(methodTag,"Request to switch browser.");
-                    return processSwitchBrowserRequest(formattedUri);
+                    return processSwitchBrowserRequest(formattedURL);
                 } else {
                     Logger.info(methodTag,"It is a redirect request.");
                     processRedirectUrl(view, url);
@@ -354,11 +353,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * From the query parameters, extract the action URI and code,
      * The constructs the URI with the action URI and code.
      *
-     * @param uri The URI of the request.
+     * @param url The URL to be opened in the browser.
      */
-    private boolean processSwitchBrowserRequest(@NonNull final Uri uri) {
+    private boolean processSwitchBrowserRequest(@NonNull final String url) {
         final SwitchBrowserChallenge switchBrowserChallenge =
-                SwitchBrowserChallenge.constructFromRedirectUri(uri);
+                SwitchBrowserChallenge.constructFromRedirectUri(Uri.parse(url));
         if (switchBrowserChallenge == null) {
             return false;
         }
