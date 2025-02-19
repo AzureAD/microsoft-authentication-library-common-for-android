@@ -102,7 +102,7 @@ object SwitchBrowserUriHelper {
      * Check if the request is to switch the browser.
      *
      * The request is considered "switch_browser" if the URL
-     * matches the following pattern: msauth:// Microsoft.AAD.BrokerPlugin/switch_browser
+     * starts with the following pattern: msauth:// Microsoft.AAD.BrokerPlugin/switch_browser
      *
      *
      * @param url The URL to be checked.
@@ -112,6 +112,6 @@ object SwitchBrowserUriHelper {
         if (url == null) {
             return false
         }
-        return url == Broker.NEW_BROKER_REDIRECT_URI +  "/" + SWITCH_BROWSER.PATH
+        return url.startsWith(Broker.NEW_BROKER_REDIRECT_URI +  "/" + SWITCH_BROWSER.PATH)
     }
 }

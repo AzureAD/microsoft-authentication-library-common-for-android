@@ -79,7 +79,8 @@ class SwitchBrowserUriHelperTest {
 
     @Test
     fun `test isSwitchBrowserRequest  valid request`() {
-        val url = "${Broker.NEW_BROKER_REDIRECT_URI}?" +
+        val url = "${Broker.NEW_BROKER_REDIRECT_URI}/" +
+                SWITCH_BROWSER.PATH +"?" +
                 "${SWITCH_BROWSER.ACTION_URI}=$ACTION_URI"
 
         Assert.assertTrue(SwitchBrowserUriHelper.isSwitchBrowserRequest(url))
