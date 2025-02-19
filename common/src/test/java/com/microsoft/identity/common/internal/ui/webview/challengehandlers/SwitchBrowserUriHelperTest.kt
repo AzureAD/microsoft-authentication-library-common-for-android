@@ -26,6 +26,7 @@ import android.net.Uri
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
+import com.microsoft.identity.common.java.exception.ClientException
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -50,15 +51,15 @@ class SwitchBrowserUriHelperTest {
         Assert.assertNotNull(switchBrowserProcessUri)
         Assert.assertEquals(
             CODE,
-            switchBrowserProcessUri?.getQueryParameter(SWITCH_BROWSER.CODE)
+            switchBrowserProcessUri.getQueryParameter(SWITCH_BROWSER.CODE)
         )
         Assert.assertEquals(
             Broker.NEW_BROKER_REDIRECT_URI,
-            switchBrowserProcessUri?.getQueryParameter(AuthenticationConstants.OAuth2.REDIRECT_URI)
+            switchBrowserProcessUri.getQueryParameter(AuthenticationConstants.OAuth2.REDIRECT_URI)
         )
         Assert.assertEquals(
             ACTION_URI,
-            switchBrowserProcessUri?.host + switchBrowserProcessUri?.path
+            switchBrowserProcessUri.host + switchBrowserProcessUri.path
         )
     }
 
@@ -68,13 +69,16 @@ class SwitchBrowserUriHelperTest {
                 "${SWITCH_BROWSER.ACTION_URI}=$ACTION_URI"
         val redirectUri = Uri.parse(redirectString)
 
-        Assert.assertNull(SwitchBrowserUriHelper.buildProcessUri(redirectUri))
+        val exception = Assert.assertThrows(ClientException::class.java) {
+            SwitchBrowserUriHelper.buildProcessUri(redirectUri)
+        }
+        Assert.assertEquals(ClientException.MALFORMED_URL, exception.errorCode)
     }
 
     @Test
     fun `test isSwitchBrowserRequest no valid request`() {
         val url = "https://login.microsoftonline.com/"
-        Assert.assertFalse(SwitchBrowserUriHelper.isSwitchBrowserRequest(url))
+        Assert.assertFalse(SwitchBrowserUriHelper.isSwitchBrowserRequest(url, Broker.NEW_BROKER_REDIRECT_URI))
     }
 
     @Test
@@ -83,6 +87,6 @@ class SwitchBrowserUriHelperTest {
                 SWITCH_BROWSER.PATH +"?" +
                 "${SWITCH_BROWSER.ACTION_URI}=$ACTION_URI"
 
-        Assert.assertTrue(SwitchBrowserUriHelper.isSwitchBrowserRequest(url))
+        Assert.assertTrue(SwitchBrowserUriHelper.isSwitchBrowserRequest(url,Broker.NEW_BROKER_REDIRECT_URI))
     }
 }
