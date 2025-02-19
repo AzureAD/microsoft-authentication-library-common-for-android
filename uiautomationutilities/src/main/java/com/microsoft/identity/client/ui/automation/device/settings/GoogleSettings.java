@@ -24,6 +24,7 @@ package com.microsoft.identity.client.ui.automation.device.settings;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG;
 import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.handleButtonClick;
+import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.handleButtonClickForObjectWithExactText;
 import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
 
 import androidx.annotation.NonNull;
@@ -354,6 +355,16 @@ public class GoogleSettings extends BaseSettings {
         handleButtonClick("com.android.settings:id/button2");
         // Confirm disabling app
         handleButtonClick("android:id/button1");
+    }
+
+    @Override
+    public void toggleNotificationsThroughSettings(@NonNull final String packageName) {
+        Logger.i(TAG, "Disabling app through settings: " + packageName);
+        launchAppInfoPage(packageName);
+        // Open Notifications page
+        handleButtonClickForObjectWithExactText("Notifications");
+        // Toggle notifications switch
+        handleButtonClick("com.android.settings:id/switch_widget");
     }
 
     @Override
