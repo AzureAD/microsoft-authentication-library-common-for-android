@@ -191,13 +191,14 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     }
 
     private String createPowerLiftIncidentInNonSharedMode() {
-        // click the 3 dot menu icon in top right
-        UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
-
         try {
+            // click the 3 dot menu icon in top right
+            final UiObject menu = UiAutomatorUtils.obtainUiObjectWithDescription("More options. Action required.");
+            menu.click();
+
             // select Send Feedback from drop down
-            final UiObject settings = UiAutomatorUtils.obtainUiObjectWithExactText("Send Feedback");
-            settings.click();
+            final UiObject sendFeedback = UiAutomatorUtils.obtainUiObjectWithDescription("Send Feedback");
+            sendFeedback.click();
 
             final UiObject havingTrouble = UiAutomatorUtils.obtainUiObjectWithText("Having trouble?");
 
@@ -216,8 +217,9 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
             describeIssueBox.setText(INCIDENT_MSG);
 
-            final UiObject sendBtn = UiAutomatorUtils.obtainUiObjectWithClass("android.widget.ImageView");
-            sendBtn.click();
+            // Send incident button also has send feedback description
+            final UiObject sendIncident = UiAutomatorUtils.obtainUiObjectWithDescription("Send feedback");
+            sendIncident.click();
 
             final UiObject postLogSubmissionMsg = UiAutomatorUtils.obtainUiObjectWithResourceId(
                     "android:id/parentPanel"
