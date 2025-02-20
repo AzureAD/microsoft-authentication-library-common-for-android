@@ -88,7 +88,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
-import static com.microsoft.identity.common.java.exception.ClientException.MALFORMED_URL;
+import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_ERROR;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -369,7 +369,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             if (throwable instanceof IErrorInformation) {
                 errorCode = ((IErrorInformation) throwable).getErrorCode();
             } else {
-                errorCode = MALFORMED_URL;
+                errorCode = UNKNOWN_ERROR;
             }
             returnError(errorCode, throwable.getMessage());
         }
