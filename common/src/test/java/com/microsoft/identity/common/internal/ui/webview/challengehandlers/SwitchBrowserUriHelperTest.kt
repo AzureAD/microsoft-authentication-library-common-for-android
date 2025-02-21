@@ -73,6 +73,7 @@ class SwitchBrowserUriHelperTest {
             SwitchBrowserUriHelper.buildProcessUri(redirectUri)
         }
         Assert.assertEquals(ClientException.MALFORMED_URL, exception.errorCode)
+        Assert.assertEquals("switch browser code is null or empty", exception.message)
     }
 
     @Test

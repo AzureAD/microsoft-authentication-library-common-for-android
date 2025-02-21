@@ -80,5 +80,6 @@ class SwitchBrowserHandlerTest {
             handler.processChallenge(challenge)
         }
         Assert.assertEquals(ClientException.NO_BROWSERS_AVAILABLE, exception.errorCode)
+        Assert.assertEquals("No browser found for SwitchBrowserChallenge.", exception.message)
     }
 }
