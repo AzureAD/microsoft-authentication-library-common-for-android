@@ -24,11 +24,11 @@ package com.microsoft.identity.common.internal.msafederation.google
 
 import android.app.Activity
 import com.microsoft.identity.common.internal.msafederation.MsaFederatedSignInProviderFactory
+import com.microsoft.identity.common.java.util.ResultFuture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 
 /**
  * Entry point for signing in with Google into MSA.
@@ -92,17 +92,24 @@ class SignInWithGoogleApi internal constructor(
      * Refer [signIn] for more details.
      */
     fun signInAsync(
-        signInWithGoogleParameters: SignInWithGoogleParameters,
-        callback: ISignInWithGoogleCredentialCallback
-    ) {
+        signInWithGoogleParameters: SignInWithGoogleParameters
+    ) : ResultFuture<SignInWithGoogleCredential> {
+        val future = ResultFuture<SignInWithGoogleCredential>()
         CoroutineScope(Dispatchers.Default).launch {
-            val credential = signIn(signInWithGoogleParameters)
-            withContext(coroutineContext) {
-                callback.onSuccess(credential)
+            try {
+                future.setResult(signIn(signInWithGoogleParameters))
+                //future.complete(signIn(signInWithGoogleParameters))
+            } catch (e: Exception) {
+                future.setException(e)
+                //future.completeExceptionally(e)
             }
         }
+        return future
     }
 
+    /**
+     * Sign out the app from google.
+     */
     suspend fun signOut(activity: Activity) {
         val signInWithGoogleParameters = SignInWithGoogleParameters(activity)
         val googleSignInProvider = federatedSignInProviderFactory.getProvider(

@@ -315,6 +315,21 @@ public enum AttributeName {
     is_new_refresh_token_cred_header_attached,
 
     /**
+     * The time (in milliseconds) spent on generating a keypair.
+     */
+    elapsed_time_keypair_generation,
+
+    /**
+     * Indicates the successful method used to generate a keypair.
+     */
+    key_pair_gen_successful_method,
+
+    /**
+     * Indicates the exception in generating a keypair.
+     */
+    keypair_gen_exception,
+    
+    /**
      * Records the stacktrace for an out-of-memory exception.
      */
     out_of_memory_exception_stacktrace
