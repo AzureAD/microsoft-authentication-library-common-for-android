@@ -92,7 +92,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import edu.umd.cs.findbugs.annotations.CheckReturnValue;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import lombok.NonNull;
@@ -530,6 +532,9 @@ public class CommandDispatcher {
      * @param command
      * @return
      */
+    @SuppressFBWarnings(
+            value="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT",
+            justification="getting spotbugs error for Span.setStatus()")
     private static CommandResult executeCommand(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command) {
 
         Object result = null;
