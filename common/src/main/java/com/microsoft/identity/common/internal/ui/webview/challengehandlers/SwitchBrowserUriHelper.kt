@@ -51,7 +51,7 @@ object SwitchBrowserUriHelper {
         val code = uri.getQueryParameter(
             SWITCH_BROWSER.CODE
         )
-        if ( code.isNullOrEmpty()) {
+        if (code.isNullOrEmpty()) {
             // This should never happen, but if it does, we should log it and throw.
             val errorMessage = "switch browser code is null or empty"
             val exception = ClientException(ClientException.MALFORMED_URL, errorMessage)
