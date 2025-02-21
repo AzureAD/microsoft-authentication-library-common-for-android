@@ -293,7 +293,7 @@ tasks.register('pmd', Pmd) {
         html.required = true
     }
 }
-
+println "Project version: ${project.version}"
 // For publishing to the remote maven repo.
 afterEvaluate {
 
@@ -301,6 +301,8 @@ afterEvaluate {
         publications {
             distRelease(MavenPublication) {
                 from components.distRelease
+                println "Components1: ${components.distRelease}"
+                println "pname: ${project.name}"
                 groupId 'com.microsoft.identity'
                 artifactId 'common'
                 //Edit the 'version' here for VSTS RC build
@@ -337,10 +339,16 @@ afterEvaluate {
             }
             distDebug(MavenPublication) {
                 from components.distDebug
+                println "Components2: ${components.distDebug}"
+                println "pname: ${project.name}"
+
+//                withoutComponent()
                 groupId 'com.microsoft.identity'
                 artifactId 'common-debug'
                 //Edit the 'version' here for VSTS RC build
+
                 version = project.version
+//                artifact{"$buildDir/outputs/aar/common-debug-${project.version}.aar"}
             }
         }
 
@@ -372,11 +380,29 @@ tasks.configureEach { task ->
     if (task.name == "publishDistDebugPublicationToVsts-maven-adal-androidRepository") {
         task.dependsOn 'generatePomFileForDistReleasePublication'
     }
+    if (task.name == "publishDistReleasePublicationToVsts-maven-adal-androidRepository") {
+        task.dependsOn 'bundleDistReleaseAar'
+    }
+    if (task.name == "publishDistDebugPublicationToVsts-maven-adal-androidRepository") {
+        task.dependsOn 'bundleDistReleaseAar'
+    }
+    if (task.name == "generateMetadataFileForDistDebugPublication") {
+        task.dependsOn 'bundleDistReleaseAar'
+    }
+    if (task.name == "generateMetadataFileForDistReleasePublication") {
+        task.dependsOn 'bundleDistDebugAar'
+    }
 }
 
 // This is used to generate the pom file for publishing to external maven in maven-release-jobs.yml
 tasks.withType(GenerateMavenPom).all {
-    destination = layout.buildDirectory.file("poms/${project.name}-${project.version}.pom").get().asFile
+    println "Generating POM: ${name}"
+    if (name.contains("distDebug")) {
+        destination = layout.buildDirectory.file("poms/common-debug-${project.version}.pom").get().asFile
+    } else if (name.contains("distRelease")) {
+        destination = layout.buildDirectory.file("poms/common-${project.version}.pom").get().asFile
+    }
+//    destination = layout.buildDirectory.file("poms/${project.name}-${project.version}.pom").get().asFile
 }
 
 def dependenciesSizeInMb = project.hasProperty("dependenciesSizeMb") ? project.dependenciesSizeMb : "15"
