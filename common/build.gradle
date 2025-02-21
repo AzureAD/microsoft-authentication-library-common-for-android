@@ -370,7 +370,7 @@ tasks.configureEach { task ->
         task.dependsOn 'sourcesJar'
     }
     if (task.name == "publishDistDebugPublicationToVsts-maven-adal-androidRepository") {
-        task.dpeendsOn 'generatePomFileForDistReleasePublication'
+        task.dependsOn 'generatePomFileForDistReleasePublication'
     }
 }
 
