@@ -33,7 +33,7 @@ import com.microsoft.identity.common.logging.Logger
  */
 object SwitchBrowserUriHelper {
 
-    private const val TAG = "SwitchBrowserUriBuilder"
+    private const val TAG = "SwitchBrowserUriHelper"
 
     /**
      * Build the process uri for the switch browser challenge.

@@ -112,10 +112,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final String mRedirectUrl;
     private final CertBasedAuthFactory mCertBasedAuthFactory;
     private AbstractCertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
-
     private final SwitchBrowserHandler mSwitchBrowserHandler;
-
-
     private HashMap<String, String> mRequestHeaders;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
