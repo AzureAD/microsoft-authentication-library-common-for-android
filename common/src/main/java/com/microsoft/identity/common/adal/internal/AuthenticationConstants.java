@@ -530,6 +530,29 @@ public final class AuthenticationConstants {
     }
 
     /**
+     * Represents the constants value for the SwitchBrowser protocol.
+     */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static final class SWITCH_BROWSER {
+
+        /**
+         * String Query parameter key to indicate support for SWITCH_BROWSER protocol.
+         */
+        public static final String PATH = "switch_browser";
+
+        /**
+         * String Query parameter key for the purpose token.
+         */
+        public static final String CODE = "code";
+
+        /**
+         * String Query parameter key for the switchBrowser action uri.
+         */
+        public static final String ACTION_URI = "action_uri";
+
+    }
+
+    /**
      * Represents the constants for broker.
      */
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
