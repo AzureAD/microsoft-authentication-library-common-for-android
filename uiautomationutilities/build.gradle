@@ -120,7 +120,7 @@ android {
         buildConfigField("boolean", "PRE_INSTALL_LTW", "$preInstallLtw")
         buildConfigField("boolean", "SEND_POWERLIFT_LOGS", "$sendPowerLiftLogs")
         buildConfigField("int", "MINIMUM_TEST_ATTEMPTS", "$minimumTestAttempts")
-        buildConfigField("int", "UI_ELEMENT_TIMEOUT", "$uiElementTimeout")
+        buildConfigField("int", "UI_ELEMENT_TIMEOUT", "$uiElementTimeoutConfig")
 
         // Specifies a sorted list of flavors that the plugin should try to use from
         // a given dimension. The following tells the plugin that, when encountering
