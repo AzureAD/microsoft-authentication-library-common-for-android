@@ -33,6 +33,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.client.ui.automation.BuildConfig;
 import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
 import com.microsoft.identity.client.ui.automation.broker.BrokerHost;
 import com.microsoft.identity.client.ui.automation.broker.BrokerLTW;
@@ -49,7 +50,7 @@ public class CommonUtils {
 
     private final static String TAG = CommonUtils.class.getSimpleName();
     public final static long FIND_UI_ELEMENT_TIMEOUT_SHORT = TimeUnit.SECONDS.toMillis(10);
-    public final static long FIND_UI_ELEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(15);
+    public final static long FIND_UI_ELEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(BuildConfig.UI_ELEMENT_TIMEOUT);
     public final static long FIND_UI_ELEMENT_TIMEOUT_LONG = TimeUnit.SECONDS.toMillis(30);
 
     private final static String SD_CARD = "/sdcard";
