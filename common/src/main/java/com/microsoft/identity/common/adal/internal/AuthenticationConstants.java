@@ -538,10 +538,10 @@ public final class AuthenticationConstants {
         /**
          * String Query parameter key to indicate support for SWITCH_BROWSER protocol.
          */
-        public static final String SWITCH_BROWSER = "switch_browser";
+        public static final String PATH = "switch_browser";
 
         /**
-         * String Query parameter key for the session token.
+         * String Query parameter key for the purpose token.
          */
         public static final String CODE = "code";
 
@@ -550,10 +550,6 @@ public final class AuthenticationConstants {
          */
         public static final String ACTION_URI = "action_uri";
 
-        /**
-         * String Query parameter key for the switchBrowser action.
-         */
-        public static final String ACTION = "action";
     }
 
     /**
@@ -632,7 +628,7 @@ public final class AuthenticationConstants {
          *
          * @see <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Broker%20API/broker_protocol_versions.md">Android Auth Broker Protocol Versions</a>
          */
-        public static final String LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "16.0";
+        public static final String LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "17.0";
 
         /**
          * The maximum msal-to-broker protocol version known by clients such as MSAL Android.

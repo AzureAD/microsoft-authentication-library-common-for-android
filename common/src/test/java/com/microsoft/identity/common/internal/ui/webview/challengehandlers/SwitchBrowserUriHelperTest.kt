@@ -23,11 +23,10 @@
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 
 import android.net.Uri
-import android.os.Bundle
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
-import com.microsoft.identity.common.java.AuthenticationConstants.OAuth2
+import com.microsoft.identity.common.java.exception.ClientException
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -47,7 +46,6 @@ class SwitchBrowserUriHelperTest {
     fun `test constructFromRedirectUri with valid redirect uri`() {
         val redirectString = "${Broker.NEW_BROKER_REDIRECT_URI}?" +
                 "${SWITCH_BROWSER.CODE}=$CODE&" +
-                "${SWITCH_BROWSER.ACTION}=$ACTION&" +
                 "${SWITCH_BROWSER.ACTION_URI}=$ACTION_URI"
         val redirectUri = Uri.parse(redirectString)
 
@@ -55,54 +53,44 @@ class SwitchBrowserUriHelperTest {
         Assert.assertNotNull(switchBrowserProcessUri)
         Assert.assertEquals(
             CODE,
-            switchBrowserProcessUri?.getQueryParameter(SWITCH_BROWSER.CODE)
+            switchBrowserProcessUri.getQueryParameter(SWITCH_BROWSER.CODE)
         )
         Assert.assertEquals(
             Broker.NEW_BROKER_REDIRECT_URI,
-            switchBrowserProcessUri?.getQueryParameter(AuthenticationConstants.OAuth2.REDIRECT_URI)
+            switchBrowserProcessUri.getQueryParameter(AuthenticationConstants.OAuth2.REDIRECT_URI)
         )
         Assert.assertEquals(
             ACTION_URI,
-            switchBrowserProcessUri?.host + switchBrowserProcessUri?.path
+            switchBrowserProcessUri.host + switchBrowserProcessUri.path
         )
     }
 
     @Test
     fun `test constructFromRedirectUri with missing code`() {
         val redirectString = "${Broker.NEW_BROKER_REDIRECT_URI}?" +
-                "${SWITCH_BROWSER.ACTION}=$ACTION&" +
                 "${SWITCH_BROWSER.ACTION_URI}=$ACTION_URI"
         val redirectUri = Uri.parse(redirectString)
 
-        Assert.assertNull(SwitchBrowserUriHelper.buildProcessUri(redirectUri))
-    }
-
-    @Test
-    fun `test constructFromRedirectUri with missing action uri`() {
-        val redirectString = "${Broker.NEW_BROKER_REDIRECT_URI}?" +
-                "${SWITCH_BROWSER.CODE}=$CODE&" +
-                "${SWITCH_BROWSER.ACTION}=$ACTION"
-        val redirectUri = Uri.parse(redirectString)
-
-        Assert.assertNull(SwitchBrowserUriHelper.buildProcessUri(redirectUri))
+        val exception = Assert.assertThrows(ClientException::class.java) {
+            SwitchBrowserUriHelper.buildProcessUri(redirectUri)
+        }
+        Assert.assertEquals(ClientException.MALFORMED_URL, exception.errorCode)
+        Assert.assertEquals("switch browser code is null or empty", exception.message)
     }
 
     @Test
     fun `test isSwitchBrowserRequest no valid request`() {
-        val uri = Uri.parse("https://login.microsoftonline.com/")
-        Assert.assertFalse(SwitchBrowserUriHelper.isSwitchBrowserRequest(uri))
+        val url = "https://login.microsoftonline.com/"
+        Assert.assertFalse(SwitchBrowserUriHelper.isSwitchBrowserRequest(url, Broker.NEW_BROKER_REDIRECT_URI))
     }
 
     @Test
     fun `test isSwitchBrowserRequest  valid request`() {
-        val uri = Uri.parse(
-            "${Broker.NEW_BROKER_REDIRECT_URI}?" +
-                    "${SWITCH_BROWSER.CODE}=$CODE&" +
-                    "${SWITCH_BROWSER.ACTION}=$ACTION&" +
-                    "${SWITCH_BROWSER.ACTION_URI}=$ACTION_URI"
-        )
-        Assert.assertTrue(SwitchBrowserUriHelper.isSwitchBrowserRequest(uri))
-    }
+        val url = "${Broker.NEW_BROKER_REDIRECT_URI}/" +
+                SWITCH_BROWSER.PATH +"?" +
+                "${SWITCH_BROWSER.ACTION_URI}=$ACTION_URI"
+
+        Assert.assertTrue(SwitchBrowserUriHelper.isSwitchBrowserRequest(url,Broker.NEW_BROKER_REDIRECT_URI))
 
     @Test
     fun `test buildResumeUri valid params`() {

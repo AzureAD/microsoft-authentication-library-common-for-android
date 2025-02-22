@@ -28,6 +28,7 @@ import android.content.Intent
 import com.microsoft.identity.common.internal.ui.browser.AndroidBrowserSelector
 import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
 import com.microsoft.identity.common.java.browser.IBrowserSelector
+import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.ui.BrowserDescriptor
 import com.microsoft.identity.common.logging.Logger
 
@@ -40,7 +41,7 @@ class SwitchBrowserHandler(
     private val context: Context,
     private val customTabsManager: CustomTabsManager,
     private val browserSelector: IBrowserSelector
-) : IChallengeHandler<SwitchBrowserChallenge, Boolean>  {
+) : IChallengeHandler<SwitchBrowserChallenge, Unit>  {
 
     companion object {
         private val TAG = SwitchBrowserHandler::class.simpleName
@@ -60,7 +61,8 @@ class SwitchBrowserHandler(
      * @param switchBrowserChallenge challenge request
      * @return true if the challenge is handled successfully, false otherwise.
      */
-    override fun processChallenge(switchBrowserChallenge: SwitchBrowserChallenge): Boolean {
+    @Throws(ClientException::class)
+    override fun processChallenge(switchBrowserChallenge: SwitchBrowserChallenge) {
         val methodTag = "$TAG:processChallenge"
 
         // Select a browser to handle the switch browser challenge
@@ -69,8 +71,12 @@ class SwitchBrowserHandler(
             null
         )
         if (browser == null) {
-            Logger.warn(methodTag, "No browser found for SwitchBrowserChallenge.")
-            return false
+            val exception = ClientException(
+                ClientException.NO_BROWSERS_AVAILABLE,
+                "No browser found for SwitchBrowserChallenge."
+            )
+            Logger.error(methodTag, "No browser found for SwitchBrowserChallenge.", exception)
+            throw exception
         }
 
         // Create an intent to launch the browser
@@ -92,7 +98,6 @@ class SwitchBrowserHandler(
         browserIntent.setPackage(browser.packageName)
         browserIntent.setData(switchBrowserChallenge.uri)
         activity.startActivity(browserIntent)
-        return true
     }
 
     fun unbind() {

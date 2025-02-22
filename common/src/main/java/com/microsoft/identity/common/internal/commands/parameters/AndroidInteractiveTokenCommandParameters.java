@@ -20,12 +20,28 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.msafederation
+package com.microsoft.identity.common.internal.commands.parameters;
+
+import android.app.Activity;
+
+import com.microsoft.identity.common.internal.controllers.BrokerMsalController;
+import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential;
+import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
 /**
- * Internal interface for Federated Sign In Providers.
- */
-internal interface IFederatedSignInProvider {
-    suspend fun signIn(): Result<FederatedCredential>
-    suspend fun signOut()
+ * InteractiveTokenCommandParameters with an {@link Activity}
+ * We still need this specifically for invoking interactive brokered Auth in {@link BrokerMsalController}
+ * (It's cleaner than plumbing that functionality into IPlatformComponents).
+ * */
+@Getter
+@SuperBuilder(toBuilder = true)
+@EqualsAndHashCode(callSuper = true)
+public class AndroidInteractiveTokenCommandParameters extends InteractiveTokenCommandParameters {
+    private transient final Activity activity;
+
+    private final SignInWithGoogleCredential signInWithGoogleCredential;
 }

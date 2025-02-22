@@ -56,6 +56,7 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.Switc
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserUriHelper;
 import com.microsoft.identity.common.java.constants.FidoConstants;
+import com.microsoft.identity.common.java.exception.IErrorInformation;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
@@ -87,6 +88,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
+import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_ERROR;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -110,10 +112,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final String mRedirectUrl;
     private final CertBasedAuthFactory mCertBasedAuthFactory;
     private AbstractCertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
-
     private final SwitchBrowserHandler mSwitchBrowserHandler;
-
-
     private HashMap<String, String> mRequestHeaders;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
@@ -123,7 +122,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
-        mSwitchBrowserHandler= new SwitchBrowserHandler(activity);
+        mSwitchBrowserHandler = new SwitchBrowserHandler(activity);
     }
 
     /**
@@ -214,10 +213,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
              }
              else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
-                final Uri formattedUri = Uri.parse(formattedURL);
-                if (SwitchBrowserUriHelper.INSTANCE.isSwitchBrowserRequest(formattedUri)) {
+                if (SwitchBrowserUriHelper.INSTANCE.isSwitchBrowserRequest(formattedURL, mRedirectUrl)) {
                     Logger.info(methodTag,"Request to switch browser.");
-                    return processSwitchBrowserRequest(formattedUri);
+                    processSwitchBrowserRequest(formattedURL);
                 } else {
                     Logger.info(methodTag,"It is a redirect request.");
                     processRedirectUrl(view, url);
@@ -354,15 +352,24 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * From the query parameters, extract the action URI and code,
      * The constructs the URI with the action URI and code.
      *
-     * @param uri The URI of the request.
+     * @param url The URL to be opened in the browser.
      */
-    private boolean processSwitchBrowserRequest(@NonNull final Uri uri) {
-        final SwitchBrowserChallenge switchBrowserChallenge =
-                SwitchBrowserChallenge.constructFromRedirectUri(uri);
-        if (switchBrowserChallenge == null) {
-            return false;
+    private void processSwitchBrowserRequest(@NonNull final String url) {
+        final String methodTag = TAG + ":processSwitchBrowserRequest";
+        try {
+            mSwitchBrowserHandler.processChallenge(
+                    SwitchBrowserChallenge.constructFromRedirectUrl(url)
+            );
+        } catch (final Throwable throwable) {
+            Logger.error(methodTag, "Switch browser challenge could not be processed.", throwable);
+            final String errorCode;
+            if (throwable instanceof IErrorInformation) {
+                errorCode = ((IErrorInformation) throwable).getErrorCode();
+            } else {
+                errorCode = UNKNOWN_ERROR;
+            }
+            returnError(errorCode, throwable.getMessage());
         }
-        return mSwitchBrowserHandler.processChallenge(switchBrowserChallenge);
     }
 
     private void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {

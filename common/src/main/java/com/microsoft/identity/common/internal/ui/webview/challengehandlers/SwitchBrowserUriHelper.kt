@@ -23,11 +23,9 @@
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 
 import android.net.Uri
-import android.os.Bundle
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
-import com.microsoft.identity.common.java.AuthenticationConstants.Broker.CHALLENGE_RESPONSE_HEADER
 import com.microsoft.identity.common.java.AuthenticationConstants.OAuth2
+import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.logging.Logger
 
 /**
@@ -35,41 +33,46 @@ import com.microsoft.identity.common.logging.Logger
  */
 object SwitchBrowserUriHelper {
 
-    private const val TAG = "SwitchBrowserUriBuilder"
+    private const val TAG = "SwitchBrowserUriHelper"
 
     /**
      * Build the process uri for the switch browser challenge.
      *
-     * @param brokerRedirectUri The broker redirect uri containing the switch browser code and action URI.
-     * e.g. msauth://com.microsoft.identity.client/your-redirect-uri?code=your-switch-browser-code&action_uri=your-action-uri
+     * @param uri The uri containing the switch browser code and action URL.
+     * e.g. msauth://com.microsoft.identity.client/switch_browser?code=code&action_uri=action-uri
      *
      * @return The process uri constructed from the broker redirect uri.
-     * e.g. your-action-uri?code=your-switch-browser-code
+     * e.g. action_uri?code=code
      */
-    fun buildProcessUri(brokerRedirectUri: Uri): Uri? {
+    @Throws(ClientException::class, IllegalArgumentException::class, NullPointerException::class, UnsupportedOperationException::class)
+    fun buildProcessUri(uri: Uri): Uri {
         val methodTag = "$TAG:buildProcessUri"
-        // Get the session token from the broker redirect uri.
-        val sessionToken = brokerRedirectUri.getQueryParameter(
+        // Get the SwitchBrowser purpose token from the broker redirect uri.
+        val code = uri.getQueryParameter(
             SWITCH_BROWSER.CODE
         )
-        if (sessionToken.isNullOrEmpty()) {
-            // This should never happen, but if it does, we should log it and return.
-            Logger.warn(methodTag, "Switch browser code is null or empty ")
-            return null
+        if (code.isNullOrEmpty()) {
+            // This should never happen, but if it does, we should log it and throw.
+            val errorMessage = "switch browser code is null or empty"
+            val exception = ClientException(ClientException.MALFORMED_URL, errorMessage)
+            Logger.error(methodTag, errorMessage, exception)
+            throw exception
         }
         // Get the process uri from the broker redirect uri.
-        val actionUri = brokerRedirectUri.getQueryParameter(
+        val actionUri = uri.getQueryParameter(
             SWITCH_BROWSER.ACTION_URI
         )
         if (actionUri.isNullOrEmpty()) {
-            // This should never happen, but if it does, we should log it and return.
-            Logger.warn(methodTag, "Switch browser action URI is null or empty ")
-            return null
+            // This should never happen, but if it does, we should log it and throw.
+            val errorMessage = "switch browser action uri is null or empty"
+            val exception = ClientException(ClientException.MALFORMED_URL, errorMessage)
+            Logger.error(methodTag, errorMessage, exception)
+            throw exception
         }
         // Query parameters for the process uri.
         val queryParams = hashMapOf<String, String>()
-        queryParams[SWITCH_BROWSER.CODE] = sessionToken
-        queryParams[OAuth2.REDIRECT_URI] = Broker.NEW_BROKER_REDIRECT_URI
+        queryParams[SWITCH_BROWSER.CODE] = code
+        queryParams[OAuth2.REDIRECT_URI] = "${uri.scheme}://${uri.authority}"
         // Construct the uri to the process endpoint.
         return buildSwitchBrowserUri(actionUri, queryParams)
     }
@@ -82,10 +85,11 @@ object SwitchBrowserUriHelper {
      *
      * @return The switch browser uri constructed from the action uri and query parameters.
      */
+    @Throws(IllegalArgumentException::class, NullPointerException::class, UnsupportedOperationException::class)
     private fun buildSwitchBrowserUri(
         actionUri: String,
         queryParams: HashMap<String, String>
-    ): Uri? {
+    ): Uri {
         val paths = actionUri.split("/")
         val authority = paths[0]
         val uriBuilder = Uri.Builder()
@@ -163,5 +167,23 @@ object SwitchBrowserUriHelper {
             requestHeaders[CHALLENGE_RESPONSE_HEADER] = proofToken
         }
         return requestHeaders
+    }
+    /**
+     * Check if the request is to switch the browser.
+     *
+     * The request is considered "switch_browser" if the URL
+     * starts with the following pattern: {redirectUrl}/switch_browser
+     *
+     *
+     * @param url The URL to be checked.
+     * @param redirectUrl The redirect URL to be checked against.
+     * @return True if the request contains the required parameters, false otherwise.
+     */
+    fun isSwitchBrowserRequest(url: String?, redirectUrl: String): Boolean {
+        val switchBrowserRedirectUrl = "${redirectUrl}/${SWITCH_BROWSER.PATH}"
+        if (url == null) {
+            return false
+        }
+        return url.startsWith(switchBrowserRedirectUrl)
     }
 }

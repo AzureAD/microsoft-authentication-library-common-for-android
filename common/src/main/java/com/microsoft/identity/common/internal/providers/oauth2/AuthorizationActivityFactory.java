@@ -31,6 +31,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.CLIENT_ID;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 import static com.microsoft.identity.common.java.logging.DiagnosticContext.CORRELATION_ID;
@@ -62,6 +63,7 @@ import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Constructs intents and/or fragments for interactive requests based on library configuration and current request.
@@ -122,7 +124,7 @@ public class AuthorizationActivityFactory {
         final LibraryConfiguration libraryConfig = LibraryConfiguration.getInstance();
         if (ProcessUtil.isBrokerProcess(context)) {
             intent = new Intent(context, BrokerAuthorizationActivity.class);
-            if(requestUrl.contains(AuthenticationConstants.SWITCH_BROWSER.SWITCH_BROWSER)) {
+            if(requestUrl.contains(SWITCH_BROWSER.PATH)) {
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                 // In the case of a SwitchBrowser protocol, we need to transition from the browser to the WebView.
                 // These flags ensure that we have a new task stack that allows for this transition.
@@ -290,13 +292,14 @@ public class AuthorizationActivityFactory {
     ) throws ClientException {
         // add header
         final HashMap<String, String> requestHeadersWithGoogleAuthCredential = requestHeaders == null? new HashMap<>() : new HashMap<>(requestHeaders);
-        requestHeadersWithGoogleAuthCredential.putAll(signInWithGoogleCredential.asHeaders());
+        requestHeadersWithGoogleAuthCredential.putAll(MsaFederationExtensions.getIdProviderHeadersForAuthorization(signInWithGoogleCredential));
 
         // add id provider query parameter
-        String requestUrlWithIdProvider = null;
+        String requestUrlWithIdProvider;
         try {
             final CommonURIBuilder uriBuilder = new CommonURIBuilder(requestUrl);
-            uriBuilder.addParameterIfAbsent(MsaFederationConstants.MSA_ID_PROVIDER_EXTRA_QUERY_PARAM_KEY, FederatedSignInProviderName.GOOGLE.getIdProviderName());
+            final Map.Entry<String, String> extraQueryParamForAuthorization = MsaFederationExtensions.getIdProviderExtraQueryParamForAuthorization(signInWithGoogleCredential);
+            uriBuilder.addParameterIfAbsent(extraQueryParamForAuthorization.getKey(), extraQueryParamForAuthorization.getValue());
             requestUrlWithIdProvider = uriBuilder.build().toString();
         } catch (final URISyntaxException e) {
             throw new ClientException(ClientException.MALFORMED_URL, "Failed to add id provider query parameter to request URL", e);
