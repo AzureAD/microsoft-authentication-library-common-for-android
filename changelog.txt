@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Add handler for resume switch_browser flow on WebViewAuthorizationFragment (#2557)
 - [MINOR] Launch browser when a switch_browser redirect URL is present (#2553)
 
 Version 20.0.0
