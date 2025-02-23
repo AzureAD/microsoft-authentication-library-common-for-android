@@ -51,8 +51,12 @@ import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizat
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserChallenge;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserUriHelper;
 import com.microsoft.identity.common.java.constants.FidoConstants;
+import com.microsoft.identity.common.java.exception.IErrorInformation;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
@@ -84,6 +88,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
+import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_ERROR;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -102,13 +107,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String TAG = AzureActiveDirectoryWebViewClient.class.getSimpleName();
 
     public static final String ERROR = "error";
-    public static final String ERROR_SUBCODE = "error_subcode";
     public static final String ERROR_DESCRIPTION = "error_description";
     private static final String DEVICE_CERT_ISSUER = "CN=MS-Organization-Access";
     private final String mRedirectUrl;
     private final CertBasedAuthFactory mCertBasedAuthFactory;
     private AbstractCertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
-
+    private final SwitchBrowserHandler mSwitchBrowserHandler;
     private HashMap<String, String> mRequestHeaders;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
@@ -118,6 +122,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
+        mSwitchBrowserHandler = new SwitchBrowserHandler(activity);
     }
 
     /**
@@ -208,7 +213,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
              }
              else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
-                processRedirectUrl(view, url);
+                if (SwitchBrowserUriHelper.INSTANCE.isSwitchBrowserRequest(formattedURL, mRedirectUrl)) {
+                    Logger.info(methodTag,"Request to switch browser.");
+                    processSwitchBrowserRequest(formattedURL);
+                } else {
+                    Logger.info(methodTag,"It is a redirect request.");
+                    processRedirectUrl(view, url);
+                }
             } else if (isWebsiteRequestUrl(formattedURL)) {
                 Logger.info(methodTag,"It is an external website request");
                 processWebsiteRequest(view, url);
@@ -325,7 +336,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     // This function is only called when the client received a redirect that starts with the apps
     // redirect uri.
-    protected void processRedirectUrl(@NonNull final WebView view, @NonNull final String url) {
+    private void processRedirectUrl(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processRedirectUrl";
 
         Logger.info(methodTag, "It is pointing to redirect. Final url can be processed to get the code or error.");
@@ -333,6 +344,32 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         getCompletionCallback().onChallengeResponseReceived(data);
         view.stopLoading();
         //the TokenTask should be processed at after the authorization process in the upper calling layer.
+    }
+
+    /**
+     * Launch the browser with the given action URI and code.
+     * <p>
+     * From the query parameters, extract the action URI and code,
+     * The constructs the URI with the action URI and code.
+     *
+     * @param url The URL to be opened in the browser.
+     */
+    private void processSwitchBrowserRequest(@NonNull final String url) {
+        final String methodTag = TAG + ":processSwitchBrowserRequest";
+        try {
+            mSwitchBrowserHandler.processChallenge(
+                    SwitchBrowserChallenge.constructFromRedirectUrl(url)
+            );
+        } catch (final Throwable throwable) {
+            Logger.error(methodTag, "Switch browser challenge could not be processed.", throwable);
+            final String errorCode;
+            if (throwable instanceof IErrorInformation) {
+                errorCode = ((IErrorInformation) throwable).getErrorCode();
+            } else {
+                errorCode = UNKNOWN_ERROR;
+            }
+            returnError(errorCode, throwable.getMessage());
+        }
     }
 
     private void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
@@ -633,6 +670,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             mCertBasedAuthChallengeHandler.cleanUp();
         }
         mCertBasedAuthFactory.onDestroy();
+        mSwitchBrowserHandler.unbind();
     }
 
     /**
