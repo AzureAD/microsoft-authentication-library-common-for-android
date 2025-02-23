@@ -109,10 +109,11 @@ object SwitchBrowserUriHelper {
      * Build the resume uri for the switch browser challenge.
      *
      * @param actionUri The action uri to be opened.
+     * @param redirectUrl The redirect url to be included in the resume uri.
      * @param clientId The client id to be included in the resume uri.
      *
      * @return The resume uri constructed from the bundle.
-     * e.g. your-resume-uri?client_id=your-client-id&redirect_uri=your-redirect-uri
+     * e.g. actionUri?client_id=client-id&redirect_uri=redirect-uri
      */
     fun buildResumeUri(actionUri: String, redirectUrl: String, clientId: String): Uri {
         // Query parameters for the resume uri.

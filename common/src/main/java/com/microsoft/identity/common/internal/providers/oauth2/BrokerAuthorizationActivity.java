@@ -30,9 +30,17 @@ import android.content.Intent;
  */
 public class BrokerAuthorizationActivity extends AuthorizationActivity {
 
+    /**
+     * Refreshes the WebView with new intent data after the user completes authentication in the browser.
+     *
+     * <p>In the Switch browser flow, once the user finishes authentication in the browser, ETS will send a request
+     * to the broker containing a code and an action URI. The broker will then send this request data back to the
+     * WebView authorization activity via an intent. This method is used to refresh the WebView with the new intent
+     * data that includes the code and action URI.
+     */
+
     @Override
     protected void onNewIntent(final Intent intent) {
-        // Update intent data with SwitchBrowserProofUpToken.
         super.onNewIntent(intent);
         setIntent(intent);
     }

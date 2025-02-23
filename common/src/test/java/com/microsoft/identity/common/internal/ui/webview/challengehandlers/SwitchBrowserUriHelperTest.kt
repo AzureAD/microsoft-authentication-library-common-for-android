@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 
 import android.net.Uri
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
 import com.microsoft.identity.common.java.exception.ClientException
@@ -56,7 +56,7 @@ class SwitchBrowserUriHelperTest {
         )
         Assert.assertEquals(
             Broker.NEW_BROKER_REDIRECT_URI,
-            switchBrowserProcessUri.getQueryParameter(AuthenticationConstants.OAuth2.REDIRECT_URI)
+            switchBrowserProcessUri.getQueryParameter(OAuth2.REDIRECT_URI)
         )
         Assert.assertEquals(
             ACTION_URI,
@@ -80,7 +80,12 @@ class SwitchBrowserUriHelperTest {
     @Test
     fun `test isSwitchBrowserRequest no valid request`() {
         val url = "https://login.microsoftonline.com/"
-        Assert.assertFalse(SwitchBrowserUriHelper.isSwitchBrowserRequest(url, Broker.NEW_BROKER_REDIRECT_URI))
+        Assert.assertFalse(
+            SwitchBrowserUriHelper.isSwitchBrowserRequest(
+                url,
+                Broker.NEW_BROKER_REDIRECT_URI
+            )
+        )
     }
 
     @Test
@@ -100,15 +105,19 @@ class SwitchBrowserUriHelperTest {
 
     @Test
     fun `test buildResumeUri valid params`() {
-        val uri = SwitchBrowserUriHelper.buildResumeUri(ACTION_URI, Broker.NEW_BROKER_REDIRECT_URI, CLIENT_ID)
+        val uri = SwitchBrowserUriHelper.buildResumeUri(
+            ACTION_URI,
+            Broker.NEW_BROKER_REDIRECT_URI,
+            CLIENT_ID
+        )
         Assert.assertNotNull(uri)
         Assert.assertEquals(
             CLIENT_ID,
-            uri.getQueryParameter(com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.CLIENT_ID)
+            uri.getQueryParameter(OAuth2.CLIENT_ID)
         )
         Assert.assertEquals(
             Broker.NEW_BROKER_REDIRECT_URI,
-            uri.getQueryParameter(com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.REDIRECT_URI)
+            uri.getQueryParameter(OAuth2.REDIRECT_URI)
         )
         Assert.assertEquals(
             ACTION_URI,
