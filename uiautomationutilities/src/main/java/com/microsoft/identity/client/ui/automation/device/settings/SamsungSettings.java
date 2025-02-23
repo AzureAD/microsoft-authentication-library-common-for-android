@@ -223,6 +223,11 @@ public class SamsungSettings extends BaseSettings {
     }
 
     @Override
+    public void toggleNotificationsThroughSettings(@NonNull String packageName) {
+        throw new UnsupportedOperationException("We do not support disabling notifications through settings page on samsung devices.");
+    }
+
+    @Override
     public void enableAppThroughSettings(@NonNull final String packageName) {
         //TODO: implement enabling app through settings
         throw new UnsupportedOperationException("We do not support enabling apps through Settings Page on samsung devices");
