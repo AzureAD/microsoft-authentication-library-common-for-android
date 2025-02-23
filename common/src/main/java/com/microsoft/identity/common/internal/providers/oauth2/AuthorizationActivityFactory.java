@@ -76,7 +76,7 @@ public class AuthorizationActivityFactory {
         final LibraryConfiguration libraryConfig = LibraryConfiguration.getInstance();
         if (ProcessUtil.isBrokerProcess(parameters.getContext())) {
             intent = new Intent(parameters.getContext(), BrokerAuthorizationActivity.class);
-            if(parameters.getRequestUrl().contains(SWITCH_BROWSER.PATH)) {
+            if (parameters.getRequestUrl().contains(SWITCH_BROWSER.PATH)) {
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                 // In the case of a SwitchBrowser protocol, we need to transition from the browser to the WebView.
                 // These flags ensure that we have a new task stack that allows for this transition.
@@ -152,7 +152,7 @@ public class AuthorizationActivityFactory {
      * parameters.
      *
      * @param authorizationActivityParameters Parameters to create the auth intent
-     * @param signInWithGoogleParameters Parameters to first start sign in with google flow before creating the intent
+     * @param signInWithGoogleParameters      Parameters to first start sign in with google flow before creating the intent
      * @return An android Intent which will be used by Android to create an AuthorizationActivity
      */
     public static Intent signInWithGoogleAndGetAuthorizationActivityIntent(
@@ -160,11 +160,12 @@ public class AuthorizationActivityFactory {
             @NonNull final SignInWithGoogleParameters signInWithGoogleParameters) throws ClientException {
         final SignInWithGoogleCredential signInWithGoogleCredential = SignInWithGoogleApi.getInstance().signInSync(signInWithGoogleParameters);
         // add header
-        final HashMap<String, String> requestHeadersWithGoogleAuthCredential = authorizationActivityParameters.getRequestHeader() == null? new HashMap<>() : new HashMap<>(authorizationActivityParameters.getRequestHeader());
+        final HashMap<String, String> authorizationActivityRequestHeaders = authorizationActivityParameters.getRequestHeader();
+        final HashMap<String, String> requestHeadersWithGoogleAuthCredential = authorizationActivityRequestHeaders == null ? new HashMap<>() : new HashMap<>(authorizationActivityRequestHeaders);
         requestHeadersWithGoogleAuthCredential.putAll(MsaFederationExtensions.getIdProviderHeadersForAuthorization(signInWithGoogleCredential));
 
         // add id provider query parameter
-        String requestUrlWithIdProvider;
+        final String requestUrlWithIdProvider;
         try {
             final CommonURIBuilder uriBuilder = new CommonURIBuilder(authorizationActivityParameters.getRequestUrl());
             final Map.Entry<String, String> extraQueryParamForAuthorization = MsaFederationExtensions.getIdProviderExtraQueryParamForAuthorization(signInWithGoogleCredential);
