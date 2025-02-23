@@ -8,6 +8,17 @@ apply from: '../versioning/version_tasks.gradle'
 project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 
+def minimumTestAttempts = 3
+
+if (project.hasProperty("testAttempts")) {
+    minimumTestAttempts = testAttempts
+}
+
+def uiElementTimeoutConfig = 25
+
+if (project.hasProperty("uiElementTimeout")) {
+    uiElementTimeoutConfig = uiElementTimeout
+}
 
 android {
 
@@ -108,6 +119,8 @@ android {
         buildConfigField("boolean", "PREFER_PRE_INSTALLED_APKS", "$usePreInstalledApks")
         buildConfigField("boolean", "PRE_INSTALL_LTW", "$preInstallLtw")
         buildConfigField("boolean", "SEND_POWERLIFT_LOGS", "$sendPowerLiftLogs")
+        buildConfigField("int", "MINIMUM_TEST_ATTEMPTS", "$minimumTestAttempts")
+        buildConfigField("int", "UI_ELEMENT_TIMEOUT", "$uiElementTimeoutConfig")
 
         // Specifies a sorted list of flavors that the plugin should try to use from
         // a given dimension. The following tells the plugin that, when encountering
