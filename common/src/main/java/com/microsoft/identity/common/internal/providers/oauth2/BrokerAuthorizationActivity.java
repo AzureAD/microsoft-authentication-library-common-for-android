@@ -37,6 +37,7 @@ public class BrokerAuthorizationActivity extends AuthorizationActivity {
      * to the broker containing a code and an action URI. The broker will then send this request data back to the
      * WebView authorization activity via an intent. This method is used to refresh the WebView with the new intent
      * data that includes the code and action URI.
+     * see {@link WebViewAuthorizationFragment#onResume()}
      */
 
     @Override
