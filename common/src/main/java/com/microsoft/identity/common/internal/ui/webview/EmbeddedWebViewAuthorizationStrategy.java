@@ -34,6 +34,7 @@ import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidAuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityFactory;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityParameters;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
@@ -108,7 +109,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
      * @param requestUrl url to which the request will be sent
      * @param sourceLibraryName the source library making the request
      * @param sourceLibraryVersion version of the source library making the request
-     * @return
+     * @return Intent to be used in web view authorization request
      */
     // Suppressing unchecked warnings during casting to HashMap<String,String> due to no generic type with mAuthorizationRequest
     @SuppressWarnings(WarningType.unchecked_warning)
@@ -119,19 +120,20 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
             @Nullable final String clientId) {
         // RedirectURI used to get the auth code in nested app auth is that of a hub app (brkRedirectURI)       
         final String redirectUri = mAuthorizationRequest.getBrkRedirectUri() != null ? mAuthorizationRequest.getBrkRedirectUri() : mAuthorizationRequest.getRedirectUri();
-        return AuthorizationActivityFactory.getAuthorizationActivityIntent(
-                    getApplicationContext(),
-                    null,
-                    requestUrl.toString(),
-                    redirectUri,
-                    mAuthorizationRequest.getRequestHeaders(),
-                    AuthorizationAgent.WEBVIEW,
-                    mAuthorizationRequest.isWebViewZoomEnabled(),
-                    mAuthorizationRequest.isWebViewZoomControlsEnabled(),
-                    sourceLibraryName,
-                    sourceLibraryVersion,
-                    clientId
+        final AuthorizationActivityParameters authorizationActivityParameters = new AuthorizationActivityParameters(
+                getApplicationContext(),
+                null,
+                requestUrl.toString(),
+                redirectUri,
+                mAuthorizationRequest.getRequestHeaders(),
+                AuthorizationAgent.WEBVIEW,
+                clientId,
+                mAuthorizationRequest.isWebViewZoomEnabled(),
+                mAuthorizationRequest.isWebViewZoomControlsEnabled(),
+                sourceLibraryName,
+                sourceLibraryVersion
         );
+        return AuthorizationActivityFactory.getAuthorizationActivityIntent(authorizationActivityParameters);
     }
 
     @Override

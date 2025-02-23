@@ -151,7 +151,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         super.onResume();
         final String methodTag = TAG + ":onResume";
         final Bundle extras = getExtras();
-        if (extras != null && isSwitchBrowserResumeFlow(extras)) {
+        if (isSwitchBrowserResumeFlow(extras)) {
             Logger.info(methodTag, "Resume switch browser protocol on WebView.");
             resumeSwitchBrowser(extras);
         }
@@ -160,33 +160,37 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     /**
      * Get the extras from the activity intent.
      *
-     * @return Bundle
+     * @return Bundle with the extras
      */
-    @Nullable
+    @NonNull
     private Bundle getExtras() {
         final Activity activity = getActivity();
         if (activity == null) {
-            return new Bundle();
+            return Bundle.EMPTY;
         }
         final Intent intent = activity.getIntent();
         if (intent == null) {
-            return new Bundle();
+            return Bundle.EMPTY;
         }
-        return intent.getExtras();
+        final Bundle extras =  intent.getExtras();
+        return extras == null ? Bundle.EMPTY : extras;
     }
 
     /**
-     * Check if the extras indicate that the resume flow is for switching browser.
+     * Check if the extras contains the switch browser code and action uri.
+     * if so, it means we are resuming the switch browser flow.
      *
      * @param extras Bundle
      * @return boolean
      */
     private boolean isSwitchBrowserResumeFlow(@NonNull final Bundle extras) {
-        final String action = extras.getString(
-                AuthenticationConstants.SWITCH_BROWSER.ACTION,
-                null
+        final boolean containsActionUri = extras.containsKey(
+                AuthenticationConstants.SWITCH_BROWSER.ACTION_URI
         );
-        return action != null;
+        final boolean containsCode = extras.containsKey(
+                AuthenticationConstants.SWITCH_BROWSER.CODE
+        );
+        return containsCode && containsActionUri;
     }
 
     /**
@@ -196,17 +200,20 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      */
     private void resumeSwitchBrowser(@NonNull final Bundle extras) {
         final String methodTag = TAG + ":resumeSwitchBrowser";
-        final Uri switchBrowserResumeUri = SwitchBrowserUriHelper.INSTANCE.buildResumeUri(extras, mClientId);
-        final HashMap<String, String> requestHeaders = SwitchBrowserUriHelper.INSTANCE.buildResumeRequestHeaders(extras);
-        if (switchBrowserResumeUri == null || requestHeaders == null) {
-            Logger.error(
-                    methodTag,
-                    "switchBrowserResumeUri is null: " + (switchBrowserResumeUri == null) +
-                            ", requestHeaders is null: " + (requestHeaders == null),
-                    null
-            );
+        final String actionUri = extras.getString(
+                AuthenticationConstants.SWITCH_BROWSER.ACTION_URI
+        );
+        final String code = extras.getString(
+                AuthenticationConstants.SWITCH_BROWSER.CODE
+        );
+        if (actionUri == null || code == null) {
+            Logger.error(methodTag, "Action URI is null: " + (actionUri == null) +
+                    ", code is null: " + (code == null), null);
+            cancelAuthorization(false);
             return;
         }
+        final Uri switchBrowserResumeUri = SwitchBrowserUriHelper.INSTANCE.buildResumeUri(actionUri, mRedirectUri, mClientId);
+        final HashMap<String, String> requestHeaders = SwitchBrowserUriHelper.INSTANCE.buildResumeRequestHeaders(code);
         mAuthorizationRequestUrl = switchBrowserResumeUri.toString();
         mRequestHeaders = requestHeaders;
         launchWebView();
