@@ -26,6 +26,7 @@ import android.net.Uri
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
+import com.microsoft.identity.common.java.AuthenticationConstants.Broker.CHALLENGE_RESPONSE_HEADER
 import com.microsoft.identity.common.java.exception.ClientException
 import org.junit.Assert
 import org.junit.Test
@@ -126,12 +127,12 @@ class SwitchBrowserUriHelperTest {
     }
 
     @Test
-    fun `test buildResumeRequestHeaders valid bundle`() {
+    fun `test buildResumeRequestHeaders`() {
         val headers = SwitchBrowserUriHelper.buildResumeRequestHeaders(CODE)
         Assert.assertNotNull(headers)
         Assert.assertEquals(
             CODE,
-            headers[SWITCH_BROWSER.CODE]
+            headers[CHALLENGE_RESPONSE_HEADER]
         )
     }
 }
