@@ -79,10 +79,10 @@ class SwitchBrowserUriHelperTest {
     }
 
     @Test
-    fun `test isSwitchBrowserRequest no valid request`() {
+    fun `test isStartSwitchBrowserRequest no valid request`() {
         val url = "https://login.microsoftonline.com/"
         Assert.assertFalse(
-            SwitchBrowserUriHelper.isSwitchBrowserRequest(
+            SwitchBrowserUriHelper.isStartSwitchBrowserRequest(
                 url,
                 Broker.NEW_BROKER_REDIRECT_URI
             )
@@ -90,19 +90,41 @@ class SwitchBrowserUriHelperTest {
     }
 
     @Test
-    fun `test isSwitchBrowserRequest  valid request`() {
+    fun `test isStartSwitchBrowserRequest  valid request`() {
         val url = "${Broker.NEW_BROKER_REDIRECT_URI}/" +
-                SWITCH_BROWSER.PATH + "?" +
-                "${SWITCH_BROWSER.ACTION_URI}=$ACTION_URI"
-
+                SWITCH_BROWSER.START_PATH
         Assert.assertTrue(
-            SwitchBrowserUriHelper.isSwitchBrowserRequest(
+            SwitchBrowserUriHelper.isStartSwitchBrowserRequest(
                 url,
                 Broker.NEW_BROKER_REDIRECT_URI
             )
         )
-
     }
+
+    @Test
+    fun `test isResumeSwitchBrowserRequest no valid request`() {
+        val url = "https://login.microsoftonline.com/"
+        Assert.assertFalse(
+            SwitchBrowserUriHelper.isResumeSwitchBrowserRequest(
+                url,
+                Broker.NEW_BROKER_REDIRECT_URI
+            )
+        )
+    }
+
+    @Test
+    fun `test isResumeSwitchBrowserRequest  valid request`() {
+        val url = "${Broker.NEW_BROKER_REDIRECT_URI}/" +
+                SWITCH_BROWSER.RESUME_PATH
+        Assert.assertTrue(
+            SwitchBrowserUriHelper.isResumeSwitchBrowserRequest(
+                url,
+                Broker.NEW_BROKER_REDIRECT_URI
+            )
+        )
+    }
+
+
 
     @Test
     fun `test buildResumeUri valid params`() {

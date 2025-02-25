@@ -135,8 +135,9 @@ object SwitchBrowserUriHelper {
         val requestHeaders = hashMapOf(CHALLENGE_RESPONSE_HEADER to code)
         return requestHeaders
     }
+
     /**
-     * Check if the request is to switch the browser.
+     * Check if the request is to start the switch the browser flow.
      *
      * The request is considered "switch_browser" if the URL
      * starts with the following pattern: {redirectUrl}/switch_browser
@@ -144,10 +145,29 @@ object SwitchBrowserUriHelper {
      *
      * @param url The URL to be checked.
      * @param redirectUrl The redirect URL to be checked against.
-     * @return True if the request contains the required parameters, false otherwise.
+     * @return True if the request matches the pattern, false otherwise.
      */
-    fun isSwitchBrowserRequest(url: String?, redirectUrl: String): Boolean {
-        val switchBrowserRedirectUrl = "${redirectUrl}/${SWITCH_BROWSER.PATH}"
+    fun isStartSwitchBrowserRequest(url: String?, redirectUrl: String): Boolean {
+        val switchBrowserRedirectUrl = "${redirectUrl}/${SWITCH_BROWSER.START_PATH}"
+        if (url == null) {
+            return false
+        }
+        return url.startsWith(switchBrowserRedirectUrl)
+    }
+
+    /**
+     * Check if the request is to switch the browser.
+     *
+     * The request is considered "switch_browser" if the URL
+     * starts with the following pattern: {redirectUrl}/switch_browser_resume
+     *
+     *
+     * @param url The URL to be checked.
+     * @param redirectUrl The redirect URL to be checked against.
+     * @return True if the request matches the pattern, false otherwise.
+     */
+    fun isResumeSwitchBrowserRequest(url: String?, redirectUrl: String): Boolean {
+        val switchBrowserRedirectUrl = "${redirectUrl}/${SWITCH_BROWSER.RESUME_PATH}"
         if (url == null) {
             return false
         }
