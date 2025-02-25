@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Launch browser when a switch_browser redirect URL is present (#2553)
 
 Version 20.0.0
 ----------

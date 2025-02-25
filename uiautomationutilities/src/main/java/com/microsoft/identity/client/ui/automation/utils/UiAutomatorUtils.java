@@ -425,6 +425,21 @@ public class UiAutomatorUtils {
     }
 
     /**
+     * Clicks the button element with exactly the supplied class
+     *
+     * @param clazz the class name of the object to click
+     */
+    public static void handleButtonClickForObjectWithClass(@NonNull final String clazz) {
+        final UiObject button = obtainUiObjectWithClass(clazz);
+
+        try {
+            button.click();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    /**
      * Clicks the button element that contains the supplied text.
      * Do not throw an exception if the button is not found.
      *

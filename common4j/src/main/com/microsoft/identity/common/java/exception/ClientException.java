@@ -492,6 +492,11 @@ public class ClientException extends BaseException {
     public static final String SIGN_IN_WITH_GOOGLE_FAILED = "sign_in_with_google_failed";
 
     /**
+     * Error occurred while getting credential in sign in with google flow.
+     */
+    public static final String NO_BROWSERS_AVAILABLE = "no_browsers_available";
+
+    /**
      * Constructor of ClientException.
      *
      * @param errorCode String
