@@ -20,15 +20,37 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.msafederation.google
+package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 
-import com.microsoft.identity.common.internal.msafederation.IFederatedCredentialCallback
+import android.net.Uri
 
 /**
- * Interface for Federated Credential Callback. Helps calling sign methods
- * async from java.
+ * SwitchBrowserChallenge is a challenge to switch from WebView to browser.
+ * It contains the URI to be opened in the new browser.
  */
-interface ISignInWithGoogleCredentialCallback :
-    IFederatedCredentialCallback<SignInWithGoogleCredential> {
-    override fun onSuccess(credential: SignInWithGoogleCredential)
+data class SwitchBrowserChallenge(
+    val uri: Uri,
+) {
+
+    companion object {
+        /**
+         * Construct a SwitchBrowserChallenge from the redirect URI.
+         *
+         * @param redirectUrl The redirect URL containing the switch browser code and action URI.
+         * e.g. {redirectUrl}/switch_browser?code=code&action_uri=action-uri
+         *
+         * @return The SwitchBrowserChallenge constructed from the redirect URI.
+         * e.g. SwitchBrowserChallenge(uri = action-uri?code=code)
+         * params: redirectUri: Uri
+         */
+        @JvmStatic
+        @Throws(Exception::class)
+        fun constructFromRedirectUrl(redirectUrl: String): SwitchBrowserChallenge {
+            Uri.parse(redirectUrl).let { redirectUri ->
+                SwitchBrowserUriHelper.buildProcessUri(redirectUri).let { processUri ->
+                    return SwitchBrowserChallenge(uri = processUri)
+                }
+            }
+        }
+    }
 }

@@ -31,6 +31,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -190,37 +191,35 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     }
 
     private String createPowerLiftIncidentInNonSharedMode() {
-        // click the 3 dot menu icon in top right
-        UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
-
         try {
-            // select Help from drop down
-            final UiObject settings = UiAutomatorUtils.obtainUiObjectWithText("Send Feedback");
-            settings.click();
+            // click the 3 dot menu icon in top right
+            final UiObject menu = UiAutomatorUtils.obtainUiObjectWithDescription("More options. Action required.");
+            menu.click();
 
-            final UiObject sendLogs = UiAutomatorUtils.obtainUiObjectWithClassAndDescription(
-                    Button.class,
-                    "Having trouble?Report it"
-            );
+            // select Send Feedback from drop down
+            final UiObject sendFeedback = UiAutomatorUtils.obtainUiObjectWithDescription("Send Feedback");
+            sendFeedback.click();
 
-            Assert.assertTrue(sendLogs.exists());
+            final UiObject havingTrouble = UiAutomatorUtils.obtainUiObjectWithText("Having trouble?");
 
-            // click the send logs button
-            sendLogs.click();
+            Assert.assertTrue(havingTrouble.exists());
+
+            // click the havingTrouble button
+            havingTrouble.click();
 
             UiAutomatorUtils.handleButtonClickForObjectWithText("Select an option");
 
             UiAutomatorUtils.handleButtonClickForObjectWithText("Other");
 
-            final UiObject describeIssueBox = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
-                    "Please don't include your name, phone number, or other personal information.",
-                    EditText.class
+            final UiObject describeIssueBox = UiAutomatorUtils.obtainUiObjectWithDescription(
+                    "Describe the issue you are facing"
             );
 
             describeIssueBox.setText(INCIDENT_MSG);
 
-            final UiObject sendBtn = UiAutomatorUtils.obtainUiObjectWithDescription("Send feedback");
-            sendBtn.click();
+            // Send incident button also has send feedback description
+            final UiObject sendIncident = UiAutomatorUtils.obtainUiObjectWithDescription("Send feedback");
+            sendIncident.click();
 
             final UiObject postLogSubmissionMsg = UiAutomatorUtils.obtainUiObjectWithResourceId(
                     "android:id/parentPanel"

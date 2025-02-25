@@ -23,18 +23,18 @@
 package com.microsoft.identity.common.internal.msafederation.google
 
 import android.app.Activity
-import com.microsoft.identity.common.internal.msafederation.FederatedSignInProviderFactory
+import com.microsoft.identity.common.internal.msafederation.MsaFederatedSignInProviderFactory
+import com.microsoft.identity.common.java.util.ResultFuture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 
 /**
  * Entry point for signing in with Google into MSA.
  */
 class SignInWithGoogleApi internal constructor(
-    private val federatedSignInProviderFactory: FederatedSignInProviderFactory){
+    private val federatedSignInProviderFactory: MsaFederatedSignInProviderFactory){
 
     companion object {
         private const val TAG = "SignInWithGoogleApi"
@@ -45,8 +45,13 @@ class SignInWithGoogleApi internal constructor(
         @JvmStatic
         fun getInstance(): SignInWithGoogleApi {
             return instance ?: synchronized(this) {
-                instance ?: SignInWithGoogleApi(FederatedSignInProviderFactory).also { instance = it }
+                instance ?: SignInWithGoogleApi(MsaFederatedSignInProviderFactory).also { instance = it }
             }
+        }
+
+        @JvmStatic
+        fun setInstance(api: SignInWithGoogleApi) {
+            instance = api
         }
     }
 
@@ -87,17 +92,24 @@ class SignInWithGoogleApi internal constructor(
      * Refer [signIn] for more details.
      */
     fun signInAsync(
-        signInWithGoogleParameters: SignInWithGoogleParameters,
-        callback: ISignInWithGoogleCredentialCallback
-    ) {
+        signInWithGoogleParameters: SignInWithGoogleParameters
+    ) : ResultFuture<SignInWithGoogleCredential> {
+        val future = ResultFuture<SignInWithGoogleCredential>()
         CoroutineScope(Dispatchers.Default).launch {
-            val credential = signIn(signInWithGoogleParameters)
-            withContext(coroutineContext) {
-                callback.onSuccess(credential)
+            try {
+                future.setResult(signIn(signInWithGoogleParameters))
+                //future.complete(signIn(signInWithGoogleParameters))
+            } catch (e: Exception) {
+                future.setException(e)
+                //future.completeExceptionally(e)
             }
         }
+        return future
     }
 
+    /**
+     * Sign out the app from google.
+     */
     suspend fun signOut(activity: Activity) {
         val signInWithGoogleParameters = SignInWithGoogleParameters(activity)
         val googleSignInProvider = federatedSignInProviderFactory.getProvider(

@@ -22,15 +22,26 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.msafederation
 
+import com.microsoft.identity.common.internal.msafederation.google.GoogleSignInProvider
+import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters
+
 /**
- * Enum class for Federated Sign In Provider Name like Google, Apple
+ * Factory class to get the Federated Sign In Provider based on provider type in parameters
  * Currently only Google is supported.
  */
-enum class FederatedSignInProviderName(private val idProviderName: String) {
-    GOOGLE("google.com"),
-    APPLE("apple.com"); // would be used later
+internal object MsaFederatedSignInProviderFactory {
 
-    fun getIdProviderName(): String {
-        return idProviderName
+    /**
+     * Get the Federated Sign In Provider based on provider type in parameters.
+     */
+    fun getProvider(parameters: MsaFederatedSignInParameters): IMsaFederatedSignInProvider {
+        return when (parameters.providerName) {
+            MsaFederatedSignInProviderName.GOOGLE -> GoogleSignInProvider.create(parameters as SignInWithGoogleParameters)
+
+            else -> {
+                throw IllegalArgumentException("Unsupported provider type")
+            }
+        }
     }
 }
+
