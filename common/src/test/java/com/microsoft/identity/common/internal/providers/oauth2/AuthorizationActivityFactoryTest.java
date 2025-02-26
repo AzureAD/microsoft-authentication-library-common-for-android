@@ -75,7 +75,7 @@ public class AuthorizationActivityFactoryTest {
     private final boolean webViewZoomControlsEnabled = true;
     private final String sourceLibraryName = "TestLibrary";
     private final String sourceLibraryVersion = "1.0.0";
-
+    final String idToken = "idToken";
     private final String clientId = "clientId";
     private final AuthorizationActivityParameters authorizationActivityParameters = new AuthorizationActivityParameters(
             context,
@@ -118,7 +118,6 @@ public class AuthorizationActivityFactoryTest {
     @Test
     public void testSignInWithGoogleAndGetAuthorizationActivityIntent() {
         // Arrange
-        final String idToken = "idToken";
         final Activity mockActivity = Robolectric.buildActivity(Activity.class).get();
         // mock SignInWithGoogleApi using mockito
         final SignInWithGoogleApi mockSignInWithGoogleApi = mock(SignInWithGoogleApi.class);
@@ -151,4 +150,35 @@ public class AuthorizationActivityFactoryTest {
         assertNotNull(idTokenHeaderValue);
         assertEquals(idToken, idTokenHeaderValue);
     }
+
+    @SneakyThrows
+    @Test
+    public void testGetAuthorizationActivityIntentWithGoogleCredential() {
+        // Arrange
+        final SignInWithGoogleCredential signInWithGoogleCredential = new SignInWithGoogleCredential(idToken);
+        final Intent resultIntent = AuthorizationActivityFactory.getAuthorizationActivityIntent(
+                authorizationActivityParameters,
+                signInWithGoogleCredential
+        );
+
+        assertEquals(AuthorizationActivity.class.getName(), resultIntent.getComponent().getClassName());
+        assertEquals(authIntent, resultIntent.getParcelableExtra(AUTH_INTENT));
+        assertEquals(redirectUri, resultIntent.getStringExtra(REDIRECT_URI));
+        assertEquals(authorizationAgent, resultIntent.getSerializableExtra(AUTHORIZATION_AGENT));
+        assertEquals(webViewZoomEnabled, resultIntent.getBooleanExtra(WEB_VIEW_ZOOM_ENABLED, false));
+        assertEquals(webViewZoomControlsEnabled, resultIntent.getBooleanExtra(WEB_VIEW_ZOOM_CONTROLS_ENABLED, false));
+        assertEquals(sourceLibraryName, resultIntent.getStringExtra(PRODUCT));
+        assertEquals(sourceLibraryVersion, resultIntent.getStringExtra(VERSION));
+
+        final String receivedUrl = resultIntent.getStringExtra(REQUEST_URL);
+        final String expectedUrl = requestUrl + "&id_provider=google.com";
+        assertEquals(expectedUrl, receivedUrl);
+
+        final HashMap<String, String> receivedHeaders = (HashMap<String, String>) resultIntent.getSerializableExtra(REQUEST_HEADERS);
+        assertNotNull(receivedHeaders);
+        final String idTokenHeaderValue = receivedHeaders.get("x-ms-fidp-idtoken");
+        assertNotNull(idTokenHeaderValue);
+        assertEquals(idToken, idTokenHeaderValue);
+    }
+
 }
