@@ -41,6 +41,8 @@ import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpResponse;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
@@ -66,6 +68,7 @@ import java.util.concurrent.TimeoutException;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.opentelemetry.api.trace.Span;
 import lombok.NonNull;
 
 public class ExceptionAdapter {
@@ -436,6 +439,18 @@ public class ExceptionAdapter {
 
 
         if (e instanceof OutOfMemoryError) {
+            // Log status code and record exception in span
+            final Span currentSpan = SpanExtension.current();
+
+            // Attach the stack trace, to debug in telemetry later
+            currentSpan.setAttribute(
+                    AttributeName.out_of_memory_exception_stacktrace.name(),
+                    StringUtil.getStacktraceAsStringFromElementArray(e.getStackTrace())
+            );
+
+            com.microsoft.identity.common.java.logging.Logger.warn(
+                    TAG, "Received an out of memory error, stacktrace attached to span.");
+
             return new ClientException(
                     ClientException.OUT_OF_MEMORY,
                     e.getMessage(),
