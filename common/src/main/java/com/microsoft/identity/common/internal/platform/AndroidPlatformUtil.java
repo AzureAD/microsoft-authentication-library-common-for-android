@@ -50,14 +50,11 @@ import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
-import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.opentelemetry.AttributeName;
-import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
@@ -70,8 +67,6 @@ import java.util.Map;
 import javax.net.ssl.KeyManagerFactory;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 

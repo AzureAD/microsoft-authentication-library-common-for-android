@@ -189,11 +189,6 @@ public class MockPlatformComponentsFactory {
         public List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList) {
             return originalList;
         }
-
-        @Override
-        public void handleShutdownForOutOfMemoryError(@NonNull final BaseException exception) {
-            throw new UnsupportedOperationException();
-        }
     };
 
     public static final IBrowserSelector NON_FUNCTIONAL_BROWSER_SELECTOR = new NoopBrowserSelector();
