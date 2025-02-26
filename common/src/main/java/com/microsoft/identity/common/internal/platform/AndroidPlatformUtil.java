@@ -333,14 +333,4 @@ public class AndroidPlatformUtil implements IPlatformUtil {
                 || redirectUri.equals("msauth://com.microsoft.teams/fcg80qvoM1YMKJZibjBwQcDfOno=")
                 || redirectUri.equals("https://login.microsoftonline.com/common/oauth2/nativeclient"));
     }
-
-    public void handleShutdownForOutOfMemoryError(@NonNull final BaseException exception) {
-        // Shut down current process
-        // Calling client app will receive an MsalClientException with "Activity killed unexpectedly" from MSAL if broker is shut down with this statement
-        // Calling application should not crash, and should be able to make another call, which will result in a new broker process.
-
-        // In android, killProcess preferable to system.exit, as it cleans up resources more thoroughly
-        android.os.Process.killProcess(android.os.Process.myPid());
-    }
-
 }
