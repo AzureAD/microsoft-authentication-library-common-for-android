@@ -2,6 +2,7 @@ vNext
 ----------
 - [MINOR] Launch browser when a switch_browser redirect URL is present (#2553)
 - [MINOR] Add Broker Webapps operations api. (#2579)
+- [MINOR] Fix issue 1991: The acquireToken method doesn't work if the app uses "withFragmemt" (#2595)
 
 Version 20.0.0
 ----------
