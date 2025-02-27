@@ -152,7 +152,7 @@ object SwitchBrowserUriHelper {
         if (url == null) {
             return false
         }
-        return url.startsWith(switchBrowserRedirectUrl)
+        return url.startsWith(switchBrowserRedirectUrl, ignoreCase = true)
     }
 
     /**
@@ -171,6 +171,6 @@ object SwitchBrowserUriHelper {
         if (url == null) {
             return false
         }
-        return url.startsWith(switchBrowserRedirectUrl)
+        return url.startsWith(switchBrowserRedirectUrl, ignoreCase = true)
     }
 }

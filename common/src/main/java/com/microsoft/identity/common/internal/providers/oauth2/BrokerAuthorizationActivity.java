@@ -39,7 +39,6 @@ public class BrokerAuthorizationActivity extends AuthorizationActivity {
      * data that includes the code and action URI.
      * see {@link WebViewAuthorizationFragment#onResume()}
      */
-
     @Override
     protected void onNewIntent(final Intent intent) {
         super.onNewIntent(intent);

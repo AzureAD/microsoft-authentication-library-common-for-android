@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity
+import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment
 import com.microsoft.identity.common.internal.ui.browser.AndroidBrowserSelector
 import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
 import com.microsoft.identity.common.java.browser.IBrowserSelector
@@ -97,7 +99,20 @@ class SwitchBrowserHandler(
         Logger.info(methodTag, "Launching switch browser request on browser: ${browser.packageName}")
         browserIntent.setPackage(browser.packageName)
         browserIntent.setData(switchBrowserChallenge.uri)
+        enableSwitchBrowserFlagOnWebViewFragment()
         activity.startActivity(browserIntent)
+    }
+
+    /**
+     * Enable the flag to indicate the WebViewAuthorizationFragment is waiting for the switch browser resume endpoint.
+     */
+    private fun enableSwitchBrowserFlagOnWebViewFragment() {
+        val methodTag = "$TAG:enableSwitchBrowserFlagOnWebViewFragment"
+        val authorizationActivity = activity as? AuthorizationActivity ?: return
+        val fragment = authorizationActivity.fragment ?: return
+        val webViewFragment = fragment as? WebViewAuthorizationFragment ?: return
+        Logger.verbose(methodTag, "Enabling switch browser flag on WebViewAuthorizationFragment")
+        webViewFragment.isWaitingForSwitchBrowserResumeEndpoint = true
     }
 
     fun unbind() {

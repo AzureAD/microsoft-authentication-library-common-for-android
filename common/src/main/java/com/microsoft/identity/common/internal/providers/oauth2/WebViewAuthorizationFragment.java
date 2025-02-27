@@ -126,6 +126,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     // This is used by LegacyFido2ApiManager to launch a PendingIntent received by the legacy API.
     private ActivityResultLauncher<LegacyFido2ApiObject> mFidoLauncher;
+    // This flag is used to determine if the fragment is waiting for the switch browser resume endpoint.
+    public boolean isWaitingForSwitchBrowserResumeEndpoint = false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -178,19 +180,26 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     /**
      * Check if the extras contains the switch browser code and action uri.
+     * also checks that the fragment is waiting for the switch browser resume endpoint.
      * if so, it means we are resuming the switch browser flow.
      *
      * @param extras Bundle
      * @return boolean
      */
     private boolean isSwitchBrowserResumeFlow(@NonNull final Bundle extras) {
+        final String methodTag = TAG + ":isSwitchBrowserResumeFlow";
         final boolean containsActionUri = extras.containsKey(
                 AuthenticationConstants.SWITCH_BROWSER.ACTION_URI
         );
         final boolean containsCode = extras.containsKey(
                 AuthenticationConstants.SWITCH_BROWSER.CODE
         );
-        return containsCode && containsActionUri;
+        Logger.verbose(
+                methodTag,
+                "action uri: " + containsActionUri +
+                        ", code: " + containsCode +
+                        ", isWaitingForSwitchBrowserResumeEndpoint: " + isWaitingForSwitchBrowserResumeEndpoint);
+        return containsCode && containsActionUri && isWaitingForSwitchBrowserResumeEndpoint;
     }
 
     /**
@@ -216,6 +225,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final HashMap<String, String> requestHeaders = SwitchBrowserUriHelper.INSTANCE.buildResumeRequestHeaders(code);
         mAuthorizationRequestUrl = switchBrowserResumeUri.toString();
         mRequestHeaders = requestHeaders;
+        isWaitingForSwitchBrowserResumeEndpoint = false;
         launchWebView();
     }
 
