@@ -24,6 +24,7 @@
 package com.microsoft.identity.common.internal.msafederation
 
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential
+import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters
 import java.util.AbstractMap
 
 /**
@@ -38,4 +39,11 @@ fun SignInWithGoogleCredential.getIdProviderHeadersForAuthorization(): Map<Strin
  */
 fun SignInWithGoogleCredential.getIdProviderExtraQueryParamForAuthorization(): Map.Entry<String, String> {
     return AbstractMap.SimpleEntry(MsaFederationConstants.MSA_ID_PROVIDER_EXTRA_QUERY_PARAM_KEY, signInProviderName.getIdProviderName())
+}
+
+/**
+ * Helper/Extension method to check if the interactive flow is using Sign-in With Google.
+ */
+fun BrokerInteractiveTokenCommandParameters.isSignInWithGoogleFlow(): Boolean {
+    return this.requestHeaders?.containsKey(MsaFederationConstants.MSA_ID_TOKEN_HEADER_KEY) ?: false
 }
