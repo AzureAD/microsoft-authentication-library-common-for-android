@@ -116,6 +116,9 @@ android {
         dist {
             dimension "main"
         }
+        production{
+            dimension "main"
+        }
     }
 
     sourceSets {
