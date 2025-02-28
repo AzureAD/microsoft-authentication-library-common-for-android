@@ -439,17 +439,26 @@ public class ExceptionAdapter {
 
 
         if (e instanceof OutOfMemoryError) {
-            // Log status code and record exception in span
-            final Span currentSpan = SpanExtension.current();
+            Logger.warn(TAG,
+                    "Received an out of memory error, attempting to attach stacktrace...");
 
-            // Attach the stack trace, to debug in telemetry later
-            currentSpan.setAttribute(
-                    AttributeName.out_of_memory_exception_stacktrace.name(),
-                    StringUtil.getStacktraceAsStringFromElementArray(e.getStackTrace())
-            );
+            // Record exception stacktrace in span
+            // Put this in a try-catch in case this telemetry emit attempt causes another OOM
+            try {
+                final Span currentSpan = SpanExtension.current();
 
-            com.microsoft.identity.common.java.logging.Logger.warn(
-                    TAG, "Received an out of memory error, stacktrace attached to span with id: " + currentSpan.getSpanContext().getSpanId());
+                // Attach the stack trace, to debug in telemetry later
+                currentSpan.setAttribute(
+                        AttributeName.out_of_memory_exception_stacktrace.name(),
+                        StringUtil.getStacktraceAsStringFromElementArray(e.getStackTrace())
+                );
+
+                Logger.warn(TAG,
+                        "Received an out of memory error, stacktrace attached to span with id: " + currentSpan.getSpanContext().getSpanId());
+            } catch (Exception secondException) {
+                Logger.error(TAG,
+                        "Failed to emit telemetry for out of memory exception.", secondException);
+            }
 
             return new ClientException(
                     ClientException.OUT_OF_MEMORY,
