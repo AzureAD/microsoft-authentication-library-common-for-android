@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.opentelemetry;
 
 /**
  * Names of Open Telemetry Span Attributes we want to capture for broker's Spans.
+ * NOTE : Any changes to this enum should also be made in the corresponding enum in Broker.
  */
 public enum AttributeName {
     /**
