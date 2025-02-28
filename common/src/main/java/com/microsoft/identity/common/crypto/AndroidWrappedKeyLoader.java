@@ -265,7 +265,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                 try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
                     keyPair = attemptKeyPairGeneration(mAlias, true, keypairGenStartTime);
                     Logger.info(methodTag, "Successfully generated keypair with new KeyPairGeneratorSpec with wrap purpose.");
-                    span.setAttribute("key_pair_gen_successful_method", "new_key_gen_spec_with_wrap");
+                    span.setAttribute(AttributeName.key_pair_gen_successful_method.name(), "new_key_gen_spec_with_wrap");
                     span.setStatus(StatusCode.OK);
                 } catch (final ProviderException e) {
                     if ("SecureKeyImportUnavailableException".equals(e.getClass().getSimpleName())) {
@@ -324,7 +324,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
 
     private KeyPair generateKeyPairWithLegacySpec(@NonNull final String alias, long keypairGenStartTime) throws ClientException{
         try {
-            KeyPair keyPair = AndroidKeyStoreUtil.generateKeyPair(
+            final KeyPair keyPair = AndroidKeyStoreUtil.generateKeyPair(
                     WRAP_KEY_ALGORITHM, getLegacySpecForKeyStoreKey(mContext, alias));
             recordKeyGenerationTime(keypairGenStartTime);
             return keyPair;
