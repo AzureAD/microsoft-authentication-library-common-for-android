@@ -455,9 +455,9 @@ public class ExceptionAdapter {
 
                 Logger.warn(TAG,
                         "Received an out of memory error, stacktrace attached to span with id: " + currentSpan.getSpanContext().getSpanId());
-            } catch (Exception secondException) {
+            } catch (Throwable throwable) {
                 Logger.error(TAG,
-                        "Failed to emit telemetry for out of memory exception.", secondException);
+                        "Failed to emit telemetry for out of memory exception.", throwable);
             }
 
             return new ClientException(
