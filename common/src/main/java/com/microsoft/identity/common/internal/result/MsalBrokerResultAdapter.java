@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.result;
 
+import static android.os.Process.killProcess;
+import static android.os.Process.myPid;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
@@ -344,6 +346,21 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     .tenantId(((IntuneAppProtectionPolicyRequiredException) exception).getTenantId());
         }
 
+        if (exception instanceof ClientException) {
+            final ClientException clientException = (ClientException) exception;
+            if (ClientException.OUT_OF_MEMORY.equalsIgnoreCase(clientException.getErrorCode())) {
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(2000); // Optional delay before termination
+                        android.os.Process.killProcess(android.os.Process.myPid());
+                        System.exit(0);
+                    } catch (final Exception ignored) {
+
+                    }
+                }).start();
+
+            }
+        }
         final Bundle resultBundle = bundleFromBrokerResult(builder.build(), negotiatedBrokerProtocolVersion);
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, false);
 
