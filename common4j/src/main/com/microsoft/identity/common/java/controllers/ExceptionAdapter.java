@@ -449,7 +449,7 @@ public class ExceptionAdapter {
             );
 
             com.microsoft.identity.common.java.logging.Logger.warn(
-                    TAG, "Received an out of memory error, stacktrace attached to span.");
+                    TAG, "Received an out of memory error, stacktrace attached to span with id: " + currentSpan.getSpanContext().getSpanId());
 
             return new ClientException(
                     ClientException.OUT_OF_MEMORY,

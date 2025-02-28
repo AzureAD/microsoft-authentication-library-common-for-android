@@ -473,14 +473,11 @@ public class StringUtil {
     @NonNull
     public static String getStacktraceAsStringFromElementArray(@NonNull final StackTraceElement[] elements) {
         final StringBuilder builder = new StringBuilder();
-
         builder.append(elements[0]);
-
         for (int i = 1; i < elements.length; i++) {
             builder.append("\n");
             builder.append(elements[i]);
         }
-
         return builder.toString();
     }
 }
