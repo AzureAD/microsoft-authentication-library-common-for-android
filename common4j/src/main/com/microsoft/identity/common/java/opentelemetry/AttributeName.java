@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.opentelemetry;
 
 /**
  * Names of Open Telemetry Span Attributes we want to capture for broker's Spans.
+ * NOTE : Any changes to this enum should also be made in the corresponding enum in Broker.
  */
 public enum AttributeName {
     /**
@@ -327,5 +328,10 @@ public enum AttributeName {
     /**
      * Indicates the exception in generating a keypair.
      */
-    keypair_gen_exception
+    keypair_gen_exception,
+
+    /**
+     * Records the stacktrace for an out-of-memory exception.
+     */
+    out_of_memory_exception_stacktrace
 }
