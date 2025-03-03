@@ -1,5 +1,8 @@
 vNext
 ----------
+
+Version 20.1.0-RC1
+----------
 - [MINOR] Launch browser when a switch_browser redirect URL is present (#2553)
 - [MINOR] Add Broker Webapps operations api. (#2579)
 - [PATCH] Add Telemetry for OOM Errors (#2567)
