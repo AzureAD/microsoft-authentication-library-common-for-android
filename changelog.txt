@@ -1,7 +1,7 @@
 vNext
 ----------
 
-Version 20.1.0-RC1
+Version 20.1.0
 ----------
 - [MINOR] Launch browser when a switch_browser redirect URL is present (#2553)
 - [MINOR] Add Broker Webapps operations api. (#2579)
