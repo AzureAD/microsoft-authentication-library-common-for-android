@@ -152,9 +152,10 @@ public abstract class MicrosoftAccount extends BaseAccount {
             Logger.info(TAG + ":" + methodName, "Using ObjectId as uniqueId");
             uniqueId = (String) claims.get(AzureActiveDirectoryIdToken.OBJECT_ID);
         } else if (!StringUtil.isNullOrEmpty((String) claims.get(AzureActiveDirectoryIdToken.SUBJECT))) {
-            Logger.info(TAG + ":" + methodName, "Using Subject as uniqueId");
+            Logger.info(TAG + ":" + methodName, "Using Subject as uniqueId:");
             uniqueId = (String) claims.get(AzureActiveDirectoryIdToken.SUBJECT);
         }
+        Logger.info(TAG + ":" + methodName, "uniqueId: " + uniqueId);
 
         return uniqueId;
     }

@@ -402,6 +402,9 @@ public class MsalOAuth2TokenCache
         }
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
+        Logger.info(
+                TAG + ":save",
+                "cache record saved with account: " + accountToSave.getHomeAccountId());
         result.account(accountToSave);
         result.accessToken(accessTokenToSave);
         result.refreshToken(refreshTokenToSave);
@@ -1673,6 +1676,11 @@ public class MsalOAuth2TokenCache
         Logger.verbose(
                 TAG + methodName,
                 "Validating cache artifacts..."
+        );
+        Logger.info(
+                TAG + methodName,
+                "Account: " + accountToSave.getLocalAccountId() + " - "
+                        + accountToSave.getUsername()
         );
 
         final boolean isAccountCompliant = isAccountSchemaCompliant(accountToSave);
