@@ -221,8 +221,8 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
             Logger.info(methodTag,"onPageStarted: Non-hierarchical loading uri.");
             Logger.infoPII(methodTag,"start url: " + url);
         } else if (StringUtil.isEmpty(uri.getQueryParameter(AuthenticationConstants.OAuth2.CODE))) {
-            Logger.info(methodTag,"onPageStarted: URI has no auth code ('"
-                    + AuthenticationConstants.OAuth2.CODE + "') query parameter.");
+            Logger.warn(methodTag,"onPageStarted: URI has no auth code ('"
+                    + AuthenticationConstants.OAuth2.CODE + "') query parameter." + url);
             Logger.infoPII(methodTag,"Scheme:" + uri.getScheme() + " Host: " + uri.getHost()
                     + " Path: " + uri.getPath());
         } else {

@@ -557,15 +557,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processInvalidUrl(@NonNull final String url) {
         final String methodTag = TAG + ":processInvalidUrl";
 
-        Logger.infoPII(methodTag,"We are declining to override loading and redirect to invalid URL: '"
-                + removeQueryParametersOrRedact(url) + "' the user's url pattern is '" + mRedirectUrl + "'");
+        Logger.warn(methodTag,"We are declining to override loading and redirect to invalid URL: '"
+                + url + "' the user's url pattern is '" + mRedirectUrl + "'");
     }
 
     private void processHeaderForwardingRequiredUri(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processHeaderForwardingRequiredUri";
 
         Logger.infoPII(methodTag,"We are loading this new URL: '"
-                + removeQueryParametersOrRedact(url) + "' with original requestHeaders appended.");
+                + url + "' with original requestHeaders appended.");
 
         view.loadUrl(url, mRequestHeaders);
     }
