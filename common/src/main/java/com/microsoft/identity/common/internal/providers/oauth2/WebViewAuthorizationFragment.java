@@ -29,7 +29,6 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -55,7 +54,7 @@ import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserUriHelper;
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -63,6 +62,7 @@ import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWeb
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.constants.FidoConstants;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
@@ -127,7 +127,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     // This is used by LegacyFido2ApiManager to launch a PendingIntent received by the legacy API.
     private ActivityResultLauncher<LegacyFido2ApiObject> mFidoLauncher;
     // This flag is used to determine if the fragment is waiting for the switch browser resume endpoint.
-    public boolean isWaitingForSwitchBrowserResumeEndpoint = false;
+    public SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator = null;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -151,10 +151,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Override
     public void onResume() {
         super.onResume();
-        final String methodTag = TAG + ":onResume";
         final Bundle extras = getExtras();
-        if (isSwitchBrowserResumeFlow(extras)) {
-            Logger.info(methodTag, "Resume switch browser protocol on WebView.");
+        if (getSwitchBrowserCoordinator().isSwitchBrowserResume(extras)) {
             resumeSwitchBrowser(extras);
         }
     }
@@ -179,54 +177,29 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     }
 
     /**
-     * Check if the extras contains the switch browser code and action uri.
-     * also checks that the fragment is waiting for the switch browser resume endpoint.
-     * if so, it means we are resuming the switch browser flow.
-     *
-     * @param extras Bundle
-     * @return boolean
-     */
-    private boolean isSwitchBrowserResumeFlow(@NonNull final Bundle extras) {
-        final String methodTag = TAG + ":isSwitchBrowserResumeFlow";
-        final boolean containsActionUri = extras.containsKey(
-                AuthenticationConstants.SWITCH_BROWSER.ACTION_URI
-        );
-        final boolean containsCode = extras.containsKey(
-                AuthenticationConstants.SWITCH_BROWSER.CODE
-        );
-        Logger.verbose(
-                methodTag,
-                "action uri: " + containsActionUri +
-                        ", code: " + containsCode +
-                        ", isWaitingForSwitchBrowserResumeEndpoint: " + isWaitingForSwitchBrowserResumeEndpoint);
-        return containsCode && containsActionUri && isWaitingForSwitchBrowserResumeEndpoint;
-    }
-
-    /**
      * Resume the switch browser protocol flow.
      *
      * @param extras Bundle with the data to resume the switch browser protocol flow.
      */
     private void resumeSwitchBrowser(@NonNull final Bundle extras) {
         final String methodTag = TAG + ":resumeSwitchBrowser";
-        final String actionUri = extras.getString(
-                AuthenticationConstants.SWITCH_BROWSER.ACTION_URI
-        );
-        final String code = extras.getString(
-                AuthenticationConstants.SWITCH_BROWSER.CODE
-        );
-        if (actionUri == null || code == null) {
-            Logger.error(methodTag, "Action URI is null: " + (actionUri == null) +
-                    ", code is null: " + (code == null), null);
+        try {
+            Logger.info(methodTag, "Resuming switch browser flow");
+            getSwitchBrowserCoordinator().processSwitchBrowserResume(
+                    extras,
+                    mRedirectUri,
+                    mClientId,
+                    (switchBrowserResumeUrl, switchBrowserResumeHeaders) -> {
+                        mAuthorizationRequestUrl = switchBrowserResumeUrl;
+                        mRequestHeaders = switchBrowserResumeHeaders;
+                        launchWebView();
+                        return null;
+                    }
+            );
+        } catch (ClientException e) {
+            Logger.error(methodTag, "Error processing switch browser resume", e);
             cancelAuthorization(false);
-            return;
         }
-        final Uri switchBrowserResumeUri = SwitchBrowserUriHelper.INSTANCE.buildResumeUri(actionUri, mRedirectUri, mClientId);
-        final HashMap<String, String> requestHeaders = SwitchBrowserUriHelper.INSTANCE.buildResumeRequestHeaders(code);
-        mAuthorizationRequestUrl = switchBrowserResumeUri.toString();
-        mRequestHeaders = requestHeaders;
-        isWaitingForSwitchBrowserResumeEndpoint = false;
-        launchWebView();
     }
 
     @Override
@@ -300,7 +273,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         }
                     }
                 },
-                mRedirectUri);
+                mRedirectUri,
+                getSwitchBrowserCoordinator().getSwitchBrowserRequestHandler()
+        );
         setUpWebView(view, mAADWebViewClient);
         launchWebView();
         return view;
@@ -584,5 +559,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             mPkeyAuthStatus = status;
             Logger.info(methodTag, null, "setPKeyAuthStatus:" + status);
         }
+    }
+
+    private SwitchBrowserProtocolCoordinator getSwitchBrowserCoordinator() {
+        if (mSwitchBrowserProtocolCoordinator == null) {
+            mSwitchBrowserProtocolCoordinator = new SwitchBrowserProtocolCoordinator(requireActivity());
+        }
+        return mSwitchBrowserProtocolCoordinator;
     }
 }

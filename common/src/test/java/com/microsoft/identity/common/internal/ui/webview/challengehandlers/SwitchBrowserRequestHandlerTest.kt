@@ -43,7 +43,7 @@ import org.powermock.api.mockito.PowerMockito.`when`
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class SwitchBrowserHandlerTest {
+class SwitchBrowserRequestHandlerTest {
 
     @Test
     fun `test processChallenge success`() {
@@ -56,11 +56,11 @@ class SwitchBrowserHandlerTest {
         }.whenever(mockActivity).startActivity(any())
         val context = mock(Context::class.java)
         val customTabsManager = mock(CustomTabsManager::class.java)
-        val challenge = mock(SwitchBrowserChallenge::class.java)
+        val challenge = mock(SwitchBrowserRequestChallenge::class.java)
         `when`(challenge.uri).thenReturn(Uri.parse("https://example.com"))
         val browserSelector = // Browser available
             IBrowserSelector { _, _ -> Browser("fakeBrowser", emptySet(), "browser", false) }
-        val handler = SwitchBrowserHandler(mockActivity, context, customTabsManager, browserSelector)
+        val handler = SwitchBrowserRequestHandler(mockActivity, context, customTabsManager, browserSelector)
         handler.processChallenge(challenge)
         Assert.assertTrue(activityExecuted)
     }
@@ -72,14 +72,14 @@ class SwitchBrowserHandlerTest {
         doNothing().`when`(activity).startActivity(Intent())
         val context = mock(Context::class.java)
         val customTabsManager = mock(CustomTabsManager::class.java)
-        val challenge = mock(SwitchBrowserChallenge::class.java)
+        val challenge = mock(SwitchBrowserRequestChallenge::class.java)
         `when`(challenge.uri).thenReturn(Uri.parse("https://example.com"))
         val browserSelector = IBrowserSelector { _, _ -> null } // No browser available
-        val handler = SwitchBrowserHandler(activity, context, customTabsManager, browserSelector)
+        val handler = SwitchBrowserRequestHandler(activity, context, customTabsManager, browserSelector)
         val exception = Assert.assertThrows(ClientException::class.java) {
             handler.processChallenge(challenge)
         }
         Assert.assertEquals(ClientException.NO_BROWSERS_AVAILABLE, exception.errorCode)
-        Assert.assertEquals("No browser found for SwitchBrowserChallenge.", exception.message)
+        Assert.assertEquals("No browser found for SwitchBrowserRequestChallenge.", exception.message)
     }
 }

@@ -125,52 +125,20 @@ object SwitchBrowserUriHelper {
     }
 
     /**
-     * Build the request headers for the resume endpoint.
-     *
-     * @param code The switch browser code.
-     *
-     * @return The request headers constructed from the bundle.
-     */
-    fun buildResumeRequestHeaders(code: String): HashMap<String, String> {
-        val requestHeaders = hashMapOf(CHALLENGE_RESPONSE_HEADER to code)
-        return requestHeaders
-    }
-
-    /**
-     * Check if the request is to start the switch the browser flow.
+     * Check if the url is a switch browser redirect url
      *
      * The request is considered "switch_browser" if the URL
-     * starts with the following pattern: {redirectUrl}/switch_browser
-     *
+     * starts with the following pattern: {redirectUrl}/{switchBrowserPath}
      *
      * @param url The URL to be checked.
      * @param redirectUrl The redirect URL to be checked against.
+     * @param switchBrowserPath The path to be checked against.
      * @return True if the request matches the pattern, false otherwise.
      */
-    fun isStartSwitchBrowserRequest(url: String?, redirectUrl: String): Boolean {
-        val switchBrowserRedirectUrl = "${redirectUrl}/${SWITCH_BROWSER.START_PATH}"
+    fun isSwitchBrowserRedirectUrl(url: String?, redirectUrl: String, switchBrowserPath: String): Boolean {
         if (url == null) {
             return false
         }
-        return url.startsWith(switchBrowserRedirectUrl, ignoreCase = true)
-    }
-
-    /**
-     * Check if the request is to switch the browser.
-     *
-     * The request is considered "switch_browser" if the URL
-     * starts with the following pattern: {redirectUrl}/switch_browser_resume
-     *
-     *
-     * @param url The URL to be checked.
-     * @param redirectUrl The redirect URL to be checked against.
-     * @return True if the request matches the pattern, false otherwise.
-     */
-    fun isResumeSwitchBrowserRequest(url: String?, redirectUrl: String): Boolean {
-        val switchBrowserRedirectUrl = "${redirectUrl}/${SWITCH_BROWSER.RESUME_PATH}"
-        if (url == null) {
-            return false
-        }
-        return url.startsWith(switchBrowserRedirectUrl, ignoreCase = true)
+        return url.startsWith("${redirectUrl}/${switchBrowserPath}", ignoreCase = true)
     }
 }

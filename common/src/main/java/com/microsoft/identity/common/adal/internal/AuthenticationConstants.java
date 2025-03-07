@@ -543,7 +543,7 @@ public final class AuthenticationConstants {
         /**
          * Path used on the broker redirect url to indicate the start of the switch browser flow.
          */
-        public static final String START_PATH = "switch_browser";
+        public static final String REQUEST_PATH = "switch_browser";
 
         /**
          * String Query parameter key to indicate support for SWITCH_BROWSER protocol.

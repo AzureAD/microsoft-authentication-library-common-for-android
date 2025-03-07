@@ -26,7 +26,6 @@ import android.net.Uri
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
-import com.microsoft.identity.common.java.AuthenticationConstants.Broker.CHALLENGE_RESPONSE_HEADER
 import com.microsoft.identity.common.java.exception.ClientException
 import org.junit.Assert
 import org.junit.Test
@@ -79,52 +78,24 @@ class SwitchBrowserUriHelperTest {
     }
 
     @Test
-    fun `test isStartSwitchBrowserRequest no valid request`() {
+    fun `test isSwitchBrowserRedirectUrl incorrect url`() {
         val url = "https://login.microsoftonline.com/"
+        val redirectUrl = Broker.NEW_BROKER_REDIRECT_URI
+        val path = "path"
         Assert.assertFalse(
-            SwitchBrowserUriHelper.isStartSwitchBrowserRequest(
-                url,
-                Broker.NEW_BROKER_REDIRECT_URI
-            )
+            SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl(url, redirectUrl, path)
         )
     }
 
     @Test
-    fun `test isStartSwitchBrowserRequest  valid request`() {
-        val url = "${Broker.NEW_BROKER_REDIRECT_URI}/" +
-                SWITCH_BROWSER.START_PATH
-        Assert.assertTrue(
-            SwitchBrowserUriHelper.isStartSwitchBrowserRequest(
-                url,
-                Broker.NEW_BROKER_REDIRECT_URI
-            )
-        )
-    }
-
-    @Test
-    fun `test isResumeSwitchBrowserRequest no valid request`() {
-        val url = "https://login.microsoftonline.com/"
+    fun `test isSwitchBrowserRedirectUrl correct url`() {
+        val url = "${Broker.NEW_BROKER_REDIRECT_URI}/path"
+        val redirectUrl = Broker.NEW_BROKER_REDIRECT_URI
+        val path = "path"
         Assert.assertFalse(
-            SwitchBrowserUriHelper.isResumeSwitchBrowserRequest(
-                url,
-                Broker.NEW_BROKER_REDIRECT_URI
-            )
+            SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl(url, redirectUrl, path)
         )
     }
-
-    @Test
-    fun `test isResumeSwitchBrowserRequest  valid request`() {
-        val url = "${Broker.NEW_BROKER_REDIRECT_URI}/" +
-                SWITCH_BROWSER.RESUME_PATH
-        Assert.assertTrue(
-            SwitchBrowserUriHelper.isResumeSwitchBrowserRequest(
-                url,
-                Broker.NEW_BROKER_REDIRECT_URI
-            )
-        )
-    }
-
-
 
     @Test
     fun `test buildResumeUri valid params`() {
@@ -145,16 +116,6 @@ class SwitchBrowserUriHelperTest {
         Assert.assertEquals(
             ACTION_URI,
             uri.host + uri.path
-        )
-    }
-
-    @Test
-    fun `test buildResumeRequestHeaders`() {
-        val headers = SwitchBrowserUriHelper.buildResumeRequestHeaders(CODE)
-        Assert.assertNotNull(headers)
-        Assert.assertEquals(
-            CODE,
-            headers[CHALLENGE_RESPONSE_HEADER]
         )
     }
 }
