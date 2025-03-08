@@ -1607,7 +1607,10 @@ public final class AuthenticationConstants {
             READ_RESTRICTIONS_MANAGER(READ_RESTRICTIONS_MANAGER_PATH, null, null),
             GET_PREFERRED_AUTH_METHOD(BrokerContentProvider.GET_PREFERRED_AUTH_METHOD, null, null),
             BROKER_INDIVIDUAL_LOGS_UPLOAD(BROKER_INDIVIDUAL_LOGS_UPLOAD_PATH, null, null),
-            BROKER_RESTORE_MSA_ACCOUNTS_WITH_TRANSFER_TOKENS(BROKER_RESTORE_MSA_ACCOUNTS_WITH_TRANSFER_TOKENS_PATH, BROKER_VERSION_5, null);
+            BROKER_RESTORE_MSA_ACCOUNTS_WITH_TRANSFER_TOKENS(BROKER_RESTORE_MSA_ACCOUNTS_WITH_TRANSFER_TOKENS_PATH, BROKER_VERSION_5, null),
+
+            WEBAPPS_GET_SUPPORTED_WEB_APPS_CONTRACTS(WEBAPPS_GET_SUPPORTED_WEB_APPS_CONTRACTS_PATH, null, null),
+            WEBAPPS_EXECUTE_WEB_APPS_REQUEST(WEBAPPS_EXECUTE_WEB_APPS_REQUEST_PATH, null, null);
 
             /**
              * The content provider path that the API exists behind.
@@ -1775,6 +1778,16 @@ public final class AuthenticationConstants {
          * produce errors if an app using the NEW WPJ API communicates with this version of the broker.
          */
         public static final String DEVICE_REGISTRATION_PROTOCOLS_PATH = "/multipledeviceRegistration/protocols";
+
+        /**
+         * Broker ContentProvider path for getting Web App supported contracts.
+         */
+        public static final String WEBAPPS_GET_SUPPORTED_WEB_APPS_CONTRACTS_PATH = "/webapp/getSupportedWebAppsContracts";
+
+        /**
+         * Broker ContentProvider path for executing Web App request.
+         */
+        public static final String WEBAPPS_EXECUTE_WEB_APPS_REQUEST_PATH = "/webapp/executeWebAppsRequest";
 
         /**
          * BrokerContentProvider URI code constant for MSAL-to-Broker hello request.

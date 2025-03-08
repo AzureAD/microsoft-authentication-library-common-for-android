@@ -463,4 +463,21 @@ public class StringUtil {
             chars[i] = '\0';
         }
     }
+
+    /**
+     * Converts an array of stack trace elements (one method invocation) into one concatenated string object.
+     *
+     * @param elements list of stacktrace elements
+     * @return concatenated string list
+     */
+    @NonNull
+    public static String getStacktraceAsStringFromElementArray(@NonNull final StackTraceElement[] elements) {
+        final StringBuilder builder = new StringBuilder();
+        builder.append(elements[0]);
+        for (int i = 1; i < elements.length; i++) {
+            builder.append("\n");
+            builder.append(elements[i]);
+        }
+        return builder.toString();
+    }
 }
