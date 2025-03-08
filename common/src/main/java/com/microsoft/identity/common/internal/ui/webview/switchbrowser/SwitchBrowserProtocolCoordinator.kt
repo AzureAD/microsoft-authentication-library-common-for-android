@@ -61,6 +61,7 @@ class SwitchBrowserProtocolCoordinator(
         clientId: String,
         onSuccessAction: (Uri, HashMap<String, String>) -> Unit
     ) {
+        val methodTag = "$TAG:processSwitchBrowserResume"
         val actionUri = extras.getString(SWITCH_BROWSER.ACTION_URI)
         val code = extras.getString(SWITCH_BROWSER.CODE)
         if (actionUri.isNullOrEmpty() || code.isNullOrEmpty()) {
@@ -73,29 +74,20 @@ class SwitchBrowserProtocolCoordinator(
             buildResumeUri(actionUri, redirectUrl, clientId),
             hashMapOf(AUTHORIZATION to code)
         )
+        // Reset the challenge state after processing the resume action
         switchBrowserRequestHandler.resetChallengeState()
+        Logger.info(methodTag, "Switch browser resume action processed successfully.")
     }
 
     /**
-     * Check if the extras contains the switch browser code and action uri.
-     * also checks that the request is expecting a switch browser request.
+     * Check if the handler processed a switch browser request.
      * if so, it means we are resuming the switch browser flow.
      *
-     * @param extras Bundle containing the switch browser action URI and code.
      * @return boolean
      */
-    fun isSwitchBrowserResume(extras: Bundle): Boolean {
-        val methodTag = "$TAG:isSwitchBrowserResumeFlow"
-
-        val containsActionUri = extras.containsKey(SWITCH_BROWSER.ACTION_URI)
-        val containsCode = extras.containsKey(SWITCH_BROWSER.CODE)
-        val expectingRequest = switchBrowserRequestHandler.isChallengeHandled
-        Logger.verbose(
-            methodTag,
-            "action uri: $containsActionUri," +
-                    " code: $containsCode," +
-                    " expectingRequest: $expectingRequest"
-        )
-        return containsCode && containsActionUri && expectingRequest
+    fun isExpectingSwitchBrowserResume(): Boolean {
+        val methodTag = "$TAG:isExpectingSwitchBrowserResume"
+        Logger.verbose(methodTag, " expectingRequest: ${switchBrowserRequestHandler.isChallengeHandled}")
+        return switchBrowserRequestHandler.isChallengeHandled
     }
 }

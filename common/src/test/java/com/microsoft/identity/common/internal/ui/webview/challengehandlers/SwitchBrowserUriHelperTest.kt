@@ -93,7 +93,7 @@ class SwitchBrowserUriHelperTest {
         val url = "${Broker.NEW_BROKER_REDIRECT_URI}/path"
         val redirectUrl = Broker.NEW_BROKER_REDIRECT_URI
         val path = "path"
-        Assert.assertFalse(
+        Assert.assertTrue(
             SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl(url, redirectUrl, path)
         )
     }

@@ -138,6 +138,7 @@ object SwitchBrowserUriHelper {
         if (url == null) {
             return false
         }
-        return url.startsWith("${redirectUrl}/${switchBrowserPath}", ignoreCase = true)
+        val expectedUrl = "$redirectUrl/$switchBrowserPath"
+        return url.startsWith(expectedUrl, ignoreCase = true)
     }
 }

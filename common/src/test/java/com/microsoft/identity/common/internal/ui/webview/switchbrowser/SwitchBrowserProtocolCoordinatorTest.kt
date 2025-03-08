@@ -93,17 +93,13 @@ class SwitchBrowserProtocolCoordinatorTest {
     @Test
     fun `test isSwitchBrowserResume with extras and handler true`() {
         // Mock parameters
-        val extras = Bundle().apply {
-            putString(AuthenticationConstants.SWITCH_BROWSER.CODE, "switch_browser_code")
-            putString(AuthenticationConstants.SWITCH_BROWSER.ACTION_URI, "test.example.com/switchbrowser/path")
-        }
         val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
         `when`(mockSwitchBrowserRequestHandler.isChallengeHandled).then { true }
         // Create an instance of SwitchBrowserProtocolCoordinator
         val coordinator = SwitchBrowserProtocolCoordinator(mockSwitchBrowserRequestHandler)
 
         // Call the method to be tested
-        val result = coordinator.isSwitchBrowserResume(extras)
+        val result = coordinator.isExpectingSwitchBrowserResume()
 
         // Verify the result
         Assert.assertTrue(result)
@@ -112,36 +108,13 @@ class SwitchBrowserProtocolCoordinatorTest {
     @Test
     fun `test isSwitchBrowserResume with extras handler false`() {
         // Mock parameters
-        val extras = Bundle().apply {
-            putString(AuthenticationConstants.SWITCH_BROWSER.CODE, "switch_browser_code")
-            putString(AuthenticationConstants.SWITCH_BROWSER.ACTION_URI, "test.example.com/switchbrowser/path")
-        }
         val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
         `when`(mockSwitchBrowserRequestHandler.isChallengeHandled).then { false }
         // Create an instance of SwitchBrowserProtocolCoordinator
         val coordinator = SwitchBrowserProtocolCoordinator(mockSwitchBrowserRequestHandler)
 
         // Call the method to be tested
-        val result = coordinator.isSwitchBrowserResume(extras)
-
-        // Verify the result
-        Assert.assertFalse(result)
-    }
-
-    @Test
-    fun `test isSwitchBrowserResume with missing extras handler true`() {
-        // Mock parameters
-        val extras = Bundle().apply {
-            // Missing code
-            // Missing ACTION_URI
-        }
-        val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
-        `when`(mockSwitchBrowserRequestHandler.isChallengeHandled).then { true }
-        // Create an instance of SwitchBrowserProtocolCoordinator
-        val coordinator = SwitchBrowserProtocolCoordinator(mockSwitchBrowserRequestHandler)
-
-        // Call the method to be tested
-        val result = coordinator.isSwitchBrowserResume(extras)
+        val result = coordinator.isExpectingSwitchBrowserResume()
 
         // Verify the result
         Assert.assertFalse(result)

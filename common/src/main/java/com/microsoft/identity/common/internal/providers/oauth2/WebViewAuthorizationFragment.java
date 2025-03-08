@@ -151,8 +151,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Override
     public void onResume() {
         super.onResume();
+        final String methodTag = TAG + ":onResume";
         final Bundle extras = getExtras();
-        if (getSwitchBrowserCoordinator().isSwitchBrowserResume(extras)) {
+        Logger.info(methodTag, "extras: " + extras.keySet());
+        if (getSwitchBrowserCoordinator().isExpectingSwitchBrowserResume()) {
             resumeSwitchBrowser(extras);
         }
     }
@@ -198,7 +200,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             );
         } catch (ClientException e) {
             Logger.error(methodTag, "Error processing switch browser resume", e);
-            cancelAuthorization(false);
+            sendResult(RawAuthorizationResult.fromException(e));
+            finish();
         }
     }
 
