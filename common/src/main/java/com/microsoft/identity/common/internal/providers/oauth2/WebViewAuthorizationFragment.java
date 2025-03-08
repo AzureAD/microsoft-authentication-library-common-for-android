@@ -189,8 +189,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     extras,
                     mRedirectUri,
                     mClientId,
-                    (switchBrowserResumeUrl, switchBrowserResumeHeaders) -> {
-                        mAuthorizationRequestUrl = switchBrowserResumeUrl;
+                    (switchBrowserResumeUri, switchBrowserResumeHeaders) -> {
+                        mAuthorizationRequestUrl = switchBrowserResumeUri.toString();
                         mRequestHeaders = switchBrowserResumeHeaders;
                         launchWebView();
                         return null;

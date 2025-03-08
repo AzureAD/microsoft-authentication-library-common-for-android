@@ -26,6 +26,7 @@ import android.net.Uri
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper
 import com.microsoft.identity.common.java.exception.ClientException
 import org.junit.Assert
 import org.junit.Test

@@ -28,7 +28,7 @@ import android.content.Intent
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
 import com.microsoft.identity.common.internal.ui.browser.AndroidBrowserSelector
 import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl
 import com.microsoft.identity.common.java.browser.IBrowserSelector
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.ui.BrowserDescriptor
