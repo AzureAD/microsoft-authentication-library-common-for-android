@@ -60,5 +60,6 @@ public enum SpanName {
     RemoveBrokerAccount,
     ProcessNonceFromEstsRedirect,
     DataStoreCorruptionException,
-    KeyPairGeneration
+    KeyPairGeneration,
+    ProcessCrossCloudRedirect
 }

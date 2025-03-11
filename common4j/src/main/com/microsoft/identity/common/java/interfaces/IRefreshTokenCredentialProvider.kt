@@ -34,4 +34,9 @@ interface IRefreshTokenCredentialProvider {
      * Gets refresh token credential using nonce retrieved from webview.
      */
     fun getRefreshTokenCredentialUsingNewNonce(inputUrl : String, username : String, nonce : String) : String?
+
+    /**
+     * Gets refresh token credential.
+     */
+    fun getRefreshTokenCredential(inputUrl : String, username : String) : String?
 }

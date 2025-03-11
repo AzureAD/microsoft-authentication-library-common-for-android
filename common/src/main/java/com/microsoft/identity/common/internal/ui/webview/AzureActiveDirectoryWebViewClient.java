@@ -51,10 +51,12 @@ import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizat
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CrossCloudChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserUriHelper;
+import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.exception.IErrorInformation;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
@@ -63,6 +65,7 @@ import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -114,6 +117,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private AbstractCertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
     private final SwitchBrowserHandler mSwitchBrowserHandler;
     private HashMap<String, String> mRequestHeaders;
+    private String mRequestUrl;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
@@ -161,6 +165,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     public void setRequestHeaders(final HashMap<String, String> requestHeaders) {
         mRequestHeaders = requestHeaders;
+    }
+
+    public void setRequestUrl(final String requestUrl) {
+        mRequestUrl = requestUrl;
     }
 
     /**
@@ -248,7 +256,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processSSLProtectionCheck(view, url);
             } else if (isHeaderForwardingRequiredUri(url)) {
                 processHeaderForwardingRequiredUri(view, url);
-            } else {
+            } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD) && isCrossCloudRedirect(formattedURL)) {
+                Logger.info(methodTag,"Navigation contains cross cloud redirect.");
+                processCloudRedirectAndPrtHeader(view, url);
+            }
+             else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
                 processInvalidUrl(url);
 
@@ -298,6 +310,25 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isNonceRedirect(@NonNull final String url) {
         return url.contains(AuthenticationConstants.Broker.SSO_NONCE_PARAMETER);
+    }
+
+    private boolean isCrossCloudRedirect(@NonNull final String url) {
+        try {
+            final URL currentUrl = new URL(url);
+            final URL startUrl = new URL(mRequestUrl);
+            if (AzureActiveDirectory.isValidCloudHost(currentUrl) && AzureActiveDirectory.isValidCloudHost(startUrl)) {
+                final Authority startUrlAuthority = Authority.getAuthorityFromAuthorityUrl(mRequestUrl);
+                final Authority currentLoadedUrlAuthority = Authority.getAuthorityFromAuthorityUrl(url);
+                if (!startUrlAuthority.getAuthorityURL().getHost().equalsIgnoreCase(currentLoadedUrlAuthority.getAuthorityURL().getHost())) {
+                    Logger.info(TAG, "Detected a cross cloud redirect.");
+                    return true;
+                }
+            }
+        } catch (final Exception e) {
+            // No op. If it fails, let it fail silently because this is not blocking the user.
+            Logger.warn(TAG, "Failure in detecting if it is a cross cloud redirect url." + e);
+        }
+        return false;
     }
 
     private boolean isWebsiteRequestUrl(@NonNull final String url) {
@@ -599,6 +630,28 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } finally {
                 span.end();
             }
+        }
+    }
+
+    /**
+     * This method is used to process the cross cloud redirect and attach the PRT header to the request.
+     */
+    private void processCloudRedirectAndPrtHeader(@NonNull final WebView view, @NonNull final String url) {
+        final String methodTag = TAG + ":processCloudRedirectAndPrtHeader";
+
+        final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
+        final Span span = spanContext != null ?
+                OTelUtility.createSpanFromParent(SpanName.ProcessCrossCloudRedirect.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessCrossCloudRedirect.name());
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            final CrossCloudChallengeHandler crossCloudChallengeHandler = new CrossCloudChallengeHandler(view, mRequestHeaders, span);
+            crossCloudChallengeHandler.processChallenge(new URL(url));
+            span.setStatus(StatusCode.OK);
+        } catch (final Exception e) {
+            // No op if an exception happens
+            Logger.warn(methodTag, "Error processing cross cloud redirect and attaching PRT header." + e);
+            span.recordException(e);
+        } finally {
+            span.end();
         }
     }
 
