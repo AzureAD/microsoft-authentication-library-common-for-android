@@ -39,13 +39,13 @@ class CrossCloudChallengeHandler(
     private val webView: WebView,
     private val headers: HashMap<String, String>,
     private val span : Span
-) : IChallengeHandler<URL, Void> {
+) : IChallengeHandler<String, Void> {
     private val TAG = CrossCloudChallengeHandler::class.java.simpleName
 
-    override fun processChallenge(input: URL): Void? {
+    override fun processChallenge(inputUrl: String): Void? {
         Logger.info(TAG, "Processing challenge of a cross cloud request.")
-        modifyHeadersWithRefreshTokenCredential(input.toString())
-        webView.loadUrl(input.toString(), headers)
+        modifyHeadersWithRefreshTokenCredential(inputUrl)
+        webView.loadUrl(inputUrl, headers)
         return null
     }
 
@@ -56,16 +56,16 @@ class CrossCloudChallengeHandler(
         val methodTag = "$TAG:modifyHeadersWithRefreshTokenCredential"
         val parameters: Map<String, String> = StringExtensions.getUrlParameters(url)
         val username = parameters["login_hint"]
-        if (!StringUtils.isNullOrEmpty(username)) {
+        if (!username.isNullOrEmpty()) {
             val updatedRefreshTokenCredentialHeader =
                 CommonRefreshTokenCredentialProvider.getRefreshTokenCredential(
-                    url, username!!
+                    url, username
                 )
-            if (!StringUtils.isNullOrEmpty(updatedRefreshTokenCredentialHeader)) {
+            if (!updatedRefreshTokenCredentialHeader.isNullOrEmpty()) {
                 Logger.info(methodTag, "Attaching refresh token credential in headers.")
                 span.setAttribute(AttributeName.is_new_refresh_token_cred_header_attached.name, true)
                 headers[AuthenticationConstants.Broker.PRT_RESPONSE_HEADER] =
-                    updatedRefreshTokenCredentialHeader!!
+                    updatedRefreshTokenCredentialHeader
             }
         }
     }
