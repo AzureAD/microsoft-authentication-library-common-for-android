@@ -190,9 +190,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     mRedirectUri,
                     mClientId,
                     (switchBrowserResumeUri, switchBrowserResumeHeaders) -> {
-                        mAuthorizationRequestUrl = switchBrowserResumeUri.toString();
-                        mRequestHeaders = switchBrowserResumeHeaders;
-                        launchWebView();
+                        launchWebView(switchBrowserResumeUri.toString(), switchBrowserResumeHeaders);
                         return null;
                     }
             );
@@ -278,7 +276,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 getSwitchBrowserCoordinator().getSwitchBrowserRequestHandler()
         );
         setUpWebView(view, mAADWebViewClient);
-        launchWebView();
+        launchWebView(mAuthorizationRequestUrl, mRequestHeaders);
         return view;
     }
 
@@ -451,17 +449,18 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     /**
      * Loads starting authorization request url into WebView.
      */
-    private void launchWebView() {
+    private void launchWebView(@NonNull final String authorizationRequestUrl,
+                               @NonNull final HashMap<String, String> requestHeaders) {
         final String methodTag = TAG + ":launchWebView";
         mWebView.post(new Runnable() {
             @Override
             public void run() {
                 Logger.info(methodTag, "Launching embedded WebView for acquiring auth code.");
-                Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
+                Logger.infoPII(methodTag, "The start url is " + authorizationRequestUrl);
 
-                mAADWebViewClient.setRequestHeaders(mRequestHeaders);
-                mAADWebViewClient.setRequestUrl(mAuthorizationRequestUrl);
-                mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
+                mAADWebViewClient.setRequestHeaders(requestHeaders);
+                mAADWebViewClient.setRequestUrl(authorizationRequestUrl);
+                mWebView.loadUrl(authorizationRequestUrl, requestHeaders);
 
                 // The first page load could take time, and we do not want to just show a blank page.
                 // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.
