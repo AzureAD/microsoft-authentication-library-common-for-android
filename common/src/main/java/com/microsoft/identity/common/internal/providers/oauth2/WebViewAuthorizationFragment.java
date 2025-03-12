@@ -126,8 +126,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     // This is used by LegacyFido2ApiManager to launch a PendingIntent received by the legacy API.
     private ActivityResultLauncher<LegacyFido2ApiObject> mFidoLauncher;
-    // This flag is used to determine if the fragment is waiting for the switch browser resume endpoint.
-    public SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator = null;
+    // This is used by the switch browser protocol to handle the resume of the flow.
+    private SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator = null;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -152,10 +152,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     public void onResume() {
         super.onResume();
         final String methodTag = TAG + ":onResume";
-        final Bundle extras = getExtras();
-        Logger.info(methodTag, "extras: " + extras.keySet());
         if (getSwitchBrowserCoordinator().isExpectingSwitchBrowserResume()) {
-            resumeSwitchBrowser(extras);
+            resumeSwitchBrowser(getExtras());
         }
     }
 
@@ -198,7 +196,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         return null;
                     }
             );
-        } catch (ClientException e) {
+        } catch (final ClientException e) {
             Logger.error(methodTag, "Error processing switch browser resume", e);
             sendResult(RawAuthorizationResult.fromException(e));
             finish();

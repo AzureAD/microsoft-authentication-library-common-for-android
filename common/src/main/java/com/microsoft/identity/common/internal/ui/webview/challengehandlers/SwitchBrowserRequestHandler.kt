@@ -35,7 +35,7 @@ import com.microsoft.identity.common.java.ui.BrowserDescriptor
 import com.microsoft.identity.common.logging.Logger
 
 /**
- * SwitchBrowserRequestHandler is a challenge handler for SwitchBrowserRequestChallenge.
+ * SwitchBrowserRequestHandler is a challenge handler for SwitchBrowserChallenge.
  * It handles the challenge by selecting a valid browser to launch the Switch browser URI.
  */
 class SwitchBrowserRequestHandler(
@@ -43,7 +43,7 @@ class SwitchBrowserRequestHandler(
     private val context: Context,
     private val customTabsManager: CustomTabsManager,
     private val browserSelector: IBrowserSelector
-) : IChallengeHandler<SwitchBrowserRequestChallenge, Unit> {
+) : IChallengeHandler<SwitchBrowserChallenge, Unit> {
 
 
     var isChallengeHandled: Boolean = false
@@ -61,14 +61,14 @@ class SwitchBrowserRequestHandler(
     )
 
     /**
-     * Process the SwitchBrowserRequestChallenge, which is a request to switch the browser.
+     * Process the SwitchBrowserChallenge, which is a request to switch the browser.
      * This method will select a valid browser to launch the challenge URI.
      *
-     * @param switchBrowserRequestChallenge challenge request
+     * @param switchBrowserChallenge challenge request
      * @return true if the challenge is handled successfully, false otherwise.
      */
     @Throws(ClientException::class)
-    override fun processChallenge(switchBrowserRequestChallenge: SwitchBrowserRequestChallenge) {
+    override fun processChallenge(switchBrowserChallenge: SwitchBrowserChallenge) {
         val methodTag = "$TAG:processChallenge"
 
         // Select a browser to handle the switch browser challenge
@@ -79,11 +79,11 @@ class SwitchBrowserRequestHandler(
         if (browser == null) {
             val exception = ClientException(
                 ClientException.NO_BROWSERS_AVAILABLE,
-                "No browser found for SwitchBrowserRequestChallenge."
+                "No browser found for SwitchBrowserChallenge."
             )
             Logger.error(
                 methodTag,
-                "No browser found for SwitchBrowserRequestChallenge.",
+                "No browser found for SwitchBrowserChallenge.",
                 exception
             )
             throw exception
@@ -109,13 +109,13 @@ class SwitchBrowserRequestHandler(
             "Launching switch browser request on browser: ${browser.packageName}"
         )
         browserIntent.setPackage(browser.packageName)
-        browserIntent.setData(switchBrowserRequestChallenge.uri)
+        browserIntent.setData(switchBrowserChallenge.uri)
         activity.startActivity(browserIntent)
         isChallengeHandled = true
     }
 
     /**
-     * Check if the request is to start the switch the browser flow.
+     *  Check if the request is to start the switch browser flow.
      *
      * The request is considered "switch_browser" if the URL
      * starts with the following pattern: {redirectUrl}/switch_browser

@@ -51,7 +51,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizat
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestChallenge;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
 import com.microsoft.identity.common.java.constants.FidoConstants;
@@ -358,7 +358,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodTag = TAG + ":processSwitchBrowserRequest";
         try {
             mSwitchBrowserRequestHandler.processChallenge(
-                    SwitchBrowserRequestChallenge.constructFromRedirectUrl(url)
+                    SwitchBrowserChallenge.constructFromRedirectUrl(url)
             );
         } catch (final Throwable throwable) {
             Logger.error(methodTag, "Switch browser challenge could not be processed.", throwable);

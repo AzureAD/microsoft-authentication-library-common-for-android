@@ -56,7 +56,7 @@ class SwitchBrowserRequestHandlerTest {
         }.whenever(mockActivity).startActivity(any())
         val context = mock(Context::class.java)
         val customTabsManager = mock(CustomTabsManager::class.java)
-        val challenge = mock(SwitchBrowserRequestChallenge::class.java)
+        val challenge = mock(SwitchBrowserChallenge::class.java)
         `when`(challenge.uri).thenReturn(Uri.parse("https://example.com"))
         val browserSelector = // Browser available
             IBrowserSelector { _, _ -> Browser("fakeBrowser", emptySet(), "browser", false) }
@@ -72,7 +72,7 @@ class SwitchBrowserRequestHandlerTest {
         doNothing().`when`(activity).startActivity(Intent())
         val context = mock(Context::class.java)
         val customTabsManager = mock(CustomTabsManager::class.java)
-        val challenge = mock(SwitchBrowserRequestChallenge::class.java)
+        val challenge = mock(SwitchBrowserChallenge::class.java)
         `when`(challenge.uri).thenReturn(Uri.parse("https://example.com"))
         val browserSelector = IBrowserSelector { _, _ -> null } // No browser available
         val handler = SwitchBrowserRequestHandler(activity, context, customTabsManager, browserSelector)
@@ -80,6 +80,6 @@ class SwitchBrowserRequestHandlerTest {
             handler.processChallenge(challenge)
         }
         Assert.assertEquals(ClientException.NO_BROWSERS_AVAILABLE, exception.errorCode)
-        Assert.assertEquals("No browser found for SwitchBrowserRequestChallenge.", exception.message)
+        Assert.assertEquals("No browser found for SwitchBrowserChallenge.", exception.message)
     }
 }

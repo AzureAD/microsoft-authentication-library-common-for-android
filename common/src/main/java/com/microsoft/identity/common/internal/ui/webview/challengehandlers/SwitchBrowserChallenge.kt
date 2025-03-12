@@ -26,30 +26,30 @@ import android.net.Uri
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper
 
 /**
- * SwitchBrowserRequestChallenge is a challenge to switch from WebView to browser.
+ * SwitchBrowserChallenge is a challenge to switch from WebView to browser.
  * It contains the URI to be opened in the new browser.
  */
-data class SwitchBrowserRequestChallenge(
+data class SwitchBrowserChallenge(
     val uri: Uri,
 ) {
 
     companion object {
         /**
-         * Construct a SwitchBrowserRequestChallenge from the redirect URI.
+         * Construct a SwitchBrowserChallenge from the redirect URI.
          *
          * @param redirectUrl The redirect URL containing the switch browser code and action URI.
          * e.g. {redirectUrl}/switch_browser?code=code&action_uri=action-uri
          *
-         * @return The SwitchBrowserRequestChallenge constructed from the redirect URI.
-         * e.g. SwitchBrowserRequestChallenge(uri = action-uri?code=code)
+         * @return The SwitchBrowserChallenge constructed from the redirect URI.
+         * e.g. SwitchBrowserChallenge(uri = action-uri?code=code)
          * params: redirectUri: Uri
          */
         @JvmStatic
         @Throws(Exception::class)
-        fun constructFromRedirectUrl(redirectUrl: String): SwitchBrowserRequestChallenge {
+        fun constructFromRedirectUrl(redirectUrl: String): SwitchBrowserChallenge {
             Uri.parse(redirectUrl).let { redirectUri ->
                 SwitchBrowserUriHelper.buildProcessUri(redirectUri).let { processUri ->
-                    return SwitchBrowserRequestChallenge(uri = processUri)
+                    return SwitchBrowserChallenge(uri = processUri)
                 }
             }
         }
