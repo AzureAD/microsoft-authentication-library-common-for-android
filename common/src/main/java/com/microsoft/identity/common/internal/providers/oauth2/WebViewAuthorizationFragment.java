@@ -151,7 +151,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Override
     public void onResume() {
         super.onResume();
-        final String methodTag = TAG + ":onResume";
         if (getSwitchBrowserCoordinator().isExpectingSwitchBrowserResume()) {
             resumeSwitchBrowser(getExtras());
         }
