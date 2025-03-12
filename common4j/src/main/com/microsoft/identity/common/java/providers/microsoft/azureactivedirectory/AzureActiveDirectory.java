@@ -95,7 +95,7 @@ public class AzureActiveDirectory
         return sAadClouds.containsKey(authorityUrl.getHost().toLowerCase(Locale.US));
     }
 
-    static synchronized boolean isValidCloudHost(@NonNull final URL authorityUrl) {
+    public static synchronized boolean isValidCloudHost(@NonNull final URL authorityUrl) {
         return hasCloudHost(authorityUrl) && getAzureActiveDirectoryCloud(authorityUrl).isValidated();
     }
 

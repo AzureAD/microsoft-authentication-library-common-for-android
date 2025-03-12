@@ -1,5 +1,6 @@
-vNext
+Version 20.1.2
 ----------
+- [PATCH] Fix multiple prompts issue in cross cloud request (#2599)
 
 Version 20.1.1
 ----------
