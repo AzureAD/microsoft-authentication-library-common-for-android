@@ -460,6 +460,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
 
                 mAADWebViewClient.setRequestHeaders(mRequestHeaders);
+                mAADWebViewClient.setRequestUrl(mAuthorizationRequestUrl);
                 mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
 
                 // The first page load could take time, and we do not want to just show a blank page.
