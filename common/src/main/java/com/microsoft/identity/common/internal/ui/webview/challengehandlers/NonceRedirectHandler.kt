@@ -65,24 +65,25 @@ class NonceRedirectHandler(
         nonce: String,
         url: String
     ) {
-        val methodTag = "$TAG:getHeadersWithNewRefreshTokenCredential"
-        val prtHeader = getPrtHeader(headers)
-        if (!prtHeader.isNullOrEmpty()) {
-            Logger.info(methodTag, "PRT credential header found in headers!")
-            val username = getUserNameFromWebViewUrl(url)
-            if (username != null) {
-                val updatedRefreshTokenCredentialHeader =
-                    CommonRefreshTokenCredentialProvider.getRefreshTokenCredentialUsingNewNonce(
-                        url, username,
-                        nonce
-                    )
-                if (updatedRefreshTokenCredentialHeader != null) {
-                    headers[AuthenticationConstants.Broker.PRT_RESPONSE_HEADER] =
-                        updatedRefreshTokenCredentialHeader
-                    span.setAttribute(AttributeName.is_new_refresh_token_cred_header_attached.name, true)
-                }
-            }
-        }
+        throw Exception("test")
+//        val methodTag = "$TAG:getHeadersWithNewRefreshTokenCredential"
+//        val prtHeader = getPrtHeader(headers)
+//        if (!prtHeader.isNullOrEmpty()) {
+//            Logger.info(methodTag, "PRT credential header found in headers!")
+//            val username = getUserNameFromWebViewUrl(url)
+//            if (username != null) {
+//                val updatedRefreshTokenCredentialHeader =
+//                    CommonRefreshTokenCredentialProvider.getRefreshTokenCredentialUsingNewNonce(
+//                        url, username,
+//                        nonce
+//                    )
+//                if (updatedRefreshTokenCredentialHeader != null) {
+//                    headers[AuthenticationConstants.Broker.PRT_RESPONSE_HEADER] =
+//                        updatedRefreshTokenCredentialHeader
+//                    span.setAttribute(AttributeName.is_new_refresh_token_cred_header_attached.name, true)
+//                }
+//            }
+//        }
     }
 
     private fun getUserNameFromWebViewUrl(url: String): String? {

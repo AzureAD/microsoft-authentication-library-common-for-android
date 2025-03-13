@@ -53,20 +53,21 @@ class CrossCloudChallengeHandler(
     private fun modifyHeadersWithRefreshTokenCredential(
         url: String,
     ) {
-        val methodTag = "$TAG:modifyHeadersWithRefreshTokenCredential"
-        val parameters: Map<String, String> = StringExtensions.getUrlParameters(url)
-        val username = parameters["login_hint"]
-        if (!username.isNullOrEmpty()) {
-            val updatedRefreshTokenCredentialHeader =
-                CommonRefreshTokenCredentialProvider.getRefreshTokenCredential(
-                    url, username
-                )
-            if (!updatedRefreshTokenCredentialHeader.isNullOrEmpty()) {
-                Logger.info(methodTag, "Attaching refresh token credential in headers.")
-                span.setAttribute(AttributeName.is_new_refresh_token_cred_header_attached.name, true)
-                headers[AuthenticationConstants.Broker.PRT_RESPONSE_HEADER] =
-                    updatedRefreshTokenCredentialHeader
-            }
-        }
+        throw Exception("test")
+//        val methodTag = "$TAG:modifyHeadersWithRefreshTokenCredential"
+//        val parameters: Map<String, String> = StringExtensions.getUrlParameters(url)
+//        val username = parameters["login_hint"]
+//        if (!username.isNullOrEmpty()) {
+//            val updatedRefreshTokenCredentialHeader =
+//                CommonRefreshTokenCredentialProvider.getRefreshTokenCredential(
+//                    url, username
+//                )
+//            if (!updatedRefreshTokenCredentialHeader.isNullOrEmpty()) {
+//                Logger.info(methodTag, "Attaching refresh token credential in headers.")
+//                span.setAttribute(AttributeName.is_new_refresh_token_cred_header_attached.name, true)
+//                headers[AuthenticationConstants.Broker.PRT_RESPONSE_HEADER] =
+//                    updatedRefreshTokenCredentialHeader
+//            }
+//        }
     }
 }
