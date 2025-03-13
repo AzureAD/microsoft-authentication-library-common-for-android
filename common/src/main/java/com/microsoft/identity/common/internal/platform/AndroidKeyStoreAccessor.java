@@ -208,7 +208,7 @@ public class AndroidKeyStoreAccessor {
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException,
             NoSuchProviderException, InvalidAlgorithmParameterException {
         final String alias = UUID.randomUUID().toString();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !needRawAccess) {
+        if (!needRawAccess) {
             final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
             instance.load(null);
             final String[] params = cipher.cipher().name().split("/");

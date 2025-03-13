@@ -23,18 +23,13 @@
 package com.microsoft.identity.common.internal.platform;
 
 import android.content.Context;
-import android.os.Build;
 import android.util.Base64;
 
-import androidx.annotation.RequiresApi;
 import androidx.test.InstrumentationRegistry;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.google.gson.reflect.TypeToken;
@@ -457,7 +452,6 @@ public class AndroidDevicePoPManagerTests {
     }
 
     @Test
-    @RequiresApi(Build.VERSION_CODES.N)
     public void testHasCertificateChain24() throws ClientException {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
         mDevicePopManager.generateAsymmetricKey();
@@ -474,7 +468,6 @@ public class AndroidDevicePoPManagerTests {
     }
 
     @Test
-    @RequiresApi(Build.VERSION_CODES.N)
     public void testNullWhenQueryingNonexistentChain24() throws ClientException {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
         // Returns null for nonexistent key

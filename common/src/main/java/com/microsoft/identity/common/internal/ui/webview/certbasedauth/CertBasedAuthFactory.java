@@ -28,7 +28,6 @@ import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
@@ -118,7 +117,6 @@ public class CertBasedAuthFactory {
 
         //Need input from user to determine which CertBasedAuthChallengeHandler to return.
         mDialogHolder.showUserChoiceDialog(new UserChoiceDialog.PositiveButtonListener() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onClick(final int checkedPosition) {
                 //Position 0 -> On-device
@@ -135,7 +133,6 @@ public class CertBasedAuthFactory {
                 setUpForSmartcardCertBasedAuth(callback, telemetryHelper);
             }
         }, new ICancelCbaCallback() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCancel() {
                 onCancelHelper(callback, telemetryHelper);
@@ -213,7 +210,6 @@ public class CertBasedAuthFactory {
     private void showSmartcardPromptDialogAndSetConnectionCallback(@NonNull final CertBasedAuthChallengeHandlerCallback challengeHandlerCallback,
                                                                    @NonNull final ICertBasedAuthTelemetryHelper telemetryHelper) {
         mDialogHolder.showSmartcardPromptDialog(new ICancelCbaCallback() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCancel() {
                 if (mNfcSmartcardCertBasedAuthManager != null) {
@@ -225,7 +221,6 @@ public class CertBasedAuthFactory {
 
         if (mUsbSmartcardCertBasedAuthManager != null) {
             mUsbSmartcardCertBasedAuthManager.setConnectionCallback(new IConnectionCallback() {
-                @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
                 @Override
                 public void onCreateConnection() {
                     if (mNfcSmartcardCertBasedAuthManager != null) {
@@ -245,7 +240,6 @@ public class CertBasedAuthFactory {
             return;
         }
         mNfcSmartcardCertBasedAuthManager.setConnectionCallback(new IConnectionCallback() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCreateConnection() {
                 if (mUsbSmartcardCertBasedAuthManager != null) {
@@ -289,12 +283,8 @@ public class CertBasedAuthFactory {
         if (wasCertBasedAuthInitiated) {
             //For CBA, we need to clear the certificate choice cache here so that
             // the user will be able to login with multiple accounts with CBA
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                WebView.clearClientCertPreferences(null);
-            } else {
-                Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP). " +
-                        "Subsequent CBA attempts will fail due to the cached action, so the user must restart the app before attempting to login with CBA again.");
-            }
+            WebView.clearClientCertPreferences(null);
+
         }
     }
 

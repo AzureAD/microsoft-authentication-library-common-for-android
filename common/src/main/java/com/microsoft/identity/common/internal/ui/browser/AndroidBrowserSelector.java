@@ -186,9 +186,7 @@ public class AndroidBrowserSelector implements IBrowserSelector {
         }
 
         int queryFlag = PackageManager.GET_RESOLVED_FILTER;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             queryFlag |= PackageManager.MATCH_DEFAULT_ONLY;
-        }
 
         final List<ResolveInfo> resolvedActivityList =
                 mPackageManager.queryIntentActivities(BROWSER_INTENT, queryFlag);

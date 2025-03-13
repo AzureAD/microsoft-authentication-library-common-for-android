@@ -68,14 +68,9 @@ public class WebViewUtil {
     @SuppressWarnings("deprecation")
     public static void removeCookiesFromWebView(final Context context) {
         final CookieManager cookieManager = getCookieManager(context);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            cookieManager.removeAllCookies(null);
-            cookieManager.flush();
-        } else {
-            final android.webkit.CookieSyncManager syncManager = android.webkit.CookieSyncManager.createInstance(context);
-            cookieManager.removeAllCookie();
-            syncManager.sync();
-        }
+        cookieManager.removeAllCookies(null);
+        cookieManager.flush();
+
     }
 
     /**
@@ -85,14 +80,8 @@ public class WebViewUtil {
     @SuppressWarnings("deprecation")
     public static void removeSessionCookiesFromWebView(final Context context) {
         final CookieManager cookieManager = getCookieManager(context);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            cookieManager.removeAllCookies(null);
-            cookieManager.flush();
-        } else {
-            final android.webkit.CookieSyncManager syncManager = android.webkit.CookieSyncManager.createInstance(context);
-            cookieManager.removeSessionCookie();
-            syncManager.sync();
-        }
+        cookieManager.removeAllCookies(null);
+        cookieManager.flush();
     }
 
     private static CookieManager getCookieManager(final Context context) {

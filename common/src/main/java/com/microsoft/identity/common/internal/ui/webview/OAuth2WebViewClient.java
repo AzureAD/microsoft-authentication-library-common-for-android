@@ -140,7 +140,6 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
      * @see #onReceivedError(WebView, int, String, String)
      */
     @Override
-    @RequiresApi(api = Build.VERSION_CODES.M)
     public void onReceivedError(@NonNull final WebView view,
                                 @NonNull final WebResourceRequest request,
                                 @NonNull final WebResourceError error) {

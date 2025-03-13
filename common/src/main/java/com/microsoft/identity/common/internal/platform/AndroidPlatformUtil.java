@@ -179,11 +179,8 @@ public class AndroidPlatformUtil implements IPlatformUtil {
 
     @Override
     public long getNanosecondTime() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            return SystemClock.elapsedRealtimeNanos();
-        } else {
-            return System.nanoTime();
-        }
+        return SystemClock.elapsedRealtimeNanos();
+
     }
 
     @Override
@@ -250,7 +247,7 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             final UserManager um = (UserManager) appContext.getSystemService(Context.USER_SERVICE);
             return um.isManagedProfile();
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        } else {
             final DevicePolicyManager dpm = (DevicePolicyManager) appContext.getSystemService(Context.DEVICE_POLICY_SERVICE);
             final List<ComponentName> activeAdmins = dpm.getActiveAdmins();
             if (activeAdmins != null) {

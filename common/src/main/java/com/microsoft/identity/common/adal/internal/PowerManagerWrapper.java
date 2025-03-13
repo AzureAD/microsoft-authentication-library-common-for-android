@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 import android.os.PowerManager;
@@ -65,7 +64,6 @@ public class PowerManagerWrapper {
      * @param connectionContext Context used to query if app is in idle mode.
      * @return true if the device is in doze/idle mode.
      */
-    @TargetApi(Build.VERSION_CODES.M)
     public boolean isDeviceIdleMode(final Context connectionContext) {
         return ((PowerManager) connectionContext.getSystemService(Context.POWER_SERVICE)).isDeviceIdleMode();
     }
@@ -78,10 +76,6 @@ public class PowerManagerWrapper {
     @NonNull
     public String getDeviceIdleMode(@NonNull final Context context){
         try {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                return UNKNOWN_STATUS;
-            }
-
             final PowerManager powerManager = ((PowerManager) context.getSystemService(Context.POWER_SERVICE));
             if (powerManager.isDeviceIdleMode()) {
                 return "Idle";
@@ -107,10 +101,6 @@ public class PowerManagerWrapper {
     @NonNull
     public String getPowerOptimizationSettings(@NonNull final Context context){
         try {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                return UNKNOWN_STATUS;
-            }
-
             final PowerManager powerManager = ((PowerManager) context.getSystemService(Context.POWER_SERVICE));
             if (powerManager.isIgnoringBatteryOptimizations(context.getPackageName())){
                 return "OptOut";
@@ -130,7 +120,7 @@ public class PowerManagerWrapper {
      * @param connectionContext Context used to query if app is ignoring battery optimizations.
      * @return true if the given application package name is on the device's power whitelist.
      */
-    @TargetApi(Build.VERSION_CODES.M)
+
     public boolean isIgnoringBatteryOptimizations(final Context connectionContext) {
         return ((PowerManager) connectionContext.getSystemService(Context.POWER_SERVICE)).isIgnoringBatteryOptimizations(connectionContext.getPackageName());
     }

@@ -27,17 +27,14 @@ import static com.microsoft.identity.common.java.exception.ClientException.KEYST
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_ERROR;
 
-import android.os.Build;
 import android.security.keystore.KeyInfo;
 
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.platform.AbstractKeyStoreKeyManager;
-import com.microsoft.identity.common.java.util.Supplier;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.security.KeyFactory;
-import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -94,48 +91,37 @@ public class AndroidDeviceKeyManager<K extends KeyStore.Entry> extends AbstractK
         try {
             KeyStore.Entry entry = getEntry();
             if (entry instanceof KeyStore.PrivateKeyEntry) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    try {
-                        final PrivateKey privateKey = ((KeyStore.PrivateKeyEntry) entry).getPrivateKey();
-                        final KeyFactory factory = KeyFactory.getInstance(
-                                privateKey.getAlgorithm(), mKeyStore.getProvider()
-                        );
-                        final KeyInfo info = factory.getKeySpec(privateKey, KeyInfo.class);
-                        final boolean isInsideSecureHardware = info.isInsideSecureHardware();
-                        Logger.info(methodTag, "PrivateKey is secure hardware backed? " + isInsideSecureHardware);
-                        return isInsideSecureHardware
-                                ? SecureHardwareState.TRUE_UNATTESTED
-                                : SecureHardwareState.FALSE;
-                    } catch (final NoSuchAlgorithmException | InvalidKeySpecException e) {
-                        Logger.error(methodTag, "Failed to query secure hardware state.", e);
-                        return SecureHardwareState.UNKNOWN_QUERY_ERROR;
-                    }
-                } else {
-                    Logger.info(methodTag, "Cannot query secure hardware state (API unavailable <23)");
+                try {
+                    final PrivateKey privateKey = ((KeyStore.PrivateKeyEntry) entry).getPrivateKey();
+                    final KeyFactory factory = KeyFactory.getInstance(
+                            privateKey.getAlgorithm(), mKeyStore.getProvider()
+                    );
+                    final KeyInfo info = factory.getKeySpec(privateKey, KeyInfo.class);
+                    final boolean isInsideSecureHardware = info.isInsideSecureHardware();
+                    Logger.info(methodTag, "PrivateKey is secure hardware backed? " + isInsideSecureHardware);
+                    return isInsideSecureHardware
+                            ? SecureHardwareState.TRUE_UNATTESTED
+                            : SecureHardwareState.FALSE;
+                } catch (final NoSuchAlgorithmException | InvalidKeySpecException e) {
+                    Logger.error(methodTag, "Failed to query secure hardware state.", e);
+                    return SecureHardwareState.UNKNOWN_QUERY_ERROR;
                 }
-
-                return SecureHardwareState.UNKNOWN_DOWNLEVEL;
             } else if (entry instanceof KeyStore.SecretKeyEntry) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    try {
-                        final SecretKey privateKey = ((KeyStore.SecretKeyEntry) entry).getSecretKey();
-                        final SecretKeyFactory factory = SecretKeyFactory.getInstance(
-                                privateKey.getAlgorithm(), mKeyStore.getProvider()
-                        );
-                        final KeyInfo info = (KeyInfo) factory.getKeySpec(privateKey, KeyInfo.class);
-                        final boolean isInsideSecureHardware = info.isInsideSecureHardware();
-                        Logger.info(methodTag, "SecretKey is secure hardware backed? " + isInsideSecureHardware);
-                        return isInsideSecureHardware
-                                ? SecureHardwareState.TRUE_UNATTESTED
-                                : SecureHardwareState.FALSE;
-                    } catch (final NoSuchAlgorithmException | InvalidKeySpecException e) {
-                        Logger.error(methodTag, "Failed to query secure hardware state.", e);
-                        return SecureHardwareState.UNKNOWN_QUERY_ERROR;
-                    }
-                } else {
-                    Logger.info(methodTag, "Cannot query secure hardware state (API unavailable <23)");
+                try {
+                    final SecretKey privateKey = ((KeyStore.SecretKeyEntry) entry).getSecretKey();
+                    final SecretKeyFactory factory = SecretKeyFactory.getInstance(
+                            privateKey.getAlgorithm(), mKeyStore.getProvider()
+                    );
+                    final KeyInfo info = (KeyInfo) factory.getKeySpec(privateKey, KeyInfo.class);
+                    final boolean isInsideSecureHardware = info.isInsideSecureHardware();
+                    Logger.info(methodTag, "SecretKey is secure hardware backed? " + isInsideSecureHardware);
+                    return isInsideSecureHardware
+                            ? SecureHardwareState.TRUE_UNATTESTED
+                            : SecureHardwareState.FALSE;
+                } catch (final NoSuchAlgorithmException | InvalidKeySpecException e) {
+                    Logger.error(methodTag, "Failed to query secure hardware state.", e);
+                    return SecureHardwareState.UNKNOWN_QUERY_ERROR;
                 }
-                return SecureHardwareState.UNKNOWN_DOWNLEVEL;
             } else {
                 throw new ClientException(UNKNOWN_ERROR, "Cannot handle entries of type " + entry.getClass().getCanonicalName());
             }

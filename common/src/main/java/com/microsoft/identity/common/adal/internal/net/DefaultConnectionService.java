@@ -22,12 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.net;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
-import android.os.Build;
 
 import com.microsoft.identity.common.adal.internal.PowerManagerWrapper;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
@@ -78,7 +76,7 @@ public class DefaultConnectionService implements IConnectionService {
         final boolean isConnectionAvailable;
         final boolean useNetworkCapabilityForNetworkCheck
                 = CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.USE_NETWORK_CAPABILITY_FOR_NETWORK_CHECK);
-        if (useNetworkCapabilityForNetworkCheck && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+        if (useNetworkCapabilityForNetworkCheck) {
             final NetworkCapabilities networkCapabilities =
                     connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
             isConnectionAvailable =
@@ -107,17 +105,14 @@ public class DefaultConnectionService implements IConnectionService {
      * @return true if the device is API23 and one or both of the following is true: the device is in doze or the company
      * portal is in standby, false otherwise.
      */
-    @TargetApi(Build.VERSION_CODES.M)
     public boolean isNetworkDisabledFromOptimizations() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            final PowerManagerWrapper powerManagerWrapper = PowerManagerWrapper.getInstance();
-            if (powerManagerWrapper.isDeviceIdleMode(mConnectionContext) &&
-                    !powerManagerWrapper.isIgnoringBatteryOptimizations(mConnectionContext)) {
-                Telemetry.emit((BaseEvent) new BaseEvent().put(
-                        TelemetryEventStrings.Key.POWER_OPTIMIZATION,
-                        String.valueOf(true)));
-                return true;
-            }
+        final PowerManagerWrapper powerManagerWrapper = PowerManagerWrapper.getInstance();
+        if (powerManagerWrapper.isDeviceIdleMode(mConnectionContext) &&
+                !powerManagerWrapper.isIgnoringBatteryOptimizations(mConnectionContext)) {
+            Telemetry.emit((BaseEvent) new BaseEvent().put(
+                    TelemetryEventStrings.Key.POWER_OPTIMIZATION,
+                    String.valueOf(true)));
+            return true;
         }
         Telemetry.emit((BaseEvent) new BaseEvent().put(
                 TelemetryEventStrings.Key.POWER_OPTIMIZATION,

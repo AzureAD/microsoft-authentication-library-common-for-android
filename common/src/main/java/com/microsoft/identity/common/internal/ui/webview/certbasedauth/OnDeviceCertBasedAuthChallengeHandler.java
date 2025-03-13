@@ -70,7 +70,6 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
      * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      * @return null
      */
-    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public Void processChallenge(ClientCertRequest request) {
         final String methodTag = TAG + ":processChallenge";
@@ -123,7 +122,6 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
         return null;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
     private String printRequestDetails(ClientCertRequest request) {
 
         final StringBuilder logLine = new StringBuilder(256);
@@ -166,7 +164,6 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
      * @param keyTypes array of key types.
      * @return array of mapped key types.
      */
-    @RequiresApi(api = Build.VERSION_CODES.M)
     @Nullable
     static public String[] mapKeyTypes(@Nullable final String[] keyTypes) {
         if (keyTypes == null) {

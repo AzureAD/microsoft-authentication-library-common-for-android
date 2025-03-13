@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -35,7 +34,6 @@ import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.lifecycle.ViewTreeLifecycleOwner;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -156,8 +154,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @return return true means the host application handles the url, while return false means the current WebView handles the url.
      */
     @Override
-    @TargetApi(Build.VERSION_CODES.N)
-    @RequiresApi(Build.VERSION_CODES.N)
     public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
         final Uri requestUrl = request.getUrl();
         return handleUrl(view, requestUrl.toString());
@@ -677,7 +673,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 RawAuthorizationResult.fromException(new ClientException(errorCode, errorMessage)));
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onReceivedClientCertRequest(@NonNull final WebView view,
                                             @NonNull final ClientCertRequest clientCertRequest) {

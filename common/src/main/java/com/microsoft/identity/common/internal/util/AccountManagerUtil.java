@@ -53,43 +53,28 @@ public final class AccountManagerUtil {
     public static boolean canUseAccountManagerOperation(final Context context,
                                                         final Set<String> accountTypes) {
         final String methodTag = TAG + ":canUseAccountManagerOperation:";
+        // Check user policy
+        final UserManager userManager = (UserManager) context.getSystemService(Context.USER_SERVICE);
+        if (userManager.hasUserRestriction(UserManager.DISALLOW_MODIFY_ACCOUNTS)) {
+            Logger.verbose(methodTag, "UserManager.DISALLOW_MODIFY_ACCOUNTS is enabled for this user.");
+            return false;
+        }
 
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            // Check user policy
-            final UserManager userManager = (UserManager) context.getSystemService(Context.USER_SERVICE);
-            if (userManager.hasUserRestriction(UserManager.DISALLOW_MODIFY_ACCOUNTS)) {
-                Logger.verbose(methodTag, "UserManager.DISALLOW_MODIFY_ACCOUNTS is enabled for this user.");
-                return false;
-            }
-
-            // Check if our account type is disabled.
-            final DevicePolicyManager devicePolicyManager = getDevicePolicyManager(context);
-            if (devicePolicyManager != null) {
-                final String[] accountTypesWithManagementDisabled = devicePolicyManager.getAccountTypesWithManagementDisabled();
-                if (accountTypesWithManagementDisabled != null) {
-                    for (final String disabledAccountType : accountTypesWithManagementDisabled) {
-                        if (accountTypes.contains(disabledAccountType)) {
-                            Logger.info(methodTag, "Account type " + disabledAccountType +
-                                    " is disabled by MDM.");
-                            return false;
-                        }
+        // Check if our account type is disabled.
+        final DevicePolicyManager devicePolicyManager = getDevicePolicyManager(context);
+        if (devicePolicyManager != null) {
+            final String[] accountTypesWithManagementDisabled = devicePolicyManager.getAccountTypesWithManagementDisabled();
+            if (accountTypesWithManagementDisabled != null) {
+                for (final String disabledAccountType : accountTypesWithManagementDisabled) {
+                    if (accountTypes.contains(disabledAccountType)) {
+                        Logger.info(methodTag, "Account type " + disabledAccountType +
+                                " is disabled by MDM.");
+                        return false;
                     }
                 }
             }
-
-            // Before Android 6.0, the MANAGE_ACCOUNTS permission is required in the app's manifest xml file.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                return true;
-            } else {
-                return isPermissionGranted(context, MANIFEST_PERMISSION_MANAGE_ACCOUNTS);
-            }
         }
-
-        // Unable to determine - treat this as false.
-        // If the restriction exists and we make an accountManager call, then the OS will pop a dialog up.
-        Logger.verbose(methodTag,
-                "Cannot verify. Skipping AccountManager operation.");
-        return false;
+        return true;
     }
 
     @Nullable
@@ -101,15 +86,5 @@ public final class AccountManagerUtil {
             Logger.verbose(methodTag, "Cannot get DevicePolicyManager.");
             return null;
         }
-    }
-
-    public static boolean isPermissionGranted(@NonNull final Context context,
-                                              @NonNull final String permissionName) {
-        final String methodTag = TAG + ":isPermissionGranted";
-        final PackageManager pm = context.getPackageManager();
-        final boolean isGranted = pm.checkPermission(permissionName, context.getPackageName())
-                == PackageManager.PERMISSION_GRANTED;
-        Logger.verbose(methodTag, "is " + permissionName + " granted? [" + isGranted + "]");
-        return isGranted;
     }
 }

@@ -118,7 +118,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                 .build();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
     public KeyPair generateNewRsaKeyPair(int keySize) throws UnsupportedOperationException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
         return generateNewRsaKeyPair(mContext, keySize);
@@ -127,35 +126,28 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
     @Override
     protected SecureHardwareState getSecureHardwareState(@NonNull KeyPair kp) {
         final String methodTag = TAG + ":getSecureHardwareState";
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            try {
-                final PrivateKey privateKey = kp.getPrivate();
-                final KeyFactory factory = KeyFactory.getInstance(
-                        privateKey.getAlgorithm(), ANDROID_KEYSTORE
-                );
-                final KeyInfo info = factory.getKeySpec(privateKey, KeyInfo.class);
-                final boolean isInsideSecureHardware = info.isInsideSecureHardware();
-                Logger.info(methodTag, "SecretKey is secure hardware backed? " + isInsideSecureHardware);
-                return isInsideSecureHardware
-                        ? SecureHardwareState.TRUE_UNATTESTED
-                        : SecureHardwareState.FALSE;
-            } catch (final NoSuchAlgorithmException | NoSuchProviderException |
-                           InvalidKeySpecException e) {
-                Logger.error(methodTag, "Failed to query secure hardware state.", e);
-                return SecureHardwareState.UNKNOWN_QUERY_ERROR;
-            }
-        } else {
-            Logger.info(methodTag, "Cannot query secure hardware state (API unavailable <23)");
+        try {
+            final PrivateKey privateKey = kp.getPrivate();
+            final KeyFactory factory = KeyFactory.getInstance(
+                    privateKey.getAlgorithm(), ANDROID_KEYSTORE
+            );
+            final KeyInfo info = factory.getKeySpec(privateKey, KeyInfo.class);
+            final boolean isInsideSecureHardware = info.isInsideSecureHardware();
+            Logger.info(methodTag, "SecretKey is secure hardware backed? " + isInsideSecureHardware);
+            return isInsideSecureHardware
+                    ? SecureHardwareState.TRUE_UNATTESTED
+                    : SecureHardwareState.FALSE;
+        } catch (final NoSuchAlgorithmException | NoSuchProviderException |
+                       InvalidKeySpecException e) {
+            Logger.error(methodTag, "Failed to query secure hardware state.", e);
+            return SecureHardwareState.UNKNOWN_QUERY_ERROR;
         }
-
-        return SecureHardwareState.UNKNOWN_DOWNLEVEL;
     }
 
     @Override
     protected void performCleanupIfMintShrFails(@NonNull final Exception e) {
         final String methodTag = TAG + ":performCleanupIfMintShrFails";
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                && e.getCause() instanceof KeyPermanentlyInvalidatedException) {
+        if (e.getCause() instanceof KeyPermanentlyInvalidatedException) {
             Logger.warn(methodTag, "Unable to access asymmetric key - clearing.");
             clearAsymmetricKey();
         }
@@ -169,7 +161,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
      * @return The newly generated RSA KeyPair.
      * @throws UnsupportedOperationException
      */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @SuppressLint(NewApi)
     private KeyPair generateNewRsaKeyPair(@androidx.annotation.NonNull final Context context,
                                           final int minKeySize)
@@ -293,7 +284,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
      * @throws NoSuchProviderException            If the designated crypto provider cannot be found.
      * @throws StrongBoxUnavailableException      If StrongBox is unavailable.
      */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private KeyPair generateNewKeyPair(@androidx.annotation.NonNull final Context context, final boolean useStrongbox,
                                        final boolean enableImport, final boolean trySetAttestationChallenge)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException,
@@ -321,7 +311,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private KeyPairGenerator getInitializedRsaKeyPairGenerator(@androidx.annotation.NonNull final Context context,
                                                                final int keySize,
                                                                final boolean useStrongbox,
@@ -352,16 +341,13 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
      * @param trySetAttestationChallenge True if we should attempt to generate an attestation challenge cert.
      * @throws InvalidAlgorithmParameterException
      */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void initialize(@androidx.annotation.NonNull final Context context,
                             @androidx.annotation.NonNull final KeyPairGenerator keyPairGenerator,
                             final int keySize,
                             final boolean useStrongbox,
                             final boolean enableImport,
                             final boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            initializePre23(context, keyPairGenerator, keySize);
-        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             initialize23(keyPairGenerator, keySize, useStrongbox, trySetAttestationChallenge);
         } else {
             initialize28(keyPairGenerator, keySize, useStrongbox, enableImport, trySetAttestationChallenge);
@@ -369,7 +355,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
     }
 
     @SuppressLint("InlinedApi")
-    @RequiresApi(api = Build.VERSION_CODES.M)
     private void initialize23(@androidx.annotation.NonNull final KeyPairGenerator keyPairGenerator,
                               final int keySize,
                               final boolean useStrongbox,
@@ -395,7 +380,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                         KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
                 );
 
-        if (trySetAttestationChallenge && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        if (trySetAttestationChallenge) {
             builder = setAttestationChallenge(builder);
         }
 
@@ -423,7 +408,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
      * Refer to: <a href="https://developer.android.com/training/articles/security-key-attestation">Verifying hardware-backed key pairs with Key Attestation</a>
      */
     @SuppressLint(NewApi)
-    @RequiresApi(Build.VERSION_CODES.N)
     @androidx.annotation.NonNull
     private KeyGenParameterSpec.Builder setAttestationChallenge(
             @androidx.annotation.NonNull final KeyGenParameterSpec.Builder builder) {
@@ -473,7 +457,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                         KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
                 );
 
-        if (trySetAttestationChallenge && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        if (trySetAttestationChallenge) {
             builder = setAttestationChallenge(builder);
         }
 
@@ -491,7 +475,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
 
 
     @SuppressLint(NewApi)
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @SuppressWarnings("deprecation")
     private void initializePre23(@androidx.annotation.NonNull final Context context,
                                  @androidx.annotation.NonNull final KeyPairGenerator keyPairGenerator,

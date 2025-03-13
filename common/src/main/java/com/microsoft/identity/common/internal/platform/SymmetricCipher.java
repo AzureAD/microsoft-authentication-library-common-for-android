@@ -22,12 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.crypto.Algorithm;
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
@@ -42,16 +40,12 @@ import java.security.KeyStore;
  */
 public enum SymmetricCipher implements CryptoSuite {
 
-    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     AES_GCM_NONE_HMACSHA256(SymmetricAlgorithm.Builder.of("AES/GCM/NoPadding"), "HmacSHA256", 256) {
         public KeyGenParameterSpec.Builder decorateKeyGenerator(@NonNull final KeyGenParameterSpec.Builder spec) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                return spec.setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                        .setKeySize(keySize());
-            } else {
-                return spec;
-            }
+            return spec.setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                    .setKeySize(keySize());
+
         }
     };
 

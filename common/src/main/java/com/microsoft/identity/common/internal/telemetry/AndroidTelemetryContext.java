@@ -93,10 +93,8 @@ public class AndroidTelemetryContext extends AbstractTelemetryContext {
 
     private void addOsInfo() {
         super.addOsInfo(TelemetryEventStrings.Os.OS_NAME, Build.VERSION.RELEASE);
+        put(TelemetryEventStrings.Os.SECURITY_PATCH, Build.VERSION.SECURITY_PATCH);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            put(TelemetryEventStrings.Os.SECURITY_PATCH, Build.VERSION.SECURITY_PATCH);
-        }
     }
 
     public void isNetworkDisabledFromOptimizations(final boolean isDozed) {
