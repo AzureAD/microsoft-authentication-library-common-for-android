@@ -88,11 +88,11 @@ class RestrictionsManagerHelper(
      * Returns null if the key is not found or failed to read the value.
      * The default [appPackageName] is the current app.
      */
-    fun getString(key: String, appPackageName: String = context.packageName): String? {
+    fun getString(key: String, appPackageName: String = context.packageName, default: String? = null): String? {
         return fetchAndFilterRestrictions(
             dataRequired = createRequestBundle(stringKeysToInclude = setOf(key)),
             appPackageName = appPackageName
-        )?.getString(key)
+        )?.getString(key) ?: default
     }
 
     /**
@@ -100,11 +100,11 @@ class RestrictionsManagerHelper(
      * Returns null if the key is not found or failed to read the value.
      * The default [appPackageName] is the current app.
      */
-    fun getBoolean(key: String, appPackageName: String = context.packageName): Boolean {
+    fun getBoolean(key: String, appPackageName: String = context.packageName, default: Boolean = false): Boolean {
         return fetchAndFilterRestrictions(
             dataRequired = createRequestBundle(booleanKeysToInclude = setOf(key)),
             appPackageName = appPackageName
-        )?.getBoolean(key) ?: false
+        )?.getBoolean(key) ?: default
     }
 
     /**
@@ -222,8 +222,8 @@ class RestrictionsManagerHelper(
                         dataRequired
                     )
                 )
-        } catch (e: BrokerCommunicationException) {
-            Logger.error(methodTag, "Communication to $appPackageName failed.", e)
+        } catch (throwable: Throwable) {
+            Logger.error(methodTag, "Communication to $appPackageName failed.", throwable)
             null
         }
     }
