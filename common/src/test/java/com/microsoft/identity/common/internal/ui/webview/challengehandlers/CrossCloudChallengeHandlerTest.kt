@@ -51,7 +51,7 @@ class CrossCloudChallengeHandlerTest {
     }
 
     @Test
-    fun testProcessChallenge() {
+    fun `testProcessChallenge success`() {
         val testUrl = "https://example.com?login_hint=testuser"
         crossCloudChallengeHandler.processChallenge(testUrl)
         verify(webView).loadUrl(eq(testUrl), eq(headers))
@@ -62,8 +62,6 @@ class CrossCloudChallengeHandlerTest {
         val testUrl = "https://example.com?login_hint=testuser"
 
         mockkObject(CommonRefreshTokenCredentialProvider)
-
-        // Stubbing method calls
         every {
             CommonRefreshTokenCredentialProvider.getRefreshTokenCredential(
                 testUrl,
@@ -85,8 +83,6 @@ class CrossCloudChallengeHandlerTest {
         val refreshTokenCredential = "refreshTokenCredential"
 
         mockkObject(CommonRefreshTokenCredentialProvider)
-
-        // Stubbing method calls
         every {
             CommonRefreshTokenCredentialProvider.getRefreshTokenCredential(
                 url,
