@@ -28,7 +28,6 @@ import static com.microsoft.identity.common.java.util.ported.DateUtilities.LOCAL
 import static com.microsoft.identity.common.java.util.ported.DateUtilities.isLocaleCalendarNonGregorian;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyInfo;
@@ -58,12 +57,8 @@ import java.security.ProviderException;
 import java.security.cert.CertificateException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.RSAKeyGenParameterSpec;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
 
-import javax.security.auth.x500.X500Principal;
 
 import lombok.NonNull;
 
@@ -98,15 +93,12 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
      */
     private static final int RSA_KEY_SIZE = 2048;
 
-    private final Context mContext;
-
-    public AndroidDevicePopManager(@NonNull final Context context) throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
-        this(context, DEFAULT_KEYSTORE_ENTRY_ALIAS);
+    public AndroidDevicePopManager() throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
+        this(DEFAULT_KEYSTORE_ENTRY_ALIAS);
     }
 
-    public AndroidDevicePopManager(@NonNull final Context context, @NonNull final String alias) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
+    public AndroidDevicePopManager(@NonNull final String alias) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
         super(createKeyStoreKeyManager(alias));
-        mContext = context;
     }
 
     private static IKeyStoreKeyManager<KeyStore.PrivateKeyEntry> createKeyStoreKeyManager(@NonNull final String alias) throws CertificateException, NoSuchAlgorithmException, IOException, KeyStoreException {
@@ -116,11 +108,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                 .keyAlias(alias)
                 .keyStore(instance)
                 .build();
-    }
-
-    @Override
-    public KeyPair generateNewRsaKeyPair(int keySize) throws UnsupportedOperationException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
-        return generateNewRsaKeyPair(mContext, keySize);
     }
 
     @Override
@@ -156,14 +143,13 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
     /**
      * Generates a new RSA KeyPair of the specified lenth.
      *
-     * @param context    The current application Context.
      * @param minKeySize The minimum keysize to use.
      * @return The newly generated RSA KeyPair.
      * @throws UnsupportedOperationException
      */
+    @Override
     @SuppressLint(NewApi)
-    private KeyPair generateNewRsaKeyPair(@androidx.annotation.NonNull final Context context,
-                                          final int minKeySize)
+    public KeyPair generateNewRsaKeyPair(final int minKeySize)
             throws UnsupportedOperationException, InvalidAlgorithmParameterException,
             NoSuchAlgorithmException, NoSuchProviderException {
         final int MAX_RETRIES = 4;
@@ -176,7 +162,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
             boolean generated = false;
             while (!generated) {
                 try {
-                    kp = generateNewKeyPair(context, tryStrongBox, tryImport, trySetAttestationChallenge);
+                    kp = generateNewKeyPair(tryStrongBox, tryImport, trySetAttestationChallenge);
                     generated = true;
 
                     // Log success (with flags used)
@@ -274,7 +260,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
     /**
      * Generates a new {@link KeyPair}.
      *
-     * @param context                    The application Context.
      * @param useStrongbox               True if StrongBox should be used, false otherwise.
      * @param trySetAttestationChallenge
      * @return The newly generated KeyPair.
@@ -284,7 +269,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
      * @throws NoSuchProviderException            If the designated crypto provider cannot be found.
      * @throws StrongBoxUnavailableException      If StrongBox is unavailable.
      */
-    private KeyPair generateNewKeyPair(@androidx.annotation.NonNull final Context context, final boolean useStrongbox,
+    private KeyPair generateNewKeyPair(final boolean useStrongbox,
                                        final boolean enableImport, final boolean trySetAttestationChallenge)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException,
             NoSuchProviderException, StrongBoxUnavailableException {
@@ -295,7 +280,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
 
             try {
                 final KeyPairGenerator kpg = getInitializedRsaKeyPairGenerator(
-                        context,
                         RSA_KEY_SIZE,
                         useStrongbox,
                         enableImport,
@@ -311,8 +295,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
         }
     }
 
-    private KeyPairGenerator getInitializedRsaKeyPairGenerator(@androidx.annotation.NonNull final Context context,
-                                                               final int keySize,
+    private KeyPairGenerator getInitializedRsaKeyPairGenerator(final int keySize,
                                                                final boolean useStrongbox,
                                                                final boolean enableImport,
                                                                final boolean trySetAttestationChallenge)
@@ -324,7 +307,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
         );
 
         // Initialize it!
-        initialize(context, keyPairGenerator, keySize, useStrongbox, enableImport, trySetAttestationChallenge);
+        initialize(keyPairGenerator, keySize, useStrongbox, enableImport, trySetAttestationChallenge);
 
         return keyPairGenerator;
     }
@@ -332,7 +315,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
     /**
      * Initialize the provided {@link KeyPairGenerator}.
      *
-     * @param context                    The current application Context.
      * @param keyPairGenerator           The KeyPairGenerator to initialize.
      * @param keySize                    The RSA keysize.
      * @param useStrongbox               True if StrongBox should be used, false otherwise. Please note that
@@ -341,7 +323,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
      * @param trySetAttestationChallenge True if we should attempt to generate an attestation challenge cert.
      * @throws InvalidAlgorithmParameterException
      */
-    private void initialize(@androidx.annotation.NonNull final Context context,
+    private void initialize(
                             @androidx.annotation.NonNull final KeyPairGenerator keyPairGenerator,
                             final int keySize,
                             final boolean useStrongbox,
@@ -470,34 +452,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
         }
 
         final AlgorithmParameterSpec spec = builder.build();
-        keyPairGenerator.initialize(spec);
-    }
-
-
-    @SuppressLint(NewApi)
-    @SuppressWarnings("deprecation")
-    private void initializePre23(@androidx.annotation.NonNull final Context context,
-                                 @androidx.annotation.NonNull final KeyPairGenerator keyPairGenerator,
-                                 final int keySize) throws InvalidAlgorithmParameterException {
-        final Calendar calendar = Calendar.getInstance();
-        final Date start = getNow(calendar);
-        calendar.add(Calendar.YEAR, AbstractDevicePopManager.CertificateProperties.CERTIFICATE_VALIDITY_YEARS);
-        final Date end = calendar.getTime();
-
-        final android.security.KeyPairGeneratorSpec.Builder specBuilder = new android.security.KeyPairGeneratorSpec.Builder(context)
-                .setAlias(mKeyManager.getKeyAlias())
-                .setStartDate(start)
-                .setEndDate(end)
-                .setSerialNumber(AndroidDevicePopManager.CertificateProperties.SERIAL_NUMBER)
-                .setSubject(new X500Principal(AndroidDevicePopManager.CertificateProperties.COMMON_NAME));
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            specBuilder.setAlgorithmParameterSpec(
-                    new RSAKeyGenParameterSpec(keySize, RSAKeyGenParameterSpec.F4)
-            );
-        }
-
-        final android.security.KeyPairGeneratorSpec spec = specBuilder.build();
         keyPairGenerator.initialize(spec);
     }
 }

@@ -69,7 +69,6 @@ public class AndroidSecretKeyAccessor implements IManagedKeyAccessor<KeyStore.Se
     private static final Charset UTF8 = Charset.forName("UTF-8");
     private final AndroidDeviceKeyManager<KeyStore.SecretKeyEntry> mKeyManager;
     private final CryptoSuite suite;
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     public byte[] encrypt(@NonNull final byte[] plaintext) throws ClientException {
         final String errCode;
@@ -110,7 +109,6 @@ public class AndroidSecretKeyAccessor implements IManagedKeyAccessor<KeyStore.Se
         throw new ClientException(errCode, exception.getMessage(), exception);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     public byte[] decrypt(@NonNull final byte[] ciphertext) throws ClientException {
         final String errCode;

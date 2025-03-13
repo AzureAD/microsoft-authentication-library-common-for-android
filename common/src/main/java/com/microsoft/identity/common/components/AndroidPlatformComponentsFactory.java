@@ -124,7 +124,7 @@ public class AndroidPlatformComponentsFactory {
             @Nullable final Fragment fragment) {
         builder.clockSkewManager(new AndroidClockSkewManager(context))
                 .broadcaster(new AndroidBroadcaster(context))
-                .popManagerLoader(new AndroidPopManagerSupplier(context))
+                .popManagerLoader(new AndroidPopManagerSupplier())
                 .storageSupplier(new AndroidStorageSupplier(context,
                         new AndroidAuthSdkStorageEncryptionManager(context)))
                 .platformUtil(new AndroidPlatformUtil(context, activity))

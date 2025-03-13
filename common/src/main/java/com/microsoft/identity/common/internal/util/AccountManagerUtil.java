@@ -25,8 +25,6 @@ package com.microsoft.identity.common.internal.util;
 
 import android.app.admin.DevicePolicyManager;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.UserManager;
 
 import androidx.annotation.NonNull;
@@ -38,8 +36,6 @@ import java.util.Set;
 
 public final class AccountManagerUtil {
     private static final String TAG = AccountManagerUtil.class.getSimpleName();
-
-    private static final String MANIFEST_PERMISSION_MANAGE_ACCOUNTS = "android.permission.MANAGE_ACCOUNTS";
 
     private AccountManagerUtil() {
     }

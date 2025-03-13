@@ -58,7 +58,6 @@ class LegacyFidoActivityResultContract : ActivityResultContract<LegacyFido2ApiOb
             )
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     override fun parseResult(resultCode: Int, intent: Intent?): Void? {
         if (intent == null) {
             errorCallback.invoke(

@@ -27,7 +27,6 @@ import static com.microsoft.identity.common.java.exception.ClientException.IO_ER
 import static com.microsoft.identity.common.java.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
 
-import android.content.Context;
 
 import androidx.annotation.Nullable;
 
@@ -47,8 +46,6 @@ import lombok.NonNull;
 @AllArgsConstructor
 public class AndroidPopManagerSupplier implements IPopManagerSupplier {
 
-    @NonNull
-    private final Context mContext;
 
     @Override
     @NonNull
@@ -58,9 +55,9 @@ public class AndroidPopManagerSupplier implements IPopManagerSupplier {
 
         try {
             if (alias == null) {
-                return new AndroidDevicePopManager(mContext);
+                return new AndroidDevicePopManager();
             } else {
-                return new AndroidDevicePopManager(mContext, alias);
+                return new AndroidDevicePopManager(alias);
             }
         } catch (final KeyStoreException e) {
             exception = e;

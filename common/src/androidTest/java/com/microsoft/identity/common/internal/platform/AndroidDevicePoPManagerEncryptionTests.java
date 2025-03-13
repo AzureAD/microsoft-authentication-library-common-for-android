@@ -81,7 +81,7 @@ public class AndroidDevicePoPManagerEncryptionTests {
 
     public AndroidDevicePoPManagerEncryptionTests(final IDevicePopManager.Cipher cipher)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
-        devicePopManager = new AndroidDevicePopManager(ApplicationProvider.getApplicationContext());
+        devicePopManager = new AndroidDevicePopManager();
         this.cipher = cipher;
     }
 

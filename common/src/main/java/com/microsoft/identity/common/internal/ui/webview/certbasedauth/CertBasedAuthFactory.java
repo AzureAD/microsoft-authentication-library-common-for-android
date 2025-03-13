@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 import android.app.Activity;
-import android.os.Build;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
@@ -34,13 +33,11 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActi
 import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthChoice;
 import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
-import com.microsoft.identity.common.logging.Logger;
 
 /**
  * Instantiates handlers for certificate based authentication.
  */
 public class CertBasedAuthFactory {
-    private static final String TAG = CertBasedAuthFactory.class.getSimpleName();
     private static final String USER_CANCEL_MESSAGE = "User canceled smartcard CBA flow.";
     private static final String NON_APPLICABLE = "N/A";
     private final Activity mActivity;
