@@ -637,7 +637,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     /**
      * This method is used to process the cross cloud redirect and attach the PRT header to the request.
      */
-    public void processCloudRedirectAndPrtHeader(@NonNull final WebView view, @NonNull final String url) {
+    private void processCloudRedirectAndPrtHeader(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processCloudRedirectAndPrtHeader";
 
         final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
@@ -653,12 +653,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             crossCloudChallengeHandler.processChallenge(url);
             span.setStatus(StatusCode.OK);
         } catch (final Exception e) {
-        // No op if an exception happens
-        Logger.warn(methodTag, "Error processing cross cloud redirect and attaching PRT header." + e);
-        span.recordException(e);
-    } finally {
-        span.end();
-    }
+            // No op if an exception happens
+            Logger.warn(methodTag, "Error processing cross cloud redirect and attaching PRT header." + e);
+            span.recordException(e);
+        } finally {
+            span.end();
+        }
     }
 
     private String removeQueryParametersOrRedact(@NonNull final String url) {
