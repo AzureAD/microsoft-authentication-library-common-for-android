@@ -272,8 +272,6 @@ public class CertBasedAuthFactory {
      * Cleanup to be done when host activity is being destroyed.
      */
     public void onDestroy() {
-        final String methodTag = TAG + ":onDestroy";
-
         if (mUsbSmartcardCertBasedAuthManager != null) {
             mUsbSmartcardCertBasedAuthManager.onDestroy(mActivity);
         }
@@ -284,7 +282,6 @@ public class CertBasedAuthFactory {
             //For CBA, we need to clear the certificate choice cache here so that
             // the user will be able to login with multiple accounts with CBA
             WebView.clearClientCertPreferences(null);
-
         }
     }
 
