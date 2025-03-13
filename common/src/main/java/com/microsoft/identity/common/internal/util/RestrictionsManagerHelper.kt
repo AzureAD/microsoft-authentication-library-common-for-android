@@ -233,7 +233,7 @@ class RestrictionsManagerHelper(
      * filtering the keys based on the [dataRequired] bundle.
      */
     private fun fetchAndFilterRestrictions(dataRequired: Bundle, appPackageName: String): Bundle? {
-        val methodTag = "$TAG:getFilteredBundle"
+        val methodTag = "$TAG:fetchAndFilterRestrictions"
         Logger.info(methodTag, "appPackageName: $appPackageName, current app: ${context.packageName}")
         return if (appPackageName.equals(context.packageName, ignoreCase = true)) {
             Logger.info(methodTag, "Request to read local restriction manager")
