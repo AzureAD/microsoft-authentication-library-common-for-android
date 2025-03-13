@@ -36,7 +36,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowRestrictionsManager
 
 @RunWith(RobolectricTestRunner::class)
-@Config(shadows = [ShadowRestrictionsManager::class])
+@Config(shadows = [ShadowRestrictionsManager::class],sdk = [28])
 class RestrictionsManagerHelperTest {
 
     private lateinit var context: Context
