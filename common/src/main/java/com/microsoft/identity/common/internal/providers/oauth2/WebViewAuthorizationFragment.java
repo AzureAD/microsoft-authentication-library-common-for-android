@@ -391,7 +391,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             public void run() {
                 Logger.info(methodTag, "Launching embedded WebView for acquiring auth code.");
                 Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
-WebViewUtil.removeCookiesFromWebView(getContext());
+                if (getContext()!=null) {
+                    WebViewUtil.removeCookiesFromWebView(requireContext());
+                }
                 mAADWebViewClient.setRequestHeaders(mRequestHeaders);
                 mAADWebViewClient.setRequestUrl(mAuthorizationRequestUrl);
                 mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
