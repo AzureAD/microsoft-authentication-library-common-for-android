@@ -36,6 +36,7 @@ import android.webkit.WebView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.ViewTreeLifecycleOwner;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -636,23 +637,28 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     /**
      * This method is used to process the cross cloud redirect and attach the PRT header to the request.
      */
-    private void processCloudRedirectAndPrtHeader(@NonNull final WebView view, @NonNull final String url) {
+    public void processCloudRedirectAndPrtHeader(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processCloudRedirectAndPrtHeader";
 
         final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         final Span span = spanContext != null ?
                 OTelUtility.createSpanFromParent(SpanName.ProcessCrossCloudRedirect.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessCrossCloudRedirect.name());
+        final CrossCloudChallengeHandler crossCloudChallengeHandler = new CrossCloudChallengeHandler(view, mRequestHeaders, span);
+        processCloudRedirectAndPrtHeaderInternal(url, crossCloudChallengeHandler, methodTag, span);
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    public void processCloudRedirectAndPrtHeaderInternal(@NonNull final String url, @NonNull final CrossCloudChallengeHandler crossCloudChallengeHandler, @NonNull final String methodTag, @NonNull final Span span) {
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
-            final CrossCloudChallengeHandler crossCloudChallengeHandler = new CrossCloudChallengeHandler(view, mRequestHeaders, span);
             crossCloudChallengeHandler.processChallenge(url);
             span.setStatus(StatusCode.OK);
         } catch (final Exception e) {
-            // No op if an exception happens
-            Logger.warn(methodTag, "Error processing cross cloud redirect and attaching PRT header." + e);
-            span.recordException(e);
-        } finally {
-            span.end();
-        }
+        // No op if an exception happens
+        Logger.warn(methodTag, "Error processing cross cloud redirect and attaching PRT header." + e);
+        span.recordException(e);
+    } finally {
+        span.end();
+    }
     }
 
     private String removeQueryParametersOrRedact(@NonNull final String url) {
