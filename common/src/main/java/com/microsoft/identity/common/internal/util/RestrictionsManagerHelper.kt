@@ -28,7 +28,6 @@ import android.os.Bundle
 import com.microsoft.identity.common.internal.broker.ipc.BrokerProcessIpcUtils
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory
 
-import com.microsoft.identity.common.exception.BrokerCommunicationException
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle
 import com.microsoft.identity.common.internal.broker.PackageHelper
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
