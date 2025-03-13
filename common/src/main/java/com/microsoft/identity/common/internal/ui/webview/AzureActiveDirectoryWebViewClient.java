@@ -627,6 +627,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.error(methodTag, "Error processing nonce and re-attaching headers", throwable);
                 span.setStatus(StatusCode.ERROR, "Error processing nonce and re-attaching headers");
                 span.recordException(throwable);
+                view.loadUrl(url, mRequestHeaders);
             } finally {
                 span.end();
             }
@@ -650,6 +651,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // No op if an exception happens
             Logger.warn(methodTag, "Error processing cross cloud redirect and attaching PRT header." + e);
             span.recordException(e);
+            view.loadUrl(url, mRequestHeaders);
         } finally {
             span.end();
         }
