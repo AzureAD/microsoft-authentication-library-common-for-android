@@ -118,17 +118,7 @@ public class DefaultConnectionServiceTest {
     @Test
     public void testNetworkDisabledFromOptimizations() {
         final DefaultConnectionService defaultConnectionService = new DefaultConnectionService(mContext);
-        ReflectionHelpers.setStaticField(Build.VERSION.class, "SDK_INT", Build.VERSION_CODES.M);
 
         assertTrue(defaultConnectionService.isNetworkDisabledFromOptimizations());
     }
-
-    @Test
-    public void testNetworkDisabledFromOptimizationsForAPIsBelow23() {
-        ReflectionHelpers.setStaticField(Build.VERSION.class, "SDK_INT", Build.VERSION_CODES.LOLLIPOP_MR1);
-        final DefaultConnectionService defaultConnectionService = new DefaultConnectionService(mContext);
-
-        assertFalse(defaultConnectionService.isNetworkDisabledFromOptimizations());
-    }
-
 }
