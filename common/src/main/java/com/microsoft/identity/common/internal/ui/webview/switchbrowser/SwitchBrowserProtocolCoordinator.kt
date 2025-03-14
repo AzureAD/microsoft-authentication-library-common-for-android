@@ -56,7 +56,6 @@ class SwitchBrowserProtocolCoordinator(
     @Throws(ClientException::class)
     fun processSwitchBrowserResume(
         extras: Bundle,
-        redirectUrl: String,
         onSuccessAction: (Uri, HashMap<String, String>) -> Unit
     ) {
         val methodTag = "$TAG:processSwitchBrowserResume"
@@ -69,7 +68,7 @@ class SwitchBrowserProtocolCoordinator(
             )
         }
         onSuccessAction(
-            buildResumeUri(actionUri, redirectUrl),
+            buildResumeUri(actionUri),
             hashMapOf(AUTHORIZATION to code)
         )
         // Reset the challenge state after processing the resume action

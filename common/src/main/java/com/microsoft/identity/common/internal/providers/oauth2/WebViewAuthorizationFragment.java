@@ -183,7 +183,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             Logger.info(methodTag, "Resuming switch browser flow");
             getSwitchBrowserCoordinator().processSwitchBrowserResume(
                     extras,
-                    mRedirectUri,
                     (switchBrowserResumeUri, switchBrowserResumeHeaders) -> {
                         launchWebView(switchBrowserResumeUri.toString(), switchBrowserResumeHeaders);
                         return null;

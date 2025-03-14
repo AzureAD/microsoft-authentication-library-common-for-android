@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.ui.webview.switchbrowser
 
 import android.os.Bundle
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2.REDIRECT_URI
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler
 import com.microsoft.identity.common.java.AuthenticationConstants.AAD.AUTHORIZATION
 import com.microsoft.identity.common.java.exception.ClientException
@@ -44,7 +43,6 @@ class SwitchBrowserProtocolCoordinatorTest {
         // Mock parameters
         val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
         doNothing().`when`(mockSwitchBrowserRequestHandler).resetChallengeState()
-        val redirectUrl = "AAD://example.com/redirect"
         val code = "switch_browser_code"
         val actionUrl = "test.example.com/switchbrowser/path"
         val extras = Bundle().apply {
@@ -55,9 +53,8 @@ class SwitchBrowserProtocolCoordinatorTest {
         val coordinator = SwitchBrowserProtocolCoordinator(mockSwitchBrowserRequestHandler)
 
         // Call the method to be tested
-        coordinator.processSwitchBrowserResume(extras, redirectUrl) { uri, headers ->
+        coordinator.processSwitchBrowserResume(extras) { uri, headers ->
             // Verify the resume URI
-            Assert.assertEquals(redirectUrl, uri.getQueryParameter(REDIRECT_URI))
             Assert.assertEquals(actionUrl, uri.host + uri.path)
             Assert.assertEquals(code, headers[AUTHORIZATION])
         }
@@ -67,7 +64,6 @@ class SwitchBrowserProtocolCoordinatorTest {
     fun `test processSwitchBrowserResume with missing extras`() {
         // Mock parameters
         val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
-        val redirectUrl = "AAD://example.com/redirect"
         val extras = Bundle().apply {
             // Missing code
             // Missing ACTION_URI
@@ -77,7 +73,7 @@ class SwitchBrowserProtocolCoordinatorTest {
 
         val exception = Assert.assertThrows(ClientException::class.java) {
             // Call the method to be tested
-            coordinator.processSwitchBrowserResume(extras, redirectUrl) { _, _ ->
+            coordinator.processSwitchBrowserResume(extras) { _, _ ->
                 // This block should not be executed
                 Assert.fail()
             }

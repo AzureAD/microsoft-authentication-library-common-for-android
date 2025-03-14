@@ -72,7 +72,6 @@ object SwitchBrowserUriHelper {
         // Query parameters for the process uri.
         val queryParams = hashMapOf<String, String>()
         queryParams[SWITCH_BROWSER.CODE] = code
-        queryParams[OAuth2.REDIRECT_URI] = "${uri.scheme}://${uri.authority}"
         // Construct the uri to the process endpoint.
         return buildSwitchBrowserUri(actionUri, queryParams)
     }
@@ -88,7 +87,7 @@ object SwitchBrowserUriHelper {
     @Throws(IllegalArgumentException::class, NullPointerException::class, UnsupportedOperationException::class)
     private fun buildSwitchBrowserUri(
         actionUri: String,
-        queryParams: HashMap<String, String>
+        queryParams: HashMap<String, String> = hashMapOf()
     ): Uri {
         val paths = actionUri.split("/")
         val authority = paths[0]
@@ -108,17 +107,13 @@ object SwitchBrowserUriHelper {
      * Build the resume uri for the switch browser challenge.
      *
      * @param actionUri The action uri to be opened.
-     * @param redirectUrl The redirect url to be included in the resume uri.
      *
      * @return The resume uri constructed from the bundle.
-     * e.g. actionUri?client_id=client-id&redirect_uri=redirect-uri
+     * e.g. actionUri
      */
-    fun buildResumeUri(actionUri: String, redirectUrl: String): Uri {
-        // Query parameters for the resume uri.
-        val queryParams = hashMapOf<String, String>()
-        queryParams[OAuth2.REDIRECT_URI] = redirectUrl
+    fun buildResumeUri(actionUri: String): Uri {
         // Construct the uri to the resume endpoint.
-        return buildSwitchBrowserUri(actionUri, queryParams)
+        return buildSwitchBrowserUri(actionUri)
     }
 
     /**
