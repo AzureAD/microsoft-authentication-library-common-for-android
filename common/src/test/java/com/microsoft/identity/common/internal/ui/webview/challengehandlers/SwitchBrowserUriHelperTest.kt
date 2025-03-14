@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 
 import android.net.Uri
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper
@@ -53,10 +52,6 @@ class SwitchBrowserUriHelperTest {
         Assert.assertEquals(
             CODE,
             switchBrowserProcessUri.getQueryParameter(SWITCH_BROWSER.CODE)
-        )
-        Assert.assertEquals(
-            Broker.NEW_BROKER_REDIRECT_URI,
-            switchBrowserProcessUri.getQueryParameter(OAuth2.REDIRECT_URI)
         )
         Assert.assertEquals(
             ACTION_URI,
@@ -100,14 +95,9 @@ class SwitchBrowserUriHelperTest {
     @Test
     fun `test buildResumeUri valid params`() {
         val uri = SwitchBrowserUriHelper.buildResumeUri(
-            ACTION_URI,
-            Broker.NEW_BROKER_REDIRECT_URI
+            ACTION_URI
         )
         Assert.assertNotNull(uri)
-        Assert.assertEquals(
-            Broker.NEW_BROKER_REDIRECT_URI,
-            uri.getQueryParameter(OAuth2.REDIRECT_URI)
-        )
         Assert.assertEquals(
             ACTION_URI,
             uri.host + uri.path
