@@ -53,9 +53,14 @@ public class AndroidDeviceMetadata extends AbstractDeviceMetadata {
     @Override
     @NonNull
     public String getCpu() {
-        final String[] supportedABIs = Build.SUPPORTED_ABIS;
-        if (supportedABIs != null && supportedABIs.length > 0) {
-            return supportedABIs[0];
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            //CPU_ABI has been deprecated
+            return Build.CPU_ABI;
+        } else {
+            final String[] supportedABIs = Build.SUPPORTED_ABIS;
+            if (supportedABIs != null && supportedABIs.length > 0) {
+                return supportedABIs[0];
+            }
         }
         return "UNKNOWN";
     }

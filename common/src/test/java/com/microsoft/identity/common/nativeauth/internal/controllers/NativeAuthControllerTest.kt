@@ -81,14 +81,12 @@ import org.mockito.MockitoAnnotations
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 import java.util.UUID
 
 /**
  * Tests for [NativeAuthMsalController].
  */
 @RunWith(RobolectricTestRunner::class)
-//@Config(sdk=[21])
 class NativeAuthControllerTest {
     private val code = "12345"
     private val challenge = "12345"
