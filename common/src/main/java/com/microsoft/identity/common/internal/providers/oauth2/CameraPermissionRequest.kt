@@ -22,9 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2
 
-import android.os.Build
 import android.webkit.PermissionRequest
-import com.microsoft.identity.common.logging.Logger
 
 /**
  * Class responsible for handling camera permission requests.
@@ -48,12 +46,10 @@ class CameraPermissionRequest(private val mCameraPermissionRequest: PermissionRe
      * Note: This method is only available on API level 21 or higher.
      */
     fun grant() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val cameraResource = arrayOf(
-                PermissionRequest.RESOURCE_VIDEO_CAPTURE
-            )
-            mCameraPermissionRequest.grant(cameraResource)
-        }
+        val cameraResource = arrayOf(
+            PermissionRequest.RESOURCE_VIDEO_CAPTURE
+        )
+        mCameraPermissionRequest.grant(cameraResource)
         isGranted = true
     }
 
@@ -64,15 +60,11 @@ class CameraPermissionRequest(private val mCameraPermissionRequest: PermissionRe
      * Note: This method is only available on API level 21 or higher.
      */
     fun deny() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mCameraPermissionRequest.deny()
-        }
+        mCameraPermissionRequest.deny()
         isGranted = false
     }
 
     companion object {
-        private val TAG = CameraPermissionRequest::class.java.simpleName
-
         /**
          * Determines whatever if the given permission request is for the camera resource.
          *
@@ -86,15 +78,7 @@ class CameraPermissionRequest(private val mCameraPermissionRequest: PermissionRe
          */
         @JvmStatic
         fun isValidRequest(request: PermissionRequest): Boolean {
-            val methodTag = "$TAG:validateRequest"
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                return request.resources.size == 1 && PermissionRequest.RESOURCE_VIDEO_CAPTURE == request.resources[0]
-            }
-            Logger.warn(
-                methodTag, "PermissionRequest.getResources() method is not available on API:"
-                        + Build.VERSION.SDK_INT + ". We cannot determine if the request is for camera."
-            )
-            return false
+            return request.resources.size == 1 && PermissionRequest.RESOURCE_VIDEO_CAPTURE == request.resources[0]
         }
     }
 }

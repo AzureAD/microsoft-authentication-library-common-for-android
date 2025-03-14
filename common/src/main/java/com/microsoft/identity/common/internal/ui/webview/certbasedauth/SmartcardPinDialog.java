@@ -25,14 +25,12 @@ package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.res.ColorStateList;
-import android.os.Build;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 
 import com.microsoft.identity.common.R;
@@ -140,7 +138,6 @@ public class SmartcardPinDialog extends SmartcardDialog {
                     return;
                 }
                 pinEditText.addTextChangedListener(new TextWatcher() {
-                    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
                     @Override
                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
                         if (start == 0) {
@@ -174,7 +171,6 @@ public class SmartcardPinDialog extends SmartcardDialog {
     /**
      * Update Dialog to indicate that an incorrect attempt was made.
      */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void setErrorMode() {
         mActivity.runOnUiThread(new Runnable() {
             @Override
@@ -193,7 +189,6 @@ public class SmartcardPinDialog extends SmartcardDialog {
     /**
      * Reset Dialog's UI to original non-error state.
      */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void resetErrorMode() {
         mActivity.runOnUiThread(new Runnable() {
             @Override

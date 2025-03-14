@@ -23,11 +23,9 @@
 package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 import android.app.Activity;
-import android.os.Build;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
 
@@ -257,7 +255,6 @@ public class DialogHolder implements IDialogHolder {
     /**
      * Sets error mode for an existing SmartcardPinDialog.
      */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public synchronized void setPinDialogErrorMode() {
         if (mCurrentDialog instanceof SmartcardPinDialog) {
             ((SmartcardPinDialog) mCurrentDialog).setErrorMode();

@@ -677,7 +677,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 RawAuthorizationResult.fromException(new ClientException(errorCode, errorMessage)));
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onReceivedClientCertRequest(@NonNull final WebView view,
                                             @NonNull final ClientCertRequest clientCertRequest) {
