@@ -49,7 +49,6 @@ class SwitchBrowserProtocolCoordinator(
      *
      * @param extras The extras bundle containing the switch browser action URI and code.
      * @param redirectUrl The redirect URL to be used in the resume URI.
-     * @param clientId The client ID to be used in the resume URI.
      * @param onSuccessAction The action to be performed on success.
      * (in this case, it will be the launch the WebView with the resume URI)
      *
@@ -58,7 +57,6 @@ class SwitchBrowserProtocolCoordinator(
     fun processSwitchBrowserResume(
         extras: Bundle,
         redirectUrl: String,
-        clientId: String,
         onSuccessAction: (Uri, HashMap<String, String>) -> Unit
     ) {
         val methodTag = "$TAG:processSwitchBrowserResume"
@@ -71,7 +69,7 @@ class SwitchBrowserProtocolCoordinator(
             )
         }
         onSuccessAction(
-            buildResumeUri(actionUri, redirectUrl, clientId),
+            buildResumeUri(actionUri, redirectUrl),
             hashMapOf(AUTHORIZATION to code)
         )
         // Reset the challenge state after processing the resume action

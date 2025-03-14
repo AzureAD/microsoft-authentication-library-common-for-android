@@ -85,10 +85,6 @@ object AuthorizationActivityFactory {
                 parameters.requestUrl
             )
             putExtra(
-                AuthenticationConstants.AuthorizationIntentKey.CLIENT_ID,
-                parameters.clientId
-            )
-            putExtra(
                 AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI,
                 parameters.redirectUri
             )

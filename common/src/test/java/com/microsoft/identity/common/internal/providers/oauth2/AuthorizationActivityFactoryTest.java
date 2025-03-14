@@ -84,7 +84,6 @@ public class AuthorizationActivityFactoryTest {
             redirectUri,
             requestHeaders,
             authorizationAgent,
-            clientId,
             webViewZoomEnabled,
             webViewZoomControlsEnabled,
             sourceLibraryName,

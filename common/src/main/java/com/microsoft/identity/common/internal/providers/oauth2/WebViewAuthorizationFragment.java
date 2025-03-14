@@ -77,7 +77,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.CLIENT_ID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
@@ -110,8 +109,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private String mAuthorizationRequestUrl;
 
     private String mRedirectUri;
-
-    private String mClientId;
 
     private HashMap<String, String> mRequestHeaders;
 
@@ -187,7 +184,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             getSwitchBrowserCoordinator().processSwitchBrowserResume(
                     extras,
                     mRedirectUri,
-                    mClientId,
                     (switchBrowserResumeUri, switchBrowserResumeHeaders) -> {
                         launchWebView(switchBrowserResumeUri.toString(), switchBrowserResumeHeaders);
                         return null;
@@ -211,7 +207,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedJavascript);
         outState.putBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         outState.putBoolean(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
-        outState.putString(CLIENT_ID, mClientId);
     }
 
     @Override
@@ -225,7 +220,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mPostPageLoadedJavascript = state.getString(POST_PAGE_LOADED_URL);
         webViewZoomEnabled = state.getBoolean(WEB_VIEW_ZOOM_ENABLED, true);
         webViewZoomControlsEnabled = state.getBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
-        mClientId = state.getString(CLIENT_ID);
     }
 
     @Nullable

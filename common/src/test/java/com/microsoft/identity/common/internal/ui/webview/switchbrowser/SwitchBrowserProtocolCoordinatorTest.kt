@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.ui.webview.switchbrowser
 
 import android.os.Bundle
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2.CLIENT_ID
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2.REDIRECT_URI
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler
 import com.microsoft.identity.common.java.AuthenticationConstants.AAD.AUTHORIZATION
@@ -46,7 +45,6 @@ class SwitchBrowserProtocolCoordinatorTest {
         val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
         doNothing().`when`(mockSwitchBrowserRequestHandler).resetChallengeState()
         val redirectUrl = "AAD://example.com/redirect"
-        val clientId = "client_id"
         val code = "switch_browser_code"
         val actionUrl = "test.example.com/switchbrowser/path"
         val extras = Bundle().apply {
@@ -57,9 +55,8 @@ class SwitchBrowserProtocolCoordinatorTest {
         val coordinator = SwitchBrowserProtocolCoordinator(mockSwitchBrowserRequestHandler)
 
         // Call the method to be tested
-        coordinator.processSwitchBrowserResume(extras, redirectUrl, clientId) { uri, headers ->
+        coordinator.processSwitchBrowserResume(extras, redirectUrl) { uri, headers ->
             // Verify the resume URI
-            Assert.assertEquals(clientId, uri.getQueryParameter(CLIENT_ID))
             Assert.assertEquals(redirectUrl, uri.getQueryParameter(REDIRECT_URI))
             Assert.assertEquals(actionUrl, uri.host + uri.path)
             Assert.assertEquals(code, headers[AUTHORIZATION])
@@ -71,7 +68,6 @@ class SwitchBrowserProtocolCoordinatorTest {
         // Mock parameters
         val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
         val redirectUrl = "AAD://example.com/redirect"
-        val clientId = "client_id"
         val extras = Bundle().apply {
             // Missing code
             // Missing ACTION_URI
@@ -81,7 +77,7 @@ class SwitchBrowserProtocolCoordinatorTest {
 
         val exception = Assert.assertThrows(ClientException::class.java) {
             // Call the method to be tested
-            coordinator.processSwitchBrowserResume(extras, redirectUrl, clientId) { _, _ ->
+            coordinator.processSwitchBrowserResume(extras, redirectUrl) { _, _ ->
                 // This block should not be executed
                 Assert.fail()
             }

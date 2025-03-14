@@ -127,7 +127,6 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
                 redirectUri,
                 mAuthorizationRequest.getRequestHeaders(),
                 AuthorizationAgent.WEBVIEW,
-                clientId,
                 mAuthorizationRequest.isWebViewZoomEnabled(),
                 mAuthorizationRequest.isWebViewZoomControlsEnabled(),
                 sourceLibraryName,

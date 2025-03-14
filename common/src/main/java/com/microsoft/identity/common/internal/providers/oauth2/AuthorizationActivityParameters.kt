@@ -35,7 +35,6 @@ import com.microsoft.identity.common.java.ui.AuthorizationAgent
  * @param redirectUri                The expected redirect URI associated with the authorization request
  * @param requestHeader              Additional HTTP headers included with the authorization request
  * @param authorizationAgent         The means by which authorization should be performed (EMBEDDED, WEBVIEW) NOTE: This should move to library configuration
- * @param clientId                   The client ID of the application making the request
  * @param webViewZoomEnabled         This parameter is specific to embedded and controls whether webview zoom is enabled... NOTE: Needs refactoring
  * @param webViewZoomControlsEnabled This parameter is specific to embedded and controls whether webview zoom controls are enabled... NOTE: Needs refactoring
  * @param sourceLibraryName          Product name to be of library making the request
@@ -48,7 +47,6 @@ data class AuthorizationActivityParameters @JvmOverloads constructor(
     val redirectUri: String,
     val requestHeader: HashMap<String, String>?,
     val authorizationAgent: AuthorizationAgent,
-    val clientId: String? = null,
     val webViewZoomEnabled: Boolean = true,
     val webViewZoomControlsEnabled: Boolean = true,
     val sourceLibraryName: String? = null,

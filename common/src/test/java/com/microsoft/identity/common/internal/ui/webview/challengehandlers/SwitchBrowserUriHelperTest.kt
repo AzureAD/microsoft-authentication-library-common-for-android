@@ -39,7 +39,6 @@ class SwitchBrowserUriHelperTest {
     companion object {
         private const val CODE = "your-switch-browser-code"
         private const val ACTION_URI = "login.microsoftonline.com/switchbrowser/process"
-        private const val CLIENT_ID = "test-client-id"
     }
 
     @Test
@@ -102,14 +101,9 @@ class SwitchBrowserUriHelperTest {
     fun `test buildResumeUri valid params`() {
         val uri = SwitchBrowserUriHelper.buildResumeUri(
             ACTION_URI,
-            Broker.NEW_BROKER_REDIRECT_URI,
-            CLIENT_ID
+            Broker.NEW_BROKER_REDIRECT_URI
         )
         Assert.assertNotNull(uri)
-        Assert.assertEquals(
-            CLIENT_ID,
-            uri.getQueryParameter(OAuth2.CLIENT_ID)
-        )
         Assert.assertEquals(
             Broker.NEW_BROKER_REDIRECT_URI,
             uri.getQueryParameter(OAuth2.REDIRECT_URI)

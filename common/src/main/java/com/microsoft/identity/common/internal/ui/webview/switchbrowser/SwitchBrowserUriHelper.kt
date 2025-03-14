@@ -109,15 +109,13 @@ object SwitchBrowserUriHelper {
      *
      * @param actionUri The action uri to be opened.
      * @param redirectUrl The redirect url to be included in the resume uri.
-     * @param clientId The client id to be included in the resume uri.
      *
      * @return The resume uri constructed from the bundle.
      * e.g. actionUri?client_id=client-id&redirect_uri=redirect-uri
      */
-    fun buildResumeUri(actionUri: String, redirectUrl: String, clientId: String): Uri {
+    fun buildResumeUri(actionUri: String, redirectUrl: String): Uri {
         // Query parameters for the resume uri.
         val queryParams = hashMapOf<String, String>()
-        queryParams[OAuth2.CLIENT_ID] = clientId
         queryParams[OAuth2.REDIRECT_URI] = redirectUrl
         // Construct the uri to the resume endpoint.
         return buildSwitchBrowserUri(actionUri, queryParams)
