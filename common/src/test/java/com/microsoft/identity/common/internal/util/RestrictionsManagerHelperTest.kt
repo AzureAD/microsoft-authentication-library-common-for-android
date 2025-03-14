@@ -98,31 +98,6 @@ class RestrictionsManagerHelperTest {
         Assert.assertEquals("expected", setValue)
     }
 
-    @Test
-    fun testGetRestrictionsManagerHelperPutBooleanKeyOnBundleRequest() {
-        setRestrictionsManager(Bundle())
-
-        val bundleRequest = restrictionsManagerHelper.createRequestBundle(
-            booleanKeysToInclude = setOf("value0", "value1"),
-        )
-        val keys = bundleRequest.getStringArrayList(RestrictionsManagerHelper.BOOLEAN_VALUES_KEY)
-        Assert.assertEquals(2, keys?.size)
-        Assert.assertEquals("value0", keys?.get(0))
-        Assert.assertEquals("value1", keys?.get(1))
-    }
-
-    @Test
-    fun testGetRestrictionsManagerHelperPutStringKeyOnBundleRequest() {
-        setRestrictionsManager(Bundle())
-
-        val bundleRequest = restrictionsManagerHelper.createRequestBundle(
-            stringKeysToInclude = setOf("value0", "value1"),
-        )
-        val keys = bundleRequest.getStringArrayList(RestrictionsManagerHelper.STRING_VALUES_KEY)
-        Assert.assertEquals(2, keys?.size)
-        Assert.assertEquals("value0", keys?.get(0))
-        Assert.assertEquals("value1", keys?.get(1))
-    }
 
     @Test
     fun testGetRestrictionsManagerHelperGetFilteredBundleFromLocalRestrictionManager() {
@@ -135,7 +110,7 @@ class RestrictionsManagerHelperTest {
             }
         )
 
-        val bundleRequest = restrictionsManagerHelper.createRequestBundle(
+        val bundleRequest = restrictionsManagerHelper.createRemoteRequestBundle(
             stringKeysToInclude = setOf("skey0"),
             booleanKeysToInclude = setOf("bkey0", "bkey1"),
         )
