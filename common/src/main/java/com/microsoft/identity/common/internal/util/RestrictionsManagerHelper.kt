@@ -87,11 +87,11 @@ class RestrictionsManagerHelper(
      * Returns null if the key is not found or failed to read the value.
      * The default [appPackageName] is the current app.
      */
-    fun getString(key: String, appPackageName: String = context.packageName, default: String? = null): String? {
+    fun getString(key: String, appPackageName: String = context.packageName, defaultValue: String? = null): String? {
         return fetchAndFilterRestrictions(
             dataRequired = createRequestBundle(stringKeysToInclude = setOf(key)),
             appPackageName = appPackageName
-        )?.getString(key) ?: default
+        )?.getString(key) ?: defaultValue
     }
 
     /**
@@ -99,11 +99,11 @@ class RestrictionsManagerHelper(
      * Returns null if the key is not found or failed to read the value.
      * The default [appPackageName] is the current app.
      */
-    fun getBoolean(key: String, appPackageName: String = context.packageName, default: Boolean = false): Boolean {
+    fun getBoolean(key: String, appPackageName: String = context.packageName, defaultValue: Boolean = false): Boolean {
         return fetchAndFilterRestrictions(
             dataRequired = createRequestBundle(booleanKeysToInclude = setOf(key)),
             appPackageName = appPackageName
-        )?.getBoolean(key) ?: default
+        )?.getBoolean(key) ?: defaultValue
     }
 
     /**
@@ -202,7 +202,7 @@ class RestrictionsManagerHelper(
      * Fetches the restriction manager bundle from the [appPackageName],
      * filtering the keys based on the [dataRequired] bundle.
      */
-    private fun fetchRestrictionManagerBundleFromTargetApp(
+    private fun fetchRestrictionsFromApp(
         appPackageName: String,
         dataRequired: Bundle
     ): Bundle? {
@@ -228,18 +228,24 @@ class RestrictionsManagerHelper(
     }
 
     /**
+     * Return true if the [appPackageName] is the current app.
+     */
+    private fun isLocal(appPackageName: String) =
+        appPackageName.equals(context.packageName, ignoreCase = true)
+
+    /**
      * Fetches the restriction manager bundle from the [appPackageName],
      * filtering the keys based on the [dataRequired] bundle.
      */
     private fun fetchAndFilterRestrictions(dataRequired: Bundle, appPackageName: String): Bundle? {
         val methodTag = "$TAG:fetchAndFilterRestrictions"
         Logger.info(methodTag, "appPackageName: $appPackageName, current app: ${context.packageName}")
-        return if (appPackageName.equals(context.packageName, ignoreCase = true)) {
+        return if (isLocal(appPackageName)) {
             Logger.info(methodTag, "Request to read local restriction manager")
             getFilteredBundleFromLocalRestrictionManager(dataRequired)
         } else {
             Logger.info(methodTag, "Request to read $appPackageName restriction manager")
-            return fetchRestrictionManagerBundleFromTargetApp(appPackageName, dataRequired)
+            return fetchRestrictionsFromApp(appPackageName, dataRequired)
         }
     }
 }

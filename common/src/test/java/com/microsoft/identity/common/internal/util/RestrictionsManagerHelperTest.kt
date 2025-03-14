@@ -57,7 +57,7 @@ class RestrictionsManagerHelperTest {
     fun testGetRestrictionsManagerHelperDefaultBoolean() {
         // Set test value on the restrictions manager
         setRestrictionsManager(Bundle())
-        val defaultValue = restrictionsManagerHelper.getBoolean(key = "test", default = false)
+        val defaultValue = restrictionsManagerHelper.getBoolean(key = "test", defaultValue = false)
         Assert.assertFalse(defaultValue)
     }
 
@@ -65,7 +65,7 @@ class RestrictionsManagerHelperTest {
     fun testGetRestrictionsManagerHelperDefaultString() {
         // Set test value on the restrictions manager
         setRestrictionsManager(Bundle())
-        val defaultValue = restrictionsManagerHelper.getString(key = "test", default = "default")
+        val defaultValue = restrictionsManagerHelper.getString(key = "test", defaultValue = "default")
         Assert.assertEquals("default", defaultValue)
     }
 
