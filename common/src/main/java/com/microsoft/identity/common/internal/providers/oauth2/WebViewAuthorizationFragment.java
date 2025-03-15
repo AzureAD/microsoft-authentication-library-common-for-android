@@ -30,6 +30,8 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -50,9 +52,11 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
+import com.microsoft.identity.common.internal.util.RestrictionsManagerHelper;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -72,6 +76,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
@@ -120,6 +126,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     // This is used by LegacyFido2ApiManager to launch a PendingIntent received by the legacy API.
     private ActivityResultLauncher<LegacyFido2ApiObject> mFidoLauncher;
+
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -295,8 +305,20 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // we show the rationale to confirm the consent with the current user.
                 // Otherwise, show the system prompt.
                 if (isAppCameraPermissionGranted()) {
-                    Logger.info(methodTag, "Camera permission already granted.");
-                    showCameraRationale();
+                    executorService.execute(() -> {
+                        final boolean isRationaleRequired = isRationaleRequired();
+                        // Post result back to the main thread
+                        mainHandler.post(() -> {
+                            Logger.info(methodTag, "Camera permission already granted.");
+                            if (isRationaleRequired) {
+                                Logger.info(methodTag, "Camera permission rationale required.");
+                                showCameraRationale();
+                            } else {
+                                Logger.info(methodTag, "Camera permission rationale not required.");
+                                mCameraPermissionRequest.grant();
+                            }
+                        });
+                    });
                 } else {
                     requestCameraPermission();
                 }
@@ -312,6 +334,23 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 return Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
             }
         });
+    }
+
+    /**
+     * Checks if the camera permission rationale is required.
+     *
+     * @return true if the rationale is required, false otherwise.
+     */
+    private boolean isRationaleRequired() {
+        if (getActivity() instanceof  BrokerAuthorizationActivity) {
+            return !new RestrictionsManagerHelper(requireContext()).getBoolean(
+                    "sdm_suppress_camera_consent",
+                    BrokerData.getProdMicrosoftAuthenticator().getPackageName(),
+                    true
+            );
+        }
+        // By default, we should show the rationale.
+        return true;
     }
 
     /**
@@ -393,7 +432,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
 
                 mAADWebViewClient.setRequestHeaders(mRequestHeaders);
-                mAADWebViewClient.setRequestUrl(mAuthorizationRequestUrl);
                 mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
 
                 // The first page load could take time, and we do not want to just show a blank page.
