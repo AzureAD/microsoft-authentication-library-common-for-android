@@ -306,16 +306,15 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // Otherwise, show the system prompt.
                 if (isAppCameraPermissionGranted()) {
                     executorService.execute(() -> {
-                        final boolean isRationaleRequired = isRationaleRequired();
+                        final boolean isCameraConsentSuppressed = isCameraConsentSuppressed();
                         // Post result back to the main thread
                         mainHandler.post(() -> {
                             Logger.info(methodTag, "Camera permission already granted.");
-                            if (isRationaleRequired) {
-                                Logger.info(methodTag, "Camera permission rationale required.");
-                                showCameraRationale();
-                            } else {
-                                Logger.info(methodTag, "Camera permission rationale not required.");
+                            Logger.info(methodTag, "Camera consent suppresed: " + isCameraConsentSuppressed);
+                            if (isCameraConsentSuppressed) {
                                 mCameraPermissionRequest.grant();
+                            } else {
+                                showCameraRationale();
                             }
                         });
                     });
@@ -337,20 +336,18 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     }
 
     /**
-     * Checks if the camera permission rationale is required.
-     *
-     * @return true if the rationale is required, false otherwise.
+     * Checks if the camera consent is suppressed.
      */
-    private boolean isRationaleRequired() {
+    private boolean isCameraConsentSuppressed() {
         if (getActivity() instanceof  BrokerAuthorizationActivity) {
-            return !new RestrictionsManagerHelper(requireContext()).getBoolean(
+            return new RestrictionsManagerHelper(requireContext()).getBoolean(
                     "sdm_suppress_camera_consent",
                     BrokerData.getProdMicrosoftAuthenticator().getPackageName(),
-                    true
+                    false
             );
         }
         // By default, we should show the rationale.
-        return true;
+        return false;
     }
 
     /**
