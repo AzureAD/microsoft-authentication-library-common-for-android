@@ -324,9 +324,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     return true;
                 }
             }
-        } catch (final Exception e) {
+        } catch (final Throwable throwable) {
             // No op. If it fails, let it fail silently because this is not blocking the user.
-            Logger.warn(TAG, "Failure in detecting if it is a cross cloud redirect url." + e);
+            Logger.warn(TAG, "Failure in detecting if it is a cross cloud redirect url." + throwable);
         }
         return false;
     }
@@ -627,6 +627,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.error(methodTag, "Error processing nonce and re-attaching headers", throwable);
                 span.setStatus(StatusCode.ERROR, "Error processing nonce and re-attaching headers");
                 span.recordException(throwable);
+                view.loadUrl(url, mRequestHeaders);
             } finally {
                 span.end();
             }
@@ -650,6 +651,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // No op if an exception happens
             Logger.warn(methodTag, "Error processing cross cloud redirect and attaching PRT header." + e);
             span.recordException(e);
+            view.loadUrl(url, mRequestHeaders);
         } finally {
             span.end();
         }

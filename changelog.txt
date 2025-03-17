@@ -1,6 +1,7 @@
 vNext
 ----------
 - [PATCH] Fix multiple prompts issue in cross cloud request (#2599)
+- [PATCH] Corrected error handling in cross cloud scenario (#2602)
 
 Version 20.1.1
 ----------
