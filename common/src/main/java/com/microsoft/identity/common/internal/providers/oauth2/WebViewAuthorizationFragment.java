@@ -99,6 +99,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @VisibleForTesting
     private static final String PKEYAUTH_STATUS = "pkeyAuthStatus";
 
+    private static final String SUPPRESS_CAMERA_CONSENT = "sdm_suppress_camera_consent";
+
     private WebView mWebView;
 
     private AzureActiveDirectoryWebViewClient mAADWebViewClient;
@@ -341,7 +343,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private boolean isCameraConsentSuppressed() {
         if (getActivity() instanceof  BrokerAuthorizationActivity) {
             return new RestrictionsManagerHelper(requireContext()).getBoolean(
-                    "sdm_suppress_camera_consent",
+                    SUPPRESS_CAMERA_CONSENT,
                     BrokerData.getProdMicrosoftAuthenticator().getPackageName(),
                     false
             );
