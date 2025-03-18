@@ -23,13 +23,19 @@
 package com.microsoft.identity.common.internal.ui.webview.switchbrowser
 
 import android.app.Activity
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
+import com.microsoft.identity.common.internal.providers.oauth2.BrokerAuthorizationActivity
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper.buildResumeUri
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl
 import com.microsoft.identity.common.java.AuthenticationConstants.AAD.AUTHORIZATION
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.ui.AuthorizationAgent
 import com.microsoft.identity.common.logging.Logger
 
 /**
@@ -42,6 +48,41 @@ class SwitchBrowserProtocolCoordinator(
 
     companion object {
         private const val TAG = "SwitchBrowserProtocolCoordinator"
+
+        /**
+         * Checks if the given [url] is used to resume the switch browser flow.
+         * This is determined by validating whether the URL starts with `[redirectUrl]/switch_browser_resume`.
+         *
+         * Returns `true` if the URL matches the expected pattern, `false` otherwise.
+         */
+        fun isSwitchBrowserResume(url: String?, redirectUrl: String): Boolean {
+            return isSwitchBrowserRedirectUrl(url, redirectUrl, SWITCH_BROWSER.RESUME_PATH)
+        }
+
+        /**
+         * Creates an intent to resume the BrokerAuthorizationActivity for the WebView.
+         * Extracts the action_uri and code from the [intentDataString] and add those as extras of the intent.
+         *
+         * Returns the [Intent] used to start the WebView.
+         */
+        fun getIntentToResumeWebViewAuth(context: Context, intentDataString: String): Intent {
+            val uri = Uri.parse(intentDataString)
+            val intent = Intent(context, BrokerAuthorizationActivity::class.java)
+            intent.putExtra(AUTHORIZATION_AGENT, AuthorizationAgent.WEBVIEW)
+            // Ensures that if the activity is already running at the top of the stack (WebView),
+            // a new instance is not created, but its existing instance is brought to the foreground
+            // instead of launching a new one.
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            intent.putExtra(
+                SWITCH_BROWSER.ACTION_URI,
+                uri.getQueryParameter(SWITCH_BROWSER.ACTION_URI)
+            )
+            intent.putExtra(
+                SWITCH_BROWSER.CODE,
+                uri.getQueryParameter(SWITCH_BROWSER.CODE)
+            )
+            return intent
+        }
     }
 
     /**
@@ -83,7 +124,7 @@ class SwitchBrowserProtocolCoordinator(
      */
     fun isExpectingSwitchBrowserResume(): Boolean {
         val methodTag = "$TAG:isExpectingSwitchBrowserResume"
-        Logger.verbose(methodTag, " expectingRequest: ${switchBrowserRequestHandler.isChallengeHandled}")
+        Logger.verbose(methodTag, "ExpectingRequest: ${switchBrowserRequestHandler.isChallengeHandled}")
         return switchBrowserRequestHandler.isChallengeHandled
     }
 }

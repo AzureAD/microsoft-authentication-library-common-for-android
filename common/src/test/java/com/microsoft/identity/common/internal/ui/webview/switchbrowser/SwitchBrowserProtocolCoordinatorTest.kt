@@ -22,11 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.switchbrowser
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler
 import com.microsoft.identity.common.java.AuthenticationConstants.AAD.AUTHORIZATION
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.ui.AuthorizationAgent
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -46,8 +51,8 @@ class SwitchBrowserProtocolCoordinatorTest {
         val code = "switch_browser_code"
         val actionUrl = "test.example.com/switchbrowser/path"
         val extras = Bundle().apply {
-            putString(AuthenticationConstants.SWITCH_BROWSER.CODE, code)
-            putString(AuthenticationConstants.SWITCH_BROWSER.ACTION_URI, actionUrl)
+            putString(SWITCH_BROWSER.CODE, code)
+            putString(SWITCH_BROWSER.ACTION_URI, actionUrl)
         }
         // Create an instance of SwitchBrowserProtocolCoordinator
         val coordinator = SwitchBrowserProtocolCoordinator(mockSwitchBrowserRequestHandler)
@@ -83,7 +88,7 @@ class SwitchBrowserProtocolCoordinatorTest {
     }
 
     @Test
-    fun `test isSwitchBrowserResume with extras and handler true`() {
+    fun `test isExpectingSwitchBrowserResume with handler true`() {
         // Mock parameters
         val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
         `when`(mockSwitchBrowserRequestHandler.isChallengeHandled).then { true }
@@ -98,7 +103,7 @@ class SwitchBrowserProtocolCoordinatorTest {
     }
 
     @Test
-    fun `test isSwitchBrowserResume with extras handler false`() {
+    fun `test isExpectingSwitchBrowserResume with handler false`() {
         // Mock parameters
         val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
         `when`(mockSwitchBrowserRequestHandler.isChallengeHandled).then { false }
@@ -110,5 +115,57 @@ class SwitchBrowserProtocolCoordinatorTest {
 
         // Verify the result
         Assert.assertFalse(result)
+    }
+
+    @Test
+    fun `test isSwitchBrowserResume for valid url`() {
+        // Mock parameters
+        val url = "${Broker.NEW_BROKER_REDIRECT_URI}/${SWITCH_BROWSER.RESUME_PATH}"
+        val redirectUrl = Broker.NEW_BROKER_REDIRECT_URI
+
+        // Call the method to be tested
+        val result = SwitchBrowserProtocolCoordinator.isSwitchBrowserResume(url, redirectUrl)
+
+        // Verify the result
+        Assert.assertTrue(result)
+    }
+
+    @Test
+    fun `test isSwitchBrowserResume for invalid url`() {
+        // Mock parameters
+        val url = "${Broker.NEW_BROKER_REDIRECT_URI}/invalid_path"
+        val redirectUrl = Broker.NEW_BROKER_REDIRECT_URI
+
+        // Call the method to be tested
+        val result = SwitchBrowserProtocolCoordinator.isSwitchBrowserResume(url, redirectUrl)
+
+        // Verify the result
+        Assert.assertFalse(result)
+    }
+
+    @Test
+    fun `test getIntentToResumeWebViewAuth`() {
+        // Mock parameters
+        val mockContext = mock(Context::class.java)
+        val actionUri = "mock-action-uri"
+        val code = "mock-code"
+        val intentDataString = "${Broker.NEW_BROKER_REDIRECT_URI}/${SWITCH_BROWSER.RESUME_PATH}?" +
+                "${SWITCH_BROWSER.ACTION_URI}=$actionUri&${SWITCH_BROWSER.CODE}=$code"
+
+        // Call the method to be tested
+        val intent = SwitchBrowserProtocolCoordinator
+            .getIntentToResumeWebViewAuth(mockContext, intentDataString)
+
+        // Verify the result
+        Assert.assertEquals(
+            Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP,
+            intent.flags
+        )
+        Assert.assertEquals(actionUri, intent.getStringExtra(SWITCH_BROWSER.ACTION_URI))
+        Assert.assertEquals(code, intent.getStringExtra(SWITCH_BROWSER.CODE))
+        Assert.assertEquals(
+            AuthorizationAgent.WEBVIEW,
+            intent.getSerializableExtra(AUTHORIZATION_AGENT) as AuthorizationAgent
+        )
     }
 }
