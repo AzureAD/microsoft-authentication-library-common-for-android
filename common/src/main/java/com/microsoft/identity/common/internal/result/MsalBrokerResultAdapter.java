@@ -339,7 +339,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         if (exception instanceof IntuneAppProtectionPolicyRequiredException) {
             // Record MAM flow in telemetry
-            SpanExtension.current().setAttribute(AttributeName.is_mam_flow.name(),true);
+            SpanExtension.current().setAttribute(AttributeName.is_mam_flow.name(), true);
 
             builder.userName(((IntuneAppProtectionPolicyRequiredException) exception).getAccountUpn())
                     .localAccountId(((IntuneAppProtectionPolicyRequiredException) exception).getAccountUserId())
