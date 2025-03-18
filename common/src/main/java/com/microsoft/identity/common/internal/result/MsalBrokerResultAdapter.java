@@ -340,7 +340,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         if (exception instanceof IntuneAppProtectionPolicyRequiredException) {
             // Record presence of exception in telemetry
             SpanExtension.current().setAttribute(
-                    AttributeName.intune_protection_policy_exception_present.name(),
+                    AttributeName.is_mam_flow.name(),
                     Boolean.toString(true)
             );
 

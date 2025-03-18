@@ -336,7 +336,7 @@ public enum AttributeName {
     out_of_memory_exception_stacktrace,
 
     /**
-     * Records if an IntuneAppProtectionPolicyRequiredException is received as part of this request.
+     * Records if if current flow is a mam flow.
      */
-    intune_protection_policy_exception_present
+    is_mam_flow
 }
