@@ -45,13 +45,13 @@ class SwitchBrowserProtocolCoordinator(
     }
 
     /**
-     * Process the switch browser resume action.
+     * Processes the switch browser resume action.
      *
-     * @param extras The extras bundle containing the switch browser action URI and code.
-     * @param redirectUrl The redirect URL to be used in the resume URI.
-     * @param onSuccessAction The action to be performed on success.
-     * (in this case, it will be the launch the WebView with the resume URI)
+     * @param extras The bundle containing the switch browser action URI and authorization code.
+     * @param onSuccessAction The action to perform on success.
      *
+     * The [onSuccessAction] function takes two parameters: the resume URL and the headers.
+     * In this case, [onSuccessAction] will launch the WebView with the provided resume URI and headers.
      */
     @Throws(ClientException::class)
     fun processSwitchBrowserResume(
@@ -67,10 +67,9 @@ class SwitchBrowserProtocolCoordinator(
                 "Action URI is null/empty: ${actionUri == null}, code is null/empty: ${code == null}"
             )
         }
-        onSuccessAction(
-            buildResumeUri(actionUri),
-            hashMapOf(AUTHORIZATION to code)
-        )
+        val resumeUri = buildResumeUri(actionUri)
+        val headers = hashMapOf(AUTHORIZATION to code)
+        onSuccessAction(resumeUri, headers)
         // Reset the challenge state after processing the resume action
         switchBrowserRequestHandler.resetChallengeState()
         Logger.info(methodTag, "Switch browser resume action processed successfully.")
