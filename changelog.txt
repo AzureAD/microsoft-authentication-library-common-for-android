@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Track MAM flow in telemetry (#2608)
 - [PATCH] Fix multiple prompts issue in cross cloud request (#2599)
 - [PATCH] Corrected error handling in cross cloud scenario (#2602)
 
