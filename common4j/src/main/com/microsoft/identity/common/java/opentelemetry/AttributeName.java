@@ -333,5 +333,10 @@ public enum AttributeName {
     /**
      * Records the stacktrace for an out-of-memory exception.
      */
-    out_of_memory_exception_stacktrace
+    out_of_memory_exception_stacktrace,
+
+    /**
+     * Records if an IntuneAppProtectionPolicyRequiredException is received as part of this request.
+     */
+    intune_protection_policy_exception_present
 }

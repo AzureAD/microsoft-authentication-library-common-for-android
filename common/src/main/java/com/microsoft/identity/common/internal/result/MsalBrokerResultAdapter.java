@@ -338,6 +338,12 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         }
 
         if (exception instanceof IntuneAppProtectionPolicyRequiredException) {
+            // Record presence of exception in telemetry
+            SpanExtension.current().setAttribute(
+                    AttributeName.intune_protection_policy_exception_present.name(),
+                    Boolean.toString(true)
+            );
+
             builder.userName(((IntuneAppProtectionPolicyRequiredException) exception).getAccountUpn())
                     .localAccountId(((IntuneAppProtectionPolicyRequiredException) exception).getAccountUserId())
                     .authority(((IntuneAppProtectionPolicyRequiredException) exception).getAuthorityUrl())
