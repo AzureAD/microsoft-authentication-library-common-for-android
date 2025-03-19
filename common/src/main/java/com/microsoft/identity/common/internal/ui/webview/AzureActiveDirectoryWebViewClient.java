@@ -53,9 +53,8 @@ import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractC
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CrossCloudChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserChallenge;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserHandler;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserUriHelper;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.exception.IErrorInformation;
@@ -115,18 +114,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final String mRedirectUrl;
     private final CertBasedAuthFactory mCertBasedAuthFactory;
     private AbstractCertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
-    private final SwitchBrowserHandler mSwitchBrowserHandler;
+    private final SwitchBrowserRequestHandler mSwitchBrowserRequestHandler;
     private HashMap<String, String> mRequestHeaders;
     private String mRequestUrl;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
-                                             @NonNull final String redirectUrl) {
+                                             @NonNull final String redirectUrl,
+                                             @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
-        mSwitchBrowserHandler = new SwitchBrowserHandler(activity);
+        mSwitchBrowserRequestHandler = switchBrowserRequestHandler;
     }
 
     /**
@@ -221,7 +221,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
              }
              else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
-                if (SwitchBrowserUriHelper.INSTANCE.isSwitchBrowserRequest(formattedURL, mRedirectUrl)) {
+                if (mSwitchBrowserRequestHandler.isSwitchBrowserRequest(formattedURL, mRedirectUrl)) {
                     Logger.info(methodTag,"Request to switch browser.");
                     processSwitchBrowserRequest(formattedURL);
                 } else {
@@ -388,7 +388,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processSwitchBrowserRequest(@NonNull final String url) {
         final String methodTag = TAG + ":processSwitchBrowserRequest";
         try {
-            mSwitchBrowserHandler.processChallenge(
+            mSwitchBrowserRequestHandler.processChallenge(
                     SwitchBrowserChallenge.constructFromRedirectUrl(url)
             );
         } catch (final Throwable throwable) {
@@ -725,7 +725,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             mCertBasedAuthChallengeHandler.cleanUp();
         }
         mCertBasedAuthFactory.onDestroy();
-        mSwitchBrowserHandler.unbind();
     }
 
     /**

@@ -536,9 +536,19 @@ public final class AuthenticationConstants {
     public static final class SWITCH_BROWSER {
 
         /**
+         * Path used on the broker redirect url to indicate the resume of the switch browser flow.
+         */
+        public static final String RESUME_PATH = "switch_browser_resume";
+
+        /**
+         * Path used on the broker redirect url to indicate the start of the switch browser flow.
+         */
+        public static final String REQUEST_PATH = "switch_browser";
+
+        /**
          * String Query parameter key to indicate support for SWITCH_BROWSER protocol.
          */
-        public static final String PATH = "switch_browser";
+        public static final String CLIENT_SUPPORTS_FLOW = "switch_browser";
 
         /**
          * String Query parameter key for the purpose token.
