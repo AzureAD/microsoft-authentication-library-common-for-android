@@ -23,9 +23,9 @@
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 
 import android.net.Uri
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper
 import com.microsoft.identity.common.java.exception.ClientException
 import org.junit.Assert
 import org.junit.Test
@@ -54,10 +54,6 @@ class SwitchBrowserUriHelperTest {
             switchBrowserProcessUri.getQueryParameter(SWITCH_BROWSER.CODE)
         )
         Assert.assertEquals(
-            Broker.NEW_BROKER_REDIRECT_URI,
-            switchBrowserProcessUri.getQueryParameter(AuthenticationConstants.OAuth2.REDIRECT_URI)
-        )
-        Assert.assertEquals(
             ACTION_URI,
             switchBrowserProcessUri.host + switchBrowserProcessUri.path
         )
@@ -77,17 +73,34 @@ class SwitchBrowserUriHelperTest {
     }
 
     @Test
-    fun `test isSwitchBrowserRequest no valid request`() {
+    fun `test isSwitchBrowserRedirectUrl incorrect url`() {
         val url = "https://login.microsoftonline.com/"
-        Assert.assertFalse(SwitchBrowserUriHelper.isSwitchBrowserRequest(url, Broker.NEW_BROKER_REDIRECT_URI))
+        val redirectUrl = Broker.NEW_BROKER_REDIRECT_URI
+        val path = "path"
+        Assert.assertFalse(
+            SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl(url, redirectUrl, path)
+        )
     }
 
     @Test
-    fun `test isSwitchBrowserRequest  valid request`() {
-        val url = "${Broker.NEW_BROKER_REDIRECT_URI}/" +
-                SWITCH_BROWSER.PATH +"?" +
-                "${SWITCH_BROWSER.ACTION_URI}=$ACTION_URI"
+    fun `test isSwitchBrowserRedirectUrl correct url`() {
+        val url = "${Broker.NEW_BROKER_REDIRECT_URI}/path"
+        val redirectUrl = Broker.NEW_BROKER_REDIRECT_URI
+        val path = "path"
+        Assert.assertTrue(
+            SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl(url, redirectUrl, path)
+        )
+    }
 
-        Assert.assertTrue(SwitchBrowserUriHelper.isSwitchBrowserRequest(url,Broker.NEW_BROKER_REDIRECT_URI))
+    @Test
+    fun `test buildResumeUri valid params`() {
+        val uri = SwitchBrowserUriHelper.buildResumeUri(
+            ACTION_URI
+        )
+        Assert.assertNotNull(uri)
+        Assert.assertEquals(
+            ACTION_URI,
+            uri.host + uri.path
+        )
     }
 }

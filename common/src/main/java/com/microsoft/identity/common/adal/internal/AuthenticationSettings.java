@@ -134,11 +134,10 @@ public enum AuthenticationSettings {
         if (rawKey == null || rawKey.length != SECRET_RAW_KEY_LENGTH) {
             throw new IllegalArgumentException("rawKey");
         }
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            Logger.warn(methodTag, "You're using setSecretKey in a version of android " +
-                    "that supports keyStore functionality.  Consider not doing this, as it only exists " +
-                    "for devices with an SDK lower than " + Build.VERSION_CODES.JELLY_BEAN_MR2);
-        }
+        Logger.warn(methodTag, "You're using setSecretKey in a version of android " +
+                "that supports keyStore functionality.  Consider not doing this, as it only exists " +
+                "for devices with an SDK lower than " + Build.VERSION_CODES.JELLY_BEAN_MR2);
+
         mSecretKeyData.set(rawKey);
     }
 
