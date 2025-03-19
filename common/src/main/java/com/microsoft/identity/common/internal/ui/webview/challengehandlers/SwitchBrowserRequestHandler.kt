@@ -25,29 +25,35 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
 import com.microsoft.identity.common.internal.ui.browser.AndroidBrowserSelector
 import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl
 import com.microsoft.identity.common.java.browser.IBrowserSelector
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.ui.BrowserDescriptor
 import com.microsoft.identity.common.logging.Logger
 
 /**
- * SwitchBrowserHandler is a challenge handler for SwitchBrowserChallenge.
+ * SwitchBrowserRequestHandler is a challenge handler for SwitchBrowserChallenge.
  * It handles the challenge by selecting a valid browser to launch the Switch browser URI.
  */
-class SwitchBrowserHandler(
+class SwitchBrowserRequestHandler(
     private val activity: Activity,
     private val context: Context,
     private val customTabsManager: CustomTabsManager,
     private val browserSelector: IBrowserSelector
-) : IChallengeHandler<SwitchBrowserChallenge, Unit>  {
+) : IChallengeHandler<SwitchBrowserChallenge, Unit> {
+
+
+    var isChallengeHandled: Boolean = false
+        private set
 
     companion object {
-        private val TAG = SwitchBrowserHandler::class.simpleName
+        private val TAG = SwitchBrowserRequestHandler::class.simpleName
     }
 
-    constructor( activity: Activity) : this(
+    constructor(activity: Activity) : this(
         activity,
         activity.applicationContext,
         CustomTabsManager(activity.applicationContext),
@@ -75,7 +81,11 @@ class SwitchBrowserHandler(
                 ClientException.NO_BROWSERS_AVAILABLE,
                 "No browser found for SwitchBrowserChallenge."
             )
-            Logger.error(methodTag, "No browser found for SwitchBrowserChallenge.", exception)
+            Logger.error(
+                methodTag,
+                "No browser found for SwitchBrowserChallenge.",
+                exception
+            )
             throw exception
         }
 
@@ -94,13 +104,41 @@ class SwitchBrowserHandler(
             Logger.warn(methodTag, "CustomTabsService is NOT supported")
             browserIntent = Intent(Intent.ACTION_VIEW)
         }
-        Logger.info(methodTag, "Launching switch browser request on browser: ${browser.packageName}")
+        Logger.info(
+            methodTag,
+            "Launching switch browser request on browser: ${browser.packageName}"
+        )
         browserIntent.setPackage(browser.packageName)
         browserIntent.setData(switchBrowserChallenge.uri)
         activity.startActivity(browserIntent)
+        isChallengeHandled = true
     }
 
-    fun unbind() {
-        customTabsManager.unbind()
+    /**
+     *  Check if the request is to start the switch browser flow.
+     *
+     * The request is considered "switch_browser" if the URL
+     * starts with the following pattern: {redirectUrl}/switch_browser
+     *
+     *
+     * @param url The URL to be checked.
+     * @param redirectUrl The redirect URL to be checked against.
+     * @return True if the request matches the pattern, false otherwise.
+     */
+    fun isSwitchBrowserRequest(url: String?, redirectUrl: String): Boolean {
+        return isSwitchBrowserRedirectUrl(url, redirectUrl, SWITCH_BROWSER.REQUEST_PATH)
     }
+
+    /**
+     * Handles the necessary cleanup after a challenge is completed.
+     * This includes unbinding the custom tabs manager and resetting the challenge handled flag.
+     */
+    fun resetChallengeState() {
+        // Unbind the custom tabs manager
+        customTabsManager.unbind()
+        // Reset the challenge handled flag
+        isChallengeHandled = false
+
+    }
+
 }
