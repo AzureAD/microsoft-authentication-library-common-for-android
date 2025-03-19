@@ -45,7 +45,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
@@ -253,14 +252,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         // Inject the javascript string from testing. This should only be evaluated if we haven't sent
                         // an auth result already.
                         if (!mAuthResultSent && !StringExtensions.isNullOrBlank(javascriptToExecute[0])) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                mWebView.evaluateJavascript(javascriptToExecute[0], null);
-                            } else {
-                                // On earlier versions of Android, javascript has to be loaded with a custom scheme.
-                                // In these cases, Android will helpfully unescape any octects it finds. Unfortunately,
-                                // our javascript may contain the '%' character, so we escape it again, to undo that.
-                                mWebView.loadUrl("javascript:" + javascriptToExecute[0].replace("%", "%25"));
-                            }
+                            mWebView.evaluateJavascript(javascriptToExecute[0], null);
                         }
                     }
                 },
@@ -324,7 +316,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
         mWebView.setWebChromeClient(new WebChromeClient() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
                 Logger.info(methodTag,
