@@ -333,5 +333,10 @@ public enum AttributeName {
     /**
      * Records the stacktrace for an out-of-memory exception.
      */
-    out_of_memory_exception_stacktrace
+    out_of_memory_exception_stacktrace,
+
+    /**
+     * Records if current flow is a mam flow.
+     */
+    is_mam_flow
 }
