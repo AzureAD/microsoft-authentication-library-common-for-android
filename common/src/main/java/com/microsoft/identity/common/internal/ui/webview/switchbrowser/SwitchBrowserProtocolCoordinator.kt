@@ -50,11 +50,10 @@ import io.opentelemetry.api.trace.StatusCode
  * Contains the handler to process the switch browser request and resume action.
  */
 class SwitchBrowserProtocolCoordinator(
-    private val activity: Activity,
-    private val switchBrowserRequestHandler: SwitchBrowserRequestHandler,
+    val switchBrowserRequestHandler: SwitchBrowserRequestHandler,
     private val spanContext: SpanContext? = null) {
 
-    constructor(activity: Activity, spanContext: SpanContext?) : this(activity, SwitchBrowserRequestHandler(activity, spanContext), spanContext)
+    constructor(activity: Activity, spanContext: SpanContext?) : this(SwitchBrowserRequestHandler(activity, spanContext), spanContext)
 
     val span: Span by lazy {
         OTelUtility.createSpanFromParent(SpanName.SwitchBrowserProtocol.name, spanContext)
