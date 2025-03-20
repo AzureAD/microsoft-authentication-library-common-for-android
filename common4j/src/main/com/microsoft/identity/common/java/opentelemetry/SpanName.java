@@ -61,5 +61,6 @@ public enum SpanName {
     ProcessNonceFromEstsRedirect,
     DataStoreCorruptionException,
     KeyPairGeneration,
-    ProcessCrossCloudRedirect
+    ProcessCrossCloudRedirect,
+    SwitchBrowserProtocol,
 }

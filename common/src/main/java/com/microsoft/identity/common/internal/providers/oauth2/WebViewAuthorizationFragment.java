@@ -85,6 +85,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 
+import io.opentelemetry.api.trace.SpanContext;
+
 /**
  * Authorization fragment with embedded webview.
  */
@@ -547,7 +549,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private SwitchBrowserProtocolCoordinator getSwitchBrowserCoordinator() {
         if (mSwitchBrowserProtocolCoordinator == null) {
-            mSwitchBrowserProtocolCoordinator = new SwitchBrowserProtocolCoordinator(requireActivity());
+            final SpanContext spanContext = requireActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) requireActivity()).getSpanContext() : null;
+            mSwitchBrowserProtocolCoordinator = new SwitchBrowserProtocolCoordinator(requireActivity(), spanContext);
         }
         return mSwitchBrowserProtocolCoordinator;
     }
