@@ -341,6 +341,11 @@ public enum AttributeName {
     is_mam_flow,
 
     /**
+     * Records if current flow is a switch browser protocol.
+     */
+    is_switch_browser_protocol,
+
+    /**
      * Records the browser package name.
      */
     browser_package_name,
