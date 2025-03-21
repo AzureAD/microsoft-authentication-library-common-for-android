@@ -67,6 +67,7 @@ import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.util.ClientExtraSku;
@@ -282,47 +283,50 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
-                Logger.info(methodTag,
-                        "Permission requested from:" +request.getOrigin() +
-                                " for resources:" + Arrays.toString(request.getResources())
-                );
-                // We can only grant or deny permissions for video capture/camera.
-                // To avoid unintentionally granting requests for not defined permissions
-                // we check if the request is for camera.
-                if (!CameraPermissionRequest.isValidRequest(request)) {
-                    Logger.warn(methodTag, "Permission request is not for camera.");
-                    request.deny();
-                    return;
-                }
-                // There is a issue in ESTS UX where it sends multiple camera permission requests.
-                // So, if there is already a camera permission request in progress we handle it here.
-                if (mCameraPermissionRequest != null) {
-                    Logger.info(methodTag, "Repeated request, granted? " + mCameraPermissionRequest.isGranted());
-                    handleRepeatedCameraRequests(request);
-                    return;
-                }
-                Logger.info(methodTag, "New camera request.");
-                mCameraPermissionRequest = new CameraPermissionRequest(request);
-                // If the OS level permission was granted previously,
-                // we show the rationale to confirm the consent with the current user.
-                // Otherwise, show the system prompt.
-                if (isAppCameraPermissionGranted()) {
-                    executorService.execute(() -> {
-                        final boolean isCameraConsentSuppressed = isCameraConsentSuppressed();
-                        // Post result back to the main thread
-                        mainHandler.post(() -> {
-                            Logger.info(methodTag, "Camera permission already granted.");
-                            Logger.info(methodTag, "Camera consent suppresed: " + isCameraConsentSuppressed);
-                            if (isCameraConsentSuppressed) {
-                                mCameraPermissionRequest.grant();
-                            } else {
-                                showCameraRationale();
-                            }
+                requireActivity().runOnUiThread(() -> {
+                    Logger.info(methodTag,
+                            "Permission requested from:" +request.getOrigin() +
+                                    " for resources:" + Arrays.toString(request.getResources())
+                    );
+                    // We can only grant or deny permissions for video capture/camera.
+                    // To avoid unintentionally granting requests for not defined permissions
+                    // we check if the request is for camera.
+                    if (!CameraPermissionRequest.isValidRequest(request)) {
+                        Logger.warn(methodTag, "Permission request is not for camera.");
+                        request.deny();
+                        return;
+                    }
+                    // There is a issue in ESTS UX where it sends multiple camera permission requests.
+                    // So, if there is already a camera permission request in progress we handle it here.
+                    if (mCameraPermissionRequest != null) {
+                        Logger.info(methodTag, "Repeated request, granted? " + mCameraPermissionRequest.isGranted());
+                        handleRepeatedCameraRequests(request);
+                        return;
+                    }
+                    Logger.info(methodTag, "New camera request.");
+                    mCameraPermissionRequest = new CameraPermissionRequest(request);
+                    // If the OS level permission was granted previously,
+                    // we show the rationale to confirm the consent with the current user.
+                    // Otherwise, show the system prompt.
+                    if (isAppCameraPermissionGranted()) {
+                        Logger.info(methodTag, "Camera permission already granted.");
+                        executorService.execute(() -> {
+                            final boolean isSdmQrPinRationaleRequired = isSdmQrPinRationaleRequired();
+                            Logger.info(methodTag, "is SDM QR+PIN rationale required: " + isSdmQrPinRationaleRequired);
+                            // Post result back to the main thread
+                            mainHandler.post(() -> {
+                                if (isSdmQrPinRationaleRequired) {
+                                    showQRPinCameraRationale();
+                                } else {
+                                    Logger.info(methodTag, "Camera permission already granted, granting request.");
+                                    mCameraPermissionRequest.grant();
+                                }
+                            });
                         });
-                    });
-                } else {
-                    requestCameraPermission();
-                }
+                    } else {
+                        requestCameraPermission();
+                    }
+                });
             }
 
             @Override
@@ -338,17 +342,26 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     }
 
     /**
-     * Checks if the camera consent is suppressed.
+     * Checks if the camera permission is required for QR+PIN flow.
      */
-    private boolean isCameraConsentSuppressed() {
+    private boolean isSdmQrPinRationaleRequired() {
         if (getActivity() instanceof  BrokerAuthorizationActivity) {
-            return new RestrictionsManagerHelper(requireContext()).getBoolean(
-                    SUPPRESS_CAMERA_CONSENT,
-                    BrokerData.getProdMicrosoftAuthenticator().getPackageName(),
-                    false
-            );
+            final String preferredAuthMethod =
+                    new RestrictionsManagerHelper(requireContext()).getString(
+                            "SUPPRESS_CAMERA_CONSENT",
+                            BrokerData.getProdMicrosoftAuthenticator().getPackageName(),
+                            "Unknown"
+                    );
+            if (PreferredAuthMethod.QR.value.equalsIgnoreCase(preferredAuthMethod)) {
+                final boolean suppressCameraConsent =
+                        new RestrictionsManagerHelper(requireContext()).getBoolean(
+                                SUPPRESS_CAMERA_CONSENT,
+                                BrokerData.getProdMicrosoftAuthenticator().getPackageName(),
+                                false
+                        );
+                return !suppressCameraConsent;
+            }
         }
-        // By default, we should show the rationale.
         return false;
     }
 
@@ -409,7 +422,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      * If the user accepts the dialog, the camera permission request will be launched.
      * If the user denies the dialog, the camera permission request will be denied.
      */
-    private void showCameraRationale() {
+    private void showQRPinCameraRationale() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setMessage(R.string.qr_code_rationale_message)
                 .setTitle(R.string.qr_code_rationale_header)
