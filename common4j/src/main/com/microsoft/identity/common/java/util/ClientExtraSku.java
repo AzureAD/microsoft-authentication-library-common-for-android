@@ -64,6 +64,9 @@ public class ClientExtraSku {
     @Builder.Default
     private String mBrowserCoreVer = "";
 
+    @Builder.Default
+    private String mMsalCppCoreVer = "";
+
     public String toString(){
         final StringBuilder stringBuilder = new StringBuilder();
         // Index 0 - Auth SDK
@@ -90,6 +93,13 @@ public class ClientExtraSku {
         // the future as needed
         stringBuilder.append("|");
         stringBuilder.append(mBrowserCoreVer);
+        stringBuilder.append(",");
+
+        // Index 4 - MSAL CPP core
+        // We don't send anything for the name, since MSAL CPP Core name is static, this can change in
+        // the future as needed
+        stringBuilder.append("|");
+        stringBuilder.append(mMsalCppCoreVer);
 
         return stringBuilder.toString();
     }
