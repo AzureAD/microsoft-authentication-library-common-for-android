@@ -242,6 +242,7 @@ object AuthorizationActivityFactory {
      * @param bundle the bundle to add to the Fragment if it is an AuthorizationFragment.
      * @return returns an Fragment that's used as to authorize a token request.
      */
+    @JvmStatic
     fun getAuthorizationFragmentFromStartIntentWithState(intent: Intent, bundle: Bundle): Fragment {
         val fragment = getAuthorizationFragmentFromStartIntent(intent)
         if (fragment is AuthorizationFragment) {
