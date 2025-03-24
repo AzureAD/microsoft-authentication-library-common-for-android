@@ -215,7 +215,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     public void testProcessCloudRedirectAndPrtHeaderInternalSuccess() {
         CrossCloudChallengeHandler mockCrossCloudChallengeHandler = Mockito.mock(CrossCloudChallengeHandler.class);
         try {
-            mWebViewClient.processCloudRedirectAndPrtHeaderInternal(TEST_CROSS_CLOUD_REDIRECT_URL, mockCrossCloudChallengeHandler, "methodTag", Span.current());
+            mWebViewClient.processCloudRedirectAndPrtHeaderInternal(TEST_CROSS_CLOUD_REDIRECT_URL, mockCrossCloudChallengeHandler, mMockWebView, "methodTag", Span.current());
         } catch (Exception e) {
             Assert.fail("Unexpected exception occured " + e);
         }
@@ -224,10 +224,12 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     public void testProcessCloudRedirectAndPrtHeaderInternalException() {
         CrossCloudChallengeHandler mockCrossCloudChallengeHandler = Mockito.mock(CrossCloudChallengeHandler.class);
+        WebView mockWebView = Mockito.mock(WebView.class);
         Mockito.doThrow(new RuntimeException("Test Exception")).when(mockCrossCloudChallengeHandler).processChallenge(TEST_CROSS_CLOUD_REDIRECT_URL);
         try {
-            mWebViewClient.processCloudRedirectAndPrtHeaderInternal(TEST_CROSS_CLOUD_REDIRECT_URL, mockCrossCloudChallengeHandler, "methodTag", Span.current());
+            mWebViewClient.processCloudRedirectAndPrtHeaderInternal(TEST_CROSS_CLOUD_REDIRECT_URL, mockCrossCloudChallengeHandler, mockWebView, "methodTag", Span.current());
             Mockito.verify(mockCrossCloudChallengeHandler, Mockito.times(1)).processChallenge(TEST_CROSS_CLOUD_REDIRECT_URL);
+            Mockito.verify(mockWebView).loadUrl(Mockito.anyString(), Mockito.any());
         } catch (Exception e) {
             Assert.fail("Failure is not expected. We should have caught the exception and ignored it. " + e);
         }

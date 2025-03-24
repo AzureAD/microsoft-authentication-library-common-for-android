@@ -645,11 +645,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final Span span = spanContext != null ?
                 OTelUtility.createSpanFromParent(SpanName.ProcessCrossCloudRedirect.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessCrossCloudRedirect.name());
         final CrossCloudChallengeHandler crossCloudChallengeHandler = new CrossCloudChallengeHandler(view, mRequestHeaders, span);
-        processCloudRedirectAndPrtHeaderInternal(url, crossCloudChallengeHandler, methodTag, span);
+        processCloudRedirectAndPrtHeaderInternal(url, crossCloudChallengeHandler, view, methodTag, span);
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    public void processCloudRedirectAndPrtHeaderInternal(@NonNull final String url, @NonNull final CrossCloudChallengeHandler crossCloudChallengeHandler, @NonNull final String methodTag, @NonNull final Span span) {
+    public void processCloudRedirectAndPrtHeaderInternal(@NonNull final String url, @NonNull final CrossCloudChallengeHandler crossCloudChallengeHandler, @NonNull final WebView view, @NonNull final String methodTag, @NonNull final Span span) {
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             crossCloudChallengeHandler.processChallenge(url);
             span.setStatus(StatusCode.OK);
