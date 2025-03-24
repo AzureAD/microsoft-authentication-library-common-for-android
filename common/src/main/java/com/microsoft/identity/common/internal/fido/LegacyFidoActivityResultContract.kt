@@ -25,12 +25,10 @@ package com.microsoft.identity.common.internal.fido
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.util.Base64
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import com.google.android.gms.fido.Fido
 import com.google.android.gms.fido.fido2.api.common.AuthenticatorAssertionResponse
 import com.google.android.gms.fido.fido2.api.common.AuthenticatorErrorResponse
@@ -58,7 +56,6 @@ class LegacyFidoActivityResultContract : ActivityResultContract<LegacyFido2ApiOb
             )
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     override fun parseResult(resultCode: Int, intent: Intent?): Void? {
         if (intent == null) {
             errorCallback.invoke(

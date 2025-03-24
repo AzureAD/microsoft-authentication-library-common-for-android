@@ -22,9 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 
@@ -84,7 +81,6 @@ public interface AsymmetricRsaKey extends AsymmetricKey {
      * @throws ClientException If an error is encountered during encryption.
      */
     @Override
-    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     String encrypt(String plaintext) throws ClientException;
 
     /**
@@ -95,6 +91,5 @@ public interface AsymmetricRsaKey extends AsymmetricKey {
      * @throws ClientException If the supplied ciphertext cannot be decrypted.
      */
     @Override
-    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     String decrypt(String ciphertext) throws ClientException;
 }

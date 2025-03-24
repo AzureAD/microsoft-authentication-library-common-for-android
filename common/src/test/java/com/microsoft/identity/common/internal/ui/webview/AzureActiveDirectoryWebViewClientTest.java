@@ -33,6 +33,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CrossCloudChallengeHandler;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 
@@ -114,7 +115,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                         return;
                     }
                 },
-                TEST_REDIRECT_URI);
+                TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserRequestHandler.class));
         HashMap<String, String> dummyHeaders = new HashMap<>();
         dummyHeaders.put("key", "value");
         mWebViewClient.setRequestHeaders(dummyHeaders);

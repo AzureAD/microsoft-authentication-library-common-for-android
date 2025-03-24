@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 
 import android.net.Uri
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper
 
 /**
  * SwitchBrowserChallenge is a challenge to switch from WebView to browser.

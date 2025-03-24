@@ -23,11 +23,9 @@
 package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 import android.app.Activity;
-import android.os.Build;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
@@ -117,7 +115,6 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
         final String methodTag = TAG + ":getSmartcardPinDialogPositiveButtonListener";
 
         return new SmartcardPinDialog.PositiveButtonListener() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onClick(@NonNull final char[] pin) {
                 //For NFC, we need another dialog prompting the user to hold the smartcard to the phone again.
@@ -181,7 +178,6 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      * @param certDetails ICertDetails of the selected certificate from the SmartcardCertPickerDialog.
      * @param request     ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void setPinDialogForIncorrectAttempt(@NonNull ICertDetails certDetails,
                                                    @NonNull ClientCertRequest request) {

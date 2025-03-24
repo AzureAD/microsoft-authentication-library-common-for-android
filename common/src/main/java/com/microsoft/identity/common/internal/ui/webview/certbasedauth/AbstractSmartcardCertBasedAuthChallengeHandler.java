@@ -23,11 +23,9 @@
 package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 import android.app.Activity;
-import android.os.Build;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
@@ -82,7 +80,6 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
      * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      * @return null
      */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public Void processChallenge(ClientCertRequest request) {
         final String methodTag = TAG + ":processChallenge";
@@ -152,7 +149,6 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
     @NonNull
     protected ICancelCbaCallback getGeneralCancelCbaCallback(@NonNull final ClientCertRequest request) {
         return new ICancelCbaCallback() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCancel() {
                 mDialogHolder.dismissDialog();
@@ -204,7 +200,6 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
      */
     private SmartcardCertPickerDialog.PositiveButtonListener getSmartcardCertPickerDialogPositiveButtonListener(@NonNull final ClientCertRequest request) {
         return new SmartcardCertPickerDialog.PositiveButtonListener() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onClick(@NonNull final ICertDetails certDetails) {
                 //Need to prompt user for pin and verify pin. The positive button listener will handle the rest of the CBA flow.
@@ -234,7 +229,6 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
      * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      * @param session An ISmartcardSession created to help with interactions pertaining to certificates.
      */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     protected void tryUsingSmartcardWithPin(@NonNull final char[] pin,
                                             @NonNull final ICertDetails certDetails,
                                             @NonNull final ClientCertRequest request,
@@ -275,7 +269,6 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
      * @param session An ISmartcardSession created to help with interactions pertaining to certificates.
      * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     protected void useSmartcardCertForAuth(@NonNull final ICertDetails certDetails,
                                            @NonNull final char[] pin,
                                            @NonNull final ISmartcardSession session,

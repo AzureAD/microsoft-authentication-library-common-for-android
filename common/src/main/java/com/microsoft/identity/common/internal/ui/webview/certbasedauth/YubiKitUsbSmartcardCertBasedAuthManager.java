@@ -26,12 +26,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
-import android.os.Build;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.logging.Logger;
@@ -48,7 +45,6 @@ import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.concurrent.Callable;
 
 public class YubiKitUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcardCertBasedAuthManager {
@@ -202,7 +198,6 @@ public class YubiKitUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcar
     Callback<Callback<Result<PivSession, Exception>>> getPivProviderCallback() {
         final String methodTag = TAG + "getPivProviderCallback:";
         return new Callback<Callback<Result<PivSession, Exception>>>() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void invoke(@NonNull final Callback<Result<PivSession, Exception>> callback) {
                 synchronized (sDeviceLock) {
