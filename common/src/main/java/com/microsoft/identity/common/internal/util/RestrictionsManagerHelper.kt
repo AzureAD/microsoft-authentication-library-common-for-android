@@ -55,8 +55,11 @@ class RestrictionsManagerHelper(
 
     companion object {
         val TAG: String = RestrictionsManagerHelper::class.java.simpleName
+        // Keys to extract the values from remote restriction manager.
         const val BOOLEAN_VALUES_KEY = "booleanValuesKey"
         const val STRING_VALUES_KEY = "stringValuesKey"
+        // Keys to be used in the app restrictions manager
+        const val APP_RESTRICTION_KEY_PREFERRED_AUTH_CONFIG = "preferred_auth_config"
     }
 
     /**
