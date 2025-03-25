@@ -37,10 +37,12 @@ import lombok.experimental.Accessors;
  *     <ul><li>Example: |1.2.5</li></ul>
  *     <li>Index 2 - Browser extension name and version</li>
  *     <ul><li>Example: Chrome|1.0.7</li></ul>
- *     <li>Index 3 -  Browser core version. Browser core name is omitted as static</li>
+ *     <li>Index 3 - Browser core version. Browser core name is omitted as static</li>
  *     <ul><li>Example: |2.5.7</li></ul>
+ *     <li>Index 4 - MSAL core version. Will be left empty as long as we are not in runtime mode</li>
+ *     <ul><li>Example: |1.1.0+</li></ul>
  * </ul>
- * Example output where no MSAL.Runtime or Browser Core is used: MSAL.Android|5.4.0,|,Chrome|1.0.7,|
+ * Example output where no MSAL.Runtime, Browser Core, or MSAL CPP Core is used: MSAL.Android|5.4.0,|,Chrome|1.0.7,|,|
  */
 @Builder
 @Accessors(prefix = "m")
