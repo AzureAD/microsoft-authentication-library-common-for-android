@@ -95,7 +95,8 @@ public final class BrokerActivity extends Activity {
     @Override
     protected void onDestroy() {
         // If the broker process crashes, onActivityResult() will not be triggered.
-        // (tested by throwing an exception in AccountChooserActivity, and by killing the activity via App Switcher).
+        // (tested by throwing an exception in AccountChooserActivity, and by killing the activity via App Switcher)
+        Logger.info(TAG, "OnDestroy of BrokerActivity invoked!");
         if (!mBrokerResultReceived) {
             returnsExceptionOnActivityUnexpectedlyKilled();
         }

@@ -342,7 +342,7 @@ public class BrokerMsalController extends BaseController {
     public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters)
             throws BaseException, InterruptedException, ExecutionException {
         final String methodTag = TAG + ":acquireToken";
-
+        Logger.info(methodTag, "AcquireToken of BrokerMsalController invoked");
         Telemetry.emit(
                 new ApiStartEvent()
                         .putProperties(parameters)
@@ -377,7 +377,7 @@ public class BrokerMsalController extends BaseController {
                          * and signal the future with the broker result to unblock the request.
                          */
 
-                        Logger.verbose(
+                        Logger.info(
                                 methodTag,
                                 "Received result from Broker..."
                         );
