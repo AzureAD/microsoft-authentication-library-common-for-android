@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.oauth2
 
 import android.content.Intent
+import android.os.Bundle
 import androidx.fragment.app.Fragment
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.internal.msafederation.getIdProviderExtraQueryParamForAuthorization
@@ -226,5 +227,27 @@ object AuthorizationActivityFactory {
             requestHeader = requestHeadersWithGoogleAuthCredential
         )
         return getAuthorizationActivityIntent(newAuthorizationActivityParameters)
+    }
+
+    /**
+     * OnaAuth method
+     * Returns the correct authorization fragment for local (non-broker) authorization flows,
+     * supplying a start bundle for the Fragment state.
+     * Fragments include:
+     * [WebViewAuthorizationFragment]
+     * [BrowserAuthorizationFragment]
+     * [CurrentTaskBrowserAuthorizationFragment]
+     *
+     * @param intent the intent to use to create the fragment.
+     * @param bundle the bundle to add to the Fragment if it is an AuthorizationFragment.
+     * @return returns an Fragment that's used as to authorize a token request.
+     */
+    @JvmStatic
+    fun getAuthorizationFragmentFromStartIntentWithState(intent: Intent, bundle: Bundle): Fragment {
+        val fragment = getAuthorizationFragmentFromStartIntent(intent)
+        if (fragment is AuthorizationFragment) {
+            fragment.setInstanceState(bundle)
+        }
+        return fragment
     }
 }
