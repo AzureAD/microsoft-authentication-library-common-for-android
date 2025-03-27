@@ -1,5 +1,8 @@
 vNext
 ----------
+
+Version 20.2.0-RC1
+----------
 - [MINOR] Add an extra index for MSAL CPP core in the extra client sku header (#2610)
 - [PATCH] Update minSdk to 21(#2607)
 - [MINOR] Add handler for resume switch_browser flow on WebViewAuthorizationFragment (#2557)
