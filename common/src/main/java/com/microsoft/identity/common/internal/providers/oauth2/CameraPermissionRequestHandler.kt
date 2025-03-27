@@ -49,7 +49,6 @@ class CameraPermissionRequestHandler {
      *
      * Note: This method is only available on API level 21 or higher.
      */
-    @TargetApi(21)
     fun grant() {
         currentPermissionRequest?.let {
             it.grant(cameraResource)
@@ -63,7 +62,6 @@ class CameraPermissionRequestHandler {
      *
      * Note: This method is only available on API level 21 or higher.
      */
-    @TargetApi(21)
     fun deny() {
         currentPermissionRequest?.let {
             it.deny()
@@ -77,7 +75,6 @@ class CameraPermissionRequestHandler {
         isGranted = false
     }
 
-    @TargetApi(21)
     private fun isRepeatedRequest(permissionRequest: PermissionRequest): Boolean {
         currentPermissionRequest.let {
             if (it == null) {
@@ -94,7 +91,6 @@ class CameraPermissionRequestHandler {
         return true
     }
 
-    @TargetApi(21)
     fun setIfValid(request: PermissionRequest): Boolean {
         val methodTag = "$TAG:isValid"
         if (!isForCamera(request)) {
@@ -131,7 +127,6 @@ class CameraPermissionRequestHandler {
      * @param request The permission request.
      * @return true if the given permission request is for camera, false otherwise.
      */
-    @TargetApi(21)
     private fun isForCamera(request: PermissionRequest): Boolean {
         return request.resources.size == 1 &&
                 PermissionRequest.RESOURCE_VIDEO_CAPTURE == request.resources[0]
@@ -139,7 +134,6 @@ class CameraPermissionRequestHandler {
 
     companion object {
         private const val TAG = "CameraPermissionRequestHandler"
-        @TargetApi(21)
         private val cameraResource = arrayOf(
             PermissionRequest.RESOURCE_VIDEO_CAPTURE
         )
