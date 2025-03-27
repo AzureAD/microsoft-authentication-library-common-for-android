@@ -20,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.challengehandlers
+package com.microsoft.identity.common.internal.ui.webview.switchbrowser
 
 import android.net.Uri
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
@@ -72,7 +72,6 @@ object SwitchBrowserUriHelper {
         // Query parameters for the process uri.
         val queryParams = hashMapOf<String, String>()
         queryParams[SWITCH_BROWSER.CODE] = code
-        queryParams[OAuth2.REDIRECT_URI] = "${uri.scheme}://${uri.authority}"
         // Construct the uri to the process endpoint.
         return buildSwitchBrowserUri(actionUri, queryParams)
     }
@@ -88,7 +87,7 @@ object SwitchBrowserUriHelper {
     @Throws(IllegalArgumentException::class, NullPointerException::class, UnsupportedOperationException::class)
     private fun buildSwitchBrowserUri(
         actionUri: String,
-        queryParams: HashMap<String, String>
+        queryParams: HashMap<String, String> = hashMapOf()
     ): Uri {
         val paths = actionUri.split("/")
         val authority = paths[0]
@@ -105,21 +104,34 @@ object SwitchBrowserUriHelper {
     }
 
     /**
-     * Check if the request is to switch the browser.
+     * Build the resume uri for the switch browser challenge.
+     *
+     * @param actionUri The action uri to be opened.
+     *
+     * @return The resume uri constructed from the bundle.
+     * e.g. actionUri
+     */
+    fun buildResumeUri(actionUri: String): Uri {
+        // Construct the uri to the resume endpoint.
+        return buildSwitchBrowserUri(actionUri)
+    }
+
+    /**
+     * Check if the url is a switch browser redirect url
      *
      * The request is considered "switch_browser" if the URL
-     * starts with the following pattern: {redirectUrl}/switch_browser
-     *
+     * starts with the following pattern: {redirectUrl}/{switchBrowserPath}
      *
      * @param url The URL to be checked.
      * @param redirectUrl The redirect URL to be checked against.
-     * @return True if the request contains the required parameters, false otherwise.
+     * @param switchBrowserPath The path to be checked against.
+     * @return True if the request matches the pattern, false otherwise.
      */
-    fun isSwitchBrowserRequest(url: String?, redirectUrl: String): Boolean {
-        val switchBrowserRedirectUrl = "${redirectUrl}/${SWITCH_BROWSER.PATH}"
+    fun isSwitchBrowserRedirectUrl(url: String?, redirectUrl: String, switchBrowserPath: String): Boolean {
         if (url == null) {
             return false
         }
-        return url.startsWith(switchBrowserRedirectUrl)
+        val expectedUrl = "$redirectUrl/$switchBrowserPath"
+        return url.startsWith(expectedUrl, ignoreCase = true)
     }
 }

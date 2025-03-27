@@ -50,7 +50,8 @@ class CrossCloudChallengeHandler(
     }
 
     // Updates the headers by attaching a refresh token credential header.
-    private fun modifyHeadersWithRefreshTokenCredential(
+    // Making it accessible for testing.
+    fun modifyHeadersWithRefreshTokenCredential(
         url: String,
     ) {
         val methodTag = "$TAG:modifyHeadersWithRefreshTokenCredential"

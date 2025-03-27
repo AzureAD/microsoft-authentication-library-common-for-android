@@ -43,7 +43,7 @@ import org.powermock.api.mockito.PowerMockito.`when`
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class SwitchBrowserHandlerTest {
+class SwitchBrowserRequestHandlerTest {
 
     @Test
     fun `test processChallenge success`() {
@@ -60,7 +60,7 @@ class SwitchBrowserHandlerTest {
         `when`(challenge.uri).thenReturn(Uri.parse("https://example.com"))
         val browserSelector = // Browser available
             IBrowserSelector { _, _ -> Browser("fakeBrowser", emptySet(), "browser", false) }
-        val handler = SwitchBrowserHandler(mockActivity, context, customTabsManager, browserSelector)
+        val handler = SwitchBrowserRequestHandler(mockActivity, context, customTabsManager, browserSelector)
         handler.processChallenge(challenge)
         Assert.assertTrue(activityExecuted)
     }
@@ -75,7 +75,7 @@ class SwitchBrowserHandlerTest {
         val challenge = mock(SwitchBrowserChallenge::class.java)
         `when`(challenge.uri).thenReturn(Uri.parse("https://example.com"))
         val browserSelector = IBrowserSelector { _, _ -> null } // No browser available
-        val handler = SwitchBrowserHandler(activity, context, customTabsManager, browserSelector)
+        val handler = SwitchBrowserRequestHandler(activity, context, customTabsManager, browserSelector)
         val exception = Assert.assertThrows(ClientException::class.java) {
             handler.processChallenge(challenge)
         }

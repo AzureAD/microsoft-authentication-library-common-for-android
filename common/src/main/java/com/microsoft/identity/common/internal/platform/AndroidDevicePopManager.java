@@ -118,7 +118,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                 .build();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
     public KeyPair generateNewRsaKeyPair(int keySize) throws UnsupportedOperationException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
         return generateNewRsaKeyPair(mContext, keySize);
@@ -169,7 +168,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
      * @return The newly generated RSA KeyPair.
      * @throws UnsupportedOperationException
      */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @SuppressLint(NewApi)
     private KeyPair generateNewRsaKeyPair(@androidx.annotation.NonNull final Context context,
                                           final int minKeySize)
@@ -293,7 +291,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
      * @throws NoSuchProviderException            If the designated crypto provider cannot be found.
      * @throws StrongBoxUnavailableException      If StrongBox is unavailable.
      */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private KeyPair generateNewKeyPair(@androidx.annotation.NonNull final Context context, final boolean useStrongbox,
                                        final boolean enableImport, final boolean trySetAttestationChallenge)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException,
@@ -321,7 +318,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private KeyPairGenerator getInitializedRsaKeyPairGenerator(@androidx.annotation.NonNull final Context context,
                                                                final int keySize,
                                                                final boolean useStrongbox,
@@ -352,7 +348,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
      * @param trySetAttestationChallenge True if we should attempt to generate an attestation challenge cert.
      * @throws InvalidAlgorithmParameterException
      */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void initialize(@androidx.annotation.NonNull final Context context,
                             @androidx.annotation.NonNull final KeyPairGenerator keyPairGenerator,
                             final int keySize,
@@ -491,7 +486,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
 
 
     @SuppressLint(NewApi)
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @SuppressWarnings("deprecation")
     private void initializePre23(@androidx.annotation.NonNull final Context context,
                                  @androidx.annotation.NonNull final KeyPairGenerator keyPairGenerator,
@@ -508,11 +502,9 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                 .setSerialNumber(AndroidDevicePopManager.CertificateProperties.SERIAL_NUMBER)
                 .setSubject(new X500Principal(AndroidDevicePopManager.CertificateProperties.COMMON_NAME));
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            specBuilder.setAlgorithmParameterSpec(
-                    new RSAKeyGenParameterSpec(keySize, RSAKeyGenParameterSpec.F4)
-            );
-        }
+        specBuilder.setAlgorithmParameterSpec(
+                new RSAKeyGenParameterSpec(keySize, RSAKeyGenParameterSpec.F4)
+        );
 
         final android.security.KeyPairGeneratorSpec spec = specBuilder.build();
         keyPairGenerator.initialize(spec);

@@ -71,7 +71,6 @@ import lombok.NonNull;
  * Instead, the actual key that we use to encrypt/decrypt data is 'wrapped/encrypted' with the keystore key
  * before it get saved to the file.
  */
-@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     private static final String TAG = AndroidWrappedKeyLoader.class.getSimpleName() + "#";
 
@@ -359,7 +358,6 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      * @param context an Android {@link Context} object.
      * @return a {@link AlgorithmParameterSpec} for the keystore key (that we'll use to wrap the secret key).
      */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private static AlgorithmParameterSpec getLegacySpecForKeyStoreKey(@NonNull final Context context,
                                                                 @NonNull final String alias) {
         // Generate a self-signed cert.

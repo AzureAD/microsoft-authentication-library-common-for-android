@@ -391,12 +391,6 @@ public class ADALOAuth2TokenCache
 
     private void validateSecretKeySetting() {
         Logger.verbose(TAG, "Validating secret key settings.");
-        final byte[] secretKeyData = AuthenticationSettings.INSTANCE.getSecretKeyData();
-
-        if (secretKeyData == null && Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            throw new IllegalArgumentException("Secret key must be provided for API < 18. "
-                    + "Use AuthenticationSettings.INSTANCE.setSecretKey()");
-        }
     }
 
     @Override
