@@ -33,7 +33,7 @@ public class ClientExtraSkuTest {
     @Test
     public void testEmptyClientExtraSkuTest() {
         final ClientExtraSku clientExtraSku = ClientExtraSku.builder().build();
-        Assert.assertEquals("|,|,|,|", clientExtraSku.toString());
+        Assert.assertEquals("|,|,|,|,|", clientExtraSku.toString());
     }
 
     @Test
@@ -42,7 +42,7 @@ public class ClientExtraSkuTest {
                 .srcSku(SKU)
                 .srcSkuVer(VERSION)
                 .build();
-        Assert.assertEquals(SKU + "|" + VERSION + ",|,|,|", clientExtraSku.toString());
+        Assert.assertEquals(SKU + "|" + VERSION + ",|,|,|,|", clientExtraSku.toString());
     }
 
 }
