@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2
 
-import android.annotation.TargetApi
 import android.webkit.PermissionRequest
 import com.microsoft.identity.common.logging.Logger
 
@@ -69,28 +68,16 @@ class CameraPermissionRequestHandler {
         }
     }
 
-
-    private fun setCurrentPermissionRequest(permissionRequest: PermissionRequest) {
-        currentPermissionRequest = permissionRequest
-        isGranted = false
-    }
-
-    private fun isRepeatedRequest(permissionRequest: PermissionRequest): Boolean {
-        currentPermissionRequest.let {
-            if (it == null) {
-                return false
-            }
-            if (it.resources.size != permissionRequest.resources.size) {
-                return false
-            }
-            if (it.origin != permissionRequest.origin) {
-                return false
-            }
-
-        }
-        return true
-    }
-
+    /**
+     * Check if the given [PermissionRequest] is valid.
+     * If valid, set the current permission request and return true.
+     * If not valid, deny the request and return false.
+     * <p>
+     * A request is considered valid if:
+     * - The request is for the camera resource only.
+     * - The request is not a repeated request (i.e., not for the same origin and resources).
+     *
+     */
     fun setIfValid(request: PermissionRequest): Boolean {
         val methodTag = "$TAG:isValid"
         if (!isForCamera(request)) {
@@ -115,6 +102,41 @@ class CameraPermissionRequestHandler {
         }
     }
 
+    /**
+     * Set the current permission request.
+     *
+     * @param permissionRequest The permission request to set.
+     */
+    private fun setCurrentPermissionRequest(permissionRequest: PermissionRequest) {
+        currentPermissionRequest = permissionRequest
+        isGranted = false
+    }
+
+    /**
+     * Check if the given permission request is a repeated request.
+     * <p>
+     * Two requests are considered repeated if:
+     * - They are for the same origin.
+     * - They are for the same resources.
+     *
+     * @param permissionRequest The permission request to check.
+     * @return true if the request is a repeated request, false otherwise.
+     */
+    private fun isRepeatedRequest(permissionRequest: PermissionRequest): Boolean {
+        currentPermissionRequest.let {
+            if (it == null) {
+                return false
+            }
+            if (it.resources.size != permissionRequest.resources.size) {
+                return false
+            }
+            if (it.origin != permissionRequest.origin) {
+                return false
+            }
+
+        }
+        return true
+    }
 
     /**
      * Determines whatever if the given permission request is for the camera resource.
