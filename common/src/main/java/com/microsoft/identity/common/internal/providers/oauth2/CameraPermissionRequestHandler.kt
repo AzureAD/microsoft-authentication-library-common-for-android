@@ -79,7 +79,7 @@ class CameraPermissionRequestHandler {
      *
      */
     fun setIfValid(request: PermissionRequest): Boolean {
-        val methodTag = "$TAG:isValid"
+        val methodTag = "$TAG:setIfValid"
         if (!isForCamera(request)) {
             Logger.warn(methodTag, "Permission request is not for camera.")
             request.deny()

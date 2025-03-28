@@ -94,6 +94,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     @VisibleForTesting
     private static final String PKEYAUTH_STATUS = "pkeyAuthStatus";
+    private static final String MICROSOFT_CLOUD_URL = "https://login.microsoftonline.com/";
 
     private WebView mWebView;
 
@@ -336,7 +337,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     // Otherwise, show the system prompt.
                     if (isAppCameraPermissionGranted()) {
                         Logger.info(methodTag, "App level camera permission already granted.");
-                        if(request.getOrigin() != null &&  "https://login.microsoftonline.com/".equalsIgnoreCase(request.getOrigin().toString())) {
+                        if(request.getOrigin() != null &&  MICROSOFT_CLOUD_URL.equalsIgnoreCase(request.getOrigin().toString())) {
                             Logger.info(methodTag, "Require rationale.");
                             showCameraRationale();
                         } else {
