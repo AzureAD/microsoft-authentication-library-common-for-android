@@ -91,6 +91,8 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_CROSS_CLOUD_REDIRECT_URL = "https://login.microsoftonline.us/organizations/oAuth2/v2.0/authorize?x=10";
     private static final String TEST_PUBLIC_CLOUD_REDIRECT_URL = "https://login.microsoftonline.com/organizations/oAuth2/v2.0/authorize?x=10";
 
+    private static final String TEST_WINDOWS_NET_REDIRECT_URL = "https://login.windows.net/organizations/oAuth2/v2.0/authorize?x=10";
+
     @Before
     public void setup() throws ClientException {
         mContext = ApplicationProvider.getApplicationContext();
@@ -210,6 +212,19 @@ public class AzureActiveDirectoryWebViewClientTest {
     public void testUrlOverrideHandlesCrossCloudRedirectUrl() {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_CROSS_CLOUD_REDIRECT_URL));
     }
+
+    @Test
+    public void testUrlOverrideNotHandleSameHost() {
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PUBLIC_CLOUD_REDIRECT_URL));
+    }
+
+    @Test
+    public void testUrlOverrideNotHandleSamePreferredNetworkHost() {
+        mWebViewClient.setRequestUrl(TEST_WINDOWS_NET_REDIRECT_URL);
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PUBLIC_CLOUD_REDIRECT_URL));
+        mWebViewClient.setRequestUrl(TEST_PUBLIC_CLOUD_REDIRECT_URL);
+    }
+
 
     @Test
     public void testProcessCloudRedirectAndPrtHeaderInternalSuccess() {
