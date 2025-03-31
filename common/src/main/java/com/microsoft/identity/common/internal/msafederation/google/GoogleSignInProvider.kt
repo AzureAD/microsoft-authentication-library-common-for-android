@@ -207,8 +207,6 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
                 e.message,
                 e
             )
-
-            clientException.subErrorCode = e.javaClass.simpleName
             return Result.failure(clientException)
         }
     }
