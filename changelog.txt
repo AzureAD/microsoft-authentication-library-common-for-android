@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Improve logs and error reporting SIWG flow (#2616)
 - [PATCH] Only show QR +PIN rationale when the request origin is from Microsoft (#2613)
 - [MINOR] Add an extra index for MSAL CPP core in the extra client sku header (#2610)
 - [MAJOR] Update minSdk to 21(#2607)
