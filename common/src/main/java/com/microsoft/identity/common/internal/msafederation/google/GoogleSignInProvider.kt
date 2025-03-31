@@ -27,7 +27,9 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCustomCredentialOption
+import androidx.credentials.exceptions.GetCredentialCustomException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -151,7 +153,7 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
                         )
                     } catch (e: GoogleIdTokenParsingException) {
                         // error parsing Google ID Token
-                        Logger.warn(TAG, "Error parsing Google ID Token, $e.message")
+                        Logger.warn(methodTag, "Error parsing Google ID Token, $e.message")
                         val clientException = ClientException(
                             ClientException.SIGN_IN_WITH_GOOGLE_FAILED,
                             e.message,
@@ -162,7 +164,7 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
                 } else {
                     // unsupported credential type
                     val errorMessage = "Unsupported credential type, " + credential.type
-                    Logger.warn(TAG, errorMessage)
+                    Logger.warn(methodTag, errorMessage)
                     val clientException = ClientException(
                         ClientException.SIGN_IN_WITH_GOOGLE_FAILED,
                         errorMessage
@@ -172,21 +174,41 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
             } else {
                 // Unexpected credential type
                 val errorMessage = "Unexpected credential type" + credential.javaClass.simpleName
-                Logger.warn(TAG, errorMessage)
+                Logger.warn(methodTag, errorMessage)
                 val clientException = ClientException(
                     ClientException.SIGN_IN_WITH_GOOGLE_FAILED,
                     errorMessage
                 )
                 return Result.failure(clientException)
             }
-        } catch (e: GetCredentialException) {
-            // failure
-            Logger.warn(TAG, "Error getting google id token credential, $e.message")
+        } catch (e: GetCredentialCustomException) {
+            Logger.warn(methodTag,
+                "Error getting google id token credential, $e.type, $e.message")
             val clientException = ClientException(
                 ClientException.SIGN_IN_WITH_GOOGLE_FAILED,
                 e.message,
                 e
             )
+            clientException.subErrorCode = e.type
+            return Result.failure(clientException)
+        }
+        catch (e: GetCredentialException) {
+            if (e is NoCredentialException && option is GetGoogleIdOption) {
+                Logger.info(methodTag, "Not credentials found.. allow adding new account, $e.message")
+                // retry with GetSignInWithGoogleOption, to allow adding a google account to device
+                return signInWithGoogle()
+            }
+
+            // failure
+            Logger.warn(methodTag,
+                "Error getting google id token credential, $e.javaClass.simpleName, $e.message")
+            val clientException = ClientException(
+                ClientException.SIGN_IN_WITH_GOOGLE_FAILED,
+                e.message,
+                e
+            )
+
+            clientException.subErrorCode = e.javaClass.simpleName
             return Result.failure(clientException)
         }
     }
