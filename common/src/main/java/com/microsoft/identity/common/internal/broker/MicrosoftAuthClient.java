@@ -39,7 +39,6 @@ import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
-//import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider.API.MSAL_HELLO;
 import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE;
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.BOUND_SERVICE;
 
