@@ -52,6 +52,7 @@ import androidx.fragment.app.FragmentActivity;
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
+import com.microsoft.identity.common.internal.numberMatch.NumberMatchJavaScriptInterface;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
 import com.microsoft.identity.common.java.WarningType;
@@ -125,6 +126,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private ActivityResultLauncher<LegacyFido2ApiObject> mFidoLauncher;
     // This is used by the switch browser protocol to handle the resume of the flow.
     private SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator = null;
+
+    private boolean isBrokerRequest = false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -214,6 +217,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mAuthIntent = state.getParcelable(AUTH_INTENT);
         mPkeyAuthStatus = state.getBoolean(PKEYAUTH_STATUS, false);
         mAuthorizationRequestUrl = state.getString(REQUEST_URL);
+        if (mAuthorizationRequestUrl != null) {
+            isBrokerRequest = checkBrokerRequest(mAuthorizationRequestUrl);
+        }
         mRedirectUri = state.getString(REDIRECT_URI);
         mRequestHeaders = getRequestHeaders(state);
         mPostPageLoadedJavascript = state.getString(POST_PAGE_LOADED_URL);
@@ -294,6 +300,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setUserAgentString(
                 userAgent + AuthenticationConstants.Broker.CLIENT_TLS_NOT_SUPPORTED);
         mWebView.getSettings().setJavaScriptEnabled(true);
+        if (isBrokerRequest) {
+            mWebView.addJavascriptInterface(new NumberMatchJavaScriptInterface(), "Android");
+        }
         mWebView.requestFocus(View.FOCUS_DOWN);
 
         // Set focus to the view for touch event
@@ -480,7 +489,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             }
 
             // Attach client extras header for ESTS telemetry. Only done for broker requests
-            if (isBrokerRequest(this.mAuthorizationRequestUrl)) {
+            if (isBrokerRequest) {
                 final ClientExtraSku clientExtraSku = ClientExtraSku.builder()
                         .srcSku(state.getString(PRODUCT))
                         .srcSkuVer(state.getString(VERSION))
@@ -502,7 +511,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      * Helper method to check if the authorization request is being made through broker.
      * Done by checking for broker version key in the url
      */
-    private boolean isBrokerRequest(final String authorizationUrl) {
+    private boolean checkBrokerRequest(final String authorizationUrl) {
         return authorizationUrl.contains(Device.PlatformIdParameters.BROKER_VERSION);
     }
 
