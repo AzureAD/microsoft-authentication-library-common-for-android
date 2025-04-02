@@ -71,7 +71,6 @@ task sourcesJar(type: Jar) {
 task generateJavadoc(type: Javadoc) {
     dependsOn generateBuildConfig
     failOnError false
-    dependsOn
     title = "Microsoft Identity Common Java"
     source = sourceSets.main.java
     classpath += project.sourceSets.main.compileClasspath

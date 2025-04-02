@@ -116,10 +116,6 @@ android {
         dist {
             dimension "main"
         }
-        production{
-            dimension "main"
-            matchingFallbacks = ['dist']
-        }
     }
 
     sourceSets {
@@ -256,7 +252,6 @@ android.libraryVariants.all { variant ->
 
 tasks.register('sourcesJar', Jar) {
     from android.sourceSets.main.java.srcDirs
-//    classifier 'sources'
     archiveClassifier.set('sources')
     destinationDirectory = reporting.file("$project.buildDir/outputs/jar/")
 }
@@ -305,8 +300,6 @@ afterEvaluate {
         publications {
             distRelease(MavenPublication) {
                 from components.distRelease
-                println "Components1: ${components.distRelease}"
-                println "pname: ${project.name}"
                 groupId 'com.microsoft.identity'
                 artifactId 'common'
                 //Edit the 'version' here for VSTS RC build
@@ -343,16 +336,11 @@ afterEvaluate {
             }
             distDebug(MavenPublication) {
                 from components.distDebug
-                println "Components2: ${components.distDebug}"
-                println "pname: ${project.name}"
-
-//                withoutComponent()
                 groupId 'com.microsoft.identity'
                 artifactId 'common-debug'
                 //Edit the 'version' here for VSTS RC build
 
                 version = project.version
-//                artifact{"$buildDir/outputs/aar/common-debug-${project.version}.aar"}
             }
         }
 
@@ -406,7 +394,6 @@ tasks.withType(GenerateMavenPom).all {
     } else if (name.contains("distRelease")) {
         destination = layout.buildDirectory.file("poms/common-${project.version}.pom").get().asFile
     }
-//    destination = layout.buildDirectory.file("poms/${project.name}-${project.version}.pom").get().asFile
 }
 
 def dependenciesSizeInMb = project.hasProperty("dependenciesSizeMb") ? project.dependenciesSizeMb : "15"
