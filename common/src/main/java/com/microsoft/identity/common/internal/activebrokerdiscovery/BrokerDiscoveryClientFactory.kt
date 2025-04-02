@@ -39,11 +39,6 @@ class BrokerDiscoveryClientFactory {
 
     companion object {
 
-        private val TAG = BrokerDiscoveryClientFactory::class.simpleName
-
-        @Volatile
-        private var IS_NEW_DISCOVERY_ENABLED = false
-
         @Volatile
         private var clientSdkInstance: IBrokerDiscoveryClient? = null
 
@@ -61,12 +56,7 @@ class BrokerDiscoveryClientFactory {
          **/
         @JvmStatic
         fun setNewBrokerDiscoveryEnabled(isEnabled: Boolean){
-            // If the flag changes, wipe the existing singleton.
-            if (isEnabled != IS_NEW_DISCOVERY_ENABLED) {
-                clientSdkInstance = null
-                brokerSdkInstance = null
-                IS_NEW_DISCOVERY_ENABLED = isEnabled
-            }
+            // noop
         }
 
         /**
@@ -74,7 +64,7 @@ class BrokerDiscoveryClientFactory {
          **/
         @JvmStatic
         fun isNewBrokerDiscoveryEnabled(): Boolean {
-            return BuildConfig.newBrokerDiscoveryEnabledFlag || IS_NEW_DISCOVERY_ENABLED;
+            return true;
         }
 
         /**
@@ -126,14 +116,7 @@ class BrokerDiscoveryClientFactory {
         private fun getInstance(context: Context,
                                 platformComponents: IPlatformComponents,
                                 cache: IClientActiveBrokerCache) : IBrokerDiscoveryClient{
-            val methodTag = "$TAG:getInstance"
-            return if (isNewBrokerDiscoveryEnabled()) {
-                Logger.info(methodTag, "Broker Discovery is enabled. Use the new logic on the SDK side")
-                BrokerDiscoveryClient(context, platformComponents, cache)
-            } else {
-                Logger.info(methodTag, "Broker Discovery is disabled. Use AccountManager on the SDK side.")
-                LegacyBrokerDiscoveryClient(context)
-            }
+            return BrokerDiscoveryClient(context, platformComponents, cache)
         }
     }
 }
