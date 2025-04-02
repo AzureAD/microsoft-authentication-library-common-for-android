@@ -292,7 +292,6 @@ tasks.register('pmd', Pmd) {
         html.required = true
     }
 }
-println "Project version: ${project.version}"
 // For publishing to the remote maven repo.
 afterEvaluate {
 
@@ -388,7 +387,6 @@ tasks.configureEach { task ->
 
 // This is used to generate the pom file for publishing to external maven in maven-release-jobs.yml
 tasks.withType(GenerateMavenPom).all {
-    println "Generating POM: ${name}"
     if (name.contains("distDebug")) {
         destination = layout.buildDirectory.file("poms/common-debug-${project.version}.pom").get().asFile
     } else if (name.contains("distRelease")) {

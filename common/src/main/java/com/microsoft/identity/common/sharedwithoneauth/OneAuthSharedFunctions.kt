@@ -24,7 +24,6 @@ package com.microsoft.identity.common.sharedwithoneauth
 
 import android.content.Context
 import androidx.annotation.WorkerThread
-import android.os.IInterface
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory
 import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient
 import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccountStrategy
