@@ -43,6 +43,7 @@ import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
 
+
 import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_1AndMGF1Padding;
 import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_256AndMGF1Padding;
 import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING;
@@ -52,7 +53,7 @@ import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher
 // https://github.com/robolectric/robolectric/issues/1518
 //todo: Investigate if these tests can be migrated to common4j
 @RunWith(Parameterized.class)
-@Config(sdk =21)
+
 public class AndroidDevicePoPManagerEncryptionTests {
 
     private static final String DATA_TO_ENCRYPT = "The quick brown fox jumped over the lazy dog.";
