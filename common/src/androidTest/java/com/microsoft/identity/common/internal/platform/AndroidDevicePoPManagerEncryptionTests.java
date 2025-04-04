@@ -43,7 +43,6 @@ import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_1AndMGF1Padding;
 import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_256AndMGF1Padding;
 import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING;
