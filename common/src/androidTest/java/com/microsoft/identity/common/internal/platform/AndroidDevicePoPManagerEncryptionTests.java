@@ -52,6 +52,7 @@ import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher
 // https://github.com/robolectric/robolectric/issues/1518
 //todo: Investigate if these tests can be migrated to common4j
 @RunWith(Parameterized.class)
+
 public class AndroidDevicePoPManagerEncryptionTests {
 
     private static final String DATA_TO_ENCRYPT = "The quick brown fox jumped over the lazy dog.";
