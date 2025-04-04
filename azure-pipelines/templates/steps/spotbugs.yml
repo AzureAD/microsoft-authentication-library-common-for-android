@@ -10,14 +10,14 @@ parameters:
   default: CodeAnalysisLogs
 - name: cwd
   default: $(Build.SourcesDirectory)
-
+- name: javaVersion
+  default: "1.17"
 steps:
 - task: Gradle@3
   displayName: 'Run Spotbugs'
   inputs:
     javaHomeSelection: JDKVersion
-    jdkVersionOption: "1.17"
-    jdkVersion: 1.17
+    jdkVersionOption: ${{parameters.javaVersion}}
     jdkArchitecture: x64
     cwd: ${{ parameters.cwd }}
     tasks: ${{ parameters.project }}:${{ parameters.spotbugsCommand }}
