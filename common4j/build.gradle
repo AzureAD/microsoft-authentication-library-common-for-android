@@ -254,8 +254,8 @@ dependencies {
     implementation("io.opentelemetry:opentelemetry-api:$rootProject.ext.openTelemetryVersion")
 }
 
-sourceCompatibility = "1.8"
-targetCompatibility = "1.8"
+sourceCompatibility = "1.17"
+targetCompatibility = "1.17"
 
 buildConfig {
     // forces the package (of the generated BuildConfig file). Defaults to '${project.group}'
