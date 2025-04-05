@@ -8,7 +8,7 @@
 
 plugins {
     id 'java-library'
-    id 'com.microsoft.identity.buildsystem' version '0.2.4'
+    id 'com.microsoft.identity.buildsystem' version '0.2.3'
     id 'maven-publish'
 
     // the below build plugin allows to generate BuildConfig files in a JAVA gradle project.
@@ -254,8 +254,8 @@ dependencies {
     implementation("io.opentelemetry:opentelemetry-api:$rootProject.ext.openTelemetryVersion")
 }
 
-sourceCompatibility = "1.17"
-targetCompatibility = "1.17"
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
 
 buildConfig {
     // forces the package (of the generated BuildConfig file). Defaults to '${project.group}'
