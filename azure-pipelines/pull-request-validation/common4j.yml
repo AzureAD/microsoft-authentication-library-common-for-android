@@ -25,6 +25,11 @@ jobs:
     submodules: recursive
     persistCredentials: True
   - template: ../templates/steps/automation-cert.yml
+  - task: PowerShell@2
+    displayName: Display the environment variable JAVA_HOME_17_X64 value
+    inputs:
+      targetType: 'inline'
+      script: echo $env:JAVA_HOME_17_X64
   - task: Gradle@1
     name: Gradle1
     displayName: Assembles the outputs of this project.
