@@ -48,4 +48,6 @@ jobs:
     inputs:
       cwd: $(Build.SourcesDirectory)/common-java-root
       tasks: common4j:test -Psugar=true -PmockApiUrl=$(MOCK_API_URL)
+      javaHomeOption: JDKVersion
+      jdkVersionOption: 1.17
 ...
