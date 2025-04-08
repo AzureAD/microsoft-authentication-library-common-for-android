@@ -92,7 +92,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     @VisibleForTesting
     private static final String PKEYAUTH_STATUS = "pkeyAuthStatus";
-
+    private static final String MICROSOFT_CLOUD_URL = "https://login.microsoftonline.com/";
     private WebView mWebView;
 
     private AzureActiveDirectoryWebViewClient mAADWebViewClient;
@@ -116,8 +116,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private boolean webViewZoomEnabled;
 
-    private CameraPermissionRequest mCameraPermissionRequest;
-
+    private final CameraPermissionRequestHandler mCameraPermissionRequestHandler = new CameraPermissionRequestHandler();
     // This is used by LegacyFido2ApiManager to launch a PendingIntent received by the legacy API.
     private ActivityResultLauncher<LegacyFido2ApiObject> mFidoLauncher;
 
@@ -183,8 +182,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 new OnPageLoadedCallback() {
                     @Override
                     public void onPageLoaded(final String url) {
-                        // Reset the camera permission request when a new page is loaded.
-                        mCameraPermissionRequest = null;
                         final String[] javascriptToExecute = new String[1];
                         mProgressBar.setVisibility(View.INVISIBLE);
                         try {
@@ -270,36 +267,36 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
-                Logger.info(methodTag,
-                        "Permission requested from:" +request.getOrigin() +
-                                " for resources:" + Arrays.toString(request.getResources())
-                );
-                // We can only grant or deny permissions for video capture/camera.
-                // To avoid unintentionally granting requests for not defined permissions
-                // we check if the request is for camera.
-                if (!CameraPermissionRequest.isValidRequest(request)) {
-                    Logger.warn(methodTag, "Permission request is not for camera.");
-                    request.deny();
-                    return;
-                }
-                // There is a issue in ESTS UX where it sends multiple camera permission requests.
-                // So, if there is already a camera permission request in progress we handle it here.
-                if (mCameraPermissionRequest != null) {
-                    Logger.info(methodTag, "Repeated request, granted? " + mCameraPermissionRequest.isGranted());
-                    handleRepeatedCameraRequests(request);
-                    return;
-                }
-                Logger.info(methodTag, "New camera request.");
-                mCameraPermissionRequest = new CameraPermissionRequest(request);
-                // If the OS level permission was granted previously,
-                // we show the rationale to confirm the consent with the current user.
-                // Otherwise, show the system prompt.
-                if (isAppCameraPermissionGranted()) {
-                    Logger.info(methodTag, "Camera permission already granted.");
-                    showCameraRationale();
-                } else {
-                    requestCameraPermission();
-                }
+                requireActivity().runOnUiThread(() -> {
+                    // Log the permission request
+                    Logger.info(methodTag,
+                            "Permission requested from:" +request.getOrigin() +
+                                    " for resources:" + Arrays.toString(request.getResources())
+                    );
+                    // We can only grant or deny permissions for video capture/camera.
+                    // To avoid unintentionally granting requests for not defined permissions
+                    // we check if the request is for camera.
+                    if (!mCameraPermissionRequestHandler.setIfValid(request)) {
+                        Logger.warn(methodTag, "Permission request is not valid, returning.");
+                        return;
+                    }
+
+                    // If the OS level permission was granted previously,
+                    // we show the rationale to confirm the consent with the current user.
+                    // Otherwise, show the system prompt.
+                    if (isAppCameraPermissionGranted()) {
+                        Logger.info(methodTag, "App level camera permission already granted.");
+                        if(request.getOrigin() != null &&  MICROSOFT_CLOUD_URL.equalsIgnoreCase(request.getOrigin().toString())) {
+                            Logger.info(methodTag, "Require rationale.");
+                            showCameraRationale();
+                        } else {
+                            Logger.info(methodTag, "Rationale not needed.");
+                            mCameraPermissionRequestHandler.grant();
+                        }
+                    } else {
+                        requestCameraPermission();
+                    }
+                });
             }
 
             @Override
@@ -312,24 +309,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 return Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
             }
         });
-    }
-
-    /**
-     * Handles repeated camera permission requests.
-     * if the camera permission has been granted, it will grant the permission to the request.
-     * Otherwise, it will deny the permission to the request.
-     * <p>
-     * Note: This method is only available on API level 21 or higher.
-     *
-     * @param request The permission request.
-     */
-    private void handleRepeatedCameraRequests(@NonNull final PermissionRequest request) {
-        final CameraPermissionRequest duplicatedRequest = new CameraPermissionRequest(request);
-        if (mCameraPermissionRequest.isGranted()) {
-            duplicatedRequest.grant();
-        } else {
-            duplicatedRequest.deny();
-        }
     }
 
     /**
@@ -347,10 +326,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             permissionGranted   -> {
                 Logger.info(TAG, "Camera permission granted: " + permissionGranted);
                 if (permissionGranted) {
-                    mCameraPermissionRequest.grant();
+                    mCameraPermissionRequestHandler.grant();
                 }
                 else {
-                    mCameraPermissionRequest.deny();
+                    mCameraPermissionRequestHandler.deny();
                 }
             }
     );
@@ -372,12 +351,19 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      * If the user denies the dialog, the camera permission request will be denied.
      */
     private void showCameraRationale() {
+        final String methodTag = TAG + ":showCameraRationale";
         final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setMessage(R.string.qr_code_rationale_message)
                 .setTitle(R.string.qr_code_rationale_header)
                 .setCancelable(false)
-                .setPositiveButton(R.string.qr_code_rationale_allow, (dialog, id) -> requestCameraPermission())
-                .setNegativeButton(R.string.qr_code_rationale_block, (dialog, id) -> mCameraPermissionRequest.deny());
+                .setPositiveButton(R.string.qr_code_rationale_allow, (dialog, id) -> {
+                    Logger.info(methodTag, "User accepted camera permission rationale.");
+                    requestCameraPermission();
+                })
+                .setNegativeButton(R.string.qr_code_rationale_block, (dialog, id) -> {
+                    Logger.info(methodTag, "User denied camera permission rationale.");
+                    mCameraPermissionRequestHandler.deny();
+                });
         builder.show();
     }
 
