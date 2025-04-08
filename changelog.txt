@@ -1,5 +1,6 @@
-vNext
+Version 20.0.1
 ----------
+- [PATCH] Only show QR +PIN rationale when the request origin is from Microsoft (#2613)
 
 Version 20.1.1
 ----------
