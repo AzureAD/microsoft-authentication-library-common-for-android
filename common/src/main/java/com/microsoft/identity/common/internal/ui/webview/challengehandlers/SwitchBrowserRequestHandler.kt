@@ -54,7 +54,7 @@ class SwitchBrowserRequestHandler(
 ) : IChallengeHandler<SwitchBrowserChallenge, Unit> {
 
     val span: Span by lazy {
-        OTelUtility.createSpanFromParent(SpanName.SwitchBrowserProtocol.name, spanContext)
+        OTelUtility.createSpanFromParent(SpanName.SwitchBrowserProcess.name, spanContext)
     }
 
     var isChallengeHandled: Boolean = false

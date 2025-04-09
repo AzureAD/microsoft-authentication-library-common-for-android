@@ -56,7 +56,7 @@ class SwitchBrowserProtocolCoordinator(
     constructor(activity: Activity, spanContext: SpanContext?) : this(SwitchBrowserRequestHandler(activity, spanContext), spanContext)
 
     val span: Span by lazy {
-        OTelUtility.createSpanFromParent(SpanName.SwitchBrowserProtocol.name, spanContext)
+        OTelUtility.createSpanFromParent(SpanName.SwitchBrowserResume.name, spanContext)
     }
 
     companion object {
