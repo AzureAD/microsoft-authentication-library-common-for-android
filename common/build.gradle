@@ -368,21 +368,6 @@ tasks.configureEach { task ->
     if (task.name == 'assembleDistRelease') {
         task.dependsOn 'sourcesJar'
     }
-//    if (task.name == "publishDistDebugPublicationToVsts-maven-adal-androidRepository") {
-//        task.dependsOn 'generatePomFileForDistReleasePublication'
-//    }
-//    if (task.name == "publishDistReleasePublicationToVsts-maven-adal-androidRepository") {
-//        task.dependsOn 'bundleDistReleaseAar'
-//    }
-//    if (task.name == "publishDistDebugPublicationToVsts-maven-adal-androidRepository") {
-//        task.dependsOn 'bundleDistReleaseAar'
-//    }
-//    if (task.name == "generateMetadataFileForDistDebugPublication") {
-//        task.dependsOn 'bundleDistReleaseAar'
-//    }
-//    if (task.name == "generateMetadataFileForDistReleasePublication") {
-//        task.dependsOn 'bundleDistDebugAar'
-//    }
 }
 
 // This is used to generate the pom file for publishing to external maven in maven-release-jobs.yml
