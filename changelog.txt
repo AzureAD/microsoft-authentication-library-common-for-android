@@ -1,6 +1,10 @@
 vNext
 ----------
-- [PATCH] Update minSdk to 21(#2607)
+- [MINOR] Enable the new Broker discovery on MSAL by default (#2618)
+- [PATCH] Improve logs and error reporting SIWG flow (#2616)
+- [PATCH] Only show QR +PIN rationale when the request origin is from Microsoft (#2613)
+- [MINOR] Add an extra index for MSAL CPP core in the extra client sku header (#2610)
+- [MAJOR] Update minSdk to 21(#2607)
 - [MINOR] Add handler for resume switch_browser flow on WebViewAuthorizationFragment (#2557)
 - [PATCH] Track MAM flow in telemetry (#2608)
 - [PATCH] Fix multiple prompts issue in cross cloud request (#2599)

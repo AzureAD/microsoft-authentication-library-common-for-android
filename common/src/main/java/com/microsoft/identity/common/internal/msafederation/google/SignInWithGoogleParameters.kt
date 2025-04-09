@@ -33,33 +33,14 @@ import com.microsoft.identity.common.internal.msafederation.MsaFederationConstan
  * @property activity The Activity context used for the sign-in process.
  * @property serverClientId The target server OAuth2.0 client (backend) ID generated in google console project.
  *                          Authenticates backend server with Google's APIs. Default value MSA's server client id.
+ * @property useBottomSheet A flag indicating whether to use a bottom sheet UI for the sign-in process.
  * UI for the sign-in process.
  */
 data class SignInWithGoogleParameters @JvmOverloads constructor(
     internal val activity: Activity,
-    internal val serverClientId: String = MsaFederationConstants.GOOGLE_MSA_SERVER_CLIENT_ID
+    internal val serverClientId: String = MsaFederationConstants.GOOGLE_MSA_SERVER_CLIENT_ID,
+    internal val useBottomSheet: Boolean = false,
 ) : MsaFederatedSignInParameters() {
-
-    /**
-     * Secondary constructor to initialize the parameters with an option to use a bottom sheet UI.
-     * Current requirement do not use bottom sheet UI, so this constructor is kept internal
-     * @param activity The Activity context used for the sign-in process.
-     * @param serverClientId The server client ID used for the sign-in process.
-     * @param useBottomSheet A flag indicating whether to use a bottom sheet UI for the sign-in process.
-     */
-    internal constructor(
-        activity: Activity,
-        serverClientId: String = MsaFederationConstants.GOOGLE_MSA_SERVER_CLIENT_ID,
-        useBottomSheet: Boolean
-    ) : this(activity, serverClientId) {
-        this.useBottomSheet = useBottomSheet
-    }
-
-    /**
-     * A flag indicating whether to use a bottom sheet UI for the sign-in process.
-     * Internal for now, as the current requirement do not use bottom sheet UI.
-     */
-    internal var useBottomSheet: Boolean = false
 
     /**
      * The provider type for the federated sign-in, which is Google in this case.
