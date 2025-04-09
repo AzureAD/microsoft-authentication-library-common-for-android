@@ -79,17 +79,6 @@ afterEvaluate {
     // above in the plugins block.
     compileJava.dependsOn generateBuildConfig, generateTestBuildConfig
 }
-//tasks.withType(JavaCompile) {
-//    options.compilerArgs += [
-//            '--add-opens', 'jdk.crypto.mscapi/sun.security.mscapi=ALL-UNNAMED'
-//    ]
-//}
-//
-//tasks.withType(Test) {
-//    jvmArgs += [
-//            '--add-opens', 'jdk.crypto.mscapi/sun.security.mscapi=ALL-UNNAMED'
-//    ]
-//}
 jar {
     manifest {
         attributes('Implementation-Title': project.name,
