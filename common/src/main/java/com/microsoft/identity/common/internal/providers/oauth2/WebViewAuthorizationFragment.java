@@ -54,6 +54,7 @@ import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContr
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
 import com.microsoft.identity.common.internal.numberMatch.NumberMatchJavaScriptInterface;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
+import com.microsoft.identity.common.internal.ui.webview.ProcessUtil;
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -217,8 +218,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mAuthIntent = state.getParcelable(AUTH_INTENT);
         mPkeyAuthStatus = state.getBoolean(PKEYAUTH_STATUS, false);
         mAuthorizationRequestUrl = state.getString(REQUEST_URL);
-        if (mAuthorizationRequestUrl != null) {
-            isBrokerRequest = checkBrokerRequest(mAuthorizationRequestUrl);
+        if (getContext() != null) {
+            isBrokerRequest = ProcessUtil.isRunningOnAuthService(getContext());
         }
         mRedirectUri = state.getString(REDIRECT_URI);
         mRequestHeaders = getRequestHeaders(state);

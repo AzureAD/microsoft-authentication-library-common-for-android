@@ -41,7 +41,6 @@ class NumberMatchJavaScriptInterface {
     // Store number matches in a static hash map
     // No need to persist this storage beyond the current broker process, but we need to keep them
     // long enough for AuthApp to call the broker api to fetch the number match
-    // TODO: Is this a security concern?
     companion object {
         val TAG = NumberMatchJavaScriptInterface::class.java.simpleName
         val numberMatchMap: HashMap<String?, String?> = HashMap()
@@ -50,18 +49,20 @@ class NumberMatchJavaScriptInterface {
     /**
      * Method to add a key:value pair of sessionID:numberMatch to static hashmap. This hashmap will be accessed
      * by broker api to get the number match for a particular sessionID.
-     *
-     * TODO: Check, I feel params should be nullable, and should fallback to null check in AuthApp code.
-     *  Not sure if this API will only called with non-null values
      */
     @JavascriptInterface
     fun postCodeMatch(sessionID : String?, numberMatch : String?) {
-        val methodTag = "$TAG:postCodeMatch"
-        Logger.info(
-            methodTag,
-            "Adding entry in NumberMatch hashmap for session ID: $sessionID"
-        )
-        numberMatchMap[sessionID] = numberMatch
+        // If both parameters are non-null, add a new entry to the hashmap
+        if (sessionID != null && numberMatch != null) {
+            val methodTag = "$TAG:postCodeMatch"
+            Logger.info(
+                methodTag,
+                "Adding entry in NumberMatch hashmap for session ID: $sessionID"
+            )
+            numberMatchMap[sessionID] = numberMatch
+        }
+
+        // If either parameter is null, do nothing
     }
 
     /**
