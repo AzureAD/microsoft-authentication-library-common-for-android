@@ -1,7 +1,7 @@
 vNext
 ----------
 
-Version 21.0.0-RC1
+Version 21.0.0
 ----------
 - [PATCH] Improve logs and error reporting SIWG flow (#2616)
 - [PATCH] Only show QR +PIN rationale when the request origin is from Microsoft (#2613)
