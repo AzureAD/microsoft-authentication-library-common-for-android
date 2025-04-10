@@ -32,7 +32,7 @@ jobs:
           cwd: $(Build.SourcesDirectory)/common-java-root
           tasks: LabApiUtilities:clean LabApiUtilities:assemble
           javaHomeSelection: JDKVersion
-          jdkVersionOption: "1.11"
+          jdkVersionOption: "1.17"
       - template: ../templates/steps/spotbugs.yml
         parameters:
           project: LabApiUtilities
