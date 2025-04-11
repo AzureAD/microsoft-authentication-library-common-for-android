@@ -39,11 +39,11 @@ class JITIntrospectApiResponse(
         private val TAG = JITIntrospectApiResponse::class.java.simpleName
     }
 
-    fun toResult(): JITIntrospectAPIResult {
+    fun toResult(): JITIntrospectApiResult {
         return when (statusCode) {
             // Handle 400 errors
             HttpURLConnection.HTTP_BAD_REQUEST -> {
-                JITIntrospectAPIResult.UnknownError(
+                JITIntrospectApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
                     errorCodes = errorCodes.orEmpty(),
@@ -55,12 +55,12 @@ class JITIntrospectApiResponse(
             HttpURLConnection.HTTP_OK -> {
                 return when {
                     challengeType.isRedirect() -> {
-                        JITIntrospectAPIResult.Redirect(
+                        JITIntrospectApiResult.Redirect(
                             correlationId = correlationId
                         )
                     }
                     methods.isNullOrEmpty() -> {
-                        JITIntrospectAPIResult.UnknownError(
+                        JITIntrospectApiResult.UnknownError(
                             error = ApiErrorResult.INVALID_STATE,
                             errorDescription = "register/introspect did not return methods",
                             errorCodes = errorCodes.orEmpty(),
@@ -69,10 +69,10 @@ class JITIntrospectApiResponse(
                     }
                     else -> {
                         try {
-                            JITIntrospectAPIResult.Success(
+                            JITIntrospectApiResult.Success(
                                 correlationId = correlationId,
                                 continuationToken = continuationToken
-                                    ?: return JITIntrospectAPIResult.UnknownError(
+                                    ?: return JITIntrospectApiResult.UnknownError(
                                         error = ApiErrorResult.INVALID_STATE,
                                         errorDescription = "register/introspect did not return a continuation token",
                                         errorCodes = errorCodes.orEmpty(),
@@ -81,7 +81,7 @@ class JITIntrospectApiResponse(
                                 methods = methods.toListOfAuthenticationMethodApiResult()
                             )
                         } catch (e: IllegalStateException) {
-                            JITIntrospectAPIResult.UnknownError(
+                            JITIntrospectApiResult.UnknownError(
                                 error = ApiErrorResult.INVALID_STATE,
                                 errorDescription = "register/introspect did not return valid methods: ${e.message}",
                                 errorCodes = errorCodes.orEmpty(),
@@ -92,7 +92,7 @@ class JITIntrospectApiResponse(
                 }
             }
             else -> {
-                JITIntrospectAPIResult.UnknownError(
+                JITIntrospectApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
                     errorCodes = errorCodes.orEmpty(),

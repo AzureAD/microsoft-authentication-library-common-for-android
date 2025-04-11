@@ -3,16 +3,15 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.jit
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordContinueApiResult
-import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.AuthenticationMethodApiResult
 
 /**
- * Represents the potential result types returned from the register/introspect endpoint,
+ * Represents the potential result types returned from the register/challenge endpoint,
  * including a case for unexpected errors received from the server.
  */
-sealed interface JITIntrospectAPIResult: ApiResult {
+sealed interface JITChallengeApiResult: ApiResult {
     data class Redirect(
         override val correlationId: String
-    ) : JITIntrospectAPIResult {
+    ) : JITChallengeApiResult {
         override fun toUnsanitizedString(): String {
             return "Redirect(correlationId=$correlationId)"
         }
@@ -23,8 +22,12 @@ sealed interface JITIntrospectAPIResult: ApiResult {
     data class Success(
         override val correlationId: String,
         val continuationToken: String,
-        val methods: List<AuthenticationMethodApiResult>
-    ) : JITIntrospectAPIResult {
+        val challengeType: String,
+        val bindingMethod: String?,
+        val challengeTargetLabel: String,
+        val challengeChannel: String,
+        val codeLength: Int
+    ) : JITChallengeApiResult {
         override fun toUnsanitizedString(): String {
             return "Success(correlationId=$correlationId)"
         }
@@ -32,17 +35,34 @@ sealed interface JITIntrospectAPIResult: ApiResult {
         override fun toString(): String = toUnsanitizedString()
     }
 
-    data class UnknownError(
+    data class InvalidVerificationContact(
         override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
-        override val errorCodes: List<Int>,
+        override val errorCodes: List<Int>
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
         errorCodes = errorCodes,
         correlationId = correlationId
-    ), JITIntrospectAPIResult {
+    ), JITChallengeApiResult {
+        override fun toUnsanitizedString() = "InvalidVerificationContact(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, subError=$subError)"
+
+        override fun toString(): String = "InvalidVerificationContact(correlationId=$correlationId)"
+    }
+
+    data class UnknownError(
+        override val correlationId: String,
+        override val error: String,
+        override val errorDescription: String,
+        override val errorCodes: List<Int>
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+        errorCodes = errorCodes,
+        correlationId = correlationId
+    ), JITChallengeApiResult {
         override fun toUnsanitizedString() = "UnknownError(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
 
