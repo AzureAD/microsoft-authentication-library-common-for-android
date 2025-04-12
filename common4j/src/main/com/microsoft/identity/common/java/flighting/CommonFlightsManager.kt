@@ -54,8 +54,12 @@ object CommonFlightsManager : IFlightsManager {
         return mFlightsManager.getFlightsProvider()
     }
 
-    override fun getFlightsProviderForTenant(tenantId: String): IFlightsProvider {
-        return mFlightsManager.getFlightsProviderForTenant(tenantId)
+    override fun fetchFlightsForTenant(tenantId: String) {
+        return mFlightsManager.fetchFlightsForTenant(tenantId)
+    }
+
+    override fun waitForEcsResult(timeOutInMilliSeconds: Int) {
+        return mFlightsManager.waitForEcsResult(timeOutInMilliSeconds)
     }
 
     /**
@@ -101,8 +105,12 @@ object CommonFlightsManager : IFlightsManager {
             return DefaultValueFlightsProvider
         }
 
-        override fun getFlightsProviderForTenant(tenantId: String): IFlightsProvider {
-            return DefaultValueFlightsProvider
+        override fun fetchFlightsForTenant(tenantId: String) {
+            // no-op
+        }
+
+        override fun waitForEcsResult(timeOutInMilliSeconds: Int) {
+            // no-op
         }
     }
 }

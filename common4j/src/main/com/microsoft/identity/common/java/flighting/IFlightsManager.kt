@@ -35,7 +35,12 @@ interface IFlightsManager {
     fun getFlightsProvider(): IFlightsProvider
 
     /**
-     * Flights provider for the given tenant
+     * Force fetching flight for the given tenant.
      */
-    fun getFlightsProviderForTenant(tenantId: String): IFlightsProvider
+    fun fetchFlightsForTenant(tenantId: String)
+
+    /**
+     * Blocks until the flight result associated to the given tenant is returned.
+     */
+    fun waitForEcsResult(timeOutInMilliSeconds: Int)
 }
