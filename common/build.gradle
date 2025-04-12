@@ -61,6 +61,7 @@ android {
         buildConfigField("boolean", "trustDebugBrokerFlag", "$trustDebugBrokerFlag")
         buildConfigField("boolean", "bypassRedirectUriCheck", "$bypassRedirectUriCheck")
     }
+    //aidl is being set to true since aidl only generated with this set
     buildFeatures {
         buildConfig = true
         aidl = true
