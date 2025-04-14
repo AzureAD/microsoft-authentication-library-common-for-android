@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.net;
 
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.ported.Function;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
@@ -74,6 +75,7 @@ public class StatusCodeAndExceptionRetry implements IRetryPolicy<HttpResponse> {
 
     @Override
     public HttpResponse attempt(Callable<HttpResponse> supplier) throws ClientException {
+        final String methodTag = StatusCodeAndExceptionRetry.class.getSimpleName() + ":attempt";
         int attemptNumber = number;
         int cumulativeDelay = initialDelay;
         do {
@@ -81,10 +83,16 @@ public class StatusCodeAndExceptionRetry implements IRetryPolicy<HttpResponse> {
                 HttpResponse response = supplier.call();
                 //If there are no retries left, or the response is acceptable, or it is not retryable.
                 if (attemptNumber <= 0 || isAcceptable.apply(response) || !isRetryable.apply(response)) {
+                    Logger.info(methodTag, "Going to return response: isAcceptable=" + isAcceptable.apply(response) +
+                            " isRetryable=" + isRetryable.apply(response) +
+                            " attemptNumber=" + attemptNumber);
                     return response;
                 }
             } catch (final Exception e) {
+                Logger.error(methodTag,"Caught an exception: ", e);
                 if (attemptNumber <= 0 || !isRetryableException.apply(e)) {
+                    Logger.info(methodTag, "Going to throw exception: isRetryableException=" + isRetryableException.apply(e) +
+                            " attemptNumber=" + attemptNumber);
                     if (e instanceof ClientException) {
                         throw (ClientException) e;
                     }
