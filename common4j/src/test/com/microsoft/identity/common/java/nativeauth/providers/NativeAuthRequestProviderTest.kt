@@ -80,6 +80,9 @@ class NativeAuthRequestProviderTest {
         every { getResetPasswordContinueEndpoint() } returns ApiConstants.MockApi.ssprContinueRequestUrl
         every { getResetPasswordSubmitEndpoint() } returns ApiConstants.MockApi.ssprSubmitRequestUrl
         every { getResetPasswordPollCompletionEndpoint() } returns ApiConstants.MockApi.ssprPollCompletionRequestUrl
+        every { getJITIntrospectEndpoint() } returns ApiConstants.MockApi.jitIntrospectRequestUrl
+        every { getJITChallengeEndpoint() } returns ApiConstants.MockApi.jitChallengeRequestUrl
+        every { getJITContinueEndpoint() } returns ApiConstants.MockApi.jitContinueRequestUrl
         every { challengeType } returns this@NativeAuthRequestProviderTest.challengeType
         every { clientId } returns this@NativeAuthRequestProviderTest.clientId
         every { useMockApiForNativeAuth } returns true
