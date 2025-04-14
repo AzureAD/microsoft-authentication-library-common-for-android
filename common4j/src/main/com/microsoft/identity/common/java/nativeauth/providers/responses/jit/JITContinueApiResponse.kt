@@ -3,6 +3,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.jit
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidGrant
 import com.microsoft.identity.common.java.nativeauth.util.isOOBValueInvalid
 import java.net.HttpURLConnection
@@ -59,7 +60,7 @@ class JITContinueApiResponse(
                 return when {
                     continuationToken.isNullOrBlank() -> {
                         JITContinueApiResult.UnknownError(
-                            error = "invalid_state",
+                            error = ApiErrorResult.INVALID_STATE,
                             errorDescription = "Register authentication method /continue did not return continuationToken field",
                             errorCodes = errorCodes.orEmpty(),
                             correlationId = correlationId

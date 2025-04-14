@@ -3,6 +3,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.jit
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidChallengeTarget
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidRequest
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
@@ -74,7 +75,7 @@ class JITChallengeApiResponse(
                             challengeChannel.isNullOrBlank() ||
                             codeLength == null -> {
                         JITChallengeApiResult.UnknownError(
-                            error = "invalid_state",
+                            error = ApiErrorResult.INVALID_STATE,
                             errorDescription = "Register authentication method /challenge did not return all mandatory fields",
                             errorCodes = errorCodes.orEmpty(),
                             correlationId = correlationId
