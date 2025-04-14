@@ -42,6 +42,7 @@ import com.microsoft.identity.common.java.nativeauth.util.isUserNotFound
  * Note: mainly used for representing error cases from the /token endpoint. Successful responses are otherwise mapped to MicrosoftStsTokenResponse instead.
  * @see com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
  */
+class SignInTokenApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
     @SerializedName("continuation_token") val continuationToken: String?,

@@ -297,13 +297,4 @@ class NativeAuthOAuth2Strategy(
             correlationId = correlationId
         )
     }
-
-    fun performJITIntrospect(
-        continuationToken: String,
-        correlationId: String
-    ): SignInIntrospectApiResult {
-        return signInInteractor.performJITIntrospect(
-            continuationToken = continuationToken,
-            correlationId = correlationId
-    )
 }
