@@ -3,6 +3,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.jit
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
+import com.microsoft.identity.common.java.nativeauth.util.isInvalidChallengeTarget
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidRequest
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import java.net.HttpURLConnection
@@ -26,7 +27,6 @@ class JITChallengeApiResponse(
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
 ) : IApiResponse(statusCode, correlationId) {
-    private val INVALID_CHALLENGE_TARGET_CODE = 901001
     override fun toUnsanitizedString(): String {
         return "JITChallengeApiResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId " +
@@ -36,20 +36,16 @@ class JITChallengeApiResponse(
     override fun toString(): String = "JITChallengeApiResponse(statusCode=$statusCode, " +
             "correlationId=$correlationId"
 
-    companion object {
-        private val TAG = JITChallengeApiResponse::class.java.simpleName
-    }
-
     fun toResult(): JITChallengeApiResult {
         return when (statusCode) {
             // Handle 400 errors
             HttpURLConnection.HTTP_BAD_REQUEST -> {
                 return when {
-                    error.isInvalidRequest() && errorCodes?.contains(INVALID_CHALLENGE_TARGET_CODE) == true -> {
+                    error.isInvalidRequest() && errorCodes?.first().isInvalidChallengeTarget() -> {
                         JITChallengeApiResult.InvalidVerificationContact(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            errorCodes = errorCodes,
+                            errorCodes = errorCodes.orEmpty(),
                             correlationId = correlationId
                         )
                     }

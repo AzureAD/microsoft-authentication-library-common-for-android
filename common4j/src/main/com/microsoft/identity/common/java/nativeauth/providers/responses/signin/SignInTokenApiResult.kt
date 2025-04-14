@@ -63,6 +63,26 @@ sealed interface SignInTokenApiResult: ApiResult, ILoggable {
         override fun toString(): String = "MFARequired(correlationId=$correlationId)"
     }
 
+    data class JITRequired(
+        override val correlationId: String,
+        val continuationToken: String,
+        override val error: String,
+        override val subError: String,
+        override val errorDescription: String,
+        override val errorCodes: List<Int>
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+        subError = subError,
+        errorCodes = errorCodes,
+        correlationId = correlationId
+    ), SignInTokenApiResult {
+        override fun toUnsanitizedString() = "JITRequired(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, subError=$subError, errorCodes=$errorCodes)"
+
+        override fun toString(): String = "JITRequired(correlationId=$correlationId)"
+    }
+
     data class UserNotFound(
         override val correlationId: String,
         override val error: String,

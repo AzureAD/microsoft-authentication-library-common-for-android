@@ -25,7 +25,8 @@ package com.microsoft.identity.common.java.nativeauth.providers
 import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.nativeauth.providers.requests.jit.JITIntrospectRequest
+import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITChallengeApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITContinueApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITIntrospectApiResponse
 import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
@@ -37,7 +38,6 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpa
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectApiResponse
-import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpChallengeApiResponse
@@ -699,8 +699,13 @@ class NativeAuthResponseHandler {
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 errorUri = null,
                 continuationToken = null,
-                pollInterval = null,
-                subError = null,
+                challengeType = null,
+                bindingMethod = null,
+                challengeTarget = null,
+                challengeChannel = null,
+                codeLength = null,
+                interval = null,
+                errorCodes = null,
                 correlationId = correlationId
             )
         } else {
@@ -742,10 +747,9 @@ class NativeAuthResponseHandler {
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
-                errorUri = null,
                 continuationToken = null,
-                pollInterval = null,
                 subError = null,
+                errorCodes = null,
                 correlationId = correlationId
             )
         } else {

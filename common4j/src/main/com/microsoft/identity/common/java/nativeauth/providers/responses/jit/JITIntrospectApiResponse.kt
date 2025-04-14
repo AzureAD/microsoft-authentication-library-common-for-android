@@ -35,10 +35,6 @@ class JITIntrospectApiResponse(
     override fun toString(): String = "JITIntrospectApiResponse(statusCode=$statusCode, " +
             "correlationId=$correlationId"
 
-    companion object {
-        private val TAG = JITIntrospectApiResponse::class.java.simpleName
-    }
-
     fun toResult(): JITIntrospectApiResult {
         return when (statusCode) {
             // Handle 400 errors

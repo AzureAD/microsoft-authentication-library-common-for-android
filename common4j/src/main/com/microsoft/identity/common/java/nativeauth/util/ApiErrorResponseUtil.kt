@@ -93,6 +93,10 @@ internal fun String?.isExpiredToken(): Boolean {
     return this.contentEquals(other = "expired_token", ignoreCase = true)
 }
 
+internal fun String?.isOOBValueInvalid(): Boolean {
+    return this.contentEquals(other = "invalid_oob_value", ignoreCase = true)
+}
+
 internal fun Int?.isInvalidParameter() : Boolean {
     return this == 90100
 }
@@ -109,8 +113,16 @@ internal fun Int?.isInvalidAuthenticationType(): Boolean {
     return this == 400002
 }
 
+internal fun Int?.isInvalidChallengeTarget(): Boolean {
+    return this == 901001
+}
+
 fun String?.isMFARequired(): Boolean {
     return this.contentEquals(other = "mfa_required", ignoreCase = true)
+}
+
+fun String?.isJITRequired(): Boolean {
+    return this.contentEquals(other = "registration_required", ignoreCase = true)
 }
 
 internal fun String?.isVerificationRequired(): Boolean {
