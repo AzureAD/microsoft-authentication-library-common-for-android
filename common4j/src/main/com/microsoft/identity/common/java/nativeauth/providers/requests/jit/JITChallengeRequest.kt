@@ -11,7 +11,7 @@ import java.net.URL
 data class JITChallengeRequest private constructor(
     override var requestUrl: URL,
     override var headers: Map<String, String?>,
-    override val parameters: NativeAuthRequestParameters
+    override val parameters: NativeAuthJITChallengeRequestParameters
 ) : NativeAuthRequest() {
 
     companion object {
