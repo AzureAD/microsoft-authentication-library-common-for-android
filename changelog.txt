@@ -1,6 +1,5 @@
 vNext
 ----------
-- [MINOR] Enable the new Broker discovery on MSAL by default (#2618)
 
 Version 21.0.0
 ----------
