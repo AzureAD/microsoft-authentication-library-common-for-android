@@ -26,7 +26,7 @@ class JITChallengeApiResponse(
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
 ) : IApiResponse(statusCode, correlationId) {
-
+    private val INVALID_CHALLENGE_TARGET_CODE = 901001
     override fun toUnsanitizedString(): String {
         return "JITChallengeApiResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId " +
@@ -45,12 +45,11 @@ class JITChallengeApiResponse(
             // Handle 400 errors
             HttpURLConnection.HTTP_BAD_REQUEST -> {
                 return when {
-                    error.isInvalidRequest() -> {
-                        // TODO: test what is the error code for invalid verification contact
+                    error.isInvalidRequest() && errorCodes?.contains(INVALID_CHALLENGE_TARGET_CODE) == true -> {
                         JITChallengeApiResult.InvalidVerificationContact(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            errorCodes = errorCodes.orEmpty(),
+                            errorCodes = errorCodes,
                             correlationId = correlationId
                         )
                     }
