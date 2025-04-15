@@ -223,10 +223,11 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         tokenApiResult = tokenApiResult
                     )
                 }
+                // TODO: this will need to change in JIT business logic PR
                 is SignInTokenApiResult.InvalidAuthenticationType,
                 is SignInTokenApiResult.MFARequired, is SignInTokenApiResult.CodeIncorrect,
                 is SignInTokenApiResult.UserNotFound, is SignInTokenApiResult.InvalidCredentials,
-                is SignInTokenApiResult.UnknownError -> {
+                is SignInTokenApiResult.UnknownError, is SignInTokenApiResult.JITRequired -> {
                     Logger.warnWithObject(
                         TAG,
                         tokenApiResult.correlationId,
@@ -298,10 +299,10 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         correlationId = tokenApiResult.correlationId
                     )
                 }
-
+                // TODO: this will need to change in JIT business logic PR
                 is SignInTokenApiResult.UnknownError, is SignInTokenApiResult.InvalidAuthenticationType,
                 is SignInTokenApiResult.MFARequired, is SignInTokenApiResult.InvalidCredentials,
-                is SignInTokenApiResult.UserNotFound -> {
+                is SignInTokenApiResult.UserNotFound, is SignInTokenApiResult.JITRequired -> {
                     Logger.warnWithObject(
                         TAG,
                         tokenApiResult.correlationId,
@@ -351,6 +352,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 oAuth2Strategy = oAuth2Strategy,
                 parameters = parametersWithScopes
             )
+            // TODO: this will need to change in JIT business logic PR
             return when (tokenApiResult) {
                 is SignInTokenApiResult.Success -> {
                     saveAndReturnTokens(
@@ -370,7 +372,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 }
                 is SignInTokenApiResult.UnknownError, is SignInTokenApiResult.InvalidAuthenticationType,
                 is SignInTokenApiResult.InvalidCredentials, is SignInTokenApiResult.UserNotFound,
-                is SignInTokenApiResult.MFARequired -> {
+                is SignInTokenApiResult.MFARequired, is SignInTokenApiResult.JITRequired -> {
                     Logger.warnWithObject(
                         TAG,
                         tokenApiResult.correlationId,
@@ -2117,6 +2119,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parametersWithScopes: SignInStartCommandParameters,
     ): SignInStartCommandResult {
+        // TODO: this will need to change in JIT business logic PR
         return when (this) {
             is SignInTokenApiResult.InvalidCredentials -> {
                 SignInCommandResult.InvalidCredentials(
@@ -2145,7 +2148,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             }
             is SignInTokenApiResult.CodeIncorrect,
             is SignInTokenApiResult.InvalidAuthenticationType, is SignInTokenApiResult.UserNotFound,
-            is SignInTokenApiResult.UnknownError -> {
+            is SignInTokenApiResult.UnknownError, is SignInTokenApiResult.JITRequired -> {
                 Logger.warnWithObject(
                     TAG,
                     this.correlationId,
@@ -2167,6 +2170,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parametersWithScopes: SignInSubmitPasswordCommandParameters,
     ): SignInSubmitPasswordCommandResult {
+        // TODO: this will need to change in JIT business logic PR
         return when (this) {
             is SignInTokenApiResult.InvalidCredentials -> {
                 SignInCommandResult.InvalidCredentials(
@@ -2194,7 +2198,8 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 )
             }
             is SignInTokenApiResult.UserNotFound, is SignInTokenApiResult.CodeIncorrect,
-            is SignInTokenApiResult.InvalidAuthenticationType, is SignInTokenApiResult.UnknownError -> {
+            is SignInTokenApiResult.InvalidAuthenticationType, is SignInTokenApiResult.UnknownError,
+            is SignInTokenApiResult.JITRequired -> {
                 Logger.warnWithObject(
                     TAG,
                     this.correlationId,
