@@ -516,15 +516,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     public ActivityResultLauncher<LegacyFido2ApiObject> getFidoLauncher() {
         return mFidoLauncher;
     }
-
-    /**
-     * Helper method to check if the authorization request is being made through broker.
-     * Done by checking for broker version key in the url
-     */
-    private boolean checkBrokerRequest(final String authorizationUrl) {
-        return authorizationUrl.contains(Device.PlatformIdParameters.BROKER_VERSION);
-    }
-
+    
     class AuthorizationCompletionCallback implements IAuthorizationCompletionCallback {
         @Override
         public void onChallengeResponseReceived(@NonNull final RawAuthorizationResult response) {
