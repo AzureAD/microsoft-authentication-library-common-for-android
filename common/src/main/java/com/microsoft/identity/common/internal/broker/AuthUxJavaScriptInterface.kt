@@ -51,12 +51,12 @@ class AuthUxJavaScriptInterface {
         Logger.info(methodTag, "Received a payload from AuthUX through JavaScript API.")
         val jsonMap : Map<String, String> = JsonUtil.extractJsonObjectIntoMap(jsonPayload)
         val function = jsonMap["function"]
-        val dataMap : Map<String, String> = JsonUtil.extractJsonObjectIntoMap(jsonMap["data"])
+        val dataString = jsonMap["data"]
         Logger.info(methodTag, "Function name: [$function]")
 
         when (function) {
             FunctionNames.NUMBER_MATCH.name ->
-                NumberMatchHelper.storeNumberMatch(dataMap[NumberMatchHelper.SESSION_ID_ATTRIBUTE_NAME], dataMap[NumberMatchHelper.NUMBER_MATCH_ATTRIBUTE_NAME])
+                NumberMatchHelper.storeNumberMatch(dataString)
             else ->
                 Logger.warn(methodTag, "Payload from AuthUX contained an unknown function name.")
         }

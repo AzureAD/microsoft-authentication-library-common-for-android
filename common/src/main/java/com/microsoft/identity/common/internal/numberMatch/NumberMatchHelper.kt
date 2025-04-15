@@ -22,7 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.numberMatch
 
+import com.microsoft.identity.common.java.util.JsonUtil
 import com.microsoft.identity.common.logging.Logger
+import org.json.JSONException
 
 
 /**
@@ -49,18 +51,31 @@ class NumberMatchHelper {
          * Method to add a key:value pair of sessionID:numberMatch to static hashmap. This hashmap will be accessed
          * by broker api to get the number match for a particular sessionID.
          */
-        fun storeNumberMatch(sessionID:String?, numberMatch:String?) {
-            // If both parameters are non-null, add a new entry to the hashmap
-            if (sessionID != null && numberMatch != null) {
-                val methodTag = "$TAG:storeNumberMatch"
-                Logger.info(
-                    methodTag,
-                    "Adding entry in NumberMatch hashmap for session ID: $sessionID"
-                )
-                numberMatchMap[sessionID] = numberMatch
+        fun storeNumberMatch(data: String?) {
+            val methodTag = "$TAG:storeNumberMatch"
+            if (data == null) {
+                // If we didn't receive a data string, don't store anything
+                Logger.warn(methodTag, "data String received was null")
+                return
             }
 
-            // If either parameter is null, do nothing
+            try {
+                val dataMap = JsonUtil.extractJsonObjectIntoMap(data)
+                val sessionId = dataMap[SESSION_ID_ATTRIBUTE_NAME]
+                val numberMatch = dataMap[NUMBER_MATCH_ATTRIBUTE_NAME]
+                // If both parameters are non-null, add a new entry to the hashmap
+                if (sessionId != null && numberMatch != null) {
+                    Logger.info(
+                        methodTag,
+                        "Adding entry in NumberMatch hashmap for session ID: $sessionId"
+                    )
+                    numberMatchMap[sessionId] = numberMatch
+                }
+
+                // If either parameter is null, do nothing
+            } catch (e: JSONException) {
+                Logger.warn(methodTag, "data String was malform during JSON extraction")
+            }
         }
 
         /**
