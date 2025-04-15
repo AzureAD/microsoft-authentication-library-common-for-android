@@ -24,8 +24,8 @@ if (project.hasProperty("labSecret")) {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 buildSystem {
@@ -82,17 +82,17 @@ afterEvaluate {
 // Needed when using java 17 since reflection had been removed.
 // Need to use these compiler arguments to allow for reflection.
 // More information here https://stackoverflow.com/questions/74723932/java-17-reflection-issue
-tasks.withType(JavaCompile) {
-    options.compilerArgs += [
-            '--add-opens', 'jdk.crypto.mscapi/sun.security.mscapi=ALL-UNNAMED'
-    ]
-}
-
-tasks.withType(Test) {
-    jvmArgs += [
-            '--add-opens', 'jdk.crypto.mscapi/sun.security.mscapi=ALL-UNNAMED'
-    ]
-}
+//tasks.withType(JavaCompile) {
+//    options.compilerArgs += [
+//            '--add-opens', 'jdk.crypto.mscapi/sun.security.mscapi=ALL-UNNAMED'
+//    ]
+//}
+//
+//tasks.withType(Test) {
+//    jvmArgs += [
+//            '--add-opens', 'jdk.crypto.mscapi/sun.security.mscapi=ALL-UNNAMED'
+//    ]
+//}
 jar {
     manifest {
         attributes('Implementation-Title': project.name,
