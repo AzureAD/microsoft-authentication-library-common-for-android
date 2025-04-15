@@ -53,12 +53,6 @@ public class SignInSubmitPasswordCommandParameters extends BaseSignInTokenComman
 	@NonNull
 	public final String continuationToken;
 
-	/**
-	 * Claims to send to the token endpoint.
-	 */
-	@Nullable
-	public final String claimsRequestJson;
-
 	@NonNull
 	@Override
 	public String toUnsanitizedString() {

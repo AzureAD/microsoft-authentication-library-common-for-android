@@ -1,6 +1,9 @@
 vNext
 ----------
 - [MINOR] Enable the new Broker discovery on MSAL by default (#2618)
+
+Version 21.0.0
+----------
 - [PATCH] Improve logs and error reporting SIWG flow (#2616)
 - [PATCH] Only show QR +PIN rationale when the request origin is from Microsoft (#2613)
 - [MINOR] Add an extra index for MSAL CPP core in the extra client sku header (#2610)
@@ -9,6 +12,7 @@ vNext
 - [PATCH] Track MAM flow in telemetry (#2608)
 - [PATCH] Fix multiple prompts issue in cross cloud request (#2599)
 - [PATCH] Corrected error handling in cross cloud scenario (#2602)
+- [MINOR] Native auth: Add claimsRequest also to getAccessToken and signIn after signUp/SSPR flows (#2622)
 
 Version 20.1.1
 ----------
