@@ -35,16 +35,29 @@ import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBro
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl
 import com.microsoft.identity.common.java.AuthenticationConstants.AAD.AUTHORIZATION
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension
+import com.microsoft.identity.common.java.opentelemetry.SpanName
 import com.microsoft.identity.common.java.ui.AuthorizationAgent
 import com.microsoft.identity.common.logging.Logger
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanContext
+import io.opentelemetry.api.trace.StatusCode
 
 /**
  * SwitchBrowserProtocolCoordinator is responsible for coordinating the switch browser protocol.
  * Contains the handler to process the switch browser request and resume action.
  */
 class SwitchBrowserProtocolCoordinator(
-    val switchBrowserRequestHandler: SwitchBrowserRequestHandler) {
-    constructor(activity: Activity) : this(SwitchBrowserRequestHandler(activity))
+    val switchBrowserRequestHandler: SwitchBrowserRequestHandler,
+    private val spanContext: SpanContext? = null) {
+
+    constructor(activity: Activity, spanContext: SpanContext?) : this(SwitchBrowserRequestHandler(activity, spanContext), spanContext)
+
+    val span: Span by lazy {
+        OTelUtility.createSpanFromParent(SpanName.SwitchBrowserResume.name, spanContext)
+    }
 
     companion object {
         private const val TAG = "SwitchBrowserProtocolCoordinator"
@@ -99,21 +112,30 @@ class SwitchBrowserProtocolCoordinator(
         extras: Bundle,
         onSuccessAction: (Uri, HashMap<String, String>) -> Unit
     ) {
-        val methodTag = "$TAG:processSwitchBrowserResume"
-        val actionUri = extras.getString(SWITCH_BROWSER.ACTION_URI)
-        val code = extras.getString(SWITCH_BROWSER.CODE)
-        if (actionUri.isNullOrEmpty() || code.isNullOrEmpty()) {
-            throw ClientException(
-                ClientException.MISSING_PARAMETER,
-                "Action URI is null/empty: ${actionUri == null}, code is null/empty: ${code == null}"
-            )
+        SpanExtension.makeCurrentSpan(span).use {
+            val methodTag = "$TAG:processSwitchBrowserResume"
+            val actionUri = extras.getString(SWITCH_BROWSER.ACTION_URI)
+            val code = extras.getString(SWITCH_BROWSER.CODE)
+            if (actionUri.isNullOrEmpty() || code.isNullOrEmpty()) {
+                val clientException = ClientException(
+                    ClientException.MISSING_PARAMETER,
+                    "Action URI is null/empty: ${actionUri == null}, code is null/empty: ${code == null}"
+                )
+                span.setStatus(StatusCode.ERROR)
+                span.recordException(clientException)
+                span.end()
+                throw clientException
+            }
+            val resumeUri = buildResumeUri(actionUri)
+            val headers = hashMapOf(AUTHORIZATION to code)
+            onSuccessAction(resumeUri, headers)
+            // Reset the challenge state after processing the resume action
+            switchBrowserRequestHandler.resetChallengeState()
+            Logger.info(methodTag, "Switch browser resume action processed successfully.")
+            span.setAttribute(AttributeName.is_switch_browser_resume_handled.name, true)
+            span.setStatus(StatusCode.OK)
+            span.end()
         }
-        val resumeUri = buildResumeUri(actionUri)
-        val headers = hashMapOf(AUTHORIZATION to code)
-        onSuccessAction(resumeUri, headers)
-        // Reset the challenge state after processing the resume action
-        switchBrowserRequestHandler.resetChallengeState()
-        Logger.info(methodTag, "Switch browser resume action processed successfully.")
     }
 
     /**

@@ -60,7 +60,7 @@ class SwitchBrowserRequestHandlerTest {
         `when`(challenge.uri).thenReturn(Uri.parse("https://example.com"))
         val browserSelector = // Browser available
             IBrowserSelector { _, _ -> Browser("fakeBrowser", emptySet(), "browser", false) }
-        val handler = SwitchBrowserRequestHandler(mockActivity, context, customTabsManager, browserSelector)
+        val handler = SwitchBrowserRequestHandler(mockActivity, context, customTabsManager, browserSelector, null)
         handler.processChallenge(challenge)
         Assert.assertTrue(activityExecuted)
     }
@@ -75,7 +75,7 @@ class SwitchBrowserRequestHandlerTest {
         val challenge = mock(SwitchBrowserChallenge::class.java)
         `when`(challenge.uri).thenReturn(Uri.parse("https://example.com"))
         val browserSelector = IBrowserSelector { _, _ -> null } // No browser available
-        val handler = SwitchBrowserRequestHandler(activity, context, customTabsManager, browserSelector)
+        val handler = SwitchBrowserRequestHandler(activity, context, customTabsManager, browserSelector, null)
         val exception = Assert.assertThrows(ClientException::class.java) {
             handler.processChallenge(challenge)
         }

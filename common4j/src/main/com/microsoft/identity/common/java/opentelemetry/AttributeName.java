@@ -338,5 +338,30 @@ public enum AttributeName {
     /**
      * Records if current flow is a mam flow.
      */
-    is_mam_flow
+    is_mam_flow,
+
+    /**
+     * Records if current flow is a switch browser protocol.
+     */
+    is_switch_browser_protocol,
+
+    /**
+     * Records the browser package name.
+     */
+    browser_package_name,
+
+    /**
+     * Records the if browser package name supports custom tabs.
+     */
+    is_custom_tabs_supported,
+
+    /**
+     * Records the if the broker handled a switch browser request,
+     */
+    is_switch_browser_request_handled,
+
+    /**
+     * Records the if the broker handled a switch browser resume,
+     */
+    is_switch_browser_resume_handled
 }
