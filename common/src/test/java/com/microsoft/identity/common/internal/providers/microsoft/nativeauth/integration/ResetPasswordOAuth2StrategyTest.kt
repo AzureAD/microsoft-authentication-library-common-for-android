@@ -114,6 +114,9 @@ class ResetPasswordOAuth2StrategyTest {
         whenever(mockConfig.getResetPasswordContinueEndpoint()).thenReturn(ApiConstants.MockApi.ssprContinueRequestUrl)
         whenever(mockConfig.getResetPasswordSubmitEndpoint()).thenReturn(ApiConstants.MockApi.ssprSubmitRequestUrl)
         whenever(mockConfig.getResetPasswordPollCompletionEndpoint()).thenReturn(ApiConstants.MockApi.ssprPollCompletionRequestUrl)
+        whenever(mockConfig.getJITIntrospectEndpoint()).thenReturn(ApiConstants.MockApi.jitIntrospectRequestUrl)
+        whenever(mockConfig.getJITChallengeEndpoint()).thenReturn(ApiConstants.MockApi.jitChallengeRequestUrl)
+        whenever(mockConfig.getJITContinueEndpoint()).thenReturn(ApiConstants.MockApi.jitContinueRequestUrl)
         whenever(mockConfig.challengeType).thenReturn(CHALLENGE_TYPE)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
