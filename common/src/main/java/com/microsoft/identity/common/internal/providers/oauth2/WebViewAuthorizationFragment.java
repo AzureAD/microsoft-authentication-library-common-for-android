@@ -451,12 +451,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 mProgressBar.setVisibility(View.VISIBLE);
 
 //                TODO: REMOVE THIS BEFORE MERGING, Using this to test JS API
-                mWebView.evaluateJavascript(AuthUxJavaScriptInterface.Companion.getInterfaceName() +".postToBroker('{function: NUMBER_MATCH,data: {sessionID: id, numberMatch: number}}')", new ValueCallback<String>() {
-                    @Override
-                    public void onReceiveValue(String value) {
-                        int x = 0;
-                    }
-                });
+//                mWebView.evaluateJavascript(AuthUxJavaScriptInterface.Companion.getInterfaceName() +".postToBroker('{function: NUMBER_MATCH,data: {sessionID: id, numberMatch: number}}')", new ValueCallback<String>() {
+//                    @Override
+//                    public void onReceiveValue(String value) {
+//                        int x = 0;
+//                    }
+//                });
             }
         });
     }
