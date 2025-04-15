@@ -36,6 +36,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.PermissionRequest;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -52,7 +53,7 @@ import androidx.fragment.app.FragmentActivity;
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
-import com.microsoft.identity.common.internal.numberMatch.NumberMatchJavaScriptInterface;
+import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.internal.ui.webview.ProcessUtil;
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
@@ -302,7 +303,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 userAgent + AuthenticationConstants.Broker.CLIENT_TLS_NOT_SUPPORTED);
         mWebView.getSettings().setJavaScriptEnabled(true);
         if (isBrokerRequest) {
-            mWebView.addJavascriptInterface(new NumberMatchJavaScriptInterface(), "Android");
+            mWebView.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
         }
         mWebView.requestFocus(View.FOCUS_DOWN);
 
@@ -448,6 +449,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.
                 // After that, progress bar will be displayed by MSA/AAD.
                 mProgressBar.setVisibility(View.VISIBLE);
+
+//                TODO: REMOVE THIS BEFORE MERGING, Using this to test JS API
+                mWebView.evaluateJavascript(AuthUxJavaScriptInterface.Companion.getInterfaceName() +".postToBroker('{function: NUMBER_MATCH,data: {sessionID: id, numberMatch: number}}')", new ValueCallback<String>() {
+                    @Override
+                    public void onReceiveValue(String value) {
+                        int x = 0;
+                    }
+                });
             }
         });
     }

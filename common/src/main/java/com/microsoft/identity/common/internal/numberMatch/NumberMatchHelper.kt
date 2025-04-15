@@ -22,13 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.numberMatch
 
-import android.webkit.JavascriptInterface
 import com.microsoft.identity.common.logging.Logger
-import com.microsoft.identity.common.nativeauth.internal.commands.GetAuthMethodsCommand
+
 
 /**
- * Java Script API to be exposed as part of brokered WebView requests.
- * Will be used by AuthUX as part of number match feature.
+ * Helper to facilitate NumberMatchFlow. Used in conjunction with {@link AuthUxJavaScriptInterface}
  * When authenticator is installed, and phone uses MFA or PSI in an interactive flow, a number
  * matching challenge is issued, where used is given a number and asked to open authenticator and check
  * for the same number in authenticator UI. This feature cuts out one UI step, where this API is used to
@@ -36,39 +34,40 @@ import com.microsoft.identity.common.nativeauth.internal.commands.GetAuthMethods
  * process is alive), where Authenticator can call a broker API to fetch the number match, and immediately
  * prompt user for consent, rather than first asking them to check the number match.
  */
-class NumberMatchJavaScriptInterface {
+class NumberMatchHelper {
 
     // Store number matches in a static hash map
     // No need to persist this storage beyond the current broker process, but we need to keep them
     // long enough for AuthApp to call the broker api to fetch the number match
     companion object {
-        val TAG = NumberMatchJavaScriptInterface::class.java.simpleName
-        val numberMatchMap: HashMap<String?, String?> = HashMap()
-    }
+        val TAG = NumberMatchHelper::class.java.simpleName
+        val numberMatchMap: HashMap<String, String> = HashMap()
+        const val SESSION_ID_ATTRIBUTE_NAME = "sessionID"
+        const val NUMBER_MATCH_ATTRIBUTE_NAME = "numberMatch"
 
-    /**
-     * Method to add a key:value pair of sessionID:numberMatch to static hashmap. This hashmap will be accessed
-     * by broker api to get the number match for a particular sessionID.
-     */
-    @JavascriptInterface
-    fun postCodeMatch(sessionID : String?, numberMatch : String?) {
-        // If both parameters are non-null, add a new entry to the hashmap
-        if (sessionID != null && numberMatch != null) {
-            val methodTag = "$TAG:postCodeMatch"
-            Logger.info(
-                methodTag,
-                "Adding entry in NumberMatch hashmap for session ID: $sessionID"
-            )
-            numberMatchMap[sessionID] = numberMatch
+        /**
+         * Method to add a key:value pair of sessionID:numberMatch to static hashmap. This hashmap will be accessed
+         * by broker api to get the number match for a particular sessionID.
+         */
+        fun storeNumberMatch(sessionID:String?, numberMatch:String?) {
+            // If both parameters are non-null, add a new entry to the hashmap
+            if (sessionID != null && numberMatch != null) {
+                val methodTag = "$TAG:storeNumberMatch"
+                Logger.info(
+                    methodTag,
+                    "Adding entry in NumberMatch hashmap for session ID: $sessionID"
+                )
+                numberMatchMap[sessionID] = numberMatch
+            }
+
+            // If either parameter is null, do nothing
         }
 
-        // If either parameter is null, do nothing
-    }
-
-    /**
-     * Clear existing number match key:value pairs
-     */
-    fun clearNumberMatchMap() {
-        numberMatchMap.clear()
+        /**
+         * Clear existing number match key:value pairs
+         */
+        fun clearNumberMatchMap() {
+            numberMatchMap.clear()
+        }
     }
 }

@@ -1,0 +1,71 @@
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+package com.microsoft.identity.common.internal.broker
+
+import android.webkit.JavascriptInterface
+import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper
+import com.microsoft.identity.common.java.util.JsonUtil
+import com.microsoft.identity.common.logging.Logger
+
+/**
+ * JavaScript API to receive JSON string payloads from AuthUX in order to facilitate calling various
+ * broker methods.
+ */
+class AuthUxJavaScriptInterface {
+
+    // Store number matches in a static hash map
+    // No need to persist this storage beyond the current broker process, but we need to keep them
+    // long enough for AuthApp to call the broker api to fetch the number match
+    companion object {
+        val TAG = AuthUxJavaScriptInterface::class.java.simpleName
+        private const val JAVASCRIPT_INTERFACE_NAME = "BrokerJS"
+
+        fun getInterfaceName() : String {
+            return JAVASCRIPT_INTERFACE_NAME
+        }
+    }
+
+    @JavascriptInterface
+    fun postToBroker(jsonPayload: String) {
+        val methodTag = "$TAG:postToBroker"
+        Logger.info(methodTag, "Received a payload from AuthUX through JavaScript API.")
+        val jsonMap : Map<String, String> = JsonUtil.extractJsonObjectIntoMap(jsonPayload)
+        val function = jsonMap["function"]
+        val dataMap : Map<String, String> = JsonUtil.extractJsonObjectIntoMap(jsonMap["data"])
+        Logger.info(methodTag, "Function name: [$function]")
+
+        when (function) {
+            FunctionNames.NUMBER_MATCH.name ->
+                NumberMatchHelper.storeNumberMatch(dataMap[NumberMatchHelper.SESSION_ID_ATTRIBUTE_NAME], dataMap[NumberMatchHelper.NUMBER_MATCH_ATTRIBUTE_NAME])
+            else ->
+                Logger.warn(methodTag, "Payload from AuthUX contained an unknown function name.")
+        }
+    }
+
+    /**
+     * Enum class to hold function names
+     */
+    enum class FunctionNames {
+        NUMBER_MATCH
+    }
+}
