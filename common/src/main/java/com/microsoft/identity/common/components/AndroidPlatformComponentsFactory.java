@@ -73,7 +73,7 @@ public class AndroidPlatformComponentsFactory {
             Device.setDeviceMetadata(new AndroidDeviceMetadata());
 
             // Denotes whether or not request is from personal profile but device has a Work Profile Available
-            Device.setIsInPersonalProfileButWorkProfileAvailable(checkIfIsInPersonalProfileButWorkProfileAvailable(context));
+            Device.setIsInPersonalProfileButClouddpcWorkProfileAvailable(checkIfIsInPersonalProfileButClouddpcWorkProfileAvailable(context));
             Logger.setAndroidLogger();
 
             final File cacheDir = context.getCacheDir();
@@ -157,7 +157,7 @@ public class AndroidPlatformComponentsFactory {
      * @param context context needed to check for intent
      * @return true if called in personal profile and a work profile managed by clouddpc exists, false otherwise
      */
-    public static boolean checkIfIsInPersonalProfileButWorkProfileAvailable(@NonNull final Context context) {
+    public static boolean checkIfIsInPersonalProfileButClouddpcWorkProfileAvailable(@NonNull final Context context) {
         Intent intent = new Intent("com.google.android.apps.work.clouddpc.ACTION_DETECT_WORK_PROFILE");
         List<ResolveInfo> activities = context.getPackageManager().queryIntentActivities(intent, 0);
 

@@ -175,7 +175,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mDiagnosticDM = Device.getModel();
         mDiagnosticCPU = Device.getCpu();
         mDiagnosticMN = Device.getManufacturer();
-        mWorkProfileAvailable = Device.getIsInPersonalProfileButWorkProfileAvailable();
+        mWorkProfileAvailable = Device.getIsInPersonalProfileButClouddpcWorkProfileAvailable();
     }
 
     public abstract static class Builder<B extends MicrosoftAuthorizationRequest.Builder<B>> extends AuthorizationRequest.Builder<B> {

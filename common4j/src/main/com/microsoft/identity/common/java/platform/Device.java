@@ -53,7 +53,7 @@ public class Device {
     /**
      * Denotes whether or not request is from personal profile but device has a Work Profile Available
      */
-    private static boolean sIsInPersonalProfileButWorkProfileAvailable = false;
+    private static boolean sIsInPersonalProfileButClouddpcWorkProfileAvailable = false;
 
     private static final ReentrantReadWriteLock sLock = new ReentrantReadWriteLock();
 
@@ -79,20 +79,20 @@ public class Device {
     }
 
     @GuardedBy("sLock")
-    public static void setIsInPersonalProfileButWorkProfileAvailable(final boolean isWorkProfileAvailable) {
+    public static void setIsInPersonalProfileButClouddpcWorkProfileAvailable(final boolean isWorkProfileAvailable) {
         sLock.writeLock().lock();
         try {
-            sIsInPersonalProfileButWorkProfileAvailable = isWorkProfileAvailable;
+            sIsInPersonalProfileButClouddpcWorkProfileAvailable = isWorkProfileAvailable;
         } finally {
             sLock.writeLock().unlock();
         }
     }
 
     @GuardedBy("sLock")
-    public static boolean getIsInPersonalProfileButWorkProfileAvailable() {
+    public static boolean getIsInPersonalProfileButClouddpcWorkProfileAvailable() {
         sLock.writeLock().lock();
         try {
-            return sIsInPersonalProfileButWorkProfileAvailable;
+            return sIsInPersonalProfileButClouddpcWorkProfileAvailable;
         } finally {
             sLock.writeLock().unlock();
         }
