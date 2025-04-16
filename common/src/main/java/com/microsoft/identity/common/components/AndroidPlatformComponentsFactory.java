@@ -151,11 +151,11 @@ public class AndroidPlatformComponentsFactory {
     }
 
     /**
-     * Helper method to check if we are in personal profile but a work profile is available.
-     * Google Docs for intent used:
+     * Helper method to check if we are in personal profile but a work profile managed by clouddpc
+     * is available. Google Docs for intent used:
      * https://developers.google.com/android/management/work-profile-detection#detect_if_the_device_has_a_work_profile
      * @param context context needed to check for intent
-     * @return true if the intent is found, false otherwise
+     * @return true if called in personal profile and a work profile managed by clouddpc exists, false otherwise
      */
     public static boolean checkIfIsInPersonalProfileButWorkProfileAvailable(@NonNull final Context context) {
         Intent intent = new Intent("com.google.android.apps.work.clouddpc.ACTION_DETECT_WORK_PROFILE");
