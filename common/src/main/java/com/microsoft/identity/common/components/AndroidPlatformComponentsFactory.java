@@ -24,6 +24,9 @@ package com.microsoft.identity.common.components;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ResolveInfo;
+import android.os.Build;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -44,6 +47,7 @@ import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.File;
+import java.util.List;
 
 import lombok.NonNull;
 
@@ -67,6 +71,9 @@ public class AndroidPlatformComponentsFactory {
         if (!sGlobalStateInitalized) {
             HttpCache.initialize(context);
             Device.setDeviceMetadata(new AndroidDeviceMetadata());
+
+            // Denotes whether or not request is from personal profile but device has a Work Profile Available
+            Device.setIsInPersonalProfileButWorkProfileAvailable(checkIfIsInPersonalProfileButWorkProfileAvailable(context));
             Logger.setAndroidLogger();
 
             final File cacheDir = context.getCacheDir();
@@ -141,5 +148,31 @@ public class AndroidPlatformComponentsFactory {
                                     .build())
                     .stateGenerator(new AndroidTaskStateGenerator(activity.getTaskId()));
         }
+    }
+
+    /**
+     * Helper method to check if we are in personal profile but a work profile is available.
+     * Google Docs for intent used:
+     * https://developers.google.com/android/management/work-profile-detection#detect_if_the_device_has_a_work_profile
+     * @param context context needed to check for intent
+     * @return true if the intent is found, false otherwise
+     */
+    public static boolean checkIfIsInPersonalProfileButWorkProfileAvailable(@NonNull final Context context) {
+        Intent intent = new Intent("com.google.android.apps.work.clouddpc.ACTION_DETECT_WORK_PROFILE");
+        List<ResolveInfo> activities = context.getPackageManager().queryIntentActivities(intent, 0);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            return activities.stream()
+                    .anyMatch(
+                            (ResolveInfo resolveInfo) -> resolveInfo.isCrossProfileIntentForwarderActivity());
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                return activities.stream()
+                        .anyMatch(
+                                (ResolveInfo resolveInfo) -> resolveInfo.activityInfo.name.equals("com.android.internal.app.ForwardIntentToManagedProfile"));
+            }
+        }
+
+        return false;
     }
 }
