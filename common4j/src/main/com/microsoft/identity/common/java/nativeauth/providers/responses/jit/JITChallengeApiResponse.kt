@@ -72,6 +72,7 @@ class JITChallengeApiResponse(
                             correlationId = correlationId
                         )
                     }
+
                     else -> {
                         JITChallengeApiResult.UnknownError(
                             error = error.orEmpty(),
@@ -86,13 +87,8 @@ class JITChallengeApiResponse(
             // Handle success and redirect
             HttpURLConnection.HTTP_OK -> {
                 return when {
-                    challengeType.isRedirect() -> {
-                        JITChallengeApiResult.Redirect(
-                            correlationId = correlationId
-                        )
-                    }
                     continuationToken.isNullOrBlank() ||
-                    challengeType.isNullOrBlank() ||
+                            challengeType.isNullOrBlank() ||
                             challengeTarget.isNullOrBlank() ||
                             challengeChannel.isNullOrBlank() ||
                             codeLength == null -> {
@@ -103,6 +99,7 @@ class JITChallengeApiResponse(
                             correlationId = correlationId
                         )
                     }
+
                     else -> {
                         JITChallengeApiResult.Success(
                             correlationId = correlationId,
@@ -116,6 +113,7 @@ class JITChallengeApiResponse(
                     }
                 }
             }
+
             else -> {
                 JITChallengeApiResult.UnknownError(
                     error = error.orEmpty(),

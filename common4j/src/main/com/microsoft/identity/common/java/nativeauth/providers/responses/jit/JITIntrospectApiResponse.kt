@@ -72,11 +72,6 @@ class JITIntrospectApiResponse(
             // Handle success and redirect
             HttpURLConnection.HTTP_OK -> {
                 return when {
-                    challengeType.isRedirect() -> {
-                        JITIntrospectApiResult.Redirect(
-                            correlationId = correlationId
-                        )
-                    }
                     methods.isNullOrEmpty() -> {
                         JITIntrospectApiResult.UnknownError(
                             error = ApiErrorResult.INVALID_STATE,

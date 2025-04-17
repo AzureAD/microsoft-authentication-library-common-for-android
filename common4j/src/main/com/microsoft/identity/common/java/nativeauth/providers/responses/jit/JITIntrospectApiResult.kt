@@ -31,15 +31,6 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.
  * including a case for unexpected errors received from the server.
  */
 sealed interface JITIntrospectApiResult: ApiResult {
-    data class Redirect(
-        override val correlationId: String
-    ) : JITIntrospectApiResult {
-        override fun toUnsanitizedString(): String {
-            return "Redirect(correlationId=$correlationId)"
-        }
-
-        override fun toString(): String = toUnsanitizedString()
-    }
 
     data class Success(
         override val correlationId: String,

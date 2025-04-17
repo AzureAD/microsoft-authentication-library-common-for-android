@@ -3407,7 +3407,7 @@ class NativeAuthResponseHandlerTest {
     }
     // endregion
 
-    //region JIT responses
+    //region JIT introspect
 
     @Test
     fun testJITIntrospectApiSuccessButEmptyMethodList() {
@@ -3428,28 +3428,6 @@ class NativeAuthResponseHandlerTest {
             assertEquals(ApiErrorResult.INVALID_STATE, apiResult.error)
         } else {
             fail("Expected JITIntrospectApiResult.UnknownError but got $apiResult")
-        }
-    }
-
-    @Test
-    fun testJITIntrospectApiSuccessRedirect() {
-        val methods = emptyList<AuthenticationMethodApiResponse>()
-        val jitIntrospectApiResponse = JITIntrospectApiResponse(
-            statusCode = successStatusCode,
-            challengeType = redirect,
-            continuationToken = continuationToken,
-            error = null,
-            errorDescription = null,
-            methods = methods,
-            errorUri = null,
-            errorCodes = null,
-            correlationId = correlationId
-        )
-        val apiResult = jitIntrospectApiResponse.toResult()
-        if (apiResult is JITIntrospectApiResult.Redirect) {
-            assertEquals(correlationId, apiResult.correlationId)
-        } else {
-            fail("Expected JITIntrospectApiResult.Redirect but got $apiResult")
         }
     }
 
@@ -3511,6 +3489,10 @@ class NativeAuthResponseHandlerTest {
         }
     }
 
+    //endregion
+
+    //region JIT challenge
+
     @Test
     fun testJITChallengeApiSuccessButMissingMandatoryField() {
         val jitChallengeApiResponse = JITChallengeApiResponse(
@@ -3534,31 +3516,6 @@ class NativeAuthResponseHandlerTest {
             assertEquals(correlationId, apiResult.correlationId)
         } else {
             fail("Expected JITChallengeApiResult.UnknownError but got $apiResult")
-        }
-    }
-
-    @Test
-    fun testJITChallengeApiSuccessRedirect() {
-        val jitChallengeApiResponse = JITChallengeApiResponse(
-            statusCode = successStatusCode,
-            challengeType = redirect,
-            continuationToken = continuationToken,
-            error = null,
-            errorDescription = null,
-            errorUri = null,
-            errorCodes = null,
-            bindingMethod = null,
-            challengeChannel = null,
-            challengeTarget = null,
-            codeLength = null,
-            interval = null,
-            correlationId = correlationId
-        )
-        val apiResult = jitChallengeApiResponse.toResult()
-        if (apiResult is JITChallengeApiResult.Redirect) {
-            assertEquals(correlationId, apiResult.correlationId)
-        } else {
-            fail("Expected JITChallengeApiResult.Redirect but got $apiResult")
         }
     }
 
@@ -3619,7 +3576,7 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testJITChallengeApiInvalidRequestWithUnknownErrorCodeIsHandledCorrectly() {
-        val errorCodes = listOf(90100)
+        val errorCodes = listOf(100100)
         val jitChallengeApiResponse = JITChallengeApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
@@ -3675,6 +3632,10 @@ class NativeAuthResponseHandlerTest {
             fail("Expected JITChallengeApiResult.Success but got $apiResult")
         }
     }
+
+    //endregion
+
+    //region JIT continue
 
     @Test
     fun testJITContinueApiInvalidOOBIsHandledCorrectly() {
