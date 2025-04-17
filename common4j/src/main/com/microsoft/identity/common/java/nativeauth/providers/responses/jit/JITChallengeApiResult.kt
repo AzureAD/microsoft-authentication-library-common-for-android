@@ -42,10 +42,20 @@ sealed interface JITChallengeApiResult: ApiResult {
         val codeLength: Int
     ) : JITChallengeApiResult {
         override fun toUnsanitizedString(): String {
-            return "Success(correlationId=$correlationId)"
+            return "Success(correlationId=$correlationId " +
+                    "challengeType=$challengeType, " +
+                    "bindingMethod=$bindingMethod, " +
+                    "challengeTargetLabel=$challengeTargetLabel, " +
+                    "challengeChannel=$challengeChannel, " +
+                    "codeLength=$codeLength)"
         }
 
-        override fun toString(): String = toUnsanitizedString()
+        override fun toString(): String {
+            return "Success(correlationId=$correlationId, " +
+                    "challengeType=$challengeType, " +
+                    "bindingMethod=$bindingMethod, " +
+                    "codeLength=$codeLength)"
+        }
     }
 
     data class InvalidVerificationContact(

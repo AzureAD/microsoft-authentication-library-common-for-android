@@ -53,7 +53,9 @@ class JITChallengeApiResponse(
     override fun toUnsanitizedString(): String {
         return "JITChallengeApiResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId " +
-                "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription)"
+                "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription, " +
+                "challengeType=$challengeType, challengeTarget=$challengeTarget, bindingMethod=$bindingMethod, " +
+                "challengeChannel=$challengeChannel, codeLength=$codeLength)"
     }
 
     override fun toString(): String = "JITChallengeApiResponse(statusCode=$statusCode, " +

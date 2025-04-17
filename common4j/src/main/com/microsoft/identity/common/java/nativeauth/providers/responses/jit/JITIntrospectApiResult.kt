@@ -38,10 +38,13 @@ sealed interface JITIntrospectApiResult: ApiResult {
         val methods: List<AuthenticationMethodApiResult>
     ) : JITIntrospectApiResult {
         override fun toUnsanitizedString(): String {
-            return "Success(correlationId=$correlationId)"
+            return "Success(correlationId=$correlationId, " +
+                    "methods=$methods)"
         }
 
-        override fun toString(): String = toUnsanitizedString()
+        override fun toString(): String {
+            return "Success(correlationId=$correlationId)"
+        }
     }
 
     data class UnknownError(

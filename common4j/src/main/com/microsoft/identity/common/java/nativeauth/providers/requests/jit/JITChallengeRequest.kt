@@ -90,8 +90,12 @@ data class JITChallengeRequest private constructor(
         @SerializedName("challenge_target") val challengeTarget: String,
         @SerializedName("challenge_channel") val challengeChannel: String
     ) : NativeAuthRequestParameters() {
-        override fun toUnsanitizedString(): String = "NativeAuthJITChallengeRequestParameters(clientId=$clientId)"
+        override fun toUnsanitizedString(): String = "NativeAuthJITChallengeRequestParameters(clientId=$clientId, " +
+                "challengeType=$challengeType, " +
+                "challengeTarget=$challengeTarget, " +
+                "challengeChannel=$challengeChannel)"
 
-        override fun toString(): String = toUnsanitizedString()
+        override fun toString(): String = "NativeAuthJITChallengeRequestParameters(clientId=$clientId, " +
+                "challengeType=$challengeType)"
     }
 }

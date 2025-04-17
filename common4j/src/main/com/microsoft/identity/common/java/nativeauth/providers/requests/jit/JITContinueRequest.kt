@@ -86,8 +86,8 @@ data class JITContinueRequest private constructor(
         @SerializedName("grant_type") val grantType: String,
         @SerializedName("oob") val oob: String
     ) : NativeAuthRequestParameters() {
-        override fun toUnsanitizedString(): String = "NativeAuthJITContinueRequestParameters(clientId=$clientId)"
+        override fun toUnsanitizedString(): String = "NativeAuthJITContinueRequestParameters(clientId=$clientId, grantType=$grantType, oob=$oob)"
 
-        override fun toString(): String = toUnsanitizedString()
+        override fun toString(): String = "NativeAuthJITContinueRequestParameters(clientId=$clientId, grantType=$grantType)"
     }
 }

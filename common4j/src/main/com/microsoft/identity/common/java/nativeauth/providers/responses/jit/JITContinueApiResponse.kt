@@ -50,7 +50,7 @@ class JITContinueApiResponse(
     }
 
     override fun toString(): String = "JITContinueAPIResponse(statusCode=$statusCode, " +
-            "correlationId=$correlationId"
+            "correlationId=$correlationId)"
 
     fun toResult(): JITContinueApiResult {
         return when (statusCode) {

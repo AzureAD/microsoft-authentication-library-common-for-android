@@ -51,7 +51,8 @@ class JITIntrospectApiResponse(
     override fun toUnsanitizedString(): String {
         return "JITIntrospectApiResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId " +
-                "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription)"
+                "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription, " +
+                "methods=$methods, challengeType=$challengeType)"
     }
 
     override fun toString(): String = "JITIntrospectApiResponse(statusCode=$statusCode, " +
