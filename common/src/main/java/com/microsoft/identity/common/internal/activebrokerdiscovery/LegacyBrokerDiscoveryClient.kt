@@ -22,33 +22,20 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.activebrokerdiscovery
 
+import android.content.Context
 import com.microsoft.identity.common.internal.broker.BrokerData
-import com.microsoft.identity.common.java.exception.ClientException
 
-interface IBrokerDiscoveryClient {
+/**
+ * An [IBrokerDiscoveryClient] which is based on AccountManager.
+ **/
+class LegacyBrokerDiscoveryClient(val context: Context): IBrokerDiscoveryClient {
 
-    /**
-     * Performs a discovery to figure out which broker app the SDK (MSAL/OneAuth)
-     * has to send its request to.
-     *
-     * @param shouldSkipCache If true, this will skip cached value (if any)
-     *                        and always query the broker for the result.
-     * @return BrokerData package name and signature hash of the targeted app.
-     * **/
-    fun getActiveBroker(shouldSkipCache: Boolean = false) : BrokerData?
+    override fun getActiveBroker(shouldSkipCache: Boolean): BrokerData? {
+        return AccountManagerBrokerDiscoveryUtil(context)
+            .getActiveBrokerFromAccountManager()
+    }
 
-    /**
-     * Force a broker app to figure out which broker app the SDK (MSAL/OneAuth)
-     * has to send its request to.
-     *
-     * This method will ignore the cache values on both SDK and broker side.
-     *
-     * Due to the nature of the method, the Android broker team will limit which app can invoke this method,
-     * and what circumstance it's allowed to do so (e.g. flight enabled for a certain tenant only).
-     * Please consult the Android broker team before use.
-     *
-     * @return BrokerData package name and signature hash of the targeted app.
-     * **/
-    @kotlin.jvm.Throws(ClientException::class)
-    fun forceBrokerRediscovery(brokerCandidate: BrokerData): BrokerData
+    override fun forceBrokerRediscovery(brokerCandidate: BrokerData): BrokerData {
+        throw UnsupportedOperationException("LegacyBrokerDiscoveryClient does not support forceBrokerRediscovery.")
+    }
 }

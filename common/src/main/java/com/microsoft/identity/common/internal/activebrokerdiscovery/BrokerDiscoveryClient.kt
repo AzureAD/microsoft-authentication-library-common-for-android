@@ -73,7 +73,30 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         val dispatcher = Dispatchers.IO.limitedParallelism(10)
 
         const val ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY = "ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY"
-        const val ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY = "ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY"
+        const val ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY =
+            "ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY"
+
+        const val FORCE_TRIGGER_BROKER_DISCOVERY_BUNDLE_KEY =
+            "FORCE_TRIGGER_BROKER_DISCOVERY_BUNDLE_KEY"
+        const val FORCE_TRIGGER_BROKER_DISCOVERY_RESULT_EXECUTED_BUNDLE_KEY =
+            "FORCE_TRIGGER_BROKER_DISCOVERY_RESULT_EXECUTED_BUNDLE_KEY"
+
+        // the broker service is too old and doesn't support this API.
+        const val FORCE_TRIGGER_BROKER_DISCOVERY_RESULT_OPERATION_NOT_SUPPORTED =
+            "OPERATION_NOT_SUPPORTED"
+
+        // the broker service recognizes this API, but the feature is disabled (e.g. behind a flight).
+        const val FORCE_TRIGGER_BROKER_DISCOVERY_RESULT_OPERATION_DISABLED = "OPERATION_DISABLED"
+
+        // the broker app you're communicating to is not installed.
+        const val FORCE_TRIGGER_BROKER_DISCOVERY_PACKAGE_NOT_INSTALLED = "PACKAGE_NOT_INSTALLED"
+
+        // the broker service you're communicating to is not a valid broker app. (e.g. not signed by proper keys)
+        const val FORCE_TRIGGER_BROKER_DISCOVERY_NOT_VALID_BROKER = "NOT_VALID_BROKER"
+
+        // Unexpected error.
+        const val FORCE_TRIGGER_BROKER_DISCOVERY_RESULT_UNEXPECTED_ERROR = "UNEXPECTED_ERROR"
+
         const val ERROR_BUNDLE_KEY = "ERROR_BUNDLE_KEY"
 
         /**
@@ -93,13 +116,15 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
          * @param shouldStopQueryForAWhile  a method which, if invoked, will force [BrokerDiscoveryClient]
          *                                  to skip the IPC discovery process for a while.
          **/
-        internal suspend fun queryFromBroker(brokerCandidates: Set<BrokerData>,
-                                             ipcStrategy: IIpcStrategy,
-                                             isPackageInstalled: (BrokerData) -> Boolean,
-                                             isValidBroker: (BrokerData) -> Boolean
+        internal suspend fun queryFromBroker(
+            brokerCandidates: Set<BrokerData>,
+            ipcStrategy: IIpcStrategy,
+            isPackageInstalled: (BrokerData) -> Boolean,
+            isValidBroker: (BrokerData) -> Boolean
         ): BrokerData? {
             return coroutineScope {
-                val installedCandidates = brokerCandidates.filter(isPackageInstalled).filter(isValidBroker)
+                val installedCandidates =
+                    brokerCandidates.filter(isPackageInstalled).filter(isValidBroker)
                 val deferredResults = installedCandidates.map { candidate ->
                     async(dispatcher) {
                         return@async makeRequest(candidate, ipcStrategy)
@@ -109,8 +134,10 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
             }
         }
 
-        private fun makeRequest(candidate: BrokerData,
-                                ipcStrategy: IIpcStrategy): BrokerData? {
+        private fun makeRequest(
+            candidate: BrokerData,
+            ipcStrategy: IIpcStrategy
+        ): BrokerData? {
             val methodTag = "$TAG:makeRequest"
             val operationBundle = BrokerOperationBundle(
                 BrokerOperationBundle.Operation.BROKER_DISCOVERY_FROM_SDK,
@@ -120,19 +147,26 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
 
             return try {
                 val result = ipcStrategy.communicateToBroker(operationBundle)
-                extractResult(result)
+                extractResult(result, forceTriggerDiscoveryFlow = false)
             } catch (t: Throwable) {
                 if (t is BrokerCommunicationException &&
-                    BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE == t.category) {
-                    Logger.info(methodTag,
-                        "Tried broker discovery on ${candidate}. It doesn't support the IPC mechanism.")
-                } else if (t is ClientException && ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE == t.errorCode){
-                    Logger.info(methodTag,
+                    BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE == t.category
+                ) {
+                    Logger.info(
+                        methodTag,
+                        "Tried broker discovery on ${candidate}. It doesn't support the IPC mechanism."
+                    )
+                } else if (t is ClientException && ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE == t.errorCode) {
+                    Logger.info(
+                        methodTag,
                         "Tried broker discovery on ${candidate}. " +
-                                "The Broker side indicates that only AccountManager is supported.")
+                                "The Broker side indicates that only AccountManager is supported."
+                    )
                 } else {
-                    Logger.error(methodTag,
-                        "Tried broker discovery on ${candidate}, get an error", t)
+                    Logger.error(
+                        methodTag,
+                        "Tried broker discovery on ${candidate}, get an error", t
+                    )
                 }
                 null
             }
@@ -142,7 +176,8 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
          * Extract the result returned via the IPC operation
          **/
         @Throws(NoSuchElementException::class)
-        private fun extractResult(bundle: Bundle?): BrokerData? {
+        private fun extractResult(bundle: Bundle?,
+                                  forceTriggerDiscoveryFlow: Boolean): BrokerData? {
             if (bundle == null) {
                 return null
             }
@@ -152,11 +187,20 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                 throw errorData as Throwable
             }
 
-            val pkgName = bundle.getString(ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY)?:
-                throw NoSuchElementException("ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY must not be null")
+            if (forceTriggerDiscoveryFlow &&
+                !bundle.containsKey(FORCE_TRIGGER_BROKER_DISCOVERY_RESULT_EXECUTED_BUNDLE_KEY)) {
+                throw ClientException(
+                    FORCE_TRIGGER_BROKER_DISCOVERY_RESULT_OPERATION_NOT_SUPPORTED,
+                    "Force Broker Discovery is not supported by the broker side. Please update the app."
+                )
+            }
 
-            val signatureHash = bundle.getString(ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY)?:
-                throw NoSuchElementException("ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY must not be null")
+            val pkgName = bundle.getString(ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY)
+                ?: throw NoSuchElementException("ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY must not be null")
+
+            val signatureHash =
+                bundle.getString(ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY)
+                    ?: throw NoSuchElementException("ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY must not be null")
 
             return BrokerData(pkgName, signatureHash)
         }
@@ -164,7 +208,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
 
     constructor(context: Context,
                 components: IPlatformComponents,
-                cache: IClientActiveBrokerCache): this(
+                cache: IClientActiveBrokerCache) : this(
         brokerCandidates = BrokerData.getKnownBrokerApps(),
         getActiveBrokerFromAccountManager = {
             AccountManagerBrokerDiscoveryUtil(context).getActiveBrokerFromAccountManager()
@@ -172,12 +216,62 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         ipcStrategy = ContentProviderStrategy(context, components),
         cache = cache,
         isPackageInstalled = { brokerData ->
-            PackageHelper(context).
-            isPackageInstalledAndEnabled(brokerData.packageName)
+            PackageHelper(context).isPackageInstalledAndEnabled(brokerData.packageName)
         },
         isValidBroker = { brokerData ->
             BrokerValidator(context).isSignedByKnownKeys(brokerData)
         })
+
+    @kotlin.jvm.Throws(ClientException::class)
+    override fun forceBrokerRediscovery(brokerCandidate: BrokerData): BrokerData {
+        val methodTag = "$TAG:forceBrokerRediscovery"
+        return runBlocking {
+            classLevelLock.withLock {
+                try {
+                    if (!isPackageInstalled(brokerCandidate)) {
+                        throw ClientException(
+                            FORCE_TRIGGER_BROKER_DISCOVERY_PACKAGE_NOT_INSTALLED,
+                            "${brokerCandidate.packageName} is not installed."
+                        )
+                    }
+
+                    if (!isValidBroker(brokerCandidate)) {
+                        throw ClientException(
+                            FORCE_TRIGGER_BROKER_DISCOVERY_NOT_VALID_BROKER,
+                            "${brokerCandidate.packageName} is not signed with valid key."
+                        )
+                    }
+
+                    val operationBundle = BrokerOperationBundle(
+                        BrokerOperationBundle.Operation.BROKER_DISCOVERY_FROM_SDK,
+                        brokerCandidate.packageName,
+                        Bundle().apply {
+                            putBoolean(FORCE_TRIGGER_BROKER_DISCOVERY_BUNDLE_KEY, true)
+                        }
+                    )
+
+                    val bundleResult = ipcStrategy.communicateToBroker(operationBundle)
+                    val result = extractResult(bundleResult, forceTriggerDiscoveryFlow = true)
+                        ?: throw ClientException(
+                            FORCE_TRIGGER_BROKER_DISCOVERY_RESULT_UNEXPECTED_ERROR,
+                            "Result bundle should not be null."
+                        )
+                    cache.setCachedActiveBroker(result)
+                    return@runBlocking result
+                } catch (c: ClientException) {
+                    Logger.error(methodTag, "forceBrokerRediscovery Failed.", c)
+                    throw c
+                } catch (t: Throwable) {
+                    Logger.error(methodTag, "forceBrokerRediscovery Failed with unknown error.", t)
+                    throw ClientException(
+                        FORCE_TRIGGER_BROKER_DISCOVERY_RESULT_UNEXPECTED_ERROR,
+                        "Unexpected result: ${t.message}",
+                        t
+                    )
+                }
+            }
+        }
+    }
 
     override fun getActiveBroker(shouldSkipCache: Boolean): BrokerData? {
         return runBlocking {
