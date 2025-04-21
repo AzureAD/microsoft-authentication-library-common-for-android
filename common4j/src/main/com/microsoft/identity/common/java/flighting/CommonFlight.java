@@ -98,7 +98,12 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable the attachment of PRT header in cross cloud requests. Default is true.
      */
-    ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD("EnableAttachPrtHeaderWhenCrossCloud", true);
+    ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD("EnableAttachPrtHeaderWhenCrossCloud", true),
+
+    /**
+     * Flight to enable the new key generation spec for wrap key v2. Default is true.
+     */
+    ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_2("EnableNewKeyGenSpecForWrap2", true);
     private String key;
     private Object defaultValue;
     CommonFlight(@NonNull String key, @NonNull Object defaultValue) {
