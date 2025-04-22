@@ -32,6 +32,7 @@ import android.security.keystore.KeyProperties;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
+import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -286,6 +287,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                 } catch (final Throwable e) {
                     span.setAttribute(AttributeName.keypair_gen_exception.name(), e.getClass().getSimpleName());
                     span.recordException(e);
+                    throw ExceptionAdapter.clientExceptionFromException(e);
                 } finally {
                     span.end();
                 }
