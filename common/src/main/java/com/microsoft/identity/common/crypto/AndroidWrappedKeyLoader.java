@@ -24,6 +24,7 @@ package com.microsoft.identity.common.crypto;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.security.KeyPairGeneratorSpec;
 import android.security.keystore.KeyGenParameterSpec;
@@ -258,8 +259,11 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
          */
         KeyPair keyPair = AndroidKeyStoreUtil.readKey(mAlias);
         if (keyPair == null) {
-            Logger.info(methodTag, "No existing keypair. Generating a new one.");
-            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_2)) {
+            final SharedPreferences preferences = mContext.getSharedPreferences(mAlias, Context.MODE_PRIVATE);
+            final boolean useNewKeyGenSpecForWrap2 = preferences.getBoolean("EnableNewKeyGenSpecForWrap2", false);
+            Logger.info(methodTag, "No existing keypair. Generating a new one. Preference value: " + useNewKeyGenSpecForWrap2);
+            preferences.edit().putBoolean("EnableNewKeyGenSpecForWrap2", !useNewKeyGenSpecForWrap2).apply();
+            if (useNewKeyGenSpecForWrap2) {
                 Logger.info(methodTag, "Using EnableNewKeyGenSpecForWrap2 for keypair generation.");
                 final Span span = OTelUtility.createSpanFromParent(SpanName.KeyPairGeneration.name(), SpanExtension.current().getSpanContext());
                 try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
