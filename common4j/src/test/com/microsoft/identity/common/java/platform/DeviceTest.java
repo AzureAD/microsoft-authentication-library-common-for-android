@@ -51,10 +51,11 @@ public class DeviceTest {
     public void testGetDataWhenMetadataIsNotSet(){
         // Shouldn't crash.
         final Map<String, String> platformParameter = Device.getPlatformIdParameters();
-        Assert.assertEquals(3, platformParameter.size());
+        Assert.assertEquals(4, platformParameter.size());
         Assert.assertEquals(NOT_SET, platformParameter.get(Device.PlatformIdParameters.CPU_PLATFORM));
         Assert.assertEquals(NOT_SET, platformParameter.get(Device.PlatformIdParameters.DEVICE_MODEL));
         Assert.assertEquals(NOT_SET, platformParameter.get(Device.PlatformIdParameters.OS));
+        Assert.assertEquals(NOT_SET, platformParameter.get(Device.PlatformIdParameters.MANUFACTURER));
 
         Assert.assertEquals(NOT_SET, Device.getManufacturer());
         Assert.assertEquals(NOT_SET, Device.getModel());
@@ -66,10 +67,11 @@ public class DeviceTest {
         Device.setDeviceMetadata(new MockDeviceMetadata());
 
         final Map<String, String> platformParameter = Device.getPlatformIdParameters();
-        Assert.assertEquals(3, platformParameter.size());
+        Assert.assertEquals(4, platformParameter.size());
         Assert.assertEquals(MockDeviceMetadata.TEST_CPU, platformParameter.get(Device.PlatformIdParameters.CPU_PLATFORM));
         Assert.assertEquals(MockDeviceMetadata.TEST_DEVICE_MODEL, platformParameter.get(Device.PlatformIdParameters.DEVICE_MODEL));
         Assert.assertEquals(MockDeviceMetadata.TEST_OS_ESTS, platformParameter.get(Device.PlatformIdParameters.OS));
+        Assert.assertEquals(MockDeviceMetadata.TEST_MANUFACTURER, platformParameter.get(Device.PlatformIdParameters.MANUFACTURER));
     }
 
     @Test
