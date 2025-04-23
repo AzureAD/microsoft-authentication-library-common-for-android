@@ -158,21 +158,27 @@ public class AndroidPlatformComponentsFactory {
      * @return true if called in personal profile and a work profile managed by clouddpc exists, false otherwise
      */
     public static boolean checkIfIsInPersonalProfileButClouddpcWorkProfileAvailable(@NonNull final Context context) {
-        Intent intent = new Intent("com.google.android.apps.work.clouddpc.ACTION_DETECT_WORK_PROFILE");
-        List<ResolveInfo> activities = context.getPackageManager().queryIntentActivities(intent, 0);
+        try {
+            Intent intent = new Intent("com.google.android.apps.work.clouddpc.ACTION_DETECT_WORK_PROFILE");
+            List<ResolveInfo> activities = context.getPackageManager().queryIntentActivities(intent, 0);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            return activities.stream()
-                    .anyMatch(
-                            (ResolveInfo resolveInfo) -> resolveInfo.isCrossProfileIntentForwarderActivity());
-        } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 return activities.stream()
                         .anyMatch(
-                                (ResolveInfo resolveInfo) -> resolveInfo.activityInfo.name.equals("com.android.internal.app.ForwardIntentToManagedProfile"));
+                                (ResolveInfo resolveInfo) -> resolveInfo.isCrossProfileIntentForwarderActivity());
+            } else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    return activities.stream()
+                            .anyMatch(
+                                    (ResolveInfo resolveInfo) -> resolveInfo.activityInfo.name.equals("com.android.internal.app.ForwardIntentToManagedProfile"));
+                }
             }
-        }
 
-        return false;
+            return false;
+        } catch (Exception e) {
+            // If we run into exception for any reason, we'll just return false
+            Logger.warn(TAG, "Received an exception while trying to check if clouddpc work profile is available: " + e.getMessage());
+            return false;
+        }
     }
 }
