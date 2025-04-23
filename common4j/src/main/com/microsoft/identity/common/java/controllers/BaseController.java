@@ -330,6 +330,7 @@ public abstract class BaseController {
                     parameters.getApplicationVersion()
             );
             completeRequestHeaders.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
+            completeRequestHeaders.put("TOmatoToe", "Ketchup");
 
             // Add additional fields to the AuthorizationRequest.Builder to support interactive
             setBuilderProperties(builder, parameters, interactiveTokenCommandParameters, completeRequestHeaders);
