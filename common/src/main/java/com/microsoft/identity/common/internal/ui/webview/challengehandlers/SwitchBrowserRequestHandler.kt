@@ -31,8 +31,15 @@ import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl
 import com.microsoft.identity.common.java.browser.IBrowserSelector
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension
+import com.microsoft.identity.common.java.opentelemetry.SpanName
 import com.microsoft.identity.common.java.ui.BrowserDescriptor
 import com.microsoft.identity.common.logging.Logger
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanContext
+import io.opentelemetry.api.trace.StatusCode
 
 /**
  * SwitchBrowserRequestHandler is a challenge handler for SwitchBrowserChallenge.
@@ -42,9 +49,13 @@ class SwitchBrowserRequestHandler(
     private val activity: Activity,
     private val context: Context,
     private val customTabsManager: CustomTabsManager,
-    private val browserSelector: IBrowserSelector
+    private val browserSelector: IBrowserSelector,
+    private val spanContext: SpanContext?
 ) : IChallengeHandler<SwitchBrowserChallenge, Unit> {
 
+    val span: Span by lazy {
+        OTelUtility.createSpanFromParent(SpanName.SwitchBrowserProcess.name, spanContext)
+    }
 
     var isChallengeHandled: Boolean = false
         private set
@@ -53,11 +64,12 @@ class SwitchBrowserRequestHandler(
         private val TAG = SwitchBrowserRequestHandler::class.simpleName
     }
 
-    constructor(activity: Activity) : this(
+    constructor(activity: Activity, spanContext: SpanContext?) : this(
         activity,
         activity.applicationContext,
         CustomTabsManager(activity.applicationContext),
-        AndroidBrowserSelector(activity.applicationContext)
+        AndroidBrowserSelector(activity.applicationContext),
+        spanContext
     )
 
     /**
@@ -69,49 +81,68 @@ class SwitchBrowserRequestHandler(
      */
     @Throws(ClientException::class)
     override fun processChallenge(switchBrowserChallenge: SwitchBrowserChallenge) {
-        val methodTag = "$TAG:processChallenge"
+        SpanExtension.makeCurrentSpan(span).use {
+            val methodTag = "$TAG:processChallenge"
 
-        // Select a browser to handle the switch browser challenge
-        val browser = browserSelector.selectBrowser(
-            BrowserDescriptor.getBrowserSafeListForSwitchBrowser(),
-            null
-        )
-        if (browser == null) {
-            val exception = ClientException(
-                ClientException.NO_BROWSERS_AVAILABLE,
-                "No browser found for SwitchBrowserChallenge."
+            // Select a browser to handle the switch browser challenge
+            val browser = browserSelector.selectBrowser(
+                BrowserDescriptor.getBrowserSafeListForSwitchBrowser(),
+                null
             )
-            Logger.error(
-                methodTag,
-                "No browser found for SwitchBrowserChallenge.",
-                exception
-            )
-            throw exception
-        }
-
-        // Create an intent to launch the browser
-        val browserIntent: Intent
-        if (browser.isCustomTabsServiceSupported) {
-            Logger.info(methodTag, "CustomTabsService is supported.")
-            //create customTabsIntent
-            if (!customTabsManager.bind(context, browser.packageName)) {
-                Logger.warn(methodTag, "Failed to bind CustomTabsService.")
-                browserIntent = Intent(Intent.ACTION_VIEW)
-            } else {
-                browserIntent = customTabsManager.customTabsIntent.intent
+            if (browser == null) {
+                val exception = ClientException(
+                    ClientException.NO_BROWSERS_AVAILABLE,
+                    "No browser found for SwitchBrowserChallenge."
+                )
+                Logger.error(
+                    methodTag,
+                    "No browser found for SwitchBrowserChallenge.",
+                    exception
+                )
+                span.setStatus(StatusCode.ERROR)
+                span.recordException(exception)
+                span.end()
+                throw exception
             }
-        } else {
-            Logger.warn(methodTag, "CustomTabsService is NOT supported")
-            browserIntent = Intent(Intent.ACTION_VIEW)
+
+            // Create an intent to launch the browser
+            val browserIntent: Intent
+            if (browser.isCustomTabsServiceSupported) {
+                Logger.info(methodTag, "CustomTabsService is supported.")
+                //create customTabsIntent
+                if (!customTabsManager.bind(context, browser.packageName)) {
+                    Logger.warn(methodTag, "Failed to bind CustomTabsService.")
+                    browserIntent = Intent(Intent.ACTION_VIEW)
+                } else {
+                    browserIntent = customTabsManager.customTabsIntent.intent
+                }
+            } else {
+                Logger.warn(methodTag, "CustomTabsService is NOT supported")
+                browserIntent = Intent(Intent.ACTION_VIEW)
+            }
+            Logger.info(
+                methodTag,
+                "Launching switch browser request on browser: ${browser.packageName}"
+            )
+            browserIntent.setPackage(browser.packageName)
+            browserIntent.setData(switchBrowserChallenge.uri)
+            activity.startActivity(browserIntent)
+            isChallengeHandled = true
+            span.setAttribute(
+                AttributeName.is_switch_browser_request_handled.name,
+                isChallengeHandled
+            )
+            span.setAttribute(
+                AttributeName.browser_package_name.name,
+                browser.packageName
+            )
+            span.setAttribute(
+                AttributeName.is_custom_tabs_supported.name,
+                browser.isCustomTabsServiceSupported
+            )
+            span.setStatus(StatusCode.OK)
+            span.end()
         }
-        Logger.info(
-            methodTag,
-            "Launching switch browser request on browser: ${browser.packageName}"
-        )
-        browserIntent.setPackage(browser.packageName)
-        browserIntent.setData(switchBrowserChallenge.uri)
-        activity.startActivity(browserIntent)
-        isChallengeHandled = true
     }
 
     /**
