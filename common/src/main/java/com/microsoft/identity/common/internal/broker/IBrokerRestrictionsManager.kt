@@ -47,6 +47,7 @@ interface IBrokerRestrictionsManager {
          * @param booleanKeys Keys to be requested from the app restrictions manager.
          * @return Bundle with the keys to be requested from the app restrictions manager.
          */
+        @JvmStatic
         @JvmOverloads
         fun buildMultiValueRequest(stringKeys: Set<String>? = null, booleanKeys: Set<String>? = null): Bundle {
             val stringList = stringKeys?.let { ArrayList(it) }
