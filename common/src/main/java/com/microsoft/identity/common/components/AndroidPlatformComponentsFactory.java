@@ -24,9 +24,6 @@ package com.microsoft.identity.common.components;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.ResolveInfo;
-import android.os.Build;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -39,6 +36,7 @@ import com.microsoft.identity.common.internal.platform.AndroidPlatformUtil;
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidTaskStateGenerator;
 import com.microsoft.identity.common.internal.ui.AndroidAuthorizationStrategyFactory;
 import com.microsoft.identity.common.internal.ui.browser.AndroidBrowserSelector;
+import com.microsoft.identity.common.internal.util.WorkProfileUtil;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.PlatformComponents;
@@ -47,7 +45,6 @@ import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.File;
-import java.util.List;
 
 import lombok.NonNull;
 
@@ -73,7 +70,8 @@ public class AndroidPlatformComponentsFactory {
             Device.setDeviceMetadata(new AndroidDeviceMetadata());
 
             // Denotes whether or not request is from personal profile but device has a Work Profile Available
-            Device.setIsInPersonalProfileButClouddpcWorkProfileAvailable(checkIfIsInPersonalProfileButClouddpcWorkProfileAvailable(context));
+            Device.setIsInPersonalProfileButClouddpcWorkProfileAvailable(
+                    WorkProfileUtil.checkIfIsInPersonalProfileButClouddpcWorkProfileAvailable(context));
             Logger.setAndroidLogger();
 
             final File cacheDir = context.getCacheDir();
@@ -147,38 +145,6 @@ public class AndroidPlatformComponentsFactory {
                                     .browserSelector(new AndroidBrowserSelector(context))
                                     .build())
                     .stateGenerator(new AndroidTaskStateGenerator(activity.getTaskId()));
-        }
-    }
-
-    /**
-     * Helper method to check if we are in personal profile but a work profile managed by clouddpc
-     * is available. Google Docs for intent used:
-     * https://developers.google.com/android/management/work-profile-detection#detect_if_the_device_has_a_work_profile
-     * @param context context needed to check for intent
-     * @return true if called in personal profile and a work profile managed by clouddpc exists, false otherwise
-     */
-    public static boolean checkIfIsInPersonalProfileButClouddpcWorkProfileAvailable(@NonNull final Context context) {
-        try {
-            Intent intent = new Intent("com.google.android.apps.work.clouddpc.ACTION_DETECT_WORK_PROFILE");
-            List<ResolveInfo> activities = context.getPackageManager().queryIntentActivities(intent, 0);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                return activities.stream()
-                        .anyMatch(
-                                (ResolveInfo resolveInfo) -> resolveInfo.isCrossProfileIntentForwarderActivity());
-            } else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    return activities.stream()
-                            .anyMatch(
-                                    (ResolveInfo resolveInfo) -> resolveInfo.activityInfo.name.equals("com.android.internal.app.ForwardIntentToManagedProfile"));
-                }
-            }
-
-            return false;
-        } catch (Exception e) {
-            // If we run into exception for any reason, we'll just return false
-            Logger.warn(TAG, "Received an exception while trying to check if clouddpc work profile is available: " + e.getMessage());
-            return false;
         }
     }
 }

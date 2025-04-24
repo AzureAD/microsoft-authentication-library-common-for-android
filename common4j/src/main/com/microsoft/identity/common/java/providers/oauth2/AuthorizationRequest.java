@@ -92,10 +92,6 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     @SerializedName("brk_client_id")
     private final String mBrkClientId;
 
-    @Expose()
-    @SerializedName("temp-param")
-    private final String mTempParam = "Temporary";
-
     /**
      * Redirect URL of the hub app.
      */
