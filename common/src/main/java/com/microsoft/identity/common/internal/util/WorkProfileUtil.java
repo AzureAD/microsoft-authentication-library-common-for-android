@@ -45,8 +45,8 @@ public class WorkProfileUtil {
      */
     public static boolean checkIfIsInPersonalProfileButClouddpcWorkProfileAvailable(@NonNull final Context context) {
         try {
-            Intent intent = new Intent("com.google.android.apps.work.clouddpc.ACTION_DETECT_WORK_PROFILE");
-            List<ResolveInfo> activities = context.getPackageManager().queryIntentActivities(intent, 0);
+            final Intent intent = new Intent("com.google.android.apps.work.clouddpc.ACTION_DETECT_WORK_PROFILE");
+            final List<ResolveInfo> activities = context.getPackageManager().queryIntentActivities(intent, 0);
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 return activities.stream()

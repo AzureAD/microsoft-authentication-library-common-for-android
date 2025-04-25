@@ -89,7 +89,7 @@ public class Device {
     }
 
     @GuardedBy("sLock")
-    public static boolean getIsInPersonalProfileButClouddpcWorkProfileAvailable() {
+    public static boolean isInPersonalProfileButClouddpcWorkProfileAvailable() {
         sLock.readLock().lock();
         try {
             return sIsInPersonalProfileButClouddpcWorkProfileAvailable;
