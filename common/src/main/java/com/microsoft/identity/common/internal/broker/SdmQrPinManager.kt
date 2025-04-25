@@ -36,19 +36,27 @@ import com.microsoft.identity.common.logging.Logger
  */
 object SdmQrPinManager {
 
-    const val TAG = "SdmQrPinManager"
+    private const val TAG = "SdmQrPinManager"
+    private const val SIX_HOURS_IN_SECONDS = 21600L
 
     /**
      * This is a flag to indicate if the device is on SDM QR PIN mode.
      * If this is true, the device should prompt the user for camera consent.
      */
     var isDeviceOnSdmQrPinAuth = false
+        private set
 
     /**
      * This is a flag to indicate if the camera consent should be suppressed.
      * If this is true, the device should not prompt the user for camera consent.
      */
     var isCameraConsentSuppressed = false
+        private set
+
+    /**
+     * This variable is used to store the last update time of the SDM QR PIN manager.
+     */
+    private var lastUpdateTime: Long = 0L
 
     /**
      * This method initializes the SDM QR PIN manager by checking the broker restrictions manager.
@@ -60,19 +68,45 @@ object SdmQrPinManager {
      */
     fun initializeSdmQrPinManager(brokerRestrictionsManager: IBrokerRestrictionsManager) {
         Logger.info(TAG, "Initializing SDM QR PIN manager.")
-        val multiValueRequest  = buildMultiValueRequest(
+        if (!needsUpdate()) {
+            Logger.info(TAG, "SDM QR PIN manager is already initialized.")
+            return
+        }
+        val multiValueRequest = buildMultiValueRequest(
             booleanKeys = setOf(SUPPRESS_CAMERA_CONSENT),
             stringKeys = setOf(PREFERRED_AUTH_CONFIG)
         )
         val multiValues = brokerRestrictionsManager.getMultiValues(
-            brokerAppPackageName =  BrokerData.prodMicrosoftAuthenticator.packageName,
+            brokerAppPackageName = BrokerData.prodMicrosoftAuthenticator.packageName,
             bundleOfKeys = multiValueRequest
         )
-        val preferredAuthConfig  = multiValues.getString(PREFERRED_AUTH_CONFIG)
-        if (preferredAuthConfig  != null && preferredAuthConfig  == PreferredAuthMethod.QR.value) {
+        val preferredAuthConfig = multiValues.getString(PREFERRED_AUTH_CONFIG)
+        if (preferredAuthConfig != null && preferredAuthConfig == PreferredAuthMethod.QR.value) {
             isDeviceOnSdmQrPinAuth = true
         }
         isCameraConsentSuppressed = multiValues.getBoolean(SUPPRESS_CAMERA_CONSENT)
-        Logger.info(TAG, "isDeviceOnSdmQrPinAuth: $isDeviceOnSdmQrPinAuth, isCameraConsentSuppressed: $isCameraConsentSuppressed")
+        Logger.info(
+            TAG,
+            "isDeviceOnSdmQrPinAuth: $isDeviceOnSdmQrPinAuth, isCameraConsentSuppressed: $isCameraConsentSuppressed"
+        )
+    }
+
+    /**
+     * This method checks if the SDM QR PIN manager needs to be updated.
+     * It checks if the last update time is more than 6 hours ago.
+     *
+     * @return true if the SDM QR PIN manager needs to be updated, false otherwise.
+     */
+    private fun needsUpdate(): Boolean {
+        val methodTag = "$TAG:needsUpdate"
+        val currentTime = System.currentTimeMillis() / 1000 // current time in seconds
+        return if (currentTime - lastUpdateTime >= SIX_HOURS_IN_SECONDS) {
+            Logger.info(methodTag, "SDM QR PIN manager needs update.")
+            lastUpdateTime = currentTime
+            true
+        } else {
+            Logger.info(methodTag, "Update skipped: less than 6 hours since last update.")
+            false
+        }
     }
 }
