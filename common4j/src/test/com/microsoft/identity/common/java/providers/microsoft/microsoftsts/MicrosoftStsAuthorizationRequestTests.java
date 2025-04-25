@@ -206,6 +206,7 @@ public class MicrosoftStsAuthorizationRequestTests {
                 request.getAuthorizationRequestAsHttpRequest().toString());
 
         Assert.assertEquals(DEFAULT_TEST_DISPLAYABLEID, request.getDisplayableId());
+        Device.setIsInPersonalProfileButClouddpcWorkProfileAvailable(false);
     }
 
     @Test(expected = IllegalStateException.class)

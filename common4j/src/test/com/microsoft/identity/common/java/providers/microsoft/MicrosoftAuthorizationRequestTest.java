@@ -128,6 +128,8 @@ public class MicrosoftAuthorizationRequestTest {
                         "&response_type=code" +
                         "&state=" + MOCK_STATE_ENCODED,
                 request.getAuthorizationRequestAsHttpRequest().toString());
+
+        Device.setIsInPersonalProfileButClouddpcWorkProfileAvailable(false);
     }
 
     // If state is not provided, MicrosoftAuthorizationRequest should generate a default one.
