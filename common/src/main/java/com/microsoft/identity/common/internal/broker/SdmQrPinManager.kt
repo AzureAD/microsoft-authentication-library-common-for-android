@@ -38,7 +38,7 @@ import com.microsoft.identity.common.logging.Logger
  *
  * It is initialized each time `GetPreferredAuthMethodMsalBrokerOperation` is called,
  * since apps always contact the broker to get the preferred authentication method
- * before starting the authentication flow.
+ * before starting the QR + PIN authentication flow.
  *
  * Note: If this object is not initialized, both flags default to `false`,
  * meaning the device is not in SDM QR PIN mode.
