@@ -50,15 +50,17 @@ class SwitchBrowserProtocolCoordinatorTest {
         doNothing().`when`(mockSwitchBrowserRequestHandler).resetChallengeState()
         val code = "switch_browser_code"
         val actionUrl = "test.example.com/switchbrowser/path"
+        val state = "123"
         val extras = Bundle().apply {
             putString(SWITCH_BROWSER.CODE, code)
             putString(SWITCH_BROWSER.ACTION_URI, actionUrl)
+            putString(SWITCH_BROWSER.STATE, state)
         }
         // Create an instance of SwitchBrowserProtocolCoordinator
         val coordinator = SwitchBrowserProtocolCoordinator(mockSwitchBrowserRequestHandler)
 
         // Call the method to be tested
-        coordinator.processSwitchBrowserResume(extras) { uri, headers ->
+        coordinator.processSwitchBrowserResume("https://auth.com?state=$state",extras) { uri, headers ->
             // Verify the resume URI
             Assert.assertEquals(actionUrl, uri.host + uri.path)
             Assert.assertEquals(code, headers[AUTHORIZATION])
@@ -78,13 +80,13 @@ class SwitchBrowserProtocolCoordinatorTest {
 
         val exception = Assert.assertThrows(ClientException::class.java) {
             // Call the method to be tested
-            coordinator.processSwitchBrowserResume(extras) { _, _ ->
+            coordinator.processSwitchBrowserResume("",extras) { _, _ ->
                 // This block should not be executed
                 Assert.fail()
             }
         }
         Assert.assertEquals(ClientException.MISSING_PARAMETER, exception.errorCode)
-        Assert.assertEquals("Action URI is null/empty: true, code is null/empty: true", exception.message)
+        Assert.assertEquals("Action URI is null/empty: true, code is null/empty: true, state is null/empty: true", exception.message)
     }
 
     @Test

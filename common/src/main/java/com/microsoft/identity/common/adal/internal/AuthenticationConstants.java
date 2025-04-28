@@ -560,6 +560,10 @@ public final class AuthenticationConstants {
          */
         public static final String ACTION_URI = "action_uri";
 
+        /**
+         * String Query parameter key for the state blob.
+         */
+        public static final String STATE = "state";
     }
 
     /**

@@ -38,13 +38,15 @@ class SwitchBrowserUriHelperTest {
     companion object {
         private const val CODE = "your-switch-browser-code"
         private const val ACTION_URI = "login.microsoftonline.com/switchbrowser/process"
+        private const val STATE = "123"
     }
 
     @Test
     fun `test constructFromRedirectUri with valid redirect uri`() {
         val redirectString = "${Broker.NEW_BROKER_REDIRECT_URI}?" +
                 "${SWITCH_BROWSER.CODE}=$CODE&" +
-                "${SWITCH_BROWSER.ACTION_URI}=$ACTION_URI"
+                "${SWITCH_BROWSER.ACTION_URI}=$ACTION_URI&" +
+                "${SWITCH_BROWSER.STATE}=$STATE"
         val redirectUri = Uri.parse(redirectString)
 
         val switchBrowserProcessUri = SwitchBrowserUriHelper.buildProcessUri(redirectUri)
@@ -95,12 +97,41 @@ class SwitchBrowserUriHelperTest {
     @Test
     fun `test buildResumeUri valid params`() {
         val uri = SwitchBrowserUriHelper.buildResumeUri(
-            ACTION_URI
+            ACTION_URI, STATE
         )
         Assert.assertNotNull(uri)
         Assert.assertEquals(
             ACTION_URI,
             uri.host + uri.path
+        )
+        Assert.assertEquals(
+            STATE,
+            uri.getQueryParameter(SWITCH_BROWSER.STATE)
+        )
+    }
+
+    @Test
+    fun `test states match`() {
+        SwitchBrowserUriHelper.statesMatch(
+            "https://example.auth.com/path?${SWITCH_BROWSER.STATE}=$STATE", STATE
+        )
+    }
+
+    @Test
+    fun `test states don't match`() {
+        val exception = Assert.assertThrows(
+            ClientException::class.java) {
+            SwitchBrowserUriHelper.statesMatch(
+                "https://example.auth.com/path?${SWITCH_BROWSER.STATE}=$STATE", "error"
+            )
+        }
+        Assert.assertEquals(
+            ClientException.STATE_MISMATCH,
+            exception.errorCode
+        )
+        Assert.assertEquals(
+            "State does not match with the auth request state.",
+            exception.message
         )
     }
 }

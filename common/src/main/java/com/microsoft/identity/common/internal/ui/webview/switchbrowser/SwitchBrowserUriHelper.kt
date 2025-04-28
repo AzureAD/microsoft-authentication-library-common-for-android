@@ -24,9 +24,10 @@ package com.microsoft.identity.common.internal.ui.webview.switchbrowser
 
 import android.net.Uri
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
-import com.microsoft.identity.common.java.AuthenticationConstants.OAuth2
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.logging.Logger
+import io.opentelemetry.api.trace.StatusCode
 
 /**
  * SwitchBrowserUriHelper is a helper class to build URIs for the switch browser challenge.
@@ -69,11 +70,85 @@ object SwitchBrowserUriHelper {
             Logger.error(methodTag, errorMessage, exception)
             throw exception
         }
+        val state = uri.getQueryParameter(
+            SWITCH_BROWSER.STATE
+        )
+        if (state.isNullOrEmpty()) {
+            // This should never happen, but if it does, we should log it and throw.
+            val errorMessage = "switch browser action state is null or empty"
+            val exception = ClientException(ClientException.MALFORMED_URL, errorMessage)
+            Logger.error(methodTag, errorMessage, exception)
+            throw exception
+        }
         // Query parameters for the process uri.
         val queryParams = hashMapOf<String, String>()
         queryParams[SWITCH_BROWSER.CODE] = code
+        queryParams[SWITCH_BROWSER.STATE] = state
         // Construct the uri to the process endpoint.
         return buildSwitchBrowserUri(actionUri, queryParams)
+    }
+
+    /**
+     * Build the resume uri for the switch browser challenge.
+     *
+     * @param actionUri The action uri to be opened.
+     * @param state The state to be included in the switch browser uri.
+     *
+     * @return The resume uri constructed from the bundle.
+     * e.g. actionUri
+     */
+    fun buildResumeUri(actionUri: String, state: String): Uri {
+        // Construct the uri to the resume endpoint.
+        val queryParams = hashMapOf(SWITCH_BROWSER.STATE to state)
+        return buildSwitchBrowserUri(actionUri, queryParams)
+    }
+
+    /**
+     * Check if the url is a switch browser redirect url
+     *
+     * The request is considered "switch_browser" if the URL
+     * starts with the following pattern: {redirectUrl}/{switchBrowserPath}
+     *
+     * @param url The URL to be checked.
+     * @param redirectUrl The redirect URL to be checked against.
+     * @param switchBrowserPath The path to be checked against.
+     * @return True if the request matches the pattern, false otherwise.
+     */
+    fun isSwitchBrowserRedirectUrl(url: String?, redirectUrl: String, switchBrowserPath: String): Boolean {
+        if (url == null) {
+            return false
+        }
+        val expectedUrl = "$redirectUrl/$switchBrowserPath"
+        return url.startsWith(expectedUrl, ignoreCase = true)
+    }
+
+    /**
+     * Check if state in the auth request matches the state provided.
+     */
+    fun statesMatch(authorizationUrl: String, state: String?) {
+        val span = SpanExtension.current()
+        // Validate the state from auth request and redirect URL is the same
+        if (state.isNullOrEmpty()) {
+             val clientException = ClientException(
+                ClientException.STATE_MISMATCH,
+                "State is null."
+            )
+            span.setStatus(StatusCode.ERROR)
+            span.recordException(clientException)
+            span.end()
+            throw clientException
+        }
+        val authRequestState = Uri.parse(authorizationUrl).getQueryParameter(SWITCH_BROWSER.STATE)
+        if (state != authRequestState) {
+            val clientException = ClientException(
+                ClientException.STATE_MISMATCH,
+                "State does not match with the auth request state."
+            )
+            span.setStatus(StatusCode.ERROR)
+            span.recordException(clientException)
+            span.end()
+            throw clientException
+        }
     }
 
     /**
@@ -101,37 +176,5 @@ object SwitchBrowserUriHelper {
             uriBuilder.appendQueryParameter(key, value)
         }
         return uriBuilder.build()
-    }
-
-    /**
-     * Build the resume uri for the switch browser challenge.
-     *
-     * @param actionUri The action uri to be opened.
-     *
-     * @return The resume uri constructed from the bundle.
-     * e.g. actionUri
-     */
-    fun buildResumeUri(actionUri: String): Uri {
-        // Construct the uri to the resume endpoint.
-        return buildSwitchBrowserUri(actionUri)
-    }
-
-    /**
-     * Check if the url is a switch browser redirect url
-     *
-     * The request is considered "switch_browser" if the URL
-     * starts with the following pattern: {redirectUrl}/{switchBrowserPath}
-     *
-     * @param url The URL to be checked.
-     * @param redirectUrl The redirect URL to be checked against.
-     * @param switchBrowserPath The path to be checked against.
-     * @return True if the request matches the pattern, false otherwise.
-     */
-    fun isSwitchBrowserRedirectUrl(url: String?, redirectUrl: String, switchBrowserPath: String): Boolean {
-        if (url == null) {
-            return false
-        }
-        val expectedUrl = "$redirectUrl/$switchBrowserPath"
-        return url.startsWith(expectedUrl, ignoreCase = true)
     }
 }

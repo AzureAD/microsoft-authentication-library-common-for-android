@@ -390,7 +390,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodTag = TAG + ":processSwitchBrowserRequest";
         try {
             mSwitchBrowserRequestHandler.processChallenge(
-                    SwitchBrowserChallenge.constructFromRedirectUrl(url)
+                    SwitchBrowserChallenge.constructFromRedirectUrl(url, mRequestUrl)
             );
         } catch (final Throwable throwable) {
             Logger.error(methodTag, "Switch browser challenge could not be processed.", throwable);
