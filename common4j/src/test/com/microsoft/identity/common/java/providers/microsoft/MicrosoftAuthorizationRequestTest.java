@@ -49,6 +49,7 @@ public class MicrosoftAuthorizationRequestTest {
     @After
     public void tearDown() {
         Device.clearDeviceMetadata();
+        Device.setIsInPersonalProfileButClouddpcWorkProfileAvailable(false);
     }
 
     public static final String MOCK_AUTHORITY = "http://mock_authority";
@@ -128,8 +129,6 @@ public class MicrosoftAuthorizationRequestTest {
                         "&response_type=code" +
                         "&state=" + MOCK_STATE_ENCODED,
                 request.getAuthorizationRequestAsHttpRequest().toString());
-
-        Device.setIsInPersonalProfileButClouddpcWorkProfileAvailable(false);
     }
 
     // If state is not provided, MicrosoftAuthorizationRequest should generate a default one.

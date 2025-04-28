@@ -95,6 +95,7 @@ public class MicrosoftStsAuthorizationRequestTests {
     @After
     public void tearDown() {
         Device.clearDeviceMetadata();
+        Device.setIsInPersonalProfileButClouddpcWorkProfileAvailable(false);
     }
 
     static URL getValidRequestUrl() throws MalformedURLException {
@@ -206,7 +207,6 @@ public class MicrosoftStsAuthorizationRequestTests {
                 request.getAuthorizationRequestAsHttpRequest().toString());
 
         Assert.assertEquals(DEFAULT_TEST_DISPLAYABLEID, request.getDisplayableId());
-        Device.setIsInPersonalProfileButClouddpcWorkProfileAvailable(false);
     }
 
     @Test(expected = IllegalStateException.class)
