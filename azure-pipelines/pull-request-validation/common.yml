@@ -2,7 +2,7 @@
 # Variable: 'MOCK_API_URL' was defined in the Variables tab
 # Description: Assemble and run unit test
 name: $(date:yyyyMMdd)$(rev:.r)
-
+trigger: none
 variables:
   - group: devex-ciam-test
 
