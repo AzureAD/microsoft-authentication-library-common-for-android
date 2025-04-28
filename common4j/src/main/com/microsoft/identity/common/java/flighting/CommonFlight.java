@@ -104,6 +104,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable adding x-client-MN and x-client-WPAvailable extra query parameters
      */
     ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS("EnableAmApiWorkProfileExtraQueryParameters", true);
+
     private String key;
     private Object defaultValue;
     CommonFlight(@NonNull String key, @NonNull Object defaultValue) {

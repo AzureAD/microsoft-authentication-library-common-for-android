@@ -50,7 +50,7 @@ public class WorkProfileUtil {
         if (!CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS)) {
             return false;
         }
-        
+
         try {
             final Intent intent = new Intent("com.google.android.apps.work.clouddpc.ACTION_DETECT_WORK_PROFILE");
             final List<ResolveInfo> activities = context.getPackageManager().queryIntentActivities(intent, 0);
