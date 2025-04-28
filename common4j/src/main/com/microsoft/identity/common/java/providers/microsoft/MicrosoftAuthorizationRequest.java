@@ -52,6 +52,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
      */
     public static final String INSTANCE_AWARE = "instance_aware";
 
+    public static final String WP_AVAILABLE_EXTRA_PARAMETER_NAME = "x-client-WPAvailable";
+
     /**
      * Required.
      */
@@ -126,7 +128,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @Expose()
     @Getter
     @Accessors(prefix = "m")
-    @SerializedName("x-client-MN")
+    @SerializedName(Device.PlatformIdParameters.MANUFACTURER)
     private final String mDiagnosticMN;
 
     @Expose()
@@ -144,7 +146,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @Expose()
     @Getter
     @Accessors(prefix = "m")
-    @SerializedName("x-client-WPAvailable")
+    @SerializedName(WP_AVAILABLE_EXTRA_PARAMETER_NAME)
     private final Boolean mWorkProfileAvailable;
 
 

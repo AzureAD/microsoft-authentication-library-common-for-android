@@ -26,6 +26,7 @@ import com.microsoft.identity.common.java.TestUtils;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.platform.MockDeviceMetadata;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 
@@ -141,7 +142,7 @@ public class MicrosoftStsAuthorizationRequestTests {
                         "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
                         "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
                         "&x-client-MN=" + MockDeviceMetadata.TEST_MANUFACTURER +
-                        "&x-client-WPAvailable=false" +
+                        "&" + MicrosoftAuthorizationRequest.WP_AVAILABLE_EXTRA_PARAMETER_NAME + "=false" +
                         "&response_type=code" +
                         "&client_id=" + DEFAULT_TEST_CLIENT_ID +
                         "&redirect_uri=" + DEFAULT_TEST_REDIRECT_URI_ENCODED +
@@ -194,7 +195,7 @@ public class MicrosoftStsAuthorizationRequestTests {
                         "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
                         "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
                         "&x-client-MN=" + MockDeviceMetadata.TEST_MANUFACTURER +
-                        "&x-client-WPAvailable=true" +
+                        "&" + MicrosoftAuthorizationRequest.WP_AVAILABLE_EXTRA_PARAMETER_NAME + "=true" +
                         "&response_type=code" +
                         "&client_id=" + DEFAULT_TEST_CLIENT_ID +
                         "&redirect_uri=" + DEFAULT_TEST_REDIRECT_URI_ENCODED +

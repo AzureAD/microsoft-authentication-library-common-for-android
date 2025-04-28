@@ -27,6 +27,10 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.platform.Device;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 
@@ -308,7 +312,15 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     public URI getAuthorizationRequestAsHttpRequest() throws ClientException {
         try {
             final CommonURIBuilder builder = new CommonURIBuilder(getAuthorizationEndpoint());
-            builder.addParametersIfAbsent(ObjectMapper.serializeObjectHashMap(this));
+            final Map<String, Object> serializedMap = ObjectMapper.serializeObjectHashMap(this);
+
+            // If the flight is not enabled, do not include these fields in the query parameter map
+            if (!CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS)) {
+                serializedMap.remove(MicrosoftAuthorizationRequest.WP_AVAILABLE_EXTRA_PARAMETER_NAME);
+                serializedMap.remove(Device.PlatformIdParameters.MANUFACTURER);
+            }
+
+            builder.addParametersIfAbsent(serializedMap);
             builder.addParametersIfAbsent(mExtraQueryParams);
             return builder.build();
         } catch (final URISyntaxException e) {

@@ -88,7 +88,7 @@ public class MicrosoftAuthorizationRequestTest {
                         "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
                         "&x-client-MN=" + MockDeviceMetadata.TEST_MANUFACTURER +
                         "&instance_aware=" + MOCK_MULTIPLE_CLOUD_AWARE +
-                        "&x-client-WPAvailable=false" +
+                        "&" + MicrosoftAuthorizationRequest.WP_AVAILABLE_EXTRA_PARAMETER_NAME + "=false" +
                 // Base class fields start here.
                         "&response_type=code" +
                         "&state=" + MOCK_STATE_ENCODED,
@@ -124,7 +124,7 @@ public class MicrosoftAuthorizationRequestTest {
                         "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
                         "&x-client-MN=" + MockDeviceMetadata.TEST_MANUFACTURER +
                         "&instance_aware=" + MOCK_MULTIPLE_CLOUD_AWARE +
-                        "&x-client-WPAvailable=true" +
+                        "&" + MicrosoftAuthorizationRequest.WP_AVAILABLE_EXTRA_PARAMETER_NAME + "=true" +
                         // Base class fields start here.
                         "&response_type=code" +
                         "&state=" + MOCK_STATE_ENCODED,
