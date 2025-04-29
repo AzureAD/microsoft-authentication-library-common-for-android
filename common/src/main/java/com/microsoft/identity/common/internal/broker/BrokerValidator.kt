@@ -41,6 +41,14 @@ open class BrokerValidator: IBrokerValidator {
         validateSigningCertificate = Companion::validateSigningCertificate
     }
 
+    constructor(context: Context, allowedApps: Set<BrokerData>) {
+        allowedBrokerApps = allowedApps
+        getSigningCertificateForApp = { packageName: String ->
+            PackageUtils.readCertDataForApp(packageName, context)
+        }
+        validateSigningCertificate = Companion::validateSigningCertificate
+    }
+
     constructor(allowedBrokerApps: Set<BrokerData>,
                 getSigningCertificateForApp: (packageName: String) -> List<X509Certificate>,
                 validateSigningCertificate: (expectedSigningCertificateSignature: String,
