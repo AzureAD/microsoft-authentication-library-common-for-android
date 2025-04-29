@@ -22,18 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.crypto;
 
-import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Build;
 import android.security.KeyPairGeneratorSpec;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
+import android.security.keystore.SecureKeyImportUnavailableException;
 
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
-import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -52,7 +50,6 @@ import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
-import java.security.ProviderException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Calendar;
 import java.util.Locale;
@@ -259,117 +256,103 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
          */
         KeyPair keyPair = AndroidKeyStoreUtil.readKey(mAlias);
         if (keyPair == null) {
-            final SharedPreferences preferences = mContext.getSharedPreferences(mAlias, Context.MODE_PRIVATE);
-            final boolean useNewKeyGenSpecForWrap2 = preferences.getBoolean("EnableNewKeyGenSpecForWrap2", false);
-            Logger.info(methodTag, "No existing keypair. Generating a new one. Preference value: " + useNewKeyGenSpecForWrap2);
-            preferences.edit().putBoolean("EnableNewKeyGenSpecForWrap2", !useNewKeyGenSpecForWrap2).apply();
-            if (useNewKeyGenSpecForWrap2) {
-                Logger.info(methodTag, "Using EnableNewKeyGenSpecForWrap2 for keypair generation.");
-                final Span span = OTelUtility.createSpanFromParent(SpanName.KeyPairGeneration.name(), SpanExtension.current().getSpanContext());
-                try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        Logger.info(methodTag, "Using new spec for keypair generation.");
-                        // Use the new KeyPairGeneratorSpec for API 23 and above.
-                        final int purposes = KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT;
-                        final KeyGenParameterSpec spec = new KeyGenParameterSpec.Builder(mAlias, purposes)
-                                .setKeySize(2048)
-                                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
-                                .build();
-                        keyPair = AndroidKeyStoreUtil.generateKeyPair(
-                                WRAP_KEY_ALGORITHM, spec);
-                        Logger.info(methodTag, "Successfully generated keypair with new spec.");
-                        span.setAttribute(AttributeName.key_pair_gen_successful_method.name(), "new_key_gen_spec_2");
-                    } else {
-                        // Use the legacy KeyPairGeneratorSpec for API 22 and below.
-                        Logger.info(methodTag, "Using legacy spec for keypair generation for < 23");
-                        keyPair = AndroidKeyStoreUtil.generateKeyPair(
-                                WRAP_KEY_ALGORITHM, getLegacySpecForKeyStoreKey(mContext, mAlias));
-                        Logger.info(methodTag, "Successfully generated keypair with legacy spec.");
-                        span.setAttribute(AttributeName.key_pair_gen_successful_method.name(), "new_key_gen_spec_2_legacy");
-                    }
-                    span.setStatus(StatusCode.OK);
-                } catch (final Throwable e) {
-                    span.setAttribute(AttributeName.keypair_gen_exception.name(), e.getClass().getSimpleName());
-                    span.recordException(e);
-                    throw ExceptionAdapter.clientExceptionFromException(e);
-                } finally {
-                    span.end();
-                }
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP)) {
-                final long keypairGenStartTime = System.currentTimeMillis();
-                final Span span = OTelUtility.createSpanFromParent(SpanName.KeyPairGeneration.name(), SpanExtension.current().getSpanContext());
-                try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
-                    keyPair = attemptKeyPairGeneration(mAlias, true, keypairGenStartTime);
-                    Logger.info(methodTag, "Successfully generated keypair with new KeyPairGeneratorSpec with wrap purpose.");
-                    span.setAttribute(AttributeName.key_pair_gen_successful_method.name(), "new_key_gen_spec_with_wrap");
-                    span.setStatus(StatusCode.OK);
-                } catch (final ProviderException e) {
-                    if ("SecureKeyImportUnavailableException".equals(e.getClass().getSimpleName())) {
-                        Logger.warn(methodTag, "Wrap purpose may not be supported. Retrying without wrap.");
-                        try {
-                            keyPair = attemptKeyPairGeneration(mAlias, false, keypairGenStartTime);
-                            Logger.info(methodTag, "Successfully generated keypair with new KeyPairGeneratorSpec without wrap purpose.");
-                            span.setAttribute(AttributeName.key_pair_gen_successful_method.name(), "new_key_gen_spec_without_wrap");
-                            span.setStatus(StatusCode.OK);
-                        } catch (final Exception ex) {
-                            // 2nd fallback to legacy keygen spec
-                            Logger.warn(methodTag, "Second attempt without wrap also failed. Falling back to legacy spec."+ ex);
-                            keyPair = generateKeyPairWithLegacySpec(mAlias, keypairGenStartTime);
-                            if (e.getMessage() != null) {
-                                span.setAttribute(AttributeName.keypair_gen_exception.name(), e.getMessage());
-                            }
-                            span.setAttribute(AttributeName.key_pair_gen_successful_method.name(), "legacy_key_gen_spec");
-                            span.setStatus(StatusCode.OK);
-                        }
-                    } else {
-                        Logger.warn(methodTag, "Some unknown exception occurred. Running legacy keygen spec logic."+ e);
-                        keyPair = generateKeyPairWithLegacySpec(mAlias, keypairGenStartTime);
-                        span.setAttribute(AttributeName.key_pair_gen_successful_method.name(), "legacy_key_gen_spec");
-                        span.setStatus(StatusCode.OK);
-                    }
-                } catch (final Throwable throwable) {
-                    Logger.warn(methodTag, "Unexpected error with new KeyPairGeneratorSpec. Falling back to legacy spec. "+ throwable);
-                    keyPair = generateKeyPairWithLegacySpec(mAlias, keypairGenStartTime);
-                    if (throwable.getMessage() != null) {
-                        span.setAttribute(AttributeName.keypair_gen_exception.name(), throwable.getMessage());
-                    }
-                    span.setAttribute(AttributeName.key_pair_gen_successful_method.name(), "legacy_key_gen_spec");
-                    span.setStatus(StatusCode.OK);
-                } finally {
-                    span.end();
-                }
-            }
-            else {
-                // If flight for using new keygen spec is not enabled, use the legacy spec.
-                Logger.info(methodTag, "Using legacy spec for keypair generation directly.");
-                keyPair = AndroidKeyStoreUtil.generateKeyPair(
-                        WRAP_KEY_ALGORITHM, getLegacySpecForKeyStoreKey(mContext, mAlias));
+            Logger.info(methodTag, "No existing keypair. Generating a new one.");
+            final Span span = OTelUtility.createSpanFromParent(SpanName.KeyPairGeneration.name(), SpanExtension.current().getSpanContext());
+            try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+                keyPair = generateNewKeyPair();
+                span.setStatus(StatusCode.OK);
+            } catch (final Throwable e) {
+                span.setStatus(StatusCode.ERROR);
+                span.recordException(e);
+            } finally {
+                span.end();
             }
         }
         final byte[] keyWrapped = AndroidKeyStoreUtil.wrap(unencryptedKey, keyPair, WRAP_ALGORITHM);
         FileUtil.writeDataToFile(keyWrapped, getKeyFile());
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.P)
-    private KeyPair attemptKeyPairGeneration(@NonNull final String alias, boolean useWrapPurpose, long keypairGenStartTime) throws ClientException{
-        KeyPair keyPair = AndroidKeyStoreUtil.generateKeyPair(
-                WRAP_KEY_ALGORITHM, getSpecForKeyStoreKey(alias, useWrapPurpose));
-        recordKeyGenerationTime(keypairGenStartTime);
-        return keyPair;
+    @NonNull
+    private KeyPair generateNewKeyPair() throws ClientException {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            return generateNewKeyPairAPI28AndAbove();
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return generateNewKeyPairAPI23AndAbove();
+        } else {
+            return generateKeyPairWithLegacySpec(mAlias);
+        }
     }
 
-    private KeyPair generateKeyPairWithLegacySpec(@NonNull final String alias, long keypairGenStartTime) throws ClientException{
+    @RequiresApi(Build.VERSION_CODES.P)
+    @NonNull
+    private KeyPair generateNewKeyPairAPI28AndAbove() throws ClientException {
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY)) {
+            try {
+                return generateWrappingKeyPair_WithPurposeWrapKey(mAlias);
+            } catch (final ClientException e) {
+                if (e.getCause() != null &&
+                        SecureKeyImportUnavailableException.class.getSimpleName().equalsIgnoreCase(e.getCause().getClass().getSimpleName())) {
+                    return generateWrappingKeyPair(mAlias);
+                }
+                throw e;
+            }
+        } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY)) {
+            return generateWrappingKeyPair(mAlias);
+        } else {
+            return generateKeyPairWithLegacySpec(mAlias);
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    @NonNull
+    private KeyPair generateNewKeyPairAPI23AndAbove() throws ClientException {
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY)) {
+            return generateWrappingKeyPair(mAlias);
+        } else {
+            return generateKeyPairWithLegacySpec(mAlias);
+        }
+    }
+
+    @NonNull
+    private KeyPair generateKeyPairWithLegacySpec(@NonNull final String alias) throws ClientException{
+        final Span span = SpanExtension.current();
         try {
-            final KeyPair keyPair = AndroidKeyStoreUtil.generateKeyPair(
-                    WRAP_KEY_ALGORITHM, getLegacySpecForKeyStoreKey(mContext, alias));
-            recordKeyGenerationTime(keypairGenStartTime);
+            final AlgorithmParameterSpec keyPairGenSpec = getLegacySpecForKeyStoreKey(mContext, alias);
+            final KeyPair keyPair = attemptKeyPairGeneration(keyPairGenSpec);
+            span.setAttribute(AttributeName.key_pair_gen_successful_method.name(), "legacy_key_gen_spec");
             return keyPair;
         } catch (final ClientException e) {
-            SpanExtension.current().recordException(e);
-            SpanExtension.current().setStatus(StatusCode.ERROR);
             Logger.error(TAG + ":generateKeyPairWithLegacySpec", "Error generating keypair with legacy spec.", e);
             throw e;
         }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.P)
+    private KeyPair generateWrappingKeyPair_WithPurposeWrapKey(@NonNull final String alias) throws ClientException {
+        final Span span = SpanExtension.current();
+        int purposes = KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_WRAP_KEY;
+        final AlgorithmParameterSpec keyPairGenSpec = getSpecForWrappingKey(alias, purposes);
+        final KeyPair keyPair = attemptKeyPairGeneration(keyPairGenSpec);
+        span.setAttribute(AttributeName.key_pair_gen_successful_method.name(), "new_key_gen_spec_with_wrap");
+        return keyPair;
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    private KeyPair generateWrappingKeyPair(@NonNull final String alias) throws ClientException {
+        final Span span = SpanExtension.current();
+        int purposes = KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT;
+        final AlgorithmParameterSpec keyPairGenSpec = getSpecForWrappingKey(alias, purposes);
+        final KeyPair keyPair = attemptKeyPairGeneration(keyPairGenSpec);
+        span.setAttribute(AttributeName.key_pair_gen_successful_method.name(), "new_key_gen_spec_without_wrap");
+        return keyPair;
+    }
+
+    private KeyPair attemptKeyPairGeneration(@NonNull final AlgorithmParameterSpec keyPairGenSpec) throws ClientException{
+        final long keypairGenStartTime = System.currentTimeMillis();
+        final KeyPair keyPair = AndroidKeyStoreUtil.generateKeyPair(
+                WRAP_KEY_ALGORITHM, keyPairGenSpec);
+        recordKeyGenerationTime(keypairGenStartTime);
+        return keyPair;
     }
 
     private void recordKeyGenerationTime(long keypairGenStartTime) {
@@ -416,20 +399,8 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                 .build();
     }
 
-    /**
-     * Generate a self-signed cert and derive an AlgorithmParameterSpec from that.
-     * This is for the key to be generated in {@link KeyStore} via {@link KeyPairGenerator}
-     *
-     * @param alias   the alias for the key.
-     * @param tryPurposeWrap whether to try to use the wrap purpose in the key generation spec.
-     * @return a {@link AlgorithmParameterSpec} for the keystore key (that we'll use to wrap the secret key).
-     */
-    @RequiresApi(api = Build.VERSION_CODES.P)
-    private static AlgorithmParameterSpec getSpecForKeyStoreKey(@NonNull final String alias, boolean tryPurposeWrap) {
-        int purposes = KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT;
-        if (tryPurposeWrap) {
-            purposes |= KeyProperties.PURPOSE_WRAP_KEY;
-        }
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private AlgorithmParameterSpec getSpecForWrappingKey(@NonNull final String alias, int purposes) {
         return new KeyGenParameterSpec.Builder(alias, purposes)
                 .setKeySize(2048)
                 .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
