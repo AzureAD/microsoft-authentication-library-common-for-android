@@ -42,16 +42,16 @@ object SdmQrPinManager {
 
     private const val TAG = "SdmQrPinManager"
 
-    private var brokerRestrictionsManager: IRestrictionsManager? = null
+    private var restrictionsManager: IRestrictionsManager? = null
 
     /**
      * This method is used to initialize the SDM QR PIN manager with the broker restrictions manager.
      * This is called when brokerAndroidBrokerPlatformComponentsFactory.create is called
      * to ensure the manager is initialized with the correct broker restrictions manager.
      */
-    fun initializeSdmQrPinManager(brokerRestrictionsManager: IRestrictionsManager) {
-        if (this.brokerRestrictionsManager == null) {
-            this.brokerRestrictionsManager = brokerRestrictionsManager
+    fun initializeSdmQrPinManager(restrictionsManager: IRestrictionsManager) {
+        if (this.restrictionsManager == null) {
+            this.restrictionsManager = restrictionsManager
         }
     }
 
@@ -59,15 +59,17 @@ object SdmQrPinManager {
      * This method checks if the device preferred authentication config is set.
      */
     fun getPreferredAuthConfig(): String? {
-        val methodTag = "$TAG:getPreferredAuthMethod"
+        val methodTag = "$TAG:getPreferredAuthConfig"
         val defaultValue = null
-        return brokerRestrictionsManager?.getString(
-            key = PREFERRED_AUTH_CONFIG,
-            brokerAppPackageName = BrokerData.prodMicrosoftAuthenticator.packageName,
-            defaultValue = defaultValue
-        ) ?: run {
+        restrictionsManager?.let { manager ->
+            return manager.getString(
+                key = PREFERRED_AUTH_CONFIG,
+                brokerAppPackageName = BrokerData.prodMicrosoftAuthenticator.packageName,
+                defaultValue = defaultValue
+            )
+        } ?: run {
             Logger.warn(methodTag, "Broker restrictions manager is not initialized.")
-            defaultValue
+            return defaultValue
         }
     }
 
@@ -77,13 +79,15 @@ object SdmQrPinManager {
     fun isCameraConsentSuppressed(): Boolean {
         val methodTag = "$TAG:isCameraConsentSuppressed"
         val defaultValue = false
-        return brokerRestrictionsManager?.getBoolean(
-            key = SUPPRESS_CAMERA_CONSENT,
-            brokerAppPackageName = BrokerData.prodMicrosoftAuthenticator.packageName,
-            defaultValue = defaultValue
-        ) ?: run {
+        restrictionsManager?.let { manager ->
+            return manager.getBoolean(
+                key = SUPPRESS_CAMERA_CONSENT,
+                brokerAppPackageName = BrokerData.prodMicrosoftAuthenticator.packageName,
+                defaultValue = defaultValue
+            )
+        } ?: run {
             Logger.warn(methodTag, "Broker restrictions manager is not initialized.")
-            defaultValue
+            return defaultValue
         }
     }
 }

@@ -124,7 +124,7 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
      * To avoid unintentionally granting requests for not defined permissions
      */
     private fun isValid(request: PermissionRequest): Boolean {
-        val methodTag = "$TAG:setIfValid"
+        val methodTag = "$TAG:isValid"
         if (!isForCamera(request)) {
             Logger.warn(methodTag, "Permission request is not for camera.")
             request.deny()
@@ -214,7 +214,7 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
      * If the user denies the dialog, the camera permission request will be denied.
      */
     private fun showQrPinCameraRationale(context: Context) {
-        val methodTag = "$TAG:showCameraRationale"
+        val methodTag = "$TAG:showQrPinCameraRationale"
         val builder = AlertDialog.Builder(context)
         builder.setMessage(R.string.qr_code_rationale_message)
             .setTitle(R.string.qr_code_rationale_header)
