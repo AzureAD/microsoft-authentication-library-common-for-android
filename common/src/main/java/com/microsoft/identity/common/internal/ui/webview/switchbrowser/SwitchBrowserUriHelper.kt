@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.ui.webview.switchbrowser
 import android.net.Uri
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.logging.Logger
 import io.opentelemetry.api.trace.StatusCode
@@ -35,6 +37,13 @@ import io.opentelemetry.api.trace.StatusCode
 object SwitchBrowserUriHelper {
 
     private const val TAG = "SwitchBrowserUriHelper"
+
+    internal val STATE_VALIDATION_REQUIRED: Boolean by lazy {
+        CommonFlightsManager
+            .getFlightsProvider()
+            .isFlightEnabled(CommonFlight.SWITCH_BROWSER_PROTOCOL_REQUIRES_STATE)
+    }
+
 
     /**
      * Build the process uri for the switch browser challenge.
@@ -70,20 +79,24 @@ object SwitchBrowserUriHelper {
             Logger.error(methodTag, errorMessage, exception)
             throw exception
         }
-        val state = uri.getQueryParameter(
-            SWITCH_BROWSER.STATE
-        )
-        if (state.isNullOrEmpty()) {
-            // This should never happen, but if it does, we should log it and throw.
-            val errorMessage = "switch browser action state is null or empty"
-            val exception = ClientException(ClientException.MALFORMED_URL, errorMessage)
-            Logger.error(methodTag, errorMessage, exception)
-            throw exception
-        }
+
         // Query parameters for the process uri.
         val queryParams = hashMapOf<String, String>()
         queryParams[SWITCH_BROWSER.CODE] = code
-        queryParams[SWITCH_BROWSER.STATE] = state
+        if (STATE_VALIDATION_REQUIRED) {
+            val state = uri.getQueryParameter(
+                SWITCH_BROWSER.STATE
+            )
+            if (state.isNullOrEmpty()) {
+                // This should never happen, but if it does, we should log it and throw.
+                val errorMessage = "switch browser action state is null or empty"
+                val exception = ClientException(ClientException.MALFORMED_URL, errorMessage)
+                Logger.error(methodTag, errorMessage, exception)
+                throw exception
+            } else {
+                queryParams[SWITCH_BROWSER.STATE] = state
+            }
+        }
         // Construct the uri to the process endpoint.
         return buildSwitchBrowserUri(actionUri, queryParams)
     }
@@ -97,9 +110,21 @@ object SwitchBrowserUriHelper {
      * @return The resume uri constructed from the bundle.
      * e.g. actionUri
      */
-    fun buildResumeUri(actionUri: String, state: String): Uri {
+    fun buildResumeUri(actionUri: String, state: String?): Uri {
+        val methodTag = "$TAG:buildResumeUri"
         // Construct the uri to the resume endpoint.
-        val queryParams = hashMapOf(SWITCH_BROWSER.STATE to state)
+        val queryParams = hashMapOf<String, String>()
+        if (STATE_VALIDATION_REQUIRED) {
+            if (state.isNullOrEmpty()) {
+                // This should never happen, but if it does, we should log it and throw.
+                val errorMessage = "State is null or empty"
+                val exception = ClientException(ClientException.MISSING_PARAMETER, errorMessage)
+                Logger.error(methodTag, errorMessage, exception)
+                throw exception
+            } else {
+                queryParams[SWITCH_BROWSER.STATE] = state
+            }
+        }
         return buildSwitchBrowserUri(actionUri, queryParams)
     }
 
@@ -126,10 +151,15 @@ object SwitchBrowserUriHelper {
      * Check if state in the auth request matches the state provided.
      */
     fun statesMatch(authorizationUrl: String, state: String?) {
+        val methodTag = "$TAG:statesMatch"
+        if (!STATE_VALIDATION_REQUIRED) {
+            Logger.info(methodTag, "State validation is not required.")
+            return
+        }
         val span = SpanExtension.current()
         // Validate the state from auth request and redirect URL is the same
         if (state.isNullOrEmpty()) {
-             val clientException = ClientException(
+            val clientException = ClientException(
                 ClientException.STATE_MISMATCH,
                 "State is null."
             )
@@ -139,6 +169,16 @@ object SwitchBrowserUriHelper {
             throw clientException
         }
         val authRequestState = Uri.parse(authorizationUrl).getQueryParameter(SWITCH_BROWSER.STATE)
+        if (authRequestState.isNullOrEmpty()) {
+            val clientException = ClientException(
+                ClientException.STATE_MISMATCH,
+                "Authorization request state is null."
+            )
+            span.setStatus(StatusCode.ERROR)
+            span.recordException(clientException)
+            span.end()
+            throw clientException
+        }
         if (state != authRequestState) {
             val clientException = ClientException(
                 ClientException.STATE_MISMATCH,
@@ -149,6 +189,7 @@ object SwitchBrowserUriHelper {
             span.end()
             throw clientException
         }
+        Logger.info(methodTag, "States match.")
     }
 
     /**

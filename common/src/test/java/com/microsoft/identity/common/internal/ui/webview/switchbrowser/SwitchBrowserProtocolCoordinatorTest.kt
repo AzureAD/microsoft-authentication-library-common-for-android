@@ -32,6 +32,8 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.Switc
 import com.microsoft.identity.common.java.AuthenticationConstants.AAD.AUTHORIZATION
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.ui.AuthorizationAgent
+import io.mockk.every
+import io.mockk.mockkObject
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -44,7 +46,8 @@ import org.robolectric.RobolectricTestRunner
 class SwitchBrowserProtocolCoordinatorTest {
 
     @Test
-    fun `test processSwitchBrowserResume with valid extras`() {
+    fun `test processSwitchBrowserResume with valid extras (stateRequired)`() {
+        isStateRequired(true)
         // Mock parameters
         val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
         doNothing().`when`(mockSwitchBrowserRequestHandler).resetChallengeState()
@@ -68,7 +71,56 @@ class SwitchBrowserProtocolCoordinatorTest {
     }
 
     @Test
+    fun `test processSwitchBrowserResume with valid extras (StateNotRequired)`() {
+        isStateRequired(false)
+        // Mock parameters
+        val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
+        doNothing().`when`(mockSwitchBrowserRequestHandler).resetChallengeState()
+        val code = "switch_browser_code"
+        val actionUrl = "test.example.com/switchbrowser/path"
+        val extras = Bundle().apply {
+            putString(SWITCH_BROWSER.CODE, code)
+            putString(SWITCH_BROWSER.ACTION_URI, actionUrl)
+        }
+        // Create an instance of SwitchBrowserProtocolCoordinator
+        val coordinator = SwitchBrowserProtocolCoordinator(mockSwitchBrowserRequestHandler)
+
+        // Call the method to be tested
+        coordinator.processSwitchBrowserResume("https://auth.com",extras) { uri, headers ->
+            // Verify the resume URI
+            Assert.assertEquals(actionUrl, uri.host + uri.path)
+            Assert.assertEquals(code, headers[AUTHORIZATION])
+        }
+    }
+
+    @Test
+    fun `test processSwitchBrowserResume with missing state (stateRequired)`() {
+        isStateRequired(true)
+        // Mock parameters
+        val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
+        val code = "switch_browser_code"
+        val actionUrl = "test.example.com/switchbrowser/path"
+        val extras = Bundle().apply {
+            putString(SWITCH_BROWSER.CODE, code)
+            putString(SWITCH_BROWSER.ACTION_URI, actionUrl)
+        }
+        // Create an instance of SwitchBrowserProtocolCoordinator
+        val coordinator = SwitchBrowserProtocolCoordinator(mockSwitchBrowserRequestHandler)
+
+        val exception = Assert.assertThrows(ClientException::class.java) {
+            // Call the method to be tested
+            coordinator.processSwitchBrowserResume("",extras) { _, _ ->
+                // This block should not be executed
+                Assert.fail()
+            }
+        }
+        Assert.assertEquals(ClientException.STATE_MISMATCH, exception.errorCode)
+        Assert.assertEquals("State is null.", exception.message)
+    }
+
+    @Test
     fun `test processSwitchBrowserResume with missing extras`() {
+        isStateRequired(false)
         // Mock parameters
         val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
         val extras = Bundle().apply {
@@ -86,7 +138,7 @@ class SwitchBrowserProtocolCoordinatorTest {
             }
         }
         Assert.assertEquals(ClientException.MISSING_PARAMETER, exception.errorCode)
-        Assert.assertEquals("Action URI is null/empty: true, code is null/empty: true, state is null/empty: true", exception.message)
+        Assert.assertEquals("Action URI is null/empty: true, code is null/empty: true.", exception.message)
     }
 
     @Test
@@ -169,5 +221,10 @@ class SwitchBrowserProtocolCoordinatorTest {
             AuthorizationAgent.WEBVIEW,
             intent.getSerializableExtra(AUTHORIZATION_AGENT) as AuthorizationAgent
         )
+    }
+
+    private fun isStateRequired(isStateRequired: Boolean) {
+        mockkObject(SwitchBrowserUriHelper)
+        every { SwitchBrowserUriHelper.STATE_VALIDATION_REQUIRED } returns isStateRequired
     }
 }

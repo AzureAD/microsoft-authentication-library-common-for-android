@@ -37,7 +37,6 @@ import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.java.opentelemetry.SpanName
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest
 import com.microsoft.identity.common.java.ui.AuthorizationAgent
 import com.microsoft.identity.common.logging.Logger
 import io.opentelemetry.api.trace.Span
@@ -121,12 +120,11 @@ class SwitchBrowserProtocolCoordinator(
             val actionUri = extras.getString(SWITCH_BROWSER.ACTION_URI)
             val code = extras.getString(SWITCH_BROWSER.CODE)
             val state = extras.getString(SWITCH_BROWSER.STATE)
-            if (actionUri.isNullOrEmpty() || code.isNullOrEmpty() || state.isNullOrEmpty()) {
+            if (actionUri.isNullOrEmpty() || code.isNullOrEmpty()) {
                 val clientException = ClientException(
                     ClientException.MISSING_PARAMETER,
                     "Action URI is null/empty: ${actionUri.isNullOrEmpty()}," +
-                            " code is null/empty: ${code.isNullOrEmpty()}," +
-                            " state is null/empty: ${state.isNullOrEmpty()}"
+                            " code is null/empty: ${code.isNullOrEmpty()}."
                 )
                 span.setStatus(StatusCode.ERROR)
                 span.recordException(clientException)

@@ -20,13 +20,14 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.challengehandlers
+package com.microsoft.identity.common.internal.ui.webview.switchbrowser
 
 import android.net.Uri
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
-import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper
 import com.microsoft.identity.common.java.exception.ClientException
+import io.mockk.every
+import io.mockk.mockkObject
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -42,11 +43,36 @@ class SwitchBrowserUriHelperTest {
     }
 
     @Test
-    fun `test constructFromRedirectUri with valid redirect uri`() {
+    fun `test constructFromRedirectUri with valid redirect uri (StateRequired)`() {
+        isStateRequired(true)
         val redirectString = "${Broker.NEW_BROKER_REDIRECT_URI}?" +
                 "${SWITCH_BROWSER.CODE}=$CODE&" +
                 "${SWITCH_BROWSER.ACTION_URI}=$ACTION_URI&" +
                 "${SWITCH_BROWSER.STATE}=$STATE"
+        val redirectUri = Uri.parse(redirectString)
+
+        val switchBrowserProcessUri = SwitchBrowserUriHelper.buildProcessUri(redirectUri)
+        Assert.assertNotNull(switchBrowserProcessUri)
+        Assert.assertEquals(
+            CODE,
+            switchBrowserProcessUri.getQueryParameter(SWITCH_BROWSER.CODE)
+        )
+        Assert.assertEquals(
+            ACTION_URI,
+            switchBrowserProcessUri.host + switchBrowserProcessUri.path
+        )
+        Assert.assertEquals(
+            STATE,
+            switchBrowserProcessUri.getQueryParameter(SWITCH_BROWSER.STATE)
+        )
+    }
+
+    @Test
+    fun `test constructFromRedirectUri with valid redirect uri (StateNotRequired)`() {
+        isStateRequired(false)
+        val redirectString = "${Broker.NEW_BROKER_REDIRECT_URI}?" +
+                "${SWITCH_BROWSER.CODE}=$CODE&" +
+                "${SWITCH_BROWSER.ACTION_URI}=$ACTION_URI"
         val redirectUri = Uri.parse(redirectString)
 
         val switchBrowserProcessUri = SwitchBrowserUriHelper.buildProcessUri(redirectUri)
@@ -111,7 +137,16 @@ class SwitchBrowserUriHelperTest {
     }
 
     @Test
+    fun `test states match (statesNotRequired)`() {
+        isStateRequired(false)
+        SwitchBrowserUriHelper.statesMatch(
+            "", null
+        )
+    }
+
+    @Test
     fun `test states match`() {
+        isStateRequired(true)
         SwitchBrowserUriHelper.statesMatch(
             "https://example.auth.com/path?${SWITCH_BROWSER.STATE}=$STATE", STATE
         )
@@ -119,6 +154,7 @@ class SwitchBrowserUriHelperTest {
 
     @Test
     fun `test states don't match`() {
+        isStateRequired(true)
         val exception = Assert.assertThrows(
             ClientException::class.java) {
             SwitchBrowserUriHelper.statesMatch(
@@ -133,5 +169,10 @@ class SwitchBrowserUriHelperTest {
             "State does not match with the auth request state.",
             exception.message
         )
+    }
+
+    private fun isStateRequired(isStateRequired: Boolean) {
+        mockkObject(SwitchBrowserUriHelper)
+        every { SwitchBrowserUriHelper.STATE_VALIDATION_REQUIRED } returns isStateRequired
     }
 }

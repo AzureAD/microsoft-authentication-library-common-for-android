@@ -98,7 +98,13 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable the attachment of PRT header in cross cloud requests. Default is true.
      */
-    ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD("EnableAttachPrtHeaderWhenCrossCloud", true);
+    ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD("EnableAttachPrtHeaderWhenCrossCloud", true),
+
+    /**
+     * Flight to make the state parameter required for the switch browser protocol.
+     */
+    SWITCH_BROWSER_PROTOCOL_REQUIRES_STATE("SwitchBrowserProtocolRequiresState", false);
+
     private String key;
     private Object defaultValue;
     CommonFlight(@NonNull String key, @NonNull Object defaultValue) {
