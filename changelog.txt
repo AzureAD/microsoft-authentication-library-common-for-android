@@ -1,6 +1,6 @@
 vNext
 ----------
-- [PATCH] Allow generating wrapping keys without PURPOSE_WRAP_KEY with Flight
+- [PATCH] Allow generating wrapping keys without PURPOSE_WRAP_KEY with Flight (#2633))
 - [MINOR] Add telemetry for the switch browser protocol (#2612)
 - [MINOR] Enable the new Broker discovery on MSAL by default (#2618)
 
