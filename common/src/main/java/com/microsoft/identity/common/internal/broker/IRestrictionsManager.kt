@@ -25,9 +25,9 @@ package com.microsoft.identity.common.internal.broker
 import android.os.Bundle
 
 /**
- * Helper class to read the app restrictions manager of the current broker app or another broker app.
+ * Helper class to read the app restrictions manager.
  */
-interface IBrokerRestrictionsManager {
+interface IRestrictionsManager {
     companion object BrokerRestrictionsManagerKeys {
         /** Keys to group the values in the bundle. */
         const val BOOLEAN_VALUES_KEY = "booleanValuesKey"

@@ -32,6 +32,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import com.microsoft.identity.common.R
 import com.microsoft.identity.common.internal.broker.SdmQrPinManager
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod
 import com.microsoft.identity.common.logging.Logger
 
 /**
@@ -157,7 +158,7 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
     private fun isQrPinRequest() : Boolean {
         return currentPermissionRequest?.origin != null
                 && MICROSOFT_CLOUD_URL.equals(currentPermissionRequest?.origin.toString(), ignoreCase = true)
-                && SdmQrPinManager.isDeviceOnSdmQrPinAuth
+                && PreferredAuthMethod.QR.value.equals(SdmQrPinManager.getPreferredAuthConfig())
     }
 
     /**
@@ -185,7 +186,7 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
         val  methodTag = "$TAG:handleQrPin"
         if (appHasCameraPermission(context)) {
             Logger.info(methodTag, "App level camera permission already granted.")
-            if (SdmQrPinManager.isCameraConsentSuppressed) {
+            if (SdmQrPinManager.isCameraConsentSuppressed()) {
                 Logger.info(methodTag, "Camera consent suppress is enabled.")
                 grant()
             } else {
