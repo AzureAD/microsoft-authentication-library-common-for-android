@@ -50,6 +50,11 @@ public class Device {
 
     private static IDeviceMetadata sDeviceMetadata;
 
+    /**
+     * Denotes whether or not request is from personal profile but device has a Work Profile Available
+     */
+    private static boolean sIsInPersonalProfileButClouddpcWorkProfileAvailable = false;
+
     private static final ReentrantReadWriteLock sLock = new ReentrantReadWriteLock();
 
     @GuardedBy("sLock")
@@ -73,6 +78,26 @@ public class Device {
         }
     }
 
+    @GuardedBy("sLock")
+    public static void setIsInPersonalProfileButClouddpcWorkProfileAvailable(final boolean isWorkProfileAvailable) {
+        sLock.writeLock().lock();
+        try {
+            sIsInPersonalProfileButClouddpcWorkProfileAvailable = isWorkProfileAvailable;
+        } finally {
+            sLock.writeLock().unlock();
+        }
+    }
+
+    @GuardedBy("sLock")
+    public static boolean isInPersonalProfileButClouddpcWorkProfileAvailable() {
+        sLock.readLock().lock();
+        try {
+            return sIsInPersonalProfileButClouddpcWorkProfileAvailable;
+        } finally {
+            sLock.readLock().unlock();
+        }
+    }
+
     @NonNull
     @GuardedBy("sLock")
     public static Map<String, String> getPlatformIdParameters() {
@@ -84,10 +109,12 @@ public class Device {
                 platformParameters.put(PlatformIdParameters.CPU_PLATFORM, sDeviceMetadata.getCpu());
                 platformParameters.put(PlatformIdParameters.OS, sDeviceMetadata.getOsForEsts());
                 platformParameters.put(PlatformIdParameters.DEVICE_MODEL, sDeviceMetadata.getDeviceModel());
+                platformParameters.put(PlatformIdParameters.MANUFACTURER, sDeviceMetadata.getManufacturer());
             } else {
                 platformParameters.put(PlatformIdParameters.CPU_PLATFORM, NOT_SET);
                 platformParameters.put(PlatformIdParameters.OS, NOT_SET);
                 platformParameters.put(PlatformIdParameters.DEVICE_MODEL, NOT_SET);
+                platformParameters.put(PlatformIdParameters.MANUFACTURER, NOT_SET);
             }
 
             return Collections.unmodifiableMap(platformParameters);
@@ -245,6 +272,11 @@ public class Device {
          * The String representing the device OS.
          */
         public static final String OS = "x-client-OS";
+
+        /**
+         * The String representing the device Manufacturer.
+         */
+        public static final String MANUFACTURER = "x-client-MN";
 
         /**
          * The String representing the device model.
