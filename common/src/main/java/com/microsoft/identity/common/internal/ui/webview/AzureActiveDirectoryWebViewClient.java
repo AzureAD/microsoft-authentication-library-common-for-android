@@ -230,7 +230,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     processRedirectUrl(view, url);
                 }
             } else if (isWebsiteRequestUrl(formattedURL)) {
-                Logger.info(methodTag,"It is an external website request");
+                Logger.info(methodTag,"It is an external website request "+formattedURL);
                 processWebsiteRequest(view, url);
             } else if (isInstallRequestUrl(formattedURL)) {
                 Logger.info(methodTag,"It is an install request");
