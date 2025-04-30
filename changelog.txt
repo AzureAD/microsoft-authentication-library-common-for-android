@@ -1,8 +1,8 @@
 vNext
 ----------
 - [PATCH] Allow generating wrapping keys without PURPOSE_WRAP_KEY with Flight (#2633))
+- [MINOR] Pass Work Profile existence, OS Version, and Manufacturer to ESTS (#2627)
 - [MINOR] Add telemetry for the switch browser protocol (#2612)
-- [MINOR] Enable the new Broker discovery on MSAL by default (#2618)
 
 Version 21.0.0
 ----------

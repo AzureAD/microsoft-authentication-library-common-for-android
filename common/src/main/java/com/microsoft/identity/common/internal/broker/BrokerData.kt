@@ -161,6 +161,20 @@ data class BrokerData(val packageName : String,
         )
 
         @JvmStatic
+        val debugIntuneCE = BrokerData(
+            AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME,
+            AuthenticationConstants.Broker.INTUNE_APP_SHA512_DEBUG_SIGNATURE,
+            "debugIntuneCE"
+        )
+
+        @JvmStatic
+        val prodIntuneCE = BrokerData(
+            AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME,
+            AuthenticationConstants.Broker.INTUNE_APP_SHA512_RELEASE_SIGNATURE,
+            "prodIntuneCE"
+        )
+
+        @JvmStatic
         val accountManagerBrokers: Set<String> =
             Collections.unmodifiableSet(object : HashSet<String>() {
                 init {
