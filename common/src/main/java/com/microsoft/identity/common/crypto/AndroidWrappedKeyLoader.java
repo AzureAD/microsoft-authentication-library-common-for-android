@@ -27,7 +27,6 @@ import android.os.Build;
 import android.security.KeyPairGeneratorSpec;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
-import android.security.keystore.SecureKeyImportUnavailableException;
 
 import androidx.annotation.RequiresApi;
 
@@ -44,6 +43,7 @@ import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.util.CachedData;
 import com.microsoft.identity.common.java.util.FileUtil;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.File;
@@ -262,10 +262,10 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
             try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
                 keyPair = generateNewKeyPair();
                 span.setStatus(StatusCode.OK);
-            } catch (final Throwable e) {
+            } catch (final ClientException e) {
                 span.setStatus(StatusCode.ERROR);
                 span.recordException(e);
-                throw ExceptionAdapter.clientExceptionFromException(e);
+                throw e;
             } finally {
                 span.end();
             }
@@ -302,15 +302,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     @NonNull
     private KeyPair generateNewKeyPairAPI28AndAbove() throws ClientException {
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY)) {
-            try {
-                return generateWrappingKeyPair_WithPurposeWrapKey();
-            } catch (final ClientException e) {
-                if (e.getCause() != null &&
-                        SecureKeyImportUnavailableException.class.getSimpleName().equalsIgnoreCase(e.getCause().getClass().getSimpleName())) {
-                    return generateWrappingKeyPair();
-                }
-                throw e;
-            }
+            return generateWrappingKeyPair_WithPurposeWrapKey();
         } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY)) {
             return generateWrappingKeyPair();
         } else {
@@ -347,30 +339,62 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
             final KeyPair keyPair = attemptKeyPairGeneration(keyPairGenSpec);
             span.setAttribute(AttributeName.key_pair_gen_successful_method.name(), "legacy_key_gen_spec");
             return keyPair;
-        } catch (final ClientException e) {
+        } catch (final Throwable e) {
             Logger.error(TAG + ":generateKeyPairWithLegacySpec", "Error generating keypair with legacy spec.", e);
-            throw e;
+            throw ExceptionAdapter.clientExceptionFromException(e);
         }
     }
 
+    /**
+     * Generate a new key pair wrapping key, based on API level >= 28. This method uses new key gen spec
+     * with PURPOSE_WRAP_KEY. If this fails, it will fallback to generateWrappingKeyPair() which does not use
+     * PURPOSE_WRAP_KEY (still uses new key gen spec).
+     */
     @RequiresApi(Build.VERSION_CODES.P)
     private KeyPair generateWrappingKeyPair_WithPurposeWrapKey() throws ClientException {
+        final String methodTag = TAG + ":generateWrappingKeyPair_WithPurposeWrapKey";
         final Span span = SpanExtension.current();
-        int purposes = KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_WRAP_KEY;
-        final AlgorithmParameterSpec keyPairGenSpec = getSpecForWrappingKey(purposes);
-        final KeyPair keyPair = attemptKeyPairGeneration(keyPairGenSpec);
-        span.setAttribute(AttributeName.key_pair_gen_successful_method.name(), "new_key_gen_spec_with_wrap");
-        return keyPair;
+        try {
+            Logger.info(methodTag, "Generating new keypair with new spec with purpose_wrap_key");
+            int purposes = KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_WRAP_KEY;
+            final AlgorithmParameterSpec keyPairGenSpec = getSpecForWrappingKey(purposes);
+            final KeyPair keyPair = attemptKeyPairGeneration(keyPairGenSpec);
+            span.setAttribute(AttributeName.key_pair_gen_successful_method.name(), "new_key_gen_spec_with_wrap");
+            return keyPair;
+        } catch (final Throwable e) {
+            Logger.error(methodTag, "Error generating keypair with new spec with purpose_wrap_key." +
+                    "Attempting without purpose_wrap_key." , e);
+            if (!StringUtil.isNullOrEmpty(e.getMessage())) {
+                span.setAttribute(AttributeName.keypair_gen_exception.name(), e.getMessage());
+            }
+            return generateWrappingKeyPair();
+        }
     }
 
+    /**
+     * Generate a new key pair wrapping key, based on API level >= 23. This method uses new key gen spec
+     * with purposes PURPOSE_ENCRYPT and PURPOSE_DECRYPT. If this fails, it will fallback to generateKeyPairWithLegacySpec()
+     * which uses olg key gen spec.
+     */
     @RequiresApi(Build.VERSION_CODES.M)
     private KeyPair generateWrappingKeyPair() throws ClientException {
+        final String methodTag = TAG + ":generateWrappingKeyPair";
         final Span span = SpanExtension.current();
-        int purposes = KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT;
-        final AlgorithmParameterSpec keyPairGenSpec = getSpecForWrappingKey(purposes);
-        final KeyPair keyPair = attemptKeyPairGeneration(keyPairGenSpec);
-        span.setAttribute(AttributeName.key_pair_gen_successful_method.name(), "new_key_gen_spec_without_wrap");
-        return keyPair;
+        try {
+            Logger.info(methodTag, "Generating new keypair with new spec without wrap key");
+            int purposes = KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT;
+            final AlgorithmParameterSpec keyPairGenSpec = getSpecForWrappingKey(purposes);
+            final KeyPair keyPair = attemptKeyPairGeneration(keyPairGenSpec);
+            span.setAttribute(AttributeName.key_pair_gen_successful_method.name(), "new_key_gen_spec_without_wrap");
+            return keyPair;
+        } catch (final Throwable e) {
+            Logger.error(methodTag, "Error generating keypair with new spec." +
+                    "Attempting with legacy spec.", e);
+            if (!StringUtil.isNullOrEmpty(e.getMessage())) {
+                span.setAttribute(AttributeName.keypair_gen_exception.name(), e.getMessage());
+            }
+            return generateKeyPairWithLegacySpec();
+        }
     }
 
     private KeyPair attemptKeyPairGeneration(@NonNull final AlgorithmParameterSpec keyPairGenSpec) throws ClientException{
