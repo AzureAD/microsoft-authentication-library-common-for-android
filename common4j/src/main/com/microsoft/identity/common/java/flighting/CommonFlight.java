@@ -103,7 +103,12 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to make the state parameter required for the switch browser protocol.
      */
-    SWITCH_BROWSER_PROTOCOL_REQUIRES_STATE("SwitchBrowserProtocolRequiresState", false);
+    SWITCH_BROWSER_PROTOCOL_REQUIRES_STATE("SwitchBrowserProtocolRequiresState", false),
+
+    /**
+     * Flight to enable adding x-client-MN and x-client-WPAvailable extra query parameters
+     */
+    ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS("EnableAmApiWorkProfileExtraQueryParameters", false);
 
     private String key;
     private Object defaultValue;
