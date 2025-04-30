@@ -106,9 +106,14 @@ public enum CommonFlight implements IFlightConfig {
      */
     SWITCH_BROWSER_PROTOCOL_REQUIRES_STATE("SwitchBrowserProtocolRequiresState", false),
 
+    /**
+     * Flight to enable adding x-client-MN and x-client-WPAvailable extra query parameters
+     */
+    ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS("EnableAmApiWorkProfileExtraQueryParameters", false),
+
     /** Flight to enable the new key generation without PURPOSE_WRAP_KEY. Default is true.
-    * This is applicable for API >= 23
-    */
+     * This is applicable for API >= 23
+     */
     ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY("EnableNewKeyGenSpecForWrapWithoutPurposeWrapKey", true);
 
     private String key;
