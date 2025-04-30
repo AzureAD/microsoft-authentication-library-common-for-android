@@ -88,7 +88,7 @@ class SwitchBrowserUriHelperTest {
     }
 
     @Test
-    fun `test constructFromRedirectUri with missing code`() {
+    fun `test buildProcessUri with missing code`() {
         val redirectString = "${Broker.NEW_BROKER_REDIRECT_URI}?" +
                 "${SWITCH_BROWSER.ACTION_URI}=$ACTION_URI"
         val redirectUri = Uri.parse(redirectString)
@@ -98,6 +98,21 @@ class SwitchBrowserUriHelperTest {
         }
         Assert.assertEquals(ClientException.MALFORMED_URL, exception.errorCode)
         Assert.assertEquals("switch browser code is null or empty", exception.message)
+    }
+
+    @Test
+    fun `test buildProcessUri with missing sate (StateRequired)`() {
+        isStateRequired(true)
+        val redirectString = "${Broker.NEW_BROKER_REDIRECT_URI}?" +
+                "${SWITCH_BROWSER.CODE}=$CODE&" +
+                "${SWITCH_BROWSER.ACTION_URI}=$ACTION_URI"
+        val redirectUri = Uri.parse(redirectString)
+
+        val exception = Assert.assertThrows(ClientException::class.java) {
+            SwitchBrowserUriHelper.buildProcessUri(redirectUri)
+        }
+        Assert.assertEquals(ClientException.MISSING_PARAMETER, exception.errorCode)
+        Assert.assertEquals("State is null or empty", exception.message)
     }
 
     @Test
@@ -121,7 +136,21 @@ class SwitchBrowserUriHelperTest {
     }
 
     @Test
-    fun `test buildResumeUri valid params`() {
+    fun `test buildResumeUri valid params (stateNotRequired)`() {
+        isStateRequired(false)
+        val uri = SwitchBrowserUriHelper.buildResumeUri(
+            ACTION_URI, null
+        )
+        Assert.assertNotNull(uri)
+        Assert.assertEquals(
+            ACTION_URI,
+            uri.host + uri.path
+        )
+        Assert.assertNull(uri.getQueryParameter(SWITCH_BROWSER.STATE))
+    }
+
+    @Test
+    fun `test buildResumeUri valid params (stateRequired)`() {
         val uri = SwitchBrowserUriHelper.buildResumeUri(
             ACTION_URI, STATE
         )
@@ -134,6 +163,16 @@ class SwitchBrowserUriHelperTest {
             STATE,
             uri.getQueryParameter(SWITCH_BROWSER.STATE)
         )
+    }
+
+    @Test
+    fun `test buildResumeUri missing state (stateRequired)`() {
+        isStateRequired(true)
+        val exception = Assert.assertThrows(ClientException::class.java) {
+            SwitchBrowserUriHelper.buildResumeUri(ACTION_URI, null)
+        }
+        Assert.assertEquals(ClientException.MISSING_PARAMETER, exception.errorCode)
+        Assert.assertEquals("State is null or empty", exception.message)
     }
 
     @Test

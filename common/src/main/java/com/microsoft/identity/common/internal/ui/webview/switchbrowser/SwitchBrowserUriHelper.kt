@@ -79,24 +79,13 @@ object SwitchBrowserUriHelper {
             Logger.error(methodTag, errorMessage, exception)
             throw exception
         }
-
+        val state = uri.getQueryParameter(
+            SWITCH_BROWSER.STATE
+        )
         // Query parameters for the process uri.
         val queryParams = hashMapOf<String, String>()
         queryParams[SWITCH_BROWSER.CODE] = code
-        if (STATE_VALIDATION_REQUIRED) {
-            val state = uri.getQueryParameter(
-                SWITCH_BROWSER.STATE
-            )
-            if (state.isNullOrEmpty()) {
-                // This should never happen, but if it does, we should log it and throw.
-                val errorMessage = "switch browser action state is null or empty"
-                val exception = ClientException(ClientException.MALFORMED_URL, errorMessage)
-                Logger.error(methodTag, errorMessage, exception)
-                throw exception
-            } else {
-                queryParams[SWITCH_BROWSER.STATE] = state
-            }
-        }
+        addStateToQueryParams(queryParams, state, methodTag)
         // Construct the uri to the process endpoint.
         return buildSwitchBrowserUri(actionUri, queryParams)
     }
@@ -114,17 +103,7 @@ object SwitchBrowserUriHelper {
         val methodTag = "$TAG:buildResumeUri"
         // Construct the uri to the resume endpoint.
         val queryParams = hashMapOf<String, String>()
-        if (STATE_VALIDATION_REQUIRED) {
-            if (state.isNullOrEmpty()) {
-                // This should never happen, but if it does, we should log it and throw.
-                val errorMessage = "State is null or empty"
-                val exception = ClientException(ClientException.MISSING_PARAMETER, errorMessage)
-                Logger.error(methodTag, errorMessage, exception)
-                throw exception
-            } else {
-                queryParams[SWITCH_BROWSER.STATE] = state
-            }
-        }
+        addStateToQueryParams(queryParams, state, methodTag)
         return buildSwitchBrowserUri(actionUri, queryParams)
     }
 
@@ -190,6 +169,25 @@ object SwitchBrowserUriHelper {
             throw clientException
         }
         Logger.info(methodTag, "States match.")
+    }
+
+    /**
+     * Add state to the query parameters If STATE_VALIDATION_REQUIRED is enabled.
+     * If STATE_VALIDATION_REQUIRED is disabled, this method does nothing.
+     * If STATE_VALIDATION_REQUIRED is enabled and state is null or empty, this method throws an exception.
+     */
+    private fun addStateToQueryParams(queryParams: HashMap<String, String>, state: String?, methodTag: String) {
+        if (STATE_VALIDATION_REQUIRED) {
+            if (state.isNullOrEmpty()) {
+                // This should never happen, but if it does, we should log it and throw.
+                val errorMessage = "State is null or empty"
+                val exception = ClientException(ClientException.MISSING_PARAMETER, errorMessage)
+                Logger.error(methodTag, errorMessage, exception)
+                throw exception
+            } else {
+                queryParams[SWITCH_BROWSER.STATE] = state
+            }
+        }
     }
 
     /**
