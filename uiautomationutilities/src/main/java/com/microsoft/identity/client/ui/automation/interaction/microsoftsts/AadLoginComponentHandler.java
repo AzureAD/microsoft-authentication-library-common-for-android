@@ -71,17 +71,18 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     @Override
     public void handleEmailField(@NonNull final String username) {
         try {
-            UiAutomatorUtils.handleInputByClass("android.widget.EditText", username, mFindLoginUiElementTimeout);
-            handleNextButtonByText();
-        } catch (AssertionError e) {
             UiAutomatorUtils.handleInput("i0116", username, mFindLoginUiElementTimeout);
             handleNextButton();
+        } catch (AssertionError e) {
+            UiAutomatorUtils.handleInputByClass("android.widget.EditText", username, mFindLoginUiElementTimeout);
+            handleNextButtonByText();
         }
     }
 
     @Override
     public void handlePasswordField(@NonNull final String password) {
         Logger.i(TAG, "Handle Aad Login Password UI..");
+        UiAutomatorUtils.obtainUiObjectWithText("password", mFindLoginUiElementTimeout);
         try {
             UiAutomatorUtils.handleInputByClass("android.widget.EditText", password, mFindLoginUiElementTimeout);
             handleNextOrSignInButtonByRegex();
