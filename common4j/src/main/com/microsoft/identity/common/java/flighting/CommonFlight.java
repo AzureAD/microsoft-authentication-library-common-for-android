@@ -102,9 +102,13 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD("EnableAttachPrtHeaderWhenCrossCloud", true),
 
     /**
-     * Flight to enable the new key generation without PURPOSE_WRAP_KEY. Default is true.
-     * This is applicable for API >= 23
+     * Flight to make the state parameter required for the switch browser protocol.
      */
+    SWITCH_BROWSER_PROTOCOL_REQUIRES_STATE("SwitchBrowserProtocolRequiresState", false),
+
+    /** Flight to enable the new key generation without PURPOSE_WRAP_KEY. Default is true.
+    * This is applicable for API >= 23
+    */
     ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY("EnableNewKeyGenSpecForWrapWithoutPurposeWrapKey", true);
 
     private String key;
