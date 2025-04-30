@@ -91,7 +91,8 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED("EnableAttachNewPrtHeaderWhenNonceExpired", true),
 
     /**
-     * Flight to enable the new key generation spec for wrap key. Default is true.
+     * Flight to enable the new key generation spec for wrap key using PURPOSE_WRAP_KEY in key gen spec. Default is true.
+     * This is applicable for API >= 28
      */
     ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY("EnableNewKeyGenSpecForWrapWithPurposeWrapKey", true),
 
@@ -101,7 +102,8 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD("EnableAttachPrtHeaderWhenCrossCloud", true),
 
     /**
-     * Flight to enable the new key generation without purpose_wrap_key
+     * Flight to enable the new key generation without PURPOSE_WRAP_KEY. Default is true.
+     * This is applicable for API >= 23
      */
     ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY("EnableNewKeyGenSpecForWrapWithoutPurposeWrapKey", true);
 
