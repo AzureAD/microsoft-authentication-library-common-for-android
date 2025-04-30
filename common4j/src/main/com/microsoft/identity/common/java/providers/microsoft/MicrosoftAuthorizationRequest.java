@@ -25,12 +25,18 @@ package com.microsoft.identity.common.java.providers.microsoft;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.DefaultStateGenerator;
 import com.microsoft.identity.common.java.providers.oauth2.PkceChallenge;
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.UUID;
 
@@ -125,10 +131,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @SerializedName("x-client-DM")
     private final String mDiagnosticDM;
 
-    @Expose()
     @Getter
     @Accessors(prefix = "m")
-    @SerializedName(Device.PlatformIdParameters.MANUFACTURER)
     private final String mDiagnosticMN;
 
     @Expose()
@@ -143,10 +147,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @SerializedName("pc")
     private final String mPreferredAuthMethodCode;
 
-    @Expose()
     @Getter
     @Accessors(prefix = "m")
-    @SerializedName(WP_AVAILABLE_EXTRA_PARAMETER_NAME)
     private final Boolean mWorkProfileAvailable;
 
 
@@ -178,6 +180,29 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mDiagnosticCPU = Device.getCpu();
         mDiagnosticMN = Device.getManufacturer();
         mWorkProfileAvailable = Device.isInPersonalProfileButClouddpcWorkProfileAvailable();
+    }
+
+    @Override
+    public URI getAuthorizationRequestAsHttpRequest() throws ClientException {
+        final URI superRequestUri = super.getAuthorizationRequestAsHttpRequest();
+
+        // If the flight is enabled, add fields for AM API Work Profile
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS)) {
+
+            final CommonURIBuilder builder = new CommonURIBuilder(superRequestUri);
+            builder.addParameterIfAbsent(WP_AVAILABLE_EXTRA_PARAMETER_NAME, String.valueOf(mWorkProfileAvailable));
+            builder.addParameterIfAbsent(Device.PlatformIdParameters.MANUFACTURER, mDiagnosticMN);
+
+            try {
+                return builder.build();
+            } catch (final URISyntaxException e) {
+                throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
+            }
+        }
+        // If flight is disabled, just return uri from the super method
+        else {
+            return superRequestUri;
+        }
     }
 
     public abstract static class Builder<B extends MicrosoftAuthorizationRequest.Builder<B>> extends AuthorizationRequest.Builder<B> {

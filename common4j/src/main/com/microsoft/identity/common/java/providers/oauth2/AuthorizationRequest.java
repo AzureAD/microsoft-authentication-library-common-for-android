@@ -312,15 +312,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     public URI getAuthorizationRequestAsHttpRequest() throws ClientException {
         try {
             final CommonURIBuilder builder = new CommonURIBuilder(getAuthorizationEndpoint());
-            final Map<String, Object> serializedMap = ObjectMapper.serializeObjectHashMap(this);
-
-            // If the flight is not enabled, do not include these fields in the query parameter map
-            if (!CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS)) {
-                serializedMap.remove(MicrosoftAuthorizationRequest.WP_AVAILABLE_EXTRA_PARAMETER_NAME);
-                serializedMap.remove(Device.PlatformIdParameters.MANUFACTURER);
-            }
-
-            builder.addParametersIfAbsent(serializedMap);
+            builder.addParametersIfAbsent(ObjectMapper.serializeObjectHashMap(this));
             builder.addParametersIfAbsent(mExtraQueryParams);
             return builder.build();
         } catch (final URISyntaxException e) {
