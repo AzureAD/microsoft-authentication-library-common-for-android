@@ -58,7 +58,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     private final long mFindLoginUiElementTimeout;
 
     public AadLoginComponentHandler() {
-        mFindLoginUiElementTimeout = CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT;
+        mFindLoginUiElementTimeout = CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
     }
 
     /**
@@ -71,12 +71,11 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     @Override
     public void handleEmailField(@NonNull final String username) {
         try {
+            UiAutomatorUtils.handleInputByClass("android.widget.EditText", username, mFindLoginUiElementTimeout);
+            handleNextButtonByText();
+        } catch (AssertionError e) {
             UiAutomatorUtils.handleInput("i0116", username, mFindLoginUiElementTimeout);
             handleNextButton();
-        } catch (AssertionError e) {
-            // If we can't find email field, we can try without resource id
-            UiAutomatorUtils.handleInputByClass("android.widget.EditText", username);
-            handleNextButtonByText();
         }
     }
 
@@ -84,12 +83,11 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     public void handlePasswordField(@NonNull final String password) {
         Logger.i(TAG, "Handle Aad Login Password UI..");
         try {
+            UiAutomatorUtils.handleInputByClass("android.widget.EditText", password, mFindLoginUiElementTimeout);
+            handleNextOrSignInButtonByRegex();
+        } catch (AssertionError e) {
             UiAutomatorUtils.handleInput("i0118", password, mFindLoginUiElementTimeout);
             handleNextButton();
-        } catch (AssertionError e) {
-            // If we can't find password field, we can try without resource id
-            UiAutomatorUtils.handleInputByClass("android.widget.EditText", password);
-            handleSignInButtonByText();
         }
     }
 
@@ -117,6 +115,10 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     public void handleRegistrationButton() {
         UiAutomatorUtils.handleButtonClickForObjectWithExactText("Register");
+    }
+
+    public void handleNextOrSignInButtonByRegex() {
+        UiAutomatorUtils.handleButtonClickForObjectWithRegexMatch("Next|Sign in");
     }
 
     @Override
