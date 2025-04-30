@@ -22,7 +22,17 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2
 
+import android.Manifest
+import android.app.AlertDialog
+import android.content.Context
+import android.content.pm.PackageManager
 import android.webkit.PermissionRequest
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import com.microsoft.identity.common.R
+import com.microsoft.identity.common.internal.broker.SdmQrPinManager
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod
 import com.microsoft.identity.common.logging.Logger
 
 /**
@@ -30,25 +40,62 @@ import com.microsoft.identity.common.logging.Logger
  * Note: This class is compatible only with API level 21 and above;
  * functionality will not behave as expected on lower versions.
  */
-class CameraPermissionRequestHandler {
+class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
+
+    private companion object {
+        private const val TAG = "CameraPermissionRequestHandler"
+        private const val MICROSOFT_CLOUD_URL: String = "https://login.microsoftonline.com/"
+        private val cameraResource = arrayOf(PermissionRequest.RESOURCE_VIDEO_CAPTURE)
+    }
+
+    private val activityResultLauncher: ActivityResultLauncher<String> =
+        fragment.registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            permissionGranted: Boolean ->
+            Logger.info(TAG, "Camera permission granted: $permissionGranted")
+            if (permissionGranted) {
+                grant()
+            } else {
+                deny()
+            }
+        }
 
     private var currentPermissionRequest : PermissionRequest? = null
 
     /**
-     * Check if the permission was granted.
-     *
-     * @return true if the permission is granted.
+     * Keeps track of the camera permission request state.
      */
     private var isGranted = false
 
     /**
+     * Handles the camera permission request.
+     * <p>
+     * If the request is valid, it will be handled by the qrPinHandler or defaultHandler.
+     * If the request is not valid, it will be denied.
+     *
+     * @param request The permission request to handle.
+     */
+    fun handle(request: PermissionRequest, context: Context) {
+        val  methodTag = "$TAG:handle"
+        // Check if the request is valid.
+        if (isValid(request)) {
+            currentPermissionRequest = request
+            isGranted = false
+        } else {
+            Logger.warn(methodTag, "Permission request is not valid, returning.")
+            return
+        }
+        if(isQrPinRequest()) {
+            qrPinHandler(context)
+        } else {
+            defaultHandler(context)
+        }
+    }
+
+    /**
      * Call this method to grant the permission to access the camera resource.
      * The granted permission is only valid for the current WebView.
-     *
-     *
-     * Note: This method is only available on API level 21 or higher.
      */
-    fun grant() {
+    private fun grant() {
         currentPermissionRequest?.let {
             it.grant(cameraResource)
             isGranted = true
@@ -57,11 +104,8 @@ class CameraPermissionRequestHandler {
 
     /**
      * Call this method to deny the permission to access the camera resource.
-     *
-     *
-     * Note: This method is only available on API level 21 or higher.
      */
-    fun deny() {
+    private fun deny() {
         currentPermissionRequest?.let {
             it.deny()
             isGranted = false
@@ -70,16 +114,17 @@ class CameraPermissionRequestHandler {
 
     /**
      * Check if the given [PermissionRequest] is valid.
-     * If valid, set the current permission request and return true.
+     * If valid return true.
      * If not valid, deny the request and return false.
      * <p>
      * A request is considered valid if:
      * - The request is for the camera resource only.
      * - The request is not a repeated request (i.e., not for the same origin and resources).
-     *
+     * We can only grant or deny permissions for video capture/camera.
+     * To avoid unintentionally granting requests for not defined permissions
      */
-    fun setIfValid(request: PermissionRequest): Boolean {
-        val methodTag = "$TAG:setIfValid"
+    private fun isValid(request: PermissionRequest): Boolean {
+        val methodTag = "$TAG:isValid"
         if (!isForCamera(request)) {
             Logger.warn(methodTag, "Permission request is not for camera.")
             request.deny()
@@ -97,19 +142,92 @@ class CameraPermissionRequestHandler {
             return false
         } else {
             Logger.info(methodTag, "Valid new request.")
-            setCurrentPermissionRequest(request)
             return true
         }
     }
 
     /**
-     * Set the current permission request.
+     * Check if the current permission request is a QR code pin request.
+     * <p>
+     * A request is considered a QR code pin request if:
+     * - The origin of the request is the Microsoft cloud URL.
+     * - The device is on SDM QR pin mode.
      *
-     * @param permissionRequest The permission request to set.
+     * @return true if the current permission request is a QR code pin request, false otherwise.
      */
-    private fun setCurrentPermissionRequest(permissionRequest: PermissionRequest) {
-        currentPermissionRequest = permissionRequest
-        isGranted = false
+    private fun isQrPinRequest() : Boolean {
+        return currentPermissionRequest?.origin != null
+                && MICROSOFT_CLOUD_URL.equals(currentPermissionRequest?.origin.toString(), ignoreCase = true)
+                && PreferredAuthMethod.QR.value.equals(SdmQrPinManager.getPreferredAuthConfig())
+    }
+
+    /**
+     * Handles the camera permission request for the app.
+     * If the camera permission is already granted, it will grant the permission.
+     * Otherwise, it will request the camera permission.
+     */
+    private fun defaultHandler(context: Context) {
+        val methodTag = "$TAG:defaultHandler"
+        if (appHasCameraPermission(context)) {
+            Logger.info(methodTag, "App level camera permission already granted, silent grant.")
+            grant()
+        } else {
+            requestCameraPermission()
+        }
+    }
+
+    /**
+     * Handles the camera permission request for QR code scanning.
+     * If the camera permission is already granted and the camera consent suppress is enabled,
+     * it will grant the permission. otherwise, it will explaining why the camera permission is required.
+     * If the camera permission is not granted, it will request the camera permission.
+     */
+    private fun qrPinHandler(context: Context) {
+        val  methodTag = "$TAG:handleQrPin"
+        if (appHasCameraPermission(context)) {
+            Logger.info(methodTag, "App level camera permission already granted.")
+            if (SdmQrPinManager.isCameraConsentSuppressed()) {
+                Logger.info(methodTag, "Camera consent suppress is enabled.")
+                grant()
+            } else {
+                Logger.info(methodTag, "Camera consent suppress is not enabled.")
+                showQrPinCameraRationale(context)
+            }
+        } else {
+            requestCameraPermission()
+        }
+    }
+
+    /**
+     * Determines whatever if the camera permission has been granted.
+     *
+     * @return true if the camera permission has been granted, false otherwise.
+     */
+    private fun appHasCameraPermission(context: Context): Boolean {
+        return (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED)
+    }
+
+    /**
+     * Shows a dialog to the user explaining why the camera permission is required.
+     * If the user accepts the dialog, the camera permission request will be launched.
+     * If the user denies the dialog, the camera permission request will be denied.
+     */
+    private fun showQrPinCameraRationale(context: Context) {
+        val methodTag = "$TAG:showQrPinCameraRationale"
+        val builder = AlertDialog.Builder(context)
+        builder.setMessage(R.string.qr_code_rationale_message)
+            .setTitle(R.string.qr_code_rationale_header)
+            .setCancelable(false)
+            .setPositiveButton(R.string.qr_code_rationale_allow) { _, _ ->
+                Logger.info(methodTag, "User accepted camera permission rationale.")
+                requestCameraPermission()
+            }
+            .setNegativeButton(R.string.qr_code_rationale_block) { _, _ ->
+                Logger.info(methodTag, "User denied camera permission rationale.")
+                deny()
+            }
+        builder.show()
     }
 
     /**
@@ -154,10 +272,14 @@ class CameraPermissionRequestHandler {
                 PermissionRequest.RESOURCE_VIDEO_CAPTURE == request.resources[0]
     }
 
-    companion object {
-        private const val TAG = "CameraPermissionRequestHandler"
-        private val cameraResource = arrayOf(
-            PermissionRequest.RESOURCE_VIDEO_CAPTURE
-        )
+    /**
+     * Launches the camera permission request for the app.
+     * Note: if the permission was already granted or denied,
+     * the user will not be prompted and it will go directly to the callback.
+     * Using the current state of the permission.
+     *
+     */
+    private fun requestCameraPermission() {
+        activityResultLauncher.launch(Manifest.permission.CAMERA)
     }
 }

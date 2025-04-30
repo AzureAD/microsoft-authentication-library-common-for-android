@@ -187,7 +187,8 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             username = commandParameters.username,
             challengeType = config.challengeType,
             requestUrl = signInTokenEndpoint,
-            headers = getRequestHeaders(commandParameters.getCorrelationId())
+            headers = getRequestHeaders(commandParameters.getCorrelationId()),
+            claimsRequestJson = commandParameters.claimsRequestJson
         )
     }
 

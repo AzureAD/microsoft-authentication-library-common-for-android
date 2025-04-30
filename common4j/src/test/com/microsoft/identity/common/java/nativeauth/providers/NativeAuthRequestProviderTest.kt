@@ -828,6 +828,7 @@ class NativeAuthRequestProviderTest {
     fun testSignInTokenContinuationShouldContainsCorrectParams() {
         val scopes = arrayListOf("OOB", "PASSWORD")
         val headers = mapOf("key" to "value")
+        val claims = "claims"
         val request = SignInTokenRequest.createContinuationTokenRequest(
             continuationToken,
             clientId,
@@ -835,10 +836,11 @@ class NativeAuthRequestProviderTest {
             scopes,
             challengeType,
             ApiConstants.MockApi.signInTokenRequestUrl.toString(),
-            headers
+            headers,
+            claimsRequestJson = claims
         )
         assertNull(request.parameters.password)
-        assertNull(request.parameters.claimsRequestJson)
+        assertEquals(request.parameters.claimsRequestJson, claims)
         assertEquals(request.parameters.scope, "OOB PASSWORD")
         assertEquals(request.parameters.continuationToken, continuationToken)
         assertEquals(request.parameters.challengeType, challengeType)

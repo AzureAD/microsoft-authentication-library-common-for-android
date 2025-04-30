@@ -139,7 +139,8 @@ data class SignInTokenRequest private constructor(
             scopes: List<String>? = null,
             challengeType: String? = null,
             requestUrl: String,
-            headers: Map<String, String?>
+            headers: Map<String, String?>,
+            claimsRequestJson: String?
         ): SignInTokenRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
@@ -157,7 +158,7 @@ data class SignInTokenRequest private constructor(
                     grantType = NativeAuthConstants.GrantType.CONTINUATION_TOKEN,
                     challengeType = challengeType,
                     scope = scopes?.joinToString(" "),
-                    claimsRequestJson = null
+                    claimsRequestJson = claimsRequestJson
                 ),
                 requestUrl = URL(requestUrl),
                 headers = headers

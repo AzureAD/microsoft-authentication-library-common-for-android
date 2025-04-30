@@ -1,6 +1,8 @@
 vNext
 ----------
-- [MINOR] Enable the new Broker discovery on MSAL by default (#2618)
+- [MINOR] Move camera logic to CameraPermissionRequestHandler and add SdmQrPinManager (#2630)
+- [MINOR] Pass Work Profile existence, OS Version, and Manufacturer to ESTS (#2627)
+- [MINOR] Add telemetry for the switch browser protocol (#2612)
 
 Version 21.0.0
 ----------
@@ -12,6 +14,7 @@ Version 21.0.0
 - [PATCH] Track MAM flow in telemetry (#2608)
 - [PATCH] Fix multiple prompts issue in cross cloud request (#2599)
 - [PATCH] Corrected error handling in cross cloud scenario (#2602)
+- [MINOR] Native auth: Add claimsRequest also to getAccessToken and signIn after signUp/SSPR flows (#2622)
 
 Version 20.1.1
 ----------
