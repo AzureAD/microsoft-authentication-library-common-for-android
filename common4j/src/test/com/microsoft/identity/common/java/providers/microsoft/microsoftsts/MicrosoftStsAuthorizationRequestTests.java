@@ -24,6 +24,8 @@ package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
 import com.microsoft.identity.common.java.TestUtils;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.platform.MockDeviceMetadata;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
@@ -129,30 +131,55 @@ public class MicrosoftStsAuthorizationRequestTests {
                 .setScope(DEFAULT_TEST_SCOPE)
                 .build();
 
-        Assert.assertEquals(DEFAULT_TEST_AUTHORIZATION_ENDPOINT +
-                        "?prompt=" + DEFAULT_TEST_PROMPT +
-                        "&login_req=" + DEFAULT_TEST_UID +
-                        "&domain_req=" + DEFAULT_TEST_UTID +
-                        "&cpVersion=" + TEST_CP_VERSION +
-                        // Base class fields start here.
-                        "&client-request-id=" + DEFAULT_TEST_CORRELATION_ID +
-                        "&code_challenge=" + MOCK_PKCE_CHALLENGE.getCodeChallenge() +
-                        "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
-                        "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
-                        "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
-                        "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
-                        "&x-client-MN=" + MockDeviceMetadata.TEST_MANUFACTURER +
-                        "&" + MicrosoftAuthorizationRequest.WP_AVAILABLE_EXTRA_PARAMETER_NAME + "=false" +
-                        "&response_type=code" +
-                        "&client_id=" + DEFAULT_TEST_CLIENT_ID +
-                        "&redirect_uri=" + DEFAULT_TEST_REDIRECT_URI_ENCODED +
-                        "&state=" + MOCK_STATE_ENCODED +
-                        "&scope=" + DEFAULT_TEST_SCOPE_ENCODED +
-                        "&" + MOCK_FLIGHT_QUERY_1 + "=" + MOCK_FLIGHT_VALUE_1 +
-                        "&" + MOCK_FLIGHT_QUERY_2 + "=" + MOCK_FLIGHT_VALUE_2 +
-                        "&slice=" + DEFAULT_TEST_SLICE_PARAMETER +
-                        "&dc=" + DEFAULT_TEST_DATA_CENTER,
-                request.getAuthorizationRequestAsHttpRequest().toString());
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS)) {
+            Assert.assertEquals(DEFAULT_TEST_AUTHORIZATION_ENDPOINT +
+                            "?prompt=" + DEFAULT_TEST_PROMPT +
+                            "&login_req=" + DEFAULT_TEST_UID +
+                            "&domain_req=" + DEFAULT_TEST_UTID +
+                            "&cpVersion=" + TEST_CP_VERSION +
+                            // Base class fields start here.
+                            "&client-request-id=" + DEFAULT_TEST_CORRELATION_ID +
+                            "&code_challenge=" + MOCK_PKCE_CHALLENGE.getCodeChallenge() +
+                            "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
+                            "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
+                            "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
+                            "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
+                            "&response_type=code" +
+                            "&client_id=" + DEFAULT_TEST_CLIENT_ID +
+                            "&redirect_uri=" + DEFAULT_TEST_REDIRECT_URI_ENCODED +
+                            "&state=" + MOCK_STATE_ENCODED +
+                            "&scope=" + DEFAULT_TEST_SCOPE_ENCODED +
+                            "&x-client-MN=" + MockDeviceMetadata.TEST_MANUFACTURER +
+                            "&" + MicrosoftAuthorizationRequest.WP_AVAILABLE_EXTRA_PARAMETER_NAME + "=false" +
+                            "&" + MOCK_FLIGHT_QUERY_1 + "=" + MOCK_FLIGHT_VALUE_1 +
+                            "&" + MOCK_FLIGHT_QUERY_2 + "=" + MOCK_FLIGHT_VALUE_2 +
+                            "&slice=" + DEFAULT_TEST_SLICE_PARAMETER +
+                            "&dc=" + DEFAULT_TEST_DATA_CENTER,
+                    request.getAuthorizationRequestAsHttpRequest().toString());
+        } else {
+            Assert.assertEquals(DEFAULT_TEST_AUTHORIZATION_ENDPOINT +
+                            "?prompt=" + DEFAULT_TEST_PROMPT +
+                            "&login_req=" + DEFAULT_TEST_UID +
+                            "&domain_req=" + DEFAULT_TEST_UTID +
+                            "&cpVersion=" + TEST_CP_VERSION +
+                            // Base class fields start here.
+                            "&client-request-id=" + DEFAULT_TEST_CORRELATION_ID +
+                            "&code_challenge=" + MOCK_PKCE_CHALLENGE.getCodeChallenge() +
+                            "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
+                            "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
+                            "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
+                            "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
+                            "&response_type=code" +
+                            "&client_id=" + DEFAULT_TEST_CLIENT_ID +
+                            "&redirect_uri=" + DEFAULT_TEST_REDIRECT_URI_ENCODED +
+                            "&state=" + MOCK_STATE_ENCODED +
+                            "&scope=" + DEFAULT_TEST_SCOPE_ENCODED +
+                            "&" + MOCK_FLIGHT_QUERY_1 + "=" + MOCK_FLIGHT_VALUE_1 +
+                            "&" + MOCK_FLIGHT_QUERY_2 + "=" + MOCK_FLIGHT_VALUE_2 +
+                            "&slice=" + DEFAULT_TEST_SLICE_PARAMETER +
+                            "&dc=" + DEFAULT_TEST_DATA_CENTER,
+                    request.getAuthorizationRequestAsHttpRequest().toString());
+        }
 
         Assert.assertEquals(DEFAULT_TEST_DISPLAYABLEID, request.getDisplayableId());
     }
@@ -182,30 +209,55 @@ public class MicrosoftStsAuthorizationRequestTests {
                 .setScope(DEFAULT_TEST_SCOPE)
                 .build();
 
-        Assert.assertEquals(DEFAULT_TEST_AUTHORIZATION_ENDPOINT +
-                        "?prompt=" + DEFAULT_TEST_PROMPT +
-                        "&login_req=" + DEFAULT_TEST_UID +
-                        "&domain_req=" + DEFAULT_TEST_UTID +
-                        "&cpVersion=" + TEST_CP_VERSION +
-                        // Base class fields start here.
-                        "&client-request-id=" + DEFAULT_TEST_CORRELATION_ID +
-                        "&code_challenge=" + MOCK_PKCE_CHALLENGE.getCodeChallenge() +
-                        "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
-                        "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
-                        "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
-                        "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
-                        "&x-client-MN=" + MockDeviceMetadata.TEST_MANUFACTURER +
-                        "&" + MicrosoftAuthorizationRequest.WP_AVAILABLE_EXTRA_PARAMETER_NAME + "=true" +
-                        "&response_type=code" +
-                        "&client_id=" + DEFAULT_TEST_CLIENT_ID +
-                        "&redirect_uri=" + DEFAULT_TEST_REDIRECT_URI_ENCODED +
-                        "&state=" + MOCK_STATE_ENCODED +
-                        "&scope=" + DEFAULT_TEST_SCOPE_ENCODED +
-                        "&" + MOCK_FLIGHT_QUERY_1 + "=" + MOCK_FLIGHT_VALUE_1 +
-                        "&" + MOCK_FLIGHT_QUERY_2 + "=" + MOCK_FLIGHT_VALUE_2 +
-                        "&slice=" + DEFAULT_TEST_SLICE_PARAMETER +
-                        "&dc=" + DEFAULT_TEST_DATA_CENTER,
-                request.getAuthorizationRequestAsHttpRequest().toString());
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS)) {
+            Assert.assertEquals(DEFAULT_TEST_AUTHORIZATION_ENDPOINT +
+                            "?prompt=" + DEFAULT_TEST_PROMPT +
+                            "&login_req=" + DEFAULT_TEST_UID +
+                            "&domain_req=" + DEFAULT_TEST_UTID +
+                            "&cpVersion=" + TEST_CP_VERSION +
+                            // Base class fields start here.
+                            "&client-request-id=" + DEFAULT_TEST_CORRELATION_ID +
+                            "&code_challenge=" + MOCK_PKCE_CHALLENGE.getCodeChallenge() +
+                            "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
+                            "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
+                            "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
+                            "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
+                            "&response_type=code" +
+                            "&client_id=" + DEFAULT_TEST_CLIENT_ID +
+                            "&redirect_uri=" + DEFAULT_TEST_REDIRECT_URI_ENCODED +
+                            "&state=" + MOCK_STATE_ENCODED +
+                            "&scope=" + DEFAULT_TEST_SCOPE_ENCODED +
+                            "&x-client-MN=" + MockDeviceMetadata.TEST_MANUFACTURER +
+                            "&" + MicrosoftAuthorizationRequest.WP_AVAILABLE_EXTRA_PARAMETER_NAME + "=true" +
+                            "&" + MOCK_FLIGHT_QUERY_1 + "=" + MOCK_FLIGHT_VALUE_1 +
+                            "&" + MOCK_FLIGHT_QUERY_2 + "=" + MOCK_FLIGHT_VALUE_2 +
+                            "&slice=" + DEFAULT_TEST_SLICE_PARAMETER +
+                            "&dc=" + DEFAULT_TEST_DATA_CENTER,
+                    request.getAuthorizationRequestAsHttpRequest().toString());
+        } else {
+            Assert.assertEquals(DEFAULT_TEST_AUTHORIZATION_ENDPOINT +
+                            "?prompt=" + DEFAULT_TEST_PROMPT +
+                            "&login_req=" + DEFAULT_TEST_UID +
+                            "&domain_req=" + DEFAULT_TEST_UTID +
+                            "&cpVersion=" + TEST_CP_VERSION +
+                            // Base class fields start here.
+                            "&client-request-id=" + DEFAULT_TEST_CORRELATION_ID +
+                            "&code_challenge=" + MOCK_PKCE_CHALLENGE.getCodeChallenge() +
+                            "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
+                            "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
+                            "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
+                            "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
+                            "&response_type=code" +
+                            "&client_id=" + DEFAULT_TEST_CLIENT_ID +
+                            "&redirect_uri=" + DEFAULT_TEST_REDIRECT_URI_ENCODED +
+                            "&state=" + MOCK_STATE_ENCODED +
+                            "&scope=" + DEFAULT_TEST_SCOPE_ENCODED +
+                            "&" + MOCK_FLIGHT_QUERY_1 + "=" + MOCK_FLIGHT_VALUE_1 +
+                            "&" + MOCK_FLIGHT_QUERY_2 + "=" + MOCK_FLIGHT_VALUE_2 +
+                            "&slice=" + DEFAULT_TEST_SLICE_PARAMETER +
+                            "&dc=" + DEFAULT_TEST_DATA_CENTER,
+                    request.getAuthorizationRequestAsHttpRequest().toString());
+        }
 
         Assert.assertEquals(DEFAULT_TEST_DISPLAYABLEID, request.getDisplayableId());
     }

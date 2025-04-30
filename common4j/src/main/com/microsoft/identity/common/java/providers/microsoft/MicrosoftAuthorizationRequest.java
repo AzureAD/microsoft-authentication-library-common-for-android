@@ -131,9 +131,10 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @SerializedName("x-client-DM")
     private final String mDiagnosticDM;
 
+    // Transient to avoid adding this automatically, leave control to flight
     @Getter
     @Accessors(prefix = "m")
-    private final String mDiagnosticMN;
+    private transient final String mDiagnosticMN;
 
     @Expose()
     @Getter
@@ -147,9 +148,10 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @SerializedName("pc")
     private final String mPreferredAuthMethodCode;
 
+    // Transient to avoid adding this automatically, leave control to flight
     @Getter
     @Accessors(prefix = "m")
-    private final Boolean mWorkProfileAvailable;
+    private transient final Boolean mWorkProfileAvailable;
 
 
     /**
@@ -190,8 +192,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS)) {
 
             final CommonURIBuilder builder = new CommonURIBuilder(superRequestUri);
-            builder.addParameterIfAbsent(WP_AVAILABLE_EXTRA_PARAMETER_NAME, String.valueOf(mWorkProfileAvailable));
             builder.addParameterIfAbsent(Device.PlatformIdParameters.MANUFACTURER, mDiagnosticMN);
+            builder.addParameterIfAbsent(WP_AVAILABLE_EXTRA_PARAMETER_NAME, String.valueOf(mWorkProfileAvailable));
 
             try {
                 return builder.build();
