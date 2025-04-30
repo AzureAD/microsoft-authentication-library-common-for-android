@@ -28,6 +28,7 @@ import com.microsoft.identity.common.logging.Logger
 
 /**
  * Manages the SDM QR PIN mode settings for the device.
+ * by reading the restrictions manager of the Authenticator app.
  *
  * This object contains functions to check"
  * - Whether camera consent should be suppressed.
@@ -42,6 +43,7 @@ object SdmQrPinManager {
 
     private const val TAG = "SdmQrPinManager"
 
+    private val authenticatorPackageName = BrokerData.prodMicrosoftAuthenticator.packageName
     private var restrictionsManager: IRestrictionsManager? = null
 
     /**
@@ -50,9 +52,7 @@ object SdmQrPinManager {
      * to ensure the manager is initialized with the correct broker restrictions manager.
      */
     fun initializeSdmQrPinManager(restrictionsManager: IRestrictionsManager) {
-        if (this.restrictionsManager == null) {
-            this.restrictionsManager = restrictionsManager
-        }
+        this.restrictionsManager = restrictionsManager
     }
 
     /**
@@ -64,7 +64,7 @@ object SdmQrPinManager {
         restrictionsManager?.let { manager ->
             return manager.getString(
                 key = PREFERRED_AUTH_CONFIG,
-                brokerAppPackageName = BrokerData.prodMicrosoftAuthenticator.packageName,
+                brokerAppPackageName = authenticatorPackageName,
                 defaultValue = defaultValue
             )
         } ?: run {
@@ -82,7 +82,7 @@ object SdmQrPinManager {
         restrictionsManager?.let { manager ->
             return manager.getBoolean(
                 key = SUPPRESS_CAMERA_CONSENT,
-                brokerAppPackageName = BrokerData.prodMicrosoftAuthenticator.packageName,
+                brokerAppPackageName = authenticatorPackageName,
                 defaultValue = defaultValue
             )
         } ?: run {
