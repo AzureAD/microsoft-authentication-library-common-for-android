@@ -53,7 +53,7 @@ public class Device {
     /**
      * Denotes whether or not request is from personal profile but device has a Work Profile Available
      */
-    private static boolean sIsInPersonalProfileButClouddpcWorkProfileAvailable = false;
+    private static Boolean sIsInPersonalProfileButClouddpcWorkProfileAvailable = null;
 
     private static final ReentrantReadWriteLock sLock = new ReentrantReadWriteLock();
 
