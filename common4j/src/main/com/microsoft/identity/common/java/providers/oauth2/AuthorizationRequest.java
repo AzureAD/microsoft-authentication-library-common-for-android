@@ -27,10 +27,6 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
-import com.microsoft.identity.common.java.platform.Device;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 

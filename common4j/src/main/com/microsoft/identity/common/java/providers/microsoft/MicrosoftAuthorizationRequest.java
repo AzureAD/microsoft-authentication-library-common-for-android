@@ -131,10 +131,11 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @SerializedName("x-client-DM")
     private final String mDiagnosticDM;
 
-    // Transient to avoid adding this automatically, leave control to flight
+    @Expose()
     @Getter
     @Accessors(prefix = "m")
-    private transient final String mDiagnosticMN;
+    @SerializedName(Device.PlatformIdParameters.MANUFACTURER)
+    private final String mDiagnosticMN;
 
     @Expose()
     @Getter
@@ -151,7 +152,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     // Transient to avoid adding this automatically, leave control to flight
     @Getter
     @Accessors(prefix = "m")
-    private transient final Boolean mWorkProfileAvailable;
+    @SerializedName(WP_AVAILABLE_EXTRA_PARAMETER_NAME)
+    private final Boolean mWorkProfileAvailable;
 
 
     /**
@@ -180,30 +182,15 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mDiagnosticOS = Device.getOsForEsts();
         mDiagnosticDM = Device.getModel();
         mDiagnosticCPU = Device.getCpu();
-        mDiagnosticMN = Device.getManufacturer();
-        mWorkProfileAvailable = Device.isInPersonalProfileButClouddpcWorkProfileAvailable();
-    }
 
-    @Override
-    public URI getAuthorizationRequestAsHttpRequest() throws ClientException {
-        final URI superRequestUri = super.getAuthorizationRequestAsHttpRequest();
 
-        // If the flight is enabled, add fields for AM API Work Profile
+        // If the flight is enabled, set the fields
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS)) {
-
-            final CommonURIBuilder builder = new CommonURIBuilder(superRequestUri);
-            builder.addParameterIfAbsent(Device.PlatformIdParameters.MANUFACTURER, mDiagnosticMN);
-            builder.addParameterIfAbsent(WP_AVAILABLE_EXTRA_PARAMETER_NAME, String.valueOf(mWorkProfileAvailable));
-
-            try {
-                return builder.build();
-            } catch (final URISyntaxException e) {
-                throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
-            }
-        }
-        // If flight is disabled, just return uri from the super method
-        else {
-            return superRequestUri;
+            mDiagnosticMN = Device.getManufacturer();
+            mWorkProfileAvailable = Device.isInPersonalProfileButClouddpcWorkProfileAvailable();
+        } else {
+            mDiagnosticMN = null;
+            mWorkProfileAvailable = null;
         }
     }
 
