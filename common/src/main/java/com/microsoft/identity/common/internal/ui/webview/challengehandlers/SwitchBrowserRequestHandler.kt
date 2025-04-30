@@ -28,6 +28,7 @@ import android.content.Intent
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
 import com.microsoft.identity.common.internal.ui.browser.AndroidBrowserSelector
 import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl
 import com.microsoft.identity.common.java.browser.IBrowserSelector
 import com.microsoft.identity.common.java.exception.ClientException
@@ -83,6 +84,9 @@ class SwitchBrowserRequestHandler(
     override fun processChallenge(switchBrowserChallenge: SwitchBrowserChallenge) {
         SpanExtension.makeCurrentSpan(span).use {
             val methodTag = "$TAG:processChallenge"
+            
+            val state = switchBrowserChallenge.processUri.getQueryParameter(SWITCH_BROWSER.STATE)
+            SwitchBrowserUriHelper.statesMatch(switchBrowserChallenge.authorizationUrl, state)
 
             // Select a browser to handle the switch browser challenge
             val browser = browserSelector.selectBrowser(
@@ -125,7 +129,7 @@ class SwitchBrowserRequestHandler(
                 "Launching switch browser request on browser: ${browser.packageName}"
             )
             browserIntent.setPackage(browser.packageName)
-            browserIntent.setData(switchBrowserChallenge.uri)
+            browserIntent.setData(switchBrowserChallenge.processUri)
             activity.startActivity(browserIntent)
             isChallengeHandled = true
             span.setAttribute(
