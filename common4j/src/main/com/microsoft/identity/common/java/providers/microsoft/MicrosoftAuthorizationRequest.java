@@ -149,7 +149,6 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @SerializedName("pc")
     private final String mPreferredAuthMethodCode;
 
-    // Transient to avoid adding this automatically, leave control to flight
     @Getter
     @Accessors(prefix = "m")
     @SerializedName(WP_AVAILABLE_EXTRA_PARAMETER_NAME)
