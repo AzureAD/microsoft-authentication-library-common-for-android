@@ -1,6 +1,7 @@
 vNext
 ----------
 - [MINOR] Adding a state parameter to prevent phish attacks, in “switch_browser” flow. (#2631)
+- [MINOR] Move camera logic to CameraPermissionRequestHandler and add SdmQrPinManager (#2630)
 - [MINOR] Pass Work Profile existence, OS Version, and Manufacturer to ESTS (#2627)
 - [MINOR] Add telemetry for the switch browser protocol (#2612)
 
