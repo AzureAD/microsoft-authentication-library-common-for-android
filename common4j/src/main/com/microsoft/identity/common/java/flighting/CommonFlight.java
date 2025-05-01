@@ -109,7 +109,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable adding x-client-MN and x-client-WPAvailable extra query parameters
      */
-    ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS("EnableAmApiWorkProfileExtraQueryParameters", false),
+    ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS("EnableAmApiWorkProfileExtraQueryParameters", true),
 
     /** Flight to enable the new key generation without PURPOSE_WRAP_KEY. Default is true.
      * This is applicable for API >= 23
