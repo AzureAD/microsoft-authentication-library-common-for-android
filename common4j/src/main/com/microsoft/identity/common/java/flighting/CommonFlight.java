@@ -91,9 +91,10 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED("EnableAttachNewPrtHeaderWhenNonceExpired", true),
 
     /**
-     * Flight to enable the new key generation spec for wrap key. Default is true.
+     * Flight to enable the new key generation spec for wrap key using PURPOSE_WRAP_KEY in key gen spec. Default is true.
+     * This is applicable for API >= 28
      */
-    ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP("EnableNewKeyGenSpecForWrap", true),
+    ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY("EnableNewKeyGenSpecForWrapWithPurposeWrapKey", true),
 
     /**
      * Flight to enable the attachment of PRT header in cross cloud requests. Default is true.
@@ -108,7 +109,12 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable adding x-client-MN and x-client-WPAvailable extra query parameters
      */
-    ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS("EnableAmApiWorkProfileExtraQueryParameters", false);
+    ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS("EnableAmApiWorkProfileExtraQueryParameters", false),
+
+    /** Flight to enable the new key generation without PURPOSE_WRAP_KEY. Default is true.
+     * This is applicable for API >= 23
+     */
+    ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY("EnableNewKeyGenSpecForWrapWithoutPurposeWrapKey", true);
 
     private String key;
     private Object defaultValue;
