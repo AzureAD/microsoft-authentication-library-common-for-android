@@ -23,9 +23,11 @@
 
 package com.microsoft.identity.common.java.nativeauth.providers
 
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITChallengeAuthMethodCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
@@ -33,16 +35,16 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
+import com.microsoft.identity.common.java.nativeauth.providers.interactors.JITInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.ResetPasswordInteractor
+import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignInInteractor
+import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignUpInteractor
+import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordContinueApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordPollCompletionApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordStartApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResult
-import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignInInteractor
-import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignUpInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectApiResult
@@ -50,6 +52,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpContinueApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResult
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 
 /**
@@ -60,7 +63,8 @@ class NativeAuthOAuth2Strategy(
     val config: NativeAuthOAuth2Configuration,
     private val signInInteractor: SignInInteractor,
     private val signUpInteractor: SignUpInteractor,
-    private val resetPasswordInteractor: ResetPasswordInteractor
+    private val resetPasswordInteractor: ResetPasswordInteractor,
+    private val jitInteractor: JITInteractor,
 ) :
     MicrosoftStsOAuth2Strategy(config, strategyParameters) {
     private val TAG = NativeAuthOAuth2Strategy::class.java.simpleName
@@ -225,6 +229,17 @@ class NativeAuthOAuth2Strategy(
         parameters: SignInSubmitPasswordCommandParameters
     ): SignInTokenApiResult {
         return signInInteractor.performPasswordTokenRequest(
+            parameters = parameters
+        )
+    }
+
+    /**
+     * Performs API call to /register/challenge.
+     */
+    fun performJITChallengeRequest(
+        parameters: JITChallengeAuthMethodCommandParameters
+    ): JITChallengeApiResult {
+        return jitInteractor.performChallenge(
             parameters = parameters
         )
     }

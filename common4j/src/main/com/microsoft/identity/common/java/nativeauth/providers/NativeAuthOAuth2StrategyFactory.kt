@@ -23,6 +23,7 @@
 
 package com.microsoft.identity.common.java.nativeauth.providers
 
+import com.microsoft.identity.common.java.nativeauth.providers.interactors.JITInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.ResetPasswordInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignInInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignUpInteractor
@@ -55,7 +56,12 @@ class NativeAuthOAuth2StrategyFactory {
                     httpClient = UrlConnectionHttpClient.getDefaultInstance(),
                     nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
                     nativeAuthResponseHandler = NativeAuthResponseHandler()
-                )
+                ),
+                jitInteractor = JITInteractor(
+                    httpClient = UrlConnectionHttpClient.getDefaultInstance(),
+                    nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
+                    nativeAuthResponseHandler = NativeAuthResponseHandler()
+                ),
             )
         }
     }

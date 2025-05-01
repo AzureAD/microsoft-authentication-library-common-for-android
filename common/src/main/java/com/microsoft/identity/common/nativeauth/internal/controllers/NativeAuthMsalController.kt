@@ -43,6 +43,7 @@ import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseNativeAuthCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseSignInTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.GetAuthMethodsCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITChallengeAuthMethodCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFADefaultChallengeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFASelectedDefaultChallengeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFASubmitChallengeCommandParameters
@@ -62,6 +63,8 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.GetAuthMethodsCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.JITChallengeAuthMethodCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.JITCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.MFAChallengeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.MFACommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.MFASubmitChallengeCommandResult
@@ -84,6 +87,7 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpS
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpSubmitUserAttributesCommandResult
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordContinueApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordPollCompletionApiResult
@@ -647,6 +651,67 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 TAG,
                 parameters.correlationId,
                 "Exception thrown in getAuthMethods()",
+                e
+            )
+            throw e
+        }
+    }
+    /**
+     * Send the challenge to the authentication method in order to register it as strong authentication method (JIT).
+     */
+    fun jitChallengeAuthMethod(parameters: JITChallengeAuthMethodCommandParameters): JITChallengeAuthMethodCommandResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "${TAG}.challengeAuthMethodJIT"
+        )
+        val oAuth2Strategy = createOAuth2Strategy(parameters)
+
+        try {
+            val result = performJITChallengeCall(
+                oAuth2Strategy = oAuth2Strategy,
+                parameters = parameters
+            )
+            return when (result) {
+                is JITChallengeApiResult.InvalidVerificationContact -> {
+                    JITCommandResult.IncorrectVerificationContact(
+                        error = result.error,
+                        errorDescription = result.errorDescription,
+                        errorCodes = result.errorCodes,
+                        correlationId = result.correlationId
+                    )
+                }
+                is JITChallengeApiResult.OOBRequired -> {
+                    JITCommandResult.VerificationRequired(
+                        correlationId = result.correlationId,
+                        continuationToken = result.continuationToken,
+                        challengeTargetLabel = result.challengeTargetLabel,
+                        challengeChannel = result.challengeChannel,
+                        codeLength = result.codeLength
+                    )
+                }
+                is JITChallengeApiResult.UnknownError -> {
+                    Logger.warnWithObject(
+                        TAG,
+                        "Unexpected result: ",
+                        result
+                    )
+                    INativeAuthCommandResult.APIError(
+                        error = result.error,
+                        errorDescription = result.errorDescription,
+                        errorCodes = result.errorCodes,
+                        correlationId = result.correlationId
+                    )
+                }
+                is JITChallengeApiResult.Preverified -> {
+                    TODO("call signIn token with continuation token")
+                }
+            }
+        } catch (e: Exception) {
+            Logger.error(
+                TAG,
+                parameters.correlationId,
+                "Exception thrown in signInSubmitPassword",
                 e
             )
             throw e
@@ -1532,6 +1597,20 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         return oAuth2Strategy.performIntrospect(
             continuationToken = continuationToken,
             correlationId = correlationId
+        )
+    }
+
+    private fun performJITChallengeCall(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: JITChallengeAuthMethodCommandParameters
+    ): JITChallengeApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.correlationId,
+            methodName = "${TAG}.performIntrospectCall"
+        )
+        return oAuth2Strategy.performJITChallengeRequest(
+            parameters = parameters
         )
     }
 
