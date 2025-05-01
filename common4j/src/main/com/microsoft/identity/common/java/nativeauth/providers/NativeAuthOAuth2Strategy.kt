@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.nativeauth.providers
 
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITChallengeAuthMethodCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITIntrospectCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITSubmitChallengeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
@@ -41,6 +42,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.interactors.Reset
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignInInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignUpInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITChallengeApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITContinueApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITIntrospectApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordContinueApiResult
@@ -253,6 +255,17 @@ class NativeAuthOAuth2Strategy(
         parameters: JITChallengeAuthMethodCommandParameters
     ): JITChallengeApiResult {
         return jitInteractor.performChallenge(
+            parameters = parameters
+        )
+    }
+
+    /**
+     * Performs API call to /register/continue.
+     */
+    fun performJITContinueRequest(
+        parameters: JITSubmitChallengeCommandParameters
+    ): JITContinueApiResult {
+        return jitInteractor.performContinue(
             parameters = parameters
         )
     }

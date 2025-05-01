@@ -393,7 +393,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     internal fun createJITContinueRequest(
         continuationToken: String,
         grantType: String,
-        code: String,
+        code: String?,
         correlationId: String
     ): JITContinueRequest {
         return JITContinueRequest.create(

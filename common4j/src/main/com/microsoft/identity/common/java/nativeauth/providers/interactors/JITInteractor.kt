@@ -26,11 +26,14 @@ import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITChallengeAuthMethodCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITIntrospectCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITSubmitChallengeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.nativeauth.providers.requests.jit.JITChallengeRequest
+import com.microsoft.identity.common.java.nativeauth.providers.requests.jit.JITContinueRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.jit.JITIntrospectRequest
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITChallengeApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITContinueApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITIntrospectApiResult
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.util.ObjectMapper
@@ -190,6 +193,80 @@ class JITInteractor(
 
         Logger.infoWithObject(
             "${TAG}.rawResponseToJITChallengeApiResult",
+            result.correlationId,
+            "result = ",
+            result
+        )
+
+        return result
+    }
+    //endregion
+
+    //region /register/continue
+    fun performContinue(
+        parameters: JITSubmitChallengeCommandParameters
+    ): JITContinueApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.correlationId,
+            methodName = "${TAG}.performContinue(parameters: JITSubmitChallengeCommandParameters)"
+        )
+
+        val request = nativeAuthRequestProvider.createJITContinueRequest(
+            continuationToken = parameters.continuationToken,
+            correlationId = parameters.correlationId,
+            grantType = parameters.grantType,
+            code = parameters.code
+        )
+
+        Logger.infoWithObject(
+            "${TAG}.performContinue",
+            parameters.correlationId,
+            "request = ",
+            request
+        )
+
+        return performContinue(
+            requestCorrelationId = parameters.correlationId,
+            request = request
+        )
+    }
+
+    private fun performContinue(
+        requestCorrelationId: String,
+        request: JITContinueRequest
+    ): JITContinueApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.performJITContinue"
+        )
+        val encodedRequest: String =
+            ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
+        val headers = request.headers
+        val requestUrl = request.requestUrl
+
+        val response = httpClient.post(
+            requestUrl,
+            headers,
+            encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
+        )
+        val rawApiResponse = nativeAuthResponseHandler.getJITContinueApiResponseFromHttpResponse(
+            requestCorrelationId = requestCorrelationId,
+            response = response
+        )
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToJITContinueApiResponse",
+            rawApiResponse.correlationId,
+            "rawApiResponse = ",
+            rawApiResponse
+        )
+
+        val result = rawApiResponse.toResult()
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToJITContinueApiResult",
             result.correlationId,
             "result = ",
             result

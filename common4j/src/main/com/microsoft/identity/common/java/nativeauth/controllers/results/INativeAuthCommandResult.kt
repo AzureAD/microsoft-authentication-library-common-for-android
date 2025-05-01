@@ -70,7 +70,7 @@ interface INativeAuthCommandResult : ILoggable {
         ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,
         ResetPasswordResendCodeCommandResult, ResetPasswordSubmitNewPasswordCommandResult,
         GetAuthMethodsCommandResult, MFAChallengeCommandResult, MFASubmitChallengeCommandResult,
-        JITChallengeAuthMethodCommandResult
+        JITChallengeAuthMethodCommandResult, JITSubmitChallengeCommandResult
     {
         override fun toUnsanitizedString(): String = "UnknownError(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes)"
 

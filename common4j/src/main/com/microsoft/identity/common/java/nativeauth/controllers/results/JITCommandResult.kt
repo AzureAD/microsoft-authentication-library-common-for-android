@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.nativeauth.controllers.results
 
 sealed interface JITChallengeAuthMethodCommandResult: INativeAuthCommandResult
+sealed interface JITSubmitChallengeCommandResult: INativeAuthCommandResult
 interface JITCommandResult {
 
     data class VerificationRequired(
@@ -46,5 +47,17 @@ interface JITCommandResult {
         override fun toUnsanitizedString(): String = "IncorrectVerificationContact(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
 
         override fun toString(): String = "IncorrectVerificationContact(correlationId=$correlationId)"
+    }
+
+    data class IncorrectChallenge(
+        override val correlationId: String,
+        val error: String,
+        val errorDescription: String,
+        val errorCodes: List<Int>,
+        val subError: String
+    ) : JITSubmitChallengeCommandResult {
+        override fun toUnsanitizedString(): String = "IncorrectChallenge(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes, subError=$subError)"
+
+        override fun toString(): String = "IncorrectChallenge(correlationId=$correlationId)"
     }
 }

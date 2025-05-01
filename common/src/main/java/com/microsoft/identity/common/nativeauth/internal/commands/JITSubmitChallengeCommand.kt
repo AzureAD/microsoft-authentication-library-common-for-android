@@ -23,38 +23,40 @@ package com.microsoft.identity.common.nativeauth.internal.commands
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITChallengeAuthMethodCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITSubmitChallengeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.JITChallengeAuthMethodCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.JITSubmitChallengeCommandResult
 import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
 
 /**
- * Command class to call controllers to trigger register/challenge JIT endpoint.
+ * Command class to call controllers to trigger register/continue JIT endpoint.
  * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
  */
-class JITChallengeAuthMethodCommand(
-    private val parameters: JITChallengeAuthMethodCommandParameters,
+class JITSubmitChallengeCommand(
+    private val parameters: JITSubmitChallengeCommandParameters,
     private val controller: NativeAuthMsalController,
     publicApiId: String
-) : BaseNativeAuthCommand<JITChallengeAuthMethodCommandResult>(
+) : BaseNativeAuthCommand<JITSubmitChallengeCommandResult>(
     parameters,
     controller,
     publicApiId
 ) {
 
     companion object {
-        private val TAG = JITChallengeAuthMethodCommand::class.java.simpleName
+        private val TAG = JITSubmitChallengeCommand::class.java.simpleName
     }
 
     /**
      * The execution part of the command, to be run on the background thread.
-     * It calls the jitChallengeAuthMethod method of the native auth MSAL controller with the given parameters.
+     * It calls the jitSubmitChallenge method of the native auth MSAL controller with the given parameters.
      */
-    override fun execute(): JITChallengeAuthMethodCommandResult {
+    override fun execute(): JITSubmitChallengeCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = parameters.getCorrelationId(),
             methodName = "${TAG}.execute"
         )
-        val result = controller.jitChallengeAuthMethod(
+        val result = controller.jitSubmitChallenge(
             parameters = parameters
         )
 
@@ -66,4 +68,5 @@ class JITChallengeAuthMethodCommand(
         )
         return result
     }
+
 }
