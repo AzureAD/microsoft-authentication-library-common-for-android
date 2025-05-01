@@ -1,5 +1,6 @@
-vNext
+Version 21.0.1
 ----------
+- [PATCH] Allow Intune CE app to force broker discovery (#2628)
 
 Version 21.0.0
 ----------
