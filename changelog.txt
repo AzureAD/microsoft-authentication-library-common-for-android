@@ -1,7 +1,7 @@
 vNext
 ----------
 
-Version 21.1.0-RC1
+Version 21.1.0-RC2
 ----------
 - [PATCH] Allow generating wrapping key without PURPOSE_WRAP_KEY with Flight (#2633))
 - [MINOR] Adding a state parameter to prevent phish attacks, in “switch_browser” flow. (#2631)
