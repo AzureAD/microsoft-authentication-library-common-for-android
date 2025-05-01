@@ -25,10 +25,13 @@ package com.microsoft.identity.common.java.nativeauth.providers.interactors
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITChallengeAuthMethodCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITIntrospectCommandParameters
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.nativeauth.providers.requests.jit.JITChallengeRequest
+import com.microsoft.identity.common.java.nativeauth.providers.requests.jit.JITIntrospectRequest
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITChallengeApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITIntrospectApiResult
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.util.ObjectMapper
 
@@ -48,6 +51,78 @@ class JITInteractor(
     private val nativeAuthResponseHandler: NativeAuthResponseHandler
 ) {
     private val TAG: String = this::class.java.simpleName
+
+    //region /register/introspect
+    fun performIntrospect(
+        parameters: JITIntrospectCommandParameters
+    ): JITIntrospectApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.correlationId,
+            methodName = "${TAG}.performIntrospect(parameters: JITIntrospectCommandParameters)"
+        )
+
+        val request = nativeAuthRequestProvider.createJITIntrospectRequest(
+            continuationToken = parameters.continuationToken,
+            correlationId = parameters.correlationId
+        )
+
+        Logger.infoWithObject(
+            "${TAG}.performIntrospect",
+            parameters.correlationId,
+            "request = ",
+            request
+        )
+
+        return performIntrospect(
+            requestCorrelationId = parameters.correlationId,
+            request = request
+        )
+    }
+
+    private fun performIntrospect(
+        requestCorrelationId: String,
+        request: JITIntrospectRequest
+    ): JITIntrospectApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            methodName = "${TAG}.performJITIntrospect"
+        )
+        val encodedRequest: String =
+            ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
+        val headers = request.headers
+        val requestUrl = request.requestUrl
+
+        val response = httpClient.post(
+            requestUrl,
+            headers,
+            encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
+        )
+        val rawApiResponse = nativeAuthResponseHandler.getJITIntrospectApiResponseFromHttpResponse(
+            requestCorrelationId = requestCorrelationId,
+            response = response
+        )
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToJITIntrospectApiResponse",
+            rawApiResponse.correlationId,
+            "rawApiResponse = ",
+            rawApiResponse
+        )
+
+        val result = rawApiResponse.toResult()
+
+        Logger.infoWithObject(
+            "${TAG}.rawResponseToJITIntrospectApiResult",
+            result.correlationId,
+            "result = ",
+            result
+        )
+
+        return result
+    }
+    //endregion
 
     //region /register/challenge
     fun performChallenge(
@@ -99,7 +174,7 @@ class JITInteractor(
             headers,
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
-        val rawApiResponse = nativeAuthResponseHandler.getJITChallengeResponseFromHttpResponse(
+        val rawApiResponse = nativeAuthResponseHandler.getJITChallengeApiResponseFromHttpResponse(
             requestCorrelationId = requestCorrelationId,
             response = response
         )

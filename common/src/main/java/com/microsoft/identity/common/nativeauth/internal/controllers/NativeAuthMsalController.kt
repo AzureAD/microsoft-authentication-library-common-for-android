@@ -88,6 +88,7 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpS
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITChallengeApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITIntrospectApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordContinueApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordPollCompletionApiResult
@@ -227,11 +228,19 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         tokenApiResult = tokenApiResult
                     )
                 }
-                // TODO: this will need to change in JIT business logic PR
+                is SignInTokenApiResult.JITRequired -> {
+                    // when a registration of a new strong authentication method is required, we retrieve the list of auth methods available
+                    return performJITIntrospect(
+                        oAuth2Strategy = oAuth2Strategy,
+                        parameters = parametersWithScopes,
+                        continuationToken = tokenApiResult.continuationToken,
+                        correlationId = tokenApiResult.correlationId
+                    ).toSignInStartCommandResult() as SignInWithContinuationTokenCommandResult
+                }
                 is SignInTokenApiResult.InvalidAuthenticationType,
                 is SignInTokenApiResult.MFARequired, is SignInTokenApiResult.CodeIncorrect,
                 is SignInTokenApiResult.UserNotFound, is SignInTokenApiResult.InvalidCredentials,
-                is SignInTokenApiResult.UnknownError, is SignInTokenApiResult.JITRequired -> {
+                is SignInTokenApiResult.UnknownError -> {
                     Logger.warnWithObject(
                         TAG,
                         tokenApiResult.correlationId,
@@ -303,7 +312,6 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         correlationId = tokenApiResult.correlationId
                     )
                 }
-                // TODO: this will need to change in JIT business logic PR
                 is SignInTokenApiResult.UnknownError, is SignInTokenApiResult.InvalidAuthenticationType,
                 is SignInTokenApiResult.MFARequired, is SignInTokenApiResult.InvalidCredentials,
                 is SignInTokenApiResult.UserNotFound, is SignInTokenApiResult.JITRequired -> {
@@ -356,7 +364,6 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 oAuth2Strategy = oAuth2Strategy,
                 parameters = parametersWithScopes
             )
-            // TODO: this will need to change in JIT business logic PR
             return when (tokenApiResult) {
                 is SignInTokenApiResult.Success -> {
                     saveAndReturnTokens(
@@ -704,7 +711,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     )
                 }
                 is JITChallengeApiResult.Preverified -> {
-                    TODO("call signIn token with continuation token")
+                    TODO("Now we need to call /continue and /token endpoint")
                 }
             }
         } catch (e: Exception) {
@@ -1488,6 +1495,23 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         )
     }
 
+    private fun performJITIntrospect(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: BaseSignInTokenCommandParameters,
+        continuationToken: String,
+        correlationId: String
+    ): JITIntrospectApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            methodName = "${TAG}.performJITIntrospectCall"
+        )
+        val introspectParams = CommandUtil.createJITIntrospectCommandParameters(parameters, correlationId, continuationToken)
+        return oAuth2Strategy.performJITIntrospectRequest(
+            parameters = introspectParams
+        )
+    }
+
     private fun performOOBTokenRequest(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignInSubmitCodeCommandParameters
@@ -2194,11 +2218,35 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         }
     }
 
+    private fun JITIntrospectApiResult.toSignInStartCommandResult(): SignInStartCommandResult {
+        return when (this) {
+            is JITIntrospectApiResult.Success -> {
+                SignInCommandResult.StrongAuthMethodRegistrationRequired(
+                    continuationToken = this.continuationToken,
+                    authMethods = this.methods,
+                    correlationId = this.correlationId
+                )
+            }
+            is JITIntrospectApiResult.UnknownError -> {
+                Logger.warnWithObject(
+                    TAG,
+                    this.correlationId,
+                    "Unexpected result: ",
+                    this
+                )
+                INativeAuthCommandResult.APIError(
+                    error = this.error,
+                    errorDescription = this.errorDescription,
+                    correlationId = this.correlationId
+                )
+            }
+        }
+    }
+
     private fun SignInTokenApiResult.toSignInStartCommandResult(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parametersWithScopes: SignInStartCommandParameters,
     ): SignInStartCommandResult {
-        // TODO: this will need to change in JIT business logic PR
         return when (this) {
             is SignInTokenApiResult.InvalidCredentials -> {
                 SignInCommandResult.InvalidCredentials(
@@ -2225,9 +2273,18 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     correlationId = this.correlationId
                 )
             }
+            is SignInTokenApiResult.JITRequired -> {
+                // when a registration of a new strong authentication method is required, we retrieve the list of auth methods available
+                performJITIntrospect(
+                    oAuth2Strategy = oAuth2Strategy,
+                    parameters = parametersWithScopes,
+                    continuationToken = this.continuationToken,
+                    correlationId = this.correlationId
+                ).toSignInStartCommandResult()
+            }
             is SignInTokenApiResult.CodeIncorrect,
             is SignInTokenApiResult.InvalidAuthenticationType, is SignInTokenApiResult.UserNotFound,
-            is SignInTokenApiResult.UnknownError, is SignInTokenApiResult.JITRequired -> {
+            is SignInTokenApiResult.UnknownError -> {
                 Logger.warnWithObject(
                     TAG,
                     this.correlationId,
@@ -2249,7 +2306,6 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parametersWithScopes: SignInSubmitPasswordCommandParameters,
     ): SignInSubmitPasswordCommandResult {
-        // TODO: this will need to change in JIT business logic PR
         return when (this) {
             is SignInTokenApiResult.InvalidCredentials -> {
                 SignInCommandResult.InvalidCredentials(
@@ -2276,9 +2332,17 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     correlationId = this.correlationId
                 )
             }
-            is SignInTokenApiResult.UserNotFound, is SignInTokenApiResult.CodeIncorrect,
-            is SignInTokenApiResult.InvalidAuthenticationType, is SignInTokenApiResult.UnknownError,
             is SignInTokenApiResult.JITRequired -> {
+                // when a registration of a new strong authentication method is required, we retrieve the list of auth methods available
+                performJITIntrospect(
+                    oAuth2Strategy = oAuth2Strategy,
+                    parameters = parametersWithScopes,
+                    continuationToken = this.continuationToken,
+                    correlationId = this.correlationId
+                ).toSignInStartCommandResult() as SignInSubmitPasswordCommandResult
+            }
+            is SignInTokenApiResult.UserNotFound, is SignInTokenApiResult.CodeIncorrect,
+            is SignInTokenApiResult.InvalidAuthenticationType, is SignInTokenApiResult.UnknownError -> {
                 Logger.warnWithObject(
                     TAG,
                     this.correlationId,

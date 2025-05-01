@@ -32,26 +32,8 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuppressFBWarnings("EI_EXPOSE_REP2")   //Suppresses spotbugs warning on the builder class
 @SuperBuilder(toBuilder = true)
-public class JITChallengeAuthMethodCommandParameters extends BaseNativeAuthCommandParameters {
-    private static final String TAG = JITChallengeAuthMethodCommandParameters.class.getSimpleName();
-
-    /**
-     * email/phone to contact to register a new strong authentication method
-     */
-    @NonNull
-    public final String verificationContact;
-
-    /**
-     * Auth method challenge type (oob, email, etc.)
-     */
-    @NonNull
-    public final String authMethodChallengeType;
-
-    /**
-     * The channel to send the challenge on. (email, voice, sms, etc.)
-     */
-    @NonNull
-    public final String challengeChannel;
+public class JITIntrospectCommandParameters extends BaseNativeAuthCommandParameters {
+    private static final String TAG = JITIntrospectCommandParameters.class.getSimpleName();
 
     /**
      * The continuation token obtained from the previous endpoint.
@@ -61,7 +43,7 @@ public class JITChallengeAuthMethodCommandParameters extends BaseNativeAuthComma
 
     @Override
     public String toUnsanitizedString() {
-        return "JITChallengeAuthMethodCommandParameters(authority=" + authority + ", challengeType=" + challengeType + ")";
+        return "JITChallengeAuthMethodCommandParameters()";
     }
 
     @Override

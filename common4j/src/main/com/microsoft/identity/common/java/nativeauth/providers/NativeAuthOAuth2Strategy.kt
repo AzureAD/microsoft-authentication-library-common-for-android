@@ -24,6 +24,7 @@
 package com.microsoft.identity.common.java.nativeauth.providers
 
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITChallengeAuthMethodCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITIntrospectCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
@@ -40,6 +41,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.interactors.Reset
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignInInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignUpInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITChallengeApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITIntrospectApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordContinueApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordPollCompletionApiResult
@@ -229,6 +231,17 @@ class NativeAuthOAuth2Strategy(
         parameters: SignInSubmitPasswordCommandParameters
     ): SignInTokenApiResult {
         return signInInteractor.performPasswordTokenRequest(
+            parameters = parameters
+        )
+    }
+
+    /**
+     * Performs API call to /register/introspect.
+     */
+    fun performJITIntrospectRequest(
+        parameters: JITIntrospectCommandParameters
+    ): JITIntrospectApiResult {
+        return jitInteractor.performIntrospect(
             parameters = parameters
         )
     }

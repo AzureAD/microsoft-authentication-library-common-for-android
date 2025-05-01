@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.controllers.results
 
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.AuthenticationMethodApiResult
+import com.microsoft.identity.common.java.nativeauth.util.toUnsanitizedString
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 
 sealed interface SignInStartCommandResult: INativeAuthCommandResult
@@ -68,6 +70,16 @@ interface SignInCommandResult {
         override fun toUnsanitizedString(): String = "CodeRequired(correlationId=$correlationId, codeLength=$codeLength, challengeTargetLabel=$challengeTargetLabel, challengeChannel=$challengeChannel)"
 
         override fun toString(): String = "CodeRequired(correlationId=$correlationId, codeLength=$codeLength, challengeChannel=$challengeChannel)"
+    }
+
+    data class StrongAuthMethodRegistrationRequired(
+        override val correlationId: String,
+        val continuationToken: String,
+        val authMethods: List<AuthenticationMethodApiResult>
+    ) : SignInStartCommandResult, SignInSubmitPasswordCommandResult, SignInWithContinuationTokenCommandResult {
+        override fun toUnsanitizedString(): String = "StrongAuthMethodRegistrationRequired(correlationId=$correlationId, authMethods=${authMethods.toUnsanitizedString()})"
+
+        override fun toString(): String = "StrongAuthMethodRegistrationRequired(correlationId=$correlationId, authMethods=${authMethods})"
     }
 
     data class UserNotFound(
