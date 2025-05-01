@@ -45,6 +45,7 @@ public class DeviceTest {
     @After
     public void tearDown() {
         Device.clearDeviceMetadata();
+        Device.setIsInPersonalProfileButClouddpcWorkProfileAvailable(null);
     }
 
     @Test
@@ -134,6 +135,20 @@ public class DeviceTest {
                 MockDeviceMetadata.TEST_OS_ESTS + METADATA_SEPARATOR +
                 MockDeviceMetadata.TEST_OS_DRS;
         Assert.assertEquals(expectedResult, deviceMetadata.getAllMetadata());
+    }
+
+    @Test
+    public void testGetWorkProfileField(){
+        Assert.assertNull(Device.isInPersonalProfileButClouddpcWorkProfileAvailable());
+
+        Device.setIsInPersonalProfileButClouddpcWorkProfileAvailable(false);
+        Assert.assertFalse(Device.isInPersonalProfileButClouddpcWorkProfileAvailable());
+
+        Device.setIsInPersonalProfileButClouddpcWorkProfileAvailable(true);
+        Assert.assertTrue(Device.isInPersonalProfileButClouddpcWorkProfileAvailable());
+
+        Device.setIsInPersonalProfileButClouddpcWorkProfileAvailable(null);
+        Assert.assertNull(Device.isInPersonalProfileButClouddpcWorkProfileAvailable());
     }
 }
 
