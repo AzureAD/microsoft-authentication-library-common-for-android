@@ -25,7 +25,7 @@ package com.microsoft.identity.common.java.nativeauth.providers
 
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITChallengeAuthMethodCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITIntrospectCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITSubmitChallengeCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITContinueCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
@@ -263,7 +263,7 @@ class NativeAuthOAuth2Strategy(
      * Performs API call to /register/continue.
      */
     fun performJITContinueRequest(
-        parameters: JITSubmitChallengeCommandParameters
+        parameters: JITContinueCommandParameters
     ): JITContinueApiResult {
         return jitInteractor.performContinue(
             parameters = parameters

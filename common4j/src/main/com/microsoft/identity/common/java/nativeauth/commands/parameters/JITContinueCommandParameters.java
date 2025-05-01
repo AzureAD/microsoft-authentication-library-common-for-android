@@ -33,9 +33,9 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuppressFBWarnings("EI_EXPOSE_REP2")   //Suppresses spotbugs warning on the builder class
 @SuperBuilder(toBuilder = true)
-public class JITSubmitChallengeCommandParameters extends BaseNativeAuthCommandParameters {
+public class JITContinueCommandParameters extends BaseNativeAuthCommandParameters {
 
-    private static final String TAG = JITSubmitChallengeCommandParameters.class.getSimpleName();
+    private static final String TAG = JITContinueCommandParameters.class.getSimpleName();
 
     /**
      * The one-time password used for authentication. It is null when grantType is continuation_token.

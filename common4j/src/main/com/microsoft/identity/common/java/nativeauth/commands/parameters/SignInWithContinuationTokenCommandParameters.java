@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -34,7 +35,7 @@ public class SignInWithContinuationTokenCommandParameters extends BaseSignInToke
     private static final String TAG = SignInWithContinuationTokenCommandParameters.class.getSimpleName();
 
     /**
-     * A continuation token for sign in in the user from sign up or self-service-password-reset flow.
+     * A continuation token for sign in in the user from sign up, self-service-password-reset flow or after JIT.
      */
     @NonNull
     public final String continuationToken;
@@ -42,7 +43,7 @@ public class SignInWithContinuationTokenCommandParameters extends BaseSignInToke
     /**
      * The email address of the user.
      */
-    @NonNull
+    @Nullable
     public final String username;
 
     @NonNull

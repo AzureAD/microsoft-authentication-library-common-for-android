@@ -44,7 +44,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseNat
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseSignInTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.GetAuthMethodsCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITChallengeAuthMethodCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITSubmitChallengeCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITContinueCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFADefaultChallengeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFASelectedDefaultChallengeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFASubmitChallengeCommandParameters
@@ -87,6 +87,7 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpS
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpSubmitCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpSubmitPasswordCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpSubmitUserAttributesCommandResult
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthConstants
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITChallengeApiResult
@@ -715,7 +716,13 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     )
                 }
                 is JITChallengeApiResult.Preverified -> {
-                    TODO("Now we need to call /continue and /token endpoint")
+                    val jitContinueParams = CommandUtil.createJITContinueCommandParameters(
+                        parameters,
+                        result.correlationId,
+                        NativeAuthConstants.GrantType.CONTINUATION_TOKEN,
+                        result.continuationToken
+                    )
+                    completeJITFlow(jitContinueParams).toJITChallengeAuthMethodCommandResult()
                 }
             }
         } catch (e: Exception) {
@@ -732,55 +739,13 @@ class NativeAuthMsalController : BaseNativeAuthController() {
     /**
      * Submit the challenge provided by external developer to register a strong auth method (JIT).
      */
-    fun jitSubmitChallenge(parameters: JITSubmitChallengeCommandParameters): JITSubmitChallengeCommandResult {
+    fun jitSubmitChallenge(parameters: JITContinueCommandParameters): JITSubmitChallengeCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = parameters.getCorrelationId(),
             methodName = "${TAG}.jitSubmitChallenge"
         )
-        val oAuth2Strategy = createOAuth2Strategy(parameters)
-
-        try {
-            val result = performJITContinueCall(
-                oAuth2Strategy = oAuth2Strategy,
-                parameters = parameters
-            )
-            return when (result) {
-                is JITContinueApiResult.CodeIncorrect -> {
-                    JITCommandResult.IncorrectChallenge(
-                        error = result.error,
-                        errorDescription = result.errorDescription,
-                        errorCodes = result.errorCodes,
-                        correlationId = result.correlationId,
-                        subError = result.subError
-                    )
-                }
-                is JITContinueApiResult.Success -> {
-                    TODO("call /token with continuation token")
-                }
-                is JITContinueApiResult.UnknownError -> {
-                    Logger.warnWithObject(
-                        TAG,
-                        "Unexpected result: ",
-                        result
-                    )
-                    INativeAuthCommandResult.APIError(
-                        error = result.error,
-                        errorDescription = result.errorDescription,
-                        errorCodes = result.errorCodes,
-                        correlationId = result.correlationId
-                    )
-                }
-            }
-        } catch (e: Exception) {
-            Logger.error(
-                TAG,
-                parameters.correlationId,
-                "Exception thrown in signInSubmitPassword",
-                e
-            )
-            throw e
-        }
+        return completeJITFlow(parameters)
     }
 
     /**
@@ -1618,6 +1583,85 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         )
     }
 
+    private fun completeJITFlow(parameters: JITContinueCommandParameters): JITSubmitChallengeCommandResult {
+        val oAuth2Strategy = createOAuth2Strategy(parameters)
+
+        try {
+            val result = performJITContinueCall(
+                oAuth2Strategy = oAuth2Strategy,
+                parameters = parameters
+            )
+            return when (result) {
+                is JITContinueApiResult.CodeIncorrect -> {
+                    JITCommandResult.IncorrectChallenge(
+                        error = result.error,
+                        errorDescription = result.errorDescription,
+                        errorCodes = result.errorCodes,
+                        correlationId = result.correlationId,
+                        subError = result.subError
+                    )
+                }
+                is JITContinueApiResult.Success -> {
+                    val signInParams =
+                        CommandUtil.createSignInWithContinuationTokenCommandParameters(
+                            parameters,
+                            result.correlationId,
+                            result.continuationToken
+                        )
+                    val tokenApiResult = performContinuationTokenTokenRequest(
+                        oAuth2Strategy = oAuth2Strategy,
+                        parameters = signInParams
+                    )
+                    return when (tokenApiResult) {
+                        is SignInTokenApiResult.Success -> {
+                            saveAndReturnTokens(
+                                oAuth2Strategy = oAuth2Strategy,
+                                parametersWithScopes = signInParams,
+                                tokenApiResult = tokenApiResult
+                            )
+                        }
+                        else -> {
+                            Logger.warnWithObject(
+                                TAG,
+                                tokenApiResult.correlationId,
+                                "An error occurred while trying to acquire token using the continuation token: ",
+                                tokenApiResult
+                            )
+                            tokenApiResult as ApiErrorResult
+                            INativeAuthCommandResult.APIError(
+                                error = tokenApiResult.error,
+                                errorDescription = tokenApiResult.errorDescription,
+                                errorCodes = tokenApiResult.errorCodes,
+                                correlationId = tokenApiResult.correlationId
+                            )
+                        }
+                    }
+                }
+                is JITContinueApiResult.UnknownError -> {
+                    Logger.warnWithObject(
+                        TAG,
+                        "Unexpected result: ",
+                        result
+                    )
+                    INativeAuthCommandResult.APIError(
+                        error = result.error,
+                        errorDescription = result.errorDescription,
+                        errorCodes = result.errorCodes,
+                        correlationId = result.correlationId
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            Logger.error(
+                TAG,
+                parameters.correlationId,
+                "Exception thrown in signInSubmitPassword",
+                e
+            )
+            throw e
+        }
+    }
+
     private fun performSignInInitiateCall(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignInStartCommandParameters,
@@ -1698,7 +1742,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
 
     private fun performJITContinueCall(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
-        parameters: JITSubmitChallengeCommandParameters
+        parameters: JITContinueCommandParameters
     ): JITContinueApiResult {
         LogSession.logMethodCall(
             tag = TAG,
@@ -1985,6 +2029,25 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             methodName = "${TAG}.performSignUpSubmitUserAttributes"
         )
         return oAuth2Strategy.performSignUpSubmitUserAttributes(commandParameters = parameters)
+    }
+
+    private fun JITSubmitChallengeCommandResult.toJITChallengeAuthMethodCommandResult(): JITChallengeAuthMethodCommandResult {
+        return when (this) {
+            is JITCommandResult.IncorrectChallenge -> {
+                INativeAuthCommandResult.APIError(
+                    error = this.error,
+                    errorDescription = this.errorDescription,
+                    errorCodes = this.errorCodes,
+                    correlationId = this.correlationId
+                )
+            }
+            is INativeAuthCommandResult.APIError -> {
+                this
+            }
+            is SignInCommandResult.Complete -> {
+                this
+            }
+        }
     }
 
     /**

@@ -22,9 +22,7 @@ package com.microsoft.identity.common.nativeauth.internal.commands
 
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITChallengeAuthMethodCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITSubmitChallengeCommandParameters
-import com.microsoft.identity.common.java.nativeauth.controllers.results.JITChallengeAuthMethodCommandResult
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITContinueCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.JITSubmitChallengeCommandResult
 import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
 
@@ -33,7 +31,7 @@ import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthM
  * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
  */
 class JITSubmitChallengeCommand(
-    private val parameters: JITSubmitChallengeCommandParameters,
+    private val parameters: JITContinueCommandParameters,
     private val controller: NativeAuthMsalController,
     publicApiId: String
 ) : BaseNativeAuthCommand<JITSubmitChallengeCommandResult>(

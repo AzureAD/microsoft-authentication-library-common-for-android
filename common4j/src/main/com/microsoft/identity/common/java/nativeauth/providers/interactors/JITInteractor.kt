@@ -26,7 +26,7 @@ import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITChallengeAuthMethodCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITIntrospectCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITSubmitChallengeCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITContinueCommandParameters
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.nativeauth.providers.requests.jit.JITChallengeRequest
@@ -204,7 +204,7 @@ class JITInteractor(
 
     //region /register/continue
     fun performContinue(
-        parameters: JITSubmitChallengeCommandParameters
+        parameters: JITContinueCommandParameters
     ): JITContinueApiResult {
         LogSession.logMethodCall(
             tag = TAG,
