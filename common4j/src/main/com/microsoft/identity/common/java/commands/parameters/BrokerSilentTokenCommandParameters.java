@@ -51,6 +51,7 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
     private final String homeAccountId;
     private final String localAccountId;
     private final int sleepTimeBeforePrtAcquisition;
+    private final boolean signalInvalidRt;
 
     @Expose
     private final String negotiatedBrokerProtocolVersion;
