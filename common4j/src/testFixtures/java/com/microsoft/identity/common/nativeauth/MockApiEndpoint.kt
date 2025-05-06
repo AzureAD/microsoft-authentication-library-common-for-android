@@ -38,5 +38,8 @@ enum class MockApiEndpoint(val stringValue: String) {
     SSPRChallenge("SSPRChallenge"),
     SSPRContinue("SSPRContinue"),
     SSPRSubmit("SSPRSubmit"),
-    SSPRPoll("SSPRPoll")
+    SSPRPoll("SSPRPoll"),
+    JITIntrospect("JITIntrospect"),
+    JITChallenge("JITChallenge"),
+    JITContinue("JITContinue")
 }

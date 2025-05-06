@@ -1366,6 +1366,38 @@ class NativeAuthControllerTest {
     }
     // endregion
 
+    //region JIT
+
+    @Test
+    fun testSignInStartWithPasswordJITIsRequired() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInInitiate,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INITIATE_SUCCESS
+        )
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
+        )
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.REGISTRATION_REQUIRED
+        )
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.JITIntrospect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.REGISTRATION_INTROSPECT_SUCCESS
+        )
+
+        val parameters = createSignInStartWithPasswordCommandParameters(correlationId)
+        val result = controller.signInStart(parameters)
+        assert(result is SignInCommandResult.StrongAuthMethodRegistrationRequired)
+    }
+    //endregion
+
     private fun createSignInStartWithPasswordCommandParameters(
         correlationId: String
     ): SignInStartCommandParameters {
