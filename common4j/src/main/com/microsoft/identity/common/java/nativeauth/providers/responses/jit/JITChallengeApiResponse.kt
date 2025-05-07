@@ -91,7 +91,7 @@ class JITChallengeApiResponse(
             HttpURLConnection.HTTP_OK -> {
                 val unknownError = JITChallengeApiResult.UnknownError(
                     error = ApiErrorResult.INVALID_STATE,
-                    errorDescription = "Register authentication method /challenge did not return all mandatory fields",
+                    errorDescription = "register/challenge.Register authentication method /challenge did not return all mandatory fields",
                     errorCodes = errorCodes.orEmpty(),
                     correlationId = correlationId
                 )
@@ -133,7 +133,7 @@ class JITChallengeApiResponse(
                     else -> {
                         JITChallengeApiResult.UnknownError(
                             error = ApiErrorResult.INVALID_STATE,
-                            errorDescription = "Received unexpected challenge type value. Expected OOB or PREVERIFIED",
+                            errorDescription = "register/challenge. Received unexpected challenge type value. Expected OOB or PREVERIFIED",
                             errorCodes = errorCodes.orEmpty(),
                             correlationId = correlationId
                         )
