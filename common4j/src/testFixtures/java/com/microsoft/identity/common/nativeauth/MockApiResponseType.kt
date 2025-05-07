@@ -77,8 +77,6 @@ enum class MockApiResponseType(val stringValue: String) {
     REGISTRATION_REQUIRED("RegistrationRequired"),
     REGISTRATION_CONTINUE_SUCCESS("RegistrationContinueSuccess"),
     REGISTRATION_INVALID_OOB_VALUE("RegistrationInvalidOOBValue"),
-    SERVER_ERROR("ServerError"),
-    ACCESS_DENIED("AccessDenied"),
     // Typo below on Registraion is expected, on par with Mock API
     REGISTRATION_INTROSPECT_SUCCESS("RegistraionIntrospectSuccess"),
     REGISTRATION_CHALLENGE_SUCCESS("RegistraionChallengeSuccess"),
