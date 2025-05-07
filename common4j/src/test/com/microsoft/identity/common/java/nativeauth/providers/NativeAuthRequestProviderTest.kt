@@ -1430,6 +1430,7 @@ class NativeAuthRequestProviderTest {
         )
     }
 
+    @Test
     fun testJITContinueWithContinuationTokenGrantType() {
         val grantType = NativeAuthConstants.GrantType.CONTINUATION_TOKEN
 
@@ -1439,11 +1440,10 @@ class NativeAuthRequestProviderTest {
             code = oobCode,
             correlationId = correlationId
         )
-        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
         assertEquals(clientId, result.parameters.clientId)
         assertEquals(continuationToken, result.parameters.continuationToken)
         assertEquals(grantType, result.parameters.grantType)
-        assertNull(result.parameters.oob)
+        assertEquals(oobCode, result.parameters.oob)
     }
 
     @Test
