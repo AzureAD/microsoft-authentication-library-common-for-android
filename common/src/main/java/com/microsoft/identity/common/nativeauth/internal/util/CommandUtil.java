@@ -22,6 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.nativeauth.internal.util;
 
+import androidx.annotation.NonNull;
+
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseNativeAuthCommandParameters;
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITContinueCommandParameters;
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITIntrospectCommandParameters;
@@ -157,12 +162,13 @@ public class CommandUtil {
      * @return [SignInWithContinuationTokenCommandParameters] object with scopes
      */
     public static SignInWithContinuationTokenCommandParameters createSignInWithContinuationTokenCommandParameters(
-            BaseNativeAuthCommandParameters parameters,
+            BaseSignInTokenCommandParameters parameters,
             String correlationId,
             String continuationToken
     ) {
         final SignInWithContinuationTokenCommandParameters commandParameters =
                 SignInWithContinuationTokenCommandParameters.builder()
+                        .authenticationScheme(parameters.getAuthenticationScheme())
                         .platformComponents(parameters.getPlatformComponents())
                         .applicationName(parameters.getApplicationName())
                         .applicationVersion(parameters.getApplicationVersion())
@@ -225,13 +231,14 @@ public class CommandUtil {
      * @return [JITIntrospectCommandParameters] object with continuation token
      */
     public static JITContinueCommandParameters createJITContinueCommandParameters(
-            BaseNativeAuthCommandParameters parameters,
+            BaseSignInTokenCommandParameters parameters,
             String correlationId,
             String grantType,
             String continuationToken
     ) {
         final JITContinueCommandParameters commandParameters =
                 JITContinueCommandParameters.builder()
+                        .authenticationScheme(parameters.getAuthenticationScheme())
                         .platformComponents(parameters.getPlatformComponents())
                         .applicationName(parameters.getApplicationName())
                         .applicationVersion(parameters.getApplicationVersion())

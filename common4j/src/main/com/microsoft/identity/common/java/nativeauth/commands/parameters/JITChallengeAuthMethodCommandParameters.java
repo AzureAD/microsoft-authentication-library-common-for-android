@@ -32,7 +32,7 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuppressFBWarnings("EI_EXPOSE_REP2")   //Suppresses spotbugs warning on the builder class
 @SuperBuilder(toBuilder = true)
-public class JITChallengeAuthMethodCommandParameters extends BaseNativeAuthCommandParameters {
+public class JITChallengeAuthMethodCommandParameters extends BaseSignInTokenCommandParameters {
     private static final String TAG = JITChallengeAuthMethodCommandParameters.class.getSimpleName();
 
     /**

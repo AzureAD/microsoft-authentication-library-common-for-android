@@ -1842,7 +1842,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             oAuth2Strategy as MicrosoftStsOAuth2Strategy,
             createAuthorizationRequest(
                 strategy = oAuth2Strategy,
-                scopes = parametersWithScopes.scopes,
+                scopes = parametersWithScopes.scopes ?: emptyList(),
                 clientId = parametersWithScopes.clientId,
                 applicationIdentifier = parametersWithScopes.applicationIdentifier
             ),
