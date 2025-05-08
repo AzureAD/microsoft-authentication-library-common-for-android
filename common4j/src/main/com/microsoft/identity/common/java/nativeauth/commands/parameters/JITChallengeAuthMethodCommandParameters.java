@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -30,26 +30,38 @@ import lombok.experimental.SuperBuilder;
 
 @Getter
 @EqualsAndHashCode(callSuper = true)
+@SuppressFBWarnings("EI_EXPOSE_REP2")   //Suppresses spotbugs warning on the builder class
 @SuperBuilder(toBuilder = true)
-public class SignInWithContinuationTokenCommandParameters extends BaseSignInTokenCommandParameters {
-    private static final String TAG = SignInWithContinuationTokenCommandParameters.class.getSimpleName();
+public class JITChallengeAuthMethodCommandParameters extends BaseSignInTokenCommandParameters {
+    private static final String TAG = JITChallengeAuthMethodCommandParameters.class.getSimpleName();
 
     /**
-     * A continuation token for sign in in the user from sign up, self-service-password-reset flow or after JIT.
+     * email/phone to contact to register a new strong authentication method
+     */
+    @NonNull
+    public final String verificationContact;
+
+    /**
+     * Auth method challenge type (oob, email, etc.)
+     */
+    @NonNull
+    public final String authMethodChallengeType;
+
+    /**
+     * The channel to send the challenge on. (email, voice, sms, etc.)
+     */
+    @NonNull
+    public final String challengeChannel;
+
+    /**
+     * The continuation token obtained from the previous endpoint.
      */
     @NonNull
     public final String continuationToken;
 
-    /**
-     * The email address of the user.
-     */
-    @Nullable
-    public final String username;
-
-    @NonNull
     @Override
     public String toUnsanitizedString() {
-        return "SignInSubmitPasswordCommandParameters(username=" + username + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
+        return "JITChallengeAuthMethodCommandParameters(authority=" + authority + ", challengeType=" + challengeType + ")";
     }
 
     @Override
@@ -57,9 +69,8 @@ public class SignInWithContinuationTokenCommandParameters extends BaseSignInToke
         return !toString().equals(toUnsanitizedString());
     }
 
-    @NonNull
     @Override
     public String toString() {
-        return "SignInSubmitPasswordCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+        return toUnsanitizedString();
     }
 }

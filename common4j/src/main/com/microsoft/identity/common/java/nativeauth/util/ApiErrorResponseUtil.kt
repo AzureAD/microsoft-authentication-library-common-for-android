@@ -34,6 +34,10 @@ internal fun String?.isOOB(): Boolean {
     return this.contentEquals(other = "oob", ignoreCase = true)
 }
 
+internal fun String?.isPreverified(): Boolean {
+    return this.contentEquals(other = "preverified", ignoreCase = true)
+}
+
 internal fun String?.isPassword(): Boolean {
     return this.contentEquals(other = "password", ignoreCase = true)
 }

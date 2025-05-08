@@ -756,8 +756,7 @@ class NativeAuthRequestProviderTest {
         )
     }
 
-    @Test(expected = ClientException::class)
-    fun testSignInTokenWithEmptyUsernameShouldThrowException() {
+    fun testSignInTokenWithEmptyUsernameShouldNotThrowException() {
         val commandParameters = SignInWithContinuationTokenCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
@@ -765,9 +764,11 @@ class NativeAuthRequestProviderTest {
             .correlationId(correlationId)
             .build()
 
-        nativeAuthRequestProvider.createContinuationTokenTokenRequest(
+        val result = nativeAuthRequestProvider.createContinuationTokenTokenRequest(
             commandParameters = commandParameters
         )
+        assertEquals(username, result.parameters.username)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
     }
 
     @Test(expected = ClientException::class)
@@ -1429,16 +1430,20 @@ class NativeAuthRequestProviderTest {
         )
     }
 
-    @Test(expected = ClientException::class)
-    fun testJITContinueWithEmptyOOBCodeShouldThrowException() {
-        val oobCode = ""
+    @Test
+    fun testJITContinueWithContinuationTokenGrantType() {
+        val grantType = NativeAuthConstants.GrantType.CONTINUATION_TOKEN
 
-        nativeAuthRequestProvider.createJITContinueRequest(
+        val result = nativeAuthRequestProvider.createJITContinueRequest(
             continuationToken =  continuationToken,
             grantType = grantType,
             code = oobCode,
             correlationId = correlationId
         )
+        assertEquals(clientId, result.parameters.clientId)
+        assertEquals(continuationToken, result.parameters.continuationToken)
+        assertEquals(grantType, result.parameters.grantType)
+        assertEquals(oobCode, result.parameters.oob)
     }
 
     @Test

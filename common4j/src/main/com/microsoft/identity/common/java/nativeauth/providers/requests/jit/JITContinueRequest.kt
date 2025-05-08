@@ -49,7 +49,7 @@ data class JITContinueRequest private constructor(
             clientId: String,
             continuationToken: String,
             grantType: String,
-            oob: String,
+            oob: String?,
             requestUrl: String,
             headers: Map<String, String?>
         ): JITContinueRequest {
@@ -57,7 +57,6 @@ data class JITContinueRequest private constructor(
             ArgUtils.validateNonNullArg(clientId, "clientId")
             ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             ArgUtils.validateNonNullArg(grantType, "grantType")
-            ArgUtils.validateNonNullArg(oob, "oob")
 
             return JITContinueRequest(
                 requestUrl = URL(requestUrl),
@@ -84,7 +83,7 @@ data class JITContinueRequest private constructor(
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("continuation_token") val continuationToken: String,
         @SerializedName("grant_type") val grantType: String,
-        @SerializedName("oob") val oob: String
+        @SerializedName("oob") val oob: String?
     ) : NativeAuthRequestParameters() {
         override fun toUnsanitizedString(): String = "NativeAuthJITContinueRequestParameters(clientId=$clientId, grantType=$grantType, oob=$oob)"
 

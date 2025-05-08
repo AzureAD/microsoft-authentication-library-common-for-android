@@ -3621,7 +3621,7 @@ class NativeAuthResponseHandlerTest {
             correlationId = correlationId
         )
         val apiResult = jitChallengeApiResponse.toResult()
-        if (apiResult is JITChallengeApiResult.Success) {
+        if (apiResult is JITChallengeApiResult.OOBRequired) {
             assertEquals(correlationId, apiResult.correlationId)
             assertEquals(emailChallengeChannel, apiResult.challengeChannel)
             assertEquals(challengeType, apiResult.challengeType)

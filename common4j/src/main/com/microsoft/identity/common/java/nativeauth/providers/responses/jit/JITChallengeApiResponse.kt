@@ -28,7 +28,8 @@ import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidChallengeTarget
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidRequest
-import com.microsoft.identity.common.java.nativeauth.util.isRedirect
+import com.microsoft.identity.common.java.nativeauth.util.isOOB
+import com.microsoft.identity.common.java.nativeauth.util.isPreverified
 import java.net.HttpURLConnection
 
 /**
@@ -88,34 +89,58 @@ class JITChallengeApiResponse(
 
             // Handle success and redirect
             HttpURLConnection.HTTP_OK -> {
+                val unknownError = JITChallengeApiResult.UnknownError(
+                    error = ApiErrorResult.INVALID_STATE,
+                    errorDescription = "register/challenge.Register authentication method /challenge did not return all mandatory fields",
+                    errorCodes = errorCodes.orEmpty(),
+                    correlationId = correlationId
+                )
                 return when {
-                    continuationToken.isNullOrBlank() ||
-                            challengeType.isNullOrBlank() ||
+                    challengeType.isNullOrBlank() -> {
+                        unknownError
+                    }
+
+                    challengeType.isOOB() -> {
+                        if (continuationToken.isNullOrBlank() ||
                             challengeTarget.isNullOrBlank() ||
                             challengeChannel.isNullOrBlank() ||
-                            codeLength == null -> {
+                            codeLength == null
+                        ) {
+                            unknownError
+                        } else {
+                            JITChallengeApiResult.OOBRequired(
+                                correlationId = correlationId,
+                                continuationToken = continuationToken,
+                                challengeType = challengeType,
+                                bindingMethod = bindingMethod,
+                                challengeTargetLabel = challengeTarget,
+                                challengeChannel = challengeChannel,
+                                codeLength = codeLength
+                            )
+                        }
+                    }
+
+                    challengeType.isPreverified() -> {
+                        if (continuationToken.isNullOrBlank()) {
+                            unknownError
+                        } else {
+                            JITChallengeApiResult.Preverified(
+                                correlationId = correlationId,
+                                continuationToken = continuationToken
+                            )
+                        }
+                    }
+                    else -> {
                         JITChallengeApiResult.UnknownError(
                             error = ApiErrorResult.INVALID_STATE,
-                            errorDescription = "Register authentication method /challenge did not return all mandatory fields",
+                            errorDescription = "register/challenge. Received unexpected challenge type value. Expected OOB or PREVERIFIED",
                             errorCodes = errorCodes.orEmpty(),
                             correlationId = correlationId
                         )
                     }
-
-                    else -> {
-                        JITChallengeApiResult.Success(
-                            correlationId = correlationId,
-                            continuationToken = continuationToken,
-                            challengeType = challengeType,
-                            bindingMethod = bindingMethod,
-                            challengeTargetLabel = challengeTarget,
-                            challengeChannel = challengeChannel,
-                            codeLength = codeLength
-                        )
-                    }
                 }
             }
-
+            // Catch uncommon status codes
             else -> {
                 JITChallengeApiResult.UnknownError(
                     error = error.orEmpty(),

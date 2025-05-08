@@ -24,7 +24,6 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.jit
 
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResult
-import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordContinueApiResult
 
 /**
  * Represents the potential result types returned from the register/challenge endpoint,
@@ -32,7 +31,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpa
  */
 sealed interface JITChallengeApiResult: ApiResult {
 
-    data class Success(
+    data class OOBRequired(
         override val correlationId: String,
         val continuationToken: String,
         val challengeType: String,
@@ -42,7 +41,7 @@ sealed interface JITChallengeApiResult: ApiResult {
         val codeLength: Int
     ) : JITChallengeApiResult {
         override fun toUnsanitizedString(): String {
-            return "Success(correlationId=$correlationId " +
+            return "OOBRequired(correlationId=$correlationId " +
                     "challengeType=$challengeType, " +
                     "bindingMethod=$bindingMethod, " +
                     "challengeTargetLabel=$challengeTargetLabel, " +
@@ -51,10 +50,23 @@ sealed interface JITChallengeApiResult: ApiResult {
         }
 
         override fun toString(): String {
-            return "Success(correlationId=$correlationId, " +
+            return "OOBRequired(correlationId=$correlationId, " +
                     "challengeType=$challengeType, " +
                     "bindingMethod=$bindingMethod, " +
                     "codeLength=$codeLength)"
+        }
+    }
+
+    data class Preverified(
+        override val correlationId: String,
+        val continuationToken: String
+    ) : JITChallengeApiResult {
+        override fun toUnsanitizedString(): String {
+            return "Preverified(correlationId=$correlationId)"
+        }
+
+        override fun toString(): String {
+            return toUnsanitizedString()
         }
     }
 

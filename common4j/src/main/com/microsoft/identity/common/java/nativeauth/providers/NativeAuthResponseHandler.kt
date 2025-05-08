@@ -28,8 +28,6 @@ import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITChallengeApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITContinueApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITIntrospectApiResponse
-import com.microsoft.identity.common.java.net.HttpResponse
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordChallengeApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordContinueApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordPollCompletionApiResponse
@@ -44,6 +42,8 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpContinueApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResponse
 import com.microsoft.identity.common.java.nativeauth.util.ApiResultUtil
+import com.microsoft.identity.common.java.net.HttpResponse
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.util.ObjectMapper
 import java.net.HttpURLConnection
 
@@ -680,7 +680,7 @@ class NativeAuthResponseHandler {
      * @return JITChallengeApiResponse object
      */
     @Throws(ClientException::class)
-    fun getJITChallengeResponseFromHttpResponse(
+    fun getJITChallengeApiResponseFromHttpResponse(
         requestCorrelationId: String,
         response: HttpResponse
     ): JITChallengeApiResponse {
