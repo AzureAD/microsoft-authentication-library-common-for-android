@@ -27,6 +27,8 @@ import android.content.Intent;
 import android.content.pm.ResolveInfo;
 import android.os.Build;
 
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.List;
@@ -44,6 +46,11 @@ public class WorkProfileUtil {
      * @return true if called in personal profile and a work profile managed by clouddpc exists, false otherwise
      */
     public static boolean checkIfIsInPersonalProfileButClouddpcWorkProfileAvailable(@NonNull final Context context) {
+        // If the flight is not enabled, just return false
+        if (!CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS)) {
+            return false;
+        }
+
         try {
             final Intent intent = new Intent("com.google.android.apps.work.clouddpc.ACTION_DETECT_WORK_PROFILE");
             final List<ResolveInfo> activities = context.getPackageManager().queryIntentActivities(intent, 0);
