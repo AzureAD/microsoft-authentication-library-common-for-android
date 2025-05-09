@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.nativeauth.providers
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
-import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.UserAttributeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.UserAttributeOptionsApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITChallengeApiResponse
@@ -59,6 +58,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpContinueApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResult
+import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.nativeauth.ApiConstants
 import io.mockk.every
 import io.mockk.mockk
@@ -3607,7 +3607,7 @@ class NativeAuthResponseHandlerTest {
     fun testJITChallengeApiSuccessIsHandledCorrectly() {
         val jitChallengeApiResponse = JITChallengeApiResponse(
             statusCode = successStatusCode,
-            challengeType = challengeType,
+            challengeType = oobChallengeType,
             continuationToken = continuationToken,
             error = null,
             errorDescription = null,
@@ -3624,12 +3624,12 @@ class NativeAuthResponseHandlerTest {
         if (apiResult is JITChallengeApiResult.OOBRequired) {
             assertEquals(correlationId, apiResult.correlationId)
             assertEquals(emailChallengeChannel, apiResult.challengeChannel)
-            assertEquals(challengeType, apiResult.challengeType)
+            assertEquals(oobChallengeType, apiResult.challengeType)
             assertEquals(codeLength, apiResult.codeLength)
             assertEquals(challengeTargetLabel, apiResult.challengeTargetLabel)
             assertEquals(bindingMethod, apiResult.bindingMethod)
         } else {
-            fail("Expected JITChallengeApiResult.Success but got $apiResult")
+            fail("Expected JITChallengeApiResult.OOBRequired but got $apiResult")
         }
     }
 
