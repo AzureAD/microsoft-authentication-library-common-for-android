@@ -1593,9 +1593,14 @@ class NativeAuthControllerTest {
         correlationId: String,
         grantType : String = "oob",
     ): JITContinueCommandParameters {
+        val authenticationScheme = AuthenticationSchemeFactory.createScheme(
+            AndroidPlatformComponentsFactory.createFromContext(context),
+            null
+        )
         return JITContinueCommandParameters.builder()
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
             .clientId(clientId)
+            .authenticationScheme(authenticationScheme)
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
@@ -1613,8 +1618,13 @@ class NativeAuthControllerTest {
         challengeChannel: String,
         correlationId: String,
     ): JITChallengeAuthMethodCommandParameters {
+        val authenticationScheme = AuthenticationSchemeFactory.createScheme(
+            AndroidPlatformComponentsFactory.createFromContext(context),
+            null
+        )
         return JITChallengeAuthMethodCommandParameters.builder()
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
+            .authenticationScheme(authenticationScheme)
             .clientId(clientId)
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
