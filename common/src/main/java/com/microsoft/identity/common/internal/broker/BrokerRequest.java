@@ -94,21 +94,18 @@ public class BrokerRequest implements Serializable {
      * Scopes for the request. This is expected to be of the format
      * "scope 1 scope2 scope3" with space as a delimiter
      */
-    @NonNull
     @SerializedName(SerializedNames.SCOPE)
     private String mScope;
 
     /**
      * The redirect uri for the request.
      */
-    @NonNull
     @SerializedName(SerializedNames.REDIRECT)
     private String mRedirect;
 
     /**
      * The client id of the application.
      */
-    @NonNull
     @SerializedName(SerializedNames.CLIENT_ID)
     private String mClientId;
 
