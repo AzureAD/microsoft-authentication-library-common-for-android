@@ -350,7 +350,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
                 mAADWebViewClient.setRequestHeaders(requestHeaders);
                 mAADWebViewClient.setRequestUrl(authorizationRequestUrl);
-                mWebView.loadUrl(authorizationRequestUrl, requestHeaders);
+                if (authorizationRequestUrl.contains("switch_browser=1")) {
+                    mWebView.loadUrl("http://192.168.0.243:3000/auth", requestHeaders);
+                }else {
+                    mWebView.loadUrl(authorizationRequestUrl, requestHeaders);
+                }
+
 
                 // The first page load could take time, and we do not want to just show a blank page.
                 // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.

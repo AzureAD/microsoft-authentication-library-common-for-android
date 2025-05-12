@@ -206,7 +206,7 @@ object SwitchBrowserUriHelper {
         val paths = actionUri.split("/")
         val authority = paths[0]
         val uriBuilder = Uri.Builder()
-            .scheme("https")
+            .scheme("http")
             .encodedAuthority(authority)
         for (i in 1 until paths.size) {
             uriBuilder.appendPath(paths[i])

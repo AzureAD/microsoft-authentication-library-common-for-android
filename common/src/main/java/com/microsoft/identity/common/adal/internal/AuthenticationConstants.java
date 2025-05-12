@@ -1467,6 +1467,14 @@ public final class AuthenticationConstants {
          */
         public static final String POWERLIFT_TENANT_ID = "powerLiftTenantId";
 
+
+        public static final String AUTHENTICATOR_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/authenticator";
+        public static final String LTW_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/ltw";
+        public static final String COMPANY_PORTAL_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/cp";
+        public static final String  BROKER_HOST_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/brokerhost";
+
+
+
         /**
          * Bundle identifiers for x-ms-clitelem info.
          */
