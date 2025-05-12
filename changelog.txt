@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Add API for resource account provisioning (API only)
 - [PATCH] Allow generating wrapping key without PURPOSE_WRAP_KEY with Flight (#2633))
 - [MINOR] Adding a state parameter to prevent phish attacks, in “switch_browser” flow. (#2631)
 - [MINOR] Move camera logic to CameraPermissionRequestHandler and add SdmQrPinManager (#2630)
