@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.java.providers.microsoft;
 
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.platform.MockDeviceMetadata;
 import com.microsoft.identity.common.java.providers.oauth2.MockAuthorizationRequest;
@@ -49,6 +51,7 @@ public class MicrosoftAuthorizationRequestTest {
     @After
     public void tearDown() {
         Device.clearDeviceMetadata();
+        Device.setIsInPersonalProfileButClouddpcWorkProfileAvailable(false);
     }
 
     public static final String MOCK_AUTHORITY = "http://mock_authority";
@@ -75,21 +78,95 @@ public class MicrosoftAuthorizationRequestTest {
                 .setState(MOCK_STATE)
                 .build();
 
-        Assert.assertEquals(MockAuthorizationRequest.MOCK_AUTH_ENDPOINT +
-                        "?login_hint=" + MOCK_LOGIN_HINT +
-                        "&client-request-id=" + MOCK_CORRELATION_ID +
-                        "&code_challenge=" + MOCK_PKCE_CHALLENGE.getCodeChallenge() +
-                        "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
-                        "&x-client-Ver=" + MOCK_LIBRARY_VERSION +
-                        "&x-client-SKU=" + MOCK_LIBRARY_NAME +
-                        "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
-                        "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
-                        "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
-                        "&instance_aware=" + MOCK_MULTIPLE_CLOUD_AWARE +
-                // Base class fields start here.
-                        "&response_type=code" +
-                        "&state=" + MOCK_STATE_ENCODED,
-                request.getAuthorizationRequestAsHttpRequest().toString());
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS)) {
+            Assert.assertEquals(MockAuthorizationRequest.MOCK_AUTH_ENDPOINT +
+                            "?login_hint=" + MOCK_LOGIN_HINT +
+                            "&client-request-id=" + MOCK_CORRELATION_ID +
+                            "&code_challenge=" + MOCK_PKCE_CHALLENGE.getCodeChallenge() +
+                            "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
+                            "&x-client-Ver=" + MOCK_LIBRARY_VERSION +
+                            "&x-client-SKU=" + MOCK_LIBRARY_NAME +
+                            "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
+                            "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
+                            "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
+                            "&x-client-MN=" + MockDeviceMetadata.TEST_MANUFACTURER +
+                            "&instance_aware=" + MOCK_MULTIPLE_CLOUD_AWARE +
+                            "&" + MicrosoftAuthorizationRequest.WP_AVAILABLE_EXTRA_PARAMETER_NAME + "=false" +
+                            // Base class fields start here.
+                            "&response_type=code" +
+                            "&state=" + MOCK_STATE_ENCODED,
+                    request.getAuthorizationRequestAsHttpRequest().toString());
+        } else {
+            Assert.assertEquals(MockAuthorizationRequest.MOCK_AUTH_ENDPOINT +
+                            "?login_hint=" + MOCK_LOGIN_HINT +
+                            "&client-request-id=" + MOCK_CORRELATION_ID +
+                            "&code_challenge=" + MOCK_PKCE_CHALLENGE.getCodeChallenge() +
+                            "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
+                            "&x-client-Ver=" + MOCK_LIBRARY_VERSION +
+                            "&x-client-SKU=" + MOCK_LIBRARY_NAME +
+                            "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
+                            "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
+                            "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
+                            "&instance_aware=" + MOCK_MULTIPLE_CLOUD_AWARE +
+                            // Base class fields start here.
+                            "&response_type=code" +
+                            "&state=" + MOCK_STATE_ENCODED,
+                    request.getAuthorizationRequestAsHttpRequest().toString());
+        }
+    }
+
+    @Test
+    public void testCreateUriFromAuthorizationRequestWithWPAvailable() throws MalformedURLException, ClientException {
+        Device.setDeviceMetadata(new MockDeviceMetadata());
+
+        Device.setIsInPersonalProfileButClouddpcWorkProfileAvailable(true);
+
+        final MockMicrosoftAuthorizationRequest request = new MockMicrosoftAuthorizationRequest.Builder()
+                .setAuthority(new URL(MOCK_AUTHORITY))
+                .setLibraryVersion(MOCK_LIBRARY_VERSION)
+                .setLibraryName(MOCK_LIBRARY_NAME)
+                .setMultipleCloudAware(MOCK_MULTIPLE_CLOUD_AWARE)
+                .setCorrelationId(MOCK_CORRELATION_ID)
+                .setLoginHint(MOCK_LOGIN_HINT)
+                .setPkceChallenge(MOCK_PKCE_CHALLENGE)
+                .setState(MOCK_STATE)
+                .build();
+
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS)) {
+            Assert.assertEquals(MockAuthorizationRequest.MOCK_AUTH_ENDPOINT +
+                            "?login_hint=" + MOCK_LOGIN_HINT +
+                            "&client-request-id=" + MOCK_CORRELATION_ID +
+                            "&code_challenge=" + MOCK_PKCE_CHALLENGE.getCodeChallenge() +
+                            "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
+                            "&x-client-Ver=" + MOCK_LIBRARY_VERSION +
+                            "&x-client-SKU=" + MOCK_LIBRARY_NAME +
+                            "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
+                            "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
+                            "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
+                            "&x-client-MN=" + MockDeviceMetadata.TEST_MANUFACTURER +
+                            "&instance_aware=" + MOCK_MULTIPLE_CLOUD_AWARE +
+                            "&" + MicrosoftAuthorizationRequest.WP_AVAILABLE_EXTRA_PARAMETER_NAME + "=true" +
+                            // Base class fields start here.
+                            "&response_type=code" +
+                            "&state=" + MOCK_STATE_ENCODED,
+                    request.getAuthorizationRequestAsHttpRequest().toString());
+        } else {
+            Assert.assertEquals(MockAuthorizationRequest.MOCK_AUTH_ENDPOINT +
+                            "?login_hint=" + MOCK_LOGIN_HINT +
+                            "&client-request-id=" + MOCK_CORRELATION_ID +
+                            "&code_challenge=" + MOCK_PKCE_CHALLENGE.getCodeChallenge() +
+                            "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
+                            "&x-client-Ver=" + MOCK_LIBRARY_VERSION +
+                            "&x-client-SKU=" + MOCK_LIBRARY_NAME +
+                            "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
+                            "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
+                            "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
+                            "&instance_aware=" + MOCK_MULTIPLE_CLOUD_AWARE +
+                            // Base class fields start here.
+                            "&response_type=code" +
+                            "&state=" + MOCK_STATE_ENCODED,
+                    request.getAuthorizationRequestAsHttpRequest().toString());
+        }
     }
 
     // If state is not provided, MicrosoftAuthorizationRequest should generate a default one.

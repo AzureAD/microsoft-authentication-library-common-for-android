@@ -27,9 +27,12 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper
 import com.microsoft.identity.common.java.browser.Browser
 import com.microsoft.identity.common.java.browser.IBrowserSelector
 import com.microsoft.identity.common.java.exception.ClientException
+import io.mockk.every
+import io.mockk.mockkObject
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -46,7 +49,8 @@ import org.robolectric.RobolectricTestRunner
 class SwitchBrowserRequestHandlerTest {
 
     @Test
-    fun `test processChallenge success`() {
+    fun `test processChallenge success (stateRequired)`() {
+        isStateRequired(true)
         // Mock parameters
         val mockActivity = mock<Activity>()
         var activityExecuted = false
@@ -57,10 +61,33 @@ class SwitchBrowserRequestHandlerTest {
         val context = mock(Context::class.java)
         val customTabsManager = mock(CustomTabsManager::class.java)
         val challenge = mock(SwitchBrowserChallenge::class.java)
-        `when`(challenge.uri).thenReturn(Uri.parse("https://example.com"))
+        `when`(challenge.processUri).thenReturn(Uri.parse("https://example.com?state=123"))
+        `when`(challenge.authorizationUrl).thenReturn("https://auth.com?state=123")
         val browserSelector = // Browser available
             IBrowserSelector { _, _ -> Browser("fakeBrowser", emptySet(), "browser", false) }
-        val handler = SwitchBrowserRequestHandler(mockActivity, context, customTabsManager, browserSelector)
+        val handler = SwitchBrowserRequestHandler(mockActivity, context, customTabsManager, browserSelector, null)
+        handler.processChallenge(challenge)
+        Assert.assertTrue(activityExecuted)
+    }
+
+    @Test
+    fun `test processChallenge success (StateNotRequired)`() {
+        isStateRequired(false)
+        // Mock parameters
+        val mockActivity = mock<Activity>()
+        var activityExecuted = false
+        doAnswer {
+            activityExecuted = true
+            null
+        }.whenever(mockActivity).startActivity(any())
+        val context = mock(Context::class.java)
+        val customTabsManager = mock(CustomTabsManager::class.java)
+        val challenge = mock(SwitchBrowserChallenge::class.java)
+        `when`(challenge.processUri).thenReturn(Uri.parse("https://example.com"))
+        `when`(challenge.authorizationUrl).thenReturn("https://auth.com")
+        val browserSelector = // Browser available
+            IBrowserSelector { _, _ -> Browser("fakeBrowser", emptySet(), "browser", false) }
+        val handler = SwitchBrowserRequestHandler(mockActivity, context, customTabsManager, browserSelector, null)
         handler.processChallenge(challenge)
         Assert.assertTrue(activityExecuted)
     }
@@ -73,13 +100,39 @@ class SwitchBrowserRequestHandlerTest {
         val context = mock(Context::class.java)
         val customTabsManager = mock(CustomTabsManager::class.java)
         val challenge = mock(SwitchBrowserChallenge::class.java)
-        `when`(challenge.uri).thenReturn(Uri.parse("https://example.com"))
+        `when`(challenge.processUri).thenReturn(Uri.parse("https://example.com?state=123"))
+        `when`(challenge.authorizationUrl).thenReturn("https://auth.com?state=123")
         val browserSelector = IBrowserSelector { _, _ -> null } // No browser available
-        val handler = SwitchBrowserRequestHandler(activity, context, customTabsManager, browserSelector)
+        val handler = SwitchBrowserRequestHandler(activity, context, customTabsManager, browserSelector, null)
         val exception = Assert.assertThrows(ClientException::class.java) {
             handler.processChallenge(challenge)
         }
         Assert.assertEquals(ClientException.NO_BROWSERS_AVAILABLE, exception.errorCode)
         Assert.assertEquals("No browser found for SwitchBrowserChallenge.", exception.message)
+    }
+
+    @Test
+    fun `test processChallenge states mismatch`() {
+        isStateRequired(true)
+        // Mock parameters
+        val mockActivity = mock<Activity>()
+        val context = mock(Context::class.java)
+        val customTabsManager = mock(CustomTabsManager::class.java)
+        val challenge = mock(SwitchBrowserChallenge::class.java)
+        `when`(challenge.processUri).thenReturn(Uri.parse("https://example.com?state=123"))
+        `when`(challenge.authorizationUrl).thenReturn("https://auth.com?state=456")
+        val browserSelector = // Browser available
+            IBrowserSelector { _, _ -> Browser("fakeBrowser", emptySet(), "browser", false) }
+        val handler = SwitchBrowserRequestHandler(mockActivity, context, customTabsManager, browserSelector, null)
+        val exception = Assert.assertThrows(ClientException::class.java) {
+            handler.processChallenge(challenge)
+        }
+        Assert.assertEquals(ClientException.STATE_MISMATCH, exception.errorCode)
+        Assert.assertEquals("State does not match with the auth request state.", exception.message)
+    }
+
+    private fun isStateRequired(isStateRequired: Boolean) {
+        mockkObject(SwitchBrowserUriHelper)
+        every { SwitchBrowserUriHelper.STATE_VALIDATION_REQUIRED } returns isStateRequired
     }
 }
