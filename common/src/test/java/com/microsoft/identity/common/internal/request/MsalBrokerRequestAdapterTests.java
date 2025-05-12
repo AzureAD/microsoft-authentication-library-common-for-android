@@ -249,7 +249,7 @@ public class MsalBrokerRequestAdapterTests {
     public void testGetRequestBundleForProvisionResourceAccount() {
         final String mockHomeAccountId = "mockHomeAccountId";
         final String mockCorrelationId = "mockCorrelationId";
-        final String mockAuthorityStr = "https://login.microsoft.com/mockAuthority";
+        final String mockAuthorityStr = "https://login.microsoftonline.com/mockAuthority";
         final Authority mockAuthority = Authority.getAuthorityFromAuthorityUrl(mockAuthorityStr);
         final String mockNegotiatedBrokerVersion = "18.0";
         final String mockApplicationName = "mockApplicationName";
