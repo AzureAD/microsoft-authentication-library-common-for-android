@@ -1490,7 +1490,7 @@ class NativeAuthControllerTest {
         )
 
         val parameters = createJITChallengeAuthMethodCommandParametersCommandParameters(
-            verificationContact = "user@contos.com",
+            verificationContact = "user@contoso.com",
             authMethodChallengeType = "oob",
             challengeChannel = "email",
             correlationId = correlationId
@@ -1509,7 +1509,7 @@ class NativeAuthControllerTest {
         )
 
         val parameters = createJITChallengeAuthMethodCommandParametersCommandParameters(
-            verificationContact = "user@contos.com",
+            verificationContact = "user@contoso.com",
             authMethodChallengeType = "oob",
             challengeChannel = "email",
             correlationId = correlationId
