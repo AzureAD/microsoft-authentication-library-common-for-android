@@ -100,12 +100,14 @@ public class BrokerRequest implements Serializable {
     /**
      * The redirect uri for the request.
      */
+    @NonNull
     @SerializedName(SerializedNames.REDIRECT)
     private String mRedirect;
 
     /**
      * The client id of the application.
      */
+    @NonNull
     @SerializedName(SerializedNames.CLIENT_ID)
     private String mClientId;
 
