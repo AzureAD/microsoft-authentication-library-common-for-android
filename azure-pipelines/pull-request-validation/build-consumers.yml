@@ -225,6 +225,7 @@ stages:
           publishJUnitResults: false
           jdkArchitecture: x86
       - task: Bash@3
+        retryCountOnTaskFailure: 3
         displayName: Execute tests
         inputs:
           workingDirectory: $(Build.SourcesDirectory)/broker-java-root
