@@ -127,6 +127,7 @@ public abstract class BrowserAuthorizationStrategy<
     private Intent buildAuthorizationActivityStartIntent(Intent authIntent, URI requestUrl) {
          // RedirectURI used to get the auth code in nested app auth is that of a hub app (brkRedirectURI)   
         final String redirectUri = mAuthorizationRequest.getBrkRedirectUri() != null ? mAuthorizationRequest.getBrkRedirectUri() : mAuthorizationRequest.getRedirectUri();
+        Logger.info("methodTag", "The start url is " + requestUrl.toString());
         final AuthorizationActivityParameters authorizationActivityParameters = new AuthorizationActivityParameters(
                 getApplicationContext(),
                 authIntent,

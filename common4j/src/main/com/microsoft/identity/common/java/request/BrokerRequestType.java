@@ -15,6 +15,12 @@ public enum BrokerRequestType {
     /**
      * Request type indicates a token request which is performed during an interrupt flow.
      */
-    RESOLVE_INTERRUPT
+    RESOLVE_INTERRUPT,
+
+    /**
+     * Request type indicates a token request which is performed during an interrupt flow specifically to get tokens for DRS service.
+     * NOTE : Only use this type when the request is for DRS service as this should not be used while serving any client side requests.
+     */
+    BROKER_DRS_REQUEST
 
 }

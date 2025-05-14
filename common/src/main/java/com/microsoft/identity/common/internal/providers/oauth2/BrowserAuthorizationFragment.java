@@ -34,6 +34,11 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.constants.FidoConstants;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.util.ClientExtraSku;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
@@ -42,10 +47,14 @@ import com.microsoft.identity.common.java.util.UrlUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -78,6 +87,8 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
     private boolean mBrowserFlowStarted = false;
 
     private Intent mAuthIntent;
+
+    private HashMap<String, String> mRequestHeaders;
 
     /**
      * Creates an intent to handle the completion of an authorization flow with browser.
@@ -124,6 +135,7 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
         super.onSaveInstanceState(outState);
         outState.putParcelable(AUTH_INTENT, mAuthIntent);
         outState.putBoolean(BROWSER_FLOW_STARTED, mBrowserFlowStarted);
+        outState.putSerializable(REQUEST_HEADERS, mRequestHeaders);
     }
 
     @Override
@@ -131,6 +143,38 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
         super.extractState(state);
         mAuthIntent = state.getParcelable(AUTH_INTENT);
         mBrowserFlowStarted = state.getBoolean(BROWSER_FLOW_STARTED, false);
+        mRequestHeaders = getRequestHeaders(state);
+    }
+
+    /**
+     * Extracts request headers from the given bundle object.
+     */
+    private HashMap<String, String> getRequestHeaders(final Bundle state) {
+        try {
+            // Suppressing unchecked warnings due to casting of serializable String to HashMap<String, String>
+            @SuppressWarnings(WarningType.unchecked_warning)
+            HashMap<String, String> requestHeaders = (HashMap<String, String>) state.getSerializable(REQUEST_HEADERS);
+            // In cases of WebView as an auth agent, we want to always add the passkey protocol header.
+            // (Not going to add passkey protocol header until full feature is ready.)
+            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PASSKEY_FEATURE)) {
+                if (requestHeaders == null) {
+                    requestHeaders = new HashMap<>();
+                }
+                requestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_VALUE);
+            }
+
+//            // Attach client extras header for ESTS telemetry. Only done for broker requests
+//            if (isBrokerRequest(this.mAuthorizationRequestUrl)) {
+//                final ClientExtraSku clientExtraSku = ClientExtraSku.builder()
+//                        .srcSku(state.getString(PRODUCT))
+//                        .srcSkuVer(state.getString(VERSION))
+//                        .build();
+//                requestHeaders.put(com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRA_SKU, clientExtraSku.toString());
+//            }
+            return requestHeaders;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @SuppressFBWarnings("ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD")

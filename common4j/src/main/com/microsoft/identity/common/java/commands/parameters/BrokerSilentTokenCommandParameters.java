@@ -95,11 +95,13 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
         }
 
         if (!getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
-            throw new ArgumentException(
-                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    "mRedirectUri", "The redirect URI doesn't match the uri" +
-                    " generated with caller package name and signature"
-            );
+            if (getRequestType() != BrokerRequestType.BROKER_DRS_REQUEST) {
+                throw new ArgumentException(
+                        ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
+                        "mRedirectUri", "The redirect URI doesn't match the uri" +
+                        " generated with caller package name and signature"
+                );
+            }
         }
 
         if (!(getOAuth2TokenCache() instanceof BrokerOAuth2TokenCache)) {
