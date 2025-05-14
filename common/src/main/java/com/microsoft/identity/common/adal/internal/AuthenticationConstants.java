@@ -560,6 +560,10 @@ public final class AuthenticationConstants {
          */
         public static final String ACTION_URI = "action_uri";
 
+        /**
+         * String Query parameter key for the state blob.
+         */
+        public static final String STATE = "state";
     }
 
     /**
@@ -1160,6 +1164,18 @@ public final class AuthenticationConstants {
          * Generated with SHA-512.
          */
         public static final String LTW_APP_SHA512_DEBUG_SIGNATURE = "5PAhhZNSRRvq7vpTT5vrYJbSLh05AU8USf7oUTS239PEltebX87uGN7GhAe5244lJepwZ5RU4vu8N6ospXVOlg==";
+
+        /**
+         * Signing certificate thumbprint of the DEBUG-signed Microsoft Intune app.
+         * Generated with SHA-512.
+         */
+        public static final String INTUNE_APP_SHA512_DEBUG_SIGNATURE = "F+Tat7A/mlOJCzRYEmj9DgLRHU2Nb0VSQjgZEyAehqW9+cOT0oYjkT/fa33hYcVMwUzaSy0hUOVt9KQtyFRnVQ==";
+
+        /**
+         * Signing certificate thumbprint of the RELEASE-signed Microsoft Intune app.
+         * Generated with SHA-512.
+         */
+        public static final String INTUNE_APP_SHA512_RELEASE_SIGNATURE = "jPpMoaNvcxSLMX4yG4C3Gf86rtTqh33SqpuRKg4WOP+MnnpA52zZgvKLW76U4Cqqf68iaBk9W7k/jhciiSAtgQ==";
 
         /**
          * Teams IP Phones (Sakurai devices) is supported by Intune, but does not have a back button nor browser.

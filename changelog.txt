@@ -1,5 +1,12 @@
 vNext
 ----------
+
+Version 21.1.0
+----------
+- [PATCH] Allow generating wrapping key without PURPOSE_WRAP_KEY with Flight (#2633))
+- [MINOR] Adding a state parameter to prevent phish attacks, in “switch_browser” flow. (#2631)
+- [MINOR] Move camera logic to CameraPermissionRequestHandler and add SdmQrPinManager (#2630)
+- [MINOR] Pass Work Profile existence, OS Version, and Manufacturer to ESTS (#2627)
 - [MINOR] Add telemetry for the switch browser protocol (#2612)
 
 Version 21.0.0

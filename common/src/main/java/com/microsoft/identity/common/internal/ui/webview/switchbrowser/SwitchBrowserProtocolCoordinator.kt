@@ -31,8 +31,6 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Autho
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
 import com.microsoft.identity.common.internal.providers.oauth2.BrokerAuthorizationActivity
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler
-import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper.buildResumeUri
-import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl
 import com.microsoft.identity.common.java.AuthenticationConstants.AAD.AUTHORIZATION
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
@@ -69,7 +67,7 @@ class SwitchBrowserProtocolCoordinator(
          * Returns `true` if the URL matches the expected pattern, `false` otherwise.
          */
         fun isSwitchBrowserResume(url: String?, redirectUrl: String): Boolean {
-            return isSwitchBrowserRedirectUrl(url, redirectUrl, SWITCH_BROWSER.RESUME_PATH)
+            return SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl(url, redirectUrl, SWITCH_BROWSER.RESUME_PATH)
         }
 
         /**
@@ -94,6 +92,10 @@ class SwitchBrowserProtocolCoordinator(
                 SWITCH_BROWSER.CODE,
                 uri.getQueryParameter(SWITCH_BROWSER.CODE)
             )
+            intent.putExtra(
+                SWITCH_BROWSER.STATE,
+                uri.getQueryParameter(SWITCH_BROWSER.STATE)
+            )
             return intent
         }
     }
@@ -109,6 +111,7 @@ class SwitchBrowserProtocolCoordinator(
      */
     @Throws(ClientException::class)
     fun processSwitchBrowserResume(
+        authorizationRequest: String,
         extras: Bundle,
         onSuccessAction: (Uri, HashMap<String, String>) -> Unit
     ) {
@@ -116,17 +119,21 @@ class SwitchBrowserProtocolCoordinator(
             val methodTag = "$TAG:processSwitchBrowserResume"
             val actionUri = extras.getString(SWITCH_BROWSER.ACTION_URI)
             val code = extras.getString(SWITCH_BROWSER.CODE)
+            val state = extras.getString(SWITCH_BROWSER.STATE)
             if (actionUri.isNullOrEmpty() || code.isNullOrEmpty()) {
                 val clientException = ClientException(
                     ClientException.MISSING_PARAMETER,
-                    "Action URI is null/empty: ${actionUri == null}, code is null/empty: ${code == null}"
+                    "Action URI is null/empty: ${actionUri.isNullOrEmpty()}," +
+                            " code is null/empty: ${code.isNullOrEmpty()}."
                 )
                 span.setStatus(StatusCode.ERROR)
                 span.recordException(clientException)
                 span.end()
                 throw clientException
             }
-            val resumeUri = buildResumeUri(actionUri)
+            SwitchBrowserUriHelper.statesMatch(authorizationRequest, state)
+            // Validate the state from auth request and redirect URL is the same
+            val resumeUri = SwitchBrowserUriHelper.buildResumeUri(actionUri, state)
             val headers = hashMapOf(AUTHORIZATION to code)
             onSuccessAction(resumeUri, headers)
             // Reset the challenge state after processing the resume action

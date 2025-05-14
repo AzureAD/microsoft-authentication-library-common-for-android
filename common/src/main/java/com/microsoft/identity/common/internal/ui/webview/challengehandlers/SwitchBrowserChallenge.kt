@@ -30,7 +30,8 @@ import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBro
  * It contains the URI to be opened in the new browser.
  */
 data class SwitchBrowserChallenge(
-    val uri: Uri,
+    val processUri: Uri,
+    val authorizationUrl: String
 ) {
 
     companion object {
@@ -46,10 +47,13 @@ data class SwitchBrowserChallenge(
          */
         @JvmStatic
         @Throws(Exception::class)
-        fun constructFromRedirectUrl(redirectUrl: String): SwitchBrowserChallenge {
+        fun constructFromRedirectUrl(redirectUrl: String, authorizationUrl: String): SwitchBrowserChallenge {
             Uri.parse(redirectUrl).let { redirectUri ->
                 SwitchBrowserUriHelper.buildProcessUri(redirectUri).let { processUri ->
-                    return SwitchBrowserChallenge(uri = processUri)
+                    return SwitchBrowserChallenge(
+                        processUri = processUri,
+                        authorizationUrl = authorizationUrl
+                    )
                 }
             }
         }
