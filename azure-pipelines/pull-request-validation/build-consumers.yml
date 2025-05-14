@@ -216,7 +216,7 @@ stages:
           cwd: $(Build.SourcesDirectory)/broker-java-root
           tasks: LinuxBroker:clean LinuxBroker:assemble --build-cache --info
           publishJUnitResults: false
-          jdkArchitecture: x86
+          jdkArchitecture: x64
           jdkVersionOption: "1.11"
       - task: Bash@3
         retryCountOnTaskFailure: 3
