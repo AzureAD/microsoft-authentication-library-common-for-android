@@ -20,37 +20,22 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.nativeauth.commands.parameters;
+package com.microsoft.identity.common.internal.activebrokerdiscovery
 
-import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
-
-import java.util.List;
-
-import javax.annotation.Nullable;
-
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
+import android.content.Context
+import com.microsoft.identity.common.internal.broker.BrokerData
 
 /**
- * BaseSignInTokenCommandParameters is the base class for parameters for all Native Auth sign in related commands.
- */
-@Getter
-@EqualsAndHashCode(callSuper = true)
-@SuperBuilder(toBuilder = true)
-public abstract class BaseSignInTokenCommandParameters extends BaseNativeAuthCommandParameters {
-   private static final String TAG = BaseSignInTokenCommandParameters.class.getSimpleName();
+ * An [IBrokerDiscoveryClient] which is based on AccountManager.
+ **/
+class LegacyBrokerDiscoveryClient(val context: Context): IBrokerDiscoveryClient {
 
-   /**
-    * The scopes for the token being fetched.
-    */
-   public final List<String> scopes;
+    override fun getActiveBroker(shouldSkipCache: Boolean): BrokerData? {
+        return AccountManagerBrokerDiscoveryUtil(context)
+            .getActiveBrokerFromAccountManager()
+    }
 
-   /**
-    * Claims to send to the token endpoint.
-    */
-   @Nullable
-   public final String claimsRequestJson;
-
-   private final AbstractAuthenticationScheme authenticationScheme;
+    override fun forceBrokerRediscovery(brokerCandidate: BrokerData): BrokerData {
+        throw UnsupportedOperationException("LegacyBrokerDiscoveryClient does not support forceBrokerRediscovery.")
+    }
 }
