@@ -290,6 +290,8 @@ public class MsalBrokerRequestAdapterTests {
         assertEquals(mockApplicationVersion, brokerRequest.getApplicationVersion());
         assertEquals(SdkType.MSAL, brokerRequest.getSdkType());
         assertEquals(mockSdkVersion, brokerRequest.getMsalVersion());
+        assertEquals(mockClientId, brokerRequest.getClientId());
+        assertEquals(mockRedirectUri, brokerRequest.getRedirect());
     }
 
     private void test_BrokerRequestFromAcquireTokenParametersInternal(final boolean suppressBrokerAccountPicker) {
