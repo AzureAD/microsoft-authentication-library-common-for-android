@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.broker
 
 import android.webkit.JavascriptInterface
+import com.google.gson.stream.MalformedJsonException
 import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper
 import com.microsoft.identity.common.java.util.JsonUtil
 import com.microsoft.identity.common.logging.Logger
@@ -38,7 +39,7 @@ class AuthUxJavaScriptInterface {
     // long enough for AuthApp to call the broker api to fetch the number match
     companion object {
         val TAG = AuthUxJavaScriptInterface::class.java.simpleName
-        private const val JAVASCRIPT_INTERFACE_NAME = "BrokerJS"
+        private const val JAVASCRIPT_INTERFACE_NAME = "ClientBrokerJS"
 
         fun getInterfaceName() : String {
             return JAVASCRIPT_INTERFACE_NAME
@@ -46,19 +47,45 @@ class AuthUxJavaScriptInterface {
     }
 
     @JavascriptInterface
-    fun postToBroker(jsonPayload: String) {
-        val methodTag = "$TAG:postToBroker"
+    fun postMessageToBroker(jsonPayload: String) {
+        val methodTag = "$TAG:postMessageToBroker"
         Logger.info(methodTag, "Received a payload from AuthUX through JavaScript API.")
-        val jsonMap : Map<String, String> = JsonUtil.extractJsonObjectIntoMap(jsonPayload)
-        val function = jsonMap["function"]
-        val dataString = jsonMap["data"]
-        Logger.info(methodTag, "Function name: [$function]")
 
-        when (function) {
-            FunctionNames.NUMBER_MATCH.name ->
-                NumberMatchHelper.storeNumberMatch(dataString)
-            else ->
-                Logger.warn(methodTag, "Payload from AuthUX contained an unknown function name.")
+        try {
+            val parsedJson = JsonUtil.extractJsonObjectIntoMap(jsonPayload)
+
+            val correlationID = parsedJson["correlationID"]
+            Logger.info(methodTag, "Correlation ID during JavaScript Call: [$correlationID]")
+
+            // TODO: Leaving these here, as these will be relevant for next WebCP feature
+            // val actionName = parsedJson["action_name"]
+            // val actionComponent = parsedJson["action_component"]
+
+            val parameters = JsonUtil.extractJsonObjectIntoMap(parsedJson["params"])
+            val function = parameters["function"]
+            val data = JsonUtil.extractJsonObjectIntoMap(parameters["data"])
+            Logger.info(methodTag, "Function name: [$function]")
+
+            when (function) {
+                FunctionNames.NUMBER_MATCH.name ->
+                    NumberMatchHelper.storeNumberMatch(
+                        data[NumberMatchHelper.SESSION_ID_ATTRIBUTE_NAME],
+                        data[NumberMatchHelper.NUMBER_MATCH_ATTRIBUTE_NAME])
+                else ->
+                    Logger.warn(methodTag, "Payload from AuthUX contained an unknown function name.")
+            }
+        } catch (e: Exception) { // If we run into exceptions, we don't want to kill the broker
+            when (e) {
+                is NullPointerException -> {
+                    Logger.warn(methodTag, "Payload with missing mandatory fields sent through JavaScriptInterface")
+                }
+                is MalformedJsonException -> {
+                    Logger.warn(methodTag, "Malformed JSON payload sent through JavaScriptInterface")
+                }
+                else -> {
+                    Logger.warn(methodTag, "Unknown error occurred while processing the payload.")
+                }
+            }
         }
     }
 

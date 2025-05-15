@@ -51,30 +51,20 @@ class NumberMatchHelper {
          * Method to add a key:value pair of sessionID:numberMatch to static hashmap. This hashmap will be accessed
          * by broker api to get the number match for a particular sessionID.
          */
-        fun storeNumberMatch(data: String?) {
+        fun storeNumberMatch(sessionId: String?, numberMatch: String?) {
             val methodTag = "$TAG:storeNumberMatch"
-            if (data == null) {
-                // If we didn't receive a data string, don't store anything
-                Logger.warn(methodTag, "data String received was null")
-                return
+            Logger.info(methodTag,
+                "Adding entry in NumberMatch hashmap for session ID: $sessionId")
+
+            // If both parameters are non-null, add a new entry to the hashmap
+            if (sessionId != null && numberMatch != null) {
+                numberMatchMap[sessionId] = numberMatch
             }
-
-            try {
-                val dataMap = JsonUtil.extractJsonObjectIntoMap(data)
-                val sessionId = dataMap[SESSION_ID_ATTRIBUTE_NAME]
-                val numberMatch = dataMap[NUMBER_MATCH_ATTRIBUTE_NAME]
-                // If both parameters are non-null, add a new entry to the hashmap
-                if (sessionId != null && numberMatch != null) {
-                    Logger.info(
-                        methodTag,
-                        "Adding entry in NumberMatch hashmap for session ID: $sessionId"
-                    )
-                    numberMatchMap[sessionId] = numberMatch
-                }
-
-                // If either parameter is null, do nothing
-            } catch (e: JSONException) {
-                Logger.warn(methodTag, "data String was malform during JSON extraction")
+            // If either parameter is null, do nothing
+            else {
+                Logger.warn(methodTag,
+                    "Either session ID or number match is null. Nothing to add for number match."
+                )
             }
         }
 
