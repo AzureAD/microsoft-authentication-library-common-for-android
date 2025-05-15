@@ -1269,6 +1269,8 @@ public final class AuthenticationConstants {
 
         public static final String SSO_NONCE_PARAMETER = "sso_nonce";
 
+        public static final String INTENT_PREFIX = "intent://";
+
         /**
          * PRT nonce.
          */

@@ -41,6 +41,7 @@ import androidx.lifecycle.ViewTreeLifecycleOwner;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.fido.CredManFidoManager;
 import com.microsoft.identity.common.internal.fido.FidoChallenge;
@@ -252,6 +253,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processInvalidRedirectUri(view, url);
             } else if (isBlankPageRequest(formattedURL)) {
                 Logger.info(methodTag,"It is an blank page request");
+            } else if (isIntentRequestForBrokerApp(formattedURL)) {
+                 Logger.info(methodTag, "It is an intent request");
+                 processIntentRequestForBrokerApp(view, formattedURL);
             } else if (!isUriSSLProtected(formattedURL)) {
                 Logger.info(methodTag,"Check for SSL protection");
                 processSSLProtectionCheck(view, url);
@@ -311,6 +315,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isNonceRedirect(@NonNull final String url) {
         return url.contains(AuthenticationConstants.Broker.SSO_NONCE_PARAMETER);
+    }
+
+    private boolean isIntentRequestForBrokerApp(@NonNull final String url) {
+        if (!url.startsWith(AuthenticationConstants.Broker.INTENT_PREFIX)) {
+            return false;
+        }
+        for (final BrokerData brokerData : BrokerData.getAllBrokers()) {
+            if (url.contains("id=" + brokerData.getPackageName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isCrossCloudRedirect(@NonNull final String url) {
@@ -574,6 +590,28 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 String.format("The RedirectUri is not as expected. Received %s and expected %s", url,
                         mRedirectUrl));
         view.stopLoading();
+    }
+
+
+
+
+    private void processIntentRequestForBrokerApp(@NonNull final WebView view, @NonNull final String url) {
+        final String methodTag = TAG + ":processIntentRequestForBrokerApp";
+        try {
+            // Intent URI format is case sensitive, so we need to make sure the action and intent keywords
+            // are in the correct case.
+            final String correctedUrl = url.replace("#intent", "#Intent")
+                    .replace("action.view", "action.VIEW");
+            final Intent intent = Intent.parseUri(correctedUrl, Intent.URI_INTENT_SCHEME);
+            if (intent != null && intent.getPackage() != null) {
+                view.getContext().startActivity(intent);
+                Logger.info(methodTag, "Intent request sent to launch the app: " + intent.getPackage());
+            } else {
+                Logger.warn(methodTag, "Unable to parse the intent URI");
+            }
+        } catch (final Throwable throwable) {
+            returnError("URI", throwable.getMessage());
+        }
     }
 
     private void processSSLProtectionCheck(@NonNull final WebView view,
