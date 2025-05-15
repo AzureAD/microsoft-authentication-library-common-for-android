@@ -142,6 +142,8 @@ public class BrokerMsalControllerTest {
         final Authority mockAuthority = Authority.getAuthorityFromAuthorityUrl(mockAuthorityStr);
         final String mockNegotiatedBrokerVersion = "18.0";
         final String mockAccountName = "mockAccountName";
+        final String mockClientId = "mockClientId";
+        final String mockRedirectUri = "mockRedirectUri";
         final AccountRecord mockAccountRecord = new AccountRecord();
         mockAccountRecord.setHomeAccountId(mockHomeAccountId);
         mockAccountRecord.setUsername(mockAccountName);
@@ -183,6 +185,8 @@ public class BrokerMsalControllerTest {
                 .applicationVersion("mockApplicationVersion")
                 .sdkVersion("mockSdkVersion")
                 .sdkType(SdkType.MSAL)
+                .clientId(mockClientId)
+                .redirectUri(mockRedirectUri)
                 .requiredBrokerProtocolVersion(mockNegotiatedBrokerVersion)
                 .build();
 

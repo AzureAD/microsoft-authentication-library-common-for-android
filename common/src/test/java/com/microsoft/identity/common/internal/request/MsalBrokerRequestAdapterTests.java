@@ -255,7 +255,8 @@ public class MsalBrokerRequestAdapterTests {
         final String mockApplicationName = "mockApplicationName";
         final String mockApplicationVersion = "mockApplicationVersion";
         final String mockSdkVersion = "mockSdkVersion";
-
+        final String mockClientId = "mockClientId";
+        final String mockRedirectUri = "mockRedirectUri";
         final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
         final ResourceAccountCommandParameters parameters = ResourceAccountCommandParameters.builder()
                 .platformComponents(components)
@@ -266,6 +267,8 @@ public class MsalBrokerRequestAdapterTests {
                 .applicationVersion(mockApplicationVersion)
                 .sdkVersion(mockSdkVersion)
                 .sdkType(SdkType.MSAL)
+                .clientId(mockClientId)
+                .redirectUri(mockRedirectUri)
                 .requiredBrokerProtocolVersion(mockNegotiatedBrokerVersion)
                 .build();
 

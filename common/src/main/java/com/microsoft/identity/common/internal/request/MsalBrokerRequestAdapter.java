@@ -288,6 +288,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .userName(parameters.getLoginHint())
                 .correlationId(parameters.getCorrelationId())
                 .clientId(parameters.getClientId())
+                .redirect(parameters.getRedirectUri())
                 .applicationName(parameters.getApplicationName())
                 .applicationVersion(parameters.getApplicationVersion())
                 .msalVersion(parameters.getSdkVersion())
