@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Implement a WebView handler to facilitate broker app installation via the Play Store (#2643)
 
 Version 21.1.0
 ----------
