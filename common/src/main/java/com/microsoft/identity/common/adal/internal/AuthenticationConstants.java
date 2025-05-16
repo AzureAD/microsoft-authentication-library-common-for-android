@@ -1626,7 +1626,9 @@ public final class AuthenticationConstants {
             BROKER_RESTORE_MSA_ACCOUNTS_WITH_TRANSFER_TOKENS(BROKER_RESTORE_MSA_ACCOUNTS_WITH_TRANSFER_TOKENS_PATH, BROKER_VERSION_5, null),
 
             WEBAPPS_GET_SUPPORTED_WEB_APPS_CONTRACTS(WEBAPPS_GET_SUPPORTED_WEB_APPS_CONTRACTS_PATH, null, null),
-            WEBAPPS_EXECUTE_WEB_APPS_REQUEST(WEBAPPS_EXECUTE_WEB_APPS_REQUEST_PATH, null, null);
+            WEBAPPS_EXECUTE_WEB_APPS_REQUEST(WEBAPPS_EXECUTE_WEB_APPS_REQUEST_PATH, null, null),
+
+            GET_AAD_DEVICE_ID(GET_AAD_DEVICE_ID_PATH, null, null),;
 
             /**
              * The content provider path that the API exists behind.
@@ -1804,6 +1806,11 @@ public final class AuthenticationConstants {
          * Broker ContentProvider path for executing Web App request.
          */
         public static final String WEBAPPS_EXECUTE_WEB_APPS_REQUEST_PATH = "/webapp/executeWebAppsRequest";
+
+        /**
+         * Broker ContentProvider path for getting AAD device ID for OneAuth.
+         */
+        public static final String GET_AAD_DEVICE_ID_PATH = "/getAadDeviceId";
 
         /**
          * BrokerContentProvider URI code constant for MSAL-to-Broker hello request.

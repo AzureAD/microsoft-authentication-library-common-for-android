@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Add Get AAD device ID API for resource account
 
 Version 21.1.0
 ----------

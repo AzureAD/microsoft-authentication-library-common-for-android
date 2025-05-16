@@ -59,6 +59,7 @@ import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
+import com.microsoft.identity.common.java.dto.AadDeviceIdRecord;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.exception.ArgumentException;
@@ -990,5 +991,20 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             Logger.error(methodTag, exception.getMessage(), exception);
             throw exception;
         }
+    }
+
+    /**
+     * Gets the {@link AadDeviceIdRecord} from the result bundle.
+     * record part of ICachedRecord is returned.
+     * @param resultBundle The result bundle from the broker.
+     * @throws BaseException
+     */
+    public AadDeviceIdRecord aadDeviceIdRecordFromBundle(@NonNull final Bundle resultBundle) throws BaseException {
+        final BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
+        final AadDeviceIdRecord aadDeviceIdRecord = brokerResult.getAadDeviceIdRecord();
+        if (aadDeviceIdRecord == null) {
+            throw new MsalBrokerResultAdapter().getBaseExceptionFromBundle(resultBundle);
+        }
+        return aadDeviceIdRecord;
     }
 }

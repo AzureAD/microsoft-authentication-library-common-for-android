@@ -27,6 +27,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_MAX_PROTOCOL_VERSION;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.GET_AAD_DEVICE_ID;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_DCF;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_SILENT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_FETCH_DCF_AUTH_RESULT;
@@ -84,12 +85,14 @@ import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoToken
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.GetAadDeviceIdCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.dto.AadDeviceIdRecord;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
@@ -1182,6 +1185,64 @@ public class BrokerMsalController extends BaseController {
             }
         });
 
+    }
+
+    /**
+     * Get the AAD device ID from the broker for given parameters. The paramters must contain
+     * tenant Id.
+     * @param parameters {@link GetAadDeviceIdCommandParameters} containing tenant Id.
+     * @throws BaseException
+     */
+    public AadDeviceIdRecord getAadDeviceId(@NonNull final GetAadDeviceIdCommandParameters parameters) throws BaseException {
+        return getBrokerOperationExecutor().execute(parameters, new BrokerOperation<AadDeviceIdRecord>() {
+
+            private String negotiatedBrokerProtocolVersion;
+
+            @Override
+            public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+            }
+
+            @NonNull
+            @Override
+            public BrokerOperationBundle getBundle() throws ClientException {
+                return new BrokerOperationBundle(
+                        GET_AAD_DEVICE_ID,
+                        mActiveBrokerPackageName,
+                        mRequestAdapter.getRequestBundleForAadDeviceIdRequest(
+                                parameters,
+                                negotiatedBrokerProtocolVersion
+                        )
+                );
+            }
+
+            @NonNull
+            @Override
+            public AadDeviceIdRecord extractResultBundle(@Nullable final Bundle resultBundle) throws BaseException {
+                if (null == resultBundle) {
+                    throw mResultAdapter.getExceptionForEmptyResultBundle();
+                }
+                verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
+                return mResultAdapter.aadDeviceIdRecordFromBundle(resultBundle);
+            }
+
+            @NonNull
+            @Override
+            public String getMethodName() {
+                return ":getAadDeviceId";
+            }
+
+            @Nullable
+            @Override
+            public String getTelemetryApiId() {
+                return null;
+            }
+
+            @Override
+            public void putValueInSuccessEvent(@NonNull final ApiEndEvent event,
+                                               @NonNull final AadDeviceIdRecord result) {
+            }
+        });
     }
 
     /**
