@@ -253,9 +253,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processInvalidRedirectUri(view, url);
             } else if (isBlankPageRequest(formattedURL)) {
                 Logger.info(methodTag,"It is an blank page request");
-            } else if (isIntentRequestForBrokerApp(formattedURL)) {
+            } else if (isIntentRequestToInstallBrokerApp(formattedURL)) {
                  Logger.info(methodTag, "It is an intent request");
-                 processIntentRequestForBrokerApp(view, formattedURL);
+                 processIntentToInstallBrokerApp(view, formattedURL);
             } else if (!isUriSSLProtected(formattedURL)) {
                 Logger.info(methodTag,"Check for SSL protection");
                 processSSLProtectionCheck(view, url);
@@ -318,18 +318,24 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * Determines if the provided URL is an intent request for a broker app.
+     * Determines if the provided URL is a valid request to install a broker app.
+     * <p>
+     * This method checks if the URL starts with the intent prefix, is targeting the Google Play Store app,
+     * and is associated with a broker app. It ensures that only valid intent requests are processed.
      *
-     * @param url The URL to evaluate. The URL is expected to start with the prefix
-     *            {@link AuthenticationConstants.Broker#INTENT_PREFIX} and contain a query parameter
-     *            in the format "id=<broker_package_name>", where <broker_package_name> matches the
-     *            package name of a known broker app.
-     * @return {@code true} if the URL is an intent request for a broker app; {@code false} otherwise.
+     * @param url The URL to evaluate.
+     * @return {@code true} if the URL is a permitted intent request, {@code false} otherwise.
      */
-    private boolean isIntentRequestForBrokerApp(@NonNull final String url) {
+    private boolean isIntentRequestToInstallBrokerApp(@NonNull final String url) {
+        // Check if the URL is an intent request
         if (!url.startsWith(AuthenticationConstants.Broker.INTENT_PREFIX)) {
             return false;
         }
+        // Check if the intent request is for the google play store app
+        if (!url.toLowerCase().contains(";package=com.android.vending;")) {
+            return false;
+        }
+        // Check if the url query parameter is for a broker app.
         for (final BrokerData brokerData : BrokerData.getAllBrokers()) {
             if (url.contains("id=" + brokerData.getPackageName())) {
                 return true;
@@ -601,15 +607,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         view.stopLoading();
     }
 
-
-
-
-    private void processIntentRequestForBrokerApp(@NonNull final WebView view, @NonNull final String url) {
-        final String methodTag = TAG + ":processIntentRequestForBrokerApp";
+    /**
+     * This method is used to process the intent to install the broker app.
+     * It parses the intent URI and starts the activity if the package name is valid.
+     *
+     * @param view The WebView that will be used to open the URL.
+     * @param intentUrl  The URL to be opened.
+     */
+    private void processIntentToInstallBrokerApp(@NonNull final WebView view, @NonNull final String intentUrl) {
+        final String methodTag = TAG + ":processIntentToInstallBrokerApp";
         try {
-            // Intent URI format is case sensitive, so we need to make sure the action and intent keywords
-            // are in the correct case.
-            final String correctedUrl = url.replace("#intent", "#Intent")
+            // Intent URI format is case sensitive, so we need to make sure the action and intent keywords are in the correct case.
+            final String correctedUrl = intentUrl.replace("#intent", "#Intent")
                     .replace("action.view", "action.VIEW");
             final Intent intent = Intent.parseUri(correctedUrl, Intent.URI_INTENT_SCHEME);
             if (intent != null && intent.getPackage() != null) {
