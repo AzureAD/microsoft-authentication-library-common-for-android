@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.ui.webview;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.net.Uri;
@@ -627,8 +628,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else {
                 Logger.warn(methodTag, "Unable to parse the intent URI");
             }
+        } catch (final URISyntaxException e) {
+            Logger.error(methodTag, "Failed to parse the intent URI due to invalid syntax.", e);
+            returnError(ErrorStrings.URI_SYNTAX_ERROR, e.getMessage());
+        } catch (final ActivityNotFoundException e) {
+            Logger.error(methodTag, "No activity found to handle the intent.", e);
+            returnError(ErrorStrings.ACTIVITY_NOT_FOUND, e.getMessage());
         } catch (final Throwable throwable) {
-            returnError("URI", throwable.getMessage());
+            Logger.error(methodTag, "An unexpected error occurred while processing the intent URI.", throwable);
+            returnError(ErrorStrings.UNEXPECTED_ERROR, throwable.getMessage());
         }
     }
 
