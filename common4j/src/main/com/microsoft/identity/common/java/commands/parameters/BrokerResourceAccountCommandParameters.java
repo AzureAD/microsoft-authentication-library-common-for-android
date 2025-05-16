@@ -48,7 +48,4 @@ public class BrokerResourceAccountCommandParameters extends ResourceAccountComma
     private final String brokerVersion;
 
     private final IBrokerAccount brokerAccount;
-
-    @Expose
-    private final BrokerRequestType requestType;
 }

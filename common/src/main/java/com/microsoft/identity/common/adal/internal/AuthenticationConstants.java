@@ -1627,7 +1627,7 @@ public final class AuthenticationConstants {
 
             WEBAPPS_GET_SUPPORTED_WEB_APPS_CONTRACTS(WEBAPPS_GET_SUPPORTED_WEB_APPS_CONTRACTS_PATH, null, null),
             WEBAPPS_EXECUTE_WEB_APPS_REQUEST(WEBAPPS_EXECUTE_WEB_APPS_REQUEST_PATH, null, null),
-            PROVISION_RESOURCE_ACCOUNT(PROVISION_RESOURCE_ACCOUNT_PATH, null, null); // TODO: add broker version
+            PROVISION_RESOURCE_ACCOUNT(PROVISION_RESOURCE_ACCOUNT_PATH, null, null);
 
             /**
              * The content provider path that the API exists behind.
