@@ -22,10 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.numberMatch
 
-import com.microsoft.identity.common.java.util.JsonUtil
 import com.microsoft.identity.common.logging.Logger
-import org.json.JSONException
-
 
 /**
  * Helper to facilitate NumberMatchFlow. Used in conjunction with {@link AuthUxJavaScriptInterface}

@@ -46,6 +46,28 @@ class AuthUxJavaScriptInterface {
         }
     }
 
+    /**
+     * Method to receive a JSON string payload from AuthUX through JavaScript API.
+     * Schema for the Json Payload:
+     *         {
+     *             "correlationID": "SOME_CORRELATION_ID" ,
+     *             "action_name":"write_data",
+     *             "action_component":"broker",
+     *             "params":
+     *             {
+     *                 "function": "NUMBER_MATCH",
+     *                 "data":
+     *                 {
+     *                     "sessionID": "$mockSessionId",
+     *                     "numberMatch": "$mockNumberMatchValue"
+     *                 }
+     *             }
+     *         }
+     * TODO: This is currently the schema set for numberMatch, there may be some additions made for
+     *  the more generalized JSON Schema for future Server-side to broker communication through JS.
+     *
+     * https://microsoft-my.sharepoint-df.com/:w:/p/veenasoman/EY1AZIeT8X5KrXVz97Vx520B3Jj0fBLSPlklnoRvcmbh0Q?e=VzNFd1&ovuser=72f988bf-86f1-41af-91ab-2d7cd011db47%2Cfadidurah%40microsoft.com&clickparams=eyJBcHBOYW1lIjoiVGVhbXMtRGVza3RvcCIsIkFwcFZlcnNpb24iOiI0OS8yNTA1MDQwMTYwOSIsIkhhc0ZlZGVyYXRlZFVzZXIiOmZhbHNlfQ%3D%3D
+     */
     @JavascriptInterface
     fun postMessageToBroker(jsonPayload: String) {
         val methodTag = "$TAG:postMessageToBroker"

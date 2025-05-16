@@ -126,6 +126,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator = null;
 
     private boolean isBrokerRequest = false;
+    private boolean isEstsRequest = false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -216,6 +217,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mAuthIntent = state.getParcelable(AUTH_INTENT);
         mPkeyAuthStatus = state.getBoolean(PKEYAUTH_STATUS, false);
         mAuthorizationRequestUrl = state.getString(REQUEST_URL);
+        if (mAuthorizationRequestUrl != null) {
+            isEstsRequest = mAuthorizationRequestUrl.startsWith("https://login.microsoftonline.com");
+        }
         if (getContext() != null) {
             isBrokerRequest = ProcessUtil.isRunningOnAuthService(getContext());
         }
@@ -298,7 +302,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setUserAgentString(
                 userAgent + AuthenticationConstants.Broker.CLIENT_TLS_NOT_SUPPORTED);
         mWebView.getSettings().setJavaScriptEnabled(true);
-        if (isBrokerRequest) {
+        if (isBrokerRequest && isEstsRequest) {
             mWebView.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
         }
         mWebView.requestFocus(View.FOCUS_DOWN);
@@ -367,14 +371,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.
                 // After that, progress bar will be displayed by MSA/AAD.
                 mProgressBar.setVisibility(View.VISIBLE);
-
-//                TODO: REMOVE THIS BEFORE MERGING, Using this to test JS API
-//                mWebView.evaluateJavascript(AuthUxJavaScriptInterface.Companion.getInterfaceName() +".postToBroker('{function: NUMBER_MATCH,data: {sessionID: id, numberMatch: number}}')", new ValueCallback<String>() {
-//                    @Override
-//                    public void onReceiveValue(String value) {
-//                        int x = 0;
-//                    }
-//                });
             }
         });
     }
