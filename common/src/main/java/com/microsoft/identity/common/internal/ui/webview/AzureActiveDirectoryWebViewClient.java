@@ -256,7 +256,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag,"It is an blank page request");
             } else if (isIntentRequestToInstallBrokerApp(formattedURL)) {
                  Logger.info(methodTag, "It is an intent request");
-                 processIntentToInstallBrokerApp(view, formattedURL);
+                // Intent URI format is case sensitive, so we need to provide the original URI.
+                processIntentToInstallBrokerApp(view, url);
             } else if (!isUriSSLProtected(formattedURL)) {
                 Logger.info(methodTag,"Check for SSL protection");
                 processSSLProtectionCheck(view, url);
@@ -333,7 +334,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             return false;
         }
         // Check if the intent request is for the google play store app
-        if (!url.toLowerCase().contains(";package=com.android.vending;")) {
+        if (!url.contains(";package=com.android.vending;")) {
             return false;
         }
         // Check if the url query parameter is for a broker app.
@@ -618,10 +619,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processIntentToInstallBrokerApp(@NonNull final WebView view, @NonNull final String intentUrl) {
         final String methodTag = TAG + ":processIntentToInstallBrokerApp";
         try {
-            // Intent URI format is case sensitive, so we need to make sure the action and intent keywords are in the correct case.
-            final String correctedUrl = intentUrl.replace("#intent", "#Intent")
-                    .replace("action.view", "action.VIEW");
-            final Intent intent = Intent.parseUri(correctedUrl, Intent.URI_INTENT_SCHEME);
+            final Intent intent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
             if (intent != null && intent.getPackage() != null) {
                 view.getContext().startActivity(intent);
                 Logger.info(methodTag, "Intent request sent to launch the app: " + intent.getPackage());
