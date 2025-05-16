@@ -1628,7 +1628,7 @@ public final class AuthenticationConstants {
             WEBAPPS_GET_SUPPORTED_WEB_APPS_CONTRACTS(WEBAPPS_GET_SUPPORTED_WEB_APPS_CONTRACTS_PATH, null, null),
             WEBAPPS_EXECUTE_WEB_APPS_REQUEST(WEBAPPS_EXECUTE_WEB_APPS_REQUEST_PATH, null, null),
 
-            GET_AAD_DEVICE_ID(GET_AAD_DEVICE_ID_PATH, null, null),;
+            GET_AAD_DEVICE_ID(GET_AAD_DEVICE_ID_PATH, null, null);
 
             /**
              * The content provider path that the API exists behind.

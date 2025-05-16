@@ -1003,7 +1003,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
         final AadDeviceIdRecord aadDeviceIdRecord = brokerResult.getAadDeviceIdRecord();
         if (aadDeviceIdRecord == null) {
-            throw new MsalBrokerResultAdapter().getBaseExceptionFromBundle(resultBundle);
+            throw this.getBaseExceptionFromBundle(resultBundle);
         }
         return aadDeviceIdRecord;
     }
