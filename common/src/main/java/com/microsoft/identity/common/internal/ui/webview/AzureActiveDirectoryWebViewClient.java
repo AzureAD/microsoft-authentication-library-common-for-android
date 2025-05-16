@@ -317,6 +317,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return url.contains(AuthenticationConstants.Broker.SSO_NONCE_PARAMETER);
     }
 
+    /**
+     * Determines if the provided URL is an intent request for a broker app.
+     *
+     * @param url The URL to evaluate. The URL is expected to start with the prefix
+     *            {@link AuthenticationConstants.Broker#INTENT_PREFIX} and contain a query parameter
+     *            in the format "id=<broker_package_name>", where <broker_package_name> matches the
+     *            package name of a known broker app.
+     * @return {@code true} if the URL is an intent request for a broker app; {@code false} otherwise.
+     */
     private boolean isIntentRequestForBrokerApp(@NonNull final String url) {
         if (!url.startsWith(AuthenticationConstants.Broker.INTENT_PREFIX)) {
             return false;
