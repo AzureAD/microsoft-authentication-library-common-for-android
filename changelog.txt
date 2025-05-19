@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Add API for resource account provisioning (API only) (#2640)
 
 Version 21.1.0
 ----------
