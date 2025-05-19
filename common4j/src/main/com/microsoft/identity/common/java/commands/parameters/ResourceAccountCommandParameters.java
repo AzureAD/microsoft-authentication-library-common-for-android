@@ -30,7 +30,7 @@ import lombok.experimental.SuperBuilder;
 
 /**
  * Command parameters for setting up Resource Account in broker. This object is part of API.
- * The caller constructs this and pass to BrokerMSALController.
+ * The caller constructs this and pass to BrokerMsalController.
  */
 @Getter
 @SuperBuilder(toBuilder = true)
