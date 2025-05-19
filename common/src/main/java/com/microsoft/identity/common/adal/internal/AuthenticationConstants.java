@@ -1627,7 +1627,7 @@ public final class AuthenticationConstants {
 
             WEBAPPS_GET_SUPPORTED_WEB_APPS_CONTRACTS(WEBAPPS_GET_SUPPORTED_WEB_APPS_CONTRACTS_PATH, null, null),
             WEBAPPS_EXECUTE_WEB_APPS_REQUEST(WEBAPPS_EXECUTE_WEB_APPS_REQUEST_PATH, null, null),
-
+            PROVISION_RESOURCE_ACCOUNT(PROVISION_RESOURCE_ACCOUNT_PATH, null, null),
             GET_AAD_DEVICE_ID(GET_AAD_DEVICE_ID_PATH, null, null);
 
             /**
@@ -1806,6 +1806,11 @@ public final class AuthenticationConstants {
          * Broker ContentProvider path for executing Web App request.
          */
         public static final String WEBAPPS_EXECUTE_WEB_APPS_REQUEST_PATH = "/webapp/executeWebAppsRequest";
+
+
+        public static final String PROVISION_RESOURCE_ACCOUNT_PATH = "/provisionResourceAccount";
+
+        public static final String GET_AAD_DEVICE_ID_PATH = "/getAadDeviceId";
 
         /**
          * Broker ContentProvider path for getting AAD device ID for OneAuth.

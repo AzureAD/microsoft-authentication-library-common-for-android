@@ -28,6 +28,7 @@ import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter.REM
 import com.microsoft.identity.common.java.cache.CacheRecord
 import com.microsoft.identity.common.java.cache.ICacheRecord
 import com.microsoft.identity.common.java.dto.AadDeviceIdRecord
+import com.microsoft.identity.common.java.dto.AccountRecord
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.request.SdkType
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult
@@ -206,6 +207,83 @@ class MsalBrokerResultAdapterTests {
     /**
      * Tests result for [MsalBrokerResultAdapter.resourceAccountRecordFromBundle]
      */
+    fun testResourceAccountRecordFromBundle() {
+        val mockHomeAccountId = "mockHomeAccountId"
+        val mockNegotiatedBrokerVersion = "18.0"
+        val mockAccountName = "mockAccountName"
+        val mockAccountRecord = AccountRecord()
+        mockAccountRecord.homeAccountId = mockHomeAccountId
+        mockAccountRecord.username = mockAccountName
+        val mockCacheRecord = CacheRecord.builder()
+            .account(mockAccountRecord)
+            .build()
+        val resultAdapter = MsalBrokerResultAdapter()
+
+        val resultBundle = resultAdapter.bundleFromAccounts(
+            listOf<ICacheRecord>(mockCacheRecord),
+            mockNegotiatedBrokerVersion
+        )
+
+        val resultCacheRecord = resultAdapter.resourceAccountRecordFromBundle(resultBundle)
+
+        assertEquals(mockHomeAccountId, resultCacheRecord.account.homeAccountId)
+        assertEquals(mockAccountName, resultCacheRecord.account.username)
+    }
+
+    fun testResourceAccountRecordFromBundle_NoAccountReturned() {
+        val mockHomeAccountId = "mockHomeAccountId"
+        val mockNegotiatedBrokerVersion = "18.0"
+        val mockAccountName = "mockAccountName"
+        val mockAccountRecord = AccountRecord()
+        mockAccountRecord.homeAccountId = mockHomeAccountId
+        mockAccountRecord.username = mockAccountName
+        val resultAdapter = MsalBrokerResultAdapter()
+
+        val resultBundle = resultAdapter.bundleFromAccounts(
+            emptyList(),
+            mockNegotiatedBrokerVersion
+        )
+
+        try {
+            resultAdapter.resourceAccountRecordFromBundle(resultBundle)
+            Assert.fail("Expected exception not thrown")
+        } catch (e: ClientException) {
+            // Expected exception
+            assertEquals(ClientException.INVALID_BROKER_BUNDLE, e.errorCode)
+        }
+    }
+
+    /**
+     * Tests result for [MsalBrokerResultAdapter.resourceAccountRecordFromBundle]
+     */
+    @Test
+    @SneakyThrows
+    fun testResourceAccountRecordFromBundle_MoreThanOneAccount() {
+        val mockHomeAccountId = "mockHomeAccountId"
+        val mockNegotiatedBrokerVersion = "18.0"
+        val mockAccountName = "mockAccountName"
+        val mockAccountRecord = AccountRecord()
+        mockAccountRecord.homeAccountId = mockHomeAccountId
+        mockAccountRecord.username = mockAccountName
+        val mockCacheRecord = CacheRecord.builder()
+            .account(mockAccountRecord)
+            .build()
+        val resultAdapter = MsalBrokerResultAdapter()
+
+        val resultBundle = resultAdapter.bundleFromAccounts(
+            listOf<ICacheRecord>(mockCacheRecord, mockCacheRecord),
+            mockNegotiatedBrokerVersion
+        )
+
+        try {
+            resultAdapter.resourceAccountRecordFromBundle(resultBundle)
+            Assert.fail("Expected exception not thrown")
+        } catch (e: ClientException) {
+            // Expected exception
+            assertEquals(ClientException.INVALID_BROKER_BUNDLE, e.errorCode)
+        }
+    }
+
     @Test
     @SneakyThrows
     fun testAadDeviceIdRecordFromBundle() {
@@ -225,9 +303,6 @@ class MsalBrokerResultAdapterTests {
         assertEquals(mockDeviceId, aadDeviceRecord.deviceId)
     }
 
-    /**
-     * Tests result for [MsalBrokerResultAdapter.resourceAccountRecordFromBundle]
-     */
     @Test
     @SneakyThrows
     fun testAadDeviceIdRecordFromBundle_NoRegistration() {

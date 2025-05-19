@@ -40,6 +40,7 @@ import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationB
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_REMOVE_ACCOUNT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SIGN_OUT_FROM_SHARED_DEVICE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SSO_TOKEN;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.PROVISION_RESOURCE_ACCOUNT;
 import static com.microsoft.identity.common.internal.controllers.BrokerOperationExecutor.BrokerOperation;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
@@ -88,6 +89,7 @@ import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommand
 import com.microsoft.identity.common.java.commands.parameters.GetAadDeviceIdCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.ResourceAccountCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
@@ -1184,7 +1186,62 @@ public class BrokerMsalController extends BaseController {
                 // TODO Needed?
             }
         });
+    }
 
+    /**
+     * Sign in a resource account in broker based on given parameters. Should called by OneAuth/MSAL
+     * to provision resource account in broker.
+     * @param parameters a {@link ResourceAccountCommandParameters}
+     */
+    public ICacheRecord provisionResourceAccount(@NonNull final ResourceAccountCommandParameters parameters) throws BaseException {
+        return getBrokerOperationExecutor().execute(parameters,
+                new BrokerOperation<ICacheRecord>() {
+                    private String negotiatedBrokerProtocolVersion;
+
+                    @Override
+                    public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+                    }
+
+                    @Override
+                    @NonNull
+                    public BrokerOperationBundle getBundle() {
+                        return new BrokerOperationBundle(
+                                PROVISION_RESOURCE_ACCOUNT,
+                                mActiveBrokerPackageName,
+                                mRequestAdapter.getRequestBundleForProvisionResourceAccount(
+                                        parameters,
+                                        negotiatedBrokerProtocolVersion
+                                ));
+                    }
+
+                    @Override
+                    @NonNull
+                    public ICacheRecord extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
+                        }
+                        verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
+                        return mResultAdapter.resourceAccountRecordFromBundle(resultBundle);
+                    }
+
+                    @Override
+                    public @NonNull
+                    String getMethodName() {
+                        return ":provisionResourceAccount";
+                    }
+
+                    @Nullable
+                    @Override
+                    public String getTelemetryApiId() {
+                        return null;
+                    }
+
+                    @Override
+                    public void putValueInSuccessEvent(@lombok.NonNull ApiEndEvent event, @lombok.NonNull ICacheRecord result) {
+
+                    }
+                });
     }
 
     /**

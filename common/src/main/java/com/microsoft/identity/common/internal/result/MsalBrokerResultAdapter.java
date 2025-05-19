@@ -906,6 +906,26 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         return JsonExtensions.getICacheRecordListFromJsonString(accountJson);
     }
 
+    /**
+     * Get resource account record from the result bundle. If successful, new account
+     * record part of ICachedRecord is returned.
+     * @param bundle The result bundle from the broker.
+     * @throws BaseException
+     */
+    public ICacheRecord resourceAccountRecordFromBundle(@NonNull final Bundle bundle) throws BaseException {
+        final String methodTag = TAG + ":resourceAccountRecordFromBundle";
+        final List<ICacheRecord> cacheRecords = getAccountsFromResultBundle(bundle);
+        if (cacheRecords.isEmpty()) {
+            Logger.error(methodTag, "No accounts found in the result bundle", null);
+            throw new ClientException(INVALID_BROKER_BUNDLE, "No accounts found in the result bundle");
+        }
+        if (cacheRecords.size() > 1) {
+            Logger.error(methodTag, "Multiple accounts found in the result bundle", null);
+            throw new ClientException(INVALID_BROKER_BUNDLE, "Multiple accounts found in the result bundle");
+        }
+        return cacheRecords.get(0);
+    }
+
     public void verifyRemoveAccountResultFromBundle(@Nullable final Bundle bundle) throws BaseException {
         final String methodTag = TAG + ":verifyRemoveAccountResultFromBundle";
         if (bundle == null) {
