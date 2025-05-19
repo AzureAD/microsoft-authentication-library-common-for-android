@@ -8,7 +8,7 @@ Version 21.1.0
 - [MINOR] Move camera logic to CameraPermissionRequestHandler and add SdmQrPinManager (#2630)
 - [MINOR] Pass Work Profile existence, OS Version, and Manufacturer to ESTS (#2627)
 - [MINOR] Add telemetry for the switch browser protocol (#2612)
-- [MINOR] Native auth: user can now register new strong authentication method when MFA is required (#2639)
+- [MINOR] Native auth: user can now register email as new strong authentication method when MFA is required (#2639)
 
 Version 21.0.0
 ----------
