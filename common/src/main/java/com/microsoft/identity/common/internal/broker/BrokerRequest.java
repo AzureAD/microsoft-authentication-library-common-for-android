@@ -94,7 +94,6 @@ public class BrokerRequest implements Serializable {
      * Scopes for the request. This is expected to be of the format
      * "scope 1 scope2 scope3" with space as a delimiter
      */
-    @NonNull
     @SerializedName(SerializedNames.SCOPE)
     private String mScope;
 
