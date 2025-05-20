@@ -163,5 +163,7 @@ public final class PublicApiId {
     public static final String NATIVE_AUTH_GET_AUTH_METHODS = "252";
     public static final String NATIVE_AUTH_MFA_SELECTED_CHALLENGE = "253";
     public static final String NATIVE_AUTH_MFA_SUBMIT_CHALLENGE = "254";
+    public static final String NATIVE_AUTH_JIT_CHALLENGE_AUTH_METHOD = "255";
+    public static final String NATIVE_AUTH_JIT_SUBMIT_CHALLENGE = "256";
     //endregion
 }

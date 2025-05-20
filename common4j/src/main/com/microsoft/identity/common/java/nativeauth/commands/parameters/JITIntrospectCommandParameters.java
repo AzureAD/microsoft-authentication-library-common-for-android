@@ -20,26 +20,39 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
-package com.microsoft.identity.common.nativeauth
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.SuperBuilder;
 
-/**
- * Enumerates all of the different endpoints supported by MockAPI for Native Auth.
- */
-enum class MockApiEndpoint(val stringValue: String) {
-    SignInInitiate("SignInInitiate"),
-    SignInChallenge("SignInChallenge"),
-    Introspect("SignInIntrospect"),
-    SignInToken("SignInToken"),
-    SignUpStart("SignUpStart"),
-    SignUpChallenge("SignUpChallenge"),
-    SignUpContinue("SignUpContinue"),
-    SSPRStart("SSPRStart"),
-    SSPRChallenge("SSPRChallenge"),
-    SSPRContinue("SSPRContinue"),
-    SSPRSubmit("SSPRSubmit"),
-    SSPRPoll("SSPRPoll"),
-    JITIntrospect("JITIntrospect"),
-    JITChallenge("JITChallenge"),
-    JITContinue("JITContinue")
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@SuppressFBWarnings("EI_EXPOSE_REP2")   //Suppresses spotbugs warning on the builder class
+@SuperBuilder(toBuilder = true)
+public class JITIntrospectCommandParameters extends BaseNativeAuthCommandParameters {
+    private static final String TAG = JITIntrospectCommandParameters.class.getSimpleName();
+
+    /**
+     * The continuation token obtained from the previous endpoint.
+     */
+    @NonNull
+    public final String continuationToken;
+
+    @Override
+    public String toUnsanitizedString() {
+        return "JITChallengeAuthMethodCommandParameters()";
+    }
+
+    @Override
+    public boolean containsPii() {
+        return !toString().equals(toUnsanitizedString());
+    }
+
+    @Override
+    public String toString() {
+        return toUnsanitizedString();
+    }
 }
