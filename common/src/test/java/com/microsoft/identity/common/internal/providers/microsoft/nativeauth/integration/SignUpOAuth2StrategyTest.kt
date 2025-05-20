@@ -23,25 +23,26 @@
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration
 
 import android.os.Build
-import com.microsoft.identity.common.nativeauth.ApiConstants
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
+import com.microsoft.identity.common.java.nativeauth.providers.interactors.JITInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.ResetPasswordInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignInInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignUpInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpContinueApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResult
+import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
+import com.microsoft.identity.common.nativeauth.ApiConstants
 import com.microsoft.identity.common.nativeauth.MockApiEndpoint
 import com.microsoft.identity.common.nativeauth.MockApiResponseType
 import com.microsoft.identity.common.nativeauth.MockApiUtils.Companion.configureMockApi
@@ -101,6 +102,9 @@ class SignUpOAuth2StrategyTest {
         whenever(mockConfig.getResetPasswordContinueEndpoint()).thenReturn(ApiConstants.MockApi.ssprContinueRequestUrl)
         whenever(mockConfig.getResetPasswordSubmitEndpoint()).thenReturn(ApiConstants.MockApi.ssprSubmitRequestUrl)
         whenever(mockConfig.getResetPasswordPollCompletionEndpoint()).thenReturn(ApiConstants.MockApi.ssprPollCompletionRequestUrl)
+        whenever(mockConfig.getJITIntrospectEndpoint()).thenReturn(ApiConstants.MockApi.jitIntrospectRequestUrl)
+        whenever(mockConfig.getJITChallengeEndpoint()).thenReturn(ApiConstants.MockApi.jitChallengeRequestUrl)
+        whenever(mockConfig.getJITContinueEndpoint()).thenReturn(ApiConstants.MockApi.jitContinueRequestUrl)
         whenever(mockConfig.challengeType).thenReturn(CHALLENGE_TYPE)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
@@ -125,6 +129,11 @@ class SignUpOAuth2StrategyTest {
                 nativeAuthRequestProvider = NativeAuthRequestProvider(
                     mockConfig
                 ),
+                nativeAuthResponseHandler = NativeAuthResponseHandler()
+            ),
+            jitInteractor = JITInteractor(
+                httpClient = UrlConnectionHttpClient.getDefaultInstance(),
+                nativeAuthRequestProvider = NativeAuthRequestProvider(config = mockConfig),
                 nativeAuthResponseHandler = NativeAuthResponseHandler()
             )
         )

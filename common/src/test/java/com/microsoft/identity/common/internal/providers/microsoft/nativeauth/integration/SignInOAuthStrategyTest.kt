@@ -35,6 +35,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2C
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
+import com.microsoft.identity.common.java.nativeauth.providers.interactors.JITInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.ResetPasswordInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignInInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignUpInteractor
@@ -102,6 +103,9 @@ class SignInOAuthStrategyTest {
         whenever(mockConfig.getResetPasswordContinueEndpoint()).thenReturn(ApiConstants.MockApi.ssprContinueRequestUrl)
         whenever(mockConfig.getResetPasswordSubmitEndpoint()).thenReturn(ApiConstants.MockApi.ssprSubmitRequestUrl)
         whenever(mockConfig.getResetPasswordPollCompletionEndpoint()).thenReturn(ApiConstants.MockApi.ssprPollCompletionRequestUrl)
+        whenever(mockConfig.getJITIntrospectEndpoint()).thenReturn(ApiConstants.MockApi.jitIntrospectRequestUrl)
+        whenever(mockConfig.getJITChallengeEndpoint()).thenReturn(ApiConstants.MockApi.jitChallengeRequestUrl)
+        whenever(mockConfig.getJITContinueEndpoint()).thenReturn(ApiConstants.MockApi.jitContinueRequestUrl)
         whenever(mockConfig.challengeType).thenReturn(CHALLENGE_TYPE)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
@@ -124,6 +128,11 @@ class SignInOAuthStrategyTest {
             resetPasswordInteractor = ResetPasswordInteractor(
                 httpClient = UrlConnectionHttpClient.getDefaultInstance(),
                 nativeAuthRequestProvider = NativeAuthRequestProvider(mockConfig),
+                nativeAuthResponseHandler = NativeAuthResponseHandler()
+            ),
+            jitInteractor = JITInteractor(
+                httpClient = UrlConnectionHttpClient.getDefaultInstance(),
+                nativeAuthRequestProvider = NativeAuthRequestProvider(config = mockConfig),
                 nativeAuthResponseHandler = NativeAuthResponseHandler()
             )
         )
