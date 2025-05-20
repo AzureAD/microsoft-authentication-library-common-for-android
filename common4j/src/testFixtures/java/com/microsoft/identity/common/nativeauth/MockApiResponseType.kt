@@ -74,4 +74,11 @@ enum class MockApiResponseType(val stringValue: String) {
     USER_NOT_FOUND("UserNotFound"),
     VALIDATION_FAILED("AttributeValidationFailed"),
     VERIFICATION_REQUIRED("VerificationRequired"),
+    REGISTRATION_REQUIRED("RegistrationRequired"),
+    REGISTRATION_CONTINUE_SUCCESS("RegistrationContinueSuccess"),
+    REGISTRATION_INVALID_OOB_VALUE("RegistrationInvalidOOBValue"),
+    // Typo below on Registraion is expected, on par with Mock API
+    REGISTRATION_INTROSPECT_SUCCESS("RegistraionIntrospectSuccess"),
+    REGISTRATION_CHALLENGE_SUCCESS("RegistraionChallengeSuccess"),
+    REGISTRATION_INVALID_CHALLENGE_TARGET("RegistraionInvalidChallengeTarget")
 }

@@ -54,6 +54,7 @@ import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoToken
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.ResourceAccountCommandParameters;
 import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
@@ -257,6 +258,50 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public Bundle getRequestBundleForAcquireTokenInteractive(@NonNull final InteractiveTokenCommandParameters parameters,
                                                              @Nullable final String negotiatedBrokerProtocolVersion) {
         final BrokerRequest brokerRequest = brokerRequestFromAcquireTokenParameters(parameters);
+        return getRequestBundleFromBrokerRequest(
+                brokerRequest,
+                negotiatedBrokerProtocolVersion,
+                parameters.getRequiredBrokerProtocolVersion()
+        );
+    }
+
+    /**
+     * Method to construct a request bundle for broker provisionResourceAccountRequest request.
+     * @param parameters                     input parameters of type {@link ResourceAccountCommandParameters}
+     * @param negotiatedBrokerProtocolVersion protocol version established by broker hello.
+     * @return request Bundle
+     */
+    public Bundle getRequestBundleForProvisionResourceAccount(
+            @NonNull final ResourceAccountCommandParameters parameters,
+            @Nullable final String negotiatedBrokerProtocolVersion
+    ) {
+        final String methodTag = TAG + ":getRequestBundleForProvisionResourceAccount";
+
+        Logger.info(methodTag, "Constructing result bundle from ProvisionResourceAccount.");
+        final String extraOptions = parameters.getExtraOptions() != null ?
+                QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
+
+        final BrokerRequest brokerRequest = BrokerRequest.builder()
+                .authority(parameters.getAuthority().getAuthorityURL().toString())
+                .extraOptions(extraOptions)
+                .homeAccountId(parameters.getHomeAccountId())
+                .userName(parameters.getLoginHint())
+                .correlationId(parameters.getCorrelationId())
+                .clientId(parameters.getClientId())
+                .redirect(parameters.getRedirectUri())
+                .applicationName(parameters.getApplicationName())
+                .applicationVersion(parameters.getApplicationVersion())
+                .msalVersion(parameters.getSdkVersion())
+                .sdkType(parameters.getSdkType())
+                .environment(AzureActiveDirectory.getEnvironment().name())
+                .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
+                .spanContext(SerializableSpanContext.builder()
+                        .traceId(SpanExtension.current().getSpanContext().getTraceId())
+                        .spanId(SpanExtension.current().getSpanContext().getSpanId())
+                        .traceFlags(SpanExtension.current().getSpanContext().getTraceFlags().asByte())
+                        .build()
+                )
+                .build();
         return getRequestBundleFromBrokerRequest(
                 brokerRequest,
                 negotiatedBrokerProtocolVersion,

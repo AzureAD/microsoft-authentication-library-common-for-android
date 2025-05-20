@@ -36,6 +36,9 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
+import com.microsoft.identity.common.java.nativeauth.providers.requests.jit.JITChallengeRequest
+import com.microsoft.identity.common.java.nativeauth.providers.requests.jit.JITContinueRequest
+import com.microsoft.identity.common.java.nativeauth.providers.requests.jit.JITIntrospectRequest
 import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpassword.ResetPasswordChallengeRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpassword.ResetPasswordContinueRequest
@@ -71,6 +74,9 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     private val resetPasswordContinueEndpoint = config.getResetPasswordContinueEndpoint().toString()
     private val resetPasswordSubmitEndpoint = config.getResetPasswordSubmitEndpoint().toString()
     private val resetPasswordPollCompletionEndpoint = config.getResetPasswordPollCompletionEndpoint().toString()
+    private val jitIntrospectEndpoint = config.getJITIntrospectEndpoint().toString()
+    private val jitChallengeEndpoint = config.getJITChallengeEndpoint().toString()
+    private val jitContinueEndpoint = config.getJITContinueEndpoint().toString()
 
     //region /oauth/v2.0/initiate
     /**
@@ -344,6 +350,58 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             clientId = config.clientId,
             challengeType = config.challengeType,
             requestUrl = signUpChallengeEndpoint,
+            headers = getRequestHeaders(correlationId)
+        )
+    }
+    //endregion
+
+    //region /register/introspect
+    internal fun createJITIntrospectRequest(
+        continuationToken: String,
+        correlationId: String
+    ): JITIntrospectRequest {
+        return JITIntrospectRequest.create(
+            continuationToken = continuationToken,
+            clientId = config.clientId,
+            requestUrl = jitIntrospectEndpoint,
+            headers = getRequestHeaders(correlationId)
+        )
+    }
+    //endregion
+
+    //region /register/challenge
+    internal fun createJITChallengeRequest(
+        continuationToken: String,
+        challengeType: String,
+        challengeTarget: String,
+        challengeChannel: String,
+        correlationId: String
+    ): JITChallengeRequest {
+        return JITChallengeRequest.create(
+            continuationToken = continuationToken,
+            challengeType = challengeType,
+            challengeTarget = challengeTarget,
+            challengeChannel = challengeChannel,
+            clientId = config.clientId,
+            requestUrl = jitChallengeEndpoint,
+            headers = getRequestHeaders(correlationId)
+        )
+    }
+    //endregion
+
+    //region /register/continue
+    internal fun createJITContinueRequest(
+        continuationToken: String,
+        grantType: String,
+        code: String?,
+        correlationId: String
+    ): JITContinueRequest {
+        return JITContinueRequest.create(
+            continuationToken = continuationToken,
+            grantType = grantType,
+            oob = code,
+            clientId = config.clientId,
+            requestUrl = jitContinueEndpoint,
             headers = getRequestHeaders(correlationId)
         )
     }

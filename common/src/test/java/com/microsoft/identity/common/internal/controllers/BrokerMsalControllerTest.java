@@ -22,23 +22,27 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.components.MockPlatformComponentsFactory;
-import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter;
+import com.microsoft.identity.common.java.authorities.Authority;
+import com.microsoft.identity.common.java.cache.CacheRecord;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.ResourceAccountCommandParameters;
+import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.request.SdkType;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -47,7 +51,8 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.util.Collections;
-import java.util.List;
+
+import lombok.SneakyThrows;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = {Build.VERSION_CODES.N}, shadows = {})
@@ -125,4 +130,76 @@ public class BrokerMsalControllerTest {
         Assert.assertEquals("x-ms-RefreshTokenCredential", ssoTokenResult.getCookieName());
     }
 
+    /**
+     * This test simulates a result calling the ProvisionResourceAccount Api.
+     */
+    @SneakyThrows
+    @Test
+    public void testProvisionResourceAccount() {
+        final String mockHomeAccountId = "mockHomeAccountId";
+        final String mockCorrelationId = "mockCorrelationId";
+        final String mockAuthorityStr = "https://login.microsoft.com/mockAuthority";
+        final Authority mockAuthority = Authority.getAuthorityFromAuthorityUrl(mockAuthorityStr);
+        final String mockNegotiatedBrokerVersion = "18.0";
+        final String mockAccountName = "mockAccountName";
+        final String mockClientId = "mockClientId";
+        final String mockRedirectUri = "mockRedirectUri";
+        final AccountRecord mockAccountRecord = new AccountRecord();
+        mockAccountRecord.setHomeAccountId(mockHomeAccountId);
+        mockAccountRecord.setUsername(mockAccountName);
+        final CacheRecord mockCacheRecord = CacheRecord.builder()
+                .account(mockAccountRecord)
+                .build();
+        final MsalBrokerResultAdapter resultAdapter = new MsalBrokerResultAdapter();
+        final IIpcStrategy strategy = new IIpcStrategy() {
+            @Override
+            public Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle) {
+                Bundle retBundle = new Bundle();
+                if (bundle.getOperation().equals(BrokerOperationBundle.Operation.MSAL_HELLO)) {
+                    retBundle.putString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY, mockNegotiatedBrokerVersion);
+                } else if (bundle.getOperation().equals(BrokerOperationBundle.Operation.PROVISION_RESOURCE_ACCOUNT)) {
+                    retBundle = resultAdapter.bundleFromAccounts(Collections.singletonList(mockCacheRecord), mockNegotiatedBrokerVersion);
+                }
+                return retBundle;
+            }
+
+            @Override
+            public boolean isSupportedByTargetedBroker(@NonNull final String targetedBrokerPackageName) {
+                return true;
+            }
+
+            @Override
+            @NonNull
+            public Type getType() {
+                return Type.CONTENT_PROVIDER;
+            }
+        };
+
+        final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
+        final ResourceAccountCommandParameters parameters = ResourceAccountCommandParameters.builder()
+                .platformComponents(components)
+                .homeAccountId(mockHomeAccountId)
+                .authority(mockAuthority)
+                .correlationId(mockCorrelationId)
+                .applicationName("mockApplicationName")
+                .applicationVersion("mockApplicationVersion")
+                .sdkVersion("mockSdkVersion")
+                .sdkType(SdkType.MSAL)
+                .clientId(mockClientId)
+                .redirectUri(mockRedirectUri)
+                .requiredBrokerProtocolVersion(mockNegotiatedBrokerVersion)
+                .build();
+
+        final BrokerMsalController controller = new BrokerMsalController(
+                InstrumentationRegistry.getInstrumentation().getContext(),
+                components,
+                "aBrokerPackage",
+                Collections.singletonList(strategy));
+
+        final ICacheRecord cacheRecord = controller.provisionResourceAccount(parameters);
+
+        // verify the cache record
+        Assert.assertEquals(mockHomeAccountId, cacheRecord.getAccount().getHomeAccountId());
+        Assert.assertEquals(mockAccountName, cacheRecord.getAccount().getUsername());
+    }
 }
