@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Build;
@@ -220,8 +221,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (mAuthorizationRequestUrl != null) {
             isEstsRequest = mAuthorizationRequestUrl.startsWith("https://login.microsoftonline.com");
         }
-        if (getContext() != null) {
-            isBrokerRequest = ProcessUtil.isRunningOnAuthService(getContext());
+
+        final Context context = getContext();
+        if (context != null) {
+            isBrokerRequest = ProcessUtil.isRunningOnAuthService(context);
         }
         mRedirectUri = state.getString(REDIRECT_URI);
         mRequestHeaders = getRequestHeaders(state);
