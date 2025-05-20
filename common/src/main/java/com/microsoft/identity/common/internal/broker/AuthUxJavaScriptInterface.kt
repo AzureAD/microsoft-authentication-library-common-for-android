@@ -25,8 +25,9 @@ package com.microsoft.identity.common.internal.broker
 import android.webkit.JavascriptInterface
 import com.google.gson.stream.MalformedJsonException
 import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper
-import com.microsoft.identity.common.java.util.JsonUtil
 import com.microsoft.identity.common.logging.Logger
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 
 /**
  * JavaScript API to receive JSON string payloads from AuthUX in order to facilitate calling various
@@ -74,25 +75,36 @@ class AuthUxJavaScriptInterface {
         Logger.info(methodTag, "Received a payload from AuthUX through JavaScript API.")
 
         try {
-            val parsedJson = JsonUtil.extractJsonObjectIntoMap(jsonPayload)
+            val payloadObject = parseJsonToAuthUxJsonPayloadObject(jsonPayload)
 
-            val correlationID = parsedJson["correlationID"]
-            Logger.info(methodTag, "Correlation ID during JavaScript Call: [$correlationID]")
+            Logger.info(methodTag, "Correlation ID during JavaScript Call: [${payloadObject.correlationId}]")
+
 
             // TODO: Leaving these here, as these will be relevant for next WebCP feature
-            // val actionName = parsedJson["action_name"]
-            // val actionComponent = parsedJson["action_component"]
+            // val actionName = payloadObject.actionName
+            // val actionComponent = payloadObject.actionComponent
 
-            val parameters = JsonUtil.extractJsonObjectIntoMap(parsedJson["params"])
-            val function = parameters["function"]
-            val data = JsonUtil.extractJsonObjectIntoMap(parameters["data"])
+            val parameters = payloadObject.params
+            if (parameters == null) {
+                Logger.warn(methodTag, "Payload from AuthUX contained no \"params\" field.")
+                return
+            }
+
+            val function = parameters.function
+
             Logger.info(methodTag, "Function name: [$function]")
+
+            val data = parameters.data
+            if (data == null) {
+                Logger.warn(methodTag, "Payload from AuthUX contained no \"data\" field.")
+                return
+            }
 
             when (function) {
                 FunctionNames.NUMBER_MATCH.name ->
                     NumberMatchHelper.storeNumberMatch(
-                        data[NumberMatchHelper.SESSION_ID_ATTRIBUTE_NAME],
-                        data[NumberMatchHelper.NUMBER_MATCH_ATTRIBUTE_NAME])
+                        data.sessionId,
+                        data.numberMatch)
                 else ->
                     Logger.warn(methodTag, "Payload from AuthUX contained an unknown function name.")
             }
@@ -101,14 +113,19 @@ class AuthUxJavaScriptInterface {
                 is NullPointerException -> {
                     Logger.warn(methodTag, "Payload with missing mandatory fields sent through JavaScriptInterface")
                 }
-                is MalformedJsonException -> {
-                    Logger.warn(methodTag, "Malformed JSON payload sent through JavaScriptInterface")
+                is MalformedJsonException, is JsonSyntaxException -> {
+                    Logger.warn(methodTag, "Error Parsing JSON payload sent through JavaScriptInterface")
                 }
                 else -> {
                     Logger.warn(methodTag, "Unknown error occurred while processing the payload.")
                 }
             }
         }
+    }
+
+    private fun parseJsonToAuthUxJsonPayloadObject(jsonString: String): AuthUxJsonPayloadObject {
+        val gson = Gson()
+        return gson.fromJson(jsonString, AuthUxJsonPayloadObject::class.java)
     }
 
     /**

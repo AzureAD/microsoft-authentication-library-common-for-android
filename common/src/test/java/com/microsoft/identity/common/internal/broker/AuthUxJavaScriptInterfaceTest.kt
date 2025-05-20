@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.broker
 
 import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
@@ -55,6 +56,12 @@ class AuthUxJavaScriptInterfaceTest {
         authUxJavaScriptInterface = AuthUxJavaScriptInterface()
     }
 
+    @After
+    fun tearDown() {
+        // Clear the static map after each test
+        NumberMatchHelper.numberMatchMap.clear()
+    }
+
     @Test
     fun `test postMessageToBroker with NUMBER_MATCH function`() {
         // Call the method
@@ -63,5 +70,21 @@ class AuthUxJavaScriptInterfaceTest {
         // Verify that the data was stored in NumberMatchHelper
         val storedValue = NumberMatchHelper.numberMatchMap[mockSessionId]
         assert(storedValue == mockNumberMatchValue)
+    }
+
+    @Test
+    fun `test postMessageToBroker with empty json`() {
+        // Call the method
+        authUxJavaScriptInterface.postMessageToBroker("{}")
+
+        // Should not get an exception
+    }
+
+    @Test
+    fun `test postMessageToBroker with non-json string`() {
+        // Call the method
+        authUxJavaScriptInterface.postMessageToBroker("NotAJson")
+
+        // Should not get an exception
     }
 }
