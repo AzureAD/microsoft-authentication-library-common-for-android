@@ -1485,7 +1485,7 @@ public final class AuthenticationConstants {
         /**
          * App Link redirect URL for the BrokerHost app.
          */
-        public static final String  BROKER_HOST_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/brokerhost";
+        public static final String BROKER_HOST_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/brokerhost";
 
         /**
          * Bundle identifiers for x-ms-clitelem info.
