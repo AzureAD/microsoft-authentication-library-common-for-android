@@ -70,6 +70,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
      * @return context
      */
     public Activity getActivity() {
+        Logger.info(TAG + ":getActivity", "Activity is " + mActivity.getClass());
         return mActivity;
     }
 
