@@ -26,7 +26,7 @@ import com.google.gson.Gson
 import org.junit.Assert.*
 import org.junit.Test
 
-class AuthUxJsonPayloadObjectTest {
+class AuthUxJsonPayloadTest {
 
     private val gson = Gson()
 
@@ -47,7 +47,7 @@ class AuthUxJsonPayloadObjectTest {
             }
         """.trimIndent()
 
-        val payload = gson.fromJson(json, AuthUxJsonPayloadObject::class.java)
+        val payload = gson.fromJson(json, AuthUxJsonPayload::class.java)
 
         assertNotNull(payload)
         assertEquals("12345", payload.correlationId)
@@ -73,7 +73,7 @@ class AuthUxJsonPayloadObjectTest {
             }
         """.trimIndent()
 
-        val payload = gson.fromJson(json, AuthUxJsonPayloadObject::class.java)
+        val payload = gson.fromJson(json, AuthUxJsonPayload::class.java)
 
         assertNotNull(payload)
         assertEquals("12345", payload.correlationId)
@@ -86,7 +86,7 @@ class AuthUxJsonPayloadObjectTest {
     fun `test deserialization of empty JSON`() {
         val json = "{}"
 
-        val payload = gson.fromJson(json, AuthUxJsonPayloadObject::class.java)
+        val payload = gson.fromJson(json, AuthUxJsonPayload::class.java)
 
         assertNotNull(payload)
         assertNull(payload.correlationId)

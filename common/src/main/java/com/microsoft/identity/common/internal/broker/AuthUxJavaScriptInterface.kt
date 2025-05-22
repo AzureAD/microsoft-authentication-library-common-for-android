@@ -23,11 +23,12 @@
 package com.microsoft.identity.common.internal.broker
 
 import android.webkit.JavascriptInterface
-import com.google.gson.stream.MalformedJsonException
-import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper
-import com.microsoft.identity.common.logging.Logger
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
+import com.google.gson.stream.MalformedJsonException
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants
+import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper
+import com.microsoft.identity.common.logging.Logger
 
 /**
  * JavaScript API to receive JSON string payloads from AuthUX in order to facilitate calling various
@@ -44,6 +45,23 @@ class AuthUxJavaScriptInterface {
 
         fun getInterfaceName() : String {
             return JAVASCRIPT_INTERFACE_NAME
+        }
+
+        /**
+         * Helper method to determine if url is a valid Url for the JS Interface
+         * @param url url being loaded
+         * @return true if url is a valid, safe url, false otherwise
+         */
+        fun isValidUrlForInterface(url: String?): Boolean {
+            // If url is null, return false
+            if (url == null) {
+                return false
+            }
+
+            // Otherwise, make sure url is a valid url
+            // We only want to allow URLs that start with the AAD URL prefix or the MSA URL prefix
+            return url.startsWith(AuthenticationConstants.Broker.AAD_URL_PREFIX) ||
+                    url.startsWith(AuthenticationConstants.Broker.MSA_URL_PREFIX)
         }
     }
 
@@ -123,9 +141,9 @@ class AuthUxJavaScriptInterface {
         }
     }
 
-    private fun parseJsonToAuthUxJsonPayloadObject(jsonString: String): AuthUxJsonPayloadObject {
+    private fun parseJsonToAuthUxJsonPayloadObject(jsonString: String): AuthUxJsonPayload {
         val gson = Gson()
-        return gson.fromJson(jsonString, AuthUxJsonPayloadObject::class.java)
+        return gson.fromJson(jsonString, AuthUxJsonPayload::class.java)
     }
 
     /**

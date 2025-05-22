@@ -62,7 +62,6 @@ import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
@@ -127,7 +126,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator = null;
 
     private boolean isBrokerRequest = false;
-    private boolean isEstsRequest = false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -218,10 +216,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mAuthIntent = state.getParcelable(AUTH_INTENT);
         mPkeyAuthStatus = state.getBoolean(PKEYAUTH_STATUS, false);
         mAuthorizationRequestUrl = state.getString(REQUEST_URL);
-        if (mAuthorizationRequestUrl != null) {
-            isEstsRequest = mAuthorizationRequestUrl.startsWith("https://login.microsoftonline.com");
-        }
-
         final Context context = getContext();
         if (context != null) {
             isBrokerRequest = ProcessUtil.isRunningOnAuthService(context);
@@ -271,6 +265,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 getSwitchBrowserCoordinator().getSwitchBrowserRequestHandler()
         );
         setUpWebView(view, mAADWebViewClient);
+        mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
         launchWebView(mAuthorizationRequestUrl, mRequestHeaders);
         return view;
     }
@@ -305,9 +300,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setUserAgentString(
                 userAgent + AuthenticationConstants.Broker.CLIENT_TLS_NOT_SUPPORTED);
         mWebView.getSettings().setJavaScriptEnabled(true);
-        if (isBrokerRequest && isEstsRequest) {
-            mWebView.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
-        }
         mWebView.requestFocus(View.FOCUS_DOWN);
 
         // Set focus to the view for touch event
@@ -433,7 +425,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     public ActivityResultLauncher<LegacyFido2ApiObject> getFidoLauncher() {
         return mFidoLauncher;
     }
-    
+
     class AuthorizationCompletionCallback implements IAuthorizationCompletionCallback {
         @Override
         public void onChallengeResponseReceived(@NonNull final RawAuthorizationResult response) {

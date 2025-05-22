@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.broker
 
 import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper
 import org.junit.After
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
@@ -69,7 +70,7 @@ class AuthUxJavaScriptInterfaceTest {
 
         // Verify that the data was stored in NumberMatchHelper
         val storedValue = NumberMatchHelper.numberMatchMap[mockSessionId]
-        assert(storedValue == mockNumberMatchValue)
+        Assert.assertTrue(storedValue == mockNumberMatchValue)
     }
 
     @Test
@@ -86,5 +87,35 @@ class AuthUxJavaScriptInterfaceTest {
         authUxJavaScriptInterface.postMessageToBroker("NotAJson")
 
         // Should not get an exception
+    }
+
+    @Test
+    fun `test isValidUrlForInterface with valid AAD URL`() {
+        val validUrl = "https://login.microsoftonline.com/common/oauth2/authorize"
+        Assert.assertTrue(AuthUxJavaScriptInterface.isValidUrlForInterface(validUrl))
+    }
+
+    @Test
+    fun `test isValidUrlForInterface with valid MSA URL`() {
+        val validUrl = "https://login.live.com/oauth20_authorize.srf"
+        Assert.assertTrue(AuthUxJavaScriptInterface.isValidUrlForInterface(validUrl))
+    }
+
+    @Test
+    fun `test isValidUrlForInterface with null URL`() {
+        val nullUrl: String? = null
+        Assert.assertFalse(AuthUxJavaScriptInterface.isValidUrlForInterface(nullUrl))
+    }
+
+    @Test
+    fun `test isValidUrlForInterface with invalid URL`() {
+        val invalidUrl = "https://example.com"
+        Assert.assertFalse(AuthUxJavaScriptInterface.isValidUrlForInterface(invalidUrl))
+    }
+
+    @Test
+    fun `test isValidUrlForInterface with empty URL`() {
+        val emptyUrl = ""
+        Assert.assertFalse(AuthUxJavaScriptInterface.isValidUrlForInterface(emptyUrl))
     }
 }

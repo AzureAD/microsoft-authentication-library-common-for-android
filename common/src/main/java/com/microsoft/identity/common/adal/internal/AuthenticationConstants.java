@@ -1223,6 +1223,16 @@ public final class AuthenticationConstants {
         public static final String REDIRECT_PREFIX = "msauth";
 
         /**
+         * Prefix for AAD urls
+         */
+        public static final String AAD_URL_PREFIX = "https://login.microsoftonline.";
+
+        /**
+         * Prefix for MSA urls
+         */
+        public static final String MSA_URL_PREFIX = "https://login.live.com/";
+
+        /**
          * Encoded delimiter for redirect.
          */
         public static final Object REDIRECT_DELIMETER_ENCODED = "%2C";

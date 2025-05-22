@@ -32,8 +32,8 @@ import com.google.gson.annotations.SerializedName
  * @property actionComponent The component responsible for the action.
  * @property params The parameters for the action, including function and data.
  */
-data class AuthUxJsonPayloadObject(
-    @SerializedName(SerializedNames.CORRELATIONID)
+data class AuthUxJsonPayload(
+    @SerializedName(SerializedNames.CORRELATION_ID)
     val correlationId: String?,
 
     @SerializedName(SerializedNames.ACTION_NAME)
@@ -67,20 +67,20 @@ data class AuthUxParams(
  * @property numberMatch The number match value.
  */
 data class AuthUxData(
-    @SerializedName(SerializedNames.SESSIONID)
+    @SerializedName(SerializedNames.SESSION_ID)
     val sessionId: String?,
 
-    @SerializedName(SerializedNames.NUMBERMATCH)
+    @SerializedName(SerializedNames.NUMBER_MATCH)
     val numberMatch: String?
 )
 
 object SerializedNames {
-    const val CORRELATIONID = "correlationID"
+    const val CORRELATION_ID = "correlationID"
     const val ACTION_NAME = "action_name"
     const val ACTION_COMPONENT = "action_component"
     const val PARAMS = "params"
     const val FUNCTION = "function"
     const val DATA = "data"
-    const val SESSIONID = "sessionID"
-    const val NUMBERMATCH = "numberMatch"
+    const val SESSION_ID = "sessionID"
+    const val NUMBER_MATCH = "numberMatch"
 }
