@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -30,26 +31,33 @@ import lombok.experimental.SuperBuilder;
 
 @Getter
 @EqualsAndHashCode(callSuper = true)
+@SuppressFBWarnings("EI_EXPOSE_REP2")   //Suppresses spotbugs warning on the builder class
 @SuperBuilder(toBuilder = true)
-public class SignInWithContinuationTokenCommandParameters extends BaseSignInTokenCommandParameters {
-    private static final String TAG = SignInWithContinuationTokenCommandParameters.class.getSimpleName();
+public class JITContinueCommandParameters extends BaseSignInTokenCommandParameters {
+
+    private static final String TAG = JITContinueCommandParameters.class.getSimpleName();
 
     /**
-     * A continuation token for sign in in the user from sign up, self-service-password-reset flow or after JIT.
+     * The one-time password used for authentication. It is null when grantType is continuation_token.
+     */
+    @Nullable
+    public final String code;
+
+    /**
+     * The grant type. (oob, continuation_token, etc.)
+     */
+    @NonNull
+    public final String grantType;
+
+    /**
+     * The continuation token obtained from the previous endpoint.
      */
     @NonNull
     public final String continuationToken;
 
-    /**
-     * The email address of the user.
-     */
-    @Nullable
-    public final String username;
-
-    @NonNull
     @Override
     public String toUnsanitizedString() {
-        return "SignInSubmitPasswordCommandParameters(username=" + username + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
+        return "JITSubmitChallengeCommandParameters(authority=" + authority + ", grantType=" + grantType + ")";
     }
 
     @Override
@@ -57,9 +65,8 @@ public class SignInWithContinuationTokenCommandParameters extends BaseSignInToke
         return !toString().equals(toUnsanitizedString());
     }
 
-    @NonNull
     @Override
     public String toString() {
-        return "SignInSubmitPasswordCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+        return toUnsanitizedString();
     }
 }
