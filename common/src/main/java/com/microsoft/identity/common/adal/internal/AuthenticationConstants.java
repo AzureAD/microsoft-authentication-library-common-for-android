@@ -642,7 +642,7 @@ public final class AuthenticationConstants {
          *
          * @see <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Broker%20API/broker_protocol_versions.md">Android Auth Broker Protocol Versions</a>
          */
-        public static final String LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "17.0";
+        public static final String LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "18.0";
 
         /**
          * The maximum msal-to-broker protocol version known by clients such as MSAL Android.
@@ -1813,11 +1813,6 @@ public final class AuthenticationConstants {
         public static final String GET_AAD_DEVICE_ID_PATH = "/getAadDeviceId";
 
         /**
-         * Broker ContentProvider path for getting AAD device ID for OneAuth.
-         */
-        public static final String GET_AAD_DEVICE_ID_PATH = "/getAadDeviceId";
-
-        /**
          * BrokerContentProvider URI code constant for MSAL-to-Broker hello request.
          */
         public static final int MSAL_HELLO_URI_CODE = 1;
@@ -2030,3 +2025,4 @@ public final class AuthenticationConstants {
         public static final String VERSION = com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
     }
 }
+
