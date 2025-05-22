@@ -188,7 +188,7 @@ stages:
         value: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     pool:
-      vmImage: 'ubuntu-20.04'
+      vmImage: 'ubuntu-latest'
     steps:
       - checkout: broker
         displayName: Checkout broker repository
