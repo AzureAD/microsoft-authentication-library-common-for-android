@@ -35,7 +35,11 @@ import com.microsoft.identity.common.internal.platform.AndroidDeviceMetadata;
 import com.microsoft.identity.common.internal.platform.AndroidPlatformUtil;
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidTaskStateGenerator;
 import com.microsoft.identity.common.internal.ui.AndroidAuthorizationStrategyFactory;
+import com.microsoft.identity.common.internal.ui.browser.AndroidBrowserSelector;
+import com.microsoft.identity.common.internal.util.WorkProfileUtil;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.PlatformComponents;
 import com.microsoft.identity.common.java.net.DefaultHttpClientWrapper;
@@ -66,6 +70,12 @@ public class AndroidPlatformComponentsFactory {
         if (!sGlobalStateInitalized) {
             HttpCache.initialize(context);
             Device.setDeviceMetadata(new AndroidDeviceMetadata());
+
+            // Denotes whether or not request is from personal profile but device has a Work Profile Available
+            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS)) {
+                Device.setIsInPersonalProfileButClouddpcWorkProfileAvailable(
+                        WorkProfileUtil.checkIfIsInPersonalProfileButClouddpcWorkProfileAvailable(context));
+            }
             Logger.setAndroidLogger();
 
             final File cacheDir = context.getCacheDir();
@@ -127,7 +137,8 @@ public class AndroidPlatformComponentsFactory {
                 .storageSupplier(new AndroidStorageSupplier(context,
                         new AndroidAuthSdkStorageEncryptionManager(context)))
                 .platformUtil(new AndroidPlatformUtil(context, activity))
-                .httpClientWrapper(new DefaultHttpClientWrapper());
+                .httpClientWrapper(new DefaultHttpClientWrapper())
+                .browserSelector(new AndroidBrowserSelector(context));
 
         if (activity != null){
             builder.authorizationStrategyFactory(
@@ -135,6 +146,7 @@ public class AndroidPlatformComponentsFactory {
                                     .context(activity.getApplicationContext())
                                     .activity(activity)
                                     .fragment(fragment)
+                                    .browserSelector(new AndroidBrowserSelector(context))
                                     .build())
                     .stateGenerator(new AndroidTaskStateGenerator(activity.getTaskId()));
         }

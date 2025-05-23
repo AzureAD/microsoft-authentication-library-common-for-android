@@ -41,6 +41,8 @@ import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpResponse;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
@@ -66,6 +68,7 @@ import java.util.concurrent.TimeoutException;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.opentelemetry.api.trace.Span;
 import lombok.NonNull;
 
 public class ExceptionAdapter {
@@ -436,6 +439,26 @@ public class ExceptionAdapter {
 
 
         if (e instanceof OutOfMemoryError) {
+            Logger.warn(TAG,
+                    "Received an out of memory error, attempting to attach stacktrace...");
+
+            // Record exception stacktrace in span
+            // Put this in a try-catch in case this telemetry emit attempt causes another OOM
+            try {
+                final Span currentSpan = SpanExtension.current();
+
+                // Attach the stack trace, to debug in telemetry later
+                currentSpan.setAttribute(
+                        AttributeName.out_of_memory_exception_stacktrace.name(),
+                        StringUtil.getStacktraceAsStringFromElementArray(e.getStackTrace())
+                );
+
+                Logger.warn(TAG,
+                        "Received an out of memory error, stacktrace attached to span with id: " + currentSpan.getSpanContext().getSpanId());
+            } catch (Throwable throwable) {
+                Logger.warn(TAG, "Failed to emit telemetry for out of memory exception.");
+            }
+
             return new ClientException(
                     ClientException.OUT_OF_MEMORY,
                     e.getMessage(),

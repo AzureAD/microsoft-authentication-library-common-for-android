@@ -25,12 +25,18 @@ package com.microsoft.identity.common.java.providers.microsoft;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.DefaultStateGenerator;
 import com.microsoft.identity.common.java.providers.oauth2.PkceChallenge;
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.UUID;
 
@@ -51,6 +57,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
      * String for the instance aware extra query parameter.
      */
     public static final String INSTANCE_AWARE = "instance_aware";
+
+    public static final String WP_AVAILABLE_EXTRA_PARAMETER_NAME = "x-client-WPAvailable";
 
     /**
      * Required.
@@ -126,6 +134,12 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @Expose()
     @Getter
     @Accessors(prefix = "m")
+    @SerializedName(Device.PlatformIdParameters.MANUFACTURER)
+    private final String mDiagnosticMN;
+
+    @Expose()
+    @Getter
+    @Accessors(prefix = "m")
     @SerializedName(INSTANCE_AWARE)
     private final Boolean mMultipleCloudAware;
 
@@ -134,6 +148,11 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @Accessors(prefix = "m")
     @SerializedName("pc")
     private final String mPreferredAuthMethodCode;
+
+    @Getter
+    @Accessors(prefix = "m")
+    @SerializedName(WP_AVAILABLE_EXTRA_PARAMETER_NAME)
+    private final Boolean mWorkProfileAvailable;
 
 
     /**
@@ -162,6 +181,16 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mDiagnosticOS = Device.getOsForEsts();
         mDiagnosticDM = Device.getModel();
         mDiagnosticCPU = Device.getCpu();
+
+
+        // If the flight is enabled, set the fields
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS)) {
+            mDiagnosticMN = Device.getManufacturer();
+            mWorkProfileAvailable = Device.isInPersonalProfileButClouddpcWorkProfileAvailable();
+        } else {
+            mDiagnosticMN = null;
+            mWorkProfileAvailable = null;
+        }
     }
 
     public abstract static class Builder<B extends MicrosoftAuthorizationRequest.Builder<B>> extends AuthorizationRequest.Builder<B> {

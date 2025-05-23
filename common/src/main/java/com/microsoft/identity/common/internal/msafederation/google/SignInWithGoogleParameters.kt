@@ -23,37 +23,28 @@
 package com.microsoft.identity.common.internal.msafederation.google
 
 import android.app.Activity
-import com.microsoft.identity.common.internal.msafederation.FederatedSignInParameters
-import com.microsoft.identity.common.internal.msafederation.FederatedSignInProviderName
+import com.microsoft.identity.common.internal.msafederation.MsaFederatedSignInParameters
+import com.microsoft.identity.common.internal.msafederation.MsaFederatedSignInProviderName
+import com.microsoft.identity.common.internal.msafederation.MsaFederationConstants
 
 /**
  * SignInWithGoogleParameters holds the parameters required for signing in with Google.
  *
  * @property activity The Activity context used for the sign-in process.
+ * @property serverClientId The target server OAuth2.0 client (backend) ID generated in google console project.
+ *                          Authenticates backend server with Google's APIs. Default value MSA's server client id.
+ * @property useBottomSheet A flag indicating whether to use a bottom sheet UI for the sign-in process.
  * UI for the sign-in process.
  */
-data class SignInWithGoogleParameters(
-    internal val activity: Activity
-) : FederatedSignInParameters() {
-
-    /**
-     * Secondary constructor to initialize the parameters with an option to use a bottom sheet UI.
-     * Current requirement do not use bottom sheet UI, so this constructor is kept internal
-     * @param activity The Activity context used for the sign-in process.
-     * @param useBottomSheet A flag indicating whether to use a bottom sheet UI for the sign-in process.
-     */
-    internal constructor(activity: Activity, useBottomSheet: Boolean) : this(activity) {
-        this.useBottomSheet = useBottomSheet
-    }
-
-    /**
-     * A flag indicating whether to use a bottom sheet UI for the sign-in process.
-     */
-    internal var useBottomSheet: Boolean = false
+data class SignInWithGoogleParameters @JvmOverloads constructor(
+    internal val activity: Activity,
+    internal val serverClientId: String = MsaFederationConstants.GOOGLE_MSA_SERVER_CLIENT_ID,
+    internal val useBottomSheet: Boolean = false,
+) : MsaFederatedSignInParameters() {
 
     /**
      * The provider type for the federated sign-in, which is Google in this case.
      */
-    override val providerName: FederatedSignInProviderName
-        get() = FederatedSignInProviderName.GOOGLE
+    override val providerName: MsaFederatedSignInProviderName
+        get() = MsaFederatedSignInProviderName.GOOGLE
 }

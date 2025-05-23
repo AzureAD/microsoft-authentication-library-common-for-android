@@ -36,6 +36,8 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.nativeauth.BuildValues
 import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.GetAuthMethodsCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITChallengeAuthMethodCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITContinueCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFADefaultChallengeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFASubmitChallengeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordResendCodeCommandParameters
@@ -53,6 +55,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.JITCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.MFACommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.ResetPasswordCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignInCommandResult
@@ -1366,6 +1369,157 @@ class NativeAuthControllerTest {
     }
     // endregion
 
+    //region JIT
+
+    @Test
+    fun testSignInStartWithPasswordJITIsRequired() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInInitiate,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INITIATE_SUCCESS
+        )
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
+        )
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.REGISTRATION_REQUIRED
+        )
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.JITIntrospect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.REGISTRATION_INTROSPECT_SUCCESS
+        )
+
+        val parameters = createSignInStartWithPasswordCommandParameters(correlationId)
+        val result = controller.signInStart(parameters)
+        assert(result is SignInCommandResult.StrongAuthMethodRegistrationRequired)
+    }
+
+    fun testSignInSubmitPasswordJITIsRequired() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.REGISTRATION_REQUIRED
+        )
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.JITIntrospect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.REGISTRATION_INTROSPECT_SUCCESS
+        )
+
+        val parameters = createSignInSubmitPasswordCommandParameters(correlationId)
+        val result = controller.signInSubmitPassword(parameters)
+        assert(result is SignInCommandResult.StrongAuthMethodRegistrationRequired)
+    }
+
+    @Test
+    fun testSignInWithContinuationTokenJITIsRequired() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.REGISTRATION_REQUIRED
+        )
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.JITIntrospect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.REGISTRATION_INTROSPECT_SUCCESS
+        )
+
+        val parameters = createSignInWithContinuationTokenCommandParameters(
+            withScopes = true,
+            correlationId = correlationId
+        )
+        val result = controller.signInWithContinuationToken(parameters)
+        assert(result is SignInCommandResult.StrongAuthMethodRegistrationRequired)
+    }
+
+    @Test
+    fun testSubmitJITChallengeAndTokenReturned() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.JITContinue,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.REGISTRATION_CONTINUE_SUCCESS
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.TOKEN_SUCCESS
+        )
+
+        val parameters = createJITContinueCommandParametersCommandParameters(
+            code = "1234",
+            correlationId = correlationId
+        )
+        val result = controller.jitSubmitChallenge(parameters)
+        assert(result is SignInCommandResult.Complete)
+    }
+
+    @Test
+    fun testSubmitJITChallengeInvalidOOB() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.JITContinue,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.REGISTRATION_INVALID_OOB_VALUE
+        )
+
+        val parameters = createJITContinueCommandParametersCommandParameters(
+            code = "1234",
+            correlationId = correlationId
+        )
+        val result = controller.jitSubmitChallenge(parameters)
+        assert(result is JITCommandResult.IncorrectChallenge)
+    }
+
+    @Test
+    fun testChallengeJITAuthMethodInvalidInput() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.JITChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.REGISTRATION_INVALID_CHALLENGE_TARGET
+        )
+
+        val parameters = createJITChallengeAuthMethodCommandParametersCommandParameters(
+            verificationContact = "user@contoso.com",
+            authMethodChallengeType = "oob",
+            challengeChannel = "email",
+            correlationId = correlationId
+        )
+        val result = controller.jitChallengeAuthMethod(parameters)
+        assert(result is JITCommandResult.IncorrectVerificationContact)
+    }
+
+    @Test
+    fun testChallengeJITAuthMethodSuccessResponse() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.JITChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.REGISTRATION_CHALLENGE_SUCCESS
+        )
+
+        val parameters = createJITChallengeAuthMethodCommandParametersCommandParameters(
+            verificationContact = "user@contoso.com",
+            authMethodChallengeType = "oob",
+            challengeChannel = "email",
+            correlationId = correlationId
+        )
+        val result = controller.jitChallengeAuthMethod(parameters)
+        assert(result is JITCommandResult.VerificationRequired)
+    }
+
+    //endregion
+
     private fun createSignInStartWithPasswordCommandParameters(
         correlationId: String
     ): SignInStartCommandParameters {
@@ -1430,6 +1584,56 @@ class NativeAuthControllerTest {
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .continuationToken(continuationToken)
             .username(username)
+            .correlationId(correlationId)
+            .build()
+    }
+
+    private fun createJITContinueCommandParametersCommandParameters(
+        code: String?,
+        correlationId: String,
+        grantType : String = "oob",
+    ): JITContinueCommandParameters {
+        val authenticationScheme = AuthenticationSchemeFactory.createScheme(
+            AndroidPlatformComponentsFactory.createFromContext(context),
+            null
+        )
+        return JITContinueCommandParameters.builder()
+            .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
+            .clientId(clientId)
+            .authenticationScheme(authenticationScheme)
+            .platformComponents(platformComponents)
+            .oAuth2TokenCache(createCache())
+            .sdkType(SdkType.MSAL)
+            .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .continuationToken(continuationToken)
+            .grantType(grantType)
+            .code(code)
+            .correlationId(correlationId)
+            .build()
+    }
+
+    private fun createJITChallengeAuthMethodCommandParametersCommandParameters(
+        verificationContact: String,
+        authMethodChallengeType: String,
+        challengeChannel: String,
+        correlationId: String,
+    ): JITChallengeAuthMethodCommandParameters {
+        val authenticationScheme = AuthenticationSchemeFactory.createScheme(
+            AndroidPlatformComponentsFactory.createFromContext(context),
+            null
+        )
+        return JITChallengeAuthMethodCommandParameters.builder()
+            .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
+            .authenticationScheme(authenticationScheme)
+            .clientId(clientId)
+            .platformComponents(platformComponents)
+            .oAuth2TokenCache(createCache())
+            .sdkType(SdkType.MSAL)
+            .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .continuationToken(continuationToken)
+            .verificationContact(verificationContact)
+            .authMethodChallengeType(authMethodChallengeType)
+            .challengeChannel(challengeChannel)
             .correlationId(correlationId)
             .build()
     }

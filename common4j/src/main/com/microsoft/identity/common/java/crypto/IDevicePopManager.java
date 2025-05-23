@@ -88,7 +88,6 @@ public interface IDevicePopManager {
      * requires use of a SHA-1 digest or uses NO_PADDING should not be supported.
      */
     enum Cipher implements AsymmetricAlgorithm {
-        //@RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
         RSA_ECB_PKCS1_PADDING("RSA/ECB/PKCS1Padding"),
 
 

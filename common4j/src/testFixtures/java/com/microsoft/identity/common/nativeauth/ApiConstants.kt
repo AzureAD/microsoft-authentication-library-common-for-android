@@ -45,6 +45,9 @@ interface ApiConstants {
         val ssprContinueRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/continue")
         val ssprSubmitRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/submit")
         val ssprPollCompletionRequestUrl = URL(BASE_REQUEST_PATH + "resetpassword/v1.0/poll_completion")
+        val jitIntrospectRequestUrl = URL(BASE_REQUEST_PATH + "register/v1.0/introspect")
+        val jitChallengeRequestUrl = URL(BASE_REQUEST_PATH + "register/v1.0/challenge")
+        val jitContinueRequestUrl = URL(BASE_REQUEST_PATH + "register/v1.0/continue")
         val tokenEndpoint = URL("https://contoso.com/1234/token")
     }
 

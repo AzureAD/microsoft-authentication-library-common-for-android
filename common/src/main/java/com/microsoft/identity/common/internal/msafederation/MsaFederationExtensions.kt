@@ -20,28 +20,30 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+@file:JvmName("MsaFederationExtensions")
 package com.microsoft.identity.common.internal.msafederation
 
-import com.microsoft.identity.common.internal.msafederation.google.GoogleSignInProvider
-import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters
+import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential
+import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters
+import java.util.AbstractMap
 
 /**
- * Factory class to get the Federated Sign In Provider based on provider type in parameters
- * Currently only Google is supported.
+ * Helper/Extension method to create header that can be used in MSA authorization
  */
-internal object FederatedSignInProviderFactory {
-
-    /**
-     * Get the Federated Sign In Provider based on provider type in parameters.
-     */
-    fun getProvider(parameters: FederatedSignInParameters): IFederatedSignInProvider {
-        return when (parameters.providerName) {
-            FederatedSignInProviderName.GOOGLE -> GoogleSignInProvider.create(parameters as SignInWithGoogleParameters, MsaFederationConstants.GOOGLE_MSA_WEB_CLIENT_ID)
-
-            else -> {
-                throw IllegalArgumentException("Unsupported provider type")
-            }
-        }
-    }
+fun SignInWithGoogleCredential.getIdProviderHeadersForAuthorization(): Map<String, String> {
+    return mapOf(MsaFederationConstants.MSA_ID_TOKEN_HEADER_KEY to this.idToken)
 }
 
+/**
+ * Helper/Extension method to create query parameter that can be used in MSA authorization
+ */
+fun SignInWithGoogleCredential.getIdProviderExtraQueryParamForAuthorization(): Map.Entry<String, String> {
+    return AbstractMap.SimpleEntry(MsaFederationConstants.MSA_ID_PROVIDER_EXTRA_QUERY_PARAM_KEY, signInProviderName.getIdProviderName())
+}
+
+/**
+ * Helper/Extension method to check if the interactive flow is using Sign-in With Google.
+ */
+fun BrokerInteractiveTokenCommandParameters.isSignInWithGoogleFlow(): Boolean {
+    return this.requestHeaders?.containsKey(MsaFederationConstants.MSA_ID_TOKEN_HEADER_KEY) ?: false
+}

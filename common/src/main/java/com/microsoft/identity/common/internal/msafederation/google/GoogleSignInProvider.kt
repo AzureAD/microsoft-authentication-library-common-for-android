@@ -27,12 +27,14 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCustomCredentialOption
+import androidx.credentials.exceptions.GetCredentialCustomException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
-import com.microsoft.identity.common.internal.msafederation.IFederatedSignInProvider
+import com.microsoft.identity.common.internal.msafederation.IMsaFederatedSignInProvider
 import com.microsoft.identity.common.java.base64.Base64Util
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.logging.Logger
@@ -46,9 +48,8 @@ import java.security.SecureRandom
  * Call [GoogleSignInProvider.create] to create an instance of GoogleSignInProvider.
  */
 internal class GoogleSignInProvider(private val credentialManager: CredentialManager,
-                           private val parameters: SignInWithGoogleParameters,
-                           private val webClientId: String
-) : IFederatedSignInProvider {
+                           private val signInWithGoogleParameters: SignInWithGoogleParameters
+) : IMsaFederatedSignInProvider {
 
     companion object {
         private const val TAG = "GoogleSignInProvider"
@@ -57,12 +58,11 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
          * Creates an instance of GoogleSignInProvider.
          *
          * @param parameters The parameters required for signing in with Google.
-         * @param webClientId The web client ID for Google sign-in.
          * @return A new instance of GoogleSignInProvider. Prod must use MSA client ID.
          */
         @JvmStatic
-        fun create(parameters: SignInWithGoogleParameters, webClientId: String): GoogleSignInProvider {
-            return GoogleSignInProvider(CredentialManager.create(parameters.activity.applicationContext), parameters, webClientId)
+        fun create(parameters: SignInWithGoogleParameters): GoogleSignInProvider {
+            return GoogleSignInProvider(CredentialManager.create(parameters.activity.applicationContext), parameters)
         }
     }
 
@@ -75,7 +75,7 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
      * or an exception on failure.
      */
     override suspend fun signIn(): Result<SignInWithGoogleCredential> {
-        return if (parameters.useBottomSheet) {
+        return if (signInWithGoogleParameters.useBottomSheet) {
             signInWithGoogleBottomSheet()
         } else {
             signInWithGoogle()
@@ -90,7 +90,7 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
     private suspend fun signInWithGoogleBottomSheet(): Result<SignInWithGoogleCredential> {
         val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
-            .setServerClientId(webClientId)
+            .setServerClientId(signInWithGoogleParameters.serverClientId)
             .setAutoSelectEnabled(false)
             .setNonce(generateNonce())
             .build()
@@ -104,7 +104,7 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
      * @return A Result containing the SignInWithGoogleCredential on success, or an exception on failure.
      */
     private suspend fun signInWithGoogle(): Result<SignInWithGoogleCredential> {
-        val signInWithGoogleOption = GetSignInWithGoogleOption.Builder(webClientId)
+        val signInWithGoogleOption = GetSignInWithGoogleOption.Builder(signInWithGoogleParameters.serverClientId)
             .setNonce(generateNonce())
             .build()
 
@@ -134,7 +134,7 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
         try {
             val getCredentialResponse = credentialManager.getCredential(
                 request = getCredentialRequest,
-                context = parameters.activity
+                context = signInWithGoogleParameters.activity
             )
 
             // handle the result
@@ -153,7 +153,7 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
                         )
                     } catch (e: GoogleIdTokenParsingException) {
                         // error parsing Google ID Token
-                        Logger.warn(TAG, "Error parsing Google ID Token, $e.message")
+                        Logger.warn(methodTag, "Error parsing Google ID Token, $e.message")
                         val clientException = ClientException(
                             ClientException.SIGN_IN_WITH_GOOGLE_FAILED,
                             e.message,
@@ -164,7 +164,7 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
                 } else {
                     // unsupported credential type
                     val errorMessage = "Unsupported credential type, " + credential.type
-                    Logger.warn(TAG, errorMessage)
+                    Logger.warn(methodTag, errorMessage)
                     val clientException = ClientException(
                         ClientException.SIGN_IN_WITH_GOOGLE_FAILED,
                         errorMessage
@@ -174,16 +174,34 @@ internal class GoogleSignInProvider(private val credentialManager: CredentialMan
             } else {
                 // Unexpected credential type
                 val errorMessage = "Unexpected credential type" + credential.javaClass.simpleName
-                Logger.warn(TAG, errorMessage)
+                Logger.warn(methodTag, errorMessage)
                 val clientException = ClientException(
                     ClientException.SIGN_IN_WITH_GOOGLE_FAILED,
                     errorMessage
                 )
                 return Result.failure(clientException)
             }
-        } catch (e: GetCredentialException) {
+        } catch (e: GetCredentialCustomException) {
+            Logger.warn(methodTag,
+                "Error getting google id token credential, $e.type, $e.message")
+            val clientException = ClientException(
+                ClientException.SIGN_IN_WITH_GOOGLE_FAILED,
+                e.message,
+                e
+            )
+            clientException.subErrorCode = e.type
+            return Result.failure(clientException)
+        }
+        catch (e: GetCredentialException) {
+            if (e is NoCredentialException && option is GetGoogleIdOption) {
+                Logger.info(methodTag, "Not credentials found.. allow adding new account, $e.message")
+                // retry with GetSignInWithGoogleOption, to allow adding a google account to device
+                return signInWithGoogle()
+            }
+
             // failure
-            Logger.warn(TAG, "Error getting google id token credential, $e.message")
+            Logger.warn(methodTag,
+                "Error getting google id token credential, $e.javaClass.simpleName, $e.message")
             val clientException = ClientException(
                 ClientException.SIGN_IN_WITH_GOOGLE_FAILED,
                 e.message,

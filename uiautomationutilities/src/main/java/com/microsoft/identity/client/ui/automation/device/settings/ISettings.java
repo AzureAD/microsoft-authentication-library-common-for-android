@@ -137,6 +137,12 @@ public interface ISettings {
     public void disableAppThroughSettings(@NonNull final String packageName);
 
     /**
+     * Toggle app notifications in settings page
+     * @param packageName package name of the app
+     */
+    public void toggleNotificationsThroughSettings(@NonNull final String packageName);
+
+    /**
      * Enable an app through the device's settings page instead of shell command.
      * @param packageName name of package to be enabled
      */

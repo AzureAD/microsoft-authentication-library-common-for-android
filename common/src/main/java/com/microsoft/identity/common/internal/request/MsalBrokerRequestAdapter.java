@@ -49,15 +49,16 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
+import com.microsoft.identity.common.internal.commands.parameters.AndroidInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.ResourceAccountCommandParameters;
 import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
@@ -77,9 +78,6 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 
 public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
@@ -96,7 +94,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final String extraOptions = parameters.getExtraOptions() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
 
-        final BrokerRequest brokerRequest = BrokerRequest.builder()
+        final BrokerRequest.BrokerRequestBuilder brokerRequestBuilder = BrokerRequest.builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
                 .scope(TextUtils.join(" ", parameters.getScopes()))
                 .redirect(parameters.getRedirectUri())
@@ -131,10 +129,14 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .preferredBrowser(parameters.getPreferredBrowser())
                 .preferredAuthMethod(parameters.getPreferredAuthMethod())
                 .accountTransferToken(parameters.getAccountTransferToken())
-                .suppressAccountPicker(parameters.isSuppressBrokerAccountPicker())
-                .build();
+                .suppressAccountPicker(parameters.isSuppressBrokerAccountPicker());
 
-        return brokerRequest;
+        if (parameters instanceof AndroidInteractiveTokenCommandParameters) {
+            final AndroidInteractiveTokenCommandParameters androidInteractiveTokenCommandParameters = (AndroidInteractiveTokenCommandParameters) parameters;
+            brokerRequestBuilder.signInWithGoogleCredential(androidInteractiveTokenCommandParameters.getSignInWithGoogleCredential());
+        }
+
+        return brokerRequestBuilder.build();
     }
 
     @Override
@@ -256,6 +258,50 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public Bundle getRequestBundleForAcquireTokenInteractive(@NonNull final InteractiveTokenCommandParameters parameters,
                                                              @Nullable final String negotiatedBrokerProtocolVersion) {
         final BrokerRequest brokerRequest = brokerRequestFromAcquireTokenParameters(parameters);
+        return getRequestBundleFromBrokerRequest(
+                brokerRequest,
+                negotiatedBrokerProtocolVersion,
+                parameters.getRequiredBrokerProtocolVersion()
+        );
+    }
+
+    /**
+     * Method to construct a request bundle for broker provisionResourceAccountRequest request.
+     * @param parameters                     input parameters of type {@link ResourceAccountCommandParameters}
+     * @param negotiatedBrokerProtocolVersion protocol version established by broker hello.
+     * @return request Bundle
+     */
+    public Bundle getRequestBundleForProvisionResourceAccount(
+            @NonNull final ResourceAccountCommandParameters parameters,
+            @Nullable final String negotiatedBrokerProtocolVersion
+    ) {
+        final String methodTag = TAG + ":getRequestBundleForProvisionResourceAccount";
+
+        Logger.info(methodTag, "Constructing result bundle from ProvisionResourceAccount.");
+        final String extraOptions = parameters.getExtraOptions() != null ?
+                QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
+
+        final BrokerRequest brokerRequest = BrokerRequest.builder()
+                .authority(parameters.getAuthority().getAuthorityURL().toString())
+                .extraOptions(extraOptions)
+                .homeAccountId(parameters.getHomeAccountId())
+                .userName(parameters.getLoginHint())
+                .correlationId(parameters.getCorrelationId())
+                .clientId(parameters.getClientId())
+                .redirect(parameters.getRedirectUri())
+                .applicationName(parameters.getApplicationName())
+                .applicationVersion(parameters.getApplicationVersion())
+                .msalVersion(parameters.getSdkVersion())
+                .sdkType(parameters.getSdkType())
+                .environment(AzureActiveDirectory.getEnvironment().name())
+                .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
+                .spanContext(SerializableSpanContext.builder()
+                        .traceId(SpanExtension.current().getSpanContext().getTraceId())
+                        .spanId(SpanExtension.current().getSpanContext().getSpanId())
+                        .traceFlags(SpanExtension.current().getSpanContext().getTraceFlags().asByte())
+                        .build()
+                )
+                .build();
         return getRequestBundleFromBrokerRequest(
                 brokerRequest,
                 negotiatedBrokerProtocolVersion,
@@ -488,27 +534,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         } else {
             return false;
         }
-    }
-
-    /**
-     * List of System Browsers which can be used from broker, currently only Chrome is supported.
-     * This information here is populated from the default browser safelist in MSAL.
-     *
-     * @return
-     */
-    public static List<BrowserDescriptor> getBrowserSafeListForBroker() {
-        List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
-        final HashSet<String> signatureHashes = new HashSet<String>();
-        signatureHashes.add("7fmduHKTdHHrlMvldlEqAIlSfii1tl35bxj1OXN5Ve8c4lU6URVu4xtSHc3BVZxS6WWJnxMDhIfQN0N0K2NDJg==");
-        final BrowserDescriptor chrome = new BrowserDescriptor(
-                "com.android.chrome",
-                signatureHashes,
-                null,
-                null
-        );
-        browserDescriptors.add(chrome);
-
-        return browserDescriptors;
     }
 
     /**

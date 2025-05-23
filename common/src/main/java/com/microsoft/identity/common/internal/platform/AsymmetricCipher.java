@@ -22,9 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
@@ -63,7 +60,6 @@ public enum AsymmetricCipher implements CryptoSuite {
             return 2048;
         }
 
-        @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
         @Override
         public SigningAlgorithm signingAlgorithm() {
             return SigningAlgorithm.SHA_256_WITH_RSA;
@@ -95,10 +91,9 @@ public enum AsymmetricCipher implements CryptoSuite {
             return 2048;
         }
 
-        @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
         @Override
         public SigningAlgorithm signingAlgorithm() {
             return SigningAlgorithm.SHA_256_WITH_RSA;
         }
-    };
+    }
 }

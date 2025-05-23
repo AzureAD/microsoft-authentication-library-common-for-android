@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.opentelemetry;
 
 /**
  * Names of Open Telemetry Span Attributes we want to capture for broker's Spans.
+ * NOTE : Any changes to this enum should also be made in the corresponding enum in Broker.
  */
 public enum AttributeName {
     /**
@@ -312,5 +313,55 @@ public enum AttributeName {
     /**
      * Indicates the new refresh token credential header attached in the eSTS request.
      */
-    is_new_refresh_token_cred_header_attached
+    is_new_refresh_token_cred_header_attached,
+
+    /**
+     * The time (in milliseconds) spent on generating a keypair.
+     */
+    elapsed_time_keypair_generation,
+
+    /**
+     * Indicates the successful method used to generate a keypair.
+     */
+    key_pair_gen_successful_method,
+
+    /**
+     * Indicates the exception in generating a keypair.
+     */
+    keypair_gen_exception,
+
+    /**
+     * Records the stacktrace for an out-of-memory exception.
+     */
+    out_of_memory_exception_stacktrace,
+
+    /**
+     * Records if current flow is a mam flow.
+     */
+    is_mam_flow,
+
+    /**
+     * Records if current flow is a switch browser protocol.
+     */
+    is_switch_browser_protocol,
+
+    /**
+     * Records the browser package name.
+     */
+    browser_package_name,
+
+    /**
+     * Records the if browser package name supports custom tabs.
+     */
+    is_custom_tabs_supported,
+
+    /**
+     * Records the if the broker handled a switch browser request,
+     */
+    is_switch_browser_request_handled,
+
+    /**
+     * Records the if the broker handled a switch browser resume,
+     */
+    is_switch_browser_resume_handled
 }

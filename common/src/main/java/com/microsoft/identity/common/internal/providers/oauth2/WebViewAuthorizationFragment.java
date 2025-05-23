@@ -22,11 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
+import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
@@ -41,18 +39,16 @@ import android.webkit.WebView;
 import android.widget.ProgressBar;
 
 import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -60,6 +56,7 @@ import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWeb
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.constants.FidoConstants;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
@@ -82,6 +79,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
+
+import io.opentelemetry.api.trace.SpanContext;
 
 /**
  * Authorization fragment with embedded webview.
@@ -116,10 +115,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private boolean webViewZoomEnabled;
 
-    private CameraPermissionRequest mCameraPermissionRequest;
+    private final CameraPermissionRequestHandler mCameraPermissionRequestHandler = new CameraPermissionRequestHandler(this);
 
     // This is used by LegacyFido2ApiManager to launch a PendingIntent received by the legacy API.
     private ActivityResultLauncher<LegacyFido2ApiObject> mFidoLauncher;
+    // This is used by the switch browser protocol to handle the resume of the flow.
+    private SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator = null;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -137,6 +138,57 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         Logger.info(methodTag, "Legacy FIDO2 API result received.");
                     }
             );
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (getSwitchBrowserCoordinator().isExpectingSwitchBrowserResume()) {
+            resumeSwitchBrowser(getExtras());
+        }
+    }
+
+    /**
+     * Get the extras from the activity intent.
+     *
+     * @return Bundle with the extras
+     */
+    @NonNull
+    private Bundle getExtras() {
+        final Activity activity = getActivity();
+        if (activity == null) {
+            return Bundle.EMPTY;
+        }
+        final Intent intent = activity.getIntent();
+        if (intent == null) {
+            return Bundle.EMPTY;
+        }
+        final Bundle extras =  intent.getExtras();
+        return extras == null ? Bundle.EMPTY : extras;
+    }
+
+    /**
+     * Resume the switch browser protocol flow.
+     *
+     * @param extras Bundle with the data to resume the switch browser protocol flow.
+     */
+    private void resumeSwitchBrowser(@NonNull final Bundle extras) {
+        final String methodTag = TAG + ":resumeSwitchBrowser";
+        try {
+            Logger.info(methodTag, "Resuming switch browser flow");
+            getSwitchBrowserCoordinator().processSwitchBrowserResume(
+                    mAuthorizationRequestUrl,
+                    extras,
+                    (switchBrowserResumeUri, switchBrowserResumeHeaders) -> {
+                        launchWebView(switchBrowserResumeUri.toString(), switchBrowserResumeHeaders);
+                        return null;
+                    }
+            );
+        } catch (final ClientException e) {
+            Logger.error(methodTag, "Error processing switch browser resume", e);
+            sendResult(RawAuthorizationResult.fromException(e));
+            finish();
         }
     }
 
@@ -183,8 +235,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 new OnPageLoadedCallback() {
                     @Override
                     public void onPageLoaded(final String url) {
-                        // Reset the camera permission request when a new page is loaded.
-                        mCameraPermissionRequest = null;
                         final String[] javascriptToExecute = new String[1];
                         mProgressBar.setVisibility(View.INVISIBLE);
                         try {
@@ -198,20 +248,15 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         // Inject the javascript string from testing. This should only be evaluated if we haven't sent
                         // an auth result already.
                         if (!mAuthResultSent && !StringExtensions.isNullOrBlank(javascriptToExecute[0])) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                mWebView.evaluateJavascript(javascriptToExecute[0], null);
-                            } else {
-                                // On earlier versions of Android, javascript has to be loaded with a custom scheme.
-                                // In these cases, Android will helpfully unescape any octects it finds. Unfortunately,
-                                // our javascript may contain the '%' character, so we escape it again, to undo that.
-                                mWebView.loadUrl("javascript:" + javascriptToExecute[0].replace("%", "%25"));
-                            }
+                            mWebView.evaluateJavascript(javascriptToExecute[0], null);
                         }
                     }
                 },
-                mRedirectUri);
+                mRedirectUri,
+                getSwitchBrowserCoordinator().getSwitchBrowserRequestHandler()
+        );
         setUpWebView(view, mAADWebViewClient);
-        launchWebView();
+        launchWebView(mAuthorizationRequestUrl, mRequestHeaders);
         return view;
     }
 
@@ -267,39 +312,16 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
         mWebView.setWebChromeClient(new WebChromeClient() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
-                Logger.info(methodTag,
-                        "Permission requested from:" +request.getOrigin() +
-                                " for resources:" + Arrays.toString(request.getResources())
-                );
-                // We can only grant or deny permissions for video capture/camera.
-                // To avoid unintentionally granting requests for not defined permissions
-                // we check if the request is for camera.
-                if (!CameraPermissionRequest.isValidRequest(request)) {
-                    Logger.warn(methodTag, "Permission request is not for camera.");
-                    request.deny();
-                    return;
-                }
-                // There is a issue in ESTS UX where it sends multiple camera permission requests.
-                // So, if there is already a camera permission request in progress we handle it here.
-                if (mCameraPermissionRequest != null) {
-                    Logger.info(methodTag, "Repeated request, granted? " + mCameraPermissionRequest.isGranted());
-                    handleRepeatedCameraRequests(request);
-                    return;
-                }
-                Logger.info(methodTag, "New camera request.");
-                mCameraPermissionRequest = new CameraPermissionRequest(request);
-                // If the OS level permission was granted previously,
-                // we show the rationale to confirm the consent with the current user.
-                // Otherwise, show the system prompt.
-                if (isAppCameraPermissionGranted()) {
-                    Logger.info(methodTag, "Camera permission already granted.");
-                    showCameraRationale();
-                } else {
-                    requestCameraPermission();
-                }
+                requireActivity().runOnUiThread(() -> {
+                    // Log the permission request
+                    Logger.info(methodTag,
+                            "Permission requested from:" +request.getOrigin() +
+                                    " for resources:" + Arrays.toString(request.getResources())
+                    );
+                    mCameraPermissionRequestHandler.handle(request, requireContext());
+                });
             }
 
             @Override
@@ -315,85 +337,20 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     }
 
     /**
-     * Handles repeated camera permission requests.
-     * if the camera permission has been granted, it will grant the permission to the request.
-     * Otherwise, it will deny the permission to the request.
-     * <p>
-     * Note: This method is only available on API level 21 or higher.
-     *
-     * @param request The permission request.
-     */
-    private void handleRepeatedCameraRequests(@NonNull final PermissionRequest request) {
-        final CameraPermissionRequest duplicatedRequest = new CameraPermissionRequest(request);
-        if (mCameraPermissionRequest.isGranted()) {
-            duplicatedRequest.grant();
-        } else {
-            duplicatedRequest.deny();
-        }
-    }
-
-    /**
-     * Determines whatever if the camera permission has been granted.
-     *
-     * @return true if the camera permission has been granted, false otherwise.
-     */
-    private boolean isAppCameraPermissionGranted() {
-        return ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
-                == PackageManager.PERMISSION_GRANTED;
-    }
-
-    private final ActivityResultLauncher<String> cameraRequestActivity = registerForActivityResult(
-            new ActivityResultContracts.RequestPermission(),
-            permissionGranted   -> {
-                Logger.info(TAG, "Camera permission granted: " + permissionGranted);
-                if (permissionGranted) {
-                    mCameraPermissionRequest.grant();
-                }
-                else {
-                    mCameraPermissionRequest.deny();
-                }
-            }
-    );
-
-    /**
-     * Launches the camera permission request for the app.
-     * Note: if the permission was already granted or denied,
-     * the user will not be prompted and it will go directly to the callback.
-     * Using the current state of the permission.
-     *
-     */
-    private void requestCameraPermission() {
-        cameraRequestActivity.launch(Manifest.permission.CAMERA);
-    }
-
-    /**
-     * Shows a dialog to the user explaining why the camera permission is required.
-     * If the user accepts the dialog, the camera permission request will be launched.
-     * If the user denies the dialog, the camera permission request will be denied.
-     */
-    private void showCameraRationale() {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setMessage(R.string.qr_code_rationale_message)
-                .setTitle(R.string.qr_code_rationale_header)
-                .setCancelable(false)
-                .setPositiveButton(R.string.qr_code_rationale_allow, (dialog, id) -> requestCameraPermission())
-                .setNegativeButton(R.string.qr_code_rationale_block, (dialog, id) -> mCameraPermissionRequest.deny());
-        builder.show();
-    }
-
-    /**
      * Loads starting authorization request url into WebView.
      */
-    private void launchWebView() {
+    private void launchWebView(@NonNull final String authorizationRequestUrl,
+                               @NonNull final HashMap<String, String> requestHeaders) {
         final String methodTag = TAG + ":launchWebView";
         mWebView.post(new Runnable() {
             @Override
             public void run() {
                 Logger.info(methodTag, "Launching embedded WebView for acquiring auth code.");
-                Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
+                Logger.infoPII(methodTag, "The start url is " + authorizationRequestUrl);
 
-                mAADWebViewClient.setRequestHeaders(mRequestHeaders);
-                mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
+                mAADWebViewClient.setRequestHeaders(requestHeaders);
+                mAADWebViewClient.setRequestUrl(authorizationRequestUrl);
+                mWebView.loadUrl(authorizationRequestUrl, requestHeaders);
 
                 // The first page load could take time, and we do not want to just show a blank page.
                 // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.
@@ -493,5 +450,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             mPkeyAuthStatus = status;
             Logger.info(methodTag, null, "setPKeyAuthStatus:" + status);
         }
+    }
+
+    private SwitchBrowserProtocolCoordinator getSwitchBrowserCoordinator() {
+        if (mSwitchBrowserProtocolCoordinator == null) {
+            final SpanContext spanContext = requireActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) requireActivity()).getSpanContext() : null;
+            mSwitchBrowserProtocolCoordinator = new SwitchBrowserProtocolCoordinator(requireActivity(), spanContext);
+        }
+        return mSwitchBrowserProtocolCoordinator;
     }
 }

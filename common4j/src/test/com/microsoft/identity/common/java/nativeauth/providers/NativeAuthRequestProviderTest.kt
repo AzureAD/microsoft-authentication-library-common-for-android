@@ -37,6 +37,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.nativeauth.providers.requests.NativeAuthRequest.Companion.toJsonString
+import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInTokenRequest
 import com.microsoft.identity.common.nativeauth.ApiConstants
 import io.mockk.every
 import io.mockk.mockk
@@ -64,6 +65,8 @@ class NativeAuthRequestProviderTest {
     private val continuationToken = "uY29tL2F1dGhlbnRpY"
     private val challengeId = "902rnwfn3"
     private val correlationId = "jsdfo4nslkjsrg"
+    private val challengeTarget = "mail@contoso.com"
+    private val challengeChannel = "email"
     private val grantType = NativeAuthConstants.GrantType.OOB
 
     private val mockConfig = mockk<NativeAuthOAuth2Configuration> {
@@ -79,6 +82,9 @@ class NativeAuthRequestProviderTest {
         every { getResetPasswordContinueEndpoint() } returns ApiConstants.MockApi.ssprContinueRequestUrl
         every { getResetPasswordSubmitEndpoint() } returns ApiConstants.MockApi.ssprSubmitRequestUrl
         every { getResetPasswordPollCompletionEndpoint() } returns ApiConstants.MockApi.ssprPollCompletionRequestUrl
+        every { getJITIntrospectEndpoint() } returns ApiConstants.MockApi.jitIntrospectRequestUrl
+        every { getJITChallengeEndpoint() } returns ApiConstants.MockApi.jitChallengeRequestUrl
+        every { getJITContinueEndpoint() } returns ApiConstants.MockApi.jitContinueRequestUrl
         every { challengeType } returns this@NativeAuthRequestProviderTest.challengeType
         every { clientId } returns this@NativeAuthRequestProviderTest.clientId
         every { useMockApiForNativeAuth } returns true
@@ -750,8 +756,7 @@ class NativeAuthRequestProviderTest {
         )
     }
 
-    @Test(expected = ClientException::class)
-    fun testSignInTokenWithEmptyUsernameShouldThrowException() {
+    fun testSignInTokenWithEmptyUsernameShouldNotThrowException() {
         val commandParameters = SignInWithContinuationTokenCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .continuationToken(continuationToken)
@@ -759,9 +764,11 @@ class NativeAuthRequestProviderTest {
             .correlationId(correlationId)
             .build()
 
-        nativeAuthRequestProvider.createContinuationTokenTokenRequest(
+        val result = nativeAuthRequestProvider.createContinuationTokenTokenRequest(
             commandParameters = commandParameters
         )
+        assertEquals(username, result.parameters.username)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
     }
 
     @Test(expected = ClientException::class)
@@ -776,6 +783,71 @@ class NativeAuthRequestProviderTest {
         nativeAuthRequestProvider.createOOBTokenRequest(
             commandParameters = commandParameters
         )
+    }
+
+    @Test
+    fun testSignInTokenOOBShouldContainsCorrectParams() {
+        val commandParameters = SignInSubmitCodeCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .continuationToken(continuationToken)
+            .correlationId(correlationId)
+            .code("code")
+            .claimsRequestJson("claims")
+            .build()
+
+        val request = nativeAuthRequestProvider.createOOBTokenRequest(
+            commandParameters = commandParameters
+        )
+        assertEquals(request.parameters.oob, commandParameters.code)
+        assertEquals(request.parameters.claimsRequestJson, commandParameters.claimsRequestJson)
+        assertEquals(request.parameters.continuationToken, commandParameters.continuationToken)
+        assertEquals(request.parameters.challengeType, mockConfig.challengeType)
+        assertNull(request.parameters.scope)
+    }
+
+    @Test
+    fun testSignInTokenPasswordShouldContainsCorrectParams() {
+        val commandParameters = SignInSubmitPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .continuationToken(continuationToken)
+            .correlationId(correlationId)
+            .password("pwd".toCharArray())
+            .claimsRequestJson("claims")
+            .build()
+
+        val request = nativeAuthRequestProvider.createPasswordTokenRequest(
+            commandParameters
+        )
+        assertEquals(request.parameters.password, commandParameters.password)
+        assertEquals(request.parameters.claimsRequestJson, commandParameters.claimsRequestJson)
+        assertEquals(request.parameters.continuationToken, commandParameters.continuationToken)
+        assertEquals(request.parameters.challengeType, mockConfig.challengeType)
+        assertNull(request.parameters.scope)
+    }
+
+    @Test
+    fun testSignInTokenContinuationShouldContainsCorrectParams() {
+        val scopes = arrayListOf("OOB", "PASSWORD")
+        val headers = mapOf("key" to "value")
+        val claims = "claims"
+        val request = SignInTokenRequest.createContinuationTokenRequest(
+            continuationToken,
+            clientId,
+            username,
+            scopes,
+            challengeType,
+            ApiConstants.MockApi.signInTokenRequestUrl.toString(),
+            headers,
+            claimsRequestJson = claims
+        )
+        assertNull(request.parameters.password)
+        assertEquals(request.parameters.claimsRequestJson, claims)
+        assertEquals(request.parameters.scope, "OOB PASSWORD")
+        assertEquals(request.parameters.continuationToken, continuationToken)
+        assertEquals(request.parameters.challengeType, challengeType)
+        assertEquals(request.parameters.username, username)
+        assertEquals(request.parameters.clientId, clientId)
+        assertEquals(request.headers, headers)
     }
 
     @Test(expected = ClientException::class)
@@ -1187,4 +1259,235 @@ class NativeAuthRequestProviderTest {
         assertEquals(ApiConstants.MockApi.ssprPollCompletionRequestUrl, result.requestUrl)
         assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
     }
+
+    // region JIT tests
+
+    @Test(expected = ClientException::class)
+    fun testJITIntrospectWithEmptyContinuationTokenShouldThrowException() {
+        val continuationToken = ""
+
+        nativeAuthRequestProvider.createJITIntrospectRequest(
+            continuationToken,
+            correlationId
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testJITIntrospectWithEmptyClientIdShouldThrowException() {
+        every { mockConfig.clientId } returns emptyString
+
+        nativeAuthRequestProvider.createJITIntrospectRequest(
+            continuationToken,
+            correlationId
+        )
+    }
+
+    @Test
+    fun testJITIntrospectWithUnsetCorrelationIdShouldNotHaveHeader() {
+        val correlationId = "UNSET"
+
+        val result = nativeAuthRequestProvider.createJITIntrospectRequest(
+            continuationToken,
+            correlationId
+        )
+
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
+    }
+
+    @Test
+    fun testJITIntrospectRequestSuccess() {
+        val result = nativeAuthRequestProvider.createJITIntrospectRequest(
+            continuationToken,
+            correlationId
+        )
+
+        assertEquals(clientId, result.parameters.clientId)
+        assertEquals(continuationToken, result.parameters.continuationToken)
+        assertEquals(ApiConstants.MockApi.jitIntrospectRequestUrl, result.requestUrl)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
+    }
+
+    @Test(expected = ClientException::class)
+    fun testJITChallengeWithEmptyContinuationTokenShouldThrowException() {
+        val continuationToken = ""
+
+        nativeAuthRequestProvider.createJITChallengeRequest(
+            continuationToken =  continuationToken,
+            challengeType = challengeType,
+            challengeTarget = challengeTarget,
+            challengeChannel =  challengeChannel,
+            correlationId = correlationId
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testJITChallengeWithEmptyChallengeTypeShouldThrowException() {
+        val challengeType = ""
+
+        nativeAuthRequestProvider.createJITChallengeRequest(
+            continuationToken =  continuationToken,
+            challengeType = challengeType,
+            challengeTarget = challengeTarget,
+            challengeChannel =  challengeChannel,
+            correlationId = correlationId
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testJITChallengeWithEmptyChallengeTargetShouldThrowException() {
+        val challengeTarget = ""
+
+        nativeAuthRequestProvider.createJITChallengeRequest(
+            continuationToken =  continuationToken,
+            challengeType = challengeType,
+            challengeTarget = challengeTarget,
+            challengeChannel =  challengeChannel,
+            correlationId = correlationId
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testJITChallengeWithEmptyChallengeChannelShouldThrowException() {
+        val challengeChannel = ""
+
+        nativeAuthRequestProvider.createJITChallengeRequest(
+            continuationToken =  continuationToken,
+            challengeType = challengeType,
+            challengeTarget = challengeTarget,
+            challengeChannel =  challengeChannel,
+            correlationId = correlationId
+        )
+    }
+
+    @Test
+    fun testJITChallengeWithUnsetCorrelationIdShouldNotHaveHeader() {
+        val correlationId = "UNSET"
+
+        val result = nativeAuthRequestProvider.createJITChallengeRequest(
+            continuationToken =  continuationToken,
+            challengeType = challengeType,
+            challengeTarget = challengeTarget,
+            challengeChannel =  challengeChannel,
+            correlationId = correlationId
+        )
+
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
+    }
+
+    @Test(expected = ClientException::class)
+    fun testJITChallengeWithEmptyClientIdShouldThrowException() {
+        every { mockConfig.clientId } returns emptyString
+
+        nativeAuthRequestProvider.createJITChallengeRequest(
+            continuationToken =  continuationToken,
+            challengeType = challengeType,
+            challengeTarget = challengeTarget,
+            challengeChannel =  challengeChannel,
+            correlationId = correlationId
+        )
+    }
+
+    @Test
+    fun testJITChallengeRequestSuccess() {
+        val result = nativeAuthRequestProvider.createJITChallengeRequest(
+            continuationToken =  continuationToken,
+            challengeType = challengeType,
+            challengeTarget = challengeTarget,
+            challengeChannel =  challengeChannel,
+            correlationId = correlationId
+        )
+
+        assertEquals(clientId, result.parameters.clientId)
+        assertEquals(continuationToken, result.parameters.continuationToken)
+        assertEquals(challengeType, result.parameters.challengeType)
+        assertEquals(challengeTarget, result.parameters.challengeTarget)
+        assertEquals(challengeChannel, result.parameters.challengeChannel)
+        assertEquals(ApiConstants.MockApi.jitChallengeRequestUrl, result.requestUrl)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
+    }
+
+    @Test(expected = ClientException::class)
+    fun testJITContinueWithEmptyContinuationTokenShouldThrowException() {
+        val continuationToken = ""
+
+        nativeAuthRequestProvider.createJITContinueRequest(
+            continuationToken =  continuationToken,
+            grantType = grantType,
+            code = oobCode,
+            correlationId = correlationId
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testJITContinueWithEmptyGrantTypeShouldThrowException() {
+        val grantType = ""
+
+        nativeAuthRequestProvider.createJITContinueRequest(
+            continuationToken =  continuationToken,
+            grantType = grantType,
+            code = oobCode,
+            correlationId = correlationId
+        )
+    }
+
+    @Test
+    fun testJITContinueWithContinuationTokenGrantType() {
+        val grantType = NativeAuthConstants.GrantType.CONTINUATION_TOKEN
+
+        val result = nativeAuthRequestProvider.createJITContinueRequest(
+            continuationToken =  continuationToken,
+            grantType = grantType,
+            code = oobCode,
+            correlationId = correlationId
+        )
+        assertEquals(clientId, result.parameters.clientId)
+        assertEquals(continuationToken, result.parameters.continuationToken)
+        assertEquals(grantType, result.parameters.grantType)
+        assertEquals(oobCode, result.parameters.oob)
+    }
+
+    @Test
+    fun testJITContinueWithUnsetCorrelationIdShouldNotHaveHeader() {
+        val correlationId = "UNSET"
+
+        val result = nativeAuthRequestProvider.createJITContinueRequest(
+            continuationToken =  continuationToken,
+            grantType = grantType,
+            code = oobCode,
+            correlationId = correlationId
+        )
+
+        assertNull(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
+    }
+
+    @Test(expected = ClientException::class)
+    fun testJITContinueWithEmptyClientIdShouldThrowException() {
+        every { mockConfig.clientId } returns emptyString
+
+        nativeAuthRequestProvider.createJITContinueRequest(
+            continuationToken =  continuationToken,
+            grantType = grantType,
+            code = oobCode,
+            correlationId = correlationId
+        )
+    }
+
+    @Test
+    fun testJITContinueRequestSuccess() {
+        val result = nativeAuthRequestProvider.createJITContinueRequest(
+            continuationToken =  continuationToken,
+            grantType = grantType,
+            code = oobCode,
+            correlationId = correlationId
+        )
+
+        assertEquals(clientId, result.parameters.clientId)
+        assertEquals(continuationToken, result.parameters.continuationToken)
+        assertEquals(grantType, result.parameters.grantType)
+        assertEquals(oobCode, result.parameters.oob)
+        assertEquals(ApiConstants.MockApi.jitContinueRequestUrl, result.requestUrl)
+        assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
+    }
+
+    //endregion
 }

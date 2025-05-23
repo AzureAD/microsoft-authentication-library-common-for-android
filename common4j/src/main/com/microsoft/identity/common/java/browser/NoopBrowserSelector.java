@@ -20,15 +20,31 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.msafederation
+package com.microsoft.identity.common.java.browser;
+
+import com.microsoft.identity.common.java.ui.BrowserDescriptor;
+
+import java.util.List;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 /**
- * Interface for Federated Credential Callback. Helps calling sign methods
- * async from java.
+ * A no-op implementation of {@link IBrowserSelector}.
  */
-interface IFederatedCredentialCallback<R : FederatedCredential> {
+public class NoopBrowserSelector implements IBrowserSelector {
+
     /**
-     * Called when the sign in is successful.
+     * Selects a valid installed browser from the list of safe browsers.
+     * If no browser is present in the list of safe browser, null is returned.
+     *
+     * @param browserSafeList            The list of browsers to choose from.
+     * @param preferredBrowserDescriptor The preferred browser descriptor.
+     * @return The selected browser.
      */
-    fun onSuccess(credential: R)
+    @Nullable
+    @Override
+    public Browser selectBrowser(@NonNull List<BrowserDescriptor> browserSafeList, @Nullable BrowserDescriptor preferredBrowserDescriptor) {
+        return null;
+    }
 }

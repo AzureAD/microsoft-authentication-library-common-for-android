@@ -30,7 +30,9 @@ import com.microsoft.identity.labapi.utilities.constants.UserType;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 import com.microsoft.identity.labapi.utilities.rules.RetryTestRule;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -43,24 +45,33 @@ public class LabClientTest {
 
     // Give some time for basic user to finish creation to enable rest of test.
     private final long POST_TEMP_USER_CREATION_WAIT = 15000;
+    private LabClient mLabClient;
 
     @Rule
     public RetryTestRule retryRule = new RetryTestRule(3);
 
-    @Test
-    public void canFetchCloudAccount() {
+    @Before
+    public void setup() {
         final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
                 TestBuildConfig.LAB_CLIENT_SECRET
         );
 
-        final LabClient labClient = new LabClient(authenticationClient);
+        mLabClient = new LabClient(authenticationClient);
+    }
 
+    @After
+    public void cleanup() {
+        mLabClient = null;
+    }
+
+    @Test
+    public void canFetchCloudAccount() {
         final LabQuery query = LabQuery.builder()
                 .userType(UserType.CLOUD)
                 .build();
 
         try {
-            final ILabAccount labAccount = labClient.getLabAccount(query);
+            final ILabAccount labAccount = mLabClient.getLabAccount(query);
             Assert.assertNotNull(labAccount);
             Assert.assertNotNull(labAccount.getUsername());
             Assert.assertNotNull(labAccount.getPassword());
@@ -74,18 +85,12 @@ public class LabClientTest {
 
     @Test
     public void canFetchMSAAccount() {
-        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
-                TestBuildConfig.LAB_CLIENT_SECRET
-        );
-
-        final LabClient labClient = new LabClient(authenticationClient);
-
         final LabQuery query = LabQuery.builder()
                 .userType(UserType.MSA)
                 .build();
 
         try {
-            final ILabAccount labAccount = labClient.getLabAccount(query);
+            final ILabAccount labAccount = mLabClient.getLabAccount(query);
             Assert.assertNotNull(labAccount);
             Assert.assertNotNull(labAccount.getUsername());
             Assert.assertNotNull(labAccount.getPassword());
@@ -99,18 +104,12 @@ public class LabClientTest {
 
     @Test
     public void canFetchGuestAccount() {
-        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
-                TestBuildConfig.LAB_CLIENT_SECRET
-        );
-
-        final LabClient labClient = new LabClient(authenticationClient);
-
         final LabQuery query = LabQuery.builder()
                 .userType(UserType.GUEST)
                 .build();
 
         try {
-            final ILabAccount labAccount = labClient.getLabAccount(query);
+            final ILabAccount labAccount = mLabClient.getLabAccount(query);
             Assert.assertNotNull(labAccount);
             Assert.assertNotNull(labAccount.getUsername());
             Assert.assertNotNull(labAccount.getPassword());
@@ -124,18 +123,12 @@ public class LabClientTest {
 
     @Test
     public void canFetchFederatedAccount() {
-        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
-                TestBuildConfig.LAB_CLIENT_SECRET
-        );
-
-        final LabClient labClient = new LabClient(authenticationClient);
-
         final LabQuery query = LabQuery.builder()
                 .userType(UserType.FEDERATED)
                 .build();
 
         try {
-            final ILabAccount labAccount = labClient.getLabAccount(query);
+            final ILabAccount labAccount = mLabClient.getLabAccount(query);
             Assert.assertNotNull(labAccount);
             Assert.assertNotNull(labAccount.getUsername());
             Assert.assertNotNull(labAccount.getPassword());
@@ -149,14 +142,8 @@ public class LabClientTest {
 
     @Test
     public void canCreateBasicTempUser() {
-        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
-                TestBuildConfig.LAB_CLIENT_SECRET
-        );
-
-        final LabClient labClient = new LabClient(authenticationClient);
-
         try {
-            final ILabAccount labAccount = labClient.createTempAccount(TempUserType.BASIC);
+            final ILabAccount labAccount = mLabClient.createTempAccount(TempUserType.BASIC);
             Assert.assertNotNull(labAccount);
             Assert.assertNotNull(labAccount.getUsername());
             Assert.assertNotNull(labAccount.getPassword());
@@ -170,14 +157,8 @@ public class LabClientTest {
 
     @Test
     public void canCreateMAMCATempUser() {
-        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
-                TestBuildConfig.LAB_CLIENT_SECRET
-        );
-
-        final LabClient labClient = new LabClient(authenticationClient);
-
         try {
-            final ILabAccount labAccount = labClient.createTempAccount(TempUserType.MAM_CA);
+            final ILabAccount labAccount = mLabClient.createTempAccount(TempUserType.MAM_CA);
             Assert.assertNotNull(labAccount);
             Assert.assertNotNull(labAccount.getUsername());
             Assert.assertNotNull(labAccount.getPassword());
@@ -190,16 +171,10 @@ public class LabClientTest {
 
     @Test
     public void canResetPassword() {
-        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
-                TestBuildConfig.LAB_CLIENT_SECRET
-        );
-
-        final LabClient labClient = new LabClient(authenticationClient);
-
         try {
-            final ILabAccount labAccount = labClient.createTempAccount(TempUserType.BASIC);
+            final ILabAccount labAccount = mLabClient.createTempAccount(TempUserType.BASIC);
             Thread.sleep(POST_TEMP_USER_CREATION_WAIT);
-            Assert.assertTrue(labClient.resetPassword(labAccount.getUsername(), 2));
+            Assert.assertTrue(mLabClient.resetPassword(labAccount.getUsername(), 2));
         } catch (final LabApiException | InterruptedException e) {
             throw new AssertionError(e);
         }
@@ -207,16 +182,10 @@ public class LabClientTest {
 
     @Test
     public void canEnablePolicy() {
-        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
-                TestBuildConfig.LAB_CLIENT_SECRET
-        );
-
-        final LabClient labClient = new LabClient(authenticationClient);
-
         try {
-            final ILabAccount labAccount = labClient.createTempAccount(TempUserType.BASIC);
+            final ILabAccount labAccount = mLabClient.createTempAccount(TempUserType.BASIC);
             Thread.sleep(POST_TEMP_USER_CREATION_WAIT);
-            Assert.assertTrue(labClient.enablePolicy(labAccount.getUsername(), ProtectionPolicy.MAM_CA));
+            Assert.assertTrue(mLabClient.enablePolicy(labAccount.getUsername(), ProtectionPolicy.MAM_CA));
         } catch (final LabApiException | InterruptedException e) {
             throw new AssertionError(e);
         }
@@ -224,16 +193,10 @@ public class LabClientTest {
 
     @Test
     public void canDisablePolicy() {
-        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
-                TestBuildConfig.LAB_CLIENT_SECRET
-        );
-
-        final LabClient labClient = new LabClient(authenticationClient);
-
         try {
-            final ILabAccount labAccount = labClient.createTempAccount(TempUserType.MAM_CA);
+            final ILabAccount labAccount = mLabClient.createTempAccount(TempUserType.MAM_CA);
             Thread.sleep(POST_TEMP_USER_CREATION_WAIT);
-            Assert.assertTrue(labClient.disablePolicy(labAccount.getUsername(), ProtectionPolicy.MAM_CA));
+            Assert.assertTrue(mLabClient.disablePolicy(labAccount.getUsername(), ProtectionPolicy.MAM_CA));
         } catch (final LabApiException | InterruptedException e){
             throw new AssertionError(e);
         }

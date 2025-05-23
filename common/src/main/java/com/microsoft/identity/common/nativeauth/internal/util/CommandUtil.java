@@ -22,7 +22,16 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.nativeauth.internal.util;
 
+import androidx.annotation.NonNull;
+
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseNativeAuthCommandParameters;
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITContinueCommandParameters;
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITIntrospectCommandParameters;
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFASubmitChallengeCommandParameters;
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseSignInTokenCommandParameters;
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters;
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters;
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters;
@@ -138,7 +147,114 @@ public class CommandUtil {
                         .password(parameters.getPassword())
                         .scopes(parameters.getScopes())
                         .correlationId(correlationId)
+                        .claimsRequestJson(parameters.getClaimsRequestJson())
                         .challengeType(parameters.getChallengeType())
+                        .build();
+
+        return commandParameters;
+    }
+
+    /**
+     * Create a [SignInWithContinuationTokenCommandParameters] object with a continuation token.
+     * @param parameters input command parameter
+     * @param correlationId correlationId to be used in the request
+     * @param continuationToken continuation token to be added
+     * @return [SignInWithContinuationTokenCommandParameters] object with scopes
+     */
+    public static SignInWithContinuationTokenCommandParameters createSignInWithContinuationTokenCommandParameters(
+            BaseSignInTokenCommandParameters parameters,
+            String correlationId,
+            String continuationToken
+    ) {
+        final SignInWithContinuationTokenCommandParameters commandParameters =
+                SignInWithContinuationTokenCommandParameters.builder()
+                        .authenticationScheme(parameters.getAuthenticationScheme())
+                        .platformComponents(parameters.getPlatformComponents())
+                        .applicationName(parameters.getApplicationName())
+                        .applicationVersion(parameters.getApplicationVersion())
+                        .clientId(parameters.getClientId())
+                        .isSharedDevice(parameters.isSharedDevice())
+                        .redirectUri(parameters.getRedirectUri())
+                        .oAuth2TokenCache(parameters.getOAuth2TokenCache())
+                        .requiredBrokerProtocolVersion(parameters.getRequiredBrokerProtocolVersion())
+                        .sdkType(SdkType.MSAL)
+                        .sdkVersion(parameters.getSdkVersion())
+                        .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
+                        .authority(parameters.getAuthority())
+                        .continuationToken(continuationToken)
+                        .correlationId(correlationId)
+                        .challengeType(parameters.getChallengeType())
+                        .build();
+
+        return commandParameters;
+    }
+
+    /**
+     * Create a [JITIntrospectCommandParameters] object from [BaseSignInTokenCommandParameters] object.
+     * @param parameters input command parameter
+     * @param correlationId correlationId to be used in the request
+     * @param continuationToken continuation token to be added
+     * @return [JITIntrospectCommandParameters] object with continuation token
+     */
+    public static JITIntrospectCommandParameters createJITIntrospectCommandParameters(
+            BaseSignInTokenCommandParameters parameters,
+            String correlationId,
+            String continuationToken
+    ) {
+        final JITIntrospectCommandParameters commandParameters =
+                JITIntrospectCommandParameters.builder()
+                        .platformComponents(parameters.getPlatformComponents())
+                        .applicationName(parameters.getApplicationName())
+                        .applicationVersion(parameters.getApplicationVersion())
+                        .clientId(parameters.getClientId())
+                        .isSharedDevice(parameters.isSharedDevice())
+                        .redirectUri(parameters.getRedirectUri())
+                        .oAuth2TokenCache(parameters.getOAuth2TokenCache())
+                        .requiredBrokerProtocolVersion(parameters.getRequiredBrokerProtocolVersion())
+                        .sdkType(SdkType.MSAL)
+                        .sdkVersion(parameters.getSdkVersion())
+                        .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
+                        .authority(parameters.getAuthority())
+                        .continuationToken(continuationToken)
+                        .correlationId(correlationId)
+                        .challengeType(parameters.getChallengeType())
+                        .build();
+
+        return commandParameters;
+    }
+
+    /**
+     * Create a [JITContinueCommandParameters] object from [BaseSignInTokenCommandParameters] object.
+     * @param parameters input command parameter
+     * @param correlationId correlationId to be used in the request
+     * @param continuationToken continuation token to be added
+     * @return [JITIntrospectCommandParameters] object with continuation token
+     */
+    public static JITContinueCommandParameters createJITContinueCommandParameters(
+            BaseSignInTokenCommandParameters parameters,
+            String correlationId,
+            String grantType,
+            String continuationToken
+    ) {
+        final JITContinueCommandParameters commandParameters =
+                JITContinueCommandParameters.builder()
+                        .authenticationScheme(parameters.getAuthenticationScheme())
+                        .platformComponents(parameters.getPlatformComponents())
+                        .applicationName(parameters.getApplicationName())
+                        .applicationVersion(parameters.getApplicationVersion())
+                        .clientId(parameters.getClientId())
+                        .isSharedDevice(parameters.isSharedDevice())
+                        .redirectUri(parameters.getRedirectUri())
+                        .oAuth2TokenCache(parameters.getOAuth2TokenCache())
+                        .requiredBrokerProtocolVersion(parameters.getRequiredBrokerProtocolVersion())
+                        .sdkType(SdkType.MSAL)
+                        .sdkVersion(parameters.getSdkVersion())
+                        .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
+                        .authority(parameters.getAuthority())
+                        .continuationToken(continuationToken)
+                        .correlationId(correlationId)
+                        .challengeType(parameters.getChallengeType())
+                        .grantType(grantType)
                         .build();
 
         return commandParameters;
@@ -189,6 +305,7 @@ public class CommandUtil {
                         .scopes(parameters.getScopes())
                         .correlationId(parameters.getCorrelationId())
                         .challengeType(parameters.getChallengeType())
+                        .claimsRequestJson(parameters.claimsRequestJson)
                         .build();
 
         return commandParameters;

@@ -33,15 +33,22 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlat
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 
+import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleApi;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential;
+import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
@@ -55,35 +62,101 @@ import lombok.SneakyThrows;
 @RunWith(RobolectricTestRunner.class)
 public class AuthorizationActivityFactoryTest {
 
+    private final Context context = RuntimeEnvironment.getApplication();
+    private final Intent authIntent = new Intent();
+    private final String requestUrl = "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?client_id=123&response_type=code&redirect_uri=msauth%3A%2F%2Fexample.com%2Fredirect";
+    private final String redirectUri = "msauth://example.com/redirect";
+    private final HashMap<String, String> requestHeaders = new HashMap<>();
+    {
+        requestHeaders.put("header1", "value1");
+    }
+    private final AuthorizationAgent authorizationAgent = AuthorizationAgent.WEBVIEW;
+    private final boolean webViewZoomEnabled = true;
+    private final boolean webViewZoomControlsEnabled = true;
+    private final String sourceLibraryName = "TestLibrary";
+    private final String sourceLibraryVersion = "1.0.0";
+    final String idToken = "idToken";
+    private final String clientId = "clientId";
+    private final AuthorizationActivityParameters authorizationActivityParameters = new AuthorizationActivityParameters(
+            context,
+            authIntent,
+            requestUrl,
+            redirectUri,
+            requestHeaders,
+            authorizationAgent,
+            webViewZoomEnabled,
+            webViewZoomControlsEnabled,
+            sourceLibraryName,
+            sourceLibraryVersion
+    );
+
     @SneakyThrows
     @Test
     public void testGetAuthorizationActivityIntent() {
-        // Arrange
-        final Context context = RuntimeEnvironment.getApplication();
-        final Intent authIntent = new Intent();
-        final String requestUrl = "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?client_id=123&response_type=code&redirect_uri=msauth%3A%2F%2Fexample.com%2Fredirect";
-        final String redirectUri = "msauth://example.com/redirect";
-        final HashMap<String, String> requestHeaders = new HashMap<>();
-        requestHeaders.put("header1", "value1");
-        final AuthorizationAgent authorizationAgent = AuthorizationAgent.WEBVIEW;
-        final boolean webViewZoomEnabled = true;
-        final boolean webViewZoomControlsEnabled = true;
-        final String sourceLibraryName = "TestLibrary";
-        final String sourceLibraryVersion = "1.0.0";
-        final String idToken = "idToken";
-        final SignInWithGoogleCredential signInWithGoogleCredential = new SignInWithGoogleCredential(idToken);
-
         final Intent resultIntent = AuthorizationActivityFactory.getAuthorizationActivityIntent(
-                context,
-                authIntent,
-                requestUrl,
-                redirectUri,
-                requestHeaders,
-                authorizationAgent,
-                webViewZoomEnabled,
-                webViewZoomControlsEnabled,
-                sourceLibraryName,
-                sourceLibraryVersion,
+                authorizationActivityParameters
+        );
+        assertEquals(AuthorizationActivity.class.getName(), resultIntent.getComponent().getClassName());
+        assertEquals(authIntent, resultIntent.getParcelableExtra(AUTH_INTENT));
+        assertEquals(redirectUri, resultIntent.getStringExtra(REDIRECT_URI));
+        assertEquals(authorizationAgent, resultIntent.getSerializableExtra(AUTHORIZATION_AGENT));
+        assertEquals(webViewZoomEnabled, resultIntent.getBooleanExtra(WEB_VIEW_ZOOM_ENABLED, false));
+        assertEquals(webViewZoomControlsEnabled, resultIntent.getBooleanExtra(WEB_VIEW_ZOOM_CONTROLS_ENABLED, false));
+        assertEquals(sourceLibraryName, resultIntent.getStringExtra(PRODUCT));
+        assertEquals(sourceLibraryVersion, resultIntent.getStringExtra(VERSION));
+        assertEquals(requestUrl,  resultIntent.getStringExtra(REQUEST_URL));
+
+        final HashMap<String, String> receivedHeaders = (HashMap<String, String>) resultIntent.getSerializableExtra(REQUEST_HEADERS);
+        assertNotNull(receivedHeaders);
+        final String idTokenHeaderValue = receivedHeaders.get("header1");
+        assertNotNull(idTokenHeaderValue);
+        assertEquals("value1", idTokenHeaderValue);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testSignInWithGoogleAndGetAuthorizationActivityIntent() {
+        // Arrange
+        final Activity mockActivity = Robolectric.buildActivity(Activity.class).get();
+        // mock SignInWithGoogleApi using mockito
+        final SignInWithGoogleApi mockSignInWithGoogleApi = mock(SignInWithGoogleApi.class);
+        final SignInWithGoogleCredential mockCredential = new SignInWithGoogleCredential(idToken);
+        when(mockSignInWithGoogleApi.signInSync(any(SignInWithGoogleParameters.class))).thenReturn(mockCredential);
+
+        SignInWithGoogleApi.setInstance(mockSignInWithGoogleApi);
+        final SignInWithGoogleParameters siwgParams = new SignInWithGoogleParameters(mockActivity);
+        final Intent resultIntent = AuthorizationActivityFactory.signInWithGoogleAndGetAuthorizationActivityIntent(
+                authorizationActivityParameters,
+                siwgParams
+        );
+
+        assertEquals(AuthorizationActivity.class.getName(), resultIntent.getComponent().getClassName());
+        assertEquals(authIntent, resultIntent.getParcelableExtra(AUTH_INTENT));
+        assertEquals(redirectUri, resultIntent.getStringExtra(REDIRECT_URI));
+        assertEquals(authorizationAgent, resultIntent.getSerializableExtra(AUTHORIZATION_AGENT));
+        assertEquals(webViewZoomEnabled, resultIntent.getBooleanExtra(WEB_VIEW_ZOOM_ENABLED, false));
+        assertEquals(webViewZoomControlsEnabled, resultIntent.getBooleanExtra(WEB_VIEW_ZOOM_CONTROLS_ENABLED, false));
+        assertEquals(sourceLibraryName, resultIntent.getStringExtra(PRODUCT));
+        assertEquals(sourceLibraryVersion, resultIntent.getStringExtra(VERSION));
+
+        final String receivedUrl = resultIntent.getStringExtra(REQUEST_URL);
+        final String expectedUrl = requestUrl + "&id_provider=google.com";
+        assertEquals(expectedUrl, receivedUrl);
+
+        final HashMap<String, String> receivedHeaders = (HashMap<String, String>) resultIntent.getSerializableExtra(REQUEST_HEADERS);
+        assertNotNull(receivedHeaders);
+        final String idTokenHeaderValue = receivedHeaders.get("x-ms-fidp-idtoken");
+        assertNotNull(idTokenHeaderValue);
+        assertEquals(idToken, idTokenHeaderValue);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testGetAuthorizationActivityIntentWithGoogleCredential() {
+        // Arrange
+        final SignInWithGoogleCredential signInWithGoogleCredential = new SignInWithGoogleCredential(idToken);
+        final Intent resultIntent = AuthorizationActivityFactory.getAuthorizationActivityIntent(
+                authorizationActivityParameters,
                 signInWithGoogleCredential
         );
 
@@ -101,8 +174,10 @@ public class AuthorizationActivityFactoryTest {
         assertEquals(expectedUrl, receivedUrl);
 
         final HashMap<String, String> receivedHeaders = (HashMap<String, String>) resultIntent.getSerializableExtra(REQUEST_HEADERS);
+        assertNotNull(receivedHeaders);
         final String idTokenHeaderValue = receivedHeaders.get("x-ms-fidp-idtoken");
         assertNotNull(idTokenHeaderValue);
         assertEquals(idToken, idTokenHeaderValue);
     }
+
 }

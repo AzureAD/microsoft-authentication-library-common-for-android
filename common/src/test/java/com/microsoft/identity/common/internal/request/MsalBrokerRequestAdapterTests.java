@@ -23,24 +23,40 @@
 package com.microsoft.identity.common.internal.request;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.REQUEST_AUTHORITY;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.components.MockPlatformComponentsFactory;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
-import com.microsoft.identity.common.internal.commands.parameters.AndroidActivityInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
+import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.commands.parameters.AndroidInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.controllers.BrokerMsalController;
+import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential;
+import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters;
+import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter;
+import com.microsoft.identity.common.internal.util.GzipUtil;
+import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryB2CAuthority;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.cache.CacheRecord;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.ResourceAccountCommandParameters;
+import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.java.request.SdkType;
@@ -52,8 +68,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
+import lombok.SneakyThrows;
 
 @RunWith(RobolectricTestRunner.class)
 public class MsalBrokerRequestAdapterTests {
@@ -175,6 +194,106 @@ public class MsalBrokerRequestAdapterTests {
         test_BrokerRequestFromAcquireTokenParametersInternal(true);
     }
 
+    @Test
+    public void test_BrokerRequestFromAcquireTokenParameters_SignInWithGoogleParameters() {
+        final Set<String> scopes = new HashSet<>();
+        scopes.add("user.read");
+
+        final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
+        final SignInWithGoogleCredential signInWithGoogleCredential = new SignInWithGoogleCredential("mock-id_token");
+        final AndroidInteractiveTokenCommandParameters params = AndroidInteractiveTokenCommandParameters.builder()
+                .platformComponents(components)
+                .correlationId("987d8962-3f4d-4054-a852-ac0c4b6a602e")
+                .clientId("4b0db8c2-9f26-4417-8bde-3f0e3656f8e0")
+                .redirectUri("msauth://com.microsoft.identity.client.sample.local/1wIqXSqBj7w%2Bh11ZifsnqwgyKrY%3D")
+                .applicationName("com.microsoft.identity.client.sample.local")
+                .applicationVersion("1.0.0")
+                .childClientId("child_client_id")
+                .childRedirectUri("child_redirect_uri")
+                .loginHint("login_hint")
+                .sdkType(SdkType.MSAL)
+                .sdkVersion("5.4.0")
+                .authority(new AzureActiveDirectoryAuthority())
+                .scopes(scopes)
+                .authenticationScheme(new BearerAuthenticationSchemeInternal())
+                .prompt(OpenIdConnectPromptParameter.LOGIN)
+                .requiredBrokerProtocolVersion("10.0")
+                .suppressBrokerAccountPicker(true)
+                .preferredBrowser(new BrowserDescriptor("chrome", "signature", null, null))
+                .claimsRequestJson("claims_request")
+                .brokerBrowserSupportEnabled(true)
+                .signInWithGoogleCredential(signInWithGoogleCredential)
+                .build();
+        final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
+        final BrokerRequest brokerRequest = msalBrokerRequestAdapter.brokerRequestFromAcquireTokenParameters(params);
+        assertEquals(params.getCorrelationId(), brokerRequest.getCorrelationId());
+        assertEquals(params.getClientId(), brokerRequest.getClientId());
+        assertEquals(params.getRedirectUri(), brokerRequest.getRedirect());
+        assertEquals(params.getApplicationName(), brokerRequest.getApplicationName());
+        assertEquals(params.getApplicationVersion(), brokerRequest.getApplicationVersion());
+        assertEquals(params.getChildClientId(), brokerRequest.getChildClientId());
+        assertEquals(params.getChildRedirectUri(), brokerRequest.getChildRedirectUri());
+        assertEquals(params.getLoginHint(), brokerRequest.getUserName());
+        assertEquals(params.getSdkType(), brokerRequest.getSdkType());
+        assertEquals(params.getSdkVersion(), brokerRequest.getMsalVersion());
+        assertEquals(params.getAuthority().getAuthorityURL().toString(), brokerRequest.getAuthority());
+        assertEquals(StringUtil.join(" ", scopes), brokerRequest.getScope());
+        assertEquals(params.getAuthenticationScheme(), brokerRequest.getAuthenticationScheme());
+        assertEquals(params.getPrompt().name(), brokerRequest.getPrompt());
+        assertEquals(params.isSuppressBrokerAccountPicker(), brokerRequest.isSuppressAccountPicker());
+        assertEquals(signInWithGoogleCredential, brokerRequest.getSignInWithGoogleCredential());
+    }
+
+    @Test
+    @SneakyThrows
+    public void testGetRequestBundleForProvisionResourceAccount() {
+        final String mockHomeAccountId = "mockHomeAccountId";
+        final String mockCorrelationId = "mockCorrelationId";
+        final String mockAuthorityStr = "https://login.microsoftonline.com/mockAuthority";
+        final Authority mockAuthority = Authority.getAuthorityFromAuthorityUrl(mockAuthorityStr);
+        final String mockNegotiatedBrokerVersion = "18.0";
+        final String mockApplicationName = "mockApplicationName";
+        final String mockApplicationVersion = "mockApplicationVersion";
+        final String mockSdkVersion = "mockSdkVersion";
+        final String mockClientId = "mockClientId";
+        final String mockRedirectUri = "mockRedirectUri";
+        final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
+        final ResourceAccountCommandParameters parameters = ResourceAccountCommandParameters.builder()
+                .platformComponents(components)
+                .homeAccountId(mockHomeAccountId)
+                .authority(mockAuthority)
+                .correlationId(mockCorrelationId)
+                .applicationName(mockApplicationName)
+                .applicationVersion(mockApplicationVersion)
+                .sdkVersion(mockSdkVersion)
+                .sdkType(SdkType.MSAL)
+                .clientId(mockClientId)
+                .redirectUri(mockRedirectUri)
+                .requiredBrokerProtocolVersion(mockNegotiatedBrokerVersion)
+                .build();
+
+        final MsalBrokerRequestAdapter requestAdapter = new MsalBrokerRequestAdapter();
+        final Bundle bundle = requestAdapter.getRequestBundleForProvisionResourceAccount(parameters, mockNegotiatedBrokerVersion);
+
+        assertTrue(bundle.containsKey(BROKER_REQUEST_V2_COMPRESSED));
+        final String deCompressedString = GzipUtil.decompressBytesToString(
+                bundle.getByteArray(BROKER_REQUEST_V2_COMPRESSED)
+        );
+        final BrokerRequest brokerRequest = AuthenticationSchemeTypeAdapter.getGsonInstance().fromJson(
+                deCompressedString, BrokerRequest.class
+        );
+        assertEquals(mockHomeAccountId, brokerRequest.getHomeAccountId());
+        assertNull(brokerRequest.getUserName());
+        assertEquals(mockAuthorityStr, brokerRequest.getAuthority());
+        assertEquals(mockCorrelationId, brokerRequest.getCorrelationId());
+        assertEquals(mockApplicationName, brokerRequest.getApplicationName());
+        assertEquals(mockApplicationVersion, brokerRequest.getApplicationVersion());
+        assertEquals(SdkType.MSAL, brokerRequest.getSdkType());
+        assertEquals(mockSdkVersion, brokerRequest.getMsalVersion());
+        assertEquals(mockClientId, brokerRequest.getClientId());
+        assertEquals(mockRedirectUri, brokerRequest.getRedirect());
+    }
+
     private void test_BrokerRequestFromAcquireTokenParametersInternal(final boolean suppressBrokerAccountPicker) {
         final Set<String> scopes = new HashSet<>();
         scopes.add("user.read");
@@ -220,5 +339,6 @@ public class MsalBrokerRequestAdapterTests {
         assertEquals(params.getAuthenticationScheme(), brokerRequest.getAuthenticationScheme());
         assertEquals(params.getPrompt().name(), brokerRequest.getPrompt());
         assertEquals(params.isSuppressBrokerAccountPicker(), brokerRequest.isSuppressAccountPicker());
+        assertNull(brokerRequest.getSignInWithGoogleCredential());
     }
 }

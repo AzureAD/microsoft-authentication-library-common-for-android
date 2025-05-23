@@ -33,7 +33,9 @@ import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidAuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityFactory;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityParameters;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.browser.Browser;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
@@ -59,18 +61,17 @@ public abstract class BrowserAuthorizationStrategy<
 
     private CustomTabsManager mCustomTabManager;
     private ResultFuture<AuthorizationResult> mAuthorizationResultFuture;
-    private Browser mBrowser;
     private boolean mDisposed;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
 
+    private final Browser mBrowser;
+
     public BrowserAuthorizationStrategy(@NonNull Context applicationContext,
                                         @NonNull Activity activity,
-                                        @Nullable Fragment fragment) {
+                                        @Nullable Fragment fragment,
+                                        @NonNull Browser browser) {
         super(applicationContext, activity, fragment);
-    }
-
-    public void setBrowser(final Browser browser) {
         mBrowser = browser;
     }
 
@@ -126,15 +127,15 @@ public abstract class BrowserAuthorizationStrategy<
     private Intent buildAuthorizationActivityStartIntent(Intent authIntent, URI requestUrl) {
          // RedirectURI used to get the auth code in nested app auth is that of a hub app (brkRedirectURI)   
         final String redirectUri = mAuthorizationRequest.getBrkRedirectUri() != null ? mAuthorizationRequest.getBrkRedirectUri() : mAuthorizationRequest.getRedirectUri();
-        final Intent intent = AuthorizationActivityFactory.getAuthorizationActivityIntent(
+        final AuthorizationActivityParameters authorizationActivityParameters = new AuthorizationActivityParameters(
                 getApplicationContext(),
                 authIntent,
                 requestUrl.toString(),
                 redirectUri,
                 mAuthorizationRequest.getRequestHeaders(),
-                AuthorizationAgent.BROWSER,
-                true,
-                true);
+                AuthorizationAgent.BROWSER
+        );
+        final Intent intent = AuthorizationActivityFactory.getAuthorizationActivityIntent(authorizationActivityParameters);
         setIntentFlag(intent);
         return intent;
     }
@@ -169,7 +170,7 @@ public abstract class BrowserAuthorizationStrategy<
     /**
      * Disposes state that will not normally be handled by garbage collection. This should be
      * called when the authorization service is no longer required, including when any owning
-     * activity is paused or destroyed (i.e. in {@link android.app.Activity#onStop()}).
+     * activity is paused or destroyed (i.e. in Activity#onStop()).
      */
     public void dispose() {
         if (mDisposed) {

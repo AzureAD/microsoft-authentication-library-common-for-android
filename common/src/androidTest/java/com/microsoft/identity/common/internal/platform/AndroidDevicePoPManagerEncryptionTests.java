@@ -63,10 +63,9 @@ public class AndroidDevicePoPManagerEncryptionTests {
     public static Iterable<IDevicePopManager.Cipher> testParams() {
         final List<IDevicePopManager.Cipher> ciphers = new ArrayList<>();
 
-        // Only execute these tests at appropriate API levels...
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            ciphers.add(RSA_ECB_PKCS1_PADDING);
-        }
+
+        ciphers.add(RSA_ECB_PKCS1_PADDING);
+
 
         //https://stackoverflow.com/questions/36015194/android-keystoreexception-unknown-error -
         //https://issuetracker.google.com/issues/37075898

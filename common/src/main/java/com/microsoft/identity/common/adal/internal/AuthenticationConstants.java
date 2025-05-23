@@ -530,6 +530,43 @@ public final class AuthenticationConstants {
     }
 
     /**
+     * Represents the constants value for the SwitchBrowser protocol.
+     */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static final class SWITCH_BROWSER {
+
+        /**
+         * Path used on the broker redirect url to indicate the resume of the switch browser flow.
+         */
+        public static final String RESUME_PATH = "switch_browser_resume";
+
+        /**
+         * Path used on the broker redirect url to indicate the start of the switch browser flow.
+         */
+        public static final String REQUEST_PATH = "switch_browser";
+
+        /**
+         * String Query parameter key to indicate support for SWITCH_BROWSER protocol.
+         */
+        public static final String CLIENT_SUPPORTS_FLOW = "switch_browser";
+
+        /**
+         * String Query parameter key for the purpose token.
+         */
+        public static final String CODE = "code";
+
+        /**
+         * String Query parameter key for the switchBrowser action uri.
+         */
+        public static final String ACTION_URI = "action_uri";
+
+        /**
+         * String Query parameter key for the state blob.
+         */
+        public static final String STATE = "state";
+    }
+
+    /**
      * Represents the constants for broker.
      */
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -605,7 +642,7 @@ public final class AuthenticationConstants {
          *
          * @see <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Broker%20API/broker_protocol_versions.md">Android Auth Broker Protocol Versions</a>
          */
-        public static final String LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "16.0";
+        public static final String LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "17.0";
 
         /**
          * The maximum msal-to-broker protocol version known by clients such as MSAL Android.
@@ -1129,6 +1166,18 @@ public final class AuthenticationConstants {
         public static final String LTW_APP_SHA512_DEBUG_SIGNATURE = "5PAhhZNSRRvq7vpTT5vrYJbSLh05AU8USf7oUTS239PEltebX87uGN7GhAe5244lJepwZ5RU4vu8N6ospXVOlg==";
 
         /**
+         * Signing certificate thumbprint of the DEBUG-signed Microsoft Intune app.
+         * Generated with SHA-512.
+         */
+        public static final String INTUNE_APP_SHA512_DEBUG_SIGNATURE = "F+Tat7A/mlOJCzRYEmj9DgLRHU2Nb0VSQjgZEyAehqW9+cOT0oYjkT/fa33hYcVMwUzaSy0hUOVt9KQtyFRnVQ==";
+
+        /**
+         * Signing certificate thumbprint of the RELEASE-signed Microsoft Intune app.
+         * Generated with SHA-512.
+         */
+        public static final String INTUNE_APP_SHA512_RELEASE_SIGNATURE = "jPpMoaNvcxSLMX4yG4C3Gf86rtTqh33SqpuRKg4WOP+MnnpA52zZgvKLW76U4Cqqf68iaBk9W7k/jhciiSAtgQ==";
+
+        /**
          * Teams IP Phones (Sakurai devices) is supported by Intune, but does not have a back button nor browser.
          * The only supported detection of this phone is the application install state.
          * The Microsoft Intune app depends on the browser opening the fwlink, and in the app manifest registers to handle the URL.
@@ -1574,7 +1623,11 @@ public final class AuthenticationConstants {
             READ_RESTRICTIONS_MANAGER(READ_RESTRICTIONS_MANAGER_PATH, null, null),
             GET_PREFERRED_AUTH_METHOD(BrokerContentProvider.GET_PREFERRED_AUTH_METHOD, null, null),
             BROKER_INDIVIDUAL_LOGS_UPLOAD(BROKER_INDIVIDUAL_LOGS_UPLOAD_PATH, null, null),
-            BROKER_RESTORE_MSA_ACCOUNTS_WITH_TRANSFER_TOKENS(BROKER_RESTORE_MSA_ACCOUNTS_WITH_TRANSFER_TOKENS_PATH, BROKER_VERSION_5, null);
+            BROKER_RESTORE_MSA_ACCOUNTS_WITH_TRANSFER_TOKENS(BROKER_RESTORE_MSA_ACCOUNTS_WITH_TRANSFER_TOKENS_PATH, BROKER_VERSION_5, null),
+
+            WEBAPPS_GET_SUPPORTED_WEB_APPS_CONTRACTS(WEBAPPS_GET_SUPPORTED_WEB_APPS_CONTRACTS_PATH, null, null),
+            WEBAPPS_EXECUTE_WEB_APPS_REQUEST(WEBAPPS_EXECUTE_WEB_APPS_REQUEST_PATH, null, null),
+            PROVISION_RESOURCE_ACCOUNT(PROVISION_RESOURCE_ACCOUNT_PATH, null, null);
 
             /**
              * The content provider path that the API exists behind.
@@ -1742,6 +1795,21 @@ public final class AuthenticationConstants {
          * produce errors if an app using the NEW WPJ API communicates with this version of the broker.
          */
         public static final String DEVICE_REGISTRATION_PROTOCOLS_PATH = "/multipledeviceRegistration/protocols";
+
+        /**
+         * Broker ContentProvider path for getting Web App supported contracts.
+         */
+        public static final String WEBAPPS_GET_SUPPORTED_WEB_APPS_CONTRACTS_PATH = "/webapp/getSupportedWebAppsContracts";
+
+        /**
+         * Broker ContentProvider path for executing Web App request.
+         */
+        public static final String WEBAPPS_EXECUTE_WEB_APPS_REQUEST_PATH = "/webapp/executeWebAppsRequest";
+
+
+        public static final String PROVISION_RESOURCE_ACCOUNT_PATH = "/provisionResourceAccount";
+
+        public static final String GET_AAD_DEVICE_ID_PATH = "/getAadDeviceId";
 
         /**
          * BrokerContentProvider URI code constant for MSAL-to-Broker hello request.

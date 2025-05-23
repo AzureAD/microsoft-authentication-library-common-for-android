@@ -128,6 +128,30 @@ public class UiAutomatorUtils {
     }
 
     /**
+     * Obtain an instance of the UiObject with text matching given regex.
+     *
+     * @param regex the regex pattern to match
+     * @return the UiObject associated to the supplied regex
+     */
+    public static UiObject obtainUiObjectWithRegex(@NonNull final String regex) {
+        Logger.i(TAG, "Obtain an instance of the UiObject with regex pattern:" + regex);
+        return obtainUiObjectWithRegex(regex, FIND_UI_ELEMENT_TIMEOUT);
+    }
+
+    /**
+     * Obtain an instance of the UiObject with text matching given regex.
+     *
+     * @param regex the regex pattern to match
+     * @param existsTimeout time to wait until ui object with text exists.
+     * @return the UiObject associated to the supplied regex
+     */
+    public static UiObject obtainUiObjectWithRegex(@NonNull final String regex, final long existsTimeout) {
+            Logger.i(TAG, "Obtain an instance of the UiObject with regex pattern:" + regex);
+            return obtainUiObjectWithUiSelector(new UiSelector().textMatches(regex),
+                    existsTimeout);
+    }
+
+    /**
      * Obtain an instance of the UiObject for the given text.
      *
      * @param description the description of the element to obtain
@@ -162,6 +186,18 @@ public class UiAutomatorUtils {
         Logger.i(TAG, "Obtain an instance of the UiObject with class name:" + clazz);
         return obtainUiObjectWithUiSelector(new UiSelector().className(clazz),
                 FIND_UI_ELEMENT_TIMEOUT);
+    }
+
+    /**
+     * Obtain an instance of the UiObject for the class.
+     *
+     * @param clazz the class name of the element to obtain
+     * @return the UiObject associated to the supplied text
+     */
+    public static UiObject obtainUiObjectWithClass(@NonNull final String clazz, final long existsTimeout) {
+        Logger.i(TAG, "Obtain an instance of the UiObject with class name:" + clazz);
+        return obtainUiObjectWithUiSelector(new UiSelector().className(clazz),
+                existsTimeout);
     }
 
     /**
@@ -328,6 +364,27 @@ public class UiAutomatorUtils {
     }
 
     /**
+     * Fills the supplied text into the input element of a given class.
+     *
+     * @param clazz classname of the object to give input
+     * @param inputText  the text to enter
+     * @param existsTimeout how long to wait for object to exist
+     */
+    public static void handleInputByClass(@NonNull final String clazz,
+                                          @NonNull final String inputText,
+                                          final long existsTimeout) {
+        Logger.i(TAG, "Handling input for class: " + clazz);
+        final UiObject inputField = obtainUiObjectWithClass(clazz, existsTimeout);
+
+        try {
+            inputField.setText(inputText);
+            closeKeyboardIfNeeded();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    /**
      * Clicks the button element associated to the supplied resource id.
      *
      * @param resourceId the resource id of the button to click
@@ -425,6 +482,21 @@ public class UiAutomatorUtils {
     }
 
     /**
+     * Clicks the button element with exactly the supplied class
+     *
+     * @param clazz the class name of the object to click
+     */
+    public static void handleButtonClickForObjectWithClass(@NonNull final String clazz) {
+        final UiObject button = obtainUiObjectWithClass(clazz);
+
+        try {
+            button.click();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    /**
      * Clicks the button element that contains the supplied text.
      * Do not throw an exception if the button is not found.
      *
@@ -437,6 +509,19 @@ public class UiAutomatorUtils {
             button.click();
         } catch (final UiObjectNotFoundException e) {
             Logger.w(TAG, "Button with text \"" + text + "\" was not found: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Clicks the button element that contains text matching the supplied regex
+     */
+    public static void handleButtonClickForObjectWithRegexMatch(@NonNull final String regex) {
+        final UiObject button = obtainUiObjectWithRegex(regex);
+
+        try {
+            button.click();
+        } catch (final UiObjectNotFoundException e) {
+            Logger.w(TAG, "Button with regex \"" + regex + "\" was not found: " + e.getMessage());
         }
     }
 

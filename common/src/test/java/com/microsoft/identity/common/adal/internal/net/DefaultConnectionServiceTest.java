@@ -25,11 +25,8 @@ package com.microsoft.identity.common.adal.internal.net;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.os.Build;
-import android.telephony.TelephonyManager;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -122,13 +119,4 @@ public class DefaultConnectionServiceTest {
 
         assertTrue(defaultConnectionService.isNetworkDisabledFromOptimizations());
     }
-
-    @Test
-    public void testNetworkDisabledFromOptimizationsForAPIsBelow23() {
-        ReflectionHelpers.setStaticField(Build.VERSION.class, "SDK_INT", Build.VERSION_CODES.LOLLIPOP_MR1);
-        final DefaultConnectionService defaultConnectionService = new DefaultConnectionService(mContext);
-
-        assertFalse(defaultConnectionService.isNetworkDisabledFromOptimizations());
-    }
-
 }

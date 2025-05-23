@@ -26,12 +26,14 @@ import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationSchem
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
 /**
- * BaseSignInTokenCommandParameters is the base class for parameters for all all Native Auth sign in related commands.
+ * BaseSignInTokenCommandParameters is the base class for parameters for all Native Auth sign in related commands.
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
@@ -43,6 +45,12 @@ public abstract class BaseSignInTokenCommandParameters extends BaseNativeAuthCom
     * The scopes for the token being fetched.
     */
    public final List<String> scopes;
+
+   /**
+    * Claims to send to the token endpoint.
+    */
+   @Nullable
+   public final String claimsRequestJson;
 
    private final AbstractAuthenticationScheme authenticationScheme;
 }

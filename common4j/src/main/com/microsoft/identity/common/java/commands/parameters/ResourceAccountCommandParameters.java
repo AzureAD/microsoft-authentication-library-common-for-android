@@ -20,17 +20,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.msafederation
+
+package com.microsoft.identity.common.java.commands.parameters;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.SuperBuilder;
 
 /**
- * Enum class for Federated Sign In Provider Name like Google, Apple
- * Currently only Google is supported.
+ * Command parameters for setting up Resource Account in broker. This object is part of API.
+ * The caller constructs this and pass to BrokerMsalController.
  */
-enum class FederatedSignInProviderName(private val idProviderName: String) {
-    GOOGLE("google.com"),
-    APPLE("apple.com"); // would be used later
+@Getter
+@SuperBuilder(toBuilder = true)
+@EqualsAndHashCode(callSuper = true)
+public class ResourceAccountCommandParameters extends TokenCommandParameters {
 
-    fun getIdProviderName(): String {
-        return idProviderName
-    }
+    // user id in home tenant uid.tid
+    @NonNull
+    private final String homeAccountId;
 }
