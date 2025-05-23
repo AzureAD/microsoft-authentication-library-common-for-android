@@ -23,12 +23,15 @@
 package com.microsoft.identity.common.internal.broker
 
 import android.webkit.JavascriptInterface
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonParseException
 import com.google.gson.JsonSyntaxException
 import com.google.gson.stream.MalformedJsonException
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper
 import com.microsoft.identity.common.logging.Logger
+import java.net.MalformedURLException
+import java.net.URL
 
 /**
  * JavaScript API to receive JSON string payloads from AuthUX in order to facilitate calling various
@@ -52,16 +55,28 @@ class AuthUxJavaScriptInterface {
          * @param url url being loaded
          * @return true if url is a valid, safe url, false otherwise
          */
-        fun isValidUrlForInterface(url: String?): Boolean {
+        fun isValidUrlForInterface(urlString: String?): Boolean {
             // If url is null, return false
-            if (url == null) {
+            if (urlString.isNullOrEmpty()) {
                 return false
             }
 
+            val url : URL
+            try {
+                url = URL(urlString)
+            } catch (e: MalformedURLException) {
+                // If url is not a valid URL, return false
+                Logger.warn(TAG, "Malformed URL passed.")
+                return false
+
+            }
+
+            val host = url.host
+
             // Otherwise, make sure url is a valid url
-            // We only want to allow URLs that start with the AAD URL prefix or the MSA URL prefix
-            return url.startsWith(AuthenticationConstants.Broker.AAD_URL_PREFIX) ||
-                    url.startsWith(AuthenticationConstants.Broker.MSA_URL_PREFIX)
+            // We only want to allow URLs that have the AAD or MSA url hosts
+            return host.startsWith(AuthenticationConstants.Broker.AAD_URL_HOST_PREFIX) ||
+                    host.startsWith(AuthenticationConstants.Broker.MSA_URL_HOST_PREFIX)
         }
     }
 
@@ -129,20 +144,22 @@ class AuthUxJavaScriptInterface {
         } catch (e: Exception) { // If we run into exceptions, we don't want to kill the broker
             when (e) {
                 is NullPointerException -> {
-                    Logger.warn(methodTag, "Payload with missing mandatory fields sent through JavaScriptInterface")
+                    Logger.error(methodTag, "Payload with missing mandatory fields sent through JavaScriptInterface", e)
                 }
-                is MalformedJsonException, is JsonSyntaxException -> {
-                    Logger.warn(methodTag, "Error Parsing JSON payload sent through JavaScriptInterface")
+                is MalformedJsonException, is JsonSyntaxException, is JsonParseException -> {
+                    Logger.error(methodTag, "Error Parsing JSON payload sent through JavaScriptInterface", e)
                 }
                 else -> {
-                    Logger.warn(methodTag, "Unknown error occurred while processing the payload.")
+                    Logger.error(methodTag, "Unknown error occurred while processing the payload.", e)
                 }
             }
         }
     }
 
-    private fun parseJsonToAuthUxJsonPayloadObject(jsonString: String): AuthUxJsonPayload {
-        val gson = Gson()
+    private fun parseJsonToAuthUxJsonPayloadObject(jsonString: String): AuthUxJsonPayload{
+        val gson = GsonBuilder()
+            .registerTypeAdapter(AuthUxJsonPayload::class.java, AuthUxJsonPayloadKTDeserializer())
+            .create()
         return gson.fromJson(jsonString, AuthUxJsonPayload::class.java)
     }
 

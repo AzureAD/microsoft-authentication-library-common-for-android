@@ -22,7 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker
 
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
+import com.google.gson.JsonParseException
 import com.google.gson.annotations.SerializedName
+import java.lang.reflect.Type
 
 /**
  * Data class representing the JSON payload object received from AuthUX.
@@ -33,16 +38,9 @@ import com.google.gson.annotations.SerializedName
  * @property params The parameters for the action, including function and data.
  */
 data class AuthUxJsonPayload(
-    @SerializedName(SerializedNames.CORRELATION_ID)
-    val correlationId: String?,
-
-    @SerializedName(SerializedNames.ACTION_NAME)
-    val actionName: String?,
-
-    @SerializedName(SerializedNames.ACTION_COMPONENT)
-    val actionComponent: String?,
-
-    @SerializedName(SerializedNames.PARAMS)
+    val correlationId: String,
+    val actionName: String,
+    val actionComponent: String,
     val params: AuthUxParams?
 )
 
@@ -73,6 +71,32 @@ data class AuthUxData(
     @SerializedName(SerializedNames.NUMBER_MATCH)
     val numberMatch: String?
 )
+
+class AuthUxJsonPayloadKTDeserializer : JsonDeserializer<AuthUxJsonPayload> {
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): AuthUxJsonPayload {
+        val jsonObject = json.asJsonObject
+
+        // Validate required fields
+        val correlationId = jsonObject.get(SerializedNames.CORRELATION_ID)?.asString
+            ?: throw JsonParseException("correlationID is required and cannot be null")
+        val actionName = jsonObject.get(SerializedNames.ACTION_NAME)?.asString
+            ?: throw JsonParseException("action_name is required and cannot be null")
+        val actionComponent = jsonObject.get(SerializedNames.ACTION_COMPONENT)?.asString
+            ?: throw JsonParseException("action_component is required and cannot be null")
+
+        // Deserialize params if present
+        val params = jsonObject.get("params")?.let {
+            context.deserialize<AuthUxParams>(it, AuthUxParams::class.java)
+        }
+
+        return AuthUxJsonPayload(
+            correlationId = correlationId,
+            actionName = actionName,
+            actionComponent = actionComponent,
+            params = params
+        )
+    }
+}
 
 object SerializedNames {
     const val CORRELATION_ID = "correlationID"

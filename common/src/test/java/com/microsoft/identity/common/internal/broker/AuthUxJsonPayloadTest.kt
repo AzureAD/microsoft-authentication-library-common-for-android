@@ -21,14 +21,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker
-
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonParseException
 import org.junit.Assert.*
 import org.junit.Test
 
 class AuthUxJsonPayloadTest {
 
-    private val gson = Gson()
+    private val gson = GsonBuilder()
+        .registerTypeAdapter(AuthUxJsonPayload::class.java, AuthUxJsonPayloadKTDeserializer())
+        .create()
 
     @Test
     fun `test deserialization of valid JSON`() {
@@ -65,11 +67,15 @@ class AuthUxJsonPayloadTest {
     }
 
     @Test
-    fun `test deserialization of JSON with missing fields`() {
+    fun `test deserialization of JSON with missing optional fields`() {
         val json = """
             {
                 "correlationID": "12345",
-                "action_name": "write_data"
+                "action_name": "write_data",
+                "action_component": "broker",
+                "params" : {
+                    "invalidField": "invalidField"
+                }
             }
         """.trimIndent()
 
@@ -78,20 +84,31 @@ class AuthUxJsonPayloadTest {
         assertNotNull(payload)
         assertEquals("12345", payload.correlationId)
         assertEquals("write_data", payload.actionName)
-        assertNull(payload.actionComponent)
-        assertNull(payload.params)
+        assertEquals("broker", payload.actionComponent)
+        assertNotNull(payload.params)
+        assertNull(payload.params?.data)
+        assertNull(payload.params?.function)
     }
 
-    @Test
-    fun `test deserialization of empty JSON`() {
+    @Test(expected = JsonParseException::class)
+    fun `test deserialization of JSON with missing mandatory fields, exception expected`() {
+        val json = """
+            {
+                "correlationID": "12345",
+                "action_name": "write_data"
+            }
+        """.trimIndent()
+
+        // This should throw an exception because "action_component" and "params" is missing
+        gson.fromJson(json, AuthUxJsonPayload::class.java)
+
+    }
+
+    @Test(expected = JsonParseException::class)
+    fun `test deserialization of empty JSON, exception expected`() {
         val json = "{}"
 
+        // This should throw an exception because the JSON is empty
         val payload = gson.fromJson(json, AuthUxJsonPayload::class.java)
-
-        assertNotNull(payload)
-        assertNull(payload.correlationId)
-        assertNull(payload.actionName)
-        assertNull(payload.actionComponent)
-        assertNull(payload.params)
     }
 }

@@ -1225,12 +1225,12 @@ public final class AuthenticationConstants {
         /**
          * Prefix for AAD urls
          */
-        public static final String AAD_URL_PREFIX = "https://login.microsoftonline.";
+        public static final String AAD_URL_HOST_PREFIX = "login.microsoftonline.";
 
         /**
          * Prefix for MSA urls
          */
-        public static final String MSA_URL_PREFIX = "https://login.live.com/";
+        public static final String MSA_URL_HOST_PREFIX = "login.live.";
 
         /**
          * Encoded delimiter for redirect.
