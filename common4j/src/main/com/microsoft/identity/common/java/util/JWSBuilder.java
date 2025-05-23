@@ -165,7 +165,7 @@ public class JWSBuilder {
                     + "."
                     + encodeUrlSafeString(StringUtil.toByteArray(claimsJsonString));
             signature = encodeUrlSafeString(
-                    deviceCert.sign(SIGNING_ALGORITHM, StringUtil.toByteArray(signingInput)));
+                    deviceCert.sign(StringUtil.toByteArray(signingInput)));
         } catch (final CertificateEncodingException e) {
             throw new ClientException(ErrorStrings.CERTIFICATE_ENCODING_ERROR,
                     "Certificate encoding error", e);

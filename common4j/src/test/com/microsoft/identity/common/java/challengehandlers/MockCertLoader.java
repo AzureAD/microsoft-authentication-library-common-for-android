@@ -65,7 +65,7 @@ public class MockCertLoader implements IDeviceCertificateLoader{
         }
 
         @Override
-        public byte[] sign(@NonNull String algorithm, byte[] dataToBeSigned) throws ClientException {
+        public byte[] sign(byte[] dataToBeSigned) throws ClientException {
             throw new UnsupportedOperationException("Should be mocked!");
         }
     };
