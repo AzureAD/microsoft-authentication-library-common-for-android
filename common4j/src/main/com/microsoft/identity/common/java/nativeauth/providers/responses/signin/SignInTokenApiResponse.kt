@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.nativeauth.util.isInvalidCredentials
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidGrant
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidOOBValue
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidRequest
+import com.microsoft.identity.common.java.nativeauth.util.isJITRequired
 import com.microsoft.identity.common.java.nativeauth.util.isMFARequired
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordChangeRequired
 import com.microsoft.identity.common.java.nativeauth.util.isUserNotFound
@@ -114,6 +115,22 @@ class SignInTokenApiResponse(
                     }
                     subError.isMFARequired() -> {
                         SignInTokenApiResult.MFARequired(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            continuationToken = continuationToken ?:
+                            return SignInTokenApiResult.UnknownError(
+                                error = ApiErrorResult.INVALID_STATE,
+                                errorDescription = "oauth/v2.0/token did not return a continuation token",
+                                errorCodes = errorCodes.orEmpty(),
+                                correlationId = correlationId
+                            ),
+                            subError = subError.orEmpty(),
+                            errorCodes = errorCodes.orEmpty(),
+                            correlationId = correlationId
+                        )
+                    }
+                    subError.isJITRequired() -> {
+                        SignInTokenApiResult.JITRequired(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
                             continuationToken = continuationToken ?:

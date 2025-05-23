@@ -63,6 +63,9 @@ class NativeAuthOAuth2Configuration(
         private const val SIGN_IN_INTROSPECT_ENDPOINT_SUFFIX = "/oauth2/v2.0/introspect"
         private const val SIGN_IN_CHALLENGE_ENDPOINT_SUFFIX = "/oauth2/v2.0/challenge"
         private const val SIGN_IN_TOKEN_ENDPOINT_SUFFIX = "/oauth2/v2.0/token"
+        private const val JIT_INTROSPECT_ENDPOINT_SUFFIX = "/register/v1.0/introspect"
+        private const val JIT_CHALLENGE_ENDPOINT_SUFFIX = "/register/v1.0/challenge"
+        private const val JIT_CONTINUE_ENDPOINT_SUFFIX = "/register/v1.0/continue"
     }
 
     override fun getAuthorityUrl(): URL {
@@ -214,6 +217,42 @@ class NativeAuthOAuth2Configuration(
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
             endpointSuffix = SIGN_IN_TOKEN_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a register/v1.0/introspect request.
+     *
+     * @return URL the endpoint
+     */
+    fun getJITIntrospectEndpoint(): URL {
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = JIT_INTROSPECT_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a register/v1.0/challenge request.
+     *
+     * @return URL the endpoint
+     */
+    fun getJITChallengeEndpoint(): URL {
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = JIT_CHALLENGE_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a register/v1.0/continue request.
+     *
+     * @return URL the endpoint
+     */
+    fun getJITContinueEndpoint(): URL {
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = JIT_CONTINUE_ENDPOINT_SUFFIX
         )
     }
 

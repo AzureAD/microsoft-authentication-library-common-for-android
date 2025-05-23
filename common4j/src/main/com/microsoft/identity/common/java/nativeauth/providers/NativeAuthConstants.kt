@@ -24,9 +24,21 @@
 package com.microsoft.identity.common.java.nativeauth.providers
 
 /**
- * NativeAuthConstants holds two classes for constants used by Native Auth
+ * NativeAuthConstants holds three classes for constants used by Native Auth
  */
 object NativeAuthConstants {
+
+    /**
+     * ChallengeChallenge represents the channel to which the auth method should be sent.
+     */
+    object ChallengeChannel {
+        //Challenge is sent using the email channel
+        const val EMAIL = "email"
+        //Challenge is sent using the voice channel
+        const val VOICE = "voice"
+        //Challenge is sent using the SMS channel
+        const val SMS = "sms"
+    }
 
     /**
      * GrantType encapsulates various grant types supported by Native Auth

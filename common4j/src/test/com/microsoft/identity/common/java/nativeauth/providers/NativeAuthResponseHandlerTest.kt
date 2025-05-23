@@ -25,9 +25,14 @@ package com.microsoft.identity.common.internal.nativeauth.providers
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
-import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.UserAttributeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.UserAttributeOptionsApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITChallengeApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITChallengeApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITContinueApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITContinueApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITIntrospectApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITIntrospectApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordChallengeApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordContinueApiResponse
@@ -53,6 +58,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpContinueApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResult
+import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.nativeauth.ApiConstants
 import io.mockk.every
 import io.mockk.mockk
@@ -60,6 +66,7 @@ import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
@@ -3399,4 +3406,339 @@ class NativeAuthResponseHandlerTest {
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
     }
     // endregion
+
+    //region JIT introspect
+
+    @Test
+    fun testJITIntrospectApiSuccessButEmptyMethodList() {
+        val methods = emptyList<AuthenticationMethodApiResponse>()
+        val jitIntrospectApiResponse = JITIntrospectApiResponse(
+            statusCode = successStatusCode,
+            challengeType = emailChallengeChannel,
+            continuationToken = continuationToken,
+            error = null,
+            errorDescription = null,
+            methods = methods,
+            errorUri = null,
+            errorCodes = null,
+            correlationId = correlationId
+        )
+        val apiResult = jitIntrospectApiResponse.toResult()
+        if (apiResult is JITIntrospectApiResult.UnknownError) {
+            assertEquals(ApiErrorResult.INVALID_STATE, apiResult.error)
+        } else {
+            fail("Expected JITIntrospectApiResult.UnknownError but got $apiResult")
+        }
+    }
+
+    @Test
+    fun testJITIntrospectApiSuccess() {
+        val method = AuthenticationMethodApiResponse(
+            id = "email",
+            challengeType = emailChallengeChannel,
+            loginHint = "email@contoso.com",
+            challengeChannel = ""
+        )
+        val methods = listOf(method)
+        val jitIntrospectApiResponse = JITIntrospectApiResponse(
+            statusCode = successStatusCode,
+            challengeType = emailChallengeChannel,
+            continuationToken = continuationToken,
+            error = null,
+            errorDescription = null,
+            methods = methods,
+            errorUri = null,
+            errorCodes = null,
+            correlationId = correlationId
+        )
+        val apiResult = jitIntrospectApiResponse.toResult()
+        if (apiResult is JITIntrospectApiResult.Success) {
+            assertEquals(continuationToken, apiResult.continuationToken)
+            assertEquals(correlationId, apiResult.correlationId)
+            assertEquals(1, apiResult.methods.count())
+            val resultMethod = apiResult.methods.first()
+            assertEquals(method.id, resultMethod.id)
+            assertEquals(method.challengeType, resultMethod.challengeType)
+            assertEquals(method.loginHint, resultMethod.loginHint)
+            assertEquals(method.challengeChannel, resultMethod.challengeChannel)
+        } else {
+            fail("Expected JITIntrospectApiResult.Success but got $apiResult")
+        }
+    }
+
+    @Test
+    fun testJITIntrospectApiResponseBadRequest() {
+        val jitIntrospectApiResponse = JITIntrospectApiResponse(
+            statusCode = errorStatusCode,
+            continuationToken = null,
+            error = invalidGrantError,
+            errorCodes = emptyList(),
+            errorDescription = unknownErrorDescription,
+            errorUri = null,
+            methods = null,
+            challengeType = null,
+            correlationId = correlationId
+        )
+
+        val apiResult = jitIntrospectApiResponse.toResult()
+        if (apiResult is JITIntrospectApiResult.UnknownError) {
+            assertEquals(invalidGrantError, apiResult.error)
+            assertEquals(unknownErrorDescription, apiResult.errorDescription)
+        } else {
+            fail("Expected JITIntrospectApiResult.UnknownError but got $apiResult")
+        }
+    }
+
+    //endregion
+
+    //region JIT challenge
+
+    @Test
+    fun testJITChallengeApiSuccessButMissingMandatoryField() {
+        val jitChallengeApiResponse = JITChallengeApiResponse(
+            statusCode = successStatusCode,
+            challengeType = emailChallengeChannel,
+            continuationToken = continuationToken,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            bindingMethod = null,
+            challengeChannel = null,
+            challengeTarget = null,
+            codeLength = null,
+            interval = null,
+            correlationId = correlationId
+        )
+        val apiResult = jitChallengeApiResponse.toResult()
+        if (apiResult is JITChallengeApiResult.UnknownError) {
+            assertEquals(ApiErrorResult.INVALID_STATE, apiResult.error)
+            assertEquals(correlationId, apiResult.correlationId)
+        } else {
+            fail("Expected JITChallengeApiResult.UnknownError but got $apiResult")
+        }
+    }
+
+    @Test
+    fun testJITChallengeApiUncommonStatusCodeShouldReturnError() {
+        val jitChallengeApiResponse = JITChallengeApiResponse(
+            statusCode = uncommonErrorStatusCode,
+            challengeType = redirect,
+            continuationToken = continuationToken,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            bindingMethod = null,
+            challengeChannel = null,
+            challengeTarget = null,
+            codeLength = null,
+            interval = null,
+            correlationId = correlationId
+        )
+        val apiResult = jitChallengeApiResponse.toResult()
+        if (apiResult is JITChallengeApiResult.UnknownError) {
+            assertEquals(correlationId, apiResult.correlationId)
+            assertEquals(emptyString, apiResult.error)
+        } else {
+            fail("Expected JITChallengeApiResult.UnknownError but got $apiResult")
+        }
+    }
+
+    @Test
+    fun testJITChallengeApiInvalidChallengeTargetIsHandledCorrectly() {
+        val errorCodes = listOf(901001)
+        val jitChallengeApiResponse = JITChallengeApiResponse(
+            statusCode = errorStatusCode,
+            challengeType = null,
+            continuationToken = null,
+            error = invalidRequestError,
+            errorDescription = errorDescription,
+            errorUri = null,
+            errorCodes = errorCodes,
+            bindingMethod = null,
+            challengeChannel = null,
+            challengeTarget = null,
+            codeLength = null,
+            interval = null,
+            correlationId = correlationId
+        )
+        val apiResult = jitChallengeApiResponse.toResult()
+        if (apiResult is JITChallengeApiResult.InvalidVerificationContact) {
+            assertEquals(correlationId, apiResult.correlationId)
+            assertEquals(invalidRequestError, apiResult.error)
+            assertEquals(errorDescription, apiResult.errorDescription)
+            assertEquals(errorCodes, apiResult.errorCodes)
+        } else {
+            fail("Expected JITChallengeApiResult.InvalidVerificationContact but got $apiResult")
+        }
+    }
+
+    @Test
+    fun testJITChallengeApiInvalidRequestWithUnknownErrorCodeIsHandledCorrectly() {
+        val errorCodes = listOf(100100)
+        val jitChallengeApiResponse = JITChallengeApiResponse(
+            statusCode = errorStatusCode,
+            challengeType = null,
+            continuationToken = null,
+            error = invalidRequestError,
+            errorDescription = errorDescription,
+            errorUri = null,
+            errorCodes = errorCodes,
+            bindingMethod = null,
+            challengeChannel = null,
+            challengeTarget = null,
+            codeLength = null,
+            interval = null,
+            correlationId = correlationId
+        )
+        val apiResult = jitChallengeApiResponse.toResult()
+        if (apiResult is JITChallengeApiResult.UnknownError) {
+            assertEquals(correlationId, apiResult.correlationId)
+            assertEquals(invalidRequestError, apiResult.error)
+            assertEquals(errorDescription, apiResult.errorDescription)
+            assertEquals(errorCodes, apiResult.errorCodes)
+        } else {
+            fail("Expected JITChallengeApiResult.UnknownError but got $apiResult")
+        }
+    }
+
+    @Test
+    fun testJITChallengeApiSuccessIsHandledCorrectly() {
+        val jitChallengeApiResponse = JITChallengeApiResponse(
+            statusCode = successStatusCode,
+            challengeType = oobChallengeType,
+            continuationToken = continuationToken,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            bindingMethod = bindingMethod,
+            challengeChannel = emailChallengeChannel,
+            challengeTarget = challengeTargetLabel,
+            codeLength = codeLength,
+            interval = interval,
+            correlationId = correlationId
+        )
+        val apiResult = jitChallengeApiResponse.toResult()
+        if (apiResult is JITChallengeApiResult.OOBRequired) {
+            assertEquals(correlationId, apiResult.correlationId)
+            assertEquals(emailChallengeChannel, apiResult.challengeChannel)
+            assertEquals(oobChallengeType, apiResult.challengeType)
+            assertEquals(codeLength, apiResult.codeLength)
+            assertEquals(challengeTargetLabel, apiResult.challengeTargetLabel)
+            assertEquals(bindingMethod, apiResult.bindingMethod)
+        } else {
+            fail("Expected JITChallengeApiResult.OOBRequired but got $apiResult")
+        }
+    }
+
+    //endregion
+
+    //region JIT continue
+
+    @Test
+    fun testJITContinueApiInvalidOOBIsHandledCorrectly() {
+        val jitContinueApiResponse = JITContinueApiResponse(
+            statusCode = errorStatusCode,
+            continuationToken = continuationToken,
+            error = invalidGrantError,
+            errorDescription = errorDescription,
+            errorCodes = null,
+            subError = invalidOOBValueError,
+            correlationId = correlationId
+        )
+        val apiResult = jitContinueApiResponse.toResult()
+        if (apiResult is JITContinueApiResult.CodeIncorrect) {
+            assertEquals(correlationId, apiResult.correlationId)
+            assertEquals(invalidGrantError, apiResult.error)
+            assertEquals(errorDescription, apiResult.errorDescription)
+        } else {
+            fail("Expected JITContinueApiResult.CodeIncorrect but got $apiResult")
+        }
+    }
+
+    @Test
+    fun testJITContinueApiInvalidGrantGenericSubErrorIsHandledAsUnknownError() {
+        val jitContinueApiResponse = JITContinueApiResponse(
+            statusCode = errorStatusCode,
+            continuationToken = continuationToken,
+            error = invalidGrantError,
+            errorDescription = errorDescription,
+            errorCodes = null,
+            subError = null,
+            correlationId = correlationId
+        )
+        val apiResult = jitContinueApiResponse.toResult()
+        if (apiResult is JITContinueApiResult.UnknownError) {
+            assertEquals(correlationId, apiResult.correlationId)
+            assertEquals(invalidGrantError, apiResult.error)
+            assertEquals(errorDescription, apiResult.errorDescription)
+        } else {
+            fail("Expected JITContinueApiResult.UnknownError but got $apiResult")
+        }
+    }
+
+    @Test
+    fun testJITContinueApiUncommonErrorCodeIsHandledAsUnknownError() {
+        val jitContinueApiResponse = JITContinueApiResponse(
+            statusCode = uncommonErrorStatusCode,
+            continuationToken = continuationToken,
+            error = invalidGrantError,
+            errorDescription = errorDescription,
+            errorCodes = null,
+            subError = null,
+            correlationId = correlationId
+        )
+        val apiResult = jitContinueApiResponse.toResult()
+        if (apiResult is JITContinueApiResult.UnknownError) {
+            assertEquals(correlationId, apiResult.correlationId)
+            assertEquals(invalidGrantError, apiResult.error)
+            assertEquals(errorDescription, apiResult.errorDescription)
+        } else {
+            fail("Expected JITContinueApiResult.UnknownError but got $apiResult")
+        }
+    }
+
+    @Test
+    fun testJITContinueApiSuccessButMissingContinuationTokenIsHandledAsUnknownError() {
+        val jitContinueApiResponse = JITContinueApiResponse(
+            statusCode = successStatusCode,
+            continuationToken = null,
+            error = invalidGrantError,
+            errorDescription = errorDescription,
+            errorCodes = null,
+            subError = null,
+            correlationId = correlationId
+        )
+        val apiResult = jitContinueApiResponse.toResult()
+        if (apiResult is JITContinueApiResult.UnknownError) {
+            assertEquals(correlationId, apiResult.correlationId)
+            assertEquals(ApiErrorResult.INVALID_STATE, apiResult.error)
+        } else {
+            fail("Expected JITContinueApiResult.UnknownError but got $apiResult")
+        }
+    }
+
+    @Test
+    fun testJITContinueApiSuccessIsHandledAsSuccess() {
+        val jitContinueApiResponse = JITContinueApiResponse(
+            statusCode = successStatusCode,
+            continuationToken = continuationToken,
+            error = null,
+            errorDescription = null,
+            errorCodes = null,
+            subError = null,
+            correlationId = correlationId
+        )
+        val apiResult = jitContinueApiResponse.toResult()
+        if (apiResult is JITContinueApiResult.Success) {
+            assertEquals(correlationId, apiResult.correlationId)
+            assertEquals(continuationToken, apiResult.continuationToken)
+        } else {
+            fail("Expected JITContinueApiResult.Success but got $apiResult")
+        }
+    }
+
+    //endregion
 }
