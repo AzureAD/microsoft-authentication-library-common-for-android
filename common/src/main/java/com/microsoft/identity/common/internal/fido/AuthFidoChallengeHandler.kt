@@ -116,6 +116,7 @@ class AuthFidoChallengeHandler (
                     span = span
                 )
                 span.setStatus(StatusCode.OK)
+                Logger.info(methodTag, "Got an non-error assertion.")
                 respondToChallenge(
                     submitUrl = submitUrl,
                     assertion = assertion,

@@ -81,11 +81,6 @@ public enum CommonFlight implements IFlightConfig {
     STOP_RETURNING_AAD_RT_BACK_TO_CALLING_APP("StopReturningAadRtBackToCallingApp", false),
 
     /**
-     * Flight to enable the legacy FIDO security key additional logic. Default is true for common.
-     */
-    ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC("EnableLegacyFidoSecurityKeyLogic", true),
-
-    /**
      * Flight to enable the re-attachment of new PRT header logic. Default is true.
      */
     ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED("EnableAttachNewPrtHeaderWhenNonceExpired", true),

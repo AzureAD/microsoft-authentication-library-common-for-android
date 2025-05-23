@@ -26,7 +26,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -45,7 +44,6 @@ import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
-import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
@@ -129,15 +127,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final FragmentActivity activity = getActivity();
         if (activity != null) {
             WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
-        }
-        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)
-                && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            mFidoLauncher = registerForActivityResult(
-                    new LegacyFidoActivityResultContract(),
-                    result -> {
-                        Logger.info(methodTag, "Legacy FIDO2 API result received.");
-                    }
-            );
         }
     }
 
@@ -370,13 +359,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             mAADWebViewClient.onDestroy();
         } else {
             Logger.error(methodTag, "Fragment destroyed, but smartcard usb discovery was unable to be stopped.", null);
-        }
-        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)
-                && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE
-                && mFidoLauncher != null) {
-            // Note: mFidoLauncher shouldn't be null (based on the OS version check),
-            // but we should still have a check here just to be safe.
-            mFidoLauncher.unregister();
         }
     }
 

@@ -23,14 +23,10 @@
 package com.microsoft.identity.common.internal.fido
 
 import android.content.Context
-import android.os.Build
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.PublicKeyCredential
-import androidx.credentials.exceptions.NoCredentialException
-import com.microsoft.identity.common.java.flighting.CommonFlight
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager.getFlightsProvider
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.logging.Logger
 import io.opentelemetry.api.trace.Span
@@ -81,33 +77,15 @@ class CredManFidoManager (val context: Context,
         )
         val getCredRequest = GetCredentialRequest(
             credentialOptions = listOf(publicKeyCredentialOption),
-            // We're setting preferImmediatelyAvailableCredentials in the CredMan getCredentialRequest object to true if the device OS is Android 13 or lower.
-            // This ensures the behavior where no dialog from CredMan is shown if no passkey cred is present.
-            // The end goal is for an Android <= 13 user who only has a security key to see one dialog which will allow them to authenticate.
-            preferImmediatelyAvailableCredentials = (getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC) && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+            preferImmediatelyAvailableCredentials = false
         )
-        try {
-            Logger.info(methodTag, "Calling Credential Manager with a GetCredentialRequest.")
-            val result = credentialManager.getCredential(
-                context = context,
-                request = getCredRequest
-            )
-            val credential: PublicKeyCredential = result.credential as PublicKeyCredential
-            return WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(credential.authenticationResponseJson)
-        } catch (e: NoCredentialException) {
-            // For version lower than Android 14, if NoCredentialException is returned,
-            // this means a UI dialog wasn't even shown to allow usage of a security key.
-            // Thus we need to call the legacy FIDO2 API here, if present.
-            if (legacyManager != null) {
-                 return legacyManager.authenticate(
-                     challenge = challenge,
-                     relyingPartyIdentifier = relyingPartyIdentifier,
-                     allowedCredentials = allowedCredentials,
-                     userVerificationPolicy = userVerificationPolicy,
-                     span = span)
-            } else {
-                throw e
-            }
-        }
+
+        Logger.info(methodTag, "Calling Credential Manager with a GetCredentialRequest.")
+        val result = credentialManager.getCredential(
+            context = context,
+            request = getCredRequest
+        )
+        val credential: PublicKeyCredential = result.credential as PublicKeyCredential
+        return WebAuthnJsonUtil.extractAuthenticatorAssertionResponseJson(credential.authenticationResponseJson)
     }
 }

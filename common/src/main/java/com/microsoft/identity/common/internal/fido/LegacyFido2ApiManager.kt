@@ -38,8 +38,11 @@ import kotlin.coroutines.resumeWithException
 
 /**
  * Utilizes the legacy Android FIDO2 API in order to return an attestation.
- * Note that the legacy FIDO2 API should only be used for older Android versions which need it,
- * such as Android 13 and below for FIDO2 security key support.
+ * Note that the legacy FIDO2 API should only be used for older Android versions which need it.
+ *
+ * For context, this class was originally added to provide support for FIDO security key usage on Android 13,
+ * but this is now addressed by a newer API.
+ * This class is being kept in case it is needed for registration purposes in the future.
  */
 class LegacyFido2ApiManager (val context: Context, val fragment: WebViewAuthorizationFragment) : IFidoManager {
 
