@@ -1488,6 +1488,21 @@ public final class AuthenticationConstants {
         public static final String BROKER_HOST_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/brokerhost";
 
         /**
+         * App Link redirect URL for the Mock Auth app.
+         */
+        public static final String MOCK_LTW_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/mockltw";
+
+        /**
+         * App Link redirect URL for the Mock CP app.
+         */
+        public static final String MOCK_CP_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/mockcp";
+
+        /**
+         * App Link redirect URL for the Mock Auth app.
+         */
+        public static final String MOCK_AUTH_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/mockauth";
+
+        /**
          * Bundle identifiers for x-ms-clitelem info.
          */
         public static final class CliTelemInfo {
