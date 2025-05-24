@@ -109,6 +109,6 @@ class AuthUxJsonPayloadTest {
         val json = "{}"
 
         // This should throw an exception because the JSON is empty
-        val payload = gson.fromJson(json, AuthUxJsonPayload::class.java)
+        gson.fromJson(json, AuthUxJsonPayload::class.java)
     }
 }
