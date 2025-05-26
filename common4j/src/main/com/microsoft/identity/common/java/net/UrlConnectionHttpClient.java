@@ -443,14 +443,24 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
 
             // Fallback to system properties if ProxySelector yields no proxy
             if (proxy == Proxy.NO_PROXY) {
-                String proxyHost = System.getProperty("http.proxyHost");
-                String proxyPort = System.getProperty("http.proxyPort");
+                String protocol = request.getRequestUrl().getProtocol().toLowerCase();
+                String proxyHost = null;
+                String proxyPort = null;
+
+                if ("https".equals(protocol)) {
+                    proxyHost = System.getProperty("https.proxyHost");
+                    proxyPort = System.getProperty("https.proxyPort");
+                } else if ("http".equals(protocol)) {
+                    proxyHost = System.getProperty("http.proxyHost");
+                    proxyPort = System.getProperty("http.proxyPort");
+                }
+
                 if (!StringUtil.isNullOrEmpty(proxyHost) && !StringUtil.isNullOrEmpty(proxyPort)) {
                     try {
                         int port = Integer.parseInt(proxyPort);
                         proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, port));
                     } catch (NumberFormatException e) {
-                        Logger.warn(TAG + methodName, "Invalid proxy port: " + proxyPort);
+                        Logger.warn(TAG + methodName, "Invalid proxy port for " + protocol + ": " + proxyPort);
                     }
                 }
             }
