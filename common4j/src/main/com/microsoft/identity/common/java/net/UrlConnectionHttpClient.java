@@ -429,7 +429,6 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     private HttpURLConnection setupConnection(HttpRequest request) throws IOException {
         final String methodName = ":setupConnection";
 
-        // Retrieve system proxy settings
         Proxy proxy = Proxy.NO_PROXY;
         try {
             ProxySelector proxySelector = ProxySelector.getDefault();
@@ -438,51 +437,20 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 List<Proxy> proxies = proxySelector.select(uri);
                 if (!proxies.isEmpty()) {
                     for (Proxy candidate : proxies) {
-                        // If proxySelector.select returns NO_PROXY it means a direct connection should be used
-                        if (candidate != Proxy.NO_PROXY) {
-                            // Use the first found valid proxy
+                        if (candidate != Proxy.NO_PROXY && candidate.type() == Proxy.Type.HTTP) {
                             proxy = candidate;
+                            Logger.verbose(TAG + methodName, "Selected proxy for " + uri.getScheme() + ": " + proxy);
                             break;
                         }
                     }
                 }
             }
-
-            // Fallback to system properties if ProxySelector yields no proxy
-            if (proxy == Proxy.NO_PROXY) {
-                String protocol = request.getRequestUrl().getProtocol().toLowerCase();
-                String proxyHost = null;
-                String proxyPort = null;
-
-                if ("https".equals(protocol)) {
-                    proxyHost = System.getProperty("https.proxyHost");
-                    proxyPort = System.getProperty("https.proxyPort");
-                } else if ("http".equals(protocol)) {
-                    proxyHost = System.getProperty("http.proxyHost");
-                    proxyPort = System.getProperty("http.proxyPort");
-                }
-
-                if (!StringUtil.isNullOrEmpty(proxyHost) && !StringUtil.isNullOrEmpty(proxyPort)) {
-                    try {
-                        int port = Integer.parseInt(proxyPort);
-                        proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, port));
-                    } catch (NumberFormatException e) {
-                        String errorMessage = String.format(
-                                "Failed to parse proxy port for %s protocol. Host: %s, Port: '%s'. Reason: %s",
-                                protocol, proxyHost, proxyPort, e.getMessage()
-                        );
-                        Logger.warn(TAG + methodName, errorMessage, e.getMessage());
-                    } catch (IllegalArgumentException e) {
-                        String errorMessage = String.format(
-                                "Invalid proxy port configuration for %s protocol. Host: %s, Port: '%s'. Reason: %s",
-                                protocol, proxyHost, proxyPort, e.getMessage()
-                        );
-                        Logger.warn(TAG + methodName, errorMessage, e.getMessage());
-                    }
-                }
-            }
-        } catch (Exception e) {
-            Logger.warn(TAG + methodName, "Failed to retrieve system proxy settings: " + e.getMessage());
+        } catch (URISyntaxException e) {
+            Logger.warn(TAG + methodName, "Invalid URI for proxy selection: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            Logger.warn(TAG + methodName, "Invalid argument for proxy selection: " + e.getMessage());
+        } catch (SecurityException e) {
+            Logger.warn(TAG + methodName, "Security error accessing proxy settings: " + e.getMessage());
         }
 
         final HttpURLConnection urlConnection = HttpUrlConnectionFactory.createHttpURLConnection(request.getRequestUrl(), proxy);
