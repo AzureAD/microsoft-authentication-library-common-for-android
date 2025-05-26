@@ -437,7 +437,14 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 URI uri = request.getRequestUrl().toURI();
                 List<Proxy> proxies = proxySelector.select(uri);
                 if (!proxies.isEmpty()) {
-                    proxy = proxies.get(0);
+                    for (Proxy candidate : proxies) {
+                        // If proxySelector.select returns NO_PROXY it means a direct connection should be used
+                        if (candidate != Proxy.NO_PROXY) {
+                            // Use the first found valid proxy
+                            proxy = candidate;
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -460,7 +467,17 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                         int port = Integer.parseInt(proxyPort);
                         proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, port));
                     } catch (NumberFormatException e) {
-                        Logger.warn(TAG + methodName, "Invalid proxy port for " + protocol + ": " + proxyPort);
+                        String errorMessage = String.format(
+                                "Failed to parse proxy port for %s protocol. Host: %s, Port: '%s'. Reason: %s",
+                                protocol, proxyHost, proxyPort, e.getMessage()
+                        );
+                        Logger.warn(TAG + methodName, errorMessage, e.getMessage());
+                    } catch (IllegalArgumentException e) {
+                        String errorMessage = String.format(
+                                "Invalid proxy port configuration for %s protocol. Host: %s, Port: '%s'. Reason: %s",
+                                protocol, proxyHost, proxyPort, e.getMessage()
+                        );
+                        Logger.warn(TAG + methodName, errorMessage, e.getMessage());
                     }
                 }
             }
