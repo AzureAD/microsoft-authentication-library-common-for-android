@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.net;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.Proxy;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -75,10 +76,22 @@ public final class HttpUrlConnectionFactory {
      * @throws IOException if it fails to open connection with the provided URL.
      */
     public static HttpURLConnection createHttpURLConnection(final URL url) throws IOException {
+        return createHttpURLConnection(url, Proxy.NO_PROXY);
+    }
+
+    /**
+     * Creates the {@link HttpURLConnection} with the given URL and proxy.
+     *
+     * @param url The request URL used to create the connection.
+     * @param proxy The proxy to use for the connection, or {@link Proxy#NO_PROXY} if none.
+     * @return {@link HttpURLConnection} with the provided URL and proxy.
+     * @throws IOException if it fails to open connection with the provided URL.
+     */
+    public static HttpURLConnection createHttpURLConnection(final URL url, final Proxy proxy) throws IOException {
         if (!sMockedConnectionQueue.isEmpty()) {
             return sMockedConnectionQueue.poll();
         }
 
-        return (HttpURLConnection) url.openConnection();
+        return (HttpURLConnection) url.openConnection(proxy);
     }
 }
