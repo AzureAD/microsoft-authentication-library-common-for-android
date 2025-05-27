@@ -10,7 +10,7 @@ ext {
     buildToolsVersion = "28.0.3"
 
     // Plugins
-    gradleVersion = '7.4.2'
+    gradleVersion = '8.1.1'
     kotlinVersion = '1.7.21'
     spotBugsGradlePluginVersion = '4.7.1'
     jupiterApiVersion = '5.6.0'
@@ -47,7 +47,7 @@ ext {
     uiAutomatorVersion = "2.2.0"
     daggerVersion = "2.31.2"
     daggerCompilerVersion = "2.31.2"
-    msal4jVersion = "1.10.0"
+    msal4jVersion = "1.20.1"
     moshiVersion = "1.14.0"
     moshiAdaptersVersion = "1.14.0"
     openpojoVersion = "0.9.1"
