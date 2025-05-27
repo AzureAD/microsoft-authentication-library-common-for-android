@@ -10,8 +10,6 @@ project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") 
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 
 android {
-    namespace "com.microsoft.identity.internal.testutils"
-
     compileSdk rootProject.ext.compileSdkVersion
 
     testOptions {
@@ -75,9 +73,7 @@ android {
     lintOptions {
         disable 'InvalidPackage'
     }
-    buildFeatures {
-        buildConfig = true
-    }
+
     buildTypes {
         debug {
             testCoverageEnabled false
@@ -101,9 +97,8 @@ android {
 
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
-    archiveClassifier.set('sources')
+    classifier 'sources'
 }
-
 
 tasks.whenTaskAdded { task ->
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
