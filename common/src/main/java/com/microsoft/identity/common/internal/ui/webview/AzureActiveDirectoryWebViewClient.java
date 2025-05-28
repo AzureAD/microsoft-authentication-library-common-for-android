@@ -227,11 +227,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PASSKEY_FEATURE) && isPasskeyUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for passkey protocol.");
                 final FidoChallenge challenge = FidoChallenge.createFromRedirectUri(url);
-                final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity)getActivity()).getSpanContext() : null;
+                final Activity currentActivity = getActivity();
+                final SpanContext spanContext = currentActivity instanceof AuthorizationActivity ? ((AuthorizationActivity)currentActivity).getSpanContext() : null;
                 final IFidoManager legacyManager =
-                        CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)
+                        currentActivity instanceof AuthorizationActivity
+                                && ((AuthorizationActivity) currentActivity).getFragment() instanceof WebViewAuthorizationFragment
+                                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)
                                 && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE
-                                ? new LegacyFido2ApiManager(view.getContext(), (WebViewAuthorizationFragment)((AuthorizationActivity)getActivity()).getFragment())
+                                ? new LegacyFido2ApiManager(view.getContext(), (WebViewAuthorizationFragment)((AuthorizationActivity)currentActivity).getFragment())
                                 : null;
                 final AuthFidoChallengeHandler challengeHandler = new AuthFidoChallengeHandler(
                         new CredManFidoManager(
