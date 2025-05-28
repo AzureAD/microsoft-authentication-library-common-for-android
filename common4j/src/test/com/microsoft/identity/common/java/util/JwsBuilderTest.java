@@ -175,7 +175,7 @@ public class JwsBuilderTest {
             }
 
             @Override
-            public byte[] sign(@NonNull final String algorithm, final byte[] dataToBeSigned) throws ClientException {
+            public byte[] sign(final byte[] dataToBeSigned) throws ClientException {
                 // Do nothing.
                 return StringUtil.toByteArray(signature);
             }

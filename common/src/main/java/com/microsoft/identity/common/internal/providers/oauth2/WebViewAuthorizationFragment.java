@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Build;
@@ -33,6 +34,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.PermissionRequest;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -47,7 +49,9 @@ import androidx.fragment.app.FragmentActivity;
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
+import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
+import com.microsoft.identity.common.internal.ui.webview.ProcessUtil;
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -58,7 +62,6 @@ import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
@@ -121,6 +124,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private ActivityResultLauncher<LegacyFido2ApiObject> mFidoLauncher;
     // This is used by the switch browser protocol to handle the resume of the flow.
     private SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator = null;
+
+    private boolean isBrokerRequest = false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -211,6 +216,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mAuthIntent = state.getParcelable(AUTH_INTENT);
         mPkeyAuthStatus = state.getBoolean(PKEYAUTH_STATUS, false);
         mAuthorizationRequestUrl = state.getString(REQUEST_URL);
+        final Context context = getContext();
+        if (context != null) {
+            isBrokerRequest = ProcessUtil.isRunningOnAuthService(context);
+        }
         mRedirectUri = state.getString(REDIRECT_URI);
         mRequestHeaders = getRequestHeaders(state);
         mPostPageLoadedJavascript = state.getString(POST_PAGE_LOADED_URL);
@@ -256,6 +265,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 getSwitchBrowserCoordinator().getSwitchBrowserRequestHandler()
         );
         setUpWebView(view, mAADWebViewClient);
+        mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
         launchWebView(mAuthorizationRequestUrl, mRequestHeaders);
         return view;
     }
@@ -398,7 +408,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             }
 
             // Attach client extras header for ESTS telemetry. Only done for broker requests
-            if (isBrokerRequest(this.mAuthorizationRequestUrl)) {
+            if (isBrokerRequest) {
                 final ClientExtraSku clientExtraSku = ClientExtraSku.builder()
                         .srcSku(state.getString(PRODUCT))
                         .srcSkuVer(state.getString(VERSION))
@@ -414,14 +424,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Nullable
     public ActivityResultLauncher<LegacyFido2ApiObject> getFidoLauncher() {
         return mFidoLauncher;
-    }
-
-    /**
-     * Helper method to check if the authorization request is being made through broker.
-     * Done by checking for broker version key in the url
-     */
-    private boolean isBrokerRequest(final String authorizationUrl) {
-        return authorizationUrl.contains(Device.PlatformIdParameters.BROKER_VERSION);
     }
 
     class AuthorizationCompletionCallback implements IAuthorizationCompletionCallback {
