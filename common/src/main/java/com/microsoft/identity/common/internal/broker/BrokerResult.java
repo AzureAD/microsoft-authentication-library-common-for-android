@@ -27,6 +27,7 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.dto.AadDeviceIdRecord;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 
 import java.util.ArrayList;
@@ -61,6 +62,11 @@ public class BrokerResult {
         static final String REFRESH_TOKEN_AGE = "refresh_token_age";
         static final String SUCCESS = "success";
         static final String SERVICED_FROM_CACHE = "serviced_from_cache";
+
+        /**
+         * Carries result of success full operation to get AAD device id
+         */
+        static final String BROKER_AAD_DEVICE_ID_RECORD = "broker_aad_device_id_record";
 
         // Error constants
         /**
@@ -317,6 +323,10 @@ public class BrokerResult {
     @SerializedName(SerializedNames.BROKER_EXCEPTION_TYPE)
     private final String mExceptionType;
 
+    @Nullable
+    @SerializedName(SerializedNames.BROKER_AAD_DEVICE_ID_RECORD)
+    private final AadDeviceIdRecord mAadDeviceIdRecord;
+
     private BrokerResult(@NonNull final Builder builder) {
         mAccessToken = builder.mAccessToken;
         mIdToken = builder.mIdToken;
@@ -351,6 +361,7 @@ public class BrokerResult {
         mCliTelemErrorCode = builder.mCliTelemErrorCode;
         mCliTelemSubErrorCode = builder.mCliTelemSubErrorCode;
         mExceptionType = builder.mExceptionType;
+        mAadDeviceIdRecord = builder.mAadDeviceIdRecord;
     }
 
     public String getExceptionType() {
@@ -483,6 +494,10 @@ public class BrokerResult {
         return mAccessToken;
     }
 
+    public AadDeviceIdRecord getAadDeviceIdRecord() {
+        return mAadDeviceIdRecord;
+    }
+
     public static class Builder {
         private String mAccessToken;
         private String mIdToken;
@@ -507,6 +522,7 @@ public class BrokerResult {
         private String mNegotiatedBrokerProtocolVersion;
         private List<ICacheRecord> mTenantProfileData;
         private boolean mServicedFromCache;
+        private AadDeviceIdRecord mAadDeviceIdRecord;
 
         // Exception parameters
         private String mErrorCode;
@@ -628,6 +644,11 @@ public class BrokerResult {
         @SuppressFBWarnings("URF_UNREAD_FIELD")
         public Builder negotiatedBrokerProtocolVersion(final String negotiatedBrokerProtocolVersion) {
             this.mNegotiatedBrokerProtocolVersion = negotiatedBrokerProtocolVersion;
+            return this;
+        }
+
+        public Builder aadDeviceIdRecord(@NonNull final AadDeviceIdRecord aadDeviceIdRecord) {
+            this.mAadDeviceIdRecord = aadDeviceIdRecord;
             return this;
         }
 
