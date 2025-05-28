@@ -22,10 +22,12 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.request
 
+import com.microsoft.identity.common.internal.broker.BrokerResult
 import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter
 import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter.REMOVE_RT_FROM_AAD_RESULT_MSAL_PROTOCOL_VERSION
 import com.microsoft.identity.common.java.cache.CacheRecord
 import com.microsoft.identity.common.java.cache.ICacheRecord
+import com.microsoft.identity.common.java.dto.AadDeviceIdRecord
 import com.microsoft.identity.common.java.dto.AccountRecord
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.request.SdkType
@@ -205,8 +207,6 @@ class MsalBrokerResultAdapterTests {
     /**
      * Tests result for [MsalBrokerResultAdapter.resourceAccountRecordFromBundle]
      */
-    @Test
-    @SneakyThrows
     fun testResourceAccountRecordFromBundle() {
         val mockHomeAccountId = "mockHomeAccountId"
         val mockNegotiatedBrokerVersion = "18.0"
@@ -230,11 +230,6 @@ class MsalBrokerResultAdapterTests {
         assertEquals(mockAccountName, resultCacheRecord.account.username)
     }
 
-    /**
-     * Tests result for [MsalBrokerResultAdapter.resourceAccountRecordFromBundle]
-     */
-    @Test
-    @SneakyThrows
     fun testResourceAccountRecordFromBundle_NoAccountReturned() {
         val mockHomeAccountId = "mockHomeAccountId"
         val mockNegotiatedBrokerVersion = "18.0"
@@ -286,6 +281,44 @@ class MsalBrokerResultAdapterTests {
         } catch (e: ClientException) {
             // Expected exception
             assertEquals(ClientException.INVALID_BROKER_BUNDLE, e.errorCode)
+        }
+    }
+
+    @Test
+    @SneakyThrows
+    fun testAadDeviceIdRecordFromBundle() {
+        val mockTenantId = "mockTenantId"
+        val mockDeviceId = "mockDeviceId"
+        val mockAadDeviceIdRecord = AadDeviceIdRecord(mockTenantId, mockDeviceId)
+        val brokerResult = BrokerResult.Builder()
+            .aadDeviceIdRecord(mockAadDeviceIdRecord)
+            .success(true)
+            .build()
+        val resultAdapter = MsalBrokerResultAdapter()
+        val resultBundle = resultAdapter.bundleFromBrokerResult(brokerResult, "18.0")
+
+        val aadDeviceRecord = resultAdapter.aadDeviceIdRecordFromBundle(resultBundle)
+
+        assertEquals(mockTenantId, aadDeviceRecord.tenantId)
+        assertEquals(mockDeviceId, aadDeviceRecord.deviceId)
+    }
+
+    @Test
+    @SneakyThrows
+    fun testAadDeviceIdRecordFromBundle_NoRegistration() {
+        val mockException = ClientException(
+            "no_such_device_registration",
+            "The device registration record requested does not exist"
+        )
+        val resultAdapter = MsalBrokerResultAdapter()
+        val resultBundle = resultAdapter.bundleFromBaseException(mockException, null)
+
+        try {
+            resultAdapter.aadDeviceIdRecordFromBundle(resultBundle)
+            Assert.fail("Expected exception not thrown")
+        } catch (e: ClientException) {
+            // Expected exception
+            assertEquals(mockException.errorCode, e.errorCode)
         }
     }
 }
