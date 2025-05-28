@@ -8,7 +8,7 @@
 
 plugins {
     id 'java-library'
-    id 'com.microsoft.identity.buildsystem' version '0.2.3'
+    id 'com.microsoft.identity.buildsystem' version '0.2.5'
     id 'maven-publish'
 
     // the below build plugin allows to generate BuildConfig files in a JAVA gradle project.
@@ -61,13 +61,15 @@ project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
 version = getAppVersionName()
 
 task sourcesJar(type: Jar) {
+    dependsOn generateBuildConfig
     from sourceSets.main.java.srcDirs
-    classifier 'sources'
+    archiveClassifier.set('sources')
     destinationDirectory = reporting.file("$project.buildDir/outputs/jars")
 }
 
 // Task to generate javadoc
 task generateJavadoc(type: Javadoc) {
+    dependsOn generateBuildConfig
     failOnError false
     title = "Microsoft Identity Common Java"
     source = sourceSets.main.java
@@ -84,7 +86,7 @@ task generateJavadoc(type: Javadoc) {
 // Task to generate javadoc.jar
 task javadocJar(type: Jar, dependsOn: generateJavadoc) {
     from javadoc.destinationDir
-    classifier 'javadoc'
+    archiveClassifier.set('javadoc')
     destinationDirectory = reporting.file("$project.buildDir/outputs/jars")
 }
 
