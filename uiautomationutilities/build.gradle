@@ -21,7 +21,7 @@ if (project.hasProperty("uiElementTimeout")) {
 }
 
 android {
-    namespace "com.microsoft.identity.client.ui.automation"
+
     testOptions {
         compileOptions {
             // Flag to enable support for the new language APIs
@@ -35,9 +35,7 @@ android {
         }
         animationsDisabled = true
     }
-    buildFeatures {
-        buildConfig = true
-    }
+
     //Commenting out until the next major version of common/msal/etc...
     /*
     compileOptions {
@@ -150,9 +148,8 @@ android {
 
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
-    archiveClassifier.set('sources')
+    classifier 'sources'
 }
-
 
 tasks.whenTaskAdded { task ->
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
