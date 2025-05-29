@@ -48,7 +48,8 @@ data class AuthUxJsonPayload(
  * Data class representing the parameters for the action, including function and data.
  *
  * @property operation The operation to be executed.
- * @property data The data associated with the function.
+ * @property sessionId
+ * @property codeMatch
  */
 data class AuthUxParams(
     @SerializedName(SerializedNames.OPERATION)
