@@ -1,8 +1,8 @@
 # This workflow checks if an ADO ID (AB#ID) has been set successfully (https://github.com/marketplace/actions/azure-boards-check-for-ab)
 # If so, the workflow will extract the AB ID from the message
-# then it will update the PR title adding ',Closed AB#ID' at the end.
+# then it will update the PR title adding ',Fixed AB#ID' at the end.
 # Why?
-# Adding ',Closed AB#ID' to the PR title will make the PR to automatically resolve the associated ADO item when the PR is completed.
+# Adding ',Fixed AB#ID' to the PR title will make the PR to automatically resolve the associated ADO item when the PR is completed.
 
 name: 'AB#ID Check'
 on: 
@@ -75,8 +75,8 @@ jobs:
             | jq -r .title)
           echo "title=$PR_TITLE" >> $GITHUB_OUTPUT
 
-  # Checks if the Pull request contains Closed AB#ID in the title,
-  # if not creates a new title appending ',Closed AB#ID' to the current title
+  # Checks if the Pull request contains Fixed AB#ID in the title,
+  # if not cretaes a new title appending ',Fixed AB#ID' to the current title
   check_if_title_needs_to_be_updated:
     name: Check if title needs to be updated
     runs-on: ubuntu-latest
@@ -85,12 +85,12 @@ jobs:
       new_pr_title: ${{ steps.new-title.outputs.new_pr_title }}
       update_required: ${{ steps.check.outputs.update_required }}
     steps:
-      - name: Check if PR title contains Closed keyword with AB# using grep
+      - name: Check if PR title contains fix keyword with AB# using grep
         id: check
         env:
           PR_TITLE: ${{ needs.get_pr_title.outputs.prtitle }}
         run: |
-          if echo "$PR_TITLE" | grep -i -q '\bClosed\b AB#[0-9]\+'; then
+          if echo "$PR_TITLE" | grep -i -q '\bfix\(ed\|es\)\? AB#[0-9]'; then
             echo "Pattern found in PR title!, no need to update."
             echo "update_required=false" >> $GITHUB_OUTPUT
           else
@@ -104,7 +104,7 @@ jobs:
         if: steps.check.outputs.update_required == 'true'
         id: new-title
         run: |
-          NEW_TITLE="$CURRENT_PR_TITLE, Closed AB#$AB_ID"
+          NEW_TITLE="$CURRENT_PR_TITLE, Fixes AB#$AB_ID"
           echo "new_pr_title=${NEW_TITLE}" >> $GITHUB_OUTPUT
 
   # Update new title
