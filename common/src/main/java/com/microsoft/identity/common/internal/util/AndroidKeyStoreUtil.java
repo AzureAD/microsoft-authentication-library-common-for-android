@@ -87,20 +87,19 @@ public class AndroidKeyStoreUtil {
     private AndroidKeyStoreUtil() {
     }
 
-    private static KeyStore mKeyStore;
-
     private static final LongCounter sFailedAndroidKeyStoreUnwrapOperationCount = OTelUtility.createLongCounter(
             "failed_keystore_key_unwrap_operation_count",
             "Number of failed Android KeyStore unwrap operations"
     );
 
+    private static final int MAX_UNWRAP_RETRIES = 3;
+    private static final long INITIAL_BACKOFF_MS = 100;
+
     private static synchronized KeyStore getKeyStore()
             throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
-        if (mKeyStore == null){
-            mKeyStore = KeyStore.getInstance(ANDROID_KEY_STORE_TYPE);
-            mKeyStore.load(null);
-        }
-        return mKeyStore;
+        final KeyStore keystore = KeyStore.getInstance(ANDROID_KEY_STORE_TYPE);
+        keystore.load(null);
+        return keystore;
     }
 
     /**
@@ -210,7 +209,7 @@ public class AndroidKeyStoreUtil {
     @Nullable
     public static synchronized KeyPair readKey(@NonNull final String keyAlias)
             throws ClientException {
-        final String methodTag = TAG + ":readKeyPair";
+        final String methodTag = TAG + ":readKey";
 
         final Throwable exception;
         final String errCode;
@@ -307,8 +306,7 @@ public class AndroidKeyStoreUtil {
         final Throwable exception;
         final String errCode;
         try {
-            final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE_TYPE);
-            keyStore.load(null);
+            final KeyStore keyStore = getKeyStore();
             keyStore.deleteEntry(aliasOfKeyToDelete);
             return;
         } catch (final KeyStoreException e) {
@@ -407,7 +405,7 @@ public class AndroidKeyStoreUtil {
      * @param wrapAlgorithm        the algorithm used to wrap the key.
      * @return the unwrapped key.
      */
-    public static synchronized SecretKey unwrap(@NonNull final byte[] wrappedKeyBlob,
+    public static synchronized SecretKey unwrap(final byte[] wrappedKeyBlob,
                                    @NonNull final String wrappedKeyAlgorithm,
                                    @NonNull final KeyPair keyPairForUnwrapping,
                                    @NonNull final String wrapAlgorithm) throws ClientException {
@@ -415,9 +413,7 @@ public class AndroidKeyStoreUtil {
         final Throwable exception;
         final String errCode;
         try {
-            final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm);
-            wrapCipher.init(Cipher.UNWRAP_MODE, keyPairForUnwrapping.getPrivate());
-            return (SecretKey) wrapCipher.unwrap(wrappedKeyBlob, wrappedKeyAlgorithm, Cipher.SECRET_KEY);
+            return unwrapWithRetry(wrappedKeyBlob, wrappedKeyAlgorithm, keyPairForUnwrapping, wrapAlgorithm);
         } catch (final IllegalArgumentException e) {
             // There is issue with Android KeyStore when lock screen type is changed which could
             // potentially wipe out keystore.
@@ -450,15 +446,6 @@ public class AndroidKeyStoreUtil {
                 exception.getMessage(),
                 exception
         );
-        if (exception instanceof InvalidKeyException) {
-            final Attributes attributes = Attributes.builder()
-                    .put(AttributeName.keystore_operation.name(), "unwrap")
-                    .put(AttributeName.error_code.name(), errCode)
-                    .put(AttributeName.error_type.name(), clientException.getClass().getSimpleName())
-                    .put(AttributeName.keystore_exception_stack_trace.name(), ThrowableUtil.getStackTraceAsString(clientException))
-                    .build();
-            sFailedAndroidKeyStoreUnwrapOperationCount.add(1, attributes);
-        }
         Logger.error(
                 methodTag,
                 errCode,
@@ -466,6 +453,51 @@ public class AndroidKeyStoreUtil {
         );
 
         throw clientException;
+    }
+
+    /**
+     * Internal method to handle unwrap retries with exponential backoff
+     */
+    @NonNull
+    private static SecretKey unwrapWithRetry(final byte[] wrappedKeyBlob,
+                                           @NonNull final String wrappedKeyAlgorithm,
+                                           @NonNull final KeyPair keyPairForUnwrapping,
+                                           @NonNull final String wrapAlgorithm) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException {
+        final String methodTag = TAG + ":unwrapWithRetry";
+        int attempt = 0;
+        do {
+            attempt++;
+            try {
+                final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm);
+                wrapCipher.init(Cipher.UNWRAP_MODE, keyPairForUnwrapping.getPrivate());
+                return (SecretKey) wrapCipher.unwrap(wrappedKeyBlob, wrappedKeyAlgorithm, Cipher.SECRET_KEY);
+            } catch (final InvalidKeyException e) {
+                final Attributes attributes = Attributes.builder()
+                        .put(AttributeName.keystore_operation.name(), "unwrap")
+                        .put(AttributeName.error_code.name(), INVALID_KEY)
+                        .put(AttributeName.error_type.name(), e.getClass().getSimpleName())
+                        .put(AttributeName.keystore_exception_stack_trace.name(), ThrowableUtil.getStackTraceAsString(e))
+                        .build();
+                sFailedAndroidKeyStoreUnwrapOperationCount.add(1, attributes);
+
+                long backoffMs = INITIAL_BACKOFF_MS * (1L << attempt);
+                Logger.error(methodTag,
+                        String.format("InvalidKeyException encountered, (attempt %d/%d) failed. Retrying in %d ms ", attempt, MAX_UNWRAP_RETRIES, backoffMs),
+                        e);
+                if (attempt == MAX_UNWRAP_RETRIES) {
+                    throw e;
+                } else {
+                    try {
+                        Thread.sleep(backoffMs);
+                    } catch (final InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        Logger.warn(methodTag, "Thread was interrupted during backoff, rethrowing");
+                        throw e;
+                    }
+                }
+            }
+        } while (attempt < MAX_UNWRAP_RETRIES);
+        throw new IllegalStateException("This code should not be reachable");
     }
 
 }

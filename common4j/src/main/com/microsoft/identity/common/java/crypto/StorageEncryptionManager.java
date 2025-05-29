@@ -223,8 +223,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             try {
                 return decryptWithSecretKey(dataBytes, keyLoader);
             } catch (final Throwable e) {
-                Logger.warn(methodTag, "Failed to decrypt with key:" + keyLoader.getAlias() +
-                        " thumbprint : " + KeyUtil.getKeyThumbPrint(keyLoader));
+                Logger.warn(methodTag, "Failed to decrypt with key:" + keyLoader.getAlias());
                 suppressedException.add(e);
             }
         }

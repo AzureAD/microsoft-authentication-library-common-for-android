@@ -54,6 +54,8 @@ import java.security.KeyStore;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.crypto.SecretKey;
 import javax.security.auth.x500.X500Principal;
@@ -98,6 +100,10 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     // Exposed for testing only.
     /* package */ static final int KEY_FILE_SIZE = 1024;
 
+    /**
+     * SecretKey cache. Maps wrapped secret key file path to the cached data containing the SecretKey.
+     */
+    private static final ConcurrentMap<String, CachedData<SecretKey>> sKeyCacheMap = new ConcurrentHashMap<>();
     private final Context mContext;
 
     /**
@@ -111,21 +117,15 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      */
     private final String mFilePath;
 
-    private final CachedData<SecretKey> mKeyCache = new CachedData<SecretKey>() {
-        @Override
-        public SecretKey getData() {
-            if (!sSkipKeyInvalidationCheck &&
-                    (!AndroidKeyStoreUtil.canLoadKey(mAlias) || !getKeyFile().exists())) {
-                this.clear();
-            }
-            return super.getData();
-        }
-    };
+    // Exposed for testing only.
+    @Nullable
+    /* package */ CachedData<SecretKey> getKeyCache() {
+        return sKeyCacheMap.get(mFilePath);
+    }
 
     // Exposed for testing only.
-    @NonNull
-    /* package */ CachedData<SecretKey> getKeyCache() {
-        return mKeyCache;
+    /* package */ void clearKeyCache() {
+        sKeyCacheMap.remove(mFilePath);
     }
 
     /**
@@ -162,18 +162,28 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     @Override
     @NonNull
     public synchronized SecretKey getKey() throws ClientException {
-        SecretKey key = mKeyCache.getData();
-
-        if (key == null) {
-            key = readSecretKeyFromStorage();
+        final String methodTag = TAG + ":getKey";
+        if (!sSkipKeyInvalidationCheck &&
+                (!AndroidKeyStoreUtil.canLoadKey(mAlias) || !this.getKeyFile().exists())) {
+            sKeyCacheMap.remove(mFilePath);
         }
+
+        final CachedData<SecretKey> keyCache = sKeyCacheMap.computeIfAbsent(mFilePath, k -> new CachedData<SecretKey>() {});
+
+        if (keyCache.getData() != null) {
+           return keyCache.getData();
+        }
+
+        Logger.info(methodTag, "Key cache is empty, loading key from storage");
+        SecretKey key = readSecretKeyFromStorage();
 
         // If key doesn't exist, generate a new one.
         if (key == null) {
+            Logger.info(methodTag, "Key does not exist in storage, generating a new key");
             key = generateRandomKey();
         }
 
-        mKeyCache.setData(key);
+        keyCache.setData(key);
         return key;
     }
 
@@ -213,7 +223,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                 // Do not delete the KeyStoreKeyPair even if the key file is empty. This caused credential cache
                 // to be deleted in Office because of sharedUserId allowing keystore to be shared amongst apps.
                 FileUtil.deleteFile(getKeyFile());
-                mKeyCache.clear();
+                sKeyCacheMap.remove(mFilePath);
                 return null;
             }
 
@@ -417,7 +427,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     public void deleteSecretKeyFromStorage() throws ClientException {
         AndroidKeyStoreUtil.deleteKey(mAlias);
         FileUtil.deleteFile(getKeyFile());
-        mKeyCache.clear();
+        sKeyCacheMap.remove(mFilePath);
     }
 
     /**
