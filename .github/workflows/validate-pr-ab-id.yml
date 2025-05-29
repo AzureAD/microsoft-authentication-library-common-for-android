@@ -90,7 +90,7 @@ jobs:
         env:
           PR_TITLE: ${{ needs.get_pr_title.outputs.prtitle }}
         run: |
-          if echo "$PR_TITLE" | grep -i -q '\bClosed AB#[0-9]+'; then
+          if echo "$PR_TITLE" | grep -i -q '\bclosed AB#[0-9]+'; then
             echo "Pattern found in PR title!, no need to update."
             echo "update_required=false" >> $GITHUB_OUTPUT
           else
