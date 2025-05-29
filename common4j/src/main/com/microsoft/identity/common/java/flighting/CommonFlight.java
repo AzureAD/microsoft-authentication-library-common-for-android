@@ -119,7 +119,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable exposing the JavaScript API for AuthUx requests
      */
-    ENABLE_JS_API_FOR_AUTHUX("EnableJsApiForAuthUx", true),;
+    ENABLE_JS_API_FOR_AUTHUX("EnableJsApiForAuthUx", true);
 
     private String key;
     private Object defaultValue;
