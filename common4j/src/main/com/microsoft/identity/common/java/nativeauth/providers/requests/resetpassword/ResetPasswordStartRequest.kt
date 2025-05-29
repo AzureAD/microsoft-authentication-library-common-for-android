@@ -50,7 +50,8 @@ data class ResetPasswordStartRequest private constructor(
             username: String,
             challengeType: String,
             requestUrl: String,
-            headers: Map<String, String?>
+            headers: Map<String, String?>,
+            capabilities: List<String>? = null
         ): ResetPasswordStartRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(clientId, "clientId")
@@ -64,7 +65,8 @@ data class ResetPasswordStartRequest private constructor(
                 parameters = NativeAuthRequestResetPasswordStartParameters(
                     clientId = clientId,
                     username = username,
-                    challengeType = challengeType
+                    challengeType = challengeType,
+                    capabilities = capabilities
                 )
             )
         }
@@ -77,9 +79,10 @@ data class ResetPasswordStartRequest private constructor(
     data class NativeAuthRequestResetPasswordStartParameters(
         val username: String,
         @SerializedName("client_id") override val clientId: String,
-        @SerializedName("challenge_type") val challengeType: String?
+        @SerializedName("challenge_type") val challengeType: String?,
+        @SerializedName("capabilities") val capabilities: List<String>? = null
     ) : NativeAuthRequestParameters() {
-        override fun toUnsanitizedString(): String = "ResetPasswordStartRequest(clientId=$clientId, challengeType=$challengeType)"
+        override fun toUnsanitizedString(): String = "ResetPasswordStartRequest(clientId=$clientId, challengeType=$challengeType, capabilities=$capabilities)"
 
         override fun toString(): String = "ResetPasswordStartRequest(clientId=$clientId)"
     }
