@@ -67,4 +67,14 @@ object NativeAuthConstants {
         //Authentication must be performed by following the redirect url
         const val REDIRECT = "redirect"
     }
+
+    /**
+     * CapabilityType encapsulates various capability types supported for authentication by Native Auth
+     */
+    object CapabilityType {
+        //mfa is required for authentication
+        const val MFA_REQUIRED = "mfa_required"
+        //registration is required for authentication
+        const val REGISTRATION_REQUIRED = "registration_required"
+    }
 }
