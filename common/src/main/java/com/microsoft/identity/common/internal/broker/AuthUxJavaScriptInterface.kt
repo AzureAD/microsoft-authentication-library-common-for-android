@@ -46,7 +46,7 @@ class AuthUxJavaScriptInterface {
         val TAG = AuthUxJavaScriptInterface::class.java.simpleName
         private const val JAVASCRIPT_INTERFACE_NAME = "ClientBrokerJS"
 
-        fun getInterfaceName() : String {
+        fun getInterfaceName(): String {
             return JAVASCRIPT_INTERFACE_NAME
         }
 
@@ -61,7 +61,7 @@ class AuthUxJavaScriptInterface {
                 return false
             }
 
-            val url : URL
+            val url: URL
             try {
                 url = URL(urlString)
             } catch (e: MalformedURLException) {
@@ -110,7 +110,10 @@ class AuthUxJavaScriptInterface {
         try {
             val payloadObject = parseJsonToAuthUxJsonPayloadObject(jsonPayload)
 
-            Logger.info(methodTag, "Correlation ID during JavaScript Call: [${payloadObject.correlationId}]")
+            Logger.info(
+                methodTag,
+                "Correlation ID during JavaScript Call: [${payloadObject.correlationId}]"
+            )
 
 
             // TODO: Leaving these here, as these will be relevant for next WebCP feature
@@ -123,40 +126,53 @@ class AuthUxJavaScriptInterface {
                 return
             }
 
-            val function = parameters.function
+            val operation = parameters.operation
 
-            Logger.info(methodTag, "Function name: [$function]")
+            Logger.info(methodTag, "Function name: [$operation]")
 
-            val data = parameters.data
-            if (data == null) {
-                Logger.warn(methodTag, "Payload from AuthUX contained no \"data\" field.")
-                return
-            }
-
-            when (function) {
-                FunctionNames.NUMBER_MATCH.name ->
+            when (operation) {
+                OperationNames.NUMBER_MATCHING ->
                     NumberMatchHelper.storeNumberMatch(
-                        data.sessionId,
-                        data.numberMatch)
+                        parameters.sessionId,
+                        parameters.codeMatch
+                    )
+
                 else ->
-                    Logger.warn(methodTag, "Payload from AuthUX contained an unknown function name.")
+                    Logger.warn(
+                        methodTag,
+                        "Payload from AuthUX contained an unknown function name."
+                    )
             }
         } catch (e: Exception) { // If we run into exceptions, we don't want to kill the broker
             when (e) {
                 is NullPointerException -> {
-                    Logger.error(methodTag, "Payload with missing mandatory fields sent through JavaScriptInterface", e)
+                    Logger.error(
+                        methodTag,
+                        "Payload with missing mandatory fields sent through JavaScriptInterface",
+                        e
+                    )
                 }
+
                 is MalformedJsonException, is JsonSyntaxException, is JsonParseException -> {
-                    Logger.error(methodTag, "Error Parsing JSON payload sent through JavaScriptInterface", e)
+                    Logger.error(
+                        methodTag,
+                        "Error Parsing JSON payload sent through JavaScriptInterface",
+                        e
+                    )
                 }
+
                 else -> {
-                    Logger.error(methodTag, "Unknown error occurred while processing the payload.", e)
+                    Logger.error(
+                        methodTag,
+                        "Unknown error occurred while processing the payload.",
+                        e
+                    )
                 }
             }
         }
     }
 
-    private fun parseJsonToAuthUxJsonPayloadObject(jsonString: String): AuthUxJsonPayload{
+    private fun parseJsonToAuthUxJsonPayloadObject(jsonString: String): AuthUxJsonPayload {
         val gson = GsonBuilder()
             .registerTypeAdapter(AuthUxJsonPayload::class.java, AuthUxJsonPayloadKTDeserializer())
             .create()
@@ -164,9 +180,9 @@ class AuthUxJavaScriptInterface {
     }
 
     /**
-     * Enum class to hold function names
+     * Enum class representing the operation names that can be called from AuthUX.
      */
-    enum class FunctionNames {
-        NUMBER_MATCH
+    object OperationNames {
+        const val NUMBER_MATCHING = "number_matching"
     }
 }

@@ -47,29 +47,18 @@ data class AuthUxJsonPayload(
 /**
  * Data class representing the parameters for the action, including function and data.
  *
- * @property function The function to be executed.
+ * @property operation The operation to be executed.
  * @property data The data associated with the function.
  */
 data class AuthUxParams(
-    @SerializedName(SerializedNames.FUNCTION)
-    val function: String?,
+    @SerializedName(SerializedNames.OPERATION)
+    val operation: String?,
 
-    @SerializedName(SerializedNames.DATA)
-    val data: AuthUxData?
-)
-
-/**
- * Data class representing the data associated with the JS API call.
- *
- * @property sessionId The session ID for the request.
- * @property numberMatch The number match value.
- */
-data class AuthUxData(
     @SerializedName(SerializedNames.SESSION_ID)
     val sessionId: String?,
 
-    @SerializedName(SerializedNames.NUMBER_MATCH)
-    val numberMatch: String?
+    @SerializedName(SerializedNames.CODE_MATCH)
+    val codeMatch: String?
 )
 
 class AuthUxJsonPayloadKTDeserializer : JsonDeserializer<AuthUxJsonPayload> {
@@ -103,8 +92,7 @@ object SerializedNames {
     const val ACTION_NAME = "action_name"
     const val ACTION_COMPONENT = "action_component"
     const val PARAMS = "params"
-    const val FUNCTION = "function"
-    const val DATA = "data"
+    const val OPERATION = "operation"
     const val SESSION_ID = "sessionID"
-    const val NUMBER_MATCH = "numberMatch"
+    const val CODE_MATCH = "code_match"
 }
