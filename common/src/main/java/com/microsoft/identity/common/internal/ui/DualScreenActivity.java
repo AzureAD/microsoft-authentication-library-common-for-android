@@ -47,12 +47,14 @@ public class DualScreenActivity extends FragmentActivity {
     public void setContentView(int layoutResID) {
         super.setContentView(R.layout.dual_screen_layout);
         adjustLayoutForDualScreenActivity();
+        Log.i("DualScreenActivity", "---------Setting content view with layoutResID: ");
         final RelativeLayout contentLayout = findViewById(R.id.dual_screen_content);
         LayoutInflater.from(this).inflate(layoutResID, contentLayout);
     }
 
     public void setFragment(@NonNull final Fragment fragment) {
         super.setContentView(R.layout.dual_screen_layout);
+        Log.i("DualScreenActivity", "---------Setting fragment");
         adjustLayoutForDualScreenActivity();
         getSupportFragmentManager()
                 .beginTransaction()
@@ -64,6 +66,7 @@ public class DualScreenActivity extends FragmentActivity {
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+        Log.i("DualScreenActivity", "---------onConfigurationChanged");
         adjustLayoutForDualScreenActivity();
     }
 
@@ -74,7 +77,7 @@ public class DualScreenActivity extends FragmentActivity {
                 (foldingFeature) -> {
                     runOnUiThread(() -> {
 
-                        Log.i("DualScreenActivity", "Folding feature: " + foldingFeature);
+                        Log.i("DualScreenActivity", "init Folding feature: " + foldingFeature);
                         // If the device is not dual-screen, then we do not need to adjust the layout.
                         if (foldingFeature != null && foldingFeature.isSeparating()) {
                             Log.i("DualScreenActivity", "isSeparating: " + foldingFeature.isSeparating());
