@@ -41,7 +41,8 @@ import lombok.Getter;
 import lombok.experimental.Accessors;
 
 /**
- * Represents the broker request
+ * Represents generic broker request. Callers must ensure all parameters are set for the request
+ * and broker side must ensure all expected parameters are present in the request.
  */
 @Builder
 @Accessors(prefix = "m")
@@ -81,13 +82,14 @@ public class BrokerRequest implements Serializable {
         final static String ACCOUNT_TRANSFER_TOKEN = "account_transfer_token";
         final static String SUPPRESS_ACCOUNT_PICKER = "suppress_account_picker";
         final static String SIGN_IN_WITH_GOOGLE_CREDENTIAL = "sign_in_with_google_credential";
+
+        final static String TENANT_ID = "tenant_id";
     }
 
     /**
      * Authority for the request
      */
     @SerializedName(SerializedNames.AUTHORITY)
-    @NonNull
     private String mAuthority;
 
     /**
@@ -228,7 +230,6 @@ public class BrokerRequest implements Serializable {
     /**
      * Boolean indicated whether app supports multiple clouds.
      */
-    @NonNull
     @SerializedName(SerializedNames.MULTIPLE_CLOUDS_SUPPORTED)
     private boolean mMultipleCloudsSupported;
 
@@ -271,4 +272,13 @@ public class BrokerRequest implements Serializable {
     @Nullable
     @SerializedName(SerializedNames.SIGN_IN_WITH_GOOGLE_CREDENTIAL)
     private SignInWithGoogleCredential mSignInWithGoogleCredential;
+
+    /**
+     * Tenant ID for the request if applicable. Currently used in request
+     * to get device ID from broker if the the device is registered in the
+     * given tenant.
+     */
+    @Nullable
+    @SerializedName(SerializedNames.TENANT_ID)
+    private String mTenantId;
 }
