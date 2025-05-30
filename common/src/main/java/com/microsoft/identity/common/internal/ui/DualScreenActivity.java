@@ -36,6 +36,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.window.layout.FoldingFeature;
+
 import com.microsoft.identity.common.R;
 
 
@@ -68,26 +69,51 @@ public class DualScreenActivity extends FragmentActivity {
 
 
     private void adjustLayoutForDualScreenActivity() {
-        adjustLayoutCommon();
-        DeviceUtils.INSTANCE.getFoldingFeatures(this, (foldingFeature) -> {
-            runOnUiThread(() -> {
-                Log.i("DualScreenActivity", "Folding feature: " + foldingFeature);
-                // If the device is not dual-screen, then we do not need to adjust the layout.
-                if (foldingFeature != null && foldingFeature.isSeparating()) {
-                    Log.i("DualScreenActivity", "isSeparating: " + foldingFeature.isSeparating());
-                    final Rect hinge = foldingFeature.getBounds();
-                    if (isAppSpanned(hinge)) {
-                        Log.i("DualScreenActivity", "Orientation: " + foldingFeature.getOrientation());
-                        if (foldingFeature.getOrientation() == FoldingFeature.Orientation.HORIZONTAL) {
-                            adjustLayoutSpannedHorizontal(hinge);
+        setBaseLayoutForDualScreen();
+        DeviceUtils.INSTANCE.getFoldingFeaturesSuspendedForJava(this,
+                (foldingFeature) -> {
+                    runOnUiThread(() -> {
+
+                        Log.i("DualScreenActivity", "Folding feature: " + foldingFeature);
+                        // If the device is not dual-screen, then we do not need to adjust the layout.
+                        if (foldingFeature != null && foldingFeature.isSeparating()) {
+                            Log.i("DualScreenActivity", "isSeparating: " + foldingFeature.isSeparating());
+                            final Rect hinge = foldingFeature.getBounds();
+                            if (isAppSpanned(hinge)) {
+                                Log.i("DualScreenActivity", "Orientation: " + foldingFeature.getOrientation());
+                                if (foldingFeature.getOrientation() == FoldingFeature.Orientation.HORIZONTAL) {
+                                    adjustLayoutSpannedHorizontal(hinge);
+                                } else {
+                                    adjustLayoutSpannedVertical(hinge);
+                                }
+                            }
                         } else {
-                            adjustLayoutSpannedVertical(hinge);
+                            setBaseLayoutForNotDual();
                         }
-                    }
-                }
-            });
-            return null;
-        });
+                    });
+                    return null;
+                });
+
+
+//        DeviceUtils.INSTANCE.getFoldingFeatures(this, (foldingFeature) -> {
+//            runOnUiThread(() -> {
+//                Log.i("DualScreenActivity", "Folding feature: " + foldingFeature);
+//                // If the device is not dual-screen, then we do not need to adjust the layout.
+//                if (foldingFeature != null && foldingFeature.isSeparating()) {
+//                    Log.i("DualScreenActivity", "isSeparating: " + foldingFeature.isSeparating());
+//                    final Rect hinge = foldingFeature.getBounds();
+//                    if (isAppSpanned(hinge)) {
+//                        Log.i("DualScreenActivity", "Orientation: " + foldingFeature.getOrientation());
+//                        if (foldingFeature.getOrientation() == FoldingFeature.Orientation.HORIZONTAL) {
+//                           adjustLayoutSpannedHorizontal(hinge);
+//                        } else {
+//                           adjustLayoutSpannedVertical(hinge);
+//                        }
+//                    }
+//                }
+//            });
+//            return null;
+//        });
     }
 
     /**
@@ -114,6 +140,7 @@ public class DualScreenActivity extends FragmentActivity {
 
 
     private ConstraintSet getCommonConstraintSet()  {
+        Log.i("DualScreenActivity", "Creating common ConstraintSet for dual screen layout.");
         final ConstraintSet constraintSet = new ConstraintSet();
         constraintSet.connect(R.id.dual_screen_content, ConstraintSet.LEFT, R.id.dual_screen_layout, ConstraintSet.LEFT, 0);
         constraintSet.connect(R.id.dual_screen_content, ConstraintSet.RIGHT, R.id.dual_screen_layout, ConstraintSet.RIGHT, 0);
@@ -124,7 +151,6 @@ public class DualScreenActivity extends FragmentActivity {
         constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.RIGHT, R.id.dual_screen_layout, ConstraintSet.RIGHT, 0);
         constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.TOP, R.id.dual_screen_layout, ConstraintSet.TOP, 0);
         constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.BOTTOM, R.id.dual_screen_layout, ConstraintSet.BOTTOM, 0);
-        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         return constraintSet;
     }
 
@@ -133,23 +159,37 @@ public class DualScreenActivity extends FragmentActivity {
         dualScreenLayout.setConstraintSet(constraintSet);
     }
 
-    private void adjustLayoutCommon() {
+    private void setBaseLayoutForDualScreen() {
+        Log.i("DualScreenActivity", "Setting base layout for dual screen.");
         final ConstraintSet constraintSet = getCommonConstraintSet();
+       // getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        setConstraintSetForDualScreenLayout(constraintSet);
+    }
+
+    private void setBaseLayoutForNotDual() {
+        Log.i("DualScreenActivity", "Setting base layout for not dual screen.");
+        final ConstraintSet constraintSet = getCommonConstraintSet();
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         constraintSet.clear(R.id.dual_screen_empty_view);
         setConstraintSetForDualScreenLayout(constraintSet);
     }
 
-    private void adjustLayoutSpannedHorizontal(@NonNull final Rect hinge) {
+    private void adjustLayoutSpannedVertical(@NonNull final Rect hinge) {
+        Log.i("DualScreenActivity", "Vertical, hinge height: " + hinge );
+
         final ConstraintSet constraintSet = getCommonConstraintSet();
         int duoHingeWidth = hinge.width() / 2;
         // WebView is on the right.
         constraintSet.connect(R.id.dual_screen_content, ConstraintSet.LEFT, R.id.vertical_guideline, ConstraintSet.RIGHT, duoHingeWidth);
         // Empty view is on the left.
         constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.RIGHT, R.id.vertical_guideline, ConstraintSet.LEFT, 0);
+
         setConstraintSetForDualScreenLayout(constraintSet);
     }
 
-    private void adjustLayoutSpannedVertical(@NonNull final Rect hinge) {
+    private void adjustLayoutSpannedHorizontal(@NonNull final Rect hinge) {
+        Log.i("DualScreenActivity", "Horizontal, hinge height: " + hinge );
+
         final ConstraintSet constraintSet = getCommonConstraintSet();
         int duoHingeWidth = hinge.height() / 2;
         // WebView is on the top.
@@ -161,4 +201,12 @@ public class DualScreenActivity extends FragmentActivity {
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
         setConstraintSetForDualScreenLayout(constraintSet);
     }
+
+
+
+
+
+
+
 }
+

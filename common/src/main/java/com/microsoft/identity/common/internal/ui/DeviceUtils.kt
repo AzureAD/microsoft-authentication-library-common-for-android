@@ -29,6 +29,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 object DeviceUtils {
@@ -63,4 +64,50 @@ object DeviceUtils {
             }
         }
     }
+
+
+    /**
+     * Suspended version of getFoldingFeatures that returns folding feature information
+     *
+     * @param activity The activity to check
+     * @return The folding feature or null if none exists
+     */
+    suspend fun getFoldingFeaturesSuspended(activity: Activity): FoldingFeature? {
+        if (activity !is LifecycleOwner) {
+            return null
+        }
+
+        val windowInfoTracker = WindowInfoTracker.getOrCreate(activity)
+
+        // Get the first value from the flow
+        val layoutInfo = windowInfoTracker.windowLayoutInfo(activity).firstOrNull() ?: return null
+
+        return layoutInfo.displayFeatures
+            .filterIsInstance<FoldingFeature>()
+            .firstOrNull()
+    }
+
+    /**
+     * Java-friendly wrapper for getFoldingFeaturesSuspended
+     *
+     * @param activity The activity to check
+     * @param callback Callback that will receive the folding feature when complete
+     */
+    fun getFoldingFeaturesSuspendedForJava(
+        activity: Activity,
+        callback: (FoldingFeature?) -> Unit
+    ) {
+        if (activity !is LifecycleOwner) {
+            callback(null)
+            return
+        }
+
+        val lifecycleOwner = activity as LifecycleOwner
+        lifecycleOwner.lifecycleScope.launch {
+            val foldingFeature = getFoldingFeaturesSuspended(activity)
+            callback(foldingFeature)
+        }
+    }
+
+
 }
