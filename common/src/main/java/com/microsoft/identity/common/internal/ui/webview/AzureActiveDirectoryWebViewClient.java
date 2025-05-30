@@ -43,6 +43,7 @@ import androidx.lifecycle.ViewTreeLifecycleOwner;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.BrokerData;
+import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.fido.CredManFidoManager;
 import com.microsoft.identity.common.internal.fido.FidoChallenge;
@@ -133,6 +134,25 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
+     * This method is used to initialize the JavaScript API for the AuthUx JavaScript interface.
+     * It checks if the current process is running on the AuthService and if the URL is valid for the interface.
+     * If both conditions are met, it adds the JavaScript interface to the WebView.
+     */
+    public void initializeAuthUxJavaScriptApi(@NonNull final WebView view, final String url) {
+        if (shouldExposeJavaScriptInterface(url)) {
+            // If broker request, and a valid url, expose JavaScript API
+            Logger.info(TAG, "Adding AuthUx JavaScript Interface");
+            view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
+        }
+    }
+
+    private boolean shouldExposeJavaScriptInterface(final String url) {
+        return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
+                && AuthUxJavaScriptInterface.Companion.isValidUrlForInterface(url)
+                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+    }
+
+    /**
      * Give the host application a chance to take over the control when a new url is about to be loaded in the current WebView.
      * This method was deprecated in API level 24.
      *
@@ -192,6 +212,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean handleUrl(final WebView view, final String url) {
         final String methodTag = TAG + ":handleUrl";
         final String formattedURL = url.toLowerCase(Locale.US);
+
+        // Re-evaluate adding AuthUx JavaScript Interface
+        if (shouldExposeJavaScriptInterface(url)) {
+            // If broker request, and a valid url, expose JavaScript API
+            Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
+            view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
+        } else {
+            // Remove AuthUx JavaScript Interface
+            Logger.info(methodTag, "Removing AuthUx JavaScript Interface");
+            view.removeJavascriptInterface(AuthUxJavaScriptInterface.Companion.getInterfaceName());
+        }
+
 
         try {
             if (isPkeyAuthUrl(formattedURL)) {

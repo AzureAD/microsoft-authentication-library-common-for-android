@@ -53,9 +53,8 @@ public interface IDeviceCertificate {
     /**
      * Signs a piece of data with the (private key associated to the) certificate.
      *
-     * @param algorithm         algorithm for signing the data.
      * @param dataToBeSigned    the data to be signed.
      */
-    byte[] sign(@NonNull final String algorithm, final byte[] dataToBeSigned) throws ClientException;
+    byte[] sign(final byte[] dataToBeSigned) throws ClientException;
 }
 

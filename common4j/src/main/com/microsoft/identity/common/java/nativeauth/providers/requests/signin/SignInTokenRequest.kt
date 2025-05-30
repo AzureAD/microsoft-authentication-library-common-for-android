@@ -135,7 +135,7 @@ data class SignInTokenRequest private constructor(
         fun createContinuationTokenRequest(
             continuationToken: String,
             clientId: String,
-            username: String,
+            username: String?,
             scopes: List<String>? = null,
             challengeType: String? = null,
             requestUrl: String,
@@ -145,7 +145,6 @@ data class SignInTokenRequest private constructor(
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             ArgUtils.validateNonNullArg(clientId, "clientId")
-            ArgUtils.validateNonNullArg(username, "username")
             ArgUtils.validateNonNullArg(challengeType, "challengeType")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")

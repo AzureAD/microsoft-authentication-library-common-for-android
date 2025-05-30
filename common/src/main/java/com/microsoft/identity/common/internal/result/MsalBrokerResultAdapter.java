@@ -59,6 +59,7 @@ import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
+import com.microsoft.identity.common.java.dto.AadDeviceIdRecord;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.exception.ArgumentException;
@@ -905,6 +906,26 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         return JsonExtensions.getICacheRecordListFromJsonString(accountJson);
     }
 
+    /**
+     * Get resource account record from the result bundle. If successful, new account
+     * record part of ICachedRecord is returned.
+     * @param bundle The result bundle from the broker.
+     * @throws BaseException
+     */
+    public ICacheRecord resourceAccountRecordFromBundle(@NonNull final Bundle bundle) throws BaseException {
+        final String methodTag = TAG + ":resourceAccountRecordFromBundle";
+        final List<ICacheRecord> cacheRecords = getAccountsFromResultBundle(bundle);
+        if (cacheRecords.isEmpty()) {
+            Logger.error(methodTag, "No accounts found in the result bundle", null);
+            throw new ClientException(INVALID_BROKER_BUNDLE, "No accounts found in the result bundle");
+        }
+        if (cacheRecords.size() > 1) {
+            Logger.error(methodTag, "Multiple accounts found in the result bundle", null);
+            throw new ClientException(INVALID_BROKER_BUNDLE, "Multiple accounts found in the result bundle");
+        }
+        return cacheRecords.get(0);
+    }
+
     public void verifyRemoveAccountResultFromBundle(@Nullable final Bundle bundle) throws BaseException {
         final String methodTag = TAG + ":verifyRemoveAccountResultFromBundle";
         if (bundle == null) {
@@ -990,5 +1011,20 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             Logger.error(methodTag, exception.getMessage(), exception);
             throw exception;
         }
+    }
+
+    /**
+     * Gets the {@link AadDeviceIdRecord} from the result bundle.
+     * record part of ICachedRecord is returned.
+     * @param resultBundle The result bundle from the broker.
+     * @throws BaseException
+     */
+    public AadDeviceIdRecord aadDeviceIdRecordFromBundle(@NonNull final Bundle resultBundle) throws BaseException {
+        final BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
+        final AadDeviceIdRecord aadDeviceIdRecord = brokerResult.getAadDeviceIdRecord();
+        if (aadDeviceIdRecord == null) {
+            throw this.getBaseExceptionFromBundle(resultBundle);
+        }
+        return aadDeviceIdRecord;
     }
 }

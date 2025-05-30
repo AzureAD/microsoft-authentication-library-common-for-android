@@ -1,6 +1,9 @@
 vNext
 ----------
 - [MINOR] Implement a WebView handler to facilitate broker app installation via the Play Store (#2643)
+- [MINOR] Add Get AAD device ID API for resource account (#2644)
+- [MINOR] Expose a JavaScript API in brokered Webviews to facilitate Improved Same Device NumberMatch (#2617)
+- [MINOR] Add API for resource account provisioning (API only) (#2640)
 
 Version 21.1.0
 ----------
@@ -9,6 +12,7 @@ Version 21.1.0
 - [MINOR] Move camera logic to CameraPermissionRequestHandler and add SdmQrPinManager (#2630)
 - [MINOR] Pass Work Profile existence, OS Version, and Manufacturer to ESTS (#2627)
 - [MINOR] Add telemetry for the switch browser protocol (#2612)
+- [MINOR] Native auth: user can now register email as new strong authentication method when MFA is required (#2639)
 
 Version 21.0.0
 ----------
