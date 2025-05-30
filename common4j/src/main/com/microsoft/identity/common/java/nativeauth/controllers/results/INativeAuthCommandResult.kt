@@ -33,13 +33,15 @@ interface INativeAuthCommandResult : ILoggable {
     val correlationId: String
     data class Redirect(
         override val correlationId: String,
+        override val errorDescription: String
     ) : Error(error = BROWSER_REQUIRED_ERROR, errorDescription = BROWSER_REQUIRED_ERROR_DESCRIPTION, correlationId = correlationId),
-        SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInSubmitCodeCommandResult, SignInResendCodeCommandResult,
-        SignInSubmitPasswordCommandResult, SignUpStartCommandResult, SignUpSubmitCodeCommandResult,
+        SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInSubmitCodeCommandResult, SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult,
+        SignUpStartCommandResult, SignUpSubmitCodeCommandResult,
         SignUpResendCodeCommandResult, SignUpSubmitPasswordCommandResult,
         SignUpSubmitUserAttributesCommandResult,
-        ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,
-        ResetPasswordResendCodeCommandResult, MFAChallengeCommandResult, GetAuthMethodsCommandResult {
+        ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult, ResetPasswordResendCodeCommandResult, ResetPasswordSubmitNewPasswordCommandResult,
+        MFAChallengeCommandResult, MFASubmitChallengeCommandResult,
+        JITChallengeAuthMethodCommandResult, JITSubmitChallengeCommandResult, GetAuthMethodsCommandResult {
             companion object {
                 private const val BROWSER_REQUIRED_ERROR: String = "browser_required"
                 private const val BROWSER_REQUIRED_ERROR_DESCRIPTION: String = "The client's authentication capabilities are insufficient. Please redirect to the browser to complete authentication"
