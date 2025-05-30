@@ -54,6 +54,7 @@ class SignInChallengeApiResponse(
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
+    @SerializedName("redirect_reason") val redirectReason: String? = null,
 ): IApiResponse(statusCode, correlationId) {
 
     override fun toUnsanitizedString(): String {
@@ -62,7 +63,8 @@ class SignInChallengeApiResponse(
                 "bindingMethod=$bindingMethod, challengeTargetLabel=$challengeTargetLabel, " +
                 "challengeChannel=$challengeChannel, codeLength=$codeLength, interval=$interval, " +
                 "error=$error, subError=$subError, errorDescription=$errorDescription, errorCodes=$errorCodes, " +
-                "errorUri=$errorUri)"
+                "errorUri=$errorUri, " +
+                "redirectReason=$redirectReason)"
     }
 
     override fun toString(): String = "SignInChallengeApiResponse(statusCode=$statusCode, " +
@@ -104,7 +106,8 @@ class SignInChallengeApiResponse(
                 return when {
                     challengeType.isRedirect() -> {
                         SignInChallengeApiResult.Redirect(
-                            correlationId = correlationId
+                            correlationId = correlationId,
+                            errorDescription = redirectReason.orEmpty()
                         )
                     }
                     challengeType.isOOB() -> {

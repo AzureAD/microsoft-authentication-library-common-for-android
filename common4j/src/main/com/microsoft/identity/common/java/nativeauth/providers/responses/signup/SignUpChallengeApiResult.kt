@@ -31,10 +31,11 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
  */
 sealed interface SignUpChallengeApiResult: ApiResult {
     data class Redirect(
-        override val correlationId: String
+        override val correlationId: String,
+        val errorDescription: String
     ) : SignUpChallengeApiResult {
         override fun toUnsanitizedString(): String {
-            return "Redirect(correlationId=$correlationId)"
+            return "Redirect(correlationId=$correlationId, errorDescription=$errorDescription)"
         }
 
         override fun toString(): String = toUnsanitizedString()

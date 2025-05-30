@@ -35,10 +35,11 @@ sealed interface SignUpStartApiResult: ApiResult {
      * The response from Signup Start is to redirect to a browser based authentication.
      */
     data class Redirect(
-        override val correlationId: String
+        override val correlationId: String,
+        val errorDescription: String
     ) : SignUpStartApiResult {
         override fun toUnsanitizedString(): String {
-            return "Redirect(correlationId=$correlationId)"
+            return "Redirect(correlationId=$correlationId, errorDescription=$errorDescription)"
         }
 
         override fun toString(): String = toUnsanitizedString()

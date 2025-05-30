@@ -57,7 +57,8 @@ class SignUpStartApiResponse(
     @SerializedName("error") val error: String?,
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     @SerializedName("error_description") val errorDescription: String?,
-    @SerializedName("suberror") val subError: String?
+    @SerializedName("suberror") val subError: String?,
+    @SerializedName("redirect_reason") val redirectReason: String? = null
 ) : IApiResponse(statusCode, correlationId) {
 
     override fun toUnsanitizedString(): String {
@@ -144,7 +145,8 @@ class SignUpStartApiResponse(
             HttpURLConnection.HTTP_OK -> {
                 if (challengeType.isRedirect()) {
                     SignUpStartApiResult.Redirect(
-                        correlationId = correlationId
+                        correlationId = correlationId,
+                        errorDescription = redirectReason.orEmpty()
                     )
                 }
                 else {

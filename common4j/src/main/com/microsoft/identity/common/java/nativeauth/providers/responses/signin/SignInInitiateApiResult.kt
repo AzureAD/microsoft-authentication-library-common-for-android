@@ -32,7 +32,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
 sealed interface SignInInitiateApiResult: ApiResult {
     data class Redirect(
         override val correlationId: String,
-        override val errorDescription: String,
+        val errorDescription: String,
     ) : SignInInitiateApiResult {
         override fun toUnsanitizedString(): String {
             return "Redirect(correlationId=$correlationId, errorDescription=$errorDescription)"

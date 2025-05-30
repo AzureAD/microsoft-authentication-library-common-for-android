@@ -32,6 +32,18 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
  * including a case for unexpected errors received from the server.
  */
 sealed interface SignInTokenApiResult: ApiResult, ILoggable {
+
+    data class Redirect(
+        override val correlationId: String,
+        val errorDescription: String
+    ) : SignInTokenApiResult {
+        override fun toUnsanitizedString(): String {
+            return "Redirect(correlationId=$correlationId, errorDescription=$errorDescription)"
+        }
+
+        override fun toString(): String = toUnsanitizedString()
+    }
+
     data class Success(
         override val correlationId: String,
         val tokenResponse: MicrosoftStsTokenResponse

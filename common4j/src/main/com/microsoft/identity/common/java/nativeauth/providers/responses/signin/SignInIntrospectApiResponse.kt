@@ -45,12 +45,14 @@ class SignInIntrospectApiResponse(
     @SerializedName("error") val error: String?,
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     @SerializedName("error_description") val errorDescription: String?,
+    @SerializedName("redirect_reason") val redirectReason: String? = null,
 ): IApiResponse(statusCode, correlationId) {
 
     override fun toUnsanitizedString(): String {
         return "SignInIntrospectApiResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId, methods=$methods, " +
-                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes, " +
+                "redirectReason=$redirectReason)"
     }
 
     override fun toString(): String = "SignInIntrospectApiResponse(statusCode=$statusCode, " +
@@ -77,7 +79,8 @@ class SignInIntrospectApiResponse(
                 return when {
                     challengeType.isRedirect() -> {
                         SignInIntrospectApiResult.Redirect(
-                            correlationId = correlationId
+                            correlationId = correlationId,
+                            errorDescription = redirectReason.orEmpty()
                         )
                     }
                     methods.isNullOrEmpty() -> {
