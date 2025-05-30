@@ -53,7 +53,7 @@ class SignInTokenApiResponse(
     @SerializedName("error_uri") val errorUri: String?,
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     @SerializedName("suberror") val subError: String?,
-    @Expose @SerializedName("challenge_type") val challengeType: String?,
+    @Expose @SerializedName("challenge_type") val challengeType: String? = null,
     @SerializedName("redirect_reason") val redirectReason: String? = null,
     ): IApiResponse(statusCode, correlationId) {
 

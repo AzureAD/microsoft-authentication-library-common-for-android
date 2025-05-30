@@ -26,7 +26,6 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
-import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResult
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidGrant
 import com.microsoft.identity.common.java.nativeauth.util.isOOBValueInvalid
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
@@ -44,7 +43,7 @@ class JITContinueApiResponse(
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("suberror") val subError: String?,
-    @Expose @SerializedName("challenge_type") val challengeType: String?,
+    @Expose @SerializedName("challenge_type") val challengeType: String? = null,
     @SerializedName("redirect_reason") val redirectReason: String? = null
 ) : IApiResponse(statusCode, correlationId) {
     override fun toUnsanitizedString(): String {

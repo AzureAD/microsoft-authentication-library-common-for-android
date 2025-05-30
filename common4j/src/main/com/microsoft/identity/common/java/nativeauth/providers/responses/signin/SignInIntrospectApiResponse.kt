@@ -26,8 +26,6 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
-import com.microsoft.identity.common.java.nativeauth.util.isOOB
-import com.microsoft.identity.common.java.nativeauth.util.isPassword
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import java.lang.IllegalStateException
 import java.net.HttpURLConnection

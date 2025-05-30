@@ -24,7 +24,6 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.resetp
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
 import com.microsoft.identity.common.java.nativeauth.util.*
 import java.net.HttpURLConnection
@@ -42,7 +41,7 @@ class ResetPasswordSubmitApiResponse(
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
     @SerializedName("suberror") val subError: String?,
-    @Expose @SerializedName("challenge_type") val challengeType: String?,
+    @Expose @SerializedName("challenge_type") val challengeType: String? = null,
     @SerializedName("redirect_reason") val redirectReason: String? = null
 ): IApiResponse(statusCode, correlationId) {
 
@@ -137,6 +136,6 @@ class ResetPasswordSubmitApiResponse(
         {
             return DEFAULT_POLL_COMPLETION_INTERVAL_IN_SECONDS
         }
-        return pollIntervalInSeconds;
+        return pollIntervalInSeconds
     }
 }

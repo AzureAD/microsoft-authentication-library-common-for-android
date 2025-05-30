@@ -62,7 +62,7 @@ class SignUpContinueApiResponse(
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("suberror") val subError: String?,
-    @Expose @SerializedName("challenge_type") val challengeType: String?,
+    @Expose @SerializedName("challenge_type") val challengeType: String? = null,
     @SerializedName("redirect_reason") val redirectReason: String? = null
 ) : IApiResponse(statusCode, correlationId) {
 

@@ -24,7 +24,6 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.jit
 
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResult
-import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResult
 
 /**
  * Represents the potential result types returned from the register/continue endpoint,
