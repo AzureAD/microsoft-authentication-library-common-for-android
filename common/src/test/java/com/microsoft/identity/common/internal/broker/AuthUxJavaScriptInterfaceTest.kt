@@ -36,18 +36,14 @@ class AuthUxJavaScriptInterfaceTest {
     private val mockNumberMatchValue = "00"
 
     private val numberMatchTestPayload = """
-        { 
-            "correlationID": "SOME_CORRELATION_ID" ,
-            "action_name":"write_data", 
-            "action_component":"broker", 
-            "params": 
-            { 
-                "function": "NUMBER_MATCH", 
-                "data": 
-                { 
-                    "sessionID": "$mockSessionId", 
-                    "numberMatch": "$mockNumberMatchValue" 
-                } 
+        {
+            correlationID: w.ServerData.correlationId,
+            action_name: "write_data",
+            action_component: "broker",
+            params: {
+                operation: "number_matching",
+                sessionID: $mockSessionId,
+                code_match: $mockNumberMatchValue
             }
         }
     """.trimIndent()

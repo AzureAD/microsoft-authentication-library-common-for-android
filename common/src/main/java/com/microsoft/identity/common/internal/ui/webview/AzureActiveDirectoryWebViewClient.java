@@ -137,11 +137,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * If both conditions are met, it adds the JavaScript interface to the WebView.
      */
     public void initializeAuthUxJavaScriptApi(@NonNull final WebView view, final String url) {
-        if (ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext()) && AuthUxJavaScriptInterface.Companion.isValidUrlForInterface(url)) {
+        if (shouldExposeJavaScriptInterface(url)) {
             // If broker request, and a valid url, expose JavaScript API
             Logger.info(TAG, "Adding AuthUx JavaScript Interface");
             view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
         }
+    }
+
+    private boolean shouldExposeJavaScriptInterface(final String url) {
+        return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
+                && AuthUxJavaScriptInterface.Companion.isValidUrlForInterface(url)
+                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
     }
 
     /**
@@ -206,7 +212,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String formattedURL = url.toLowerCase(Locale.US);
 
         // Re-evaluate adding AuthUx JavaScript Interface
-        if (ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext()) && AuthUxJavaScriptInterface.Companion.isValidUrlForInterface(url)) {
+        if (shouldExposeJavaScriptInterface(url)) {
             // If broker request, and a valid url, expose JavaScript API
             Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
             view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
