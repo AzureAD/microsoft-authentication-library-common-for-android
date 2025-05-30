@@ -167,13 +167,13 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
             sKeyCacheMap.remove(mFilePath);
         }
 
-        SecretKey cachedKey = sKeyCacheMap.get(mFilePath);
-        if (cachedKey != null) {
-            return cachedKey;
+        SecretKey key = sKeyCacheMap.get(mFilePath);
+        if (key != null) {
+            return key;
         }
 
         Logger.info(methodTag, "Key not in cache is empty, loading key from storage");
-        SecretKey key = readSecretKeyFromStorage();
+        key = readSecretKeyFromStorage();
 
         // If key doesn't exist, generate a new one.
         if (key == null) {
