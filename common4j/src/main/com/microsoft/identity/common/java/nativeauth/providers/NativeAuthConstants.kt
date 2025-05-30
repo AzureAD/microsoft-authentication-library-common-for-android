@@ -71,10 +71,10 @@ object NativeAuthConstants {
     /**
      * CapabilityType encapsulates various capability types supported for authentication by Native Auth
      */
-    object CapabilityType {
-        //mfa is required for authentication
+    object Capabilities {
+        //Application supports challenge_type when MFA is required
         const val MFA_REQUIRED = "mfa_required"
-        //registration is required for authentication
+        //Application supports challenge_type when the registration of a new strong authentication method is required.
         const val REGISTRATION_REQUIRED = "registration_required"
     }
 }
