@@ -113,7 +113,8 @@ private val signUpUsernameAlreadyExistsCommandResult = SignUpCommandResult.Usern
 )
 
 private val redirectCommandResult = INativeAuthCommandResult.Redirect(
-    correlationId = CORRELATION_ID
+    correlationId = CORRELATION_ID,
+    errorDescription = ERROR_DESCRIPTION
 )
 
 private val APIErrorCommandResult = INativeAuthCommandResult.APIError(
