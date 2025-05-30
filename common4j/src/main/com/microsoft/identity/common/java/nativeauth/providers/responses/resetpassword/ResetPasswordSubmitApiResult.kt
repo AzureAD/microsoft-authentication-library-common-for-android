@@ -40,6 +40,7 @@ sealed interface ResetPasswordSubmitApiResult: ApiResult {
 
         override fun toString(): String = toUnsanitizedString()
     }
+
     data class SubmitSuccess(
         val continuationToken: String,
         val pollInterval: Int,

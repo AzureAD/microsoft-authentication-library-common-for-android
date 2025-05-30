@@ -46,13 +46,15 @@ class JITIntrospectApiResponse(
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
+    @SerializedName("redirect_reason") val redirectReason: String? = null
 ) : IApiResponse(statusCode, correlationId) {
 
     override fun toUnsanitizedString(): String {
         return "JITIntrospectApiResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId " +
                 "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription, " +
-                "methods=$methods, challengeType=$challengeType)"
+                "methods=$methods, challengeType=$challengeType, " +
+                "redirectReason = $redirectReason)"
     }
 
     override fun toString(): String = "JITIntrospectApiResponse(statusCode=$statusCode, " +
@@ -73,6 +75,12 @@ class JITIntrospectApiResponse(
             // Handle success and redirect
             HttpURLConnection.HTTP_OK -> {
                 return when {
+                    challengeType.isRedirect() -> {
+                        JITIntrospectApiResult.Redirect(
+                            correlationId = correlationId,
+                            errorDescription = redirectReason.orEmpty()
+                        )
+                    }
                     methods.isNullOrEmpty() -> {
                         JITIntrospectApiResult.UnknownError(
                             error = ApiErrorResult.INVALID_STATE,

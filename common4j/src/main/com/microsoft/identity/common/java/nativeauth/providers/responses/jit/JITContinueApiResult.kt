@@ -24,12 +24,23 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.jit
 
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResult
 
 /**
  * Represents the potential result types returned from the register/continue endpoint,
  * including a case for unexpected errors received from the server.
  */
 sealed interface JITContinueApiResult: ApiResult {
+    data class Redirect(
+        override val correlationId: String,
+        val errorDescription: String
+    ) : JITContinueApiResult {
+        override fun toUnsanitizedString(): String {
+            return "Redirect(correlationId=$correlationId, errorDescription=$errorDescription)"
+        }
+
+        override fun toString(): String = toUnsanitizedString()
+    }
 
     data class Success(
         override val correlationId: String,

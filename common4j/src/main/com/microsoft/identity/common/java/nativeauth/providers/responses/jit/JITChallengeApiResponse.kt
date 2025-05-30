@@ -30,6 +30,7 @@ import com.microsoft.identity.common.java.nativeauth.util.isInvalidChallengeTarg
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidRequest
 import com.microsoft.identity.common.java.nativeauth.util.isOOB
 import com.microsoft.identity.common.java.nativeauth.util.isPreverified
+import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import java.net.HttpURLConnection
 
 /**
@@ -50,13 +51,15 @@ class JITChallengeApiResponse(
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
+    @SerializedName("redirect_reason") val redirectReason: String? = null,
 ) : IApiResponse(statusCode, correlationId) {
     override fun toUnsanitizedString(): String {
         return "JITChallengeApiResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId " +
                 "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription, " +
                 "challengeType=$challengeType, challengeTarget=$challengeTarget, bindingMethod=$bindingMethod, " +
-                "challengeChannel=$challengeChannel, codeLength=$codeLength)"
+                "challengeChannel=$challengeChannel, codeLength=$codeLength," +
+                "redirectReason=$redirectReason)"
     }
 
     override fun toString(): String = "JITChallengeApiResponse(statusCode=$statusCode, " +
@@ -129,6 +132,13 @@ class JITChallengeApiResponse(
                                 continuationToken = continuationToken
                             )
                         }
+                    }
+
+                    challengeType.isRedirect() -> {
+                        JITChallengeApiResult.Redirect(
+                            correlationId = correlationId,
+                            errorDescription = redirectReason.orEmpty()
+                        )
                     }
                     else -> {
                         JITChallengeApiResult.UnknownError(
