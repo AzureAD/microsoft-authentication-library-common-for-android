@@ -31,7 +31,6 @@ import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.util.CachedData;
 import com.microsoft.identity.common.java.util.FileUtil;
 
 import org.junit.Assert;
@@ -151,9 +150,7 @@ public class AndroidWrappedKeyLoaderTest {
 
         final AndroidWrappedKeyLoader keyLoader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
         final SecretKey secretKey = keyLoader.getKey();
-        final CachedData<SecretKey> cachedKey = keyLoader.getKeyCache();
-        Assert.assertNotNull(cachedKey);
-        final SecretKey key = cachedKey.getData();
+        final SecretKey key = keyLoader.getKeyFromCache();
         Assert.assertNotNull(key);
         Assert.assertEquals(AES256KeyLoader.AES_ALGORITHM, secretKey.getAlgorithm());
         Assert.assertArrayEquals(secretKey.getEncoded(), key.getEncoded());
@@ -237,7 +234,7 @@ public class AndroidWrappedKeyLoaderTest {
 
         long timeStartLoopNotCached = System.nanoTime();
         for (int i = 0; i < 100; i++) {
-            keyLoader.clearKeyCache();
+            keyLoader.clearKeyFromCache();
             keyLoader.getKey();
         }
         long timeFinishLoopNotCached = System.nanoTime();
@@ -255,7 +252,7 @@ public class AndroidWrappedKeyLoaderTest {
         AndroidKeyStoreUtil.deleteKey(MOCK_KEY_ALIAS);
 
         // Cached key also be wiped.
-        final CachedData<SecretKey> key = keyLoader.getKeyCache();
+        final SecretKey key = keyLoader.getKeyFromCache();
         Assert.assertNull(key);
     }
 
@@ -266,7 +263,7 @@ public class AndroidWrappedKeyLoaderTest {
         FileUtil.deleteFile(getKeyFile());
 
         // Cached key also be wiped.
-        final CachedData<SecretKey> key = keyLoader.getKeyCache();
+        final SecretKey key = keyLoader.getKeyFromCache();
         Assert.assertNull(key);
     }
 
@@ -365,7 +362,7 @@ public class AndroidWrappedKeyLoaderTest {
         final AndroidWrappedKeyLoader keyLoader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
         final SecretKey key = keyLoader.getKey();
         Assert.assertNotNull(key);
-        Assert.assertNotNull(keyLoader.getKeyCache());
+        Assert.assertNotNull(keyLoader.getKeyFromCache());
         return keyLoader;
     }
 }

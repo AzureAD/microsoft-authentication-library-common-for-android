@@ -41,7 +41,6 @@ import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
-import com.microsoft.identity.common.java.util.CachedData;
 import com.microsoft.identity.common.java.util.FileUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
@@ -101,9 +100,9 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     /* package */ static final int KEY_FILE_SIZE = 1024;
 
     /**
-     * SecretKey cache. Maps wrapped secret key file path to the cached data containing the SecretKey.
+     * SecretKey cache. Maps wrapped secret key file path to the SecretKey.
      */
-    private static final ConcurrentMap<String, CachedData<SecretKey>> sKeyCacheMap = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, SecretKey> sKeyCacheMap = new ConcurrentHashMap<>();
     private final Context mContext;
 
     /**
@@ -119,12 +118,12 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
 
     // Exposed for testing only.
     @Nullable
-    /* package */ CachedData<SecretKey> getKeyCache() {
+    /* package */ SecretKey getKeyFromCache() {
         return sKeyCacheMap.get(mFilePath);
     }
 
     // Exposed for testing only.
-    /* package */ void clearKeyCache() {
+    /* package */ void clearKeyFromCache() {
         sKeyCacheMap.remove(mFilePath);
     }
 
@@ -168,13 +167,12 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
             sKeyCacheMap.remove(mFilePath);
         }
 
-        final CachedData<SecretKey> keyCache = sKeyCacheMap.computeIfAbsent(mFilePath, k -> new CachedData<SecretKey>() {});
-
-        if (keyCache.getData() != null) {
-           return keyCache.getData();
+        SecretKey cachedKey = sKeyCacheMap.get(mFilePath);
+        if (cachedKey != null) {
+            return cachedKey;
         }
 
-        Logger.info(methodTag, "Key cache is empty, loading key from storage");
+        Logger.info(methodTag, "Key not in cache is empty, loading key from storage");
         SecretKey key = readSecretKeyFromStorage();
 
         // If key doesn't exist, generate a new one.
@@ -183,7 +181,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
             key = generateRandomKey();
         }
 
-        keyCache.setData(key);
+        sKeyCacheMap.put(mFilePath, key);
         return key;
     }
 
