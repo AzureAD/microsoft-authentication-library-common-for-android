@@ -32,8 +32,9 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
 sealed interface ResetPasswordStartApiResult: ApiResult {
     data class Redirect(
         override val correlationId: String,
+        val errorDescription: String
     ): ResetPasswordStartApiResult {
-        override fun toUnsanitizedString() = "Redirect(correlationId=$correlationId)"
+        override fun toUnsanitizedString() = "Redirect(correlationId=$correlationId, errorDescription=$errorDescription)"
 
         override fun toString(): String = "Redirect(correlationId=$correlationId)"
     }

@@ -36,6 +36,7 @@ import com.microsoft.identity.common.java.nativeauth.util.isPasswordTooShort
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordTooWeak
 import com.microsoft.identity.common.java.nativeauth.util.isPollInProgress
 import com.microsoft.identity.common.java.nativeauth.util.isPollSucceeded
+import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import com.microsoft.identity.common.java.nativeauth.util.isUserNotFound
 import java.net.HttpURLConnection
 
@@ -52,13 +53,16 @@ class ResetPasswordPollCompletionApiResponse(
     @SerializedName("error") val error: String?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
-    @SerializedName("suberror") val subError: String?
+    @SerializedName("suberror") val subError: String?,
+    @Expose @SerializedName("challenge_type") val challengeType: String?,
+    @SerializedName("redirect_reason") val redirectReason: String? = null,
 ): IApiResponse(statusCode, correlationId) {
 
     override fun toUnsanitizedString(): String {
         return "ResetPasswordPollCompletionApiResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId, status=$status, expiresIn=$expiresIn " +
-                "error=$error, errorUri=$errorUri, errorDescription=$errorDescription, subError=$subError)"
+                "error=$error, errorUri=$errorUri, errorDescription=$errorDescription, subError=$subError, " +
+                "challengeType=$challengeType, redirectReason=$redirectReason)"
     }
 
     override fun toString(): String = "ResetPasswordPollCompletionApiResponse(statusCode=$statusCode, " +
@@ -125,9 +129,16 @@ class ResetPasswordPollCompletionApiResponse(
             // Handle success and redirect
             HttpURLConnection.HTTP_OK -> {
                 return when {
+                    challengeType.isRedirect() -> {
+                        ResetPasswordPollCompletionApiResult.Redirect(
+                            correlationId = correlationId,
+                            errorDescription = redirectReason.orEmpty()
+                        )
+                    }
                     status.isPollInProgress() -> {
                         ResetPasswordPollCompletionApiResult.InProgress(
-                            correlationId = correlationId
+                            correlationId = correlationId,
+                            errorDescription = redirectReason.orEmpty()
                         )
                     }
                     status.isPollSucceeded() -> {

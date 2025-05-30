@@ -30,10 +30,22 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
  * including a case for unexpected errors received from the server.
  */
 sealed interface ResetPasswordPollCompletionApiResult: ApiResult {
+    data class Redirect(
+        override val correlationId: String,
+        val errorDescription: String
+    ) : ResetPasswordPollCompletionApiResult {
+        override fun toUnsanitizedString(): String {
+            return "Redirect(correlationId=$correlationId, errorDescription=$errorDescription)"
+        }
+
+        override fun toString(): String = toUnsanitizedString()
+    }
+
     data class InProgress(
         override val correlationId: String,
+        val errorDescription: String
     ) : ResetPasswordPollCompletionApiResult {
-        override fun toUnsanitizedString() = "InProgress(correlationId=$correlationId)"
+        override fun toUnsanitizedString() = "InProgress(correlationId=$correlationId, errorDescription=$errorDescription)"
 
         override fun toString(): String = toUnsanitizedString()
     }

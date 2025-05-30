@@ -49,6 +49,7 @@ class ResetPasswordChallengeApiResponse(
     @SerializedName("error") val error: String?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
+    @SerializedName("redirect_reason") val redirectReason: String? = null,
 ): IApiResponse(statusCode, correlationId) {
 
     override fun toUnsanitizedString(): String {
@@ -56,7 +57,8 @@ class ResetPasswordChallengeApiResponse(
                 "correlationId=$correlationId, challengeType=$challengeType, " +
                 "bindingMethod=$bindingMethod, challengeTargetLabel=$challengeTargetLabel, " +
                 "challengeChannel=$challengeChannel, codeLength=$codeLength, interval=$interval, " +
-                "error=$error, errorDescription=$errorDescription, errorUri=$errorUri)"
+                "error=$error, errorDescription=$errorDescription, errorUri=$errorUri, " +
+                "redirectReason=$redirectReason)"
     }
 
     override fun toString(): String = "ResetPasswordChallengeApiResponse(statusCode=$statusCode, " +
@@ -105,7 +107,8 @@ class ResetPasswordChallengeApiResponse(
                 return when {
                     challengeType.isRedirect() -> {
                         ResetPasswordChallengeApiResult.Redirect(
-                            correlationId = correlationId
+                            correlationId = correlationId,
+                            errorDescription = redirectReason.orEmpty()
                         )
                     }
                     challengeType.isOOB() -> {
