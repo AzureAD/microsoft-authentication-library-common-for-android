@@ -64,7 +64,8 @@ class SignUpStartApiResponse(
     override fun toUnsanitizedString(): String {
         return "SignUpStartApiResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId, challengeType=$challengeType" +
-                "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription, subError=$subError)"
+                "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription, subError=$subError, " +
+                "redirectReason=$redirectReason)"
     }
 
     override fun toString(): String = "SignUpContinueApiResponse(statusCode=$statusCode, " +

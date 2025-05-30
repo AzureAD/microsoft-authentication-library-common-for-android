@@ -58,7 +58,8 @@ class SignUpChallengeApiResponse(
                 "correlationId=$correlationId, challengeType=$challengeType, " +
                 "bindingMethod=$bindingMethod, challengeTargetLabel=$challengeTargetLabel, " +
                 "challengeChannel=$challengeChannel, codeLength=$codeLength, interval=$interval, " +
-                "error=$error, errorDescription=$errorDescription)"
+                "error=$error, errorDescription=$errorDescription, " +
+                "redirectReason=$redirectReason)"
     }
 
     override fun toString(): String = "SignInChallengeApiResponse(statusCode=$statusCode, " +
@@ -107,7 +108,8 @@ class SignUpChallengeApiResponse(
                 return when {
                     challengeType.isRedirect() -> {
                         SignUpChallengeApiResult.Redirect(
-                            correlationId = correlationId
+                            correlationId = correlationId,
+                            errorDescription = redirectReason.orEmpty()
                         )
                     }
                     challengeType.isOOB() -> {

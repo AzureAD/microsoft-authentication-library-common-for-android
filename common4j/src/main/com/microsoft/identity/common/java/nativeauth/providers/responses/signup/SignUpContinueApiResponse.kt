@@ -27,6 +27,7 @@ import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.UserAttributeApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResult
 import com.microsoft.identity.common.java.nativeauth.util.isAttributeValidationFailed
 import com.microsoft.identity.common.java.nativeauth.util.isAttributesRequired
 import com.microsoft.identity.common.java.nativeauth.util.isCredentialRequired
@@ -39,6 +40,7 @@ import com.microsoft.identity.common.java.nativeauth.util.isPasswordRecentlyUsed
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordTooLong
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordTooShort
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordTooWeak
+import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import com.microsoft.identity.common.java.nativeauth.util.isUserAlreadyExists
 import com.microsoft.identity.common.java.nativeauth.util.isVerificationRequired
 import com.microsoft.identity.common.java.nativeauth.util.toAttributeList
@@ -59,13 +61,16 @@ class SignUpContinueApiResponse(
     @SerializedName("error") val error: String?,
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     @SerializedName("error_description") val errorDescription: String?,
-    @SerializedName("suberror") val subError: String?
+    @SerializedName("suberror") val subError: String?,
+    @Expose @SerializedName("challenge_type") val challengeType: String?,
+    @SerializedName("redirect_reason") val redirectReason: String? = null
 ) : IApiResponse(statusCode, correlationId) {
 
     override fun toUnsanitizedString(): String {
         return "SignUpContinueApiResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId, expiresIn=$expiresIn, requiredAttributes=$requiredAttributes, " +
-                "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription, subError=$subError)"
+                "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription, subError=$subError, " +
+                "challengeType=$challengeType, redirectReason=$redirectReason)"
     }
 
     override fun toString(): String = "SignUpContinueApiResponse(statusCode=$statusCode, " +
@@ -188,6 +193,13 @@ class SignUpContinueApiResponse(
 
             // Handle success
             HttpURLConnection.HTTP_OK -> {
+                if (challengeType.isRedirect()) {
+                    SignUpContinueApiResult.Redirect(
+                        correlationId = correlationId,
+                        errorDescription = redirectReason.orEmpty()
+                    )
+                }
+
                 SignUpContinueApiResult.Success(
                     continuationToken = continuationToken,
                     expiresIn = expiresIn,
