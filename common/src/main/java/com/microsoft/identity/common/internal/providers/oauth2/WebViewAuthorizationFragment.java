@@ -49,7 +49,6 @@ import androidx.fragment.app.FragmentActivity;
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
-import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.internal.ui.webview.ProcessUtil;
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
