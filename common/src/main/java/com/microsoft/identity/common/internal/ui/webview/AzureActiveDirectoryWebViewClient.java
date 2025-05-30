@@ -229,6 +229,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 final FidoChallenge challenge = FidoChallenge.createFromRedirectUri(url);
                 final Activity currentActivity = getActivity();
                 final SpanContext spanContext = currentActivity instanceof AuthorizationActivity ? ((AuthorizationActivity)currentActivity).getSpanContext() : null;
+                // The legacyManager should only be getting added if the device is on Android 13 or lower and the library is MSAL/OneAuth with fragment or dialog mode.
+                // The legacyManager logic should be removed once a larger majority of users are on Android 14+.
                 final IFidoManager legacyManager =
                         currentActivity instanceof AuthorizationActivity
                                 && ((AuthorizationActivity) currentActivity).getFragment() instanceof WebViewAuthorizationFragment
