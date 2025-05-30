@@ -55,6 +55,7 @@ class NativeAuthRequestProviderTest {
     private val tenant = "samtoso.onmicrosoft.com"
     private val tokenEndpoint = URL("https://contoso.com/1234/token")
     private val challengeType = "oob redirect"
+    private val capabilities = "mfa_required registration_required"
     private val userAttributes = mapOf("city" to "Dublin")
     private val emptyUserAttributes = emptyMap<String, String>()
     private val oobGrantType = "oob"
@@ -87,6 +88,7 @@ class NativeAuthRequestProviderTest {
         every { getJITContinueEndpoint() } returns ApiConstants.MockApi.jitContinueRequestUrl
         every { challengeType } returns this@NativeAuthRequestProviderTest.challengeType
         every { clientId } returns this@NativeAuthRequestProviderTest.clientId
+        every { capabilities } returns this@NativeAuthRequestProviderTest.capabilities
         every { useMockApiForNativeAuth } returns true
     }
 
