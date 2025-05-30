@@ -22,13 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui;
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Rect;
+import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Surface;
 import android.view.WindowManager;
 import android.widget.RelativeLayout;
 
@@ -39,32 +36,23 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.window.layout.FoldingFeature;
-import androidx.window.layout.WindowInfoTracker;
-import androidx.window.layout.WindowMetricsCalculator;
-
 import com.microsoft.identity.common.R;
+
 
 // This activity readjusts its child layouts so that they're displayed on both single-screen and dual-screen device correctly.
 public class DualScreenActivity extends FragmentActivity {
 
-
-
-
     @Override
     public void setContentView(int layoutResID) {
-        initializeContentView();
-
-        final RelativeLayout contentLayout = findViewById(com.microsoft.identity.common.R.id.dual_screen_content);
+        super.setContentView(R.layout.dual_screen_layout);
+        adjustLayoutForDualScreenActivity();
+        final RelativeLayout contentLayout = findViewById(R.id.dual_screen_content);
         LayoutInflater.from(this).inflate(layoutResID, contentLayout);
     }
 
-    private void initializeContentView(){
+    public void setFragment(@NonNull final Fragment fragment) {
         super.setContentView(R.layout.dual_screen_layout);
         adjustLayoutForDualScreenActivity();
-    }
-
-    public void setFragment(@NonNull final Fragment fragment) {
-        initializeContentView();
         getSupportFragmentManager()
                 .beginTransaction()
                 .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
@@ -73,82 +61,59 @@ public class DualScreenActivity extends FragmentActivity {
     }
 
     @Override
-    public void onConfigurationChanged(Configuration newConfig) {
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         adjustLayoutForDualScreenActivity();
     }
 
 
-    private void adjustLayout() {
-
-        DeviceUtils.INSTANCE.getFoldingFeature(this, layoutInfo -> {
-
-            final ConstraintSet constraintSet = new ConstraintSet();
-            constraintSet.connect(R.id.dual_screen_content, ConstraintSet.LEFT, R.id.dual_screen_layout, ConstraintSet.LEFT, 0);
-            constraintSet.connect(R.id.dual_screen_content, ConstraintSet.RIGHT, R.id.dual_screen_layout, ConstraintSet.RIGHT, 0);
-            constraintSet.connect(R.id.dual_screen_content, ConstraintSet.TOP, R.id.dual_screen_layout, ConstraintSet.TOP, 0);
-            constraintSet.connect(R.id.dual_screen_content, ConstraintSet.BOTTOM, R.id.dual_screen_layout, ConstraintSet.BOTTOM, 0);
-
-            constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.LEFT, R.id.dual_screen_layout, ConstraintSet.LEFT, 0);
-            constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.RIGHT, R.id.dual_screen_layout, ConstraintSet.RIGHT, 0);
-            constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.TOP, R.id.dual_screen_layout, ConstraintSet.TOP, 0);
-            constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.BOTTOM, R.id.dual_screen_layout, ConstraintSet.BOTTOM, 0);
-
-            getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-
-            if (DeviceUtils.INSTANCE.isLDualScreenDevice(layoutInfo)) {
-                // Handle dual-screen layout
-                // For example, split content across screens
-                //updateLayoutForDualScreen();
-                final FoldingFeature foldingFeature = DeviceUtils.INSTANCE.getFoldingFeature(layoutInfo);
-                if (foldingFeature == null){
-                    return null;
+    private void adjustLayoutForDualScreenActivity() {
+        adjustLayoutCommon();
+        DeviceUtils.INSTANCE.getFoldingFeatures(this, (foldingFeature) -> {
+            runOnUiThread(() -> {
+                Log.i("DualScreenActivity", "Folding feature: " + foldingFeature);
+                // If the device is not dual-screen, then we do not need to adjust the layout.
+                if (foldingFeature != null && foldingFeature.isSeparating()) {
+                    Log.i("DualScreenActivity", "isSeparating: " + foldingFeature.isSeparating());
+                    final Rect hinge = foldingFeature.getBounds();
+                    if (isAppSpanned(hinge)) {
+                        Log.i("DualScreenActivity", "Orientation: " + foldingFeature.getOrientation());
+                        if (foldingFeature.getOrientation() == FoldingFeature.Orientation.HORIZONTAL) {
+                            adjustLayoutSpannedHorizontal(hinge);
+                        } else {
+                            adjustLayoutSpannedVertical(hinge);
+                        }
+                    }
                 }
-                // Check fold orientation
-                boolean isVertical = foldingFeature.getOrientation() == FoldingFeature.Orientation.VERTICAL;
-
-                // Get hinge width
-                int hingeWidth = foldingFeature.getBounds().width();
-
-
-                if (!isVertical) {
-                    int duoHingeWidth = getHinge(this, rotation).width() / 2;
-
-                    // WebView is on the right.
-                    constraintSet.connect(R.id.dual_screen_content, ConstraintSet.LEFT, R.id.vertical_guideline, ConstraintSet.RIGHT, duoHingeWidth);
-
-                    // Empty view is on the left.
-                    constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.RIGHT, R.id.vertical_guideline, ConstraintSet.LEFT, 0);
-                } else {
-                    int duoHingeWidth = getHinge(this, rotation).height() / 2;
-
-                    // WebView is on the top.
-                    constraintSet.connect(R.id.dual_screen_content, ConstraintSet.BOTTOM, R.id.horizontal_guideline, ConstraintSet.TOP, duoHingeWidth);
-
-                    // Empty view is in the bottom.
-                    constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.TOP, R.id.horizontal_guideline, ConstraintSet.BOTTOM, 0);
-
-                    // In spanned vertical mode, keyboard will always be on the lower screen.
-                    // This means we do not need to shrink the webview.
-                    getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
-                }
-
-            } else {
-                // Use regular single-screen layout
-                //updateLayoutForSingleScreen();
-                // Shrink empty view. If constraint is not set, then its size will be (0,0).
-                constraintSet.clear(R.id.dual_screen_empty_view);
-            }
-            return null; // Required for Kotlin Unit return type
+            });
+            return null;
         });
-
     }
 
-    private void adjustLayoutForDualScreenActivity() {
-        int rotation = getRotation(this);
-        boolean isAppSpanned = isAppSpanned(this);
-        boolean isHorizontal = rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180;
+    /**
+     * Returns true if the app is being spanned across two screens.
+     */
+    public boolean isAppSpanned(final Rect hinge) {
+        final Rect windowRect = getWindowRect();
+        if (windowRect.width() > 0 && windowRect.height() > 0) {
+            // The windowRect doesn't intersect hinge
+            return hinge.intersect(windowRect);
+        }
+        return false;
+    }
 
+
+    /**
+     * Returns the area of the displaying window.
+     */
+    private Rect getWindowRect() {
+        Rect windowRect = new Rect();
+        this.getWindowManager().getDefaultDisplay().getRectSize(windowRect);
+        return windowRect;
+    }
+
+
+    private ConstraintSet getCommonConstraintSet()  {
         final ConstraintSet constraintSet = new ConstraintSet();
         constraintSet.connect(R.id.dual_screen_content, ConstraintSet.LEFT, R.id.dual_screen_layout, ConstraintSet.LEFT, 0);
         constraintSet.connect(R.id.dual_screen_content, ConstraintSet.RIGHT, R.id.dual_screen_layout, ConstraintSet.RIGHT, 0);
@@ -159,111 +124,41 @@ public class DualScreenActivity extends FragmentActivity {
         constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.RIGHT, R.id.dual_screen_layout, ConstraintSet.RIGHT, 0);
         constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.TOP, R.id.dual_screen_layout, ConstraintSet.TOP, 0);
         constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.BOTTOM, R.id.dual_screen_layout, ConstraintSet.BOTTOM, 0);
-
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        return constraintSet;
+    }
 
-        if (isAppSpanned) {
-            if (isHorizontal) {
-                int duoHingeWidth = getHinge(this, rotation).width() / 2;
-
-                // WebView is on the right.
-                constraintSet.connect(R.id.dual_screen_content, ConstraintSet.LEFT, R.id.vertical_guideline, ConstraintSet.RIGHT, duoHingeWidth);
-
-                // Empty view is on the left.
-                constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.RIGHT, R.id.vertical_guideline, ConstraintSet.LEFT, 0);
-            } else {
-                int duoHingeWidth = getHinge(this, rotation).height() / 2;
-
-                // WebView is on the top.
-                constraintSet.connect(R.id.dual_screen_content, ConstraintSet.BOTTOM, R.id.horizontal_guideline, ConstraintSet.TOP, duoHingeWidth);
-
-                // Empty view is in the bottom.
-                constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.TOP, R.id.horizontal_guideline, ConstraintSet.BOTTOM, 0);
-
-                // In spanned vertical mode, keyboard will always be on the lower screen.
-                // This means we do not need to shrink the webview.
-                getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
-            }
-        } else {
-            // Shrink empty view. If constraint is not set, then its size will be (0,0).
-            constraintSet.clear(R.id.dual_screen_empty_view);
-        }
-
+    private void setConstraintSetForDualScreenLayout(@NonNull final ConstraintSet constraintSet) {
         final ConstraintLayout dualScreenLayout = findViewById(R.id.dual_screen_layout);
         dualScreenLayout.setConstraintSet(constraintSet);
     }
 
-    /**
-     * Returns true if the app is being spanned across two screens.
-     */
-    public boolean isAppSpanned(final Activity activity) {
-        if (!isDualScreenDevice(activity)) {
-            return false;
-        }
-
-        int rotation = getRotation(activity);
-        Rect hinge = getHinge(activity, rotation);
-        Rect windowRect = getWindowRect(activity);
-
-        if (windowRect.width() > 0 && windowRect.height() > 0) {
-            // The windowRect doesn't intersect hinge
-            return hinge.intersect(windowRect);
-        }
-
-        return false;
+    private void adjustLayoutCommon() {
+        final ConstraintSet constraintSet = getCommonConstraintSet();
+        constraintSet.clear(R.id.dual_screen_empty_view);
+        setConstraintSetForDualScreenLayout(constraintSet);
     }
 
-    /**
-     * Get the device's rotation.
-     *
-     * @return Surface.ROTATION_0, Surface.ROTATION_90, Surface.ROTATION_180 or Surface.ROTATION_270
-     */
-    public int getRotation(Activity activity) {
-        WindowManager wm = (WindowManager) activity.getSystemService(Context.WINDOW_SERVICE);
-        int rotation = 0;
-        if (wm != null) {
-            rotation = wm.getDefaultDisplay().getRotation();
-        }
-        return rotation;
+    private void adjustLayoutSpannedHorizontal(@NonNull final Rect hinge) {
+        final ConstraintSet constraintSet = getCommonConstraintSet();
+        int duoHingeWidth = hinge.width() / 2;
+        // WebView is on the right.
+        constraintSet.connect(R.id.dual_screen_content, ConstraintSet.LEFT, R.id.vertical_guideline, ConstraintSet.RIGHT, duoHingeWidth);
+        // Empty view is on the left.
+        constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.RIGHT, R.id.vertical_guideline, ConstraintSet.LEFT, 0);
+        setConstraintSetForDualScreenLayout(constraintSet);
     }
 
-    /**
-     * Returns true if this device supports dual screen mode.
-     */
-    private boolean isDualScreenDevice(final Context context) {
-        final PackageManager pm = context.getPackageManager();
-
-        return pm.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE);
-    }
-
-    /**
-     * Returns the area of the display that is not functional for displaying content.
-     *
-     * @param  context Context
-     * @param rotation Surface.ROTATION_0, Surface.ROTATION_90, Surface.ROTATION_180 or Surface.ROTATION_270
-     */
-    private Rect getHinge(final Context context, final int rotation) {
-        final Rect bounds = WindowMetricsCalculator
-                .getOrCreate()
-                .computeCurrentWindowMetrics(context)
-                .getBounds();
-        switch (rotation) {
-            case Surface.ROTATION_90:
-            case Surface.ROTATION_270:
-                return new Rect(0, 0, bounds.height(), bounds.width()); // Swap width and height for 90/270
-            case Surface.ROTATION_0:
-            case Surface.ROTATION_180:
-            default:
-                return new Rect(0, 0, bounds.width(), bounds.height()); // Original dimensions for 0/180
-        }
-    }
-
-    /**
-     * Returns the area of the displaying window.
-     */
-    private Rect getWindowRect(final Activity activity) {
-        Rect windowRect = new Rect();
-        activity.getWindowManager().getDefaultDisplay().getRectSize(windowRect);
-        return windowRect;
+    private void adjustLayoutSpannedVertical(@NonNull final Rect hinge) {
+        final ConstraintSet constraintSet = getCommonConstraintSet();
+        int duoHingeWidth = hinge.height() / 2;
+        // WebView is on the top.
+        constraintSet.connect(R.id.dual_screen_content, ConstraintSet.BOTTOM, R.id.horizontal_guideline, ConstraintSet.TOP, duoHingeWidth);
+        // Empty view is in the bottom.
+        constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.TOP, R.id.horizontal_guideline, ConstraintSet.BOTTOM, 0);
+        // In spanned vertical mode, keyboard will always be on the lower screen.
+        // This means we do not need to shrink the webview.
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
+        setConstraintSetForDualScreenLayout(constraintSet);
     }
 }
