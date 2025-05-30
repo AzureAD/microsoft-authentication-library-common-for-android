@@ -91,6 +91,8 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_CROSS_CLOUD_REDIRECT_URL = "https://login.microsoftonline.us/organizations/oAuth2/v2.0/authorize?x=10";
     private static final String TEST_PUBLIC_CLOUD_REDIRECT_URL = "https://login.microsoftonline.com/organizations/oAuth2/v2.0/authorize?x=10";
 
+    private static final String TEST_WEB_CP_ENROLLMENT_URL = "https://enterprise.google.com/android/enroll";
+
     @Before
     public void setup() throws ClientException {
         mContext = ApplicationProvider.getApplicationContext();
@@ -209,6 +211,11 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     public void testUrlOverrideHandlesCrossCloudRedirectUrl() {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_CROSS_CLOUD_REDIRECT_URL));
+    }
+
+    @Test
+    public void testUrlOverrideHandleWebCPEnrollmentUrl() {
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_WEB_CP_ENROLLMENT_URL));
     }
 
     @Test

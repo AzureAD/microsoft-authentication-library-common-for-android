@@ -292,6 +292,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD) && isCrossCloudRedirect(formattedURL)) {
                 Logger.info(methodTag,"Navigation contains cross cloud redirect.");
                 processCloudRedirectAndPrtHeader(view, url);
+            } else if (isWebCpEnrollmentUrl(url)) {
+                Logger.info(methodTag,"Navigation contains web cp enrollment url.");
+                openLinkInBrowser(url);
+                returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
             }
              else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
@@ -387,6 +391,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return url.startsWith(AMAZON_APP_REDIRECT_PREFIX);
     }
 
+    private boolean isWebCpEnrollmentUrl(@NonNull final String url) {
+        return url.startsWith(AuthenticationConstants.Broker.WEBCP_ENROLLMENT_URL);
+    }
+
     private boolean isHeaderForwardingRequiredUri(@NonNull final String url) {
         // MSAL makes MSA requests first to login.microsoftonline.com, and then gets redirected to login.live.com.
         // This drops all the headers, which can have credentials useful for SSO and correlationIds useful for
@@ -460,9 +468,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 }
             }
 
-            // Otherwise, launch in Browser.
-            openLinkInBrowser(url);
-            returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
+            // Otherwise, load the https link in the webview.
+            final String httpsUrl = url.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
+            view.loadUrl(httpsUrl, mRequestHeaders);
             return;
         }
 
@@ -534,6 +542,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         Logger.info(methodTag, "Try to open url link in browser");
         final String link = url
                 .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
+
         final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
 
         if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
