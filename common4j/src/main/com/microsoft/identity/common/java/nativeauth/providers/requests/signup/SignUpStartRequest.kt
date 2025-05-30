@@ -55,7 +55,7 @@ data class SignUpStartRequest private constructor(
             challengeType: String,
             requestUrl: String,
             headers: Map<String, String?>,
-            capabilities: List<String>? = null
+            capabilities: String?
         ): SignUpStartRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(clientId, "clientId")
@@ -92,7 +92,7 @@ data class SignUpStartRequest private constructor(
         val attributes: String? = null,
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("challenge_type") val challengeType: String,
-        @SerializedName("capabilities") val capabilities: List<String>? = null
+        @SerializedName("capabilities") val capabilities: String?
     ) : NativeAuthRequestParameters() {
         override fun toUnsanitizedString(): String = "NativeAuthRequestSignUpStartRequestParameters(clientId=$clientId, challengeType=$challengeType, capabilities=$capabilities)"
 

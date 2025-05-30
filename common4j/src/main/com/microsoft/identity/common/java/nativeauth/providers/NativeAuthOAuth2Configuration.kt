@@ -40,7 +40,7 @@ class NativeAuthOAuth2Configuration(
     private val authorityUrl: URL,
     val clientId: String,
     val challengeType: String,
-    val capabilities: List<String>? = null,
+    val capabilities: String? = null,
     // Need this to decide whether or not to return mock api authority or actual authority supplied in configuration
     // Turn this on if you plan to use web auth and/or open id configuration
     val useMockApiForNativeAuth: Boolean = BuildValues.shouldUseMockApiForNativeAuth(),
