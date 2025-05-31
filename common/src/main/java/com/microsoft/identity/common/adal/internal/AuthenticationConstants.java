@@ -1280,6 +1280,12 @@ public final class AuthenticationConstants {
         public static final String SSO_NONCE_PARAMETER = "sso_nonce";
 
         /**
+         * Prefix for intent-based URIs. This is typically used to construct or parse
+         * intent URIs that are used for inter-app communication or deep linking.
+         */
+        public static final String INTENT_PREFIX = "intent://";
+
+        /**
          * PRT nonce.
          */
         public static final String PRT_NONCE = "nonce";
