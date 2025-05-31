@@ -1484,6 +1484,41 @@ public final class AuthenticationConstants {
         public static final String POWERLIFT_TENANT_ID = "powerLiftTenantId";
 
         /**
+         * The App Link redirect URL for the Authenticator app.
+         */
+        public static final String AUTHENTICATOR_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/authenticator";
+
+        /**
+         * The App Link redirect URL for the LTW app.
+         */
+        public static final String LTW_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/ltw";
+
+        /**
+         * App Link redirect URL for the CP app.
+         */
+        public static final String COMPANY_PORTAL_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/cp";
+
+        /**
+         * App Link redirect URL for the BrokerHost app.
+         */
+        public static final String BROKER_HOST_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/brokerhost";
+
+        /**
+         * App Link redirect URL for the Mock Auth app.
+         */
+        public static final String MOCK_LTW_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/mockltw";
+
+        /**
+         * App Link redirect URL for the Mock CP app.
+         */
+        public static final String MOCK_CP_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/mockcp";
+
+        /**
+         * App Link redirect URL for the Mock Auth app.
+         */
+        public static final String MOCK_AUTH_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/mockauth";
+
+        /**
          * Bundle identifiers for x-ms-clitelem info.
          */
         public static final class CliTelemInfo {
