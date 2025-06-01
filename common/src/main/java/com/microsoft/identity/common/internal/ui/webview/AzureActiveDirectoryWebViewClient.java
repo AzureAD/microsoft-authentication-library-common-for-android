@@ -165,6 +165,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (StringUtil.isNullOrEmpty(url)) {
             throw new IllegalArgumentException("Redirect to empty url in web view.");
         }
+
         return handleUrl(view, url);
     }
 
@@ -210,17 +211,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean handleUrl(final WebView view, final String url) {
         final String methodTag = TAG + ":handleUrl";
         final String formattedURL = url.toLowerCase(Locale.US);
-
-        // Re-evaluate adding AuthUx JavaScript Interface
-        if (shouldExposeJavaScriptInterface(url)) {
-            // If broker request, and a valid url, expose JavaScript API
-            Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
-            view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
-        } else {
-            // Remove AuthUx JavaScript Interface
-            Logger.info(methodTag, "Removing AuthUx JavaScript Interface");
-            view.removeJavascriptInterface(AuthUxJavaScriptInterface.Companion.getInterfaceName());
-        }
+//        // Re-evaluate adding AuthUx JavaScript Interface
+//        if (shouldExposeJavaScriptInterface(url)) {
+//            // If broker request, and a valid url, expose JavaScript API
+//            Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
+//            view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
+//        } else {
+//            // Remove AuthUx JavaScript Interface
+//            Logger.info(methodTag, "Removing AuthUx JavaScript Interface");
+//            view.removeJavascriptInterface(AuthUxJavaScriptInterface.Companion.getInterfaceName());
+//        }
 
 
         try {
@@ -294,12 +294,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processCloudRedirectAndPrtHeader(view, url);
             } else if (isWebCpEnrollmentUrl(url)) {
                 Logger.info(methodTag,"Navigation contains web cp enrollment url.");
-                openLinkInBrowser(url);
+                openLinkInBrowser1(url);
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
             }
              else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
-                processInvalidUrl(url);
+                processInvalidUrl(view, url);
 
                 return false;
             }
@@ -470,7 +470,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
             // Otherwise, load the https link in the webview.
             final String httpsUrl = url.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
-            view.loadUrl(httpsUrl, mRequestHeaders);
+            view.loadUrl(httpsUrl);
             return;
         }
 
@@ -552,6 +552,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
+    private void openLinkInBrowser1(final String url) {
+        final String methodTag = TAG + ":openLinkInBrowser";
+        Logger.info(methodTag, "Try to open url link in browser");
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        intent.addCategory(Intent.CATEGORY_BROWSABLE);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Optional: clear stack
+
+        if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+            getActivity().startActivity(intent);
+        }
+    }
+
     private void processWebCpRequest(@NonNull final WebView view, @NonNull final String url) {
 
         view.stopLoading();
@@ -627,11 +639,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         view.stopLoading();
     }
 
-    private void processInvalidUrl(@NonNull final String url) {
+    private void processInvalidUrl(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processInvalidUrl";
 
-        Logger.infoPII(methodTag,"We are declining to override loading and redirect to invalid URL: '"
-                + removeQueryParametersOrRedact(url) + "' the user's url pattern is '" + mRedirectUrl + "'");
+        Logger.info(methodTag,"We are declining to override loading and redirect to invalid URL: '"
+                + url + "' the user's url pattern is '" + mRedirectUrl + "'");
     }
 
     private void processHeaderForwardingRequiredUri(@NonNull final WebView view, @NonNull final String url) {
