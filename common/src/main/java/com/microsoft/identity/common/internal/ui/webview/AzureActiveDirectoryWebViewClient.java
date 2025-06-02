@@ -299,7 +299,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
              else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
-                processInvalidUrl(view, url);
+                processInvalidUrl(url);
 
                 return false;
             }
@@ -639,7 +639,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         view.stopLoading();
     }
 
-    private void processInvalidUrl(@NonNull final WebView view, @NonNull final String url) {
+    private void processInvalidUrl(@NonNull final String url) {
         final String methodTag = TAG + ":processInvalidUrl";
 
         Logger.info(methodTag,"We are declining to override loading and redirect to invalid URL: '"
