@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.ui.webview;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.net.Uri;
@@ -41,6 +42,7 @@ import androidx.lifecycle.ViewTreeLifecycleOwner;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.fido.CredManFidoManager;
@@ -289,6 +291,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processInvalidRedirectUri(view, url);
             } else if (isBlankPageRequest(formattedURL)) {
                 Logger.info(methodTag,"It is an blank page request");
+            } else if (isIntentRequestToInstallBrokerApp(formattedURL)) {
+                 Logger.info(methodTag, "It is an intent request");
+                // Intent URI format is case sensitive, so we need to provide the original URI.
+                processIntentToInstallBrokerApp(view, url);
             } else if (!isUriSSLProtected(formattedURL)) {
                 Logger.info(methodTag,"Check for SSL protection");
                 processSSLProtectionCheck(view, url);
@@ -348,6 +354,33 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isNonceRedirect(@NonNull final String url) {
         return url.contains(AuthenticationConstants.Broker.SSO_NONCE_PARAMETER);
+    }
+
+    /**
+     * Determines if the provided URL is a valid request to install a broker app.
+     * <p>
+     * This method checks if the URL starts with the intent prefix, is targeting the Google Play Store app,
+     * and is associated with a broker app. It ensures that only valid intent requests are processed.
+     *
+     * @param url The URL to evaluate.
+     * @return {@code true} if the URL is a permitted intent request, {@code false} otherwise.
+     */
+    private boolean isIntentRequestToInstallBrokerApp(@NonNull final String url) {
+        // Check if the URL is an intent request
+        if (!url.startsWith(AuthenticationConstants.Broker.INTENT_PREFIX)) {
+            return false;
+        }
+        // Check if the intent request is for the google play store app
+        if (!url.contains(";package=com.android.vending;")) {
+            return false;
+        }
+        // Check if the url query parameter is for a broker app.
+        for (final BrokerData brokerData : BrokerData.getAllBrokers()) {
+            if (url.contains("id=" + brokerData.getPackageName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isCrossCloudRedirect(@NonNull final String url) {
@@ -611,6 +644,35 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 String.format("The RedirectUri is not as expected. Received %s and expected %s", url,
                         mRedirectUrl));
         view.stopLoading();
+    }
+
+    /**
+     * This method is used to process the intent to install the broker app.
+     * It parses the intent URI and starts the activity if the package name is valid.
+     *
+     * @param view The WebView that will be used to open the URL.
+     * @param intentUrl  The URL to be opened.
+     */
+    private void processIntentToInstallBrokerApp(@NonNull final WebView view, @NonNull final String intentUrl) {
+        final String methodTag = TAG + ":processIntentToInstallBrokerApp";
+        try {
+            final Intent intent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
+            if (intent != null && intent.getPackage() != null) {
+                view.getContext().startActivity(intent);
+                Logger.info(methodTag, "Intent request sent to launch the app: " + intent.getPackage());
+            } else {
+                Logger.warn(methodTag, "Unable to parse the intent URI");
+            }
+        } catch (final URISyntaxException e) {
+            Logger.error(methodTag, "Failed to parse the intent URI due to invalid syntax.", e);
+            returnError(ErrorStrings.URI_SYNTAX_ERROR, e.getMessage());
+        } catch (final ActivityNotFoundException e) {
+            Logger.error(methodTag, "No activity found to handle the intent.", e);
+            returnError(ErrorStrings.ACTIVITY_NOT_FOUND, e.getMessage());
+        } catch (final Throwable throwable) {
+            Logger.error(methodTag, "An unexpected error occurred while processing the intent URI.", throwable);
+            returnError(ErrorStrings.UNEXPECTED_ERROR, throwable.getMessage());
+        }
     }
 
     private void processSSLProtectionCheck(@NonNull final WebView view,
