@@ -76,7 +76,7 @@ jobs:
           echo "title=$PR_TITLE" >> $GITHUB_OUTPUT
 
   # Checks if the Pull request contains Fixed AB#ID in the title,
-  # if not cretaes a new title appending ',Fixed AB#ID' to the current title
+  # if not creates a new title appending ',Fixed AB#ID' to the current title
   check_if_title_needs_to_be_updated:
     name: Check if title needs to be updated
     runs-on: ubuntu-latest

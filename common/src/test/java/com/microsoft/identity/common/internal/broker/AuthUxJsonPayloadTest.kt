@@ -21,6 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker
+
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParseException
 import org.junit.Assert.*
@@ -36,15 +37,13 @@ class AuthUxJsonPayloadTest {
     fun `test deserialization of valid JSON`() {
         val json = """
             {
-                "correlationID": "12345",
-                "action_name": "write_data",
-                "action_component": "broker",
-                "params": {
-                    "function": "NUMBER_MATCH",
-                    "data": {
-                        "sessionID": "67890",
-                        "numberMatch": "123456"
-                    }
+                correlationID: 12345,
+                action_name: "write_data",
+                action_component: "broker",
+                params: {
+                    operation: "number_matching",
+                    sessionID: 67890,
+                    code_match: 123456
                 }
             }
         """.trimIndent()
@@ -58,24 +57,18 @@ class AuthUxJsonPayloadTest {
 
         val params = payload.params
         assertNotNull(params)
-        assertEquals("NUMBER_MATCH", params?.function)
-
-        val data = params?.data
-        assertNotNull(data)
-        assertEquals("67890", data?.sessionId)
-        assertEquals("123456", data?.numberMatch)
+        assertEquals("number_matching", params?.operation)
+        assertEquals("67890", params?.sessionId)
+        assertEquals("123456", params?.codeMatch)
     }
 
     @Test
     fun `test deserialization of JSON with missing optional fields`() {
         val json = """
             {
-                "correlationID": "12345",
-                "action_name": "write_data",
-                "action_component": "broker",
-                "params" : {
-                    "invalidField": "invalidField"
-                }
+                correlationID: 12345,
+                action_name: "write_data",
+                action_component: "broker"
             }
         """.trimIndent()
 
@@ -85,17 +78,15 @@ class AuthUxJsonPayloadTest {
         assertEquals("12345", payload.correlationId)
         assertEquals("write_data", payload.actionName)
         assertEquals("broker", payload.actionComponent)
-        assertNotNull(payload.params)
-        assertNull(payload.params?.data)
-        assertNull(payload.params?.function)
+        assertNull(payload.params)
     }
 
     @Test(expected = JsonParseException::class)
     fun `test deserialization of JSON with missing mandatory fields, exception expected`() {
         val json = """
             {
-                "correlationID": "12345",
-                "action_name": "write_data"
+                correlationID: 12345,
+                action_name: "write_data"
             }
         """.trimIndent()
 
@@ -108,7 +99,54 @@ class AuthUxJsonPayloadTest {
     fun `test deserialization of empty JSON, exception expected`() {
         val json = "{}"
 
-        // This should throw an exception because the JSON is empty
+        // This should throw an exception because the JSON is empty and does not contain required fields
+        gson.fromJson(json, AuthUxJsonPayload::class.java)
+    }
+
+    @Test
+    fun `test deserialization of JSON with unexpected fields`() {
+        val json = """
+            {
+                correlationID: 12345,
+                action_name: "write_data",
+                action_component: "broker",
+                "unexpected_field": "unexpected_value",
+                params: {
+                    operation: "number_matching",
+                    sessionID: 67890,
+                    code_match: 123456
+                }
+            }
+        """.trimIndent()
+
+        val payload = gson.fromJson(json, AuthUxJsonPayload::class.java)
+
+        assertNotNull(payload)
+        assertEquals("12345", payload.correlationId)
+        assertEquals("write_data", payload.actionName)
+        assertEquals("broker", payload.actionComponent)
+
+        val params = payload.params
+        assertNotNull(params)
+        assertEquals("number_matching", params?.operation)
+        assertEquals("67890", params?.sessionId)
+        assertEquals("123456", params?.codeMatch)
+    }
+
+    @Test(expected = JsonParseException::class)
+    fun `test deserialization of invalid JSON`() {
+        val json = """
+            {
+                "correlationID": "12345",
+                "action_name": "write_data",
+                "action_component": "broker",
+                "params": {
+                    "operation": "NUMBER_MATCH",
+                    "sessionID": "67890",
+                    "code_match": "123456"
+                }
+        """.trimIndent() // Missing closing brace
+
         gson.fromJson(json, AuthUxJsonPayload::class.java)
     }
 }
