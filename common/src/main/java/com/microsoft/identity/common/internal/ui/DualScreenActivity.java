@@ -41,6 +41,7 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.microsoft.device.display.DisplayMask;
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.List;
 
@@ -180,15 +181,21 @@ public class DualScreenActivity extends FragmentActivity {
      */
     private Rect getHinge(final Context context,
                           int rotation) {
+        final String methodTag = "DualScreenActivity:getHinge";
         // Hinge's coordinates of its 4 edges in different mode
         // Double Landscape Rect(0, 1350 - 1800, 1434)
         // Double Portrait  Rect(1350, 0 - 1434, 1800)
-        final DisplayMask displayMask = DisplayMask.fromResourcesRect(context);
-        List<Rect> boundings = displayMask.getBoundingRectsForRotation(rotation);
-        if (boundings.size() == 0) {
+        try {
+            final DisplayMask displayMask = DisplayMask.fromResourcesRect(context);
+            List<Rect> boundings = displayMask.getBoundingRectsForRotation(rotation);
+            if (boundings.size() == 0) {
+                return new Rect(0, 0, 0, 0);
+            }
+            return boundings.get(0);
+        } catch (final Throwable throwable) {
+            Logger.error(methodTag, "Failed to get hinge rect", throwable);
             return new Rect(0, 0, 0, 0);
         }
-        return boundings.get(0);
     }
 
     /**
