@@ -38,6 +38,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.window.layout.FoldingFeature;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.logging.Logger;
 
 
 // This activity readjusts its child layouts so that they're displayed on both single-screen and dual-screen device correctly.
