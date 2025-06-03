@@ -47,6 +47,7 @@ import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.concurrent.Future;
 
 /**
@@ -84,9 +85,14 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         mAuthorizationResultFuture = new ResultFuture<>();
         mOAuth2Strategy = oAuth2Strategy;
         mAuthorizationRequest = authorizationRequest;
-        Logger.info(methodTag,"Perform the authorization request with embedded webView.");
-        final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
 
+         URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
+        try {
+            requestUrl = new URI(requestUrl.toString() + "&dc=ESTS-PUB-NCUS-LZ1-FD000-TEST1");
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        Logger.info(methodTag,"Perform the authorization request with embedded webView. "+ requestUrl.toString());
         String sourceLibraryName = null;
         String sourceLibraryVersion = null;
 

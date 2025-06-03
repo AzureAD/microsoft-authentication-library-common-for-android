@@ -46,6 +46,7 @@ import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.concurrent.Future;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
@@ -112,8 +113,13 @@ public abstract class BrowserAuthorizationStrategy<
         }
 
         authIntent.setPackage(mBrowser.getPackageName());
-        final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
-
+         URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
+        try {
+            requestUrl = new URI(requestUrl.toString() + "&dc=ESTS-PUB-NCUS-LZ1-FD000-TEST1");
+            Logger.info(methodTag,"Perform the authorization request with embedded webView. "+ requestUrl.toString());
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
         authIntent.setData(Uri.parse(requestUrl.toString()));
 
         final Intent intent = buildAuthorizationActivityStartIntent(authIntent, requestUrl);

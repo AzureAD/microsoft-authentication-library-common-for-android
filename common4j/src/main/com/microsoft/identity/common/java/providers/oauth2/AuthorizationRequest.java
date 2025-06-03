@@ -27,6 +27,7 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 
@@ -309,6 +310,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         try {
             final CommonURIBuilder builder = new CommonURIBuilder(getAuthorizationEndpoint());
             builder.addParametersIfAbsent(ObjectMapper.serializeObjectHashMap(this));
+            Logger.info(TAG, "client id param in auth request"+ mExtraQueryParams.contains("caller_app_client_id"));
             builder.addParametersIfAbsent(mExtraQueryParams);
             return builder.build();
         } catch (final URISyntaxException e) {
