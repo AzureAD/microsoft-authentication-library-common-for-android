@@ -162,6 +162,22 @@ class NativeAuthRequestProviderTest {
     }
 
     @Test
+    fun testSignUpStartWithEmptyCapabilitiesShouldThrowNotException() {
+        every { mockConfig.capabilities } returns emptyString
+
+        val commandParameters = SignUpStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .clientId(clientId)
+            .correlationId(correlationId)
+            .build()
+
+        nativeAuthRequestProvider.createSignUpStartRequest(
+            commandParameters = commandParameters
+        )
+    }
+
+    @Test
     fun testSignUpStartWithUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = SignUpStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
@@ -479,6 +495,21 @@ class NativeAuthRequestProviderTest {
     @Test(expected = ClientException::class)
     fun testSignInInitiateWithEmptyChallengeTypesShouldThrowException() {
         every { mockConfig.challengeType } returns emptyString
+
+        val commandParameters = SignInStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .correlationId(correlationId)
+            .build()
+
+        nativeAuthRequestProvider.createSignInInitiateRequest(
+            commandParameters = commandParameters
+        )
+    }
+
+    @Test
+    fun testSignInInitiateWithEmptyCapabilitiesShouldThrowNotException() {
+        every { mockConfig.capabilities } returns emptyString
 
         val commandParameters = SignInStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
@@ -976,6 +1007,21 @@ class NativeAuthRequestProviderTest {
     @Test(expected = ClientException::class)
     fun testResetPasswordStartWithEmptyChallengeTypeShouldThrowException() {
         every { mockConfig.challengeType } returns emptyString
+
+        val commandParameters = ResetPasswordStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .correlationId(correlationId)
+            .build()
+
+        nativeAuthRequestProvider.createResetPasswordStartRequest(
+            commandParameters = commandParameters
+        )
+    }
+
+    @Test
+    fun testResetPasswordStartWithEmptyCapabilitiesShouldNotThrowException() {
+        every { mockConfig.capabilities } returns emptyString
 
         val commandParameters = ResetPasswordStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
