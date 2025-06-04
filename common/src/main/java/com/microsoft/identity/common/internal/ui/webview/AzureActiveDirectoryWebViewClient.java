@@ -121,6 +121,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final SwitchBrowserRequestHandler mSwitchBrowserRequestHandler;
     private HashMap<String, String> mRequestHeaders;
     private String mRequestUrl;
+    private boolean mAuthUxJavaScriptInterfaceAdded = false;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
@@ -143,6 +144,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // If broker request, and a valid url, expose JavaScript API
             Logger.info(TAG, "Adding AuthUx JavaScript Interface");
             view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
+            mAuthUxJavaScriptInterfaceAdded = true;
         }
     }
 
@@ -150,6 +152,22 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
                 && AuthUxJavaScriptInterface.Companion.isValidUrlForInterface(url)
                 && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+    }
+
+    @Override
+    public void onPageFinished(final WebView view,
+                               final String url) {
+        super.onPageFinished(view, url);
+
+        if (mAuthUxJavaScriptInterfaceAdded) {
+            // Inject JavaScript to define `window.postMessageToBroker`
+            String wrapAuthUxJsScript = "window.postMessageToBroker = function(message) { ClientBrokerJS.postMessageToBroker(message) }";
+
+            // Need this if statement, because our min api is 16, this is only supported in 19+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                view.evaluateJavascript(wrapAuthUxJsScript, null);
+            }
+        }
     }
 
     /**
@@ -218,10 +236,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // If broker request, and a valid url, expose JavaScript API
             Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
             view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
-        } else {
+            mAuthUxJavaScriptInterfaceAdded = true;
+        } else if (mAuthUxJavaScriptInterfaceAdded) {
             // Remove AuthUx JavaScript Interface
             Logger.info(methodTag, "Removing AuthUx JavaScript Interface");
             view.removeJavascriptInterface(AuthUxJavaScriptInterface.Companion.getInterfaceName());
+            mAuthUxJavaScriptInterfaceAdded = false;
         }
 
 
