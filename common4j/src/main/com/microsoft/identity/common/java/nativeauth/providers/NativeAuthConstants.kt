@@ -69,12 +69,15 @@ object NativeAuthConstants {
     }
 
     /**
-     * CapabilityType encapsulates various capability types supported for authentication by Native Auth
+     * Capabilities encapsulates various capabilities supported for authentication by Native Auth
+     * Valid options are
+     *      MFARequired: The application can accommodate the associated challenge type(s) specified by the user when MFA is required.
+     *      RegistrationRequired: The application can accommodate the associated challenge type(s) specified by the user when registering a new strong authentication method is required.
      */
     object Capabilities {
-        //The application can accommodate the capability specified by the user when MFA is required
+        //Specifies that the associated challenge type(s) are supported when MFA is required
         const val MFA_REQUIRED = "mfa_required"
-        //The application can accommodate the capability specified by the user when the registration of a new strong authentication method is required
+        //Specifies that the associated challenge type(s) are supported when the registration of a new strong authentication
         const val REGISTRATION_REQUIRED = "registration_required"
     }
 }
