@@ -44,7 +44,7 @@ class AuthUxJavaScriptInterface {
     // long enough for AuthApp to call the broker api to fetch the number match
     companion object {
         val TAG = AuthUxJavaScriptInterface::class.java.simpleName
-        private const val JAVASCRIPT_INTERFACE_NAME = "ClientBrokerJS"
+        private const val JAVASCRIPT_INTERFACE_NAME = "broker"
 
         fun getInterfaceName(): String {
             return JAVASCRIPT_INTERFACE_NAME

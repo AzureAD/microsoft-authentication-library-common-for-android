@@ -121,6 +121,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final SwitchBrowserRequestHandler mSwitchBrowserRequestHandler;
     private HashMap<String, String> mRequestHeaders;
     private String mRequestUrl;
+    private boolean mAuthUxJavaScriptInterfaceAdded = false;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
@@ -143,6 +144,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // If broker request, and a valid url, expose JavaScript API
             Logger.info(TAG, "Adding AuthUx JavaScript Interface");
             view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
+            mAuthUxJavaScriptInterfaceAdded = true;
         }
     }
 
@@ -218,10 +220,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // If broker request, and a valid url, expose JavaScript API
             Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
             view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
-        } else {
+            mAuthUxJavaScriptInterfaceAdded = true;
+        } else if (mAuthUxJavaScriptInterfaceAdded){
             // Remove AuthUx JavaScript Interface
             Logger.info(methodTag, "Removing AuthUx JavaScript Interface");
             view.removeJavascriptInterface(AuthUxJavaScriptInterface.Companion.getInterfaceName());
+            mAuthUxJavaScriptInterfaceAdded = false;
         }
 
 
