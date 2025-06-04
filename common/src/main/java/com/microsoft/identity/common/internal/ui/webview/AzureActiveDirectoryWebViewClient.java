@@ -154,22 +154,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
     }
 
-    @Override
-    public void onPageFinished(final WebView view,
-                               final String url) {
-        super.onPageFinished(view, url);
-
-        if (mAuthUxJavaScriptInterfaceAdded) {
-            // Inject JavaScript to define `window.postMessageToBroker`
-            String wrapAuthUxJsScript = "window.postMessageToBroker = function(message) { ClientBrokerJS.postMessageToBroker(message) }";
-
-            // Need this if statement, because our min api is 16, this is only supported in 19+
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                view.evaluateJavascript(wrapAuthUxJsScript, null);
-            }
-        }
-    }
-
     /**
      * Give the host application a chance to take over the control when a new url is about to be loaded in the current WebView.
      * This method was deprecated in API level 24.
