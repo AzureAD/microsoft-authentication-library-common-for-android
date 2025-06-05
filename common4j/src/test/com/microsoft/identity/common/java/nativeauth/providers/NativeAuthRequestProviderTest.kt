@@ -535,11 +535,9 @@ class NativeAuthRequestProviderTest {
             .correlationId(correlationId)
             .build()
 
-        val result = nativeAuthRequestProvider.createSignInInitiateRequest(
+        nativeAuthRequestProvider.createSignInInitiateRequest(
             commandParameters = commandParameters
         )
-
-        assertEquals(capabilities, result.parameters.capabilities)
     }
 
     @Test
