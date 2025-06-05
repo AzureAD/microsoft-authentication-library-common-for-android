@@ -178,6 +178,24 @@ class NativeAuthRequestProviderTest {
     }
 
     @Test
+    fun testSignUpStartExpectedCapabilitiesStringAddedToRequestBody() {
+        every { mockConfig.capabilities } returns capabilities
+
+        val commandParameters = SignUpStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .clientId(clientId)
+            .correlationId(correlationId)
+            .build()
+
+        val result = nativeAuthRequestProvider.createSignUpStartRequest(
+            commandParameters = commandParameters
+        )
+
+        assertEquals(capabilities, result.parameters.capabilities)
+    }
+
+    @Test
     fun testSignUpStartWithUnsetCorrelationIdShouldNotHaveHeader() {
         val commandParameters = SignUpStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
@@ -517,9 +535,28 @@ class NativeAuthRequestProviderTest {
             .correlationId(correlationId)
             .build()
 
-        nativeAuthRequestProvider.createSignInInitiateRequest(
+        val result = nativeAuthRequestProvider.createSignInInitiateRequest(
             commandParameters = commandParameters
         )
+
+        assertEquals(capabilities, result.parameters.capabilities)
+    }
+
+    @Test
+    fun testSignInInitiateExpectedCapabilitiesStringAddedToRequestBody() {
+        every { mockConfig.capabilities } returns capabilities
+
+        val commandParameters = SignInStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .correlationId(correlationId)
+            .build()
+
+        val result = nativeAuthRequestProvider.createSignInInitiateRequest(
+            commandParameters = commandParameters
+        )
+
+        assertEquals(capabilities, result.parameters.capabilities)
     }
 
     @Test
@@ -1032,6 +1069,23 @@ class NativeAuthRequestProviderTest {
         nativeAuthRequestProvider.createResetPasswordStartRequest(
             commandParameters = commandParameters
         )
+    }
+
+    @Test
+    fun testResetPasswordStartExpectedCapabilitiesStringAddedToRequestBody() {
+        every { mockConfig.capabilities } returns capabilities
+
+        val commandParameters = ResetPasswordStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .correlationId(correlationId)
+            .build()
+
+        val result = nativeAuthRequestProvider.createResetPasswordStartRequest(
+            commandParameters = commandParameters
+        )
+
+        assertEquals(capabilities, result.parameters.capabilities)
     }
 
     @Test
