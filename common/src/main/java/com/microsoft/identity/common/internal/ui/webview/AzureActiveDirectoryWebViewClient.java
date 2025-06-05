@@ -30,6 +30,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
+import android.view.View;
 import android.webkit.ClientCertRequest;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
@@ -152,6 +153,23 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
                 && AuthUxJavaScriptInterface.Companion.isValidUrlForInterface(url)
                 && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+    }
+
+
+    @Override
+    public void onPageFinished(final WebView view,
+                               final String url) {
+        super.onPageFinished(view, url);
+
+        // Add a function to the api to . Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
+        // passing dict objects through Javascript APIs, only Strings and primitive types. Server side will be sending in a dict
+        String jsScript = "window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".postMessageToBroker = function(message) { " +
+                "    window." +  AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".receiveAuthUxMessage(JSON.stringify(message)); " +
+                "};";
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            view.evaluateJavascript(jsScript, null);
+        }
     }
 
     /**

@@ -103,8 +103,8 @@ class AuthUxJavaScriptInterface {
      * https://microsoft-my.sharepoint-df.com/:w:/p/veenasoman/EY1AZIeT8X5KrXVz97Vx520B3Jj0fBLSPlklnoRvcmbh0Q?e=VzNFd1&ovuser=72f988bf-86f1-41af-91ab-2d7cd011db47%2Cfadidurah%40microsoft.com&clickparams=eyJBcHBOYW1lIjoiVGVhbXMtRGVza3RvcCIsIkFwcFZlcnNpb24iOiI0OS8yNTA1MDQwMTYwOSIsIkhhc0ZlZGVyYXRlZFVzZXIiOmZhbHNlfQ%3D%3D
      */
     @JavascriptInterface
-    fun postMessageToBroker(jsonPayload: String) {
-        val methodTag = "$TAG:postMessageToBroker"
+    fun receiveAuthUxMessage(jsonPayload: String) {
+        val methodTag = "$TAG:receiveAuthUxMessage"
         Logger.info(methodTag, "Received a payload from AuthUX through JavaScript API.")
 
         try {
