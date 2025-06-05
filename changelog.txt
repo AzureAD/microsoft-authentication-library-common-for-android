@@ -1,7 +1,7 @@
 vNext
 ----------
 
-Version 21.2.0-RC2
+Version 21.2.0
 ----------
 - [MINOR] Implement a WebView handler to facilitate broker app installation via the Play Store (#2643)
 - [MINOR] Add Get AAD device ID API for resource account (#2644)
