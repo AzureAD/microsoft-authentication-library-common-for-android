@@ -1611,7 +1611,7 @@ class NativeAuthRequestProviderTest {
         // Verify that the request object has null capabilities
         assertNull("Capabilities should be null in the request parameters", result.parameters.capabilities)
 
-        // Test the key scenario: ObjectMapper.serializeObjectToFormUrlEncoded should filter out null values
+        // Test that ObjectMapper.serializeObjectToFormUrlEncoded should filter out null values
         val serializedParams = ObjectMapper.serializeObjectToFormUrlEncoded(result.parameters)
         
         // Verify that capabilities parameter is not included in the serialized form
