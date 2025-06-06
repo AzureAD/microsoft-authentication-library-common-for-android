@@ -38,6 +38,7 @@ import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.nativeauth.providers.requests.NativeAuthRequest.Companion.toJsonString
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInTokenRequest
+import com.microsoft.identity.common.java.util.ObjectMapper
 import com.microsoft.identity.common.nativeauth.ApiConstants
 import io.mockk.every
 import io.mockk.mockk
@@ -1589,5 +1590,66 @@ class NativeAuthRequestProviderTest {
         assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
     }
 
+    // Test for null capabilities filtering in serialization
+
+    @Test
+    fun testSignInInitiateWithNullCapabilitiesFiltersOutFromSerializedRequestBody() {
+        // Set capabilities to null in config
+        every { mockConfig.capabilities } returns null
+
+        val commandParameters = SignInStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .clientId(clientId)
+            .correlationId(correlationId)
+            .build()
+
+        val result = nativeAuthRequestProvider.createSignInInitiateRequest(
+            commandParameters = commandParameters
+        )
+
+        // Verify that the request object has null capabilities
+        assertNull("Capabilities should be null in the request parameters", result.parameters.capabilities)
+
+        // Test the key scenario: ObjectMapper.serializeObjectToFormUrlEncoded should filter out null values
+        val serializedParams = ObjectMapper.serializeObjectToFormUrlEncoded(result.parameters)
+        
+        // Verify that capabilities parameter is not included in the serialized form
+        Assert.assertFalse(
+            "Serialized request body should not contain 'capabilities' parameter when it is null",
+            serializedParams.contains("capabilities")
+        )
+    }
+
+    @Test
+    fun testSignInInitiateWithNonNullCapabilitiesIncludedInSerializedRequestBody() {
+        // Set capabilities to a valid value in config
+        every { mockConfig.capabilities } returns capabilities
+
+        val commandParameters = SignInStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .clientId(clientId)
+            .correlationId(correlationId)
+            .build()
+
+        val result = nativeAuthRequestProvider.createSignInInitiateRequest(
+            commandParameters = commandParameters
+        )
+
+        // Verify that the request object has the expected capabilities
+        assertEquals("Capabilities should match the configured value", capabilities, result.parameters.capabilities)
+
+        // Test that ObjectMapper.serializeObjectToFormUrlEncoded includes non-null values
+        val serializedParams = ObjectMapper.serializeObjectToFormUrlEncoded(result.parameters)
+        
+        // Verify that capabilities parameter IS included in the serialized form when not null
+        Assert.assertTrue(
+            "Serialized request body should contain 'capabilities' parameter when it has a value",
+            serializedParams.contains("capabilities=${capabilities.replace(" ", "+")}")
+        )
+    }
+
     //endregion
+
 }
