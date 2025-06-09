@@ -40,6 +40,7 @@ private const val CONTINUATION_TOKEN = "1234"
 private const val CORRELATION_ID = "Lkjsdf89034nsdflkjsdf"
 private const val ERROR = "error_code"
 private const val ERROR_DESCRIPTION = "error description"
+private const val REDIRECT_REASON = "redirect reason"
 private const val CHALLENGE_TARGET_LABEL = "user@contoso.com"
 private const val CHALLENGE_TYPE = "email"
 private const val CODE_LENGTH = 6
@@ -114,7 +115,7 @@ private val signUpUsernameAlreadyExistsCommandResult = SignUpCommandResult.Usern
 
 private val redirectCommandResult = INativeAuthCommandResult.Redirect(
     correlationId = CORRELATION_ID,
-    redirectReason = ERROR_DESCRIPTION
+    redirectReason = REDIRECT_REASON
 )
 
 private val APIErrorCommandResult = INativeAuthCommandResult.APIError(
@@ -1141,6 +1142,7 @@ class CommandResultUtilTestResetPasswordSubmitNewPasswordCommandResult(private v
             resetPasswordPasswordNotAcceptedCommandResult,
             resetPasswordPasswordResetFailedCommandResult,
             APIErrorCommandResult,
+            redirectCommandResult,
             resetPasswordUserNotFoundCommandResult
         )
     }
