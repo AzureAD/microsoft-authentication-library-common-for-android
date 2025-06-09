@@ -33,7 +33,7 @@ interface INativeAuthCommandResult : ILoggable {
     val correlationId: String
     data class Redirect(
         override val correlationId: String,
-        override val errorDescription: String
+        val redirectReason: String
     ) : Error(error = BROWSER_REQUIRED_ERROR, errorDescription = BROWSER_REQUIRED_ERROR_DESCRIPTION, correlationId = correlationId),
         SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInSubmitCodeCommandResult, SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult,
         SignUpStartCommandResult, SignUpSubmitCodeCommandResult,

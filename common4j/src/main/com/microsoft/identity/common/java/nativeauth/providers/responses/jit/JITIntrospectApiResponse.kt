@@ -54,7 +54,7 @@ class JITIntrospectApiResponse(
                 "correlationId=$correlationId " +
                 "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription, " +
                 "methods=$methods, challengeType=$challengeType, " +
-                "redirectReason = $redirectReason)"
+                "redirectReason=$redirectReason)"
     }
 
     override fun toString(): String = "JITIntrospectApiResponse(statusCode=$statusCode, " +

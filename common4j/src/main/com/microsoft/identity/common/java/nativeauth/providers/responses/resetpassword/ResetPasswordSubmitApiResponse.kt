@@ -102,7 +102,7 @@ class ResetPasswordSubmitApiResponse(
             // Handle success and redirect
             HttpURLConnection.HTTP_OK -> {
                 if (challengeType.isRedirect()) {
-                    ResetPasswordSubmitApiResult.Redirect(
+                    return ResetPasswordSubmitApiResult.Redirect(
                         correlationId = correlationId,
                         errorDescription = redirectReason.orEmpty()
                     )
