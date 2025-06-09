@@ -36,10 +36,10 @@ sealed interface SignUpStartApiResult: ApiResult {
      */
     data class Redirect(
         override val correlationId: String,
-        val errorDescription: String
+        val redirectReason: String
     ) : SignUpStartApiResult {
         override fun toUnsanitizedString(): String {
-            return "Redirect(correlationId=$correlationId, errorDescription=$errorDescription)"
+            return "Redirect(correlationId=$correlationId, redirectReason=$redirectReason)"
         }
 
         override fun toString(): String = toUnsanitizedString()

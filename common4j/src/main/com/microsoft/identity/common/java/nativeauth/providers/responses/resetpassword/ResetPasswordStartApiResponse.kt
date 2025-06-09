@@ -98,7 +98,7 @@ class ResetPasswordStartApiResponse(
                 if (challengeType.isRedirect()) {
                     ResetPasswordStartApiResult.Redirect(
                         correlationId = correlationId,
-                        errorDescription = redirectReason.orEmpty()
+                        redirectReason = redirectReason.orEmpty()
                     )
                 }
                 else {

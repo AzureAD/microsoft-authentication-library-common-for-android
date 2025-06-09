@@ -104,7 +104,7 @@ class ResetPasswordSubmitApiResponse(
                 if (challengeType.isRedirect()) {
                     return ResetPasswordSubmitApiResult.Redirect(
                         correlationId = correlationId,
-                        errorDescription = redirectReason.orEmpty()
+                        redirectReason = redirectReason.orEmpty()
                     )
                 }
 

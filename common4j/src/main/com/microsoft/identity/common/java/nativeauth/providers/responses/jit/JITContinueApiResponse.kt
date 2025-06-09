@@ -87,7 +87,7 @@ class JITContinueApiResponse(
                     challengeType.isRedirect() -> {
                         JITContinueApiResult.Redirect(
                             correlationId = correlationId,
-                            errorDescription = redirectReason.orEmpty()
+                            redirectReason = redirectReason.orEmpty()
                         )
                     }
                     continuationToken.isNullOrBlank() -> {

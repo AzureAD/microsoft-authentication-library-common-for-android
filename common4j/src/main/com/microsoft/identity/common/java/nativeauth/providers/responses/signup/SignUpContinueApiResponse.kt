@@ -27,7 +27,6 @@ import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.UserAttributeApiResult
-import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResult
 import com.microsoft.identity.common.java.nativeauth.util.isAttributeValidationFailed
 import com.microsoft.identity.common.java.nativeauth.util.isAttributesRequired
 import com.microsoft.identity.common.java.nativeauth.util.isCredentialRequired
@@ -196,7 +195,7 @@ class SignUpContinueApiResponse(
                 if (challengeType.isRedirect()) {
                     SignUpContinueApiResult.Redirect(
                         correlationId = correlationId,
-                        errorDescription = redirectReason.orEmpty()
+                        redirectReason = redirectReason.orEmpty()
                     )
                 }
 

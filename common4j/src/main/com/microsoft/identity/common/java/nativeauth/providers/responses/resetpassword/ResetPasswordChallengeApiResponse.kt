@@ -107,7 +107,7 @@ class ResetPasswordChallengeApiResponse(
                     challengeType.isRedirect() -> {
                         ResetPasswordChallengeApiResult.Redirect(
                             correlationId = correlationId,
-                            errorDescription = redirectReason.orEmpty()
+                            redirectReason = redirectReason.orEmpty()
                         )
                     }
                     challengeType.isOOB() -> {

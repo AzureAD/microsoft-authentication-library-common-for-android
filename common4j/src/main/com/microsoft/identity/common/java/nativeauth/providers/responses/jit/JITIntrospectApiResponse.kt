@@ -78,7 +78,7 @@ class JITIntrospectApiResponse(
                     challengeType.isRedirect() -> {
                         JITIntrospectApiResult.Redirect(
                             correlationId = correlationId,
-                            errorDescription = redirectReason.orEmpty()
+                            redirectReason = redirectReason.orEmpty()
                         )
                     }
                     methods.isNullOrEmpty() -> {

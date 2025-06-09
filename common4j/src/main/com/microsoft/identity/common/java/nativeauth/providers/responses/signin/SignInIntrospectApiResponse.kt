@@ -78,7 +78,7 @@ class SignInIntrospectApiResponse(
                     challengeType.isRedirect() -> {
                         SignInIntrospectApiResult.Redirect(
                             correlationId = correlationId,
-                            errorDescription = redirectReason.orEmpty()
+                            redirectReason = redirectReason.orEmpty()
                         )
                     }
                     methods.isNullOrEmpty() -> {

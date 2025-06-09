@@ -93,7 +93,7 @@ class SignInInitiateApiResponse(
                 if (challengeType.isRedirect()) {
                     SignInInitiateApiResult.Redirect(
                         correlationId = correlationId,
-                        errorDescription = redirectReason.orEmpty()
+                        redirectReason = redirectReason.orEmpty()
                     )
                 }
                 else {

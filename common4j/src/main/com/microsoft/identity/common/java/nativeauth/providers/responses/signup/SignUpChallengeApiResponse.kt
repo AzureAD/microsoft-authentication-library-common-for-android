@@ -109,7 +109,7 @@ class SignUpChallengeApiResponse(
                     challengeType.isRedirect() -> {
                         SignUpChallengeApiResult.Redirect(
                             correlationId = correlationId,
-                            errorDescription = redirectReason.orEmpty()
+                            redirectReason = redirectReason.orEmpty()
                         )
                     }
                     challengeType.isOOB() -> {

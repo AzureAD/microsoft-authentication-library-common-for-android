@@ -137,7 +137,7 @@ class JITChallengeApiResponse(
                     challengeType.isRedirect() -> {
                         JITChallengeApiResult.Redirect(
                             correlationId = correlationId,
-                            errorDescription = redirectReason.orEmpty()
+                            redirectReason = redirectReason.orEmpty()
                         )
                     }
                     else -> {

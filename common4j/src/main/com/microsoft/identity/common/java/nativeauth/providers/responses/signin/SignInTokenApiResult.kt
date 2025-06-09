@@ -35,10 +35,10 @@ sealed interface SignInTokenApiResult: ApiResult, ILoggable {
 
     data class Redirect(
         override val correlationId: String,
-        val errorDescription: String
+        val redirectReason: String
     ) : SignInTokenApiResult {
         override fun toUnsanitizedString(): String {
-            return "Redirect(correlationId=$correlationId, errorDescription=$errorDescription)"
+            return "Redirect(correlationId=$correlationId, redirectReason=$redirectReason)"
         }
 
         override fun toString(): String = toUnsanitizedString()

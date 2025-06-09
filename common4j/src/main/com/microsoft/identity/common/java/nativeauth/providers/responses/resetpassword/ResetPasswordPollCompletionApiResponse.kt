@@ -131,7 +131,7 @@ class ResetPasswordPollCompletionApiResponse(
                     challengeType.isRedirect() -> {
                         ResetPasswordPollCompletionApiResult.Redirect(
                             correlationId = correlationId,
-                            errorDescription = redirectReason.orEmpty()
+                            redirectReason = redirectReason.orEmpty()
                         )
                     }
                     status.isPollInProgress() -> {

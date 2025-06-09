@@ -216,7 +216,7 @@ class SignInTokenApiResponse(
                 if (challengeType.isRedirect()) {
                     SignInTokenApiResult.Redirect(
                         correlationId = correlationId,
-                        errorDescription = redirectReason.orEmpty()
+                        redirectReason = redirectReason.orEmpty()
                     )
                 }
                 else {

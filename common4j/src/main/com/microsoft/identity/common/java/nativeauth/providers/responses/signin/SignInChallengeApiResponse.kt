@@ -105,7 +105,7 @@ class SignInChallengeApiResponse(
                     challengeType.isRedirect() -> {
                         SignInChallengeApiResult.Redirect(
                             correlationId = correlationId,
-                            errorDescription = redirectReason.orEmpty()
+                            redirectReason = redirectReason.orEmpty()
                         )
                     }
                     challengeType.isOOB() -> {
