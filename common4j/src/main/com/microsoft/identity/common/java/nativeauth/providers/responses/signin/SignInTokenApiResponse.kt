@@ -34,9 +34,7 @@ import com.microsoft.identity.common.java.nativeauth.util.isInvalidRequest
 import com.microsoft.identity.common.java.nativeauth.util.isJITRequired
 import com.microsoft.identity.common.java.nativeauth.util.isMFARequired
 import com.microsoft.identity.common.java.nativeauth.util.isPasswordChangeRequired
-import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import com.microsoft.identity.common.java.nativeauth.util.isUserNotFound
-import java.net.HttpURLConnection
 
 /**
  * Represents the raw response from the /token endpoint.
@@ -53,15 +51,12 @@ class SignInTokenApiResponse(
     @SerializedName("error_uri") val errorUri: String?,
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     @SerializedName("suberror") val subError: String?,
-    @Expose @SerializedName("challenge_type") val challengeType: String? = null,
-    @SerializedName("redirect_reason") val redirectReason: String? = null,
-    ): IApiResponse(statusCode, correlationId) {
+): IApiResponse(statusCode, correlationId) {
 
     override fun toUnsanitizedString(): String {
         return "SignInTokenApiResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId, error=$error, errorDescription=$errorDescription, " +
-                "errorCodes=$errorCodes, errorUri=$errorUri, subError=$subError ," +
-                "redirectReason=$redirectReason)"
+                "errorCodes=$errorCodes, errorUri=$errorUri, subError=$subError)"
     }
 
     override fun toString(): String = "SignInTokenApiResponse(statusCode=$statusCode, " +
@@ -77,129 +72,96 @@ class SignInTokenApiResponse(
      * @see com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
      */
     fun toErrorResult(): SignInTokenApiResult {
-        return when (statusCode) {
-
-            // Handle 400 errors
-            HttpURLConnection.HTTP_BAD_REQUEST -> {
+        return when {
+            error.isInvalidRequest() -> {
                 when {
-                    error.isInvalidRequest() -> {
-                        when {
-                            errorCodes.isNullOrEmpty() -> {
-                                SignInTokenApiResult.UnknownError(
-                                    error = error.orEmpty(),
-                                    errorDescription = errorDescription.orEmpty(),
-                                    errorCodes = errorCodes.orEmpty(),
-                                    correlationId = correlationId
-                                )
-                            }
-
-                            errorCodes[0].isPasswordChangeRequired() -> {
-                                val customDescription =
-                                    "User password change is required, which can't be fulfilled as part of this flow. " +
-                                            "Please reset the password and perform a new sign in operation. More information:" + errorDescription.orEmpty()
-                                SignInTokenApiResult.UnknownError(
-                                    error = error.orEmpty(),
-                                    errorDescription = customDescription,
-                                    errorCodes = errorCodes,
-                                    correlationId = correlationId
-                                )
-                            }
-
-                            else -> {
-                                SignInTokenApiResult.UnknownError(
-                                    error = error.orEmpty(),
-                                    errorDescription = errorDescription.orEmpty(),
-                                    errorCodes = errorCodes,
-                                    correlationId = correlationId
-                                )
-                            }
-                        }
-                    }
-
-                    error.isInvalidGrant() -> {
-                        return when {
-                            !errorCodes.isNullOrEmpty() && errorCodes[0].isInvalidCredentials() -> {
-                                SignInTokenApiResult.InvalidCredentials(
-                                    error = error.orEmpty(),
-                                    errorDescription = errorDescription.orEmpty(),
-                                    errorCodes = errorCodes,
-                                    correlationId = correlationId
-                                )
-                            }
-
-                            subError.isMFARequired() -> {
-                                SignInTokenApiResult.MFARequired(
-                                    error = error.orEmpty(),
-                                    errorDescription = errorDescription.orEmpty(),
-                                    continuationToken = continuationToken
-                                        ?: return SignInTokenApiResult.UnknownError(
-                                            error = ApiErrorResult.INVALID_STATE,
-                                            errorDescription = "oauth/v2.0/token did not return a continuation token",
-                                            errorCodes = errorCodes.orEmpty(),
-                                            correlationId = correlationId
-                                        ),
-                                    subError = subError.orEmpty(),
-                                    errorCodes = errorCodes.orEmpty(),
-                                    correlationId = correlationId
-                                )
-                            }
-
-                            subError.isJITRequired() -> {
-                                SignInTokenApiResult.JITRequired(
-                                    error = error.orEmpty(),
-                                    errorDescription = errorDescription.orEmpty(),
-                                    continuationToken = continuationToken
-                                        ?: return SignInTokenApiResult.UnknownError(
-                                            error = ApiErrorResult.INVALID_STATE,
-                                            errorDescription = "oauth/v2.0/token did not return a continuation token",
-                                            errorCodes = errorCodes.orEmpty(),
-                                            correlationId = correlationId
-                                        ),
-                                    subError = subError.orEmpty(),
-                                    errorCodes = errorCodes.orEmpty(),
-                                    correlationId = correlationId
-                                )
-                            }
-
-                            subError.isInvalidOOBValue() -> {
-                                SignInTokenApiResult.CodeIncorrect(
-                                    error = error.orEmpty(),
-                                    errorDescription = errorDescription.orEmpty(),
-                                    errorCodes = errorCodes.orEmpty(),
-                                    subError = subError.orEmpty(),
-                                    correlationId = correlationId
-                                )
-                            }
-
-                            !errorCodes.isNullOrEmpty() && errorCodes[0].isInvalidAuthenticationType() -> {
-                                SignInTokenApiResult.InvalidAuthenticationType(
-                                    error = error.orEmpty(),
-                                    errorDescription = errorDescription.orEmpty(),
-                                    errorCodes = errorCodes,
-                                    correlationId = correlationId
-                                )
-                            }
-
-                            else -> {
-                                SignInTokenApiResult.UnknownError(
-                                    error = error.orEmpty(),
-                                    errorDescription = errorDescription.orEmpty(),
-                                    errorCodes = errorCodes.orEmpty(),
-                                    correlationId = correlationId
-                                )
-                            }
-                        }
-                    }
-
-                    error.isUserNotFound() -> {
-                        SignInTokenApiResult.UserNotFound(
+                    errorCodes.isNullOrEmpty() -> {
+                        SignInTokenApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
                             errorCodes = errorCodes.orEmpty(),
                             correlationId = correlationId
                         )
                     }
-
+                    errorCodes[0].isPasswordChangeRequired() -> {
+                        val customDescription = "User password change is required, which can't be fulfilled as part of this flow. " +
+                                "Please reset the password and perform a new sign in operation. More information:" + errorDescription.orEmpty()
+                        SignInTokenApiResult.UnknownError(
+                            error = error.orEmpty(),
+                            errorDescription = customDescription,
+                            errorCodes = errorCodes,
+                            correlationId = correlationId
+                        )
+                    }
+                    else -> {
+                        SignInTokenApiResult.UnknownError(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            errorCodes = errorCodes,
+                            correlationId = correlationId
+                        )
+                    }
+                }
+            }
+            error.isInvalidGrant() -> {
+                return when {
+                    !errorCodes.isNullOrEmpty() && errorCodes[0].isInvalidCredentials() -> {
+                        SignInTokenApiResult.InvalidCredentials(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            errorCodes = errorCodes,
+                            correlationId = correlationId
+                        )
+                    }
+                    subError.isMFARequired() -> {
+                        SignInTokenApiResult.MFARequired(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            continuationToken = continuationToken ?:
+                            return SignInTokenApiResult.UnknownError(
+                                error = ApiErrorResult.INVALID_STATE,
+                                errorDescription = "oauth/v2.0/token did not return a continuation token",
+                                errorCodes = errorCodes.orEmpty(),
+                                correlationId = correlationId
+                            ),
+                            subError = subError.orEmpty(),
+                            errorCodes = errorCodes.orEmpty(),
+                            correlationId = correlationId
+                        )
+                    }
+                    subError.isJITRequired() -> {
+                        SignInTokenApiResult.JITRequired(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            continuationToken = continuationToken ?:
+                            return SignInTokenApiResult.UnknownError(
+                                error = ApiErrorResult.INVALID_STATE,
+                                errorDescription = "oauth/v2.0/token did not return a continuation token",
+                                errorCodes = errorCodes.orEmpty(),
+                                correlationId = correlationId
+                            ),
+                            subError = subError.orEmpty(),
+                            errorCodes = errorCodes.orEmpty(),
+                            correlationId = correlationId
+                        )
+                    }
+                    subError.isInvalidOOBValue() -> {
+                        SignInTokenApiResult.CodeIncorrect(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            errorCodes = errorCodes.orEmpty(),
+                            subError = subError.orEmpty(),
+                            correlationId = correlationId
+                        )
+                    }
+                    !errorCodes.isNullOrEmpty() && errorCodes[0].isInvalidAuthenticationType() -> {
+                        SignInTokenApiResult.InvalidAuthenticationType(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            errorCodes = errorCodes,
+                            correlationId = correlationId
+                        )
+                    }
                     else -> {
                         SignInTokenApiResult.UnknownError(
                             error = error.orEmpty(),
@@ -210,26 +172,14 @@ class SignInTokenApiResponse(
                     }
                 }
             }
-
-            // Handle success and redirect
-            HttpURLConnection.HTTP_OK -> {
-                if (challengeType.isRedirect()) {
-                    SignInTokenApiResult.Redirect(
-                        correlationId = correlationId,
-                        redirectReason = redirectReason.orEmpty()
-                    )
-                }
-                else {
-                    SignInTokenApiResult.UnknownError(
-                        error = error.orEmpty(),
-                        errorDescription = errorDescription.orEmpty(),
-                        errorCodes = errorCodes.orEmpty(),
-                        correlationId = correlationId
-                    )
-                }
+            error.isUserNotFound() -> {
+                SignInTokenApiResult.UserNotFound(
+                    error = error.orEmpty(),
+                    errorDescription = errorDescription.orEmpty(),
+                    errorCodes = errorCodes.orEmpty(),
+                    correlationId = correlationId
+                )
             }
-
-            // Catch uncommon status codes
             else -> {
                 SignInTokenApiResult.UnknownError(
                     error = error.orEmpty(),
