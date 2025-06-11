@@ -50,7 +50,7 @@ class SignUpChallengeApiResponse(
     @Expose @SerializedName("challenge_channel") val challengeChannel: String?,
     @SerializedName("error") val error: String?,
     @SerializedName("error_description") val errorDescription: String?,
-    @SerializedName("redirect_reason") val redirectReason: String? = null,
+    @SerializedName("redirect_reason") val redirectReason: String?,
 ) : IApiResponse(statusCode, correlationId) {
 
     override fun toUnsanitizedString(): String {

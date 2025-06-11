@@ -48,7 +48,7 @@ class ResetPasswordChallengeApiResponse(
     @SerializedName("error") val error: String?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
-    @SerializedName("redirect_reason") val redirectReason: String? = null,
+    @SerializedName("redirect_reason") val redirectReason: String?,
 ): IApiResponse(statusCode, correlationId) {
 
     override fun toUnsanitizedString(): String {

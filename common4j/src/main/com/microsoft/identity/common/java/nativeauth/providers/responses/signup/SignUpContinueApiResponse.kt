@@ -62,7 +62,7 @@ class SignUpContinueApiResponse(
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("suberror") val subError: String?,
     @Expose @SerializedName("challenge_type") val challengeType: String? = null,
-    @SerializedName("redirect_reason") val redirectReason: String? = null
+    @SerializedName("redirect_reason") val redirectReason: String?,
 ) : IApiResponse(statusCode, correlationId) {
 
     override fun toUnsanitizedString(): String {

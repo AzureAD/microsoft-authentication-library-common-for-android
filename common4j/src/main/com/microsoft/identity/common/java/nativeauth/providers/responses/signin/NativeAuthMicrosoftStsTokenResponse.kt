@@ -39,7 +39,7 @@ class NativeAuthMicrosoftStsTokenResponse : MicrosoftStsTokenResponse() {
     var redirectReason: String? = null
 
     /**
-     * The type of challenge presented to the user.
+     * The type of challenge will be redirect when redirect_reason field return
      */
     @SerializedName("challenge_type")
     var challengeType: String? = null
