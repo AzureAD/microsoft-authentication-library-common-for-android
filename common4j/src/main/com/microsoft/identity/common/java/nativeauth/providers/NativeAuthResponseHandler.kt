@@ -43,8 +43,8 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpContinueApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResponse
 import com.microsoft.identity.common.java.nativeauth.util.ApiResultUtil
+import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import com.microsoft.identity.common.java.net.HttpResponse
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.util.ObjectMapper
 import java.net.HttpURLConnection
 
@@ -391,10 +391,17 @@ class NativeAuthResponseHandler {
                 response.body,
                 NativeAuthMicrosoftStsTokenResponse::class.java  // Extended class from MicrosoftStsTokenResponse
             )
-            return SignInTokenApiResult.Success(
-                tokenResponse = apiResponse,
-                correlationId = correlationId
-            )
+            return if (apiResponse.challengeType.isRedirect()) {
+                SignInTokenApiResult.Redirect(
+                    correlationId = correlationId,
+                    redirectReason = apiResponse.redirectReason.orEmpty()
+                )
+            } else {
+                SignInTokenApiResult.Success(
+                    tokenResponse = apiResponse,
+                    correlationId = correlationId
+                )
+            }
         }
     }
     //endregion
