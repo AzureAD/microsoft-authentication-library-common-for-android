@@ -32,6 +32,13 @@ import lombok.NonNull;
 public class PredefinedKeyLoader extends AES256KeyLoader {
 
     /**
+     * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
+     * Java AES/CBC/PKCS5Padding is default(!) algorithm name, thus PKCS5 here
+     * probably doing PKCS7. We decide to go with Java default string.
+     */
+    private static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";
+
+    /**
      * Indicate that the token item is encrypted with the user provided key.
      */
     public static final String USER_PROVIDED_KEY_IDENTIFIER = "U001";
@@ -40,9 +47,9 @@ public class PredefinedKeyLoader extends AES256KeyLoader {
     private final SecretKey mKey;
 
     public PredefinedKeyLoader(@NonNull final String alias,
-                               @NonNull final byte[] rawBytes) {
+                               final byte @NonNull [] rawBytes) {
         mAlias = alias;
-        mKey = generateKeyFromRawBytes(rawBytes);
+        mKey = getSecretKeyGenerator().generateKeyFromRawBytes(rawBytes);
     }
 
     @Override
@@ -61,5 +68,11 @@ public class PredefinedKeyLoader extends AES256KeyLoader {
     @NonNull
     public String getKeyTypeIdentifier() {
         return USER_PROVIDED_KEY_IDENTIFIER;
+    }
+
+    @Override
+    @NonNull
+    public String getCipherAlgorithm(){
+        return CIPHER_ALGORITHM;
     }
 }

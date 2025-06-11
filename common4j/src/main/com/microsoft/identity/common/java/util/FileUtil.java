@@ -28,10 +28,12 @@ import com.microsoft.identity.common.java.logging.Logger;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -141,6 +143,45 @@ public class FileUtil {
             if (!file.delete()) {
                 Logger.verbose(TAG + methodName, "Failed to delete file.");
             }
+        }
+    }
+
+
+
+
+
+    public static String readStringFromFile(File file) {
+        try (FileInputStream fis = new FileInputStream(file);
+             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = fis.read(buffer)) != -1) {
+                baos.write(buffer, 0, length);
+            }
+
+            return baos.toString("UTF-8");
+        } catch (IOException e) {
+            return null; // or handle the exception as needed
+        }
+    }
+    public static void writeStringToFile(String content, File file) throws ClientException {
+        final String methodTag = TAG + ":writeStringToFile";
+
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            baos.write(content.getBytes(StandardCharsets.UTF_8));
+            baos.writeTo(fos);
+        } catch (IOException e) {
+            final ClientException clientException = new ClientException(
+                    IO_ERROR,
+                    e.getMessage(),
+                    e
+            );
+
+            Logger.error(methodTag, clientException.getErrorCode(), e
+            );
+            throw clientException;
         }
     }
 

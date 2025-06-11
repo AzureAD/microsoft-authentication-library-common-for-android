@@ -32,7 +32,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
-import com.microsoft.identity.common.java.crypto.key.AbstractSecretKeyLoader;
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyLoader;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
 import com.microsoft.identity.common.java.crypto.key.PredefinedKeyLoader;
 
@@ -62,7 +62,7 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
     public void testGetEncryptionKey() {
         final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context);
 
-        final AbstractSecretKeyLoader loader = manager.getKeyLoaderForEncryption();
+        final ISecretKeyLoader loader = manager.getKeyLoaderForEncryption();
         Assert.assertTrue(loader instanceof AndroidWrappedKeyLoader);
         Assert.assertNotEquals(KeyUtil.getKeyThumbPrint(secretKeyMock), KeyUtil.getKeyThumbPrint(loader));
     }
@@ -72,7 +72,7 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
         AuthenticationSettings.INSTANCE.setSecretKey(PREDEFINED_KEY);
         final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context);
 
-        final AbstractSecretKeyLoader loader = manager.getKeyLoaderForEncryption();
+        final ISecretKeyLoader loader = manager.getKeyLoaderForEncryption();
         Assert.assertTrue(loader instanceof PredefinedKeyLoader);
         Assert.assertEquals(KeyUtil.getKeyThumbPrint(secretKeyMock), KeyUtil.getKeyThumbPrint(loader));
     }
@@ -84,7 +84,7 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
     @Test
     public void testGetDecryptionKey_ForDataEncryptedWithKeyStoreKey() {
         final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context);
-        final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY);
+        final List<ISecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY);
 
         Assert.assertEquals(1, keyLoaderList.size());
         Assert.assertTrue(keyLoaderList.get(0) instanceof AndroidWrappedKeyLoader);
@@ -99,7 +99,7 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
     public void testGetDecryptionKey_ForDataEncryptedWithKeyStoreKey_PreDefinedKeyProvided() {
         AuthenticationSettings.INSTANCE.setSecretKey(PREDEFINED_KEY);
         final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context);
-        final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY);
+        final List<ISecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY);
 
         Assert.assertEquals(1, keyLoaderList.size());
         Assert.assertTrue(keyLoaderList.get(0) instanceof AndroidWrappedKeyLoader);
@@ -114,7 +114,7 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
     public void testGetDecryptionKey_ForDataEncryptedWithPreDefinedKey() {
         final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context);
         try {
-            final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
+            final List<ISecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
         } catch (IllegalStateException ex) {
             Assert.assertEquals(
                     "Cipher Text is encrypted by USER_PROVIDED_KEY_IDENTIFIER, but mPredefinedKeyLoader is null.",
@@ -125,7 +125,7 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
     public void testGetDecryptionKey_ForUnencryptedText_returns_empty_keyloader() {
         AuthenticationSettings.INSTANCE.setIgnoreKeyLoaderNotFoundError(false);
         final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context);
-        final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption("Unencrypted".getBytes(ENCODING_UTF8));
+        final List<ISecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption("Unencrypted".getBytes(ENCODING_UTF8));
         Assert.assertEquals(0, keyLoaderList.size());
     }
 
@@ -137,7 +137,7 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
     public void testGetDecryptionKey_ForDataEncryptedWithPreDefinedKey_PreDefinedKeyProvided() {
         AuthenticationSettings.INSTANCE.setSecretKey(PREDEFINED_KEY);
         final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context);
-        final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
+        final List<ISecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
 
         Assert.assertEquals(1, keyLoaderList.size());
         Assert.assertTrue(keyLoaderList.get(0) instanceof PredefinedKeyLoader);

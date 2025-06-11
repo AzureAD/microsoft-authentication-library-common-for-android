@@ -24,12 +24,15 @@ package com.microsoft.identity.common.crypto;
 
 import android.content.Context;
 import android.security.KeyPairGeneratorSpec;
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyProperties;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
+import com.microsoft.identity.common.java.crypto.key.AES256SecretKeyGenerator;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.FileUtil;
 
@@ -40,12 +43,23 @@ import org.junit.Test;
 
 import java.io.File;
 import java.math.BigInteger;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.MGF1ParameterSpec;
 import java.util.Arrays;
 import java.util.Date;
 
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.OAEPParameterSpec;
+import javax.crypto.spec.PSource;
 import javax.security.auth.x500.X500Principal;
 
 import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
@@ -56,6 +70,8 @@ public class AndroidWrappedKeyLoaderTest {
     final String MOCK_KEY_ALIAS = "MOCK_KEY_ALIAS";
     final String MOCK_KEY_FILE_PATH = "MOCK_KEY_FILE_PATH";
     final int TEST_LOOP = 100;
+
+    final static String AES_ALGORITHM = "AES";
 
     @Before
     public void setUp() throws Exception {
@@ -113,7 +129,7 @@ public class AndroidWrappedKeyLoaderTest {
         final AndroidWrappedKeyLoader keyLoader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
         final SecretKey secretKey = keyLoader.generateRandomKey();
 
-        Assert.assertEquals(AES256KeyLoader.AES_ALGORITHM, secretKey.getAlgorithm());
+        Assert.assertEquals(AES_ALGORITHM, secretKey.getAlgorithm());
     }
 
     @Test
@@ -125,8 +141,8 @@ public class AndroidWrappedKeyLoaderTest {
         // They're not the same object!
         Assert.assertNotSame(secretKey, storedSecretKey);
 
-        Assert.assertEquals(AES256KeyLoader.AES_ALGORITHM, secretKey.getAlgorithm());
-        Assert.assertEquals(AES256KeyLoader.AES_ALGORITHM, storedSecretKey.getAlgorithm());
+        Assert.assertEquals(AES_ALGORITHM, secretKey.getAlgorithm());
+        Assert.assertEquals(AES_ALGORITHM, storedSecretKey.getAlgorithm());
 
         Assert.assertNotNull(secretKey.getEncoded());
         Assert.assertNotNull(storedSecretKey.getEncoded());
@@ -145,7 +161,7 @@ public class AndroidWrappedKeyLoaderTest {
 
         final SecretKey key = keyLoader.getKeyCache().getData();
         Assert.assertNotNull(key);
-        Assert.assertEquals(AES256KeyLoader.AES_ALGORITHM, secretKey.getAlgorithm());
+        Assert.assertEquals(AES_ALGORITHM, secretKey.getAlgorithm());
         Assert.assertArrayEquals(secretKey.getEncoded(), key.getEncoded());
         Assert.assertEquals(secretKey.getFormat(), key.getFormat());
     }
@@ -259,6 +275,46 @@ public class AndroidWrappedKeyLoaderTest {
         final SecretKey key = keyLoader.getKeyCache().getData();
         Assert.assertNull(key);
     }
+
+    @Test
+    public void test1() throws ClientException, NoSuchAlgorithmException, NoSuchProviderException,
+            NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException, IllegalBlockSizeException {
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(
+                KeyProperties.KEY_ALGORITHM_RSA, "AndroidKeyStore");
+
+        keyPairGenerator.initialize(new KeyGenParameterSpec.Builder(
+                "my_rsa_key_alias", // alias for keystore
+                KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+                .setKeySize(2048)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
+                .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA1) // allow both digests
+                .build());
+
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+
+        // Assume AES key was created elsewhere
+        SecretKey aesKey = new AES256SecretKeyGenerator().generateRandomKey();
+
+        // Use OAEPParameterSpec with SHA-256 as main digest but SHA-1 for MGF1
+        OAEPParameterSpec oaepParams = new OAEPParameterSpec(
+                "SHA-256", "MGF1", MGF1ParameterSpec.SHA1, PSource.PSpecified.DEFAULT);
+
+        Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPPadding");
+        cipher.init(Cipher.WRAP_MODE, keyPair.getPublic(), oaepParams);
+
+        byte[] wrappedKey = cipher.wrap(aesKey);
+
+        Cipher cipher2 = Cipher.getInstance("RSA/ECB/OAEPPadding");
+        cipher2.init(Cipher.UNWRAP_MODE, keyPair.getPrivate(), oaepParams);
+
+        // Unwrap the key back into SecretKey object
+        SecretKey unwrappedKey = (SecretKey) cipher2.unwrap(wrappedKey, "AES", Cipher.SECRET_KEY);
+
+        // Verify the keys match
+        Assert.assertEquals(aesKey.getAlgorithm(), unwrappedKey.getAlgorithm());
+        Assert.assertArrayEquals(aesKey.getEncoded(), unwrappedKey.getEncoded());
+    }
+
 
     private AndroidWrappedKeyLoader initKeyLoaderWithKeyEntry() throws ClientException {
         final AndroidWrappedKeyLoader keyLoader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);

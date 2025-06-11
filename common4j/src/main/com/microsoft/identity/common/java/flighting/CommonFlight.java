@@ -119,7 +119,12 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable exposing the JavaScript API for AuthUx requests
      */
-    ENABLE_JS_API_FOR_AUTHUX("EnableJsApiForAuthUx", true);
+    ENABLE_JS_API_FOR_AUTHUX("EnableJsApiForAuthUx", true),
+
+    /**
+     * Flight to enable the new KEK algorithm for encryption/decryption of keys.
+     */
+    ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING("EnableOAEPWithSHAAndMGF1Padding", false);
 
     private String key;
     private Object defaultValue;

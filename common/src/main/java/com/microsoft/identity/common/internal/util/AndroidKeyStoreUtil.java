@@ -46,6 +46,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.spec.AlgorithmParameterSpec;
+import java.util.List;
 import java.util.Locale;
 
 import javax.crypto.Cipher;
@@ -237,7 +238,6 @@ public class AndroidKeyStoreUtil {
                 Logger.verbose(methodTag, "Public key entry doesn't exist.");
                 return null;
             }
-
             return new KeyPair(cert.getPublicKey(), (PrivateKey) privateKey);
         } catch (final RuntimeException e) {
             // There is an issue in android keystore that resets keystore
@@ -354,7 +354,8 @@ public class AndroidKeyStoreUtil {
      */
     public static synchronized byte[] wrap(@NonNull final SecretKey key,
                               @NonNull final KeyPair keyToWrap,
-                              @NonNull final String wrapAlgorithm)
+                              @NonNull final String wrapAlgorithm,
+                              @Nullable final AlgorithmParameterSpec algorithmParameterSpec)
             throws ClientException {
         final String methodTag = TAG + ":wrap";
 
@@ -363,7 +364,11 @@ public class AndroidKeyStoreUtil {
         try {
             Logger.verbose(methodTag, "Wrap secret key with a KeyPair.");
             final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm);
-            wrapCipher.init(Cipher.WRAP_MODE, keyToWrap.getPublic());
+            if (algorithmParameterSpec != null) {
+                wrapCipher.init(Cipher.WRAP_MODE, keyToWrap.getPublic(), algorithmParameterSpec);
+            } else {
+                wrapCipher.init(Cipher.WRAP_MODE, keyToWrap.getPublic());
+            }
             return wrapCipher.wrap(key);
         } catch (final NoSuchPaddingException e) {
             errCode = NO_SUCH_PADDING;
@@ -408,15 +413,20 @@ public class AndroidKeyStoreUtil {
      * @return the unwrapped key.
      */
     public static synchronized SecretKey unwrap(@NonNull final byte[] wrappedKeyBlob,
-                                   @NonNull final String wrappedKeyAlgorithm,
-                                   @NonNull final KeyPair keyPairForUnwrapping,
-                                   @NonNull final String wrapAlgorithm) throws ClientException {
+                                                @NonNull final String wrappedKeyAlgorithm,
+                                                @NonNull final KeyPair keyPairForUnwrapping,
+                                                @NonNull final String wrapAlgorithm,
+                                                @Nullable final AlgorithmParameterSpec algorithmParameterSpec) throws ClientException {
         final String methodTag = TAG + ":unwrap";
         final Throwable exception;
         final String errCode;
         try {
             final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm);
-            wrapCipher.init(Cipher.UNWRAP_MODE, keyPairForUnwrapping.getPrivate());
+            if (algorithmParameterSpec != null) {
+                wrapCipher.init(Cipher.UNWRAP_MODE, keyPairForUnwrapping.getPrivate(), algorithmParameterSpec);
+            } else {
+                wrapCipher.init(Cipher.UNWRAP_MODE, keyPairForUnwrapping.getPrivate());
+            }
             return (SecretKey) wrapCipher.unwrap(wrappedKeyBlob, wrappedKeyAlgorithm, Cipher.SECRET_KEY);
         } catch (final IllegalArgumentException e) {
             // There is issue with Android KeyStore when lock screen type is changed which could

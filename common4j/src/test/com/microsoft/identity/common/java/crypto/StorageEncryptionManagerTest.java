@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
-import com.microsoft.identity.common.java.crypto.key.AbstractSecretKeyLoader;
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyLoader;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 
@@ -40,7 +40,6 @@ import static com.microsoft.identity.common.java.crypto.MockData.ANDROID_WRAPPED
 import static com.microsoft.identity.common.java.crypto.MockData.PREDEFINED_KEY_MALFORMED;
 import static com.microsoft.identity.common.java.crypto.MockData.TEXT_ENCRYPTED_BY_PREDEFINED_KEY;
 import static com.microsoft.identity.common.java.crypto.MockData.TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY;
-import static com.microsoft.identity.common.java.crypto.MockData.EXPECTED_ENCRYPTED_TEXT_1_WITH_MALFORMED_ENCODE_VERSION;
 import static com.microsoft.identity.common.java.crypto.MockData.PREDEFINED_KEY_IV;
 import static com.microsoft.identity.common.java.crypto.MockData.ANDROID_WRAPPED_KEY_IV;
 import static com.microsoft.identity.common.java.crypto.MockData.PREDEFINED_KEY_IDENTIFIER;
@@ -88,7 +87,7 @@ public class StorageEncryptionManagerTest {
     @Test(expected = RuntimeException.class)
     public void testDecryptNullKeyLoader() throws ClientException {
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null,
-                new ArrayList<AbstractSecretKeyLoader>() {{
+                new ArrayList<ISecretKeyLoader>() {{
                     add(null);
                 }});
         manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
@@ -97,7 +96,7 @@ public class StorageEncryptionManagerTest {
 
     @Test(expected = RuntimeException.class)
     public void testDecrypt_empty_KeyLoader_throws() throws ClientException {
-        final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null, Collections.<AbstractSecretKeyLoader>emptyList());
+        final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null, Collections.<ISecretKeyLoader>emptyList());
         manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
         Assert.fail("decrypt() should throw an exception but it succeeds.");
     }
@@ -134,7 +133,7 @@ public class StorageEncryptionManagerTest {
 
         // Key order doesn't matter.
         final StorageEncryptionManager manager_failFirst = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null,
-                new ArrayList<AbstractSecretKeyLoader>(){{
+                new ArrayList<ISecretKeyLoader>(){{
                     add(failingKeyLoader);
                     add(successKeyLoader);
                 }});
@@ -142,7 +141,7 @@ public class StorageEncryptionManagerTest {
         Assert.assertArrayEquals(TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY, manager_failFirst.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY));
 
         final StorageEncryptionManager manager_failSecond = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null,
-                new ArrayList<AbstractSecretKeyLoader>(){{
+                new ArrayList<ISecretKeyLoader>(){{
                     add(successKeyLoader);
                     add(failingKeyLoader);
                 }});
@@ -156,7 +155,7 @@ public class StorageEncryptionManagerTest {
         final AES256KeyLoader decryptKeyLoader_2 = new MockAES256KeyLoader();
 
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null,
-                new ArrayList<AbstractSecretKeyLoader>(){{
+                new ArrayList<ISecretKeyLoader>(){{
                     add(decryptKeyLoader);
                     add(decryptKeyLoader_2);
                 }});

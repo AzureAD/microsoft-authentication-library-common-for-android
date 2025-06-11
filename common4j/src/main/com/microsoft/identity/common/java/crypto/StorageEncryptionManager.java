@@ -38,7 +38,7 @@ import static com.microsoft.identity.common.java.exception.ClientException.UNKNO
 import com.microsoft.identity.common.java.base64.Base64Flags;
 import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
-import com.microsoft.identity.common.java.crypto.key.AbstractSecretKeyLoader;
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyLoader;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
@@ -128,7 +128,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
         final Throwable exception;
 
         // load key for encryption if not loaded
-        final AbstractSecretKeyLoader keyLoader = getKeyLoaderForEncryption();
+        final ISecretKeyLoader keyLoader = getKeyLoaderForEncryption();
         if (keyLoader == null) {
             // Developer error. Throw.
             throw new IllegalStateException("Cannot find a matching Keyloader.");
@@ -212,14 +212,14 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             return cipherText;
         }
 
-        final List<AbstractSecretKeyLoader> keysForDecryption = getKeyLoaderForDecryption(cipherText);
+        final List<ISecretKeyLoader> keysForDecryption = getKeyLoaderForDecryption(cipherText);
         if (keysForDecryption.size() == 0) {
             // Developer error. Throw.
             throw new IllegalStateException("Cannot find a matching Keyloader.");
         }
 
         final List<Throwable> suppressedException = new ArrayList<>();
-        for (final AbstractSecretKeyLoader keyLoader : keysForDecryption) {
+        for (final ISecretKeyLoader keyLoader : keysForDecryption) {
             try {
                 return decryptWithSecretKey(dataBytes, keyLoader);
             } catch (final Throwable e) {
@@ -271,14 +271,14 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
     }
 
     /**
-     * Decrypted the given encrypted blob with a key from {@link AbstractSecretKeyLoader}
+     * Decrypted the given encrypted blob with a key from {@link ISecretKeyLoader}
      *
      * @param encryptedBlobWithoutEncodeVersion the encrypted blob with the format of
      *                                          [KeyIdentifier][encryptedData][iv][MACDigest].
-     * @param keyLoader                         a {@link AbstractSecretKeyLoader} to load the decryption key from.
+     * @param keyLoader                         a {@link ISecretKeyLoader} to load the decryption key from.
      */
     private byte[] decryptWithSecretKey(final byte[] encryptedBlobWithoutEncodeVersion,
-                                        @NonNull final AbstractSecretKeyLoader keyLoader)
+                                        @NonNull final ISecretKeyLoader keyLoader)
             throws ClientException {
         final String errCode;
         final Throwable exception;
@@ -478,7 +478,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
         // It does not fail fast on the first not equal byte to protect against
         // timing attack.
         for (int i = start; i < end; i++) {
-            result |= expected[i - start] ^ encryptedBlob[i];
+            result |= (byte) (expected[i - start] ^ encryptedBlob[i]);
         }
 
         if (result != 0) {
@@ -492,7 +492,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
      * @return a SecretKey loader.
      */
     @NonNull
-    public abstract AbstractSecretKeyLoader getKeyLoaderForEncryption() throws ClientException;
+    public abstract ISecretKeyLoader getKeyLoaderForEncryption() throws ClientException;
 
     /**
      * Identify the encrypted blob and return a list of potential candidate key loaders for decryption.
@@ -501,5 +501,5 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
      * @return a prioritized list of SecretKey (earlier keys is more likely to be the correct one).
      **/
     @NonNull
-    abstract public List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(final byte[] cipherText) throws ClientException;
+    abstract public List<ISecretKeyLoader> getKeyLoaderForDecryption(final byte[] cipherText) throws ClientException;
 }

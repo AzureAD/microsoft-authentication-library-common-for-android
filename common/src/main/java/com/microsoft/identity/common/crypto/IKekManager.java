@@ -20,40 +20,34 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.crypto;
+package com.microsoft.identity.common.crypto;
 
-import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.java.exception.ClientException;
-
-import org.jetbrains.annotations.NotNull;
 
 import javax.crypto.SecretKey;
 
-import lombok.NonNull;
+/**
+ * Interface for key encryption key (KEK) generation.
+ * Defines the contract for generating key pairs used to wrap/unwrap secret keys.
+ * Implementations can handle different algorithms and API versions.
+ */
+public interface IKekManager {
 
-public class MockAES256KeyLoaderWithGetKeyError extends AES256KeyLoader  {
-    public static String FAIL_TO_LOAD_KEY_ERROR = "FAIL_TO_LOAD_KEY_ERROR";
-    public static String MOCK_KEY_IDENTIFIER = "MOCK_ERROR_ID";
-    public static String MOCK_ERROR = "MOCK_ERROR";
+    /**
+     * Gets the appropriate cipher transformation to use with the generated keys.
+     * The transformation string specifies the algorithm, mode, and padding to be
+     * used for encryption/decryption operations.
+     *
+     * @return The cipher transformation string in the format "algorithm/mode/padding"
+     */
+    @NonNull
+    String getCipherTransformation();
 
-    @Override
-    public @NonNull String getAlias() {
-        return MOCK_ERROR;
-    }
+    byte [] wrapKey(final SecretKey keyToWrap) throws ClientException;
 
-    @Override
-    public @NonNull SecretKey getKey() throws ClientException {
-        throw new ClientException(FAIL_TO_LOAD_KEY_ERROR);
-    }
+    SecretKey unwrapKey(final byte [] wrappedSecretKey, final String SecretKeyAlgorithm) throws ClientException;
 
-    @Override
-    public @NonNull String getKeyTypeIdentifier() {
-        return MOCK_KEY_IDENTIFIER;
-    }
-
-    @NotNull
-    @Override
-    public String getCipherAlgorithm() {
-        return "";
-    }
+    boolean kekExists() throws ClientException;
 }

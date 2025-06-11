@@ -22,42 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto.key;
 
-import lombok.NonNull;
+import org.jetbrains.annotations.NotNull;
 
-public abstract class AES256KeyLoader extends AbstractSecretKeyLoader {
-    private static final String TAG = AES256KeyLoader.class.getSimpleName();
 
-    /**
-     * Key size
-     */
-    private static final int KEY_SIZE = 256;
-
-    /**
-     * Key spec algorithm.
-     */
-    public static final String AES_ALGORITHM = "AES";
-
-    /**
-     * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
-     * Java AES/CBC/PKCS5Padding is default(!) algorithm name, thus PKCS5 here
-     * probably doing PKCS7. We decide to go with Java default string.
-     */
-    private static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";
-
-    @Override
-    @NonNull
-    public String getKeySpecAlgorithm() {
-        return AES_ALGORITHM;
-    }
-
-    @Override
-    @NonNull
-    public String getCipherAlgorithm(){
-        return CIPHER_ALGORITHM;
-    }
-
-    @Override
-    protected int getKeySize() {
-        return KEY_SIZE;
+public abstract class AES256KeyLoader implements ISecretKeyLoader {
+    @NotNull
+    public ISecretKeyGenerator getSecretKeyGenerator() {
+        return new AES256SecretKeyGenerator();
     }
 }

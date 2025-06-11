@@ -20,40 +20,43 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.crypto;
+package com.microsoft.identity.common.java.crypto.key
 
-import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
-import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException
+import javax.crypto.SecretKey
 
-import org.jetbrains.annotations.NotNull;
+/**
+ * Interface defining how a [SecretKey] is loaded/cached/sourced/used.
+ * Implementations of this interface provide concrete strategies for key generation,
+ * loading, and management across different platforms and API levels.
+ */
+interface ISecretKeyLoader {
+    /**
+     * Returns this key's alias/name.
+     * Each key will have a unique alias/name.
+     *
+     * @return The key alias.
+     */
+    val alias: String
 
-import javax.crypto.SecretKey;
+    /**
+     * Gets an identifier of this key type.
+     * This might be padded into the encrypted string.
+     *
+     * @return The key type identifier.
+     */
+    val keyTypeIdentifier: String
 
-import lombok.NonNull;
+    /**
+     * Gets the cipher algorithm that is meant to be used with this key type.
+     *
+     * @return The cipher algorithm name.
+     */
+    val cipherAlgorithm: String
 
-public class MockAES256KeyLoaderWithGetKeyError extends AES256KeyLoader  {
-    public static String FAIL_TO_LOAD_KEY_ERROR = "FAIL_TO_LOAD_KEY_ERROR";
-    public static String MOCK_KEY_IDENTIFIER = "MOCK_ERROR_ID";
-    public static String MOCK_ERROR = "MOCK_ERROR";
 
-    @Override
-    public @NonNull String getAlias() {
-        return MOCK_ERROR;
-    }
+    val secretKeyGenerator: ISecretKeyGenerator
 
-    @Override
-    public @NonNull SecretKey getKey() throws ClientException {
-        throw new ClientException(FAIL_TO_LOAD_KEY_ERROR);
-    }
-
-    @Override
-    public @NonNull String getKeyTypeIdentifier() {
-        return MOCK_KEY_IDENTIFIER;
-    }
-
-    @NotNull
-    @Override
-    public String getCipherAlgorithm() {
-        return "";
-    }
+    @get:Throws(ClientException::class)
+    val key: SecretKey
 }

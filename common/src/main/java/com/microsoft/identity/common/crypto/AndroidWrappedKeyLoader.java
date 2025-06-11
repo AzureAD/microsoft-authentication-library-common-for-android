@@ -177,7 +177,6 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         return key;
     }
 
-    @Override
     @NonNull
     protected SecretKey generateRandomKey() throws ClientException {
         final String methodTag = TAG + ":generateRandomKey";
@@ -217,7 +216,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                 return null;
             }
 
-            final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, getKeySpecAlgorithm(), keyPair, WRAP_ALGORITHM);
+            final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, "AES", keyPair, WRAP_ALGORITHM, null);
 
             Logger.info(methodTag, "Key is loaded with thumbprint: " +
                     KeyUtil.getKeyThumbPrint(key));
@@ -270,7 +269,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                 span.end();
             }
         }
-        final byte[] keyWrapped = AndroidKeyStoreUtil.wrap(unencryptedKey, keyPair, WRAP_ALGORITHM);
+        final byte[] keyWrapped = AndroidKeyStoreUtil.wrap(unencryptedKey, keyPair, WRAP_ALGORITHM, null);
         FileUtil.writeDataToFile(keyWrapped, getKeyFile());
     }
 
@@ -463,5 +462,11 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         return new File(
                 mContext.getDir(mContext.getPackageName(), Context.MODE_PRIVATE),
                 mFilePath);
+    }
+
+    @androidx.annotation.NonNull
+    @Override
+    public String getCipherAlgorithm() {
+        return WRAP_ALGORITHM;
     }
 }
