@@ -193,7 +193,7 @@ class SignUpContinueApiResponse(
             // Handle success
             HttpURLConnection.HTTP_OK -> {
                 if (challengeType.isRedirect()) {
-                    SignUpContinueApiResult.Redirect(
+                    return SignUpContinueApiResult.Redirect(
                         correlationId = correlationId,
                         redirectReason = redirectReason.orEmpty()
                     )

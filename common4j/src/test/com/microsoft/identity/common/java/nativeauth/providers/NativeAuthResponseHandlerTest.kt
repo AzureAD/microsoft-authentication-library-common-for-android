@@ -133,6 +133,7 @@ class NativeAuthResponseHandlerTest {
     private val errorDescription = "User not found"
     private val signInUnknownError = "unknown_error"
     private val redirect = "redirect"
+    private val redirectReason = "redirect_reason"
     private val verificationRequiredErrorCode = "verification_required"
     private val authNotSupportedErrorCode = "unsupported_auth_method"
     private val invalidAttributesErrorCode = "invalid_attributes"
@@ -193,6 +194,7 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = successStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = continuationToken,
             error = null,
             errorCodes = null,
@@ -216,6 +218,7 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = unauthorizedClientError,
             errorCodes = null,
@@ -235,6 +238,7 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = null,
             errorCodes = null,
@@ -254,6 +258,7 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = continuationToken,
             error = null,
             errorCodes = null,
@@ -273,6 +278,7 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = userAlreadyExistsError,
             errorCodes = null,
@@ -291,6 +297,7 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = null,
             errorCodes = listOf(invalidParameterErrorCode),
@@ -309,6 +316,7 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = null,
             errorCodes = listOf(invalidParameterErrorCode),
@@ -327,6 +335,7 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = unsupportedChallengeTypeError,
             errorCodes = null,
@@ -345,6 +354,7 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = invalidGrantError,
             errorCodes = null,
@@ -363,6 +373,7 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = invalidGrantError,
             errorCodes = null,
@@ -381,6 +392,7 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = invalidGrantError,
             errorCodes = null,
@@ -399,6 +411,7 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = invalidGrantError,
             errorCodes = null,
@@ -417,6 +430,7 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = invalidGrantError,
             errorCodes = null,
@@ -435,6 +449,7 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = successStatusCode,
             challengeType = redirect,
+            redirectReason = redirectReason,
             continuationToken = null,
             error = null,
             errorCodes = null,
@@ -447,6 +462,7 @@ class NativeAuthResponseHandlerTest {
 
         val apiResult = signUpStartApiResponse.toResult()
         assertTrue(apiResult is SignUpStartApiResult.Redirect)
+        assertEquals(redirectReason, (apiResult as SignUpStartApiResult.Redirect).redirectReason)
     }
 
     @Test
@@ -454,6 +470,7 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = authNotSupportedErrorCode,
             errorCodes = null,
@@ -472,6 +489,7 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = invalidGrantError,
             errorCodes = null,
@@ -490,6 +508,7 @@ class NativeAuthResponseHandlerTest {
         val signUpStartApiResponse = SignUpStartApiResponse(
             statusCode = uncommonErrorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = null,
             errorCodes = null,
@@ -511,6 +530,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = unsupportedChallengeTypeError,
             errorDescription = null,
@@ -530,6 +550,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = expiredTokenError,
             errorDescription = null,
@@ -549,6 +570,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
+            redirectReason = null,
             continuationToken = continuationToken,
             error = null,
             errorDescription = null,
@@ -572,6 +594,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
+            redirectReason = null,
             continuationToken = continuationToken,
             error = null,
             errorDescription = null,
@@ -592,6 +615,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
+            redirectReason = null,
             continuationToken = continuationToken,
             error = null,
             errorDescription = null,
@@ -611,6 +635,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
+            redirectReason = null,
             continuationToken = continuationToken,
             error = null,
             errorDescription = null,
@@ -630,6 +655,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = passwordChallengeType,
+            redirectReason = null,
             continuationToken = continuationToken,
             error = null,
             errorDescription = null,
@@ -653,6 +679,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = redirect,
+            redirectReason = redirectReason,
             continuationToken = continuationToken,
             error = null,
             errorDescription = null,
@@ -665,6 +692,7 @@ class NativeAuthResponseHandlerTest {
         )
         val apiResult = signUpChallengeApiResponse.toResult()
         assertTrue(apiResult is SignUpChallengeApiResult.Redirect)
+        assertEquals(redirectReason, (apiResult as SignUpChallengeApiResult.Redirect).redirectReason)
     }
 
     @Test
@@ -672,6 +700,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = invalidChallengeType,
+            redirectReason = null,
             continuationToken = continuationToken,
             error = null,
             errorDescription = null,
@@ -691,6 +720,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
+            redirectReason = null,
             continuationToken = null,
             error = null,
             errorDescription = null,
@@ -710,6 +740,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = passwordChallengeType,
+            redirectReason = null,
             continuationToken = null,
             error = null,
             errorDescription = null,
@@ -729,6 +760,7 @@ class NativeAuthResponseHandlerTest {
         val signUpChallengeApiResponse = SignUpChallengeApiResponse(
             statusCode = uncommonErrorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = null,
             errorDescription = null,
@@ -758,11 +790,35 @@ class NativeAuthResponseHandlerTest {
             expiresIn = expiresIn,
             requiredAttributes = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.Success)
         assertEquals((apiResult as SignUpContinueApiResult.Success).continuationToken, continuationToken)
+    }
+
+    @Test
+    fun testSignUpContinueApiResponseRedirect() {
+        val signUpContinueApiResponse = SignUpContinueApiResponse(
+            statusCode = successStatusCode,
+            continuationToken = continuationToken,
+            error = null,
+            errorCodes = null,
+            errorDescription = null,
+            unverifiedAttributes = null,
+            invalidAttributes = null,
+            expiresIn = null,
+            requiredAttributes = null,
+            subError = null,
+            correlationId = correlationId,
+            challengeType = redirect,
+            redirectReason = redirectReason
+        )
+        val apiResult = signUpContinueApiResponse.toResult()
+        assertTrue(apiResult is SignUpContinueApiResult.Redirect)
+        assertEquals(redirectReason, (apiResult as SignUpContinueApiResult.Redirect).redirectReason)
     }
 
     @Test
@@ -778,7 +834,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.Success)
@@ -798,7 +856,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.UnknownError)
@@ -817,7 +877,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.UnknownError)
@@ -836,7 +898,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = passwordTooWeakError,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidPassword)
@@ -855,7 +919,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = passwordTooLongError,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidPassword)
@@ -874,7 +940,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = passwordTooShortError,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidPassword)
@@ -893,7 +961,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = passwordBannedError,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidPassword)
@@ -912,7 +982,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = passwordRecentlyUsedError,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidPassword)
@@ -931,7 +1003,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.UsernameAlreadyExists)
@@ -950,7 +1024,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = invalidOOBValueError,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidOOBValue)
@@ -969,7 +1045,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = invalidOOBValueError,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidOOBValue)
@@ -988,7 +1066,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = invalidOOBValueError,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidOOBValue)
@@ -1007,7 +1087,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.UnknownError)
@@ -1026,7 +1108,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.UnknownError)
@@ -1045,7 +1129,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.ExpiredToken)
@@ -1064,7 +1150,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = attributeValidationFailedErrorCode,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidAttributes)
@@ -1083,7 +1171,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = attributeValidationFailedErrorCode,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.UnknownError)
@@ -1102,7 +1192,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = requiredAttributes,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.AttributesRequired)
@@ -1122,7 +1214,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = attributeValidationFailed,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.InvalidAttributes)
@@ -1142,7 +1236,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = requiredAttributes,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.UnknownError)
@@ -1161,7 +1257,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.UnknownError)
@@ -1180,7 +1278,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.CredentialRequired)
@@ -1200,7 +1300,9 @@ class NativeAuthResponseHandlerTest {
             expiresIn = null,
             requiredAttributes = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.UnknownError)
@@ -1214,14 +1316,17 @@ class NativeAuthResponseHandlerTest {
             statusCode = successStatusCode,
             continuationToken = null,
             challengeType = redirect,
+            redirectReason = redirectReason,
             error = null,
             errorDescription = null,
             errorUri = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+
         )
 
         val apiResult = resetPasswordStartApiResponse.toResult()
         assertTrue(apiResult is ResetPasswordStartApiResult.Redirect)
+        assertEquals(redirectReason, (apiResult as ResetPasswordStartApiResult.Redirect).redirectReason)
     }
 
     @Test
@@ -1230,6 +1335,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = successStatusCode,
             continuationToken = continuationToken,
             challengeType = null,
+            redirectReason = null,
             error = null,
             errorDescription = null,
             errorUri = null,
@@ -1247,6 +1353,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             continuationToken = null,
             challengeType = null,
+            redirectReason = null,
             error = unauthorizedClientError,
             errorDescription = null,
             errorUri = null,
@@ -1264,6 +1371,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = successStatusCode,
             continuationToken = null,
             challengeType = null,
+            redirectReason = null,
             error = null,
             errorDescription = null,
             errorUri = null,
@@ -1280,6 +1388,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             continuationToken = null,
             challengeType = null,
+            redirectReason = null,
             error = userNotFoundError,
             errorDescription = null,
             errorUri = null,
@@ -1296,6 +1405,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             continuationToken = null,
             challengeType = null,
+            redirectReason = null,
             error = invalidGrantError,
             errorDescription = null,
             errorUri = null,
@@ -1312,6 +1422,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             continuationToken = null,
             challengeType = null,
+            redirectReason = null,
             error = unsupportedChallengeTypeError,
             errorDescription = null,
             errorUri = null,
@@ -1328,6 +1439,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             continuationToken = null,
             challengeType = null,
+            redirectReason = null,
             error = null,
             errorDescription = unknownError,
             errorUri = null,
@@ -1345,6 +1457,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = uncommonErrorStatusCode,
             continuationToken = null,
             challengeType = null,
+            redirectReason = null,
             error = null,
             errorDescription = unknownError,
             errorUri = null,
@@ -1364,6 +1477,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = successStatusCode,
             continuationToken = continuationToken,
             challengeType = oobChallengeType,
+            redirectReason = null,
             bindingMethod = null,
             challengeTargetLabel = challengeTargetLabel,
             challengeChannel = emailChallengeChannel,
@@ -1383,32 +1497,12 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
-    fun testValidateSsprChallengeResultSuccessWithRedirectChallenge() {
-        val resetPasswordChallengeApiResponse = ResetPasswordChallengeApiResponse(
-            statusCode = successStatusCode,
-            continuationToken = continuationToken,
-            challengeType = redirect,
-            bindingMethod = null,
-            challengeTargetLabel = challengeTargetLabel,
-            challengeChannel = emailChallengeChannel,
-            codeLength = codeLength,
-            interval = null,
-            error = null,
-            errorDescription = null,
-            errorUri = null,
-            correlationId = correlationId
-        )
-
-        val apiResult = resetPasswordChallengeApiResponse.toResult()
-        assertTrue(apiResult is ResetPasswordChallengeApiResult.Redirect)
-    }
-
-    @Test
     fun testValidateSsprChallengeResultSuccessWithPasswordChallenge() {
         val resetPasswordChallengeApiResponse = ResetPasswordChallengeApiResponse(
             statusCode = 200,
             continuationToken = "1234",
-            challengeType = "password",
+            challengeType = passwordChallengeType,
+            redirectReason = null,
             bindingMethod = null,
             challengeTargetLabel = "label",
             challengeChannel = "channel",
@@ -1425,11 +1519,35 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
+    fun testValidateSsprChallengeResultSuccessWithRedirectChallenge() {
+        val resetPasswordChallengeApiResponse = ResetPasswordChallengeApiResponse(
+            statusCode = successStatusCode,
+            continuationToken = continuationToken,
+            challengeType = redirect,
+            redirectReason = redirectReason,
+            bindingMethod = null,
+            challengeTargetLabel = challengeTargetLabel,
+            challengeChannel = emailChallengeChannel,
+            codeLength = codeLength,
+            interval = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            correlationId = correlationId
+        )
+
+        val apiResult = resetPasswordChallengeApiResponse.toResult()
+        assertTrue(apiResult is ResetPasswordChallengeApiResult.Redirect)
+        assertEquals(redirectReason, (apiResult as ResetPasswordChallengeApiResult.Redirect).redirectReason)
+    }
+
+    @Test
     fun testValidateSsprChallengeResultSuccessAndMissingContinuationToken() {
         val resetPasswordChallengeApiResponse = ResetPasswordChallengeApiResponse(
             statusCode = successStatusCode,
             continuationToken = null,
             challengeType = oobChallengeType,
+            redirectReason = null,
             bindingMethod = null,
             challengeTargetLabel = challengeTargetLabel,
             challengeChannel = emailChallengeChannel,
@@ -1451,6 +1569,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = successStatusCode,
             continuationToken = continuationToken,
             challengeType = oobChallengeType,
+            redirectReason = null,
             bindingMethod = null,
             challengeTargetLabel = null,
             challengeChannel = challengeTargetLabel,
@@ -1472,6 +1591,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = successStatusCode,
             continuationToken = continuationToken,
             challengeType = oobChallengeType,
+            redirectReason = null,
             bindingMethod = null,
             challengeTargetLabel = challengeTargetLabel,
             challengeChannel = null,
@@ -1493,6 +1613,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = successStatusCode,
             continuationToken = continuationToken,
             challengeType = null,
+            redirectReason = null,
             bindingMethod = null,
             challengeTargetLabel = challengeTargetLabel,
             challengeChannel = emailChallengeChannel,
@@ -1514,6 +1635,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = successStatusCode,
             continuationToken = continuationToken,
             challengeType = oobChallengeType,
+            redirectReason = null,
             bindingMethod = null,
             challengeTargetLabel = challengeTargetLabel,
             challengeChannel = emailChallengeChannel,
@@ -1535,6 +1657,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             continuationToken = null,
             challengeType = null,
+            redirectReason = null,
             bindingMethod = null,
             challengeTargetLabel = null,
             challengeChannel = null,
@@ -1556,6 +1679,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             continuationToken = null,
             challengeType = null,
+            redirectReason = null,
             bindingMethod = null,
             challengeTargetLabel = null,
             challengeChannel = null,
@@ -1577,6 +1701,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             continuationToken = null,
             challengeType = null,
+            redirectReason = null,
             bindingMethod = null,
             challengeTargetLabel = null,
             challengeChannel = null,
@@ -1598,6 +1723,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = uncommonErrorStatusCode,
             continuationToken = null,
             challengeType = null,
+            redirectReason = null,
             bindingMethod = null,
             challengeTargetLabel = null,
             challengeChannel = null,
@@ -1621,6 +1747,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = successStatusCode,
             continuationToken = continuationToken,
             challengeType = null,
+            redirectReason = null,
             expiresIn = expiresIn400,
             error = null,
             errorDescription = null,
@@ -1641,6 +1768,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = successStatusCode,
             continuationToken = continuationToken,
             challengeType = null,
+            redirectReason = null,
             expiresIn = null,
             error = null,
             errorDescription = null,
@@ -1660,6 +1788,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = successStatusCode,
             continuationToken = null,
             challengeType = null,
+            redirectReason = null,
             expiresIn = expiresIn400,
             error = null,
             errorDescription = null,
@@ -1678,6 +1807,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = successStatusCode,
             continuationToken = null,
             challengeType = redirect,
+            redirectReason = redirectReason,
             expiresIn = null,
             error = null,
             errorDescription = null,
@@ -1688,6 +1818,7 @@ class NativeAuthResponseHandlerTest {
 
         val apiResult = resetPasswordContinueApiResponse.toResult()
         assertTrue(apiResult is ResetPasswordContinueApiResult.Redirect)
+        assertEquals(redirectReason, (apiResult as ResetPasswordContinueApiResult.Redirect).redirectReason)
     }
 
     @Test
@@ -1696,6 +1827,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             continuationToken = null,
             challengeType = null,
+            redirectReason = null,
             expiresIn = null,
             error = invalidGrantError,
             errorDescription = null,
@@ -1714,6 +1846,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             continuationToken = null,
             challengeType = null,
+            redirectReason = null,
             expiresIn = null,
             error = invalidGrantError,
             errorDescription = null,
@@ -1732,6 +1865,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             continuationToken = null,
             challengeType = null,
+            redirectReason = null,
             expiresIn = null,
             error = expiredTokenError,
             errorDescription = null,
@@ -1750,6 +1884,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             continuationToken = null,
             challengeType = null,
+            redirectReason = null,
             expiresIn = null,
             error = null,
             errorDescription = unknownError,
@@ -1768,6 +1903,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = uncommonErrorStatusCode,
             continuationToken = null,
             challengeType = null,
+            redirectReason = null,
             expiresIn = null,
             error = null,
             errorDescription = unknownError,
@@ -1792,13 +1928,35 @@ class NativeAuthResponseHandlerTest {
             errorDescription = null,
             errorUri = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
         assertTrue(apiResult is ResetPasswordSubmitApiResult.SubmitSuccess)
         assertNotNull((apiResult as ResetPasswordSubmitApiResult.SubmitSuccess).continuationToken)
         assertNotNull(apiResult.pollInterval)
+    }
+
+    @Test
+    fun testValidateSsprSubmitResultSuccessRedirect() {
+        val resetPasswordSubmitApiResponse = ResetPasswordSubmitApiResponse(
+            statusCode = successStatusCode,
+            continuationToken = continuationToken,
+            pollInterval = pollInterval,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            subError = null,
+            correlationId = correlationId,
+            challengeType = redirect,
+            redirectReason = redirectReason
+        )
+
+        val apiResult = resetPasswordSubmitApiResponse.toResult()
+        assertTrue(apiResult is ResetPasswordSubmitApiResult.Redirect)
+        assertEquals(redirectReason, (apiResult as ResetPasswordSubmitApiResult.Redirect).redirectReason)
     }
 
     @Test
@@ -1811,7 +1969,9 @@ class NativeAuthResponseHandlerTest {
             errorDescription = null,
             errorUri = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1828,7 +1988,9 @@ class NativeAuthResponseHandlerTest {
             errorDescription = null,
             errorUri = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1846,7 +2008,9 @@ class NativeAuthResponseHandlerTest {
             errorDescription = null,
             errorUri = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1863,7 +2027,9 @@ class NativeAuthResponseHandlerTest {
             errorDescription = null,
             errorUri = null,
             subError = passwordTooWeakError,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1880,7 +2046,9 @@ class NativeAuthResponseHandlerTest {
             errorDescription = null,
             errorUri = null,
             subError = passwordTooLongError,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1897,7 +2065,9 @@ class NativeAuthResponseHandlerTest {
             errorDescription = null,
             errorUri = null,
             subError = passwordTooShortError,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1914,7 +2084,9 @@ class NativeAuthResponseHandlerTest {
             errorDescription = null,
             errorUri = null,
             subError = passwordBannedError,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1931,7 +2103,9 @@ class NativeAuthResponseHandlerTest {
             errorDescription = null,
             errorUri = null,
             subError = passwordRecentlyUsedError,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1948,7 +2122,9 @@ class NativeAuthResponseHandlerTest {
             errorDescription = unknownError,
             errorUri = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1967,7 +2143,9 @@ class NativeAuthResponseHandlerTest {
             errorDescription = unknownError,
             errorUri = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -1989,7 +2167,9 @@ class NativeAuthResponseHandlerTest {
             errorUri = null,
             subError = null,
             expiresIn = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordPollCompletionApiResponse.toResult()
@@ -2007,7 +2187,9 @@ class NativeAuthResponseHandlerTest {
             errorUri = null,
             subError = null,
             expiresIn = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordPollCompletionApiResponse.toResult()
@@ -2025,11 +2207,34 @@ class NativeAuthResponseHandlerTest {
             errorUri = null,
             subError = null,
             correlationId = correlationId,
-            expiresIn = null
+            expiresIn = null,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordPollCompletionApiResponse.toResult()
         assertTrue(apiResult is ResetPasswordPollCompletionApiResult.PollingFailed)
+    }
+
+    @Test
+    fun testValidateSsprPollCompletionResultPollingSuccessRedirect() {
+        val resetPasswordPollCompletionApiResponse = ResetPasswordPollCompletionApiResponse(
+            statusCode = successStatusCode,
+            status = failedStatus,
+            continuationToken = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            subError = null,
+            correlationId = correlationId,
+            expiresIn = null,
+            challengeType = redirect,
+            redirectReason = redirectReason
+        )
+
+        val apiResult = resetPasswordPollCompletionApiResponse.toResult()
+        assertTrue(apiResult is ResetPasswordPollCompletionApiResult.Redirect)
+        assertEquals(redirectReason, (apiResult as ResetPasswordPollCompletionApiResult.Redirect).redirectReason)
     }
 
     @Test
@@ -2043,7 +2248,9 @@ class NativeAuthResponseHandlerTest {
             status = null,
             continuationToken = null,
             correlationId = correlationId,
-            expiresIn = null
+            expiresIn = null,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2061,7 +2268,9 @@ class NativeAuthResponseHandlerTest {
             status = null,
             continuationToken = null,
             correlationId = correlationId,
-            expiresIn = null
+            expiresIn = null,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2079,7 +2288,9 @@ class NativeAuthResponseHandlerTest {
             status = null,
             continuationToken = null,
             expiresIn = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2097,7 +2308,9 @@ class NativeAuthResponseHandlerTest {
             status = null,
             continuationToken = null,
             expiresIn = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2115,7 +2328,9 @@ class NativeAuthResponseHandlerTest {
             status = null,
             continuationToken = null,
             expiresIn = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2133,7 +2348,9 @@ class NativeAuthResponseHandlerTest {
             status = null,
             continuationToken = null,
             expiresIn = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2151,7 +2368,9 @@ class NativeAuthResponseHandlerTest {
             status = null,
             continuationToken = null,
             expiresIn = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordSubmitApiResponse.toResult()
@@ -2169,7 +2388,9 @@ class NativeAuthResponseHandlerTest {
             errorUri = null,
             subError = null,
             expiresIn = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordPollCompletionApiResponse.toResult()
@@ -2187,7 +2408,9 @@ class NativeAuthResponseHandlerTest {
             errorUri = null,
             subError = null,
             expiresIn = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
 
         val apiResult = resetPasswordPollCompletionApiResponse.toResult()
@@ -2201,16 +2424,18 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = successStatusCode,
             challengeType = redirect,
+            redirectReason = redirectReason,
             continuationToken = null,
             error = null,
             errorCodes = null,
             errorDescription = null,
             errorUri = null,
-            correlationId = correlationId
+            correlationId = correlationId,
         )
 
         val apiResult = signInInitiateApiResponse.toResult()
         assertTrue(apiResult is SignInInitiateApiResult.Redirect)
+        assertEquals(redirectReason, (apiResult as SignInInitiateApiResult.Redirect).redirectReason)
     }
 
     @Test
@@ -2218,6 +2443,7 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = successStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = continuationToken,
             error = null,
             errorCodes = null,
@@ -2236,6 +2462,7 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = successStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = null,
             errorDescription = null,
@@ -2253,6 +2480,7 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = unauthorizedClientError,
             errorCodes = listOf(),
@@ -2270,6 +2498,7 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = invalidGrantError,
             errorCodes = listOf(),
@@ -2287,6 +2516,7 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = userNotFoundError,
             errorCodes = listOf(userNotFoundErrorCode),
@@ -2306,6 +2536,7 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = invalidGrantError,
             errorCodes = listOf(randomErrorCode),
@@ -2323,6 +2554,7 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = signInUnknownError,
             errorCodes = listOf(unknownErrorCode),
@@ -2342,6 +2574,7 @@ class NativeAuthResponseHandlerTest {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = uncommonErrorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = null,
             errorCodes = null,
@@ -2361,6 +2594,7 @@ class NativeAuthResponseHandlerTest {
         val apiResponse = SignInIntrospectApiResponse(
             statusCode = successStatusCode,
             challengeType = redirect,
+            redirectReason = redirectReason,
             methods = null,
             continuationToken = null,
             error = null,
@@ -2371,6 +2605,7 @@ class NativeAuthResponseHandlerTest {
 
         val apiResult = apiResponse.toResult()
         assertTrue(apiResult is SignInIntrospectApiResult.Redirect)
+        assertEquals(redirectReason, (apiResult as SignInIntrospectApiResult.Redirect).redirectReason)
     }
 
     @Test
@@ -2392,6 +2627,7 @@ class NativeAuthResponseHandlerTest {
         val apiResponse = SignInIntrospectApiResponse(
             statusCode = successStatusCode,
             challengeType = null,
+            redirectReason = null,
             methods = methods,
             continuationToken = null,
             error = null,
@@ -2423,6 +2659,7 @@ class NativeAuthResponseHandlerTest {
         val apiResponse = SignInIntrospectApiResponse(
             statusCode = successStatusCode,
             challengeType = null,
+            redirectReason = null,
             methods = methods,
             continuationToken = continuationToken,
             error = null,
@@ -2443,6 +2680,7 @@ class NativeAuthResponseHandlerTest {
         val apiResponse = SignInIntrospectApiResponse(
             statusCode = successStatusCode,
             challengeType = null,
+            redirectReason = null,
             methods = emptyList(),
             continuationToken = null,
             error = null,
@@ -2475,6 +2713,7 @@ class NativeAuthResponseHandlerTest {
         val apiResponse = SignInIntrospectApiResponse(
             statusCode = successStatusCode,
             challengeType = null,
+            redirectReason = null,
             methods = methods,
             continuationToken = null,
             error = null,
@@ -2495,6 +2734,7 @@ class NativeAuthResponseHandlerTest {
         val response = SignInChallengeApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = invalidGrantError,
             subError = null,
@@ -2520,6 +2760,7 @@ class NativeAuthResponseHandlerTest {
         val response = SignInChallengeApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = invalidRequestError,
             subError = introspectRequiredSubError,
@@ -2544,6 +2785,7 @@ class NativeAuthResponseHandlerTest {
         val response = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
+            redirectReason = null,
             continuationToken = continuationToken,
             error = null,
             subError = null,
@@ -2569,6 +2811,7 @@ class NativeAuthResponseHandlerTest {
         val response = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
+            redirectReason = null,
             continuationToken = continuationToken,
             error = null,
             subError = null,
@@ -2592,6 +2835,7 @@ class NativeAuthResponseHandlerTest {
         val response = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
+            redirectReason = null,
             continuationToken = continuationToken,
             error = null,
             subError = null,
@@ -2615,6 +2859,7 @@ class NativeAuthResponseHandlerTest {
         val response = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
+            redirectReason = null,
             continuationToken = continuationToken,
             error = null,
             subError = null,
@@ -2638,6 +2883,7 @@ class NativeAuthResponseHandlerTest {
         val response = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = passwordChallengeType,
+            redirectReason = null,
             continuationToken = null,
             error = null,
             subError = null,
@@ -2661,6 +2907,7 @@ class NativeAuthResponseHandlerTest {
         val response = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = passwordChallengeType,
+            redirectReason = null,
             continuationToken = continuationToken,
             error = null,
             subError = null,
@@ -2685,6 +2932,7 @@ class NativeAuthResponseHandlerTest {
         val response = SignInChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = passwordChallengeType,
+            redirectReason = null,
             continuationToken = null,
             error = null,
             subError = null,
@@ -2708,6 +2956,7 @@ class NativeAuthResponseHandlerTest {
         val response = SignInChallengeApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = signInUnknownError,
             subError = null,
@@ -2733,6 +2982,7 @@ class NativeAuthResponseHandlerTest {
         val response = SignInChallengeApiResponse(
             statusCode = uncommonErrorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = null,
             subError = null,
@@ -2749,6 +2999,30 @@ class NativeAuthResponseHandlerTest {
 
         val apiResult = response.toResult()
         assertTrue(apiResult is SignInChallengeApiResult.UnknownError)
+    }
+
+    fun testSignInChallengeSuccessRedirect() {
+        val response = SignInChallengeApiResponse(
+            statusCode = uncommonErrorStatusCode,
+            challengeType = null,
+            redirectReason = null,
+            continuationToken = null,
+            error = null,
+            subError = null,
+            errorCodes = null,
+            errorDescription = null,
+            errorUri = null,
+            challengeTargetLabel = null,
+            challengeChannel = null,
+            codeLength = null,
+            bindingMethod = null,
+            interval = null,
+            correlationId = correlationId
+        )
+
+        val apiResult = response.toResult()
+        assertTrue(apiResult is SignInChallengeApiResult.Redirect)
+        assertEquals(redirectReason, (apiResult as SignInChallengeApiResult.Redirect).redirectReason)
     }
     // endregion
 
@@ -2957,6 +3231,20 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
+    fun testSignInTokenApiResponseSuccessRedirect() {
+        val response = mock<HttpResponse>()
+        whenever(response.statusCode).thenReturn(200)
+        val body = "{\"token_type\":\"Bearer\",\"scope\":\"openid offline_access\",\"expires_in\":3600,\"ext_expires_in\":3600,\"access_token\":\"EwBwA8l6BAAUAOyDv0l6PcCVu89kmzvqZmkWABkAAQ27/JswzTr5JApngbbLvCRL6dxztu4d+m7p9E0LpFsRZMOsH1w7EUmFynerA2s0HGpM8aMeja90GALzXj8ZQ1L0rJ39q4UzEe1nodBHz5cSvI0SzDDi1FuD2o3zKYIDV/zELm8GnayljTShXI6ml2u7WEahlKtXVrwDe1Ek/IJepNc9EirZaxL51A/OqETGsyiYKz6/D55+OIgWcSf6oApxg6iCQpIAAzoiF91Ab2xptHKkc7lp5z/ucB09dc8Y2SWiJLLSH4pkGf3h15m3OHo3hA1C1aOTUuc/bk7hA7CEVbMX/UGF5XrKwbJtG0SO97b2+xgKdY53JzWB6zp6kggDZgAACL6Ttxs6Lc1sQAI20md0RrEgIZN2EvvGimyQrRIK3j3DDiq3fuSTWrDPrfNnK14CW+JpSuQapG+n3349kdt9OFPUd57pYcHrj5kf9kf8srdOm1D8EqKAXExlpjPFWZ32JpDFpvPFCVPil+inkAH9iSjj5d3ScWJg9mznRlZKM1NpRSAOfEXuXWE3EWXygS5Ka5PnY9uTce52FvifZ+QGU/j27ostv48XQx1rVR0elvkT+yG9VErKZiypHOp9MvK2JyzsYdgkM+v1NwEVnW2ZBSbF1zYkLPUL8MqkmwYnXm0TRGxUV0mfDi/2R4/WrzVZRCAs/+sE/QrmAK1qIrbCc4uAjTzjU2Aqb1z6twuLUFuVZuXxO/S4iucOk4kUFzSIBtA9/bIooR3uXwJLKMbw0Ghhi9xrJatOFKj8MBMohsgQSCMGjRcli3oNm++vs8XTynupjVJJON5nLb4JVfV2CMhXCQ07IIxW0CsA4W+eJj2gPan6mIn91iPQcQrtD4rNcwBH8Kcj14j+8UtnpNAYy1h8oOtmxFbckzEo01fGZ3KEYBTE4+bvW05k/ujj1Ot+k8lj6GUBFY23aD0qB5fv6fsWxiyPvRYyzXBZaHs7dq1xvR8zGHQ6eBp4gqlrZTQSCF/v1D//WAtlAJX+XToAETfD2P/lVhNunpXn/bKV3pBoKaRkVlHHk0/nJGboCPGv1VhrPzmXSBq6bm/mOntxpRHr8QUwHH1vtwFXnS0bhwjF1P+wi6c8GmW/v+2tFmGDofYYRqUgWnUGgE6LAg==\",\"refresh_token\":\"M.C106_BL2.-CWTREwEuljWTTz!UQXU!SujJppWGaLzL*qBnGRB!ldp3lvNQcImJG8Y8P5YlpsWxF56F4GU5NE5efKpZ0leEC2H2pvOqK4OLj2cc81JVE*O8IbHJYyPLPVX9HQg5TLW*MFFSxVnLMJvux6umg9NdLqdkIgUzAyhi*qBJTNC!0*I4jRsPbCJkMr6EVThw8GlP*MGX0bJZeJWcNEGxJBMyzzGXnS!PGVCNOyM9HL8xVaM4WX*NjcA!gFee1PCnAauNrYtYv!PnvorihhyCvRMw8q5cIvvPrlyWxaaoLN0!mX!cWnfhyJRsA1lR8vw3EOAaOKEs*2vaCN!tSwk*AUQVybLw7kEVAuiCFgY28C!8cIFk\",\"id_token\":\"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6ImJXOFpjTWpCQ25KWlMtaWJYNVVRRE5TdHZ4NCJ9.eyJ2ZXIiOiIyLjAiLCJpc3MiOiJodHRwczovL2xvZ2luLm1pY3Jvc29mdG9ubGluZS5jb20vOTE4ODA0MGQtNmM2Ny00YzViLWIxMTItMzZhMzA0YjY2ZGFkL3YyLjAiLCJzdWIiOiJBQUFBQUFBQUFBQUFBQUFBQUFBQUFQV0t1dkFxNDdlZmxzSjdNd2dpbWtVIiwiYXVkIjoiMDk4NGE3YjYtYmMxMy00MTQxLThiMGQtOGY3NjdlMTM2YmI3IiwiZXhwIjoxNjgxNDYzMDIzLCJpYXQiOjE2ODEzNzYzMjMsIm5iZiI6MTY4MTM3NjMyMywibmFtZSI6IlNhbW15IE9kZW5ob3ZlbiIsInByZWZlcnJlZF91c2VybmFtZSI6InNhbW15Lm9kZW5ob3ZlbkBnbWFpbC5jb20iLCJvaWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtNDQ3Yi0yNzNlZWMwMGRkNTciLCJ0aWQiOiI5MTg4MDQwZC02YzY3LTRjNWItYjExMi0zNmEzMDRiNjZkYWQiLCJhaW8iOiJEVGhGY3dSdFgwT0tqNXBTSEdOZUdVR1NVNGhaNFJoNU83TmhnUjYzMnpldEM5WmgzM3dWRypXeUJqIVFPM0twU0dXRVRla25sMDA1WE8qQWg0bXhRamVuR2VRZXIqakx3Nypkcmh1cDdTc0NJRThraUlsempYMDZuaWNWNFFFTGZxR3BoYkRuemI0RWtOZEZXTHBOTmhJJCJ9.WRe3tNCsvIuYfw8bIY1D8spFJXg-ZrGm2MiDYkUlfNR-bbW_7niJg372U-wG65OfRA99NauR511IKWcg6i5FRzx3Xcx4AfGCJhOCGagD4fRDaU4I1pE-C3lJlGY6bIodTSXIlS0VUPw_YmvzQ-X9lyJP-l-89hxQNtvCSbdm2zlSJPvdynJmRH58s4PTJSGuv7zn5Jq-Uc0s2DZx0nLfBfLee8bQpaUQamaxQ6Noz7zAjz7-TkCRriqZyvJLE9dBvRd6uSzYR_qm4VDpsH5wnGsMRvW7F_hcjjZo2gZyxI6BWy0kONF8juL6H1ar1EMi3Xn9jIU1Tde3yafjTpkmyw\",\"client_info\":\"eyJ2ZXIiOiIxLjAiLCJzdWIiOiJBQUFBQUFBQUFBQUFBQUFBQUFBQUFBcEhXMjhma09DSE9xNlJZX2l2V0tZIiwibmFtZSI6IlNpbHZpdSBQZXRyZXNjdSIsInByZWZlcnJlZF91c2VybmFtZSI6InNwZXRyZXNjdW1zQG91dGxvb2suY29tIiwib2lkIjoiMDAwMDAwMDAtMDAwMC0wMDAwLTc5MzYtYWEzMjBhMmNmN2JiIiwidGlkIjoiOTE4ODA0MGQtNmM2Ny00YzViLWIxMTItMzZhMzA0YjY2ZGFkIiwiaG9tZV9vaWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtNzkzNi1hYTMyMGEyY2Y3YmIiLCJ1aWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtNzkzNi1hYTMyMGEyY2Y3YmIiLCJ1dGlkIjoiOTE4ODA0MGQtNmM2Ny00YzViLWIxMTItMzZhMzA0YjY2ZGFkIn0\", \"challenge_type\":\"redirect\",\"redirect_reason\":\"redirect reason\"}"
+        whenever(response.body).thenReturn(body)
+
+        val result = nativeAuthResponseHandler.getSignInTokenApiResultFromHttpResponse(
+            requestCorrelationId = correlationId,
+            response = response
+        )
+        assertTrue(result is SignInTokenApiResult.Redirect)
+    }
+
+    @Test
     fun testSignInTokenApiResponseWithUnknownError() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
@@ -3067,7 +3355,9 @@ class NativeAuthResponseHandlerTest {
         Assert.assertNull(response.invalidAttributes)
         Assert.assertNull(response.unverifiedAttributes)
     }
+    //endregion
 
+    // region Empty or Null Response
     @Test
     fun testSignUpStartEmptyResponse() {
         val response = handler.getSignUpStartResultFromHttpResponse(
@@ -3405,16 +3695,16 @@ class NativeAuthResponseHandlerTest {
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, response.error)
         Assert.assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, response.errorDescription)
     }
-    // endregion
+    //endregion
 
     //region JIT introspect
-
     @Test
     fun testJITIntrospectApiSuccessButEmptyMethodList() {
         val methods = emptyList<AuthenticationMethodApiResponse>()
         val jitIntrospectApiResponse = JITIntrospectApiResponse(
             statusCode = successStatusCode,
             challengeType = emailChallengeChannel,
+            redirectReason = null,
             continuationToken = continuationToken,
             error = null,
             errorDescription = null,
@@ -3443,6 +3733,7 @@ class NativeAuthResponseHandlerTest {
         val jitIntrospectApiResponse = JITIntrospectApiResponse(
             statusCode = successStatusCode,
             challengeType = emailChallengeChannel,
+            redirectReason = null,
             continuationToken = continuationToken,
             error = null,
             errorDescription = null,
@@ -3467,6 +3758,26 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
+    fun testJITIntrospectApiSuccessRedirect() {
+        val jitIntrospectApiResponse = JITIntrospectApiResponse(
+            statusCode = successStatusCode,
+            challengeType = redirect,
+            redirectReason = redirectReason,
+            continuationToken = continuationToken,
+            error = null,
+            errorDescription = null,
+            methods = null,
+            errorUri = null,
+            errorCodes = null,
+            correlationId = correlationId
+        )
+        val apiResult = jitIntrospectApiResponse.toResult()
+
+        assertTrue(apiResult is JITIntrospectApiResult.Redirect)
+        assertEquals(redirectReason, (apiResult as JITIntrospectApiResult.Redirect).redirectReason)
+    }
+
+    @Test
     fun testJITIntrospectApiResponseBadRequest() {
         val jitIntrospectApiResponse = JITIntrospectApiResponse(
             statusCode = errorStatusCode,
@@ -3477,6 +3788,7 @@ class NativeAuthResponseHandlerTest {
             errorUri = null,
             methods = null,
             challengeType = null,
+            redirectReason = null,
             correlationId = correlationId
         )
 
@@ -3488,16 +3800,15 @@ class NativeAuthResponseHandlerTest {
             fail("Expected JITIntrospectApiResult.UnknownError but got $apiResult")
         }
     }
-
     //endregion
 
     //region JIT challenge
-
     @Test
     fun testJITChallengeApiSuccessButMissingMandatoryField() {
         val jitChallengeApiResponse = JITChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = emailChallengeChannel,
+            redirectReason = null,
             continuationToken = continuationToken,
             error = null,
             errorDescription = null,
@@ -3520,10 +3831,35 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
+    fun testJITChallengeApiSuccessRedirect() {
+        val jitChallengeApiResponse = JITChallengeApiResponse(
+            statusCode = successStatusCode,
+            challengeType = redirect,
+            redirectReason = redirectReason,
+            continuationToken = continuationToken,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            bindingMethod = null,
+            challengeChannel = null,
+            challengeTarget = null,
+            codeLength = null,
+            interval = null,
+            correlationId = correlationId
+        )
+        val apiResult = jitChallengeApiResponse.toResult()
+
+        assertTrue(apiResult is JITChallengeApiResult.Redirect)
+        assertEquals(redirectReason, (apiResult as JITChallengeApiResult.Redirect).redirectReason)
+    }
+
+    @Test
     fun testJITChallengeApiUncommonStatusCodeShouldReturnError() {
         val jitChallengeApiResponse = JITChallengeApiResponse(
             statusCode = uncommonErrorStatusCode,
             challengeType = redirect,
+            redirectReason = redirectReason,
             continuationToken = continuationToken,
             error = null,
             errorDescription = null,
@@ -3551,6 +3887,7 @@ class NativeAuthResponseHandlerTest {
         val jitChallengeApiResponse = JITChallengeApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = invalidRequestError,
             errorDescription = errorDescription,
@@ -3580,6 +3917,7 @@ class NativeAuthResponseHandlerTest {
         val jitChallengeApiResponse = JITChallengeApiResponse(
             statusCode = errorStatusCode,
             challengeType = null,
+            redirectReason = null,
             continuationToken = null,
             error = invalidRequestError,
             errorDescription = errorDescription,
@@ -3608,6 +3946,7 @@ class NativeAuthResponseHandlerTest {
         val jitChallengeApiResponse = JITChallengeApiResponse(
             statusCode = successStatusCode,
             challengeType = oobChallengeType,
+            redirectReason = null,
             continuationToken = continuationToken,
             error = null,
             errorDescription = null,
@@ -3632,11 +3971,9 @@ class NativeAuthResponseHandlerTest {
             fail("Expected JITChallengeApiResult.OOBRequired but got $apiResult")
         }
     }
-
     //endregion
 
     //region JIT continue
-
     @Test
     fun testJITContinueApiInvalidOOBIsHandledCorrectly() {
         val jitContinueApiResponse = JITContinueApiResponse(
@@ -3646,7 +3983,9 @@ class NativeAuthResponseHandlerTest {
             errorDescription = errorDescription,
             errorCodes = null,
             subError = invalidOOBValueError,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = jitContinueApiResponse.toResult()
         if (apiResult is JITContinueApiResult.CodeIncorrect) {
@@ -3667,7 +4006,9 @@ class NativeAuthResponseHandlerTest {
             errorDescription = errorDescription,
             errorCodes = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = jitContinueApiResponse.toResult()
         if (apiResult is JITContinueApiResult.UnknownError) {
@@ -3688,7 +4029,9 @@ class NativeAuthResponseHandlerTest {
             errorDescription = errorDescription,
             errorCodes = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = jitContinueApiResponse.toResult()
         if (apiResult is JITContinueApiResult.UnknownError) {
@@ -3709,7 +4052,9 @@ class NativeAuthResponseHandlerTest {
             errorDescription = errorDescription,
             errorCodes = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = jitContinueApiResponse.toResult()
         if (apiResult is JITContinueApiResult.UnknownError) {
@@ -3729,7 +4074,9 @@ class NativeAuthResponseHandlerTest {
             errorDescription = null,
             errorCodes = null,
             subError = null,
-            correlationId = correlationId
+            correlationId = correlationId,
+            challengeType = null,
+            redirectReason = null
         )
         val apiResult = jitContinueApiResponse.toResult()
         if (apiResult is JITContinueApiResult.Success) {
@@ -3740,5 +4087,23 @@ class NativeAuthResponseHandlerTest {
         }
     }
 
+    @Test
+    fun testJITContinueApiSuccessRedirect() {
+        val jitContinueApiResponse = JITContinueApiResponse(
+            statusCode = successStatusCode,
+            continuationToken = continuationToken,
+            error = null,
+            errorDescription = null,
+            errorCodes = null,
+            subError = null,
+            correlationId = correlationId,
+            challengeType = redirect,
+            redirectReason = redirectReason
+        )
+        val apiResult = jitContinueApiResponse.toResult()
+
+        assertTrue(apiResult is JITContinueApiResult.Redirect)
+        assertEquals(redirectReason, (apiResult as JITContinueApiResult.Redirect).redirectReason)
+    }
     //endregion
 }
