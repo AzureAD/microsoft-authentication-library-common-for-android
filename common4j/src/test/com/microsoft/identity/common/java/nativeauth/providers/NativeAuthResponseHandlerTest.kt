@@ -1320,8 +1320,7 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            correlationId = correlationId,
-
+            correlationId = correlationId
         )
 
         val apiResult = resetPasswordStartApiResponse.toResult()
@@ -1526,9 +1525,9 @@ class NativeAuthResponseHandlerTest {
             challengeType = redirect,
             redirectReason = redirectReason,
             bindingMethod = null,
-            challengeTargetLabel = challengeTargetLabel,
-            challengeChannel = emailChallengeChannel,
-            codeLength = codeLength,
+            challengeTargetLabel = null,
+            challengeChannel = null,
+            codeLength = null,
             interval = null,
             error = null,
             errorDescription = null,
