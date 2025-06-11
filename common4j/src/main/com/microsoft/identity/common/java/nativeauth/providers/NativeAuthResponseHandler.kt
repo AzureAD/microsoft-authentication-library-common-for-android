@@ -33,6 +33,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpa
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordPollCompletionApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordStartApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.NativeAuthMicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectApiResponse
@@ -388,7 +389,7 @@ class NativeAuthResponseHandler {
         } else {
             val apiResponse = ObjectMapper.deserializeJsonStringToObject(
                 response.body,
-                MicrosoftStsTokenResponse::class.java
+                NativeAuthMicrosoftStsTokenResponse::class.java  // Extended class from MicrosoftStsTokenResponse
             )
             return SignInTokenApiResult.Success(
                 tokenResponse = apiResponse,
