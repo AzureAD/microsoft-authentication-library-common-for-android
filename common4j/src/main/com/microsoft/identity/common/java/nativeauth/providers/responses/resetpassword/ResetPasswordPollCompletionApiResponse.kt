@@ -53,7 +53,7 @@ class ResetPasswordPollCompletionApiResponse(
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
     @SerializedName("suberror") val subError: String?,
-    @Expose @SerializedName("challenge_type") val challengeType: String? = null,
+    @Expose @SerializedName("challenge_type") val challengeType: String?,
     @SerializedName("redirect_reason") val redirectReason: String?,
 ): IApiResponse(statusCode, correlationId) {
 

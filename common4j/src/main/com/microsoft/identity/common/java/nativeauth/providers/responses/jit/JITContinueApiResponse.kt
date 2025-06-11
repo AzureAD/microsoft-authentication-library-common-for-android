@@ -43,7 +43,7 @@ class JITContinueApiResponse(
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("suberror") val subError: String?,
-    @Expose @SerializedName("challenge_type") val challengeType: String? = null,
+    @Expose @SerializedName("challenge_type") val challengeType: String?,
     @SerializedName("redirect_reason") val redirectReason: String?,
 ) : IApiResponse(statusCode, correlationId) {
     override fun toUnsanitizedString(): String {
