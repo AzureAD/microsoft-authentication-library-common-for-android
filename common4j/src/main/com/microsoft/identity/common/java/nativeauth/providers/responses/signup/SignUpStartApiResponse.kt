@@ -46,7 +46,7 @@ import java.net.HttpURLConnection
  * Represents the raw response from the Sign Up /start endpoint.
  * Can be converted to SignUpContinueApiResult using the provided toResult() method.
  */
-class SignUpStartNativeAuthApiResponse(
+class SignUpStartApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
     override val continuationToken: String?,
@@ -71,7 +71,7 @@ class SignUpStartNativeAuthApiResponse(
             "correlationId=$correlationId"
 
     companion object {
-        private val TAG = SignUpStartNativeAuthApiResponse::class.java.simpleName
+        private val TAG = SignUpStartApiResponse::class.java.simpleName
     }
 
     fun toResult(): SignUpStartApiResult {

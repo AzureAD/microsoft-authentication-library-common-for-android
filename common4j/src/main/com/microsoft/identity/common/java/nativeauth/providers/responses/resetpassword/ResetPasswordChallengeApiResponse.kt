@@ -35,7 +35,7 @@ import java.net.HttpURLConnection
  * Represents the raw response from the Reset Password /challenge endpoint.
  * Can be converted to ResetPasswordChallengeApiResult using the provided toResult() method.
  */
-class ResetPasswordChallengeNativeAuthApiResponse(
+class ResetPasswordChallengeApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
     override val continuationToken: String?,
@@ -64,7 +64,7 @@ class ResetPasswordChallengeNativeAuthApiResponse(
             "correlationId=$correlationId"
 
     companion object {
-        private val TAG = ResetPasswordChallengeNativeAuthApiResponse::class.java.simpleName
+        private val TAG = ResetPasswordChallengeApiResponse::class.java.simpleName
     }
 
     /**

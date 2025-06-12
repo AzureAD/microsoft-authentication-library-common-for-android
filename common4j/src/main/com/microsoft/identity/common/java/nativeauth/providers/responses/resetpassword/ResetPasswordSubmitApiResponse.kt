@@ -25,21 +25,18 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.resetp
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
-import com.microsoft.identity.common.java.nativeauth.util.isExpiredToken
-import com.microsoft.identity.common.java.nativeauth.util.isInvalidGrant
-import com.microsoft.identity.common.java.nativeauth.util.isInvalidOOBValue
-import com.microsoft.identity.common.java.nativeauth.util.isRedirect
+import com.microsoft.identity.common.java.nativeauth.util.*
 import java.net.HttpURLConnection
 
 /**
- * Represents the raw response from the Reset Password /continue endpoint.
+ * Represents the raw response from the Reset Password /submit endpoint.
  * Can be converted to ResetPasswordChallengeApiResult using the provided toResult() method.
  */
-class ResetPasswordContinueNativeAuthApiResponse(
+class ResetPasswordSubmitApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
     override val continuationToken: String?,
-    @Expose @SerializedName("expires_in") val expiresIn: Int?,
+    @Expose @SerializedName("poll_interval") val pollInterval: Int?,
     override val error: String?,
     override val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
@@ -49,57 +46,51 @@ class ResetPasswordContinueNativeAuthApiResponse(
 ): INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
 
     override fun toUnsanitizedString(): String {
-        return "ResetPasswordContinueApiResponse(statusCode=$statusCode, " +
-                "correlationId=$correlationId, challengeType=$challengeType, expiresIn=$expiresIn " +
-                "error=$error, errorUri=$errorUri, errorDescription=$errorDescription, subError=$subError, " +
-                "redirectReason=$redirectReason)"
+        return "ResetPasswordSubmitApiResponse(statusCode=$statusCode, " +
+                "correlationId=$correlationId, pollInterval=$pollInterval, error=$error, " +
+                "errorUri=$errorUri, errorDescription=$errorDescription, subError=$subError, " +
+                "challengeType=$challengeType, redirectReason=$redirectReason)"
     }
 
-    override fun toString(): String = "ResetPasswordContinueApiResponse(statusCode=$statusCode, " +
+    override fun toString(): String = "ResetPasswordSubmitApiResponse(statusCode=$statusCode, " +
             "correlationId=$correlationId"
 
     companion object {
-        private val TAG = ResetPasswordContinueNativeAuthApiResponse::class.java.simpleName
+        private val TAG = ResetPasswordSubmitApiResponse::class.java.simpleName
+        private const val MINIMUM_POLL_COMPLETION_INTERVAL_IN_SECONDS = 1
+        private const val MAXIMUM_POLL_COMPLETION_INTERVAL_IN_SECONDS = 15
+        private const val DEFAULT_POLL_COMPLETION_INTERVAL_IN_SECONDS = 2
+
     }
 
     /**
      * Maps potential errors returned from the server response, and provide different states based on the response.
-     * @see com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordContinueApiResult
+     * @see com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResult
      */
-    fun toResult(): ResetPasswordContinueApiResult {
+    fun toResult(): ResetPasswordSubmitApiResult {
         return when (statusCode) {
 
             // Handle 400 errors
             HttpURLConnection.HTTP_BAD_REQUEST -> {
                 return when {
-                    error.isInvalidGrant() -> {
-                        return when {
-                            subError.isInvalidOOBValue() -> {
-                                ResetPasswordContinueApiResult.CodeIncorrect(
-                                    error = error.orEmpty(),
-                                    errorDescription = errorDescription.orEmpty(),
-                                    subError = subError.orEmpty(),
-                                    correlationId = correlationId
-                                )
-                            }
-                            else -> {
-                                ResetPasswordContinueApiResult.UnknownError(
-                                    error = error.orEmpty(),
-                                    errorDescription = errorDescription.orEmpty(),
-                                    correlationId = correlationId
-                                )
-                            }
-                        }
+                    subError.isPasswordBanned() || subError.isPasswordTooShort() || subError.isPasswordTooLong() || subError.isPasswordRecentlyUsed() ||
+                            subError.isPasswordTooWeak() || subError.isPasswordInvalid() -> {
+                        ResetPasswordSubmitApiResult.PasswordInvalid(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            subError = subError.orEmpty(),
+                            correlationId = correlationId
+                        )
                     }
                     error.isExpiredToken() -> {
-                        ResetPasswordContinueApiResult.ExpiredToken(
+                        ResetPasswordSubmitApiResult.ExpiredToken(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
                             correlationId = correlationId
                         )
                     }
                     else -> {
-                        ResetPasswordContinueApiResult.UnknownError(
+                        ResetPasswordSubmitApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
                             correlationId = correlationId
@@ -111,33 +102,40 @@ class ResetPasswordContinueNativeAuthApiResponse(
             // Handle success and redirect
             HttpURLConnection.HTTP_OK -> {
                 if (challengeType.isRedirect()) {
-                    ResetPasswordContinueApiResult.Redirect(
+                    return ResetPasswordSubmitApiResult.Redirect(
                         correlationId = correlationId,
                         redirectReason = redirectReason.orEmpty()
                     )
                 }
-                else {
-                    ResetPasswordContinueApiResult.PasswordRequired(
-                        continuationToken = continuationToken
-                            ?: return ResetPasswordContinueApiResult.UnknownError(
-                                error = "invalid_state",
-                                errorDescription = "ResetPassword /continue successful, but did not return a continuation token",
-                                correlationId = correlationId
-                            ),
-                        expiresIn = expiresIn,
-                        correlationId = correlationId
-                    )
-                }
+
+                ResetPasswordSubmitApiResult.SubmitSuccess(
+                    continuationToken = continuationToken
+                        ?: return ResetPasswordSubmitApiResult.UnknownError(
+                            error = "invalid_state",
+                            errorDescription = "ResetPassword /submit successful, but did not return a flow token",
+                            correlationId = correlationId
+                        ),
+                    pollInterval = clampPollInterval(pollInterval),
+                    correlationId = correlationId
+                )
             }
 
             // Catch uncommon status codes
             else -> {
-                ResetPasswordContinueApiResult.UnknownError(
+                ResetPasswordSubmitApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
                     correlationId = correlationId
                 )
             }
         }
+    }
+
+    private fun clampPollInterval(pollIntervalInSeconds: Int?): Int {
+        if (pollIntervalInSeconds == null || pollIntervalInSeconds < MINIMUM_POLL_COMPLETION_INTERVAL_IN_SECONDS || pollIntervalInSeconds > MAXIMUM_POLL_COMPLETION_INTERVAL_IN_SECONDS)
+        {
+            return DEFAULT_POLL_COMPLETION_INTERVAL_IN_SECONDS
+        }
+        return pollIntervalInSeconds
     }
 }

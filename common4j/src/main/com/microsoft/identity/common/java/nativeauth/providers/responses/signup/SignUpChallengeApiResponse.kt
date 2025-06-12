@@ -20,90 +20,93 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.nativeauth.providers.responses.signin
+package com.microsoft.identity.common.java.nativeauth.providers.responses.signup
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
-import com.microsoft.identity.common.java.nativeauth.util.isIntrospectRequired
-import com.microsoft.identity.common.java.nativeauth.util.isInvalidRequest
+import com.microsoft.identity.common.java.nativeauth.util.isExpiredToken
 import com.microsoft.identity.common.java.nativeauth.util.isOOB
 import com.microsoft.identity.common.java.nativeauth.util.isPassword
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
+import com.microsoft.identity.common.java.nativeauth.util.isUnsupportedChallengeType
 import java.net.HttpURLConnection
 
 /**
- * Represents the raw response from the /challenge endpoint.
- * Can be converted to SignInChallengeApiResult using the provided toResult() method.
+ * Represents the raw response from the Sign Up /challenge endpoint.
+ * Can be converted to SignUpChallengeApiResult using the provided toResult() method.
  */
-class SignInChallengeNativeAuthApiResponse(
+class SignUpChallengeApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
     override val continuationToken: String?,
-    @Expose @SerializedName("binding_method") val bindingMethod: String?,
     @SerializedName("challenge_target_label") val challengeTargetLabel: String?,
-    @Expose @SerializedName("challenge_channel") val challengeChannel: String?,
     @Expose @SerializedName("code_length") val codeLength: Int?,
+    @Expose @SerializedName("binding_method") val bindingMethod: String?,
     @Expose @SerializedName("interval") val interval: Int?,
+    @Expose @SerializedName("challenge_channel") val challengeChannel: String?,
     override val error: String?,
     override val errorDescription: String?,
-    @SerializedName("suberror") val subError: String?,
-    @SerializedName("error_uri") val errorUri: String?,
-    @SerializedName("error_codes") val errorCodes: List<Int>?,
     override val challengeType: String?,
     override val redirectReason: String?,
-): INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
+) : INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
 
     override fun toUnsanitizedString(): String {
         return "SignInChallengeApiResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId, challengeType=$challengeType, " +
                 "bindingMethod=$bindingMethod, challengeTargetLabel=$challengeTargetLabel, " +
                 "challengeChannel=$challengeChannel, codeLength=$codeLength, interval=$interval, " +
-                "error=$error, subError=$subError, errorDescription=$errorDescription, errorCodes=$errorCodes, " +
-                "errorUri=$errorUri, " +
+                "error=$error, errorDescription=$errorDescription, " +
                 "redirectReason=$redirectReason)"
     }
 
     override fun toString(): String = "SignInChallengeApiResponse(statusCode=$statusCode, " +
             "correlationId=$correlationId"
 
+    companion object {
+        private val TAG = SignUpChallengeApiResponse::class.java.simpleName
+    }
+
     /**
-    * Maps potential errors returned from the server response, and provide different states based on the response.
-    * @see com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeApiResult
-    */
-    fun toResult(): SignInChallengeApiResult {
+     * Maps potential errors returned from the server response, and provide different states based on the response.
+     * @see com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpChallengeApiResult
+     */
+    fun toResult(): SignUpChallengeApiResult {
         return when (statusCode) {
 
             // Handle 400 errors
             HttpURLConnection.HTTP_BAD_REQUEST -> {
-                when {
-                    error.isInvalidRequest() && subError.isIntrospectRequired() -> {
-                        SignInChallengeApiResult.IntrospectRequired(
+                return when {
+                    error.isUnsupportedChallengeType() -> {
+                        SignUpChallengeApiResult.UnsupportedChallengeType(
                             error = error.orEmpty(),
-                            subError = subError.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            errorCodes = errorCodes.orEmpty(),
+                            correlationId = correlationId
+                        )
+                    }
+                    error.isExpiredToken() -> {
+                        SignUpChallengeApiResult.ExpiredToken(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
                             correlationId = correlationId
                         )
                     }
                     else -> {
-                        SignInChallengeApiResult.UnknownError(
+                        SignUpChallengeApiResult.UnknownError(
                             error = error.orEmpty(),
-                            subError = subError.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            errorCodes = errorCodes.orEmpty(),
                             correlationId = correlationId
                         )
                     }
                 }
             }
 
-            // Handle success and redirect
+            // Handle challenge types
             HttpURLConnection.HTTP_OK -> {
                 return when {
                     challengeType.isRedirect() -> {
-                        SignInChallengeApiResult.Redirect(
+                        SignUpChallengeApiResult.Redirect(
                             correlationId = correlationId,
                             redirectReason = redirectReason.orEmpty()
                         )
@@ -111,69 +114,57 @@ class SignInChallengeNativeAuthApiResponse(
                     challengeType.isOOB() -> {
                         return when {
                             challengeTargetLabel.isNullOrBlank() -> {
-                                SignInChallengeApiResult.UnknownError(
+                                SignUpChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
-                                    subError = subError.orEmpty(),
-                                    errorDescription = "oauth/v2.0/challenge did not return a challenge_target_label with oob challenge type",
-                                    errorCodes = errorCodes.orEmpty(),
+                                    errorDescription = "SignUp /challenge did not return a challenge_target_label with oob challenge type",
                                     correlationId = correlationId
                                 )
                             }
                             challengeChannel.isNullOrBlank() -> {
-                                SignInChallengeApiResult.UnknownError(
+                                SignUpChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
-                                    subError = subError.orEmpty(),
-                                    errorDescription = "oauth/v2.0/challenge did not return a challenge_channel with oob challenge type",
-                                    errorCodes = errorCodes.orEmpty(),
+                                    errorDescription = "SignUp /challenge did not return a challenge_channel with oob challenge type",
                                     correlationId = correlationId
                                 )
                             }
                             codeLength == null -> {
-                                SignInChallengeApiResult.UnknownError(
+                                SignUpChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
-                                    subError = subError.orEmpty(),
-                                    errorDescription = "oauth/v2.0/challenge did not return a code_length with oob challenge type",
-                                    errorCodes = errorCodes.orEmpty(),
+                                    errorDescription = "SignUp /challenge did not return a code_length with oob challenge type",
                                     correlationId = correlationId
                                 )
                             }
                             else -> {
-                                SignInChallengeApiResult.OOBRequired(
+                                SignUpChallengeApiResult.OOBRequired(
                                     continuationToken = continuationToken
-                                        ?: return SignInChallengeApiResult.UnknownError(
+                                        ?: return SignUpChallengeApiResult.UnknownError(
                                             error = ApiErrorResult.INVALID_STATE,
-                                            subError = subError.orEmpty(),
-                                            errorDescription = "oauth/v2.0/challenge did not return a continuation token with oob challenge type",
-                                            errorCodes = errorCodes.orEmpty(),
+                                            errorDescription = "SignUp /challenge did not return a continuation token with oob challenge type",
                                             correlationId = correlationId
                                         ),
                                     challengeTargetLabel = challengeTargetLabel,
-                                    codeLength = codeLength,
                                     challengeChannel = challengeChannel,
+                                    codeLength = codeLength,
                                     correlationId = correlationId
                                 )
                             }
                         }
                     }
                     challengeType.isPassword() -> {
-                        SignInChallengeApiResult.PasswordRequired(
+                        SignUpChallengeApiResult.PasswordRequired(
                             continuationToken = continuationToken
-                                ?: return SignInChallengeApiResult.UnknownError(
+                                ?: return SignUpChallengeApiResult.UnknownError(
                                     error = ApiErrorResult.INVALID_STATE,
-                                    errorDescription = "oauth/v2.0/challenge did not return a continuation token with password challenge type",
-                                    errorCodes = errorCodes.orEmpty(),
-                                    subError = subError.orEmpty(),
+                                    errorDescription = "SignUp /challenge did not return a continuation token with password challenge type",
                                     correlationId = correlationId
                                 ),
                             correlationId = correlationId
                         )
                     }
                     else -> {
-                        SignInChallengeApiResult.UnknownError(
+                        SignUpChallengeApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            errorCodes = errorCodes.orEmpty(),
-                            subError = subError.orEmpty(),
                             correlationId = correlationId
                         )
                     }
@@ -182,11 +173,9 @@ class SignInChallengeNativeAuthApiResponse(
 
             // Catch uncommon status codes
             else -> {
-                SignInChallengeApiResult.UnknownError(
+                SignUpChallengeApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
-                    errorCodes = errorCodes.orEmpty(),
-                    subError = subError.orEmpty(),
                     correlationId = correlationId
                 )
             }

@@ -25,66 +25,81 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.resetp
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
+import com.microsoft.identity.common.java.nativeauth.util.isExpiredToken
+import com.microsoft.identity.common.java.nativeauth.util.isInvalidGrant
+import com.microsoft.identity.common.java.nativeauth.util.isInvalidOOBValue
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
-import com.microsoft.identity.common.java.nativeauth.util.isUnsupportedChallengeType
-import com.microsoft.identity.common.java.nativeauth.util.isUserNotFound
 import java.net.HttpURLConnection
 
 /**
- * Represents the raw response from the Reset Password /start endpoint.
+ * Represents the raw response from the Reset Password /continue endpoint.
  * Can be converted to ResetPasswordChallengeApiResult using the provided toResult() method.
  */
-class ResetPasswordStartNativeAuthApiResponse(
+class ResetPasswordContinueApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
     override val continuationToken: String?,
-    override val challengeType: String?,
+    @Expose @SerializedName("expires_in") val expiresIn: Int?,
     override val error: String?,
     override val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
+    @SerializedName("suberror") val subError: String?,
+    override val challengeType: String?,
     override val redirectReason: String?,
 ): INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
 
     override fun toUnsanitizedString(): String {
-        return "ResetPasswordStartApiResponse(statusCode=$statusCode, " +
-                "correlationId=$correlationId, challengeType=$challengeType, error=$error, " +
-                "errorUri=$errorUri, errorDescription=$errorDescription, " +
+        return "ResetPasswordContinueApiResponse(statusCode=$statusCode, " +
+                "correlationId=$correlationId, challengeType=$challengeType, expiresIn=$expiresIn " +
+                "error=$error, errorUri=$errorUri, errorDescription=$errorDescription, subError=$subError, " +
                 "redirectReason=$redirectReason)"
     }
 
-    override fun toString(): String = "ResetPasswordStartApiResponse(statusCode=$statusCode, " +
+    override fun toString(): String = "ResetPasswordContinueApiResponse(statusCode=$statusCode, " +
             "correlationId=$correlationId"
 
     companion object {
-        private val TAG = ResetPasswordStartNativeAuthApiResponse::class.java.simpleName
+        private val TAG = ResetPasswordContinueApiResponse::class.java.simpleName
     }
 
     /**
      * Maps potential errors returned from the server response, and provide different states based on the response.
-     * @see com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordStartApiResult
+     * @see com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordContinueApiResult
      */
-    fun toResult(): ResetPasswordStartApiResult {
+    fun toResult(): ResetPasswordContinueApiResult {
         return when (statusCode) {
 
             // Handle 400 errors
             HttpURLConnection.HTTP_BAD_REQUEST -> {
                 return when {
-                    error.isUserNotFound() -> {
-                        ResetPasswordStartApiResult.UserNotFound(
-                            error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty(),
-                            correlationId = correlationId
-                        )
+                    error.isInvalidGrant() -> {
+                        return when {
+                            subError.isInvalidOOBValue() -> {
+                                ResetPasswordContinueApiResult.CodeIncorrect(
+                                    error = error.orEmpty(),
+                                    errorDescription = errorDescription.orEmpty(),
+                                    subError = subError.orEmpty(),
+                                    correlationId = correlationId
+                                )
+                            }
+                            else -> {
+                                ResetPasswordContinueApiResult.UnknownError(
+                                    error = error.orEmpty(),
+                                    errorDescription = errorDescription.orEmpty(),
+                                    correlationId = correlationId
+                                )
+                            }
+                        }
                     }
-                    error.isUnsupportedChallengeType() -> {
-                        ResetPasswordStartApiResult.UnsupportedChallengeType(
+                    error.isExpiredToken() -> {
+                        ResetPasswordContinueApiResult.ExpiredToken(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
                             correlationId = correlationId
                         )
                     }
                     else -> {
-                        ResetPasswordStartApiResult.UnknownError(
+                        ResetPasswordContinueApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
                             correlationId = correlationId
@@ -96,19 +111,20 @@ class ResetPasswordStartNativeAuthApiResponse(
             // Handle success and redirect
             HttpURLConnection.HTTP_OK -> {
                 if (challengeType.isRedirect()) {
-                    ResetPasswordStartApiResult.Redirect(
+                    ResetPasswordContinueApiResult.Redirect(
                         correlationId = correlationId,
                         redirectReason = redirectReason.orEmpty()
                     )
                 }
                 else {
-                    ResetPasswordStartApiResult.Success(
-                        continuationToken
-                            ?: return ResetPasswordStartApiResult.UnknownError(
+                    ResetPasswordContinueApiResult.PasswordRequired(
+                        continuationToken = continuationToken
+                            ?: return ResetPasswordContinueApiResult.UnknownError(
                                 error = "invalid_state",
-                                errorDescription = "ResetPassword /start returned redirect challenge, but did not return a flow token",
+                                errorDescription = "ResetPassword /continue successful, but did not return a continuation token",
                                 correlationId = correlationId
                             ),
+                        expiresIn = expiresIn,
                         correlationId = correlationId
                     )
                 }
@@ -116,7 +132,7 @@ class ResetPasswordStartNativeAuthApiResponse(
 
             // Catch uncommon status codes
             else -> {
-                ResetPasswordStartApiResult.UnknownError(
+                ResetPasswordContinueApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
                     correlationId = correlationId

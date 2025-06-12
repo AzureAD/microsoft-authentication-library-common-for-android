@@ -25,23 +25,23 @@ package com.microsoft.identity.common.java.nativeauth.providers
 import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITChallengeNativeAuthApiResponse
-import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITContinueNativeAuthApiResponse
-import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITIntrospectNativeAuthApiResponse
-import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordChallengeNativeAuthApiResponse
-import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordContinueNativeAuthApiResponse
-import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordPollCompletionNativeAuthApiResponse
-import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordStartNativeAuthApiResponse
-import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitNativeAuthApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITChallengeApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITContinueApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITIntrospectApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordChallengeApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordContinueApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordPollCompletionApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordStartApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.NativeAuthMicrosoftStsTokenResponse
-import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeNativeAuthApiResponse
-import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateNativeAuthApiResponse
-import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectNativeAuthApiResponse
-import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenNativeAuthApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
-import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpChallengeNativeAuthApiResponse
-import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpContinueNativeAuthApiResponse
-import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartNativeAuthApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpChallengeApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpContinueApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResponse
 import com.microsoft.identity.common.java.nativeauth.util.ApiResultUtil
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import com.microsoft.identity.common.java.net.HttpResponse
@@ -63,7 +63,7 @@ class NativeAuthResponseHandler {
 
     //region /signup/start
     /**
-     * Converts the HTTP response for /signup/start API to [SignUpStartNativeAuthApiResponse] object
+     * Converts the HTTP response for /signup/start API to [SignUpStartApiResponse] object
      * @param response : HTTP response received from the API
      * @return SignUpStartApiResponse object
      */
@@ -71,7 +71,7 @@ class NativeAuthResponseHandler {
     fun getSignUpStartResultFromHttpResponse(
         requestCorrelationId: String,
         response: HttpResponse
-    ): SignUpStartNativeAuthApiResponse {
+    ): SignUpStartApiResponse {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = null,
@@ -81,7 +81,7 @@ class NativeAuthResponseHandler {
         val correlationId = retrieveCorrelationId(response, requestCorrelationId)
 
         val result = if (response.body.isNullOrBlank()) {
-            SignUpStartNativeAuthApiResponse(
+            SignUpStartApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
@@ -98,7 +98,7 @@ class NativeAuthResponseHandler {
         else {
             ObjectMapper.deserializeJsonStringToObject(
                 response.body,
-                SignUpStartNativeAuthApiResponse::class.java
+                SignUpStartApiResponse::class.java
             )
         }
         result.statusCode = response.statusCode
@@ -112,7 +112,7 @@ class NativeAuthResponseHandler {
 
     //region signup/challenge
     /**
-     * Converts the HTTP response for /signup/challenge API to [SignUpChallengeNativeAuthApiResponse] object
+     * Converts the HTTP response for /signup/challenge API to [SignUpChallengeApiResponse] object
      * @param response : HTTP response received from the API
      * @return SignUpChallengeApiResponse object
      */
@@ -120,7 +120,7 @@ class NativeAuthResponseHandler {
     fun getSignUpChallengeResultFromHttpResponse(
         requestCorrelationId: String,
         response: HttpResponse
-    ): SignUpChallengeNativeAuthApiResponse {
+    ): SignUpChallengeApiResponse {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = null,
@@ -130,7 +130,7 @@ class NativeAuthResponseHandler {
         val correlationId = retrieveCorrelationId(response, requestCorrelationId)
 
         val result = if (response.body.isNullOrBlank()) {
-            SignUpChallengeNativeAuthApiResponse(
+            SignUpChallengeApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
@@ -147,7 +147,7 @@ class NativeAuthResponseHandler {
         } else {
             ObjectMapper.deserializeJsonStringToObject(
                 response.body,
-                SignUpChallengeNativeAuthApiResponse::class.java
+                SignUpChallengeApiResponse::class.java
             )
         }
         result.statusCode = response.statusCode
@@ -161,7 +161,7 @@ class NativeAuthResponseHandler {
 
     //region /signup/continue
     /**
-     * Converts the HTTP response for /signup/continue API to [SignUpContinueNativeAuthApiResponse] object
+     * Converts the HTTP response for /signup/continue API to [SignUpContinueApiResponse] object
      * @param response : HTTP response received from the API
      * @return SignUpContinueApiResponse object
      */
@@ -169,7 +169,7 @@ class NativeAuthResponseHandler {
     fun getSignUpContinueResultFromHttpResponse(
         requestCorrelationId: String,
         response: HttpResponse
-    ): SignUpContinueNativeAuthApiResponse {
+    ): SignUpContinueApiResponse {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = null,
@@ -179,7 +179,7 @@ class NativeAuthResponseHandler {
         val correlationId = retrieveCorrelationId(response, requestCorrelationId)
 
         val result = if (response.body.isNullOrBlank()) {
-            SignUpContinueNativeAuthApiResponse(
+            SignUpContinueApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
@@ -197,7 +197,7 @@ class NativeAuthResponseHandler {
         } else {
             ObjectMapper.deserializeJsonStringToObject(
                 response.body,
-                SignUpContinueNativeAuthApiResponse::class.java
+                SignUpContinueApiResponse::class.java
             )
         }
         result.statusCode = response.statusCode
@@ -217,7 +217,7 @@ class NativeAuthResponseHandler {
     fun getSignInInitiateResultFromHttpResponse(
         requestCorrelationId: String,
         response: HttpResponse
-    ): SignInInitiateNativeAuthApiResponse {
+    ): SignInInitiateApiResponse {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = null,
@@ -227,7 +227,7 @@ class NativeAuthResponseHandler {
         val correlationId = retrieveCorrelationId(response, requestCorrelationId)
 
         val result = if (response.body.isNullOrBlank()) {
-            SignInInitiateNativeAuthApiResponse(
+            SignInInitiateApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
@@ -241,7 +241,7 @@ class NativeAuthResponseHandler {
         }  else {
             ObjectMapper.deserializeJsonStringToObject(
                 response.body,
-                SignInInitiateNativeAuthApiResponse::class.java
+                SignInInitiateApiResponse::class.java
             )
         }
         result.statusCode = response.statusCode
@@ -262,7 +262,7 @@ class NativeAuthResponseHandler {
     fun getSignInChallengeResultFromHttpResponse(
         requestCorrelationId: String,
         response: HttpResponse
-    ): SignInChallengeNativeAuthApiResponse {
+    ): SignInChallengeApiResponse {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = null,
@@ -272,7 +272,7 @@ class NativeAuthResponseHandler {
         val correlationId = retrieveCorrelationId(response, requestCorrelationId)
 
         val result = if (response.body.isNullOrBlank()) {
-            SignInChallengeNativeAuthApiResponse(
+            SignInChallengeApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
@@ -293,7 +293,7 @@ class NativeAuthResponseHandler {
         } else {
             ObjectMapper.deserializeJsonStringToObject(
                 response.body,
-                SignInChallengeNativeAuthApiResponse::class.java
+                SignInChallengeApiResponse::class.java
             )
         }
         result.statusCode = response.statusCode
@@ -314,7 +314,7 @@ class NativeAuthResponseHandler {
     fun getSignInIntrospectResultFromHttpResponse(
         requestCorrelationId: String,
         response: HttpResponse
-    ): SignInIntrospectNativeAuthApiResponse {
+    ): SignInIntrospectApiResponse {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = null,
@@ -324,7 +324,7 @@ class NativeAuthResponseHandler {
         val correlationId = retrieveCorrelationId(response, requestCorrelationId)
 
         val result = if (response.body.isNullOrBlank()) {
-            SignInIntrospectNativeAuthApiResponse(
+            SignInIntrospectApiResponse(
                 statusCode = response.statusCode,
                 challengeType = null,
                 redirectReason = null,
@@ -338,7 +338,7 @@ class NativeAuthResponseHandler {
         } else {
             ObjectMapper.deserializeJsonStringToObject(
                 response.body,
-                SignInIntrospectNativeAuthApiResponse::class.java
+                SignInIntrospectApiResponse::class.java
             )
         }
         result.statusCode = response.statusCode
@@ -372,7 +372,7 @@ class NativeAuthResponseHandler {
         // or standard MicrosoftStsTokenResponse in case of success response
         if (response.statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
             val apiResponse = if (response.body.isNullOrBlank()) {
-                SignInTokenNativeAuthApiResponse(
+                SignInTokenApiResponse(
                     statusCode = response.statusCode,
                     error = null,
                     errorDescription = null,
@@ -385,7 +385,7 @@ class NativeAuthResponseHandler {
             } else {
                 ObjectMapper.deserializeJsonStringToObject(
                     response.body,
-                    SignInTokenNativeAuthApiResponse::class.java
+                    SignInTokenApiResponse::class.java
                 )
             }
             apiResponse.statusCode = response.statusCode
@@ -415,7 +415,7 @@ class NativeAuthResponseHandler {
 
     //region /resetpassword/start
     /**
-     * Converts the HTTP response for /resetpassword/start API to [ResetPasswordStartNativeAuthApiResponse] object
+     * Converts the HTTP response for /resetpassword/start API to [ResetPasswordStartApiResponse] object
      * @param response : HTTP response received from the API
      * @return ResetPasswordStartApiResponse object
      */
@@ -423,7 +423,7 @@ class NativeAuthResponseHandler {
     fun getResetPasswordStartApiResponseFromHttpResponse(
         requestCorrelationId: String,
         response: HttpResponse
-    ): ResetPasswordStartNativeAuthApiResponse {
+    ): ResetPasswordStartApiResponse {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = null,
@@ -433,7 +433,7 @@ class NativeAuthResponseHandler {
         val correlationId = retrieveCorrelationId(response, requestCorrelationId)
 
         val result = if (response.body.isNullOrBlank()) {
-            ResetPasswordStartNativeAuthApiResponse(
+            ResetPasswordStartApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
@@ -446,7 +446,7 @@ class NativeAuthResponseHandler {
         } else {
             ObjectMapper.deserializeJsonStringToObject(
                 response.body,
-                ResetPasswordStartNativeAuthApiResponse::class.java
+                ResetPasswordStartApiResponse::class.java
             )
         }
         result.statusCode = response.statusCode
@@ -460,7 +460,7 @@ class NativeAuthResponseHandler {
 
     //region /resetpassword/challenge
     /**
-     * Converts the HTTP response for /resetpassword/challenge API to [ResetPasswordChallengeNativeAuthApiResponse] object
+     * Converts the HTTP response for /resetpassword/challenge API to [ResetPasswordChallengeApiResponse] object
      * @param response : HTTP response received from the API
      * @return ResetPasswordChallengeApiResponse object
      */
@@ -468,7 +468,7 @@ class NativeAuthResponseHandler {
     fun getResetPasswordChallengeApiResponseFromHttpResponse(
         requestCorrelationId: String,
         response: HttpResponse
-    ): ResetPasswordChallengeNativeAuthApiResponse {
+    ): ResetPasswordChallengeApiResponse {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = null,
@@ -478,7 +478,7 @@ class NativeAuthResponseHandler {
         val correlationId = retrieveCorrelationId(response, requestCorrelationId)
 
         val result = if (response.body.isNullOrBlank()) {
-            ResetPasswordChallengeNativeAuthApiResponse(
+            ResetPasswordChallengeApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
@@ -496,7 +496,7 @@ class NativeAuthResponseHandler {
         } else {
             ObjectMapper.deserializeJsonStringToObject(
                 response.body,
-                ResetPasswordChallengeNativeAuthApiResponse::class.java
+                ResetPasswordChallengeApiResponse::class.java
             )
         }
         result.statusCode = response.statusCode
@@ -510,7 +510,7 @@ class NativeAuthResponseHandler {
 
     //region /resetpassword/continue
     /**
-     * Converts the HTTP response for /resetpassword/continue API to [ResetPasswordContinueNativeAuthApiResponse] object
+     * Converts the HTTP response for /resetpassword/continue API to [ResetPasswordContinueApiResponse] object
      * @param response : HTTP response received from the API
      * @return ResetPasswordContinueApiResponse object
      */
@@ -518,7 +518,7 @@ class NativeAuthResponseHandler {
     fun getResetPasswordContinueApiResponseFromHttpResponse(
         requestCorrelationId: String,
         response: HttpResponse
-    ): ResetPasswordContinueNativeAuthApiResponse {
+    ): ResetPasswordContinueApiResponse {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = null,
@@ -528,7 +528,7 @@ class NativeAuthResponseHandler {
         val correlationId = retrieveCorrelationId(response, requestCorrelationId)
 
         val result = if (response.body.isNullOrBlank()) {
-            ResetPasswordContinueNativeAuthApiResponse(
+            ResetPasswordContinueApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription =  EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
@@ -543,7 +543,7 @@ class NativeAuthResponseHandler {
         } else {
             ObjectMapper.deserializeJsonStringToObject(
                 response.body,
-                ResetPasswordContinueNativeAuthApiResponse::class.java
+                ResetPasswordContinueApiResponse::class.java
             )
         }
         result.statusCode = response.statusCode
@@ -556,7 +556,7 @@ class NativeAuthResponseHandler {
 
     //region /resetpassword/submit
     /**
-     * Converts the HTTP response for /resetpassword/submit API to [ResetPasswordSubmitNativeAuthApiResponse] object
+     * Converts the HTTP response for /resetpassword/submit API to [ResetPasswordSubmitApiResponse] object
      * @param response : HTTP response received from the API
      * @return ResetPasswordSubmitApiResponse object
      */
@@ -564,7 +564,7 @@ class NativeAuthResponseHandler {
     fun getResetPasswordSubmitApiResponseFromHttpResponse(
         requestCorrelationId: String,
         response: HttpResponse
-    ): ResetPasswordSubmitNativeAuthApiResponse {
+    ): ResetPasswordSubmitApiResponse {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = null,
@@ -574,7 +574,7 @@ class NativeAuthResponseHandler {
         val correlationId = retrieveCorrelationId(response, requestCorrelationId)
 
         val result = if (response.body.isNullOrBlank()) {
-            ResetPasswordSubmitNativeAuthApiResponse(
+            ResetPasswordSubmitApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
@@ -589,7 +589,7 @@ class NativeAuthResponseHandler {
         } else {
             ObjectMapper.deserializeJsonStringToObject(
                 response.body,
-                ResetPasswordSubmitNativeAuthApiResponse::class.java
+                ResetPasswordSubmitApiResponse::class.java
             )
         }
         result.statusCode = response.statusCode
@@ -603,7 +603,7 @@ class NativeAuthResponseHandler {
 
     //region /resetpassword/poll_completion
     /**
-     * Converts the HTTP response for /resetpassword/poll_completion API to [ResetPasswordPollCompletionNativeAuthApiResponse] object
+     * Converts the HTTP response for /resetpassword/poll_completion API to [ResetPasswordPollCompletionApiResponse] object
      * @param response : HTTP response received from the API
      * @return ResetPasswordPollCompletionApiResponse object
      */
@@ -611,7 +611,7 @@ class NativeAuthResponseHandler {
     fun getResetPasswordPollCompletionApiResponseFromHttpResponse(
         requestCorrelationId: String,
         response: HttpResponse
-    ): ResetPasswordPollCompletionNativeAuthApiResponse {
+    ): ResetPasswordPollCompletionApiResponse {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = null,
@@ -621,7 +621,7 @@ class NativeAuthResponseHandler {
         val correlationId = retrieveCorrelationId(response, requestCorrelationId)
 
         val result = if (response.body.isNullOrBlank()) {
-            ResetPasswordPollCompletionNativeAuthApiResponse(
+            ResetPasswordPollCompletionApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
@@ -637,7 +637,7 @@ class NativeAuthResponseHandler {
         } else {
             ObjectMapper.deserializeJsonStringToObject(
                 response.body,
-                ResetPasswordPollCompletionNativeAuthApiResponse::class.java
+                ResetPasswordPollCompletionApiResponse::class.java
             )
         }
         result.statusCode = response.statusCode
@@ -659,7 +659,7 @@ class NativeAuthResponseHandler {
     fun getJITIntrospectApiResponseFromHttpResponse(
         requestCorrelationId: String,
         response: HttpResponse
-    ): JITIntrospectNativeAuthApiResponse {
+    ): JITIntrospectApiResponse {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = null,
@@ -669,7 +669,7 @@ class NativeAuthResponseHandler {
         val correlationId = retrieveCorrelationId(response, requestCorrelationId)
 
         val result = if (response.body.isNullOrBlank()) {
-            JITIntrospectNativeAuthApiResponse(
+            JITIntrospectApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
@@ -684,7 +684,7 @@ class NativeAuthResponseHandler {
         } else {
             ObjectMapper.deserializeJsonStringToObject(
                 response.body,
-                JITIntrospectNativeAuthApiResponse::class.java
+                JITIntrospectApiResponse::class.java
             )
         }
         result.statusCode = response.statusCode
@@ -706,7 +706,7 @@ class NativeAuthResponseHandler {
     fun getJITChallengeApiResponseFromHttpResponse(
         requestCorrelationId: String,
         response: HttpResponse
-    ): JITChallengeNativeAuthApiResponse {
+    ): JITChallengeApiResponse {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = null,
@@ -716,7 +716,7 @@ class NativeAuthResponseHandler {
         val correlationId = retrieveCorrelationId(response, requestCorrelationId)
 
         val result = if (response.body.isNullOrBlank()) {
-            JITChallengeNativeAuthApiResponse(
+            JITChallengeApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
@@ -735,7 +735,7 @@ class NativeAuthResponseHandler {
         } else {
             ObjectMapper.deserializeJsonStringToObject(
                 response.body,
-                JITChallengeNativeAuthApiResponse::class.java
+                JITChallengeApiResponse::class.java
             )
         }
         result.statusCode = response.statusCode
@@ -749,7 +749,7 @@ class NativeAuthResponseHandler {
 
     //region /register/continue
     /**
-     * Converts the HTTP response for /register/continue API to [JITContinueNativeAuthApiResponse] object
+     * Converts the HTTP response for /register/continue API to [JITContinueApiResponse] object
      * @param response : HTTP response received from the API
      * @return JITContinueApiResponse object
      */
@@ -757,7 +757,7 @@ class NativeAuthResponseHandler {
     fun getJITContinueApiResponseFromHttpResponse(
         requestCorrelationId: String,
         response: HttpResponse
-    ): JITContinueNativeAuthApiResponse {
+    ): JITContinueApiResponse {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = null,
@@ -767,7 +767,7 @@ class NativeAuthResponseHandler {
         val correlationId = retrieveCorrelationId(response, requestCorrelationId)
 
         val result = if (response.body.isNullOrBlank()) {
-            JITContinueNativeAuthApiResponse(
+            JITContinueApiResponse(
                 statusCode = response.statusCode,
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
@@ -781,7 +781,7 @@ class NativeAuthResponseHandler {
         } else {
             ObjectMapper.deserializeJsonStringToObject(
                 response.body,
-                JITContinueNativeAuthApiResponse::class.java
+                JITContinueApiResponse::class.java
             )
         }
         result.statusCode = response.statusCode

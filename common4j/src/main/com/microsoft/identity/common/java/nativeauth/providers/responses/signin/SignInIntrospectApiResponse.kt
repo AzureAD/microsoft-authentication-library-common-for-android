@@ -34,7 +34,7 @@ import java.net.HttpURLConnection
  * Represents the raw response from the /oauth/v2.0/introspect endpoint.
  * Can be converted to SignInIntrospectApiResult using the provided toResult() method.
  */
-class SignInIntrospectNativeAuthApiResponse(
+class SignInIntrospectApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
     override val continuationToken: String?,
@@ -58,7 +58,7 @@ class SignInIntrospectNativeAuthApiResponse(
 
     /**
     * Maps potential errors returned from the server response, and provide different states based on the response.
-    * @see com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectNativeAuthApiResponse
+    * @see com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectApiResponse
     */
     fun toResult(): SignInIntrospectApiResult {
         return when (statusCode) {

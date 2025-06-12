@@ -34,7 +34,7 @@ import java.net.HttpURLConnection
  * Represents the raw response from the /initiate endpoint.
  * Can be converted to SignInInitiateApiResult using the provided toResult() method.
  */
-class SignInInitiateNativeAuthApiResponse(
+class SignInInitiateApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
     override val continuationToken: String?,
@@ -58,7 +58,7 @@ class SignInInitiateNativeAuthApiResponse(
             "correlationId=$correlationId"
 
     companion object {
-        private val TAG = SignInInitiateNativeAuthApiResponse::class.java.simpleName
+        private val TAG = SignInInitiateApiResponse::class.java.simpleName
     }
 
     /**

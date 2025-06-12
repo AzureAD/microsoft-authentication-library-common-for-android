@@ -37,7 +37,7 @@ import java.net.HttpURLConnection
  * Represents the raw response from the register/challenge endpoint.
  * Can be converted to JITChallengeApiResult using the provided toResult() method.
  */
-class JITChallengeNativeAuthApiResponse(
+class JITChallengeApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
     override val continuationToken: String?,

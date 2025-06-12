@@ -26,95 +26,88 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
-import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.AuthenticationMethodApiResponse
-import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.toListOfAuthenticationMethodApiResult
+import com.microsoft.identity.common.java.nativeauth.util.isInvalidGrant
+import com.microsoft.identity.common.java.nativeauth.util.isOOBValueInvalid
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
-import java.lang.IllegalStateException
 import java.net.HttpURLConnection
 
 /**
- * Represents the raw response from the register/introspect endpoint.
- * Can be converted to JITIntrospectApiResult using the provided toResult() method.
+ * Represents the raw response from the register/continue endpoint.
+ * Can be converted to JITContinueAPIResult using the provided toResult() method.
  */
-class JITIntrospectNativeAuthApiResponse(
+class JITContinueApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
     override val continuationToken: String?,
-    @Expose @SerializedName("methods") val methods: List<AuthenticationMethodApiResponse>?,
     override val error: String?,
     override val errorDescription: String?,
-    @SerializedName("error_uri") val errorUri: String?,
+    @SerializedName("suberror") val subError: String?,
     @SerializedName("error_codes") val errorCodes: List<Int>?,
     override val challengeType: String?,
     override val redirectReason: String?,
 ) : INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
-
     override fun toUnsanitizedString(): String {
-        return "JITIntrospectApiResponse(statusCode=$statusCode, " +
+        return "JITContinueAPIResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId " +
-                "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription, " +
-                "methods=$methods, challengeType=$challengeType, " +
+                "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription," +
                 "redirectReason=$redirectReason)"
     }
 
-    override fun toString(): String = "JITIntrospectApiResponse(statusCode=$statusCode, " +
-            "correlationId=$correlationId"
+    override fun toString(): String = "JITContinueAPIResponse(statusCode=$statusCode, " +
+            "correlationId=$correlationId)"
 
-    fun toResult(): JITIntrospectApiResult {
+    fun toResult(): JITContinueApiResult {
         return when (statusCode) {
             // Handle 400 errors
             HttpURLConnection.HTTP_BAD_REQUEST -> {
-                JITIntrospectApiResult.UnknownError(
-                    error = error.orEmpty(),
-                    errorDescription = errorDescription.orEmpty(),
-                    errorCodes = errorCodes.orEmpty(),
-                    correlationId = correlationId
-                )
+                return when {
+                    error.isInvalidGrant() && subError.isOOBValueInvalid() -> {
+                        JITContinueApiResult.CodeIncorrect(
+                            correlationId = correlationId,
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            errorCodes = errorCodes.orEmpty(),
+                            subError = subError.orEmpty()
+                        )
+                    }
+                    else -> {
+                        JITContinueApiResult.UnknownError(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            errorCodes = errorCodes.orEmpty(),
+                            correlationId = correlationId
+                        )
+                    }
+                }
             }
 
             // Handle success and redirect
             HttpURLConnection.HTTP_OK -> {
                 return when {
                     challengeType.isRedirect() -> {
-                        JITIntrospectApiResult.Redirect(
+                        JITContinueApiResult.Redirect(
                             correlationId = correlationId,
                             redirectReason = redirectReason.orEmpty()
                         )
                     }
-                    methods.isNullOrEmpty() -> {
-                        JITIntrospectApiResult.UnknownError(
+                    continuationToken.isNullOrBlank() -> {
+                        JITContinueApiResult.UnknownError(
                             error = ApiErrorResult.INVALID_STATE,
-                            errorDescription = "register/introspect did not return methods",
+                            errorDescription = "Register authentication method /continue did not return continuationToken field",
                             errorCodes = errorCodes.orEmpty(),
                             correlationId = correlationId
                         )
                     }
                     else -> {
-                        try {
-                            JITIntrospectApiResult.Success(
-                                correlationId = correlationId,
-                                continuationToken = continuationToken
-                                    ?: return JITIntrospectApiResult.UnknownError(
-                                        error = ApiErrorResult.INVALID_STATE,
-                                        errorDescription = "register/introspect did not return a continuation token",
-                                        errorCodes = errorCodes.orEmpty(),
-                                        correlationId = correlationId
-                                    ),
-                                methods = methods.toListOfAuthenticationMethodApiResult()
-                            )
-                        } catch (e: IllegalStateException) {
-                            JITIntrospectApiResult.UnknownError(
-                                error = ApiErrorResult.INVALID_STATE,
-                                errorDescription = "register/introspect did not return valid methods: ${e.message}",
-                                errorCodes = errorCodes.orEmpty(),
-                                correlationId = correlationId
-                            )
-                        }
+                        JITContinueApiResult.Success(
+                            correlationId = correlationId,
+                            continuationToken = continuationToken
+                        )
                     }
                 }
             }
             else -> {
-                JITIntrospectApiResult.UnknownError(
+                JITContinueApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
                     errorCodes = errorCodes.orEmpty(),
