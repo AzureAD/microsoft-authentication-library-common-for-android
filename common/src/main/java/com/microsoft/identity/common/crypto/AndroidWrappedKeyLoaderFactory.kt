@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.crypto
 
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyLoader
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 
@@ -30,15 +31,13 @@ object AndroidWrappedKeyLoaderFactory {
         keyIdentifier: String,
         fileName: String,
         context: android.content.Context
-    ): AndroidWrappedKeyLoader {
+    ): ISecretKeyLoader {
         val useNewAndroidWrappedKeyLoader =
             CommonFlightsManager
                 .getFlightsProvider()
                 .isFlightEnabled(CommonFlight.ENABLE_NEW_ANDROID_WRAPPED_KEY_LOADER)
-
         return if (useNewAndroidWrappedKeyLoader) {
-            // TODO : Replace with the new loader on the next PR
-            AndroidWrappedKeyLoader(
+            NewAndroidWrappedKeyLoader(
                 keyIdentifier,
                 fileName,
                 context

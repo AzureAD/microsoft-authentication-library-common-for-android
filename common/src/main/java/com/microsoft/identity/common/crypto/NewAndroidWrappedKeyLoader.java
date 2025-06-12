@@ -32,7 +32,6 @@ import com.microsoft.identity.common.java.util.CachedData;
 import com.microsoft.identity.common.java.util.FileUtil;
 import com.microsoft.identity.common.logging.Logger;
 
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
@@ -269,8 +268,9 @@ public class NewAndroidWrappedKeyLoader extends AES256KeyLoader {
                 SECRET_KEY_ALGORITHM_FILE);
     }
 
+    @NonNull
     @Override
-    public @NotNull String getCipherAlgorithm() {
+    public String getCipherTransformation() {
         return mKekManager.getCipherTransformation();
     }
 }
