@@ -26,6 +26,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.OTEL_CONTEXT_CARRIER
 import com.microsoft.identity.common.internal.msafederation.getIdProviderExtraQueryParamForAuthorization
 import com.microsoft.identity.common.internal.msafederation.getIdProviderHeadersForAuthorization
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleApi.Companion.getInstance
@@ -40,8 +41,10 @@ import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
+import com.microsoft.identity.common.java.opentelemetry.TextMapPropagatorExtension
 import com.microsoft.identity.common.java.ui.AuthorizationAgent
 import com.microsoft.identity.common.java.util.CommonURIBuilder
+import io.opentelemetry.context.Context
 import java.net.URISyntaxException
 
 
@@ -117,6 +120,10 @@ object AuthorizationActivityFactory {
                         .traceFlags(SpanExtension.current().spanContext.traceFlags.asByte())
                         .build()
                 )
+            )
+            putExtra(
+                OTEL_CONTEXT_CARRIER,
+                TextMapPropagatorExtension.inject(Context.current())
             )
             if (parameters.sourceLibraryName != null) {
                 putExtra(PRODUCT, parameters.sourceLibraryName)

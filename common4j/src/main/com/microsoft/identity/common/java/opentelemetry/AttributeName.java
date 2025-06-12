@@ -363,5 +363,28 @@ public enum AttributeName {
     /**
      * Records the if the broker handled a switch browser resume,
      */
-    is_switch_browser_resume_handled
+    is_switch_browser_resume_handled,
+
+    /**
+     * The tenant id for the home tenant of the account for which PRT is required.
+     */
+    tenant_id,
+
+    /**
+     * Indicates the type of account such as AAD or MSA.
+     */
+    account_type,
+
+    /**
+     * Indicates the broker app that emits the event.
+     * The broker is not necessarily the active broker.
+     * e.g. An inactive broker app might be invoked during OnUpgrade.
+     * (It should be renamed, but that would mess up the dashboard)
+     */
+    active_broker_package_name,
+
+    /**
+     * Indicates the current broker package name processing the request.
+     */
+    current_broker_package_name
 }

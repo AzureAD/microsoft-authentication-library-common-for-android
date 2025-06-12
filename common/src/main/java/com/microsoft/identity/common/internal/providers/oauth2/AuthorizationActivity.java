@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.OTEL_CONTEXT_CARRIER;
+
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
@@ -31,9 +33,14 @@ import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter;
 import com.microsoft.identity.common.java.exception.TerminalException;
 import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
+import com.microsoft.identity.common.java.opentelemetry.TextMapPropagatorExtension;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.context.Context;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
@@ -43,6 +50,11 @@ public class AuthorizationActivity extends DualScreenActivity {
     @Getter
     @Accessors(prefix = "m")
     private SpanContext mSpanContext;
+
+    @Getter
+    @Accessors(prefix = "m")
+    private Context mOtelContext;
+
     private AuthorizationFragment mFragment;
 
     public AuthorizationFragment getFragment() {
@@ -60,6 +72,21 @@ public class AuthorizationActivity extends DualScreenActivity {
                         getIntent().getExtras().getString(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT),
                         SerializableSpanContext.class
                 );
+                // Extract OtelContext from the carrier if it exists
+                final Map<String, String> carrier;
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                    carrier = getIntent().getExtras() != null ?
+                            getIntent().getExtras().getSerializable(OTEL_CONTEXT_CARRIER, HashMap.class) :
+                            new HashMap<>();
+                } else {
+                    @SuppressWarnings("unchecked")
+                    Map<String, String> temp = getIntent().getExtras() != null ?
+                            (Map<String, String>) getIntent().getExtras().getSerializable(OTEL_CONTEXT_CARRIER) :
+                            new HashMap<>();
+                    carrier = temp;
+                }
+                mOtelContext = TextMapPropagatorExtension.extract(carrier);
+
             } catch (final TerminalException e) {
                 // Don't want to block any features if an error occurs during deserialization of the span context.
                 mSpanContext = null;

@@ -99,6 +99,7 @@ import static com.microsoft.identity.common.java.exception.ClientException.UNKNO
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
 /**
@@ -236,7 +237,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag,"WebView detected request for passkey protocol.");
                 final FidoChallenge challenge = FidoChallenge.createFromRedirectUri(url);
                 final Activity currentActivity = getActivity();
-                final SpanContext spanContext = currentActivity instanceof AuthorizationActivity ? ((AuthorizationActivity)currentActivity).getSpanContext() : null;
+                final Context oTelContext = currentActivity instanceof AuthorizationActivity ? ((AuthorizationActivity)currentActivity).getOtelContext() : null;
                 // The legacyManager should only be getting added if the device is on Android 13 or lower and the library is MSAL/OneAuth with fragment or dialog mode.
                 // The legacyManager logic should be removed once a larger majority of users are on Android 14+.
                 final IFidoManager legacyManager =
@@ -252,7 +253,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                 legacyManager
                         ),
                         view,
-                        spanContext,
+                        oTelContext,
                         ViewTreeLifecycleOwner.get(view));
                 challengeHandler.processChallenge(challenge);
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED) && isNonceRedirect(formattedURL)) {
