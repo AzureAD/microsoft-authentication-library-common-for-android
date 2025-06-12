@@ -24,7 +24,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.signin
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import java.lang.IllegalStateException
@@ -34,17 +34,17 @@ import java.net.HttpURLConnection
  * Represents the raw response from the /oauth/v2.0/introspect endpoint.
  * Can be converted to SignInIntrospectApiResult using the provided toResult() method.
  */
-class SignInIntrospectApiResponse(
+class SignInIntrospectNativeAuthApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
-    @SerializedName("continuation_token") val continuationToken: String?,
-    @Expose @SerializedName("challenge_type") val challengeType: String?,
+    override val continuationToken: String?,
     @Expose @SerializedName("methods") val methods: List<AuthenticationMethodApiResponse>?,
-    @SerializedName("error") val error: String?,
+    override val error: String?,
+    override val errorDescription: String?,
     @SerializedName("error_codes") val errorCodes: List<Int>?,
-    @SerializedName("error_description") val errorDescription: String?,
-    @SerializedName("redirect_reason") val redirectReason: String?,
-): IApiResponse(statusCode, correlationId) {
+    override val challengeType: String?,
+    override val redirectReason: String?,
+): INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
 
     override fun toUnsanitizedString(): String {
         return "SignInIntrospectApiResponse(statusCode=$statusCode, " +
@@ -58,7 +58,7 @@ class SignInIntrospectApiResponse(
 
     /**
     * Maps potential errors returned from the server response, and provide different states based on the response.
-    * @see com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectApiResponse
+    * @see com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectNativeAuthApiResponse
     */
     fun toResult(): SignInIntrospectApiResult {
         return when (statusCode) {

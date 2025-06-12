@@ -24,7 +24,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.resetp
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import com.microsoft.identity.common.java.nativeauth.util.isUnsupportedChallengeType
 import com.microsoft.identity.common.java.nativeauth.util.isUserNotFound
@@ -34,16 +34,16 @@ import java.net.HttpURLConnection
  * Represents the raw response from the Reset Password /start endpoint.
  * Can be converted to ResetPasswordChallengeApiResult using the provided toResult() method.
  */
-class ResetPasswordStartApiResponse(
+class ResetPasswordStartNativeAuthApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
-    @SerializedName("continuation_token") val continuationToken: String?,
-    @Expose @SerializedName("challenge_type") val challengeType: String?,
-    @SerializedName("error") val error: String?,
-    @SerializedName("error_description") val errorDescription: String?,
+    override val continuationToken: String?,
+    override val challengeType: String?,
+    override val error: String?,
+    override val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
-    @SerializedName("redirect_reason") val redirectReason: String?,
-): IApiResponse(statusCode, correlationId) {
+    override val redirectReason: String?,
+): INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
 
     override fun toUnsanitizedString(): String {
         return "ResetPasswordStartApiResponse(statusCode=$statusCode, " +
@@ -56,7 +56,7 @@ class ResetPasswordStartApiResponse(
             "correlationId=$correlationId"
 
     companion object {
-        private val TAG = ResetPasswordStartApiResponse::class.java.simpleName
+        private val TAG = ResetPasswordStartNativeAuthApiResponse::class.java.simpleName
     }
 
     /**

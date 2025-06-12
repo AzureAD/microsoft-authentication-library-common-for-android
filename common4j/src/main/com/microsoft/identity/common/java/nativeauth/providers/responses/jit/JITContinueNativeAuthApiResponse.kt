@@ -24,7 +24,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.jit
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidGrant
 import com.microsoft.identity.common.java.nativeauth.util.isOOBValueInvalid
@@ -35,17 +35,17 @@ import java.net.HttpURLConnection
  * Represents the raw response from the register/continue endpoint.
  * Can be converted to JITContinueAPIResult using the provided toResult() method.
  */
-class JITContinueApiResponse(
+class JITContinueNativeAuthApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
-    @SerializedName("continuation_token") val continuationToken: String?,
-    @SerializedName("error") val error: String?,
-    @SerializedName("error_codes") val errorCodes: List<Int>?,
-    @SerializedName("error_description") val errorDescription: String?,
+    override val continuationToken: String?,
+    override val error: String?,
+    override val errorDescription: String?,
     @SerializedName("suberror") val subError: String?,
-    @Expose @SerializedName("challenge_type") val challengeType: String?,
-    @SerializedName("redirect_reason") val redirectReason: String?,
-) : IApiResponse(statusCode, correlationId) {
+    @SerializedName("error_codes") val errorCodes: List<Int>?,
+    override val challengeType: String?,
+    override val redirectReason: String?,
+) : INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
     override fun toUnsanitizedString(): String {
         return "JITContinueAPIResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId " +

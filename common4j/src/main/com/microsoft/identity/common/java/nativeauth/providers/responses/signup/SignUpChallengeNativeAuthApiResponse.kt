@@ -24,8 +24,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.signup
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.util.isExpiredToken
 import com.microsoft.identity.common.java.nativeauth.util.isOOB
@@ -38,20 +37,20 @@ import java.net.HttpURLConnection
  * Represents the raw response from the Sign Up /challenge endpoint.
  * Can be converted to SignUpChallengeApiResult using the provided toResult() method.
  */
-class SignUpChallengeApiResponse(
+class SignUpChallengeNativeAuthApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
-    @SerializedName("continuation_token") val continuationToken: String?,
-    @Expose @SerializedName("challenge_type") val challengeType: String?,
+    override val continuationToken: String?,
     @SerializedName("challenge_target_label") val challengeTargetLabel: String?,
     @Expose @SerializedName("code_length") val codeLength: Int?,
     @Expose @SerializedName("binding_method") val bindingMethod: String?,
     @Expose @SerializedName("interval") val interval: Int?,
     @Expose @SerializedName("challenge_channel") val challengeChannel: String?,
-    @SerializedName("error") val error: String?,
-    @SerializedName("error_description") val errorDescription: String?,
-    @SerializedName("redirect_reason") val redirectReason: String?,
-) : IApiResponse(statusCode, correlationId) {
+    override val error: String?,
+    override val errorDescription: String?,
+    override val challengeType: String?,
+    override val redirectReason: String?,
+) : INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
 
     override fun toUnsanitizedString(): String {
         return "SignInChallengeApiResponse(statusCode=$statusCode, " +
@@ -66,7 +65,7 @@ class SignUpChallengeApiResponse(
             "correlationId=$correlationId"
 
     companion object {
-        private val TAG = SignUpChallengeApiResponse::class.java.simpleName
+        private val TAG = SignUpChallengeNativeAuthApiResponse::class.java.simpleName
     }
 
     /**

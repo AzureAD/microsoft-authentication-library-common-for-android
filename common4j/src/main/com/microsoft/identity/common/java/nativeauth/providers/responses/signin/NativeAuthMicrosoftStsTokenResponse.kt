@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.responses.signin
 
+import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 
@@ -41,6 +42,7 @@ class NativeAuthMicrosoftStsTokenResponse : MicrosoftStsTokenResponse() {
     /**
      * The type of challenge will be redirect when redirect_reason field return
      */
+    @Expose
     @SerializedName("challenge_type")
     var challengeType: String? = null
 }

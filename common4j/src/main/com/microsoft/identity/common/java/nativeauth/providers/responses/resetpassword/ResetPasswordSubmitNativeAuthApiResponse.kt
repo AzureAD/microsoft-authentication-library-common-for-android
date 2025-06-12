@@ -24,7 +24,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.resetp
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import com.microsoft.identity.common.java.nativeauth.util.*
 import java.net.HttpURLConnection
 
@@ -32,18 +32,18 @@ import java.net.HttpURLConnection
  * Represents the raw response from the Reset Password /submit endpoint.
  * Can be converted to ResetPasswordChallengeApiResult using the provided toResult() method.
  */
-class ResetPasswordSubmitApiResponse(
+class ResetPasswordSubmitNativeAuthApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
-    @SerializedName("continuation_token") val continuationToken: String?,
+    override val continuationToken: String?,
     @Expose @SerializedName("poll_interval") val pollInterval: Int?,
-    @SerializedName("error") val error: String?,
-    @SerializedName("error_description") val errorDescription: String?,
+    override val error: String?,
+    override val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
     @SerializedName("suberror") val subError: String?,
-    @Expose @SerializedName("challenge_type") val challengeType: String?,
-    @SerializedName("redirect_reason") val redirectReason: String?,
-): IApiResponse(statusCode, correlationId) {
+    override val challengeType: String?,
+    override val redirectReason: String?,
+): INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
 
     override fun toUnsanitizedString(): String {
         return "ResetPasswordSubmitApiResponse(statusCode=$statusCode, " +
@@ -56,7 +56,7 @@ class ResetPasswordSubmitApiResponse(
             "correlationId=$correlationId"
 
     companion object {
-        private val TAG = ResetPasswordSubmitApiResponse::class.java.simpleName
+        private val TAG = ResetPasswordSubmitNativeAuthApiResponse::class.java.simpleName
         private const val MINIMUM_POLL_COMPLETION_INTERVAL_IN_SECONDS = 1
         private const val MAXIMUM_POLL_COMPLETION_INTERVAL_IN_SECONDS = 15
         private const val DEFAULT_POLL_COMPLETION_INTERVAL_IN_SECONDS = 2

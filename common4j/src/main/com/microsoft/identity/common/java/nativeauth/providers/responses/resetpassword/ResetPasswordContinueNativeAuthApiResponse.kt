@@ -24,7 +24,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.resetp
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import com.microsoft.identity.common.java.nativeauth.util.isExpiredToken
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidGrant
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidOOBValue
@@ -35,18 +35,18 @@ import java.net.HttpURLConnection
  * Represents the raw response from the Reset Password /continue endpoint.
  * Can be converted to ResetPasswordChallengeApiResult using the provided toResult() method.
  */
-class ResetPasswordContinueApiResponse(
+class ResetPasswordContinueNativeAuthApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
-    @SerializedName("continuation_token") val continuationToken: String?,
-    @Expose @SerializedName("challenge_type") val challengeType: String?,
+    override val continuationToken: String?,
     @Expose @SerializedName("expires_in") val expiresIn: Int?,
-    @SerializedName("error") val error: String?,
-    @SerializedName("error_description") val errorDescription: String?,
+    override val error: String?,
+    override val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
     @SerializedName("suberror") val subError: String?,
-    @SerializedName("redirect_reason") val redirectReason: String?,
-): IApiResponse(statusCode, correlationId) {
+    override val challengeType: String?,
+    override val redirectReason: String?,
+): INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
 
     override fun toUnsanitizedString(): String {
         return "ResetPasswordContinueApiResponse(statusCode=$statusCode, " +
@@ -59,7 +59,7 @@ class ResetPasswordContinueApiResponse(
             "correlationId=$correlationId"
 
     companion object {
-        private val TAG = ResetPasswordContinueApiResponse::class.java.simpleName
+        private val TAG = ResetPasswordContinueNativeAuthApiResponse::class.java.simpleName
     }
 
     /**
