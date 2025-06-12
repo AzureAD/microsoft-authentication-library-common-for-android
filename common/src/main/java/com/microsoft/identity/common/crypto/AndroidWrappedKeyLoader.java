@@ -476,6 +476,5 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     @Override
     public String getCipherTransformation() {
         return CIPHER_TRANSFORMATION;
-
     }
 }
