@@ -1485,7 +1485,6 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            errorCodes = null,
             correlationId = correlationId
         )
 
@@ -1511,7 +1510,6 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            errorCodes = null,
             correlationId = correlationId
         )
 
@@ -1534,7 +1532,6 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            errorCodes = null,
             correlationId = correlationId
         )
 
@@ -1558,7 +1555,6 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            errorCodes = null,
             correlationId = correlationId
         )
 
@@ -1581,7 +1577,6 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            errorCodes = null,
             correlationId = correlationId
         )
 
@@ -1604,7 +1599,6 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            errorCodes = null,
             correlationId = correlationId
         )
 
@@ -1627,7 +1621,6 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            errorCodes = null,
             correlationId = correlationId
         )
 
@@ -1650,7 +1643,6 @@ class NativeAuthResponseHandlerTest {
             error = null,
             errorDescription = null,
             errorUri = null,
-            errorCodes = null,
             correlationId = correlationId
         )
 
@@ -1673,7 +1665,6 @@ class NativeAuthResponseHandlerTest {
             error = expiredTokenError,
             errorDescription = null,
             errorUri = null,
-            errorCodes = null,
             correlationId = correlationId
         )
 
@@ -1696,7 +1687,6 @@ class NativeAuthResponseHandlerTest {
             error = unsupportedChallengeTypeError,
             errorDescription = null,
             errorUri = null,
-            errorCodes = null,
             correlationId = correlationId
         )
 
@@ -1719,7 +1709,6 @@ class NativeAuthResponseHandlerTest {
             error = invalidGrantError,
             errorDescription = null,
             errorUri = null,
-            errorCodes = null,
             correlationId = correlationId
         )
 
@@ -1742,7 +1731,6 @@ class NativeAuthResponseHandlerTest {
             error = invalidGrantError,
             errorDescription = null,
             errorUri = null,
-            errorCodes = null,
             correlationId = correlationId
         )
 
