@@ -113,7 +113,7 @@ public class AndroidWrappedKeyLoaderTest {
         final AndroidWrappedKeyLoader keyLoader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
         final SecretKey secretKey = keyLoader.generateRandomKey();
 
-        Assert.assertEquals(AES256KeyLoader.AES_ALGORITHM, secretKey.getAlgorithm());
+        Assert.assertEquals(keyLoader.getSecretKeyGenerator().getKeyAlgorithm(), secretKey.getAlgorithm());
     }
 
     @Test
@@ -125,8 +125,8 @@ public class AndroidWrappedKeyLoaderTest {
         // They're not the same object!
         Assert.assertNotSame(secretKey, storedSecretKey);
 
-        Assert.assertEquals(AES256KeyLoader.AES_ALGORITHM, secretKey.getAlgorithm());
-        Assert.assertEquals(AES256KeyLoader.AES_ALGORITHM, storedSecretKey.getAlgorithm());
+        Assert.assertEquals(keyLoader.getSecretKeyGenerator().getKeyAlgorithm(), secretKey.getAlgorithm());
+        Assert.assertEquals(keyLoader.getSecretKeyGenerator().getKeyAlgorithm(), storedSecretKey.getAlgorithm());
 
         Assert.assertNotNull(secretKey.getEncoded());
         Assert.assertNotNull(storedSecretKey.getEncoded());
@@ -145,7 +145,7 @@ public class AndroidWrappedKeyLoaderTest {
 
         final SecretKey key = keyLoader.getKeyCache().getData();
         Assert.assertNotNull(key);
-        Assert.assertEquals(AES256KeyLoader.AES_ALGORITHM, secretKey.getAlgorithm());
+        Assert.assertEquals(keyLoader.getSecretKeyGenerator().getKeyAlgorithm(), secretKey.getAlgorithm());
         Assert.assertArrayEquals(secretKey.getEncoded(), key.getEncoded());
         Assert.assertEquals(secretKey.getFormat(), key.getFormat());
     }

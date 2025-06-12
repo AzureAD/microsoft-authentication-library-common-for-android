@@ -177,12 +177,11 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         return key;
     }
 
-    @Override
     @NonNull
     protected SecretKey generateRandomKey() throws ClientException {
         final String methodTag = TAG + ":generateRandomKey";
 
-        final SecretKey key = super.generateRandomKey();
+        final SecretKey key = getSecretKeyGenerator().generateRandomKey();
         saveSecretKeyToStorage(key);
 
         Logger.info(methodTag, "New key is generated with thumbprint: " +
@@ -217,7 +216,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                 return null;
             }
 
-            final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, getKeySpecAlgorithm(), keyPair, WRAP_ALGORITHM);
+            final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, getSecretKeyGenerator().getKeyAlgorithm(), keyPair, WRAP_ALGORITHM);
 
             Logger.info(methodTag, "Key is loaded with thumbprint: " +
                     KeyUtil.getKeyThumbPrint(key));
@@ -259,7 +258,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         if (keyPair == null) {
             Logger.info(methodTag, "No existing keypair. Generating a new one.");
             final Span span = OTelUtility.createSpanFromParent(SpanName.KeyPairGeneration.name(), SpanExtension.current().getSpanContext());
-            try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            try (final Scope ignored = SpanExtension.makeCurrentSpan(span)) {
                 keyPair = generateNewKeyPair();
                 span.setStatus(StatusCode.OK);
             } catch (final ClientException e) {
@@ -329,7 +328,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      * Generate a new key pair wrapping key based on legacy logic. Call this for API < 23 or as fallback
      * until new key gen specs are stable.
      * @return key pair generated with legacy spec
-     * @throws ClientException
+     * @throws ClientException if there is an error generating the key pair
      */
     @NonNull
     private KeyPair generateKeyPairWithLegacySpec() throws ClientException{

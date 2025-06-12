@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.crypto;
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
 import com.microsoft.identity.common.java.exception.ClientException;
 
+
 import javax.crypto.SecretKey;
 
 import lombok.NonNull;
@@ -37,13 +38,13 @@ public class MockAES256KeyLoader extends AES256KeyLoader {
     private final String mKeyIdentifier;
 
     public MockAES256KeyLoader() throws ClientException {
-        mKey = generateRandomKey();
+        mKey = getSecretKeyGenerator().generateRandomKey();
         mKeyIdentifier = DEFAULT_MOCK_KEY_IDENTIFIER;
     }
 
     public MockAES256KeyLoader(@NonNull final byte[] secretKey,
                                @NonNull final String keyIdentifier){
-        mKey = generateKeyFromRawBytes(secretKey);
+        mKey = getSecretKeyGenerator().generateKeyFromRawBytes(secretKey);
         mKeyIdentifier = keyIdentifier;
     }
 

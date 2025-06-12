@@ -20,50 +20,35 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.crypto.key;
+package com.microsoft.identity.common.crypto
 
-import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 
-import org.jetbrains.annotations.NotNull;
+object AndroidWrappedKeyLoaderFactory {
+    fun createWrappedKeyLoader(
+        keyIdentifier: String,
+        fileName: String,
+        context: android.content.Context
+    ): AndroidWrappedKeyLoader {
+        val useNewAndroidWrappedKeyLoader =
+            CommonFlightsManager
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_NEW_ANDROID_WRAPPED_KEY_LOADER)
 
-import javax.crypto.SecretKey;
-
-import lombok.NonNull;
-
-/**
- * For loading an AES-256 key from a provided rawbytes array.
- */
-public class PredefinedKeyLoader extends AES256KeyLoader {
-
-    /**
-     * Indicate that the token item is encrypted with the user provided key.
-     */
-    public static final String USER_PROVIDED_KEY_IDENTIFIER = "U001";
-
-    private final String mAlias;
-    private final SecretKey mKey;
-
-    public PredefinedKeyLoader(@NonNull final String alias,
-                               final byte[] rawBytes) {
-        mAlias = alias;
-        mKey = getSecretKeyGenerator().generateKeyFromRawBytes(rawBytes);
-    }
-
-    @NotNull
-    @Override
-    public String getAlias() {
-        return mAlias;
-    }
-
-    @NotNull
-    @Override
-    public String getKeyTypeIdentifier() {
-        return USER_PROVIDED_KEY_IDENTIFIER;
-    }
-
-    @NotNull
-    @Override
-    public SecretKey getKey() throws ClientException {
-        return mKey;
+        return if (useNewAndroidWrappedKeyLoader) {
+            // TODO : Replace with the new loader on the next PR
+            AndroidWrappedKeyLoader(
+                keyIdentifier,
+                fileName,
+                context
+            )
+        } else {
+            AndroidWrappedKeyLoader(
+                keyIdentifier,
+                fileName,
+                context
+            )
+        }
     }
 }
