@@ -35,14 +35,14 @@ import java.net.HttpURLConnection
 class ResetPasswordSubmitApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
-    override val continuationToken: String?,
+    @SerializedName("continuation_token") override val continuationToken: String?,
     @Expose @SerializedName("poll_interval") val pollInterval: Int?,
-    override val error: String?,
-    override val errorDescription: String?,
+    @SerializedName("error") override val error: String?,
+    @SerializedName("error_description") override val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
     @SerializedName("suberror") val subError: String?,
-    override val challengeType: String?,
-    override val redirectReason: String?,
+    @Expose @SerializedName("challenge_type") override val challengeType: String?,
+    @SerializedName("redirect_reason") override val redirectReason: String?,
 ): INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
 
     override fun toUnsanitizedString(): String {

@@ -37,13 +37,13 @@ import java.net.HttpURLConnection
 class SignInIntrospectApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
-    override val continuationToken: String?,
+    @SerializedName("continuation_token") override val continuationToken: String?,
     @Expose @SerializedName("methods") val methods: List<AuthenticationMethodApiResponse>?,
-    override val error: String?,
-    override val errorDescription: String?,
+    @SerializedName("error") override val error: String?,
+    @SerializedName("error_description") override val errorDescription: String?,
     @SerializedName("error_codes") val errorCodes: List<Int>?,
-    override val challengeType: String?,
-    override val redirectReason: String?,
+    @Expose @SerializedName("challenge_type") override val challengeType: String?,
+    @SerializedName("redirect_reason") override val redirectReason: String?,
 ): INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
 
     override fun toUnsanitizedString(): String {
