@@ -1,8 +1,10 @@
 vNext
 ----------
+- [MINOR] Implement a WebView handler to facilitate broker app installation via the Play Store (#2643)
 - [MINOR] Add Get AAD device ID API for resource account (#2644)
 - [MINOR] Expose a JavaScript API in brokered Webviews to facilitate Improved Same Device NumberMatch (#2617)
 - [MINOR] Add API for resource account provisioning (API only) (#2640)
+- [PATCH] Fixing error in construction of LegacyFido2ApiManager (#2654)
 
 Version 21.1.0
 ----------
