@@ -35,16 +35,22 @@ import org.jetbrains.annotations.NotNull;
 public abstract class AES256KeyLoader implements ISecretKeyLoader {
 
     /**
+     * Shared instance of AES256SecretKeyGenerator.
+     * Created once and reused across all instances to avoid unnecessary object creation.
+     */
+    private static final AES256SecretKeyGenerator AES_256_KEY_GENERATOR = new AES256SecretKeyGenerator();
+
+    /**
      * Returns an AES-256 secret key generator.
      * <p>
-     * This implementation creates a new instance of {@link AES256SecretKeyGenerator}
-     * which can be used to generate new AES-256 keys when needed.
+     * This implementation returns a shared instance of {@link AES256SecretKeyGenerator}
+     * to avoid unnecessary object creation, as the generator is stateless.
      *
-     * @return A new instance of {@link AES256SecretKeyGenerator}
+     * @return A shared instance of {@link AES256SecretKeyGenerator}
      */
     @Override
     @NotNull
     public AES256SecretKeyGenerator getSecretKeyGenerator() {
-        return new AES256SecretKeyGenerator();
+        return AES_256_KEY_GENERATOR;
     }
 }
