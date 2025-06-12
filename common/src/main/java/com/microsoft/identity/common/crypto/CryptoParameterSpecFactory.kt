@@ -149,7 +149,6 @@ class CryptoParameterSpecFactory(private val context: Context, private val keyAl
         )
     }
 
-
     /**
      * Returns a prioritized list of cipher parameter specifications to try in sequence.
      *

@@ -55,7 +55,7 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
     public static final String WRAPPED_KEY_FILE_NAME = "adalks";
 
     private final PredefinedKeyLoader mPredefinedKeyLoader;
-    private final AndroidWrappedKeyLoader mKeyStoreKeyLoader;
+    private final ISecretKeyLoader mKeyStoreKeyLoader;
 
     public AndroidAuthSdkStorageEncryptionManager(@NonNull final Context context) {
         if (AuthenticationSettings.INSTANCE.getSecretKeyData() == null) {
@@ -74,7 +74,7 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
 
     @Override
     @NonNull
-    public AES256KeyLoader getKeyLoaderForEncryption() {
+    public ISecretKeyLoader getKeyLoaderForEncryption() {
         if (mPredefinedKeyLoader != null) {
             return mPredefinedKeyLoader;
         }
