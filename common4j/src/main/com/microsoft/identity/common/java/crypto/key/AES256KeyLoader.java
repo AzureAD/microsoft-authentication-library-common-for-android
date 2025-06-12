@@ -24,8 +24,24 @@ package com.microsoft.identity.common.java.crypto.key;
 
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Abstract base class for loading AES-256 secret keys.
+ * <p>
+ * This class implements the {@link ISecretKeyLoader} interface and provides a default
+ * implementation for retrieving an AES-256 key generator. It serves as a base class
+ * for concrete implementations that handle the loading of AES-256 secret keys from
+ * various sources.
+ */
 public abstract class AES256KeyLoader implements ISecretKeyLoader {
 
+    /**
+     * Returns an AES-256 secret key generator.
+     * <p>
+     * This implementation creates a new instance of {@link AES256SecretKeyGenerator}
+     * which can be used to generate new AES-256 keys when needed.
+     *
+     * @return A new instance of {@link AES256SecretKeyGenerator}
+     */
     @Override
     @NotNull
     public AES256SecretKeyGenerator getSecretKeyGenerator() {
