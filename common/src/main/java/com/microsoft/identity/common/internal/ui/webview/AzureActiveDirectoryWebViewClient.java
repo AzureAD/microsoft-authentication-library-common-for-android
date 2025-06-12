@@ -145,7 +145,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Logger.info(TAG, "Adding AuthUx JavaScript Interface");
             view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
             mAuthUxJavaScriptInterfaceAdded = true;
-            mAuthUxJavaScriptInterfaceAdded = true;
         }
     }
 
@@ -161,27 +160,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         super.onPageFinished(view, url);
 
         if (mAuthUxJavaScriptInterfaceAdded) {
-
-            // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
-            // passing dict objects through Javascript APIs, only Strings and primitive types. Server side will be sending message in a dict
-            String jsScript = "window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".postMessageToBroker = function(message) { " +
-                    "    window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".receiveAuthUxMessage(JSON.stringify(message)); " +
-                    "};";
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                view.evaluateJavascript(jsScript, null);
-            }
-        }
-    }
-
-
-    @Override
-    public void onPageFinished(final WebView view,
-                               final String url) {
-        super.onPageFinished(view, url);
-
-        if (mAuthUxJavaScriptInterfaceAdded) {
-
             // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
             // passing dict objects through Javascript APIs, only Strings and primitive types. Server side will be sending message in a dict
             String jsScript = "window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".postMessageToBroker = function(message) { " +
@@ -261,7 +239,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
             view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
             mAuthUxJavaScriptInterfaceAdded = true;
-        } else if (mAuthUxJavaScriptInterfaceAdded){
+        } else if (mAuthUxJavaScriptInterfaceAdded) {
             // Remove AuthUx JavaScript Interface
             Logger.info(methodTag, "Removing AuthUx JavaScript Interface");
             view.removeJavascriptInterface(AuthUxJavaScriptInterface.Companion.getInterfaceName());
