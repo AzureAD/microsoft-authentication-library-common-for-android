@@ -27,9 +27,8 @@ import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 
 /**
- * Extended Microsoft STS Token Response with additional native auth parameters.
- * This class extends MicrosoftStsTokenResponse to include redirect reason and challenge type
- * for native authentication successful sign in token scenarios.
+ * Microsoft STS Token Response extended with native auth parameters
+ * (redirect reason and challenge type) for successful sign-in scenarios.
  */
 class NativeAuthMicrosoftStsTokenResponse : MicrosoftStsTokenResponse() {
     
