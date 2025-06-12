@@ -40,7 +40,7 @@ public class PredefinedKeyLoader extends AES256KeyLoader {
      * Java AES/CBC/PKCS5Padding is default(!) algorithm name, thus PKCS5 here
      * probably doing PKCS7. We decide to go with Java default string.
      */
-    private static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";
+    private static final String CIPHER_TRANSFORMATION_AES_CBC_PKCS5PADDING = "AES/CBC/PKCS5Padding";
 
     /**
      * Indicate that the token item is encrypted with the user provided key.
@@ -68,15 +68,15 @@ public class PredefinedKeyLoader extends AES256KeyLoader {
         return USER_PROVIDED_KEY_IDENTIFIER;
     }
 
-    @Override
-    @NonNull
-    public String getCipherAlgorithm(){
-        return CIPHER_ALGORITHM;
-    }
-    
     @NotNull
     @Override
     public SecretKey getKey() throws ClientException {
         return mKey;
+    }
+
+    @NotNull
+    @Override
+    public String getCipherTransformation() {
+        return CIPHER_TRANSFORMATION_AES_CBC_PKCS5PADDING;
     }
 }

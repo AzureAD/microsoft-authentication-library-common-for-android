@@ -25,18 +25,6 @@ package com.microsoft.identity.common.java.crypto.key;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class AES256KeyLoader implements ISecretKeyLoader {
-    /**
-     * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
-     * Java AES/CBC/PKCS5Padding is default(!) algorithm name, thus PKCS5 here
-     * probably doing PKCS7. We decide to go with Java default string.
-     */
-    private static final String CIPHER_TRANSFORMATION = "AES/CBC/PKCS5Padding";
-
-    @NotNull
-    @Override
-    public String getCipherTransformation() {
-        return CIPHER_TRANSFORMATION;
-    }
 
     @Override
     @NotNull

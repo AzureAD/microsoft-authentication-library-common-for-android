@@ -36,6 +36,9 @@ public class MockAES256KeyLoaderWithGetKeyError extends AES256KeyLoader  {
     public static String MOCK_KEY_IDENTIFIER = "MOCK_ERROR_ID";
     public static String MOCK_ERROR = "MOCK_ERROR";
 
+    public static String MOCK_CIPHER_TRANSFORMATION = "MOCK_CIPHER_TRANSFORMATION";
+
+
     @Override
     public @NonNull String getAlias() {
         return MOCK_ERROR;
@@ -53,7 +56,7 @@ public class MockAES256KeyLoaderWithGetKeyError extends AES256KeyLoader  {
 
     @NotNull
     @Override
-    public String getCipherAlgorithm() {
-        return "";
+    public String getCipherTransformation() {
+        return MOCK_CIPHER_TRANSFORMATION;
     }
 }

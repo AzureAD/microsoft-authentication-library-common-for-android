@@ -26,6 +26,8 @@ import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
 import com.microsoft.identity.common.java.exception.ClientException;
 
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.crypto.SecretKey;
 
 import lombok.NonNull;
@@ -33,6 +35,7 @@ import lombok.NonNull;
 public class MockAES256KeyLoader extends AES256KeyLoader {
     public static String DEFAULT_MOCK_KEY_IDENTIFIER = "MOCK_ID";
     public static String MOCK_ALIAS = "MOCK_ALIAS";
+    public static String MOCK_CIPHER_TRANSFORMATION = "MOCK_CIPHER_TRANSFORMATION";
 
     private final SecretKey mKey;
     private final String mKeyIdentifier;
@@ -63,9 +66,9 @@ public class MockAES256KeyLoader extends AES256KeyLoader {
         return mKeyIdentifier;
     }
 
-    @NonNull
+    @NotNull
     @Override
-    public String getCipherAlgorithm() {
-        return "";
+    public String getCipherTransformation() {
+        return MOCK_CIPHER_TRANSFORMATION;
     }
 }
