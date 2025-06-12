@@ -24,7 +24,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.jit
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.AuthenticationMethodApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.toListOfAuthenticationMethodApiResult
@@ -39,20 +39,22 @@ import java.net.HttpURLConnection
 class JITIntrospectApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
-    @SerializedName("continuation_token") val continuationToken: String?,
+    override val continuationToken: String?,
     @Expose @SerializedName("methods") val methods: List<AuthenticationMethodApiResponse>?,
-    @Expose @SerializedName("challenge_type") val challengeType: String?,
-    @SerializedName("error") val error: String?,
-    @SerializedName("error_codes") val errorCodes: List<Int>?,
-    @SerializedName("error_description") val errorDescription: String?,
+    override val error: String?,
+    override val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
-) : IApiResponse(statusCode, correlationId) {
+    @SerializedName("error_codes") val errorCodes: List<Int>?,
+    override val challengeType: String?,
+    override val redirectReason: String?,
+) : INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
 
     override fun toUnsanitizedString(): String {
         return "JITIntrospectApiResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId " +
                 "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription, " +
-                "methods=$methods, challengeType=$challengeType)"
+                "methods=$methods, challengeType=$challengeType, " +
+                "redirectReason=$redirectReason)"
     }
 
     override fun toString(): String = "JITIntrospectApiResponse(statusCode=$statusCode, " +
@@ -73,6 +75,12 @@ class JITIntrospectApiResponse(
             // Handle success and redirect
             HttpURLConnection.HTTP_OK -> {
                 return when {
+                    challengeType.isRedirect() -> {
+                        JITIntrospectApiResult.Redirect(
+                            correlationId = correlationId,
+                            redirectReason = redirectReason.orEmpty()
+                        )
+                    }
                     methods.isNullOrEmpty() -> {
                         JITIntrospectApiResult.UnknownError(
                             error = ApiErrorResult.INVALID_STATE,

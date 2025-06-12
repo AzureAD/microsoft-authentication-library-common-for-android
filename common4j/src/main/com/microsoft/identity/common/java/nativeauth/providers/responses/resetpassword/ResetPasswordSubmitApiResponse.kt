@@ -24,8 +24,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.resetp
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import com.microsoft.identity.common.java.nativeauth.util.*
 import java.net.HttpURLConnection
 
@@ -36,18 +35,21 @@ import java.net.HttpURLConnection
 class ResetPasswordSubmitApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
-    @SerializedName("continuation_token") val continuationToken: String?,
+    override val continuationToken: String?,
     @Expose @SerializedName("poll_interval") val pollInterval: Int?,
-    @SerializedName("error") val error: String?,
-    @SerializedName("error_description") val errorDescription: String?,
+    override val error: String?,
+    override val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
-    @SerializedName("suberror") val subError: String?
-): IApiResponse(statusCode, correlationId) {
+    @SerializedName("suberror") val subError: String?,
+    override val challengeType: String?,
+    override val redirectReason: String?,
+): INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
 
     override fun toUnsanitizedString(): String {
         return "ResetPasswordSubmitApiResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId, pollInterval=$pollInterval, error=$error, " +
-                "errorUri=$errorUri, errorDescription=$errorDescription, subError=$subError)"
+                "errorUri=$errorUri, errorDescription=$errorDescription, subError=$subError, " +
+                "challengeType=$challengeType, redirectReason=$redirectReason)"
     }
 
     override fun toString(): String = "ResetPasswordSubmitApiResponse(statusCode=$statusCode, " +
@@ -99,6 +101,13 @@ class ResetPasswordSubmitApiResponse(
 
             // Handle success and redirect
             HttpURLConnection.HTTP_OK -> {
+                if (challengeType.isRedirect()) {
+                    return ResetPasswordSubmitApiResult.Redirect(
+                        correlationId = correlationId,
+                        redirectReason = redirectReason.orEmpty()
+                    )
+                }
+
                 ResetPasswordSubmitApiResult.SubmitSuccess(
                     continuationToken = continuationToken
                         ?: return ResetPasswordSubmitApiResult.UnknownError(
@@ -127,6 +136,6 @@ class ResetPasswordSubmitApiResponse(
         {
             return DEFAULT_POLL_COMPLETION_INTERVAL_IN_SECONDS
         }
-        return pollIntervalInSeconds;
+        return pollIntervalInSeconds
     }
 }

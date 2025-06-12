@@ -22,15 +22,22 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers
 
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.nativeauth.util.ILoggable
 
 /**
  * Base class to represent the various responses for Native Auth API requests.
  */
-abstract class IApiResponse(
+abstract class INativeAuthApiResponse(
     //HTTP status code
     @Transient open val statusCode: Int,
-    correlationId: String
+    correlationId: String,
+    @SerializedName("continuation_token") open val continuationToken: String? = null,
+    @Expose @SerializedName("challenge_type") open val challengeType: String? = null,
+    @SerializedName("redirect_reason") open val redirectReason: String? = null,
+    @SerializedName("error") open val error: String? = null,
+    @SerializedName("error_description") open val errorDescription: String? = null,
 ) : ILoggable {
 
     // Custom setter. Limit access to this method, to avoid accidental overwrite.
