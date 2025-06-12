@@ -42,13 +42,6 @@ public class PredefinedKeyLoader extends AES256KeyLoader {
     private static final String CIPHER_TRANSFORMATION = "AES/CBC/PKCS5Padding";
 
     /**
-     * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
-     * Java AES/CBC/PKCS5Padding is default(!) algorithm name, thus PKCS5 here
-     * probably doing PKCS7. We decide to go with Java default string.
-     */
-    private static final String CIPHER_TRANSFORMATION_AES_CBC_PKCS5PADDING = "AES/CBC/PKCS5Padding";
-
-    /**
      * Indicate that the token item is encrypted with the user provided key.
      */
     public static final String USER_PROVIDED_KEY_IDENTIFIER = "U001";

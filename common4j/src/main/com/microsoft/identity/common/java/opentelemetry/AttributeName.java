@@ -363,5 +363,10 @@ public enum AttributeName {
     /**
      * Records the if the broker handled a switch browser resume,
      */
-    is_switch_browser_resume_handled
+    is_switch_browser_resume_handled,
+
+    /**
+     * Records the transformation used to unwrap a key pair.
+     */
+    key_pair_unwrap_transformation,
 }

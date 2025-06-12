@@ -40,32 +40,45 @@ import javax.crypto.spec.OAEPParameterSpec
 import javax.crypto.spec.PSource
 import javax.security.auth.x500.X500Principal
 
-
-
 /**
  * Factory class to create various cryptographic parameter specifications
  * for key generation and cipher operations.
  *
  * This class encapsulates the logic to determine which key generation and cipher specs
- * to use based on the Android API level and flight flags.
+ * to use based on the Android API level and feature flags. It implements a fallback mechanism
+ * to ensure compatibility across different Android versions and device implementations.
  *
+ * Key features:
+ * - Creates appropriate key generation specifications based on Android API level
+ * - Supports both modern (API 23+) and legacy key specifications
+ * - Provides options for different padding schemes (OAEP, PKCS1)
+ * - Configurable through feature flags for testing different implementations
  *
  * The Android Keystore (especially on older devices or some hardware-backed implementations) has limited support for MGF1 digests.
  *
  * Specifically:
  *
  * It supports OAEP with:
- *
- * Main Digest: SHA-256 ✅
- *
- * MGF1 Digest: SHA-1 ✅
+ * - Main Digest: SHA-256 ✅
+ * - MGF1 Digest: SHA-1 ✅
  *
  * But not:
+ * - MGF1 Digest: SHA-256 ❌ (on many devices)
  *
- * MGF1 Digest: SHA-256 ❌ (on many devices)
- *
+ * This factory helps navigate these limitations by providing appropriate fallback mechanisms.
  */
 class CryptoParameterSpecFactory(private val context: Context, private val keyAlias: String) {
+
+
+    data class KeyGenSpec(
+        val keyGenParameterSpec: AlgorithmParameterSpec,
+        val description: String
+    )
+
+    data class CipherSpec(
+        val algorithmParameterSpecs: AlgorithmParameterSpec?,
+        val transformation: String
+    )
 
     companion object {
         private val TAG = CryptoParameterSpecFactory::class.java.simpleName
@@ -76,33 +89,46 @@ class CryptoParameterSpecFactory(private val context: Context, private val keyAl
         private const val OAEP_TRANSFORMATION = "RSA/NONE/OAEPwithSHA-256andMGF1Padding"
         private const val PKCS1_TRANSFORMATION = "RSA/ECB/PKCS1Padding"
 
-
         private val oaepSpec  = OAEPParameterSpec(
             "SHA-256",  // main digest
             "MGF1",  // mask generation function
             MGF1ParameterSpec.SHA1,  // MGF1 digest
             PSource.PSpecified.DEFAULT // label (usually default)
         )
-
-        private val legacyCipherSpec = CipherSpec(
-            algorithmParameterSpecs = null,
-            transformation = PKCS1_TRANSFORMATION
-        )
-
-        private val oaepCipherSpec = CipherSpec(
-            algorithmParameterSpecs = oaepSpec,
-            transformation = OAEP_TRANSFORMATION
-        )
     }
 
-    data class KeyGenSpec(
-        val keyGenParameterSpec: AlgorithmParameterSpec,
-        val description: String
+    private val legacyCipherSpec = CipherSpec(
+        algorithmParameterSpecs = null,
+        transformation = PKCS1_TRANSFORMATION
     )
 
-    data class CipherSpec(
-        val algorithmParameterSpecs: AlgorithmParameterSpec?,
-        val transformation: String
+    private val oaepCipherSpec = CipherSpec(
+        algorithmParameterSpecs = oaepSpec,
+        transformation = OAEP_TRANSFORMATION
+    )
+
+    @RequiresApi(Build.VERSION_CODES.P)
+    private val keyGenParamSpecWithPurposeWrapKey = KeyGenSpec(
+        keyGenParameterSpec = getAlgorithmParameterSpec(
+            KeyProperties.PURPOSE_ENCRYPT or
+                    KeyProperties.PURPOSE_DECRYPT or
+                    KeyProperties.PURPOSE_WRAP_KEY
+        ),
+        description = MODERN_SPEC_WITH_PURPOSE_WRAP_KEY
+    )
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    private val keyGenParamSpecWithoutPurposeWrapKey = KeyGenSpec(
+        keyGenParameterSpec = getAlgorithmParameterSpec(
+            KeyProperties.PURPOSE_ENCRYPT or
+                    KeyProperties.PURPOSE_DECRYPT
+        ),
+        description = MODERN_SPEC_WITHOUT_PURPOSE_WRAP_KEY
+    )
+
+    private val keyGenParamSpecLegacy = KeyGenSpec(
+        keyGenParameterSpec = getLegacyKeyGenParamSpec(),
+        description = LEGACY_SPEC
     )
 
     private val keySpecWithPurposeKey =
@@ -123,77 +149,82 @@ class CryptoParameterSpecFactory(private val context: Context, private val keyAl
         )
     }
 
-    fun getPrimaryCipherParameterSpec(): CipherSpec {
-        val methodTag = "$TAG:getCipherTransformation"
-        val spec = if (keySpecWithOAEP) {
-            oaepCipherSpec
-        } else {
-            legacyCipherSpec
-        }
-        Logger.info(methodTag, "Using cipher transformation: ${spec.transformation}")
-        return spec
-    }
 
+    /**
+     * Returns a prioritized list of cipher parameter specifications to try in sequence.
+     *
+     * This allows the calling code to attempt operations with the most secure/preferred
+     * specification first, then fall back to more compatible options if needed.
+     *
+     * The list is ordered with the most preferred specification first (OAEP if enabled, then PKCS1).
+     *
+     * @return List of [CipherSpec] objects ordered by preference (highest priority first)
+     */
     fun getPrioritizedCipherParameterSpecs(): List<CipherSpec> {
+        val methodTag = "$TAG:getPrioritizedCipherParameterSpecs"
         val specs = mutableListOf<CipherSpec>()
+
+        // Add OAEP padding spec first (if enabled) as it provides stronger security
         if (keySpecWithOAEP) {
             specs.add(oaepCipherSpec)
         }
+
+        // Always include legacy PKCS1 padding as a fallback for compatibility
         specs.add(legacyCipherSpec)
+
+        Logger.info(methodTag, "Options: ${specs.joinToString { it.transformation }}")
         return specs
     }
 
     /**
-     * Returns a prioritized list of AlgorithmParameterSpec objects to try in sequence.
-     * This helps handle fallback scenarios where the preferred spec might not work
-     * on all devices or with all existing keys.
+     * Returns a prioritized list of key generation parameter specifications to try in sequence.
      *
-     * @return List of AlgorithmParameterSpec objects ordered by priority (highest first)
+     * This helps handle fallback scenarios where the preferred spec might not work
+     * on all devices or with all existing keys. Each specification has a descriptive
+     * identifier for logging and debugging purposes.
+     *
+     * The method considers:
+     * 1. Android API level (supporting modern APIs from Android M/23 and P/28)
+     * 2. Feature flags that enable/disable specific key generation approaches
+     * 3. Backward compatibility with existing keys
+     *
+     * The list always includes a legacy specification as a last resort fallback option.
+     *
+     * @return List of [KeyGenSpec] objects ordered by priority (highest first)
      */
     fun getPrioritizedKeyGenParameterSpecs(): List<KeyGenSpec> {
         val methodTag = "$TAG:getPrioritizedKeyGenParameterSpecs"
 
         val specs = mutableListOf<KeyGenSpec>()
+
         // Add specs in order of preference
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && keySpecWithPurposeKey) {
             // First priority: API 28+ with PURPOSE_WRAP_KEY if enabled
-            specs.add(
-                KeyGenSpec(
-                    getKeyGenParamSpecWithPurposeWrapKey(),
-                    MODERN_SPEC_WITH_PURPOSE_WRAP_KEY
-                )
-            )
+            specs.add(keyGenParamSpecWithPurposeWrapKey)
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && keySpecWithoutPurposeKey) {
             // Second priority: API 23+ without PURPOSE_WRAP_KEY
-            specs.add(
-                KeyGenSpec(
-                    getKeyGenParamSpecWithoutPurposeWrapKey(),
-                    MODERN_SPEC_WITHOUT_PURPOSE_WRAP_KEY
-                )
-            )
+            specs.add(keyGenParamSpecWithoutPurposeWrapKey)
         }
 
         // Always include legacy spec as last resort fallback
-        specs.add(KeyGenSpec(getLegacyKeyGenParamSpec(), LEGACY_SPEC))
+        specs.add(keyGenParamSpecLegacy)
 
-        Logger.info(
-            methodTag,
-            "Created prioritized specs list with ${specs.size} options: ${specs.joinToString { it.description }}"
-        )
+        Logger.info(methodTag, "Options: ${specs.joinToString { it.description }}")
         return specs
     }
 
     /**
-     * Generate a self-signed cert and derive an AlgorithmParameterSpec from that.
-     * This is for the key to be generated in {@link KeyStore} via {@link KeyPairGenerator}
-     * Note : This is now only for API level < 23 or as fallback.
+     * Generates a legacy algorithm parameter specification using KeyPairGeneratorSpec.
      *
-     * @return a {@link AlgorithmParameterSpec} for the keystore key (that we'll use to wrap the secret key).
+     * This approach is used for API levels below 23 (Android M) or as a fallback
+     * when more modern specifications fail. It creates a self-signed certificate
+     * with a 100-year validity period.
+     *
+     * @return A [KeyPairGeneratorSpec] configured for the key alias and application context
      */
     private fun getLegacyKeyGenParamSpec(): AlgorithmParameterSpec {
-
         // Generate a self-signed cert.
         val certInfo = String.format(
             Locale.ROOT, "CN=%s, OU=%s",
@@ -214,24 +245,16 @@ class CryptoParameterSpecFactory(private val context: Context, private val keyAl
             .build()
     }
 
-
-    @RequiresApi(Build.VERSION_CODES.P)
-    private fun getKeyGenParamSpecWithPurposeWrapKey(): AlgorithmParameterSpec {
-        return getAlgorithmParameterSpec(
-            KeyProperties.PURPOSE_ENCRYPT or
-                    KeyProperties.PURPOSE_DECRYPT or
-                    KeyProperties.PURPOSE_WRAP_KEY
-        )
-    }
-
-    @RequiresApi(Build.VERSION_CODES.M)
-    private fun getKeyGenParamSpecWithoutPurposeWrapKey(): AlgorithmParameterSpec {
-        return getAlgorithmParameterSpec(
-            KeyProperties.PURPOSE_ENCRYPT or
-                    KeyProperties.PURPOSE_DECRYPT
-        )
-    }
-
+    /**
+     * Helper method to create an appropriate key generation parameter specification.
+     *
+     * This method configures the specification with the appropriate padding and digest
+     * algorithms based on feature flags. It supports both OAEP (stronger) and PKCS1
+     * (more compatible) padding schemes.
+     *
+     * @param purposes The key usage purposes (combinations of KeyProperties.PURPOSE_* constants)
+     * @return A [KeyGenParameterSpec] configured according to current settings
+     */
     @RequiresApi(api = Build.VERSION_CODES.M)
     private fun getAlgorithmParameterSpec(purposes: Int): AlgorithmParameterSpec {
         val methodTag = "$TAG:getSpecForWrappingKey"
