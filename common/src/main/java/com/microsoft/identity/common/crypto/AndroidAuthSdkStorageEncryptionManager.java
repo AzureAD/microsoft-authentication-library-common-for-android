@@ -65,10 +65,11 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
                     AuthenticationSettings.INSTANCE.getSecretKeyData());
         }
 
-        mKeyStoreKeyLoader = new AndroidWrappedKeyLoader(
+        mKeyStoreKeyLoader = AndroidWrappedKeyLoaderFactory.INSTANCE.createWrappedKeyLoader(
                 WRAPPING_KEY_ALIAS,
                 WRAPPED_KEY_FILE_NAME,
-                context);
+                context
+        );
     }
 
     @Override

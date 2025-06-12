@@ -22,6 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto.key;
 
+import com.microsoft.identity.common.java.exception.ClientException;
+
+import org.jetbrains.annotations.NotNull;
+
 import javax.crypto.SecretKey;
 
 import lombok.NonNull;
@@ -47,25 +51,19 @@ public class PredefinedKeyLoader extends AES256KeyLoader {
     private final SecretKey mKey;
 
     public PredefinedKeyLoader(@NonNull final String alias,
-                               final byte @NonNull [] rawBytes) {
+                               final byte[] rawBytes) {
         mAlias = alias;
         mKey = getSecretKeyGenerator().generateKeyFromRawBytes(rawBytes);
     }
 
+    @NotNull
     @Override
-    @NonNull
     public String getAlias() {
         return mAlias;
     }
 
+    @NotNull
     @Override
-    @NonNull
-    public SecretKey getKey() {
-        return mKey;
-    }
-
-    @Override
-    @NonNull
     public String getKeyTypeIdentifier() {
         return USER_PROVIDED_KEY_IDENTIFIER;
     }
@@ -74,5 +72,11 @@ public class PredefinedKeyLoader extends AES256KeyLoader {
     @NonNull
     public String getCipherAlgorithm(){
         return CIPHER_ALGORITHM;
+    }
+    
+    @NotNull
+    @Override
+    public SecretKey getKey() throws ClientException {
+        return mKey;
     }
 }

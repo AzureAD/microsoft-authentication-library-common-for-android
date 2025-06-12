@@ -20,27 +20,35 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.crypto.key;
+package com.microsoft.identity.common.crypto
 
-import org.jetbrains.annotations.NotNull;
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 
-public abstract class AES256KeyLoader implements ISecretKeyLoader {
-    /**
-     * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
-     * Java AES/CBC/PKCS5Padding is default(!) algorithm name, thus PKCS5 here
-     * probably doing PKCS7. We decide to go with Java default string.
-     */
-    private static final String CIPHER_TRANSFORMATION = "AES/CBC/PKCS5Padding";
+object AndroidWrappedKeyLoaderFactory {
+    fun createWrappedKeyLoader(
+        keyIdentifier: String,
+        fileName: String,
+        context: android.content.Context
+    ): AndroidWrappedKeyLoader {
+        val useNewAndroidWrappedKeyLoader =
+            CommonFlightsManager
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_NEW_ANDROID_WRAPPED_KEY_LOADER)
 
-    @NotNull
-    @Override
-    public String getCipherTransformation() {
-        return CIPHER_TRANSFORMATION;
-    }
-
-    @Override
-    @NotNull
-    public AES256SecretKeyGenerator getSecretKeyGenerator() {
-        return new AES256SecretKeyGenerator();
+        return if (useNewAndroidWrappedKeyLoader) {
+            // TODO : Replace with the new loader on the next PR
+            AndroidWrappedKeyLoader(
+                keyIdentifier,
+                fileName,
+                context
+            )
+        } else {
+            AndroidWrappedKeyLoader(
+                keyIdentifier,
+                fileName,
+                context
+            )
+        }
     }
 }

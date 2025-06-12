@@ -144,7 +144,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             final IvParameterSpec ivSpec = new IvParameterSpec(iv);
 
             // Set to encrypt mode
-            final Cipher cipher = Cipher.getInstance(keyLoader.getCipherAlgorithm());
+            final Cipher cipher = Cipher.getInstance(keyLoader.getCipherTransformation());
             final Mac mac = Mac.getInstance(HMAC_ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, encryptionKey, ivSpec);
 
@@ -295,7 +295,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             // Calculate digest again and compare to the appended value
             // incoming message: version+encryptedData+IV+Digest
             // Digest of EncryptedData+IV excluding the digest itself.
-            final Cipher cipher = Cipher.getInstance(keyLoader.getCipherAlgorithm());
+            final Cipher cipher = Cipher.getInstance(keyLoader.getCipherTransformation());
             final Mac mac = Mac.getInstance(HMAC_ALGORITHM);
             mac.init(hmacKey);
             mac.update(encryptedBlobWithoutEncodeVersion, 0, macDigestIndex);

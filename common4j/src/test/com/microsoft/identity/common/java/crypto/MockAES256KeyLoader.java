@@ -25,7 +25,6 @@ package com.microsoft.identity.common.java.crypto;
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
 import com.microsoft.identity.common.java.exception.ClientException;
 
-import org.jetbrains.annotations.NotNull;
 
 import javax.crypto.SecretKey;
 
@@ -64,7 +63,7 @@ public class MockAES256KeyLoader extends AES256KeyLoader {
         return mKeyIdentifier;
     }
 
-    @NotNull
+    @NonNull
     @Override
     public String getCipherAlgorithm() {
         return "";
