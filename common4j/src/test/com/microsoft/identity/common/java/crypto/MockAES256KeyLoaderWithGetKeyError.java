@@ -25,6 +25,8 @@ package com.microsoft.identity.common.java.crypto;
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
 import com.microsoft.identity.common.java.exception.ClientException;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.crypto.SecretKey;
 
 import lombok.NonNull;
@@ -33,6 +35,7 @@ public class MockAES256KeyLoaderWithGetKeyError extends AES256KeyLoader  {
     public static String FAIL_TO_LOAD_KEY_ERROR = "FAIL_TO_LOAD_KEY_ERROR";
     public static String MOCK_KEY_IDENTIFIER = "MOCK_ERROR_ID";
     public static String MOCK_ERROR = "MOCK_ERROR";
+    public static String MOCK_CIPHER_TRANSFORMATION = "MOCK_CIPHER_TRANSFORMATION";
 
     @Override
     public @NonNull String getAlias() {
@@ -48,4 +51,9 @@ public class MockAES256KeyLoaderWithGetKeyError extends AES256KeyLoader  {
     public @NonNull String getKeyTypeIdentifier() {
         return MOCK_KEY_IDENTIFIER;
     }
+
+    @NotNull
+    @Override
+    public String getCipherTransformation() {
+        return MOCK_CIPHER_TRANSFORMATION;    }
 }

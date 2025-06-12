@@ -22,15 +22,36 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.crypto
 
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyLoader
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 
+/**
+ * Factory class for creating wrapped key loaders specific to the Android platform.
+ *
+ * This object is responsible for creating the appropriate implementation of [ISecretKeyLoader]
+ * based on feature flag. It abstracts away the details of which
+ * specific loader implementation should be used, allowing for runtime switching between
+ * different implementations without affecting client code.
+ */
 object AndroidWrappedKeyLoaderFactory {
+    /**
+     * Creates an appropriate wrapped key loader instance based on current feature flags.
+     *
+     * This method checks the [CommonFlight.ENABLE_NEW_ANDROID_WRAPPED_KEY_LOADER] feature flag
+     * to determine whether to use the new implementation or the legacy implementation of
+     * the Android wrapped key loader.
+     *
+     * @param keyIdentifier A unique identifier for the key being loaded
+     * @param fileName The name of the file where the wrapped key is stored
+     * @param context The Android application context needed for file and security operations
+     * @return An implementation of [ISecretKeyLoader] that can load the specified wrapped key
+     */
     fun createWrappedKeyLoader(
         keyIdentifier: String,
         fileName: String,
         context: android.content.Context
-    ): AndroidWrappedKeyLoader {
+    ): ISecretKeyLoader {
         val useNewAndroidWrappedKeyLoader =
             CommonFlightsManager
                 .getFlightsProvider()

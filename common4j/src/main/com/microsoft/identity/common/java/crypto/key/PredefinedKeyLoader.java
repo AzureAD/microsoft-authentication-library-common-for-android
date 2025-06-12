@@ -34,6 +34,12 @@ import lombok.NonNull;
  * For loading an AES-256 key from a provided rawbytes array.
  */
 public class PredefinedKeyLoader extends AES256KeyLoader {
+    /**
+     * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
+     * Java AES/CBC/PKCS5Padding is default(!) algorithm name, thus PKCS5 here
+     * probably doing PKCS7. We decide to go with Java default string.
+     */
+    private static final String CIPHER_TRANSFORMATION = "AES/CBC/PKCS5Padding";
 
     /**
      * Indicate that the token item is encrypted with the user provided key.
@@ -65,5 +71,11 @@ public class PredefinedKeyLoader extends AES256KeyLoader {
     @Override
     public SecretKey getKey() throws ClientException {
         return mKey;
+    }
+
+    @NotNull
+    @Override
+    public String getCipherTransformation() {
+        return CIPHER_TRANSFORMATION;
     }
 }

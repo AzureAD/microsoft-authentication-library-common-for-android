@@ -24,20 +24,24 @@ package com.microsoft.identity.common.java.crypto.key;
 
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Abstract base class for loading AES-256 secret keys.
+ * <p>
+ * This class implements the {@link ISecretKeyLoader} interface and provides a default
+ * implementation for retrieving an AES-256 key generator. It serves as a base class
+ * for concrete implementations that handle the loading of AES-256 secret keys from
+ * various sources.
+ */
 public abstract class AES256KeyLoader implements ISecretKeyLoader {
+
     /**
-     * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
-     * Java AES/CBC/PKCS5Padding is default(!) algorithm name, thus PKCS5 here
-     * probably doing PKCS7. We decide to go with Java default string.
+     * Returns an AES-256 secret key generator.
+     * <p>
+     * This implementation creates a new instance of {@link AES256SecretKeyGenerator}
+     * which can be used to generate new AES-256 keys when needed.
+     *
+     * @return A new instance of {@link AES256SecretKeyGenerator}
      */
-    private static final String CIPHER_TRANSFORMATION = "AES/CBC/PKCS5Padding";
-
-    @NotNull
-    @Override
-    public String getCipherTransformation() {
-        return CIPHER_TRANSFORMATION;
-    }
-
     @Override
     @NotNull
     public AES256SecretKeyGenerator getSecretKeyGenerator() {

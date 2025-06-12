@@ -72,6 +72,14 @@ import lombok.NonNull;
  * before it get saved to the file.
  */
 public class AndroidWrappedKeyLoader extends AES256KeyLoader {
+
+    /**
+     * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
+     * Java AES/CBC/PKCS5Padding is default(!) algorithm name, thus PKCS5 here
+     * probably doing PKCS7. We decide to go with Java default string.
+     */
+    private static final String CIPHER_TRANSFORMATION = "AES/CBC/PKCS5Padding";
+
     private static final String TAG = AndroidWrappedKeyLoader.class.getSimpleName() + "#";
 
     /**
@@ -462,5 +470,12 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         return new File(
                 mContext.getDir(mContext.getPackageName(), Context.MODE_PRIVATE),
                 mFilePath);
+    }
+
+    @NonNull
+    @Override
+    public String getCipherTransformation() {
+        return CIPHER_TRANSFORMATION;
+
     }
 }
