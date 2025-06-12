@@ -28,7 +28,7 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 
 /**
  * Microsoft STS Token Response extended with native auth parameters
- * (redirect reason and challenge type) for successful sign-in scenarios.
+ * (redirectReason and challengeType) for successful sign-in scenarios.
  */
 class NativeAuthMicrosoftStsTokenResponse : MicrosoftStsTokenResponse() {
     
