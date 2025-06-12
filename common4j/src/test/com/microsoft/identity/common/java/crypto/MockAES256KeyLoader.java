@@ -36,6 +36,7 @@ public class MockAES256KeyLoader extends AES256KeyLoader {
     public static String DEFAULT_MOCK_KEY_IDENTIFIER = "MOCK_ID";
     public static String MOCK_ALIAS = "MOCK_ALIAS";
     public static String MOCK_CIPHER_TRANSFORMATION = "MOCK_CIPHER_TRANSFORMATION";
+
     private final SecretKey mKey;
     private final String mKeyIdentifier;
 

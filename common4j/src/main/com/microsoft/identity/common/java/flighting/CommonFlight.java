@@ -121,7 +121,9 @@ public enum CommonFlight implements IFlightConfig {
      */
     ENABLE_JS_API_FOR_AUTHUX("EnableJsApiForAuthUx", true),
 
-
+    /**
+     * Flight to enable the new Android wrapped key loader.
+     */
     ENABLE_NEW_ANDROID_WRAPPED_KEY_LOADER("EnableNewAndroidWrappedKeyLoader", true);
 
     private String key;
