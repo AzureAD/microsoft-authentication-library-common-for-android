@@ -35,7 +35,6 @@ import lombok.NonNull;
 public class MockAES256KeyLoader extends AES256KeyLoader {
     public static String DEFAULT_MOCK_KEY_IDENTIFIER = "MOCK_ID";
     public static String MOCK_ALIAS = "MOCK_ALIAS";
-    public static String MOCK_CIPHER_TRANSFORMATION = "MOCK_CIPHER_TRANSFORMATION";
 
     private final SecretKey mKey;
     private final String mKeyIdentifier;
@@ -69,6 +68,6 @@ public class MockAES256KeyLoader extends AES256KeyLoader {
     @NotNull
     @Override
     public String getCipherTransformation() {
-        return MOCK_CIPHER_TRANSFORMATION;
+        return "AES/CBC/PKCS5Padding";
     }
 }
