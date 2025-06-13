@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto.key
 
-import ISecretKeyGenerator
 import com.microsoft.identity.common.java.exception.ClientException
 import javax.crypto.SecretKey
 
