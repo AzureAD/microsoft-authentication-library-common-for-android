@@ -294,6 +294,28 @@ class SignUpOAuth2StrategyTest {
     }
 
     @Test
+    fun testPerformSignUpWithSubmitCodeWithRedirectSuccess() {
+        val correlationId = UUID.randomUUID().toString()
+        configureMockApi(
+            endpointType = MockApiEndpoint.SignUpContinue,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+        )
+
+        val signUpSubmitCodeCommandParameters = SignUpSubmitCodeCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .code(OOB_CODE)
+            .continuationToken(CONTINUATION_TOKEN)
+            .correlationId(correlationId)
+            .build()
+
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpSubmitCode(
+            signUpSubmitCodeCommandParameters
+        )
+        assertTrue(signupResult is SignUpContinueApiResult.Redirect)
+    }
+
+    @Test
     fun testPerformSignUpWithSubmitCodeSuccess() {
         val correlationId = UUID.randomUUID().toString()
         configureMockApi(

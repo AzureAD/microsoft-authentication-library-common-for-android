@@ -162,7 +162,7 @@ class SignInOAuthStrategyTest {
     }
 
     @Test
-    fun testPerformSignInChallengeSuccess() {
+    fun testPerformSignInChallengeWithRedirectSuccess() {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
