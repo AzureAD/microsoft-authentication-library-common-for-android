@@ -56,7 +56,7 @@ class AuthFidoChallengeHandler (
     private val lifecycleOwner: LifecycleOwner?
 ) : IChallengeHandler<FidoChallenge, Void> {
     val TAG = AuthFidoChallengeHandler::class.simpleName.toString()
-    val parentAttributeNames = arrayListOf(
+    private val parentAttributeNames = arrayListOf(
         AttributeName.correlation_id,
         AttributeName.tenant_id,
         AttributeName.account_type,

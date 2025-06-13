@@ -34,7 +34,7 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 
 /**
  * Extension class for handling OpenTelemetry context propagation.
- * Provides utility methods for injecting and extracting context using W3CBaggagePropagator.
+ * Provides utility methods for injecting and extracting context which contains Baggage and SpanContext.
  */
 public final class TextMapPropagatorExtension {
 
@@ -51,7 +51,7 @@ public final class TextMapPropagatorExtension {
     }
 
     /**
-     * Injects the current context into a carrier using W3CBaggagePropagator.
+     * Injects the current context into a carrier.
      *
      * @param context The context to inject. If null, the current context will be used.
      * @return A map containing the injected context properties.
@@ -74,7 +74,7 @@ public final class TextMapPropagatorExtension {
     }
 
     /**
-     * Extracts context from a carrier map using W3CBaggagePropagator.
+     * Extracts context from a carrier map.
      *
      * @param carrier The carrier containing context information.
      * @return The extracted context, or the current context if extraction fails.
