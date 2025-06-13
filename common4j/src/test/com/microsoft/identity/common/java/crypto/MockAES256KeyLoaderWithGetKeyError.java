@@ -53,7 +53,7 @@ public class MockAES256KeyLoaderWithGetKeyError extends AES256KeyLoader  {
 
     @NotNull
     @Override
-    public String getCipherAlgorithm() {
+    public String getCipherTransformation() {
         return "";
     }
 }

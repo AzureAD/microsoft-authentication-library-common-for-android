@@ -72,7 +72,7 @@ public class PredefinedKeyLoader extends AES256KeyLoader {
 
     @Override
     @NonNull
-    public String getCipherAlgorithm(){
+    public String getCipherTransformation(){
         return CIPHER_ALGORITHM;
     }
 }

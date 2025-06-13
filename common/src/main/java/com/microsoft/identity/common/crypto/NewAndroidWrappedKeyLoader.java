@@ -270,7 +270,7 @@ public class NewAndroidWrappedKeyLoader extends AES256KeyLoader {
     }
 
     @Override
-    public @NotNull String getCipherAlgorithm() {
+    public @NotNull String getCipherTransformation() {
         return mKekManager.getCipherTransformation();
     }
 }
