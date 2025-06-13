@@ -22,26 +22,29 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.opentelemetry;
 
-import java.util.Arrays;
+import com.microsoft.identity.common.java.logging.Logger;
+
 import java.util.List;
 
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.BaggageBuilder;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 
 /**
  * Utility class for working with OpenTelemetry Baggage objects.
  */
-public class BaggageUtility {
+public class BaggageExtension {
 
-    private static final String TAG = BaggageUtility.class.getSimpleName();
+    private static final String TAG = BaggageExtension.class.getSimpleName();
 
     /**
      * Default constructor.
      */
-    private BaggageUtility() {
+    private BaggageExtension() {
         // Utility class, private constructor to prevent instantiation
     }
 
@@ -66,5 +69,25 @@ public class BaggageUtility {
         }
 
         return baggageBuilder.build();
+    }
+
+    /**
+     * Makes the provided Baggage current in the context, catching any exceptions silently.
+     * This is useful in scenarios where Baggage propagation should not interrupt normal operation flow.
+     *
+     * @param baggage The Baggage to make current.
+     * @return the resulting scope.
+     */
+    public static Scope makeBaggageCurrent(final Baggage baggage) {
+        if (baggage == null) {
+            return SpanExtension.NoopScope.INSTANCE;
+        }
+
+        try {
+            return baggage.storeInContext(Context.current()).makeCurrent();
+        } catch (Exception e) {
+            Logger.error(TAG + ":makeBaggageCurrent", e.getMessage(), e);
+            return SpanExtension.NoopScope.INSTANCE;
+        }
     }
 }
