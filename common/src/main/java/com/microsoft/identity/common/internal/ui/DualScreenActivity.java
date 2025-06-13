@@ -63,15 +63,19 @@ public class DualScreenActivity extends FragmentActivity {
     private void initializeContentView(){
         super.setContentView(R.layout.dual_screen_layout);
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_HANDLING_FOR_EDGE_TO_EDGE)) {
-            ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (view, insets) -> {
-                int topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
-                int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
-                int leftInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).left; // Get left system bar inset
-                int rightInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).right; // Get right system bar inset
+            try {
+                ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (view, insets) -> {
+                    int topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
+                    int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
+                    int leftInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).left;
+                    int rightInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).right;
 
-                view.setPadding(leftInset, topInset, rightInset, bottomInset);
-                return insets;
-            });
+                    view.setPadding(leftInset, topInset, rightInset, bottomInset);
+                    return insets;
+                });
+            } catch (final Throwable throwable) {
+                Logger.warn("DualScreenActivity:initializeContentView", "Failed to set OnApplyWindowInsetsListener");
+            }
         }
         adjustLayoutForDualScreenActivity();
     }
