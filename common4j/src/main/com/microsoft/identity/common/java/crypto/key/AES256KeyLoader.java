@@ -38,7 +38,7 @@ public abstract class AES256KeyLoader implements ISecretKeyLoader {
      * Shared instance of AES256SecretKeyGenerator.
      * Created once and reused across all instances to avoid unnecessary object creation.
      */
-    private static final AES256SecretKeyGenerator AES_256_KEY_GENERATOR = new AES256SecretKeyGenerator();
+    private static final ISecretKeyGenerator AES_256_KEY_GENERATOR = new AES256SecretKeyGenerator();
 
     /**
      * Returns an AES-256 secret key generator.
@@ -50,7 +50,7 @@ public abstract class AES256KeyLoader implements ISecretKeyLoader {
      */
     @Override
     @NotNull
-    public AES256SecretKeyGenerator getSecretKeyGenerator() {
+    public ISecretKeyGenerator getSecretKeyGenerator() {
         return AES_256_KEY_GENERATOR;
     }
 }

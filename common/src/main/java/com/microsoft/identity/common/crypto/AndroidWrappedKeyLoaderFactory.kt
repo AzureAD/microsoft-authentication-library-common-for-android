@@ -35,6 +35,7 @@ import com.microsoft.identity.common.java.flighting.CommonFlightsManager
  * different implementations without affecting client code.
  */
 object AndroidWrappedKeyLoaderFactory {
+    const val WRAPPED_KEY_KEY_IDENTIFIER: String = "A001"
     /**
      * Creates an appropriate wrapped key loader instance based on current feature flags.
      *
