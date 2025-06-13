@@ -67,6 +67,6 @@ public class MockAES256KeyLoader extends AES256KeyLoader {
     @NotNull
     @Override
     public String getCipherTransformation() {
-        return "";
+        return "AES/CBC/PKCS5Padding";
     }
 }
