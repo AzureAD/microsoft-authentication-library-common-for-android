@@ -109,8 +109,8 @@ class CryptoParameterSpecFactory(private val context: Context, private val keyAl
         getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY)
     private val keySpecWithoutPurposeKey =
         getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY)
-    private val keySpecWithOAEP =
-        getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING)
+    private val keySpecWithOAEP = true
+        //getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING)
 
     init {
         val methodTag = "$TAG:init"

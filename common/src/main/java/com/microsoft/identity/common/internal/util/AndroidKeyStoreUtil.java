@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.util;
 
 import android.os.Build;
+import android.util.Log;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -362,7 +363,7 @@ public class AndroidKeyStoreUtil {
         final Throwable exception;
         final String errCode;
         try {
-            Logger.verbose(methodTag, "Wrap secret key with a KeyPair.");
+            Log.i(methodTag, "Wrap a key with algorithm: " + wrapAlgorithm);
             final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm);
             if (algorithmParameterSpec != null) {
                 wrapCipher.init(Cipher.WRAP_MODE, keyToWrap.getPublic(), algorithmParameterSpec);
@@ -421,6 +422,7 @@ public class AndroidKeyStoreUtil {
         final Throwable exception;
         final String errCode;
         try {
+            Log.i(methodTag, "unwrap a key with algorithm: " + wrapAlgorithm);
             final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm);
             if (algorithmParameterSpec != null) {
                 wrapCipher.init(Cipher.UNWRAP_MODE, keyPairForUnwrapping.getPrivate(), algorithmParameterSpec);
