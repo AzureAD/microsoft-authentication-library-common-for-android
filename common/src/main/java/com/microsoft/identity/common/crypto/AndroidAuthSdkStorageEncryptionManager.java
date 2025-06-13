@@ -26,7 +26,6 @@ import android.content.Context;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.java.crypto.StorageEncryptionManager;
-import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
 import com.microsoft.identity.common.java.crypto.key.ISecretKeyLoader;
 import com.microsoft.identity.common.java.crypto.key.PredefinedKeyLoader;
 import com.microsoft.identity.common.logging.Logger;
@@ -55,7 +54,7 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
     public static final String WRAPPED_KEY_FILE_NAME = "adalks";
 
     private final PredefinedKeyLoader mPredefinedKeyLoader;
-    private final AndroidWrappedKeyLoader mKeyStoreKeyLoader;
+    private final ISecretKeyLoader mKeyStoreKeyLoader;
 
     public AndroidAuthSdkStorageEncryptionManager(@NonNull final Context context) {
         if (AuthenticationSettings.INSTANCE.getSecretKeyData() == null) {
@@ -73,7 +72,7 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
 
     @Override
     @NonNull
-    public AES256KeyLoader getKeyLoaderForEncryption() {
+    public ISecretKeyLoader getKeyLoaderForEncryption() {
         if (mPredefinedKeyLoader != null) {
             return mPredefinedKeyLoader;
         }
@@ -89,14 +88,14 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
         final String keyIdentifier = getKeyIdentifierFromCipherText(cipherText);
         if (PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER.equalsIgnoreCase(keyIdentifier)) {
             if (mPredefinedKeyLoader != null) {
-                return Collections.<ISecretKeyLoader>singletonList(mPredefinedKeyLoader);
+                return Collections.singletonList(mPredefinedKeyLoader);
             } else {
                 throw new IllegalStateException(
                         "Cipher Text is encrypted by USER_PROVIDED_KEY_IDENTIFIER, " +
                                 "but mPredefinedKeyLoader is null.");
             }
-        } else if (AndroidWrappedKeyLoader.WRAPPED_KEY_KEY_IDENTIFIER.equalsIgnoreCase(keyIdentifier)) {
-            return Collections.<ISecretKeyLoader>singletonList(mKeyStoreKeyLoader);
+        } else if (AndroidWrappedKeyLoaderFactory.WRAPPED_KEY_KEY_IDENTIFIER.equalsIgnoreCase(keyIdentifier)) {
+            return Collections.singletonList(mKeyStoreKeyLoader);
         }
 
         Logger.warn(methodTag,
