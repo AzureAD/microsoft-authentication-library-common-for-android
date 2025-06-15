@@ -55,7 +55,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizat
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CrossCloudChallengeHandler;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
@@ -167,6 +167,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (StringUtil.isNullOrEmpty(url)) {
             throw new IllegalArgumentException("Redirect to empty url in web view.");
         }
+
         return handleUrl(view, url);
     }
 
@@ -223,7 +224,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Logger.info(methodTag, "Removing AuthUx JavaScript Interface");
             view.removeJavascriptInterface(AuthUxJavaScriptInterface.Companion.getInterfaceName());
         }
-
 
         try {
             if (isPkeyAuthUrl(formattedURL)) {
@@ -303,11 +303,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD) && isCrossCloudRedirect(formattedURL)) {
                 Logger.info(methodTag,"Navigation contains cross cloud redirect.");
                 processCloudRedirectAndPrtHeader(view, url);
-            }
-             else {
+            } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW) && isWebCpEnrollmentUrl(url)) {
+                Logger.info(methodTag,"Navigation contains web cp enrollment url.");
+                processWebCpEnrollmentUrl(view, url);
+            } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW) && isWebCpAuthorizeUrl(url)) {
+                processWebCpAuthorize(view, url);
+            } else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
                 processInvalidUrl(url);
-
                 return false;
             }
         } catch (final ClientException exception) {
@@ -425,6 +428,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return url.startsWith(AMAZON_APP_REDIRECT_PREFIX);
     }
 
+    private boolean isWebCpEnrollmentUrl(@NonNull final String url) {
+        return url.startsWith(AuthenticationConstants.Broker.WEBCP_ENROLLMENT_URL);
+    }
+
+    private boolean isWebCpAuthorizeUrl(@NonNull final String url) {
+        // URL is for an authorize request and contains the client_id of the WebCP app.
+        return url.contains("authorize?client_id=74bcdadc-2fdc-4bb3-8459-76d06952a0e9");
+    }
+
     private boolean isHeaderForwardingRequiredUri(@NonNull final String url) {
         // MSAL makes MSA requests first to login.microsoftonline.com, and then gets redirected to login.live.com.
         // This drops all the headers, which can have credentials useful for SSO and correlationIds useful for
@@ -476,20 +488,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processWebsiteRequest";
-
         view.stopLoading();
 
-        if (url.contains(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER)) {
+        if (isDeviceCaRequest(url)) {
             Logger.info(methodTag, "This is a device CA request.");
-            final PackageHelper packageHelper = new PackageHelper(getActivity().getPackageManager());
 
-            // If CP is installed, redirect to CP.
-            // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
-            //       CP is currently working on this.
-            //       Until that comes, we'll only handle this in ipphone.
-            if (packageHelper.isPackageInstalledAndEnabled(IPPHONE_APP_PACKAGE_NAME) &&
-                    IPPHONE_APP_SIGNATURE.equals(packageHelper.getSha1SignatureForPackage(IPPHONE_APP_PACKAGE_NAME)) &&
-                    packageHelper.isPackageInstalledAndEnabled(COMPANY_PORTAL_APP_PACKAGE_NAME)) {
+            if (shouldLaunchCompanyPortal()) {
+                // If CP is installed, redirect to CP.
+                // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
+                //       CP is currently working on this.
+                //       Until that comes, we'll only handle this in ipphone.
                 try {
                     launchCompanyPortal();
                     return;
@@ -498,14 +506,62 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 }
             }
 
-            // Otherwise, launch in Browser.
-            openLinkInBrowser(url);
-            returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
-            return;
+            loadDeviceCaUrl(url, view);
         }
 
+        Logger.info(methodTag, "Not a device CA request. Redirecting to browser.");
         openLinkInBrowser(url);
         returnResult(RawAuthorizationResult.ResultCode.CANCELLED);
+    }
+
+    private boolean isDeviceCaRequest(@NonNull final String url) {
+        return url.contains(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+    }
+
+    private boolean shouldLaunchCompanyPortal() {
+        PackageHelper packageHelper = new PackageHelper(getActivity().getPackageManager());
+
+        return packageHelper.isPackageInstalledAndEnabled(IPPHONE_APP_PACKAGE_NAME)
+                && IPPHONE_APP_SIGNATURE.equals(packageHelper.getSha1SignatureForPackage(IPPHONE_APP_PACKAGE_NAME))
+                && packageHelper.isPackageInstalledAndEnabled(COMPANY_PORTAL_APP_PACKAGE_NAME);
+    }
+
+    private void loadDeviceCaUrl(@NonNull final String originalUrl, @NonNull final WebView view) {
+        final String methodTag = TAG + ":loadDeviceCaUrl";
+        final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
+        final Span span = spanContext != null ?
+                OTelUtility.createSpanFromParent(SpanName.ProcessWebCpRedirects.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessWebCpRedirects.name());
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)) {
+            Logger.info(methodTag, "Loading device CA request in WebView.");
+            span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), true);
+            String httpsUrl = originalUrl.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
+            view.loadUrl(httpsUrl, mRequestHeaders);
+        } else {
+            Logger.info(methodTag, "Loading device CA request in browser.");
+            span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), false);
+            openLinkInBrowser(originalUrl);
+            returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
+        }
+    }
+
+
+    private void processWebCpEnrollmentUrl(@NonNull final WebView view, @NonNull final String url) {
+        final String methodTag = TAG + ":processWebCpEnrollmentUrl";
+        final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
+        final Span span = spanContext != null ?
+                OTelUtility.createSpanFromParent(SpanName.ProcessWebCpRedirects.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessWebCpRedirects.name());
+        span.setAttribute(AttributeName.is_webcp_enrollment_request.name(), true);
+        view.stopLoading();
+        Logger.info(methodTag, "Loading WebCP enrollment url in browser.");
+        // This is a WebCP enrollment URL, so we need to open it in the browser (it does not work in WebView as google enrollment is enforced to be done in browser).
+        openLinkInBrowser(url);
+        final int threadSleepForIntentToLaunch = 5000; // 5 secs pause before the intent is launched and flow is killed for smooth transition.
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
+            }
+        }, threadSleepForIntentToLaunch);
     }
 
     private boolean processPlayStoreURL(@NonNull final WebView view, @NonNull final String url) {
@@ -580,7 +636,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Logger.warn(methodTag, "Unable to find an app to resolve the activity.");
         }
     }
-
     private void processWebCpRequest(@NonNull final WebView view, @NonNull final String url) {
 
         view.stopLoading();
@@ -688,7 +743,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processInvalidUrl(@NonNull final String url) {
         final String methodTag = TAG + ":processInvalidUrl";
 
-        Logger.infoPII(methodTag,"We are declining to override loading and redirect to invalid URL: '"
+        Logger.info(methodTag,"We are declining to override loading and redirect to invalid URL: '"
                 + removeQueryParametersOrRedact(url) + "' the user's url pattern is '" + mRedirectUrl + "'");
     }
 
@@ -735,6 +790,20 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
+     * This method is used to process the webcp redirect and re-attach the PRT header to the request.
+     */
+    private void processWebCpAuthorize(@NonNull final WebView view, @NonNull final String url) {
+        final String methodTag = TAG + ":processWebCPAuthorize";
+        Logger.info(methodTag, "Processing WebCP authorize request.");
+        final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
+        final Span span = spanContext != null ?
+                OTelUtility.createSpanFromParent(SpanName.ProcessWebCpRedirects.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessWebCpRedirects.name());
+        span.setAttribute(AttributeName.is_webcp_authorize_request.name(), true);
+        final ReAttachPrtHandler reAttachPrtHandler = new ReAttachPrtHandler(view, mRequestHeaders, span);
+        reAttachPrtHeader(url, reAttachPrtHandler, view, methodTag, span);
+    }
+
+    /**
      * This method is used to process the cross cloud redirect and attach the PRT header to the request.
      */
     private void processCloudRedirectAndPrtHeader(@NonNull final WebView view, @NonNull final String url) {
@@ -743,20 +812,20 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         final Span span = spanContext != null ?
                 OTelUtility.createSpanFromParent(SpanName.ProcessCrossCloudRedirect.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessCrossCloudRedirect.name());
-        final CrossCloudChallengeHandler crossCloudChallengeHandler = new CrossCloudChallengeHandler(view, mRequestHeaders, span);
-        processCloudRedirectAndPrtHeaderInternal(url, crossCloudChallengeHandler, view, methodTag, span);
+        final ReAttachPrtHandler reAttachPrtHandler = new ReAttachPrtHandler(view, mRequestHeaders, span);
+        reAttachPrtHeader(url, reAttachPrtHandler, view, methodTag, span);
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    public void processCloudRedirectAndPrtHeaderInternal(@NonNull final String url, @NonNull final CrossCloudChallengeHandler crossCloudChallengeHandler, @NonNull final WebView view, @NonNull final String methodTag, @NonNull final Span span) {
+    public void reAttachPrtHeader(@NonNull final String url, @NonNull final ReAttachPrtHandler reAttachPrtHandler, @NonNull final WebView view, @NonNull final String methodTag, @NonNull final Span span) {
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
-            crossCloudChallengeHandler.processChallenge(url);
+            reAttachPrtHandler.processChallenge(url);
             span.setStatus(StatusCode.OK);
         } catch (final Exception e) {
             // No op if an exception happens
-            Logger.warn(methodTag, "Error processing cross cloud redirect and attaching PRT header." + e);
+            Logger.warn(methodTag, "Error attaching PRT header." + e);
             span.recordException(e);
-            view.loadUrl(url, mRequestHeaders);
+            view.loadUrl(url, mRequestHeaders); //
         } finally {
             span.end();
         }

@@ -64,4 +64,5 @@ public enum SpanName {
     ProcessCrossCloudRedirect,
     SwitchBrowserResume,
     SwitchBrowserProcess,
+    ProcessWebCpRedirects
 }
