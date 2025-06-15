@@ -39,7 +39,6 @@ class ReAttachPrtHeaderHandler(
     private val span : Span
 ) : IChallengeHandler<String, Void> {
     private val TAG = ReAttachPrtHeaderHandler::class.java.simpleName
-
     override fun processChallenge(inputUrl: String): Void? {
         Logger.info(TAG, "Processing challenge to attach prt header.")
         modifyHeadersWithRefreshTokenCredential(inputUrl)
