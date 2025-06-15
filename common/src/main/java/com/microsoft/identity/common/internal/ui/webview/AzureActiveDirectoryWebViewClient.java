@@ -55,7 +55,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizat
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHandler;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHeaderHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
@@ -187,7 +187,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (StringUtil.isNullOrEmpty(url)) {
             throw new IllegalArgumentException("Redirect to empty url in web view.");
         }
-
         return handleUrl(view, url);
     }
 
@@ -456,7 +455,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isWebCpAuthorizeUrl(@NonNull final String url) {
         // URL is for an authorize request and contains the client_id of the WebCP app.
-        return url.contains("authorize?client_id=74bcdadc-2fdc-4bb3-8459-76d06952a0e9");
+        return url.contains(AuthenticationConstants.Broker.WEBCP_AUTHORIZE_REDIRECT_URL);
     }
 
     private boolean isHeaderForwardingRequiredUri(@NonNull final String url) {
@@ -529,11 +528,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
 
             loadDeviceCaUrl(url, view);
+        } else {
+            Logger.info(methodTag, "Not a device CA request. Redirecting to browser.");
+            openLinkInBrowser(url);
+            returnResult(RawAuthorizationResult.ResultCode.CANCELLED);
         }
-
-        Logger.info(methodTag, "Not a device CA request. Redirecting to browser.");
-        openLinkInBrowser(url);
-        returnResult(RawAuthorizationResult.ResultCode.CANCELLED);
     }
 
     private boolean isDeviceCaRequest(@NonNull final String url) {
@@ -821,8 +820,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final Span span = spanContext != null ?
                 OTelUtility.createSpanFromParent(SpanName.ProcessWebCpRedirects.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessWebCpRedirects.name());
         span.setAttribute(AttributeName.is_webcp_authorize_request.name(), true);
-        final ReAttachPrtHandler reAttachPrtHandler = new ReAttachPrtHandler(view, mRequestHeaders, span);
-        reAttachPrtHeader(url, reAttachPrtHandler, view, methodTag, span);
+        final ReAttachPrtHeaderHandler reAttachPrtHeaderHandler = new ReAttachPrtHeaderHandler(view, mRequestHeaders, span);
+        reAttachPrtHeader(url, reAttachPrtHeaderHandler, view, methodTag, span);
     }
 
     /**
@@ -834,12 +833,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         final Span span = spanContext != null ?
                 OTelUtility.createSpanFromParent(SpanName.ProcessCrossCloudRedirect.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessCrossCloudRedirect.name());
-        final ReAttachPrtHandler reAttachPrtHandler = new ReAttachPrtHandler(view, mRequestHeaders, span);
-        reAttachPrtHeader(url, reAttachPrtHandler, view, methodTag, span);
+        final ReAttachPrtHeaderHandler reAttachPrtHeaderHandler = new ReAttachPrtHeaderHandler(view, mRequestHeaders, span);
+        reAttachPrtHeader(url, reAttachPrtHeaderHandler, view, methodTag, span);
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    public void reAttachPrtHeader(@NonNull final String url, @NonNull final ReAttachPrtHandler reAttachPrtHandler, @NonNull final WebView view, @NonNull final String methodTag, @NonNull final Span span) {
+    public void reAttachPrtHeader(@NonNull final String url, @NonNull final ReAttachPrtHeaderHandler reAttachPrtHandler, @NonNull final WebView view, @NonNull final String methodTag, @NonNull final Span span) {
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             reAttachPrtHandler.processChallenge(url);
             span.setStatus(StatusCode.OK);
