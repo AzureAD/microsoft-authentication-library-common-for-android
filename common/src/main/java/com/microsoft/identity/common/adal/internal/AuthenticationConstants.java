@@ -1273,6 +1273,11 @@ public final class AuthenticationConstants {
         public static final String WEBCP_ENROLLMENT_URL = "https://enterprise.google.com/android/enroll";
 
         /**
+         * Redirect URL from WebCP that should launch the authorization flow.
+         */
+        public static final String WEBCP_AUTHORIZE_REDIRECT_URL = "authorize?client_id=74bcdadc-2fdc-4bb3-8459-76d06952a0e9";
+
+        /**
          * A query param indicating that this is an intune device CA link.
          */
         public static final String BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "&ismdmurl=1";

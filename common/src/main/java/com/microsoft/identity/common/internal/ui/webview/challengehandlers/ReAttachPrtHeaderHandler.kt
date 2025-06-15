@@ -33,15 +33,15 @@ import io.opentelemetry.api.trace.Span
 /**
  * Handler for attaching prt credential header on web view in redirect scenarios.
  */
-class ReAttachPrtHandler(
+class ReAttachPrtHeaderHandler(
     private val webView: WebView,
     private val headers: HashMap<String, String>,
     private val span : Span
 ) : IChallengeHandler<String, Void> {
-    private val TAG = ReAttachPrtHandler::class.java.simpleName
+    private val TAG = ReAttachPrtHeaderHandler::class.java.simpleName
 
     override fun processChallenge(inputUrl: String): Void? {
-        Logger.info(TAG, "Processing challenge of a cross cloud request.")
+        Logger.info(TAG, "Processing challenge to attach prt header.")
         modifyHeadersWithRefreshTokenCredential(inputUrl)
         webView.loadUrl(inputUrl, headers)
         return null
