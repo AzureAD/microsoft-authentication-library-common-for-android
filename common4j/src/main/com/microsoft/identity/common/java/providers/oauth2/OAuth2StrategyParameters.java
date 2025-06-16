@@ -51,6 +51,9 @@ public class OAuth2StrategyParameters {
     @Nullable
     public final List<String> mChallengeTypes;
 
+    @Nullable
+    public final List<String> mCapabilities;
+
     // TODO: Consider moving this field into MicrosoftStsOAuth2Configuration and updating it's endpoint methods
     //  to use OpenId Configuration.
     private transient boolean mUsingOpenIdConfiguration;
