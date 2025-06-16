@@ -31,7 +31,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHandler;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHeaderHandler;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler;
@@ -223,7 +223,7 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Test
     public void testProcessCloudRedirectAndPrtHeaderInternalSuccess() {
-        ReAttachPrtHandler mockCrossCloudChallengeHandler = Mockito.mock(ReAttachPrtHandler.class);
+        ReAttachPrtHeaderHandler mockCrossCloudChallengeHandler = Mockito.mock(ReAttachPrtHeaderHandler.class);
         try {
             mWebViewClient.reAttachPrtHeader(TEST_CROSS_CLOUD_REDIRECT_URL, mockCrossCloudChallengeHandler, mMockWebView, "methodTag", Span.current());
         } catch (Exception e) {
@@ -233,7 +233,7 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Test
     public void testProcessCloudRedirectAndPrtHeaderInternalException() {
-        ReAttachPrtHandler mockReAttachPrtHandler = Mockito.mock(ReAttachPrtHandler.class);
+        ReAttachPrtHeaderHandler mockReAttachPrtHandler = Mockito.mock(ReAttachPrtHeaderHandler.class);
         WebView mockWebView = Mockito.mock(WebView.class);
         Mockito.doThrow(new RuntimeException("Test Exception")).when(mockReAttachPrtHandler).processChallenge(TEST_CROSS_CLOUD_REDIRECT_URL);
         try {

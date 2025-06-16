@@ -87,6 +87,7 @@ import java.security.Principal;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AMAZON_APP_REDIRECT_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
@@ -115,6 +116,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public static final String ERROR = "error";
     public static final String ERROR_DESCRIPTION = "error_description";
     private static final String DEVICE_CERT_ISSUER = "CN=MS-Organization-Access";
+    // 3 secs wait for the intent to be launched and the current flow is killed for smooth transition.
+    private static final int THREAD_SLEEP_FOR_INTENT_LAUNCH_MS = 3;
     private final String mRedirectUrl;
     private final CertBasedAuthFactory mCertBasedAuthFactory;
     private AbstractCertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
@@ -576,13 +579,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         Logger.info(methodTag, "Loading WebCP enrollment url in browser.");
         // This is a WebCP enrollment URL, so we need to open it in the browser (it does not work in WebView as google enrollment is enforced to be done in browser).
         openLinkInBrowser(url);
-        final int threadSleepForIntentToLaunch = 5000; // 5 secs pause before the intent is launched and flow is killed for smooth transition.
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
             }
-        }, threadSleepForIntentToLaunch);
+        }, TimeUnit.SECONDS.toMillis(THREAD_SLEEP_FOR_INTENT_LAUNCH_MS));
     }
 
     private boolean processPlayStoreURL(@NonNull final WebView view, @NonNull final String url) {
