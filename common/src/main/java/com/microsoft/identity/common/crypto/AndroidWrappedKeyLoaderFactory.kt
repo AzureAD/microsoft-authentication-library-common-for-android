@@ -36,6 +36,7 @@ import com.microsoft.identity.common.java.flighting.CommonFlightsManager
  */
 object AndroidWrappedKeyLoaderFactory {
     const val WRAPPED_KEY_KEY_IDENTIFIER: String = "A001"
+    var skipKeyInvalidationCheck: Boolean = false
     /**
      * Creates an appropriate wrapped key loader instance based on current feature flags.
      *
@@ -59,8 +60,7 @@ object AndroidWrappedKeyLoaderFactory {
                 .isFlightEnabled(CommonFlight.ENABLE_NEW_ANDROID_WRAPPED_KEY_LOADER)
 
         return if (useNewAndroidWrappedKeyLoader) {
-            // TODO : Replace with the new loader on the next PR
-            AndroidWrappedKeyLoader(
+            NewAndroidWrappedKeyLoader(
                 keyIdentifier,
                 fileName,
                 context

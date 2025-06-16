@@ -122,6 +122,11 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_JS_API_FOR_AUTHUX("EnableJsApiForAuthUx", true),
 
     /**
+     * Flight to enable the new KEK algorithm for encryption/decryption of keys.
+     */
+    ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING("EnableOAEPWithSHAAndMGF1Padding", true),
+
+    /**
      * Flight to enable the new Android wrapped key loader.
      */
     ENABLE_NEW_ANDROID_WRAPPED_KEY_LOADER("EnableNewAndroidWrappedKeyLoader", true);

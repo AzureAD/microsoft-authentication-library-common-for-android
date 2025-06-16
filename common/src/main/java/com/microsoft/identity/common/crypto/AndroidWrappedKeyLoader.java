@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.crypto;
 
+import static com.microsoft.identity.common.crypto.AndroidWrappedKeyLoaderFactory.WRAPPED_KEY_KEY_IDENTIFIER;
+
 import android.content.Context;
 import android.os.Build;
 import android.security.KeyPairGeneratorSpec;
@@ -81,11 +83,6 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     private static final String CIPHER_TRANSFORMATION = "AES/CBC/PKCS5Padding";
     private static final String TAG = AndroidWrappedKeyLoader.class.getSimpleName() + "#";
 
-    /**
-     * Should KeyStore and key file check for validity before every key load be skipped.
-     */
-    @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
-    public static boolean sSkipKeyInvalidationCheck = false;
 
     /**
      * Algorithm for key wrapping.
@@ -96,11 +93,6 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      * Algorithm for the wrapping key itself.
      */
     private static final String WRAP_KEY_ALGORITHM = "RSA";
-
-    /**
-     * Indicate that token item is encrypted with the key loaded in this class.
-     */
-    public static final String WRAPPED_KEY_KEY_IDENTIFIER = "A001";
 
     // Exposed for testing only.
     /* package */ static final int KEY_FILE_SIZE = 1024;
@@ -121,7 +113,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     private final CachedData<SecretKey> mKeyCache = new CachedData<SecretKey>() {
         @Override
         public SecretKey getData() {
-            if (!sSkipKeyInvalidationCheck &&
+            if (!AndroidWrappedKeyLoaderFactory.INSTANCE.getSkipKeyInvalidationCheck() &&
                     (!AndroidKeyStoreUtil.canLoadKey(mAlias) || !getKeyFile().exists())) {
                 this.clear();
             }

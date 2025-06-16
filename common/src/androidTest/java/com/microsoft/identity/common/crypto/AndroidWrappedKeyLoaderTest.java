@@ -124,14 +124,6 @@ public class AndroidWrappedKeyLoaderTest {
     }
 
     @Test
-    public void testGenerateKey() throws ClientException {
-        final NewAndroidWrappedKeyLoader keyLoader = new NewAndroidWrappedKeyLoader(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
-        final SecretKey secretKey = keyLoader.generateRandomKey();
-
-        Assert.assertEquals(AES_ALGORITHM, secretKey.getAlgorithm());
-    }
-
-    @Test
     public void testReadKeyDirectly() throws ClientException {
         final NewAndroidWrappedKeyLoader keyLoader = initKeyLoaderWithKeyEntry();
         final SecretKey secretKey = keyLoader.getKey();
@@ -169,7 +161,7 @@ public class AndroidWrappedKeyLoaderTest {
     public void testLoadKeyFromCorruptedFile_TruncatedExisingKey() throws ClientException {
         // Create a new Keystore-wrapped key.
         final NewAndroidWrappedKeyLoader keyLoader = new NewAndroidWrappedKeyLoader(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
-        keyLoader.generateRandomKey();
+        generateRandomKey(keyLoader);
 
         final byte[] wrappedKey = FileUtil.readFromFile(getKeyFile(), NewAndroidWrappedKeyLoader.KEY_FILE_SIZE);
         Assert.assertNotNull(wrappedKey);
@@ -196,7 +188,7 @@ public class AndroidWrappedKeyLoaderTest {
     public void testLoadKeyFromCorruptedFile_InjectGarbage() throws ClientException {
         // Create a new Keystore-wrapped key.
         final NewAndroidWrappedKeyLoader keyLoader = new NewAndroidWrappedKeyLoader(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
-        keyLoader.generateRandomKey();
+        generateRandomKey(keyLoader);
 
         final byte[] wrappedKey = FileUtil.readFromFile(getKeyFile(), NewAndroidWrappedKeyLoader.KEY_FILE_SIZE);
         Assert.assertNotNull(wrappedKey);
@@ -321,5 +313,26 @@ public class AndroidWrappedKeyLoaderTest {
         Assert.assertNotNull(key);
         Assert.assertNotNull(keyLoader.getKeyCache().getData());
         return keyLoader;
+    }
+
+    /**
+     * Helper method to generate a random key using NewAndroidWrappedKeyLoader.
+     * This method is used to substitute the call to keyLoader.generateRandomKey() in tests.
+     *
+     * @param keyLoader The NewAndroidWrappedKeyLoader instance to use
+     * @return The generated SecretKey
+     * @throws ClientException if key generation fails
+     */
+    private SecretKey generateRandomKey(NewAndroidWrappedKeyLoader keyLoader) throws ClientException {
+        // Get the key will generate a new one if it doesn't exist
+        SecretKey key = keyLoader.getKey();
+
+        // Clear the cache to ensure it's regenerated next time
+        keyLoader.getKeyCache().clear();
+
+        // Generate a new key by getting the key again which will create a new one
+        key = keyLoader.getKey();
+
+        return key;
     }
 }

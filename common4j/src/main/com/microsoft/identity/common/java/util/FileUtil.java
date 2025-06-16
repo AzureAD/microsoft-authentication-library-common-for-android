@@ -22,13 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
+import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -146,13 +146,17 @@ public class FileUtil {
         }
     }
 
-
-
-
-
+    /**
+     * Read a string from a file.
+     *
+     * @param file the file to read from.
+     * @return the content of the file as a String, or null if an error occurs.
+     */
     public static String readStringFromFile(File file) {
+        final String methodTag = TAG + ":readStringFromFile";
+
         try (FileInputStream fis = new FileInputStream(file);
-             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+             final ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 
             byte[] buffer = new byte[1024];
             int length;
@@ -162,27 +166,28 @@ public class FileUtil {
 
             return baos.toString("UTF-8");
         } catch (IOException e) {
+            Logger.error(methodTag, e.getMessage(), e);
             return null; // or handle the exception as needed
         }
     }
+
+    /**
+     * Write a string to a file.
+     *
+     * @param content the string content to write.
+     * @param file    the file to write to.
+     * @throws ClientException if an error occurs during writing.
+     */
     public static void writeStringToFile(String content, File file) throws ClientException {
         final String methodTag = TAG + ":writeStringToFile";
 
         try (FileOutputStream fos = new FileOutputStream(file)) {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
             baos.write(content.getBytes(StandardCharsets.UTF_8));
             baos.writeTo(fos);
-        } catch (IOException e) {
-            final ClientException clientException = new ClientException(
-                    IO_ERROR,
-                    e.getMessage(),
-                    e
-            );
-
-            Logger.error(methodTag, clientException.getErrorCode(), e
-            );
-            throw clientException;
+        } catch (final IOException e) {
+            Logger.error(methodTag, e.getMessage(), e);
+            throw ExceptionAdapter.clientExceptionFromException(e);
         }
     }
-
 }
