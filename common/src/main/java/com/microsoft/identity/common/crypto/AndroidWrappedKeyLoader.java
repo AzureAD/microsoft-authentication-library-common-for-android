@@ -336,7 +336,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      * Generate a new key pair wrapping key based on legacy logic. Call this for API < 23 or as fallback
      * until new key gen specs are stable.
      * @return key pair generated with legacy spec
-     * @throws ClientException if there is an error generating the key pair
+     * @throws ClientException if there is an error generating the key pair.
      */
     @NonNull
     private KeyPair generateKeyPairWithLegacySpec() throws ClientException{
