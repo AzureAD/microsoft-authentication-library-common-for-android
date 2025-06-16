@@ -1,7 +1,7 @@
 vNext
 ----------
 
-Version 21.3.0-RC2
+Version 21.3.0
 ----------
 - [MINOR] changes accommodating the WrappedKeyAlgoIdentifier module (#2667)
 
