@@ -550,7 +550,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 && packageHelper.isPackageInstalledAndEnabled(COMPANY_PORTAL_APP_PACKAGE_NAME);
     }
 
-    private void loadDeviceCaUrl(@NonNull final String originalUrl, @NonNull final WebView view) {
+    @VisibleForTesting
+    protected void loadDeviceCaUrl(@NonNull final String originalUrl, @NonNull final WebView view) {
         final String methodTag = TAG + ":loadDeviceCaUrl";
         final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         final Span span = spanContext != null ?
@@ -848,7 +849,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // No op if an exception happens
             Logger.warn(methodTag, "Error attaching PRT header." + e);
             span.recordException(e);
-            view.loadUrl(url, mRequestHeaders); //
+            view.loadUrl(url, mRequestHeaders);
         } finally {
             span.end();
         }
