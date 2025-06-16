@@ -77,6 +77,7 @@ class SignUpOAuth2StrategyTest {
     private val PASSWORD = "verySafePassword".toCharArray()
     private val CLIENT_ID = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val CHALLENGE_TYPE = "oob password redirect"
+    private val CAPABILITIES = "mfa_required registration_required"
     private val USER_ATTRIBUTES = mapOf("city" to "Dublin")
     private val OOB_CODE = "123456"
     private val CONTINUATION_TOKEN = "iFQ"
@@ -106,6 +107,7 @@ class SignUpOAuth2StrategyTest {
         whenever(mockConfig.getJITChallengeEndpoint()).thenReturn(ApiConstants.MockApi.jitChallengeRequestUrl)
         whenever(mockConfig.getJITContinueEndpoint()).thenReturn(ApiConstants.MockApi.jitContinueRequestUrl)
         whenever(mockConfig.challengeType).thenReturn(CHALLENGE_TYPE)
+        whenever(mockConfig.capabilities).thenReturn(CAPABILITIES)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
             config = mockConfig,

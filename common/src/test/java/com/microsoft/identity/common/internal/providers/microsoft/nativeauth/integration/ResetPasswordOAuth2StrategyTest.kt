@@ -80,6 +80,7 @@ class ResetPasswordOAuth2StrategyTest {
     private val TENANT = "samtoso.onmicrosoft.com"
     private val CLIENT_ID = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val CHALLENGE_TYPE = "oob redirect"
+    private val CAPABILITIES = "mfa_required registration_required"
     private val OOB_CODE = "123456"
     private val CONTINUATION_TOKEN = "1234"
     private val INVALID_GRANT_ERROR = "invalid_grant"
@@ -117,6 +118,7 @@ class ResetPasswordOAuth2StrategyTest {
         whenever(mockConfig.getJITChallengeEndpoint()).thenReturn(ApiConstants.MockApi.jitChallengeRequestUrl)
         whenever(mockConfig.getJITContinueEndpoint()).thenReturn(ApiConstants.MockApi.jitContinueRequestUrl)
         whenever(mockConfig.challengeType).thenReturn(CHALLENGE_TYPE)
+        whenever(mockConfig.capabilities).thenReturn(CAPABILITIES)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
             config = mockConfig,

@@ -83,6 +83,7 @@ class JITOAuthStrategyTest {
 
     private val CLIENT_ID = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val CHALLENGE_TYPE = "oob password redirect"
+    private val CAPABILITIES = "mfa_required registration_required"
     private val CONTINUATION_TOKEN = "12345"
     private val VERIFICATION_CONTACT = "user@email.com"
     private val CHALLENGE_CHANNEL = "email"
@@ -116,6 +117,7 @@ class JITOAuthStrategyTest {
         whenever(mockConfig.getJITChallengeEndpoint()).thenReturn(ApiConstants.MockApi.jitChallengeRequestUrl)
         whenever(mockConfig.getJITContinueEndpoint()).thenReturn(ApiConstants.MockApi.jitContinueRequestUrl)
         whenever(mockConfig.challengeType).thenReturn(CHALLENGE_TYPE)
+        whenever(mockConfig.capabilities).thenReturn(CAPABILITIES)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
             config = mockConfig,
