@@ -557,6 +557,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final Span span = spanContext != null ?
                 OTelUtility.createSpanFromParent(SpanName.ProcessWebCpRedirects.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessWebCpRedirects.name());
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)) {
+            final String tenantIdList = CommonFlightsManager.INSTANCE.getFlightsProvider().getStringValue(CommonFlight.TENANT_LIST_TO_ENABLE_WEB_CP_IN_WEBVIEW);
+            if (StringUtil.isNullOrEmpty(tenantIdList)) {
+                Logger.info(methodTag, "TenantId list is " + tenantIdList);
+                final Map<String, String> urlParams = StringExtensions.getUrlParameters(originalUrl);
+                final String tenantId = urlParams.get("tenantId");
+                if (tenantId != null && !tenantIdList.contains(tenantId)) {
+                    Logger.info(methodTag, "TenantId " + tenantId + " is not in the allowed tenantId list.");
+                } else {
+                    Logger.info(methodTag, "TenantId " + tenantId + " is in the allowed tenantId list.");
+                }
+            }
             Logger.info(methodTag, "Loading device CA request in WebView.");
             span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), true);
             String httpsUrl = originalUrl.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
