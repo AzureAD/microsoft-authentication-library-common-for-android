@@ -497,6 +497,11 @@ public class ClientException extends BaseException {
     public static final String NO_BROWSERS_AVAILABLE = "no_browsers_available";
 
     /**
+     * The device doesn't support hardware wrapped key import.
+     */
+    public static final String DEVICE_NOT_SUPPORT_HARDWARE_WRAPPED_KEY_IMPORT = "device_not_supported_hardware_wrapped_key_import";
+
+    /**
      * Constructor of ClientException.
      *
      * @param errorCode String

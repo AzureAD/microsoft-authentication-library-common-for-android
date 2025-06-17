@@ -36,18 +36,14 @@ class AuthUxJavaScriptInterfaceTest {
     private val mockNumberMatchValue = "00"
 
     private val numberMatchTestPayload = """
-        { 
-            "correlationID": "SOME_CORRELATION_ID" ,
-            "action_name":"write_data", 
-            "action_component":"broker", 
-            "params": 
-            { 
-                "function": "NUMBER_MATCH", 
-                "data": 
-                { 
-                    "sessionID": "$mockSessionId", 
-                    "numberMatch": "$mockNumberMatchValue" 
-                } 
+        {
+            correlationID: w.ServerData.correlationId,
+            action_name: "write_data",
+            action_component: "broker",
+            params: {
+                operation: "number_matching",
+                sessionID: $mockSessionId,
+                code_match: $mockNumberMatchValue
             }
         }
     """.trimIndent()
@@ -64,9 +60,9 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
-    fun `test postMessageToBroker with NUMBER_MATCH function`() {
+    fun `test receiveAuthUxMessage with NUMBER_MATCH function`() {
         // Call the method
-        authUxJavaScriptInterface.postMessageToBroker(numberMatchTestPayload)
+        authUxJavaScriptInterface.receiveAuthUxMessage(numberMatchTestPayload)
 
         // Verify that the data was stored in NumberMatchHelper
         val storedValue = NumberMatchHelper.numberMatchMap[mockSessionId]
@@ -74,17 +70,17 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
-    fun `test postMessageToBroker with empty json`() {
+    fun `test receiveAuthUxMessage with empty json`() {
         // Call the method
-        authUxJavaScriptInterface.postMessageToBroker("{}")
+        authUxJavaScriptInterface.receiveAuthUxMessage("{}")
 
         // Should not get an exception
     }
 
     @Test
-    fun `test postMessageToBroker with non-json string`() {
+    fun `test receiveAuthUxMessage with non-json string`() {
         // Call the method
-        authUxJavaScriptInterface.postMessageToBroker("NotAJson")
+        authUxJavaScriptInterface.receiveAuthUxMessage("NotAJson")
 
         // Should not get an exception
     }

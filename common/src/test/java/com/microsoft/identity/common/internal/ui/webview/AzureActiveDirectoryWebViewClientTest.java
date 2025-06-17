@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CrossCloudChallengeHandler;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
@@ -90,6 +91,8 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_NONCE_REDIRECT_URL = "https://login.microsoftonline.com/organizations/oAuth2/v2.0/authorize?&sso_nonce=ABCD";
     private static final String TEST_CROSS_CLOUD_REDIRECT_URL = "https://login.microsoftonline.us/organizations/oAuth2/v2.0/authorize?x=10";
     private static final String TEST_PUBLIC_CLOUD_REDIRECT_URL = "https://login.microsoftonline.com/organizations/oAuth2/v2.0/authorize?x=10";
+    private static final String TEST_PASSKEY_REDIRECT_URL = "http-auth:PassKey?challenge=challenge&version=1.0&submitUrl=https://login.microsoftonline.com/common/credential?passKeyAuth=1.0%2fpasskey&context=&relyingPartyIdentifier=login.microsoft.com&allowedCredentials=somevalue";
+    private static final String TEST_INTENT_INSTALL_BROKER_REDIRECT_URL = "intent://play.google.com/store/apps/details?id=com.azure.authenticator&referrer=%20adjust_reftag%3Dc6f1p4ErudH2C%26utm_source%3DLanding%2BPage%2BOrganic%2B-%2Bapp%2Bstore%2Bbadges%26utm_campaign%3Dappstore_android&pcampaignid=web_auto_redirect&web_logged_in=0&redirect_entry_point=dp#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.vending;end";
 
     @Before
     public void setup() throws ClientException {
@@ -232,6 +235,48 @@ public class AzureActiveDirectoryWebViewClientTest {
             Mockito.verify(mockWebView).loadUrl(Mockito.anyString(), Mockito.any());
         } catch (Exception e) {
             Assert.fail("Failure is not expected. We should have caught the exception and ignored it. " + e);
+        }
+    }
+
+    public void testUrlOverrideHandlesIntentRedirectUrl() {
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_INTENT_INSTALL_BROKER_REDIRECT_URL));
+    }
+
+    public void setTestPasskeyRedirectUrl() {
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PASSKEY_REDIRECT_URL));
+    }
+
+    @Test
+    public void testPasskeyActivityCastingNoException() {
+        try {
+            // Putting an explicit non-AuthorizationActivity activity here to test that an exception won't be thrown.
+            mActivity = Robolectric.buildActivity(DualScreenActivity.class).get();
+            mWebViewClient = new AzureActiveDirectoryWebViewClient(
+                    mActivity,
+                    new IAuthorizationCompletionCallback() {
+                        @Override
+                        public void onChallengeResponseReceived(@NonNull RawAuthorizationResult response) {
+
+                        }
+
+                        @Override
+                        public void setPKeyAuthStatus(boolean status) {
+                            return;
+                        }
+                    },
+                    new OnPageLoadedCallback() {
+                        @Override
+                        public void onPageLoaded(final String url) {
+                            return;
+                        }
+                    },
+                    TEST_REDIRECT_URI,
+                    Mockito.mock(SwitchBrowserRequestHandler.class));
+            mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PASSKEY_REDIRECT_URL);
+        } catch (ClassCastException e) {
+            Assert.fail("Failure is not expected. The class checks should have prevented this." + e);
+        } catch (Exception e) {
+            Assert.fail("Failure is not expected." + e);
         }
     }
 }

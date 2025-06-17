@@ -39,7 +39,8 @@ import java.util.Collections
  */
 data class BrokerData(val packageName : String,
                       val signingCertificateThumbprint : String,
-                      private val nickName: String?) {
+                      private val nickName: String?,
+                      val appLinkRedirectUri: String? = null) {
     constructor(packageName: String, signingCertificateThumbprint: String):
                 this(packageName, signingCertificateThumbprint, null)
 
@@ -94,70 +95,81 @@ data class BrokerData(val packageName : String,
         val debugMicrosoftAuthenticator = BrokerData(
             AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
             AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE_SHA512,
-            "debugMicrosoftAuthenticator"
+            "debugMicrosoftAuthenticator",
+            AuthenticationConstants.Broker.AUTHENTICATOR_APP_LINK_REDIRECT_URL
         )
 
         @JvmStatic
         val prodMicrosoftAuthenticator = BrokerData(
             AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
             AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE_SHA512,
-            "prodMicrosoftAuthenticator"
+            "prodMicrosoftAuthenticator",
+            AuthenticationConstants.Broker.AUTHENTICATOR_APP_LINK_REDIRECT_URL
         )
 
         @JvmStatic
         val debugCompanyPortal = BrokerData(
             AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
             AuthenticationConstants.Broker.COMPANY_PORTAL_APP_DEBUG_SIGNATURE_SHA512,
-            "debugCompanyPortal"
+            "debugCompanyPortal",
+            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_LINK_REDIRECT_URL
         )
 
         @JvmStatic
         val prodCompanyPortal = BrokerData(
             AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
             AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512,
-            "prodCompanyPortal"
+            "prodCompanyPortal",
+            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_LINK_REDIRECT_URL
         )
 
         @JvmStatic
         val debugBrokerHost = BrokerData(
             AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME,
             AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE_SHA512,
-            "debugBrokerHost"
+            "debugBrokerHost",
+            AuthenticationConstants.Broker.BROKER_HOST_APP_LINK_REDIRECT_URL
         )
 
         @JvmStatic
         val debugMockCp = BrokerData(
             AuthenticationConstants.Broker.MOCK_CP_PACKAGE_NAME,
             AuthenticationConstants.Broker.MOCK_CP_SIGNATURE_SHA512,
-            "debugMockCp"
+            "debugMockCp",
+            AuthenticationConstants.Broker.MOCK_CP_APP_LINK_REDIRECT_URL
         )
 
         @JvmStatic
         val debugMockAuthApp = BrokerData(
             AuthenticationConstants.Broker.MOCK_AUTH_APP_PACKAGE_NAME,
             AuthenticationConstants.Broker.MOCK_AUTH_APP_SIGNATURE_SHA512,
-            "debugMockAuthApp"
+            "debugMockAuthApp",
+            AuthenticationConstants.Broker.MOCK_AUTH_APP_PACKAGE_NAME
         )
 
         @JvmStatic
         val debugMockLtw = BrokerData(
             AuthenticationConstants.Broker.MOCK_LTW_PACKAGE_NAME,
             AuthenticationConstants.Broker.MOCK_LTW_SIGNATURE_SHA512,
-            "debugMockLtw"
+            "debugMockLtw",
+            AuthenticationConstants.Broker.MOCK_LTW_APP_LINK_REDIRECT_URL
         )
 
         @JvmStatic
         val prodLTW = BrokerData(
             AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME,
             AuthenticationConstants.Broker.LTW_APP_SHA512_RELEASE_SIGNATURE,
-            "prodLTW"
+            "prodLTW",
+            AuthenticationConstants.Broker.LTW_APP_LINK_REDIRECT_URL
         )
 
         @JvmStatic
         val debugLTW = BrokerData(
             AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME,
             AuthenticationConstants.Broker.LTW_APP_SHA512_DEBUG_SIGNATURE,
-            "debugLTW"
+            "debugLTW",
+            AuthenticationConstants.Broker.LTW_APP_LINK_REDIRECT_URL
+
         )
 
         @JvmStatic
