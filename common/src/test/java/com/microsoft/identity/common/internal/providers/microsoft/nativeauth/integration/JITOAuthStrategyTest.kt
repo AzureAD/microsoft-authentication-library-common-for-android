@@ -117,7 +117,6 @@ class JITOAuthStrategyTest {
         whenever(mockConfig.getJITChallengeEndpoint()).thenReturn(ApiConstants.MockApi.jitChallengeRequestUrl)
         whenever(mockConfig.getJITContinueEndpoint()).thenReturn(ApiConstants.MockApi.jitContinueRequestUrl)
         whenever(mockConfig.challengeType).thenReturn(CHALLENGE_TYPE)
-        whenever(mockConfig.capabilities).thenReturn(CAPABILITIES)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
             config = mockConfig,
