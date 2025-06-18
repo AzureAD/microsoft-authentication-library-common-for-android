@@ -326,7 +326,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processHeaderForwardingRequiredUri(view, url);
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD) && isCrossCloudRedirect(formattedURL)) {
                 Logger.info(methodTag,"Navigation contains cross cloud redirect.");
-                processCloudRedirectAndPrtHeader(view, url);
+                processCrossCloudRedirect(view, url);
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW) && isWebCpEnrollmentUrl(url)) {
                 Logger.info(methodTag,"Navigation contains web cp enrollment url.");
                 processWebCpEnrollmentUrl(view, url);
@@ -458,7 +458,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isWebCpAuthorizeUrl(@NonNull final String url) {
         // URL is for an authorize request and contains the client_id of the WebCP app.
-        return url.contains(AuthenticationConstants.Broker.WEBCP_AUTHORIZE_REDIRECT_URL);
+        return url.contains(AuthenticationConstants.Broker.WEBCP_AUTHORIZE_URL_PATTERN);
     }
 
     private boolean isHeaderForwardingRequiredUri(@NonNull final String url) {
@@ -580,6 +580,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         Logger.info(methodTag, "Loading WebCP enrollment url in browser.");
         // This is a WebCP enrollment URL, so we need to open it in the browser (it does not work in WebView as google enrollment is enforced to be done in browser).
         openLinkInBrowser(url);
+        // We need to return MDM_FLOW result code as the enrollment is done in browser. But this may sometimes take a few seconds to launch the intent.
+        // So we will wait for a few seconds before returning the result so that the current page in webview does not get closed immediately.
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -830,8 +832,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     /**
      * This method is used to process the cross cloud redirect and attach the PRT header to the request.
      */
-    private void processCloudRedirectAndPrtHeader(@NonNull final WebView view, @NonNull final String url) {
-        final String methodTag = TAG + ":processCloudRedirectAndPrtHeader";
+    private void processCrossCloudRedirect(@NonNull final WebView view, @NonNull final String url) {
+        final String methodTag = TAG + ":processCrossCloudRedirect";
 
         final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         final Span span = spanContext != null ?
