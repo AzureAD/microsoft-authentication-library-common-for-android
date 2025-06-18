@@ -73,7 +73,7 @@ import okio.Okio;
 public class ApiClient {
 
     private static final String DEFAULT_BASE_PATH = "https://msidlabs.vault.azure.net";
-    public static final String BUILD_AUTOMATION_VAULT_BASE_PATH = "https://mobilebuildvault.vault.azure.net";
+    public static final String KEY_VAULT_BASE_PATH = "https://mobilebuildvault.vault.azure.net";
     private boolean debugging = false;
     private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
     private String basePath;
