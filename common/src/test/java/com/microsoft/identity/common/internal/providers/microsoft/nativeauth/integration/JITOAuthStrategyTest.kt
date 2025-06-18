@@ -24,10 +24,6 @@ package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.in
 
 import android.os.Build
 import com.microsoft.identity.common.nativeauth.ApiConstants
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITChallengeAuthMethodCommandParameters
@@ -45,17 +41,10 @@ import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignU
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITContinueApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITIntrospectApiResult
-import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeApiResult
-import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResult
-import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectApiResult
-import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 import com.microsoft.identity.common.nativeauth.MockApiEndpoint
 import com.microsoft.identity.common.nativeauth.MockApiResponseType
 import com.microsoft.identity.common.nativeauth.MockApiUtils
-import io.mockk.InternalPlatformDsl.toArray
-import io.mockk.every
-import io.mockk.mockk
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -69,7 +58,7 @@ import org.robolectric.annotation.Config
 import java.util.UUID
 
 /**
- * These are integration tests using real API responses instead of mocked API responses. This class
+ * These are integration tests using mocked API responses. This class
  * covers all sign up endpoints.
  * These tests run on the mock API, see: $(MOCK_API_URL) in the variable of the pipeline.
  */
@@ -117,6 +106,7 @@ class JITOAuthStrategyTest {
         whenever(mockConfig.getJITChallengeEndpoint()).thenReturn(ApiConstants.MockApi.jitChallengeRequestUrl)
         whenever(mockConfig.getJITContinueEndpoint()).thenReturn(ApiConstants.MockApi.jitContinueRequestUrl)
         whenever(mockConfig.challengeType).thenReturn(CHALLENGE_TYPE)
+        whenever(mockConfig.capabilities).thenReturn(CAPABILITIES)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
             config = mockConfig,
@@ -169,6 +159,7 @@ class JITOAuthStrategyTest {
         )
 
         Assert.assertTrue(jitIntrospectResult is JITIntrospectApiResult.Redirect)
+        Assert.assertNotNull((jitIntrospectResult as JITIntrospectApiResult.Redirect).redirectReason)
     }
 
     @Test
@@ -195,6 +186,7 @@ class JITOAuthStrategyTest {
         )
 
         Assert.assertTrue(jitChallengeResult is JITChallengeApiResult.Redirect)
+        Assert.assertNotNull((jitChallengeResult as JITChallengeApiResult.Redirect).redirectReason)
     }
 
     @Test
@@ -220,5 +212,6 @@ class JITOAuthStrategyTest {
         )
 
         Assert.assertTrue(jitContinueResult is JITContinueApiResult.Redirect)
+        Assert.assertNotNull((jitContinueResult as JITContinueApiResult.Redirect).redirectReason)
     }
 }

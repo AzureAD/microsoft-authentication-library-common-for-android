@@ -37,6 +37,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.interactors.JITIn
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.ResetPasswordInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignInInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignUpInteractor
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpContinueApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResult
@@ -47,6 +48,8 @@ import com.microsoft.identity.common.nativeauth.MockApiEndpoint
 import com.microsoft.identity.common.nativeauth.MockApiResponseType
 import com.microsoft.identity.common.nativeauth.MockApiUtils.Companion.configureMockApi
 import junit.framework.TestCase.assertTrue
+import org.junit.Assert
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -59,7 +62,7 @@ import org.robolectric.annotation.Config
 import java.util.UUID
 
 /**
- * These are integration tests using real API responses instead of mocked API responses. This class
+ * These are integration tests using mocked API responses. This class
  * covers all sign up endpoints.
  * These tests run on the mock API, see: $(MOCK_API_URL) in the variable of the pipeline.
  */
@@ -107,6 +110,7 @@ class SignUpOAuth2StrategyTest {
         whenever(mockConfig.getJITChallengeEndpoint()).thenReturn(ApiConstants.MockApi.jitChallengeRequestUrl)
         whenever(mockConfig.getJITContinueEndpoint()).thenReturn(ApiConstants.MockApi.jitContinueRequestUrl)
         whenever(mockConfig.challengeType).thenReturn(CHALLENGE_TYPE)
+        whenever(mockConfig.capabilities).thenReturn(CAPABILITIES)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
             config = mockConfig,
@@ -182,6 +186,7 @@ class SignUpOAuth2StrategyTest {
             signUpStartCommandParameters
         )
         assertTrue(signupResult is SignUpStartApiResult.Redirect)
+        assertNotNull((signupResult as SignUpStartApiResult.Redirect).redirectReason)
     }
 
     @Test
@@ -314,6 +319,7 @@ class SignUpOAuth2StrategyTest {
             signUpSubmitCodeCommandParameters
         )
         assertTrue(signupResult is SignUpContinueApiResult.Redirect)
+        assertNotNull((signupResult as SignUpContinueApiResult.Redirect).redirectReason)
     }
 
     @Test

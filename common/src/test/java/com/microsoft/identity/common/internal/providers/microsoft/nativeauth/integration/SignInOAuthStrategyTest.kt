@@ -39,6 +39,8 @@ import com.microsoft.identity.common.java.nativeauth.providers.interactors.JITIn
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.ResetPasswordInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignInInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignUpInteractor
+import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITContinueApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordStartApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectApiResult
@@ -62,7 +64,7 @@ import org.robolectric.annotation.Config
 import java.util.UUID
 
 /**
- * These are integration tests using real API responses instead of mocked API responses. This class
+ * These are integration tests using mocked API responses. This class
  * covers all sign up endpoints.
  * These tests run on the mock API, see: $(MOCK_API_URL) in the variable of the pipeline.
  */
@@ -108,6 +110,7 @@ class SignInOAuthStrategyTest {
         whenever(mockConfig.getJITChallengeEndpoint()).thenReturn(ApiConstants.MockApi.jitChallengeRequestUrl)
         whenever(mockConfig.getJITContinueEndpoint()).thenReturn(ApiConstants.MockApi.jitContinueRequestUrl)
         whenever(mockConfig.challengeType).thenReturn(CHALLENGE_TYPE)
+        whenever(mockConfig.capabilities).thenReturn(CAPABILITIES)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
             config = mockConfig,
@@ -178,6 +181,7 @@ class SignInOAuthStrategyTest {
         )
 
         Assert.assertTrue(signInChallengeResult is SignInChallengeApiResult.Redirect)
+        Assert.assertNotNull((signInChallengeResult as SignInChallengeApiResult.Redirect).redirectReason)
     }
 
     @Test
@@ -269,6 +273,7 @@ class SignInOAuthStrategyTest {
             parameters = parameters
         )
         Assert.assertTrue(signInInitiateResult is SignInInitiateApiResult.Redirect)
+        Assert.assertNotNull((signInInitiateResult as SignInInitiateApiResult.Redirect).redirectReason)
     }
 
     @Test
@@ -304,6 +309,7 @@ class SignInOAuthStrategyTest {
         )
 
         Assert.assertTrue(result is SignInIntrospectApiResult.Redirect)
+        Assert.assertNotNull((result as SignInIntrospectApiResult.Redirect).redirectReason)
     }
 
     @Test
@@ -370,6 +376,7 @@ class SignInOAuthStrategyTest {
             correlationId = correlationId
         )
         Assert.assertTrue(signInChallengeResult is SignInChallengeApiResult.Redirect)
+        Assert.assertNotNull((signInChallengeResult as SignInChallengeApiResult.Redirect).redirectReason)
     }
 
     @Test
