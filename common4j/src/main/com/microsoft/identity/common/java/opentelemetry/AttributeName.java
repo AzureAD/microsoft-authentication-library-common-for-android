@@ -371,7 +371,7 @@ public enum AttributeName {
     is_webcp_authorize_request,
 
     /**
-     * Records if the request is a webcp authorize request.
+     * Records if the request is a webcp enrollment request.
      */
     is_webcp_enrollment_request,
 
