@@ -369,6 +369,14 @@ tasks.configureEach { task ->
     if (task.name == 'assembleDistRelease') {
         task.dependsOn 'sourcesJar'
     }
+
+    // Ensure tasks depend on each other correctly
+    if (task.name == 'publishDistReleasePublicationToVsts-maven-adal-androidRepository') {
+        task.dependsOn bundleDistReleaseAar
+    }
+    if (task.name == 'publishDistDebugPublicationToVsts-maven-adal-androidRepository') {
+        task.dependsOn bundleDistDebugAar
+    }
 //    // Due to gradle version increase, we need to be more explicit in the dependency chain
 //    // More information https://discuss.gradle.org/t/g./gradle-8-project-dependency-requirement-clarification/46336
 //    if (task.name == "publishDistDebugPublicationToVsts-maven-adal-androidRepository") {
