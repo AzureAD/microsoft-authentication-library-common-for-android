@@ -46,7 +46,7 @@ class JITChallengeApiResponse(
     @Expose @SerializedName("challenge_channel") val challengeChannel: String?,
     @Expose @SerializedName("code_length") val codeLength: Int?,
     @Expose @SerializedName("interval") val interval: Int?,
-    @SerializedName ("error")override val error: String?,
+    @SerializedName("error")override val error: String?,
     @SerializedName("error_description") override val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
     @SerializedName("error_codes") val errorCodes: List<Int>?,
