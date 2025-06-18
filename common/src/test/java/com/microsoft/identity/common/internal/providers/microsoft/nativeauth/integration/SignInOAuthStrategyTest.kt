@@ -39,8 +39,6 @@ import com.microsoft.identity.common.java.nativeauth.providers.interactors.JITIn
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.ResetPasswordInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignInInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignUpInteractor
-import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITContinueApiResult
-import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordStartApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectApiResult
