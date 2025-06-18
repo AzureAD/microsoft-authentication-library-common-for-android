@@ -431,6 +431,7 @@ public class BrokerMsalController extends BaseController {
 
             verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
             result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
+            trackTelemetryRegionFromResultBundle(resultBundle);
         } catch (final BaseException | ExecutionException e) {
             Telemetry.emit(
                     new ApiEndEvent()
@@ -616,6 +617,7 @@ public class BrokerMsalController extends BaseController {
                                     "Attempting to sleep thread during Device Code Flow token polling...");
                             return acquireDeviceCodeFlowToken(authorizationResult, parameters);
                         } else {
+                            trackTelemetryRegionFromResultBundle(resultBundle);
                             return acquireTokenResult;
                         }
                     }
@@ -1322,6 +1324,9 @@ public class BrokerMsalController extends BaseController {
 
             try {
                 final ClientInfo clientInfo = new ClientInfo(brokerResult.getClientInfo());
+                // Store the telemetry region info in shared preferences
+                mComponents.getPlatformUtil().storeTelemetryRegionByTenant(mComponents.getStorageSupplier(), clientInfo);
+
                 final MicrosoftStsAccount microsoftStsAccount = new MicrosoftStsAccount(
                         new IDToken(brokerResult.getIdToken()),
                         clientInfo
@@ -1419,6 +1424,25 @@ public class BrokerMsalController extends BaseController {
         } catch (final ClientException e) {
             Logger.info(methodTag, "ResultBundle does not contain BrokerResult. " +
                     "So, this is not likely a broker version supported issue. Continuing.");
+        }
+    }
+
+    private void trackTelemetryRegionFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
+        final String methodTag = TAG + ":trackTelemetryRegionFromResultBundle";
+        final BrokerResult brokerResult = new MsalBrokerResultAdapter().brokerResultFromBundle(resultBundle);
+        if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
+            if (StringUtil.isNullOrEmpty(brokerResult.getClientInfo())) {
+                return;
+            }
+
+            try {
+                final ClientInfo clientInfo = new ClientInfo(brokerResult.getClientInfo());
+
+                // Store the telemetry region info in shared preferences
+                mComponents.getPlatformUtil().storeTelemetryRegionByTenant(mComponents.getStorageSupplier(), clientInfo);
+            } catch (Exception e) {
+                Logger.error(methodTag, "Exception while trying to store telemetry region from client info in broker result.", e);
+            }
         }
     }
 }

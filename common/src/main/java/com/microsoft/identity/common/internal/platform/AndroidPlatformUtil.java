@@ -54,7 +54,10 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.interfaces.IStorageSupplier;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
@@ -202,6 +205,25 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     @Override
     public List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList) {
         return originalList;
+    }
+
+    @Override
+    public void storeTelemetryRegionByTenant(@NonNull IStorageSupplier supplier, @NonNull ClientInfo clientInfo) {
+        final String methodTag = TAG + ":storeTelemetryRegionByTenant";
+        final String tenantId = clientInfo.getUtid();
+        final String tdbrClaim = clientInfo.getTdbrClaim();
+
+
+
+        if (StringUtil.isNullOrEmpty(tenantId)) {
+            Logger.warn(methodTag, "tenantId is null or empty. Not storing telemetry region by tenant.");
+            return;
+        }
+
+        // Store the tdbr claim for a specific tenant ID
+        Logger.info(methodTag, "Storing telemetry region by tenant: " + tenantId + ", TDBR Claim: " + tdbrClaim);
+        final INameValueStorage<String> tdbrValueStore = supplier.getUnencryptedNameValueStore(ClientInfo.TDBR_CLAIM, String.class);
+        tdbrValueStore.put(tenantId, tdbrClaim);
     }
 
     /**
