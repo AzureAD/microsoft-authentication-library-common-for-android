@@ -370,30 +370,20 @@ tasks.configureEach { task ->
         task.dependsOn 'sourcesJar'
     }
 
-    // Ensure tasks depend on each other correctly
-    if (task.name == 'publishDistReleasePublicationToVsts-maven-adal-androidRepository') {
-        task.dependsOn bundleDistReleaseAar
+    // Due to gradle version increase, we need to be more explicit in the dependency chain
+    // More information can be found here: https://docs.gradle.org/8.1/userguide/validation_problems.html#implicit_dependency
+    if (task.name == "publishDistDebugPublicationToVsts-maven-adal-androidRepository") {
+        task.mustRunAfter 'generatePomFileForDistReleasePublication', 'bundleDistReleaseAar'
     }
-    if (task.name == 'publishDistDebugPublicationToVsts-maven-adal-androidRepository') {
-        task.dependsOn bundleDistDebugAar
+    if (task.name == "publishDistReleasePublicationToVsts-maven-adal-androidRepository") {
+        task.dependsOn 'bundleDistReleaseAar'
     }
-//    // Due to gradle version increase, we need to be more explicit in the dependency chain
-//    // More information https://discuss.gradle.org/t/g./gradle-8-project-dependency-requirement-clarification/46336
-//    if (task.name == "publishDistDebugPublicationToVsts-maven-adal-androidRepository") {
-//        task.dependsOn 'generatePomFileForDistReleasePublication'
-//    }
-//    if (task.name == "publishDistReleasePublicationToVsts-maven-adal-androidRepository") {
-//        task.dependsOn 'bundleDistReleaseAar'
-//    }
-//    if (task.name == "publishDistDebugPublicationToVsts-maven-adal-androidRepository") {
-//        task.dependsOn 'bundleDistReleaseAar'
-//    }
-//    if (task.name == "generateMetadataFileForDistDebugPublication") {
-//        task.dependsOn 'bundleDistReleaseAar'
-//    }
-//    if (task.name == "generateMetadataFileForDistReleasePublication") {
-//        task.dependsOn 'bundleDistDebugAar'
-//    }
+    if (task.name == "generateMetadataFileForDistDebugPublication") {
+        task.mustRunAfter 'bundleDistReleaseAar'
+    }
+    if (task.name == "generateMetadataFileForDistReleasePublication") {
+        task.dependsOn 'bundleDistDebugAar'
+    }
 }
 
 // This is used to generate the pom file for publishing to external maven in maven-release-jobs.yml.
