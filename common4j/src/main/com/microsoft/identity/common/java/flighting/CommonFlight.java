@@ -114,7 +114,17 @@ public enum CommonFlight implements IFlightConfig {
     /** Flight to enable the new key generation without PURPOSE_WRAP_KEY. Default is true.
      * This is applicable for API >= 23
      */
-    ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY("EnableNewKeyGenSpecForWrapWithoutPurposeWrapKey", true);
+    ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY("EnableNewKeyGenSpecForWrapWithoutPurposeWrapKey", true),
+
+    /**
+     * Flight to enable exposing the JavaScript API for AuthUx requests
+     */
+    ENABLE_JS_API_FOR_AUTHUX("EnableJsApiForAuthUx", true),
+
+    /**
+     * Flight to enable handling the UI in edge to edge mode
+     */
+    ENABLE_HANDLING_FOR_EDGE_TO_EDGE("EnableHandlingEdgeToEdge", true);
 
     private String key;
     private Object defaultValue;

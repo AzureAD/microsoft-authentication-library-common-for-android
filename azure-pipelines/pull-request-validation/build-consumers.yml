@@ -47,7 +47,7 @@ stages:
   # Check PR Label
   displayName: Check for PR Label
   pool:
-    name: Hosted Windows 2019 with VS2019
+    vmImage: 'windows-2022'
   jobs:
     - template: ../templates/steps/fetch-pr-labels.yml
 - stage: validateConsumers
@@ -55,7 +55,7 @@ stages:
   displayName: 'Validate'
   dependsOn: getLabel
   pool:
-    name: Hosted Windows 2019 with VS2019
+    vmImage: 'windows-2022'
   variables:
     prLabels: $[ stageDependencies.getLabel.getLabelsJob.outputs['fetchPrCILabel.prLabels'] ]
   jobs:

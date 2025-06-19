@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.ui.webview;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.net.Uri;
@@ -41,6 +42,7 @@ import androidx.lifecycle.ViewTreeLifecycleOwner;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.fido.CredManFidoManager;
@@ -119,6 +121,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final SwitchBrowserRequestHandler mSwitchBrowserRequestHandler;
     private HashMap<String, String> mRequestHeaders;
     private String mRequestUrl;
+    private boolean mAuthUxJavaScriptInterfaceAdded = false;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
@@ -137,10 +140,35 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * If both conditions are met, it adds the JavaScript interface to the WebView.
      */
     public void initializeAuthUxJavaScriptApi(@NonNull final WebView view, final String url) {
-        if (ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext()) && AuthUxJavaScriptInterface.Companion.isValidUrlForInterface(url)) {
+        if (shouldExposeJavaScriptInterface(url)) {
             // If broker request, and a valid url, expose JavaScript API
             Logger.info(TAG, "Adding AuthUx JavaScript Interface");
             view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
+            mAuthUxJavaScriptInterfaceAdded = true;
+        }
+    }
+
+    private boolean shouldExposeJavaScriptInterface(final String url) {
+        return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
+                && AuthUxJavaScriptInterface.Companion.isValidUrlForInterface(url)
+                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+    }
+
+    @Override
+    public void onPageFinished(final WebView view,
+                               final String url) {
+        super.onPageFinished(view, url);
+
+        if (mAuthUxJavaScriptInterfaceAdded) {
+            // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
+            // passing dict objects through Javascript APIs, only Strings and primitive types. Server side will be sending message in a dict
+            String jsScript = "window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".postMessageToBroker = function(message) { " +
+                    "    window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".receiveAuthUxMessage(JSON.stringify(message)); " +
+                    "};";
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                view.evaluateJavascript(jsScript, null);
+            }
         }
     }
 
@@ -206,14 +234,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String formattedURL = url.toLowerCase(Locale.US);
 
         // Re-evaluate adding AuthUx JavaScript Interface
-        if (ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext()) && AuthUxJavaScriptInterface.Companion.isValidUrlForInterface(url)) {
+        if (shouldExposeJavaScriptInterface(url)) {
             // If broker request, and a valid url, expose JavaScript API
             Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
             view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
-        } else {
+            mAuthUxJavaScriptInterfaceAdded = true;
+        } else if (mAuthUxJavaScriptInterfaceAdded) {
             // Remove AuthUx JavaScript Interface
             Logger.info(methodTag, "Removing AuthUx JavaScript Interface");
             view.removeJavascriptInterface(AuthUxJavaScriptInterface.Companion.getInterfaceName());
+            mAuthUxJavaScriptInterfaceAdded = false;
         }
 
 
@@ -227,11 +257,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PASSKEY_FEATURE) && isPasskeyUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for passkey protocol.");
                 final FidoChallenge challenge = FidoChallenge.createFromRedirectUri(url);
-                final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity)getActivity()).getSpanContext() : null;
+                final Activity currentActivity = getActivity();
+                final SpanContext spanContext = currentActivity instanceof AuthorizationActivity ? ((AuthorizationActivity)currentActivity).getSpanContext() : null;
+                // The legacyManager should only be getting added if the device is on Android 13 or lower and the library is MSAL/OneAuth with fragment or dialog mode.
+                // The legacyManager logic should be removed once a larger majority of users are on Android 14+.
                 final IFidoManager legacyManager =
-                        CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)
+                        currentActivity instanceof AuthorizationActivity
+                                && ((AuthorizationActivity) currentActivity).getFragment() instanceof WebViewAuthorizationFragment
+                                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)
                                 && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE
-                                ? new LegacyFido2ApiManager(view.getContext(), (WebViewAuthorizationFragment)((AuthorizationActivity)getActivity()).getFragment())
+                                ? new LegacyFido2ApiManager(view.getContext(), (WebViewAuthorizationFragment)((AuthorizationActivity)currentActivity).getFragment())
                                 : null;
                 final AuthFidoChallengeHandler challengeHandler = new AuthFidoChallengeHandler(
                         new CredManFidoManager(
@@ -278,6 +313,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processInvalidRedirectUri(view, url);
             } else if (isBlankPageRequest(formattedURL)) {
                 Logger.info(methodTag,"It is an blank page request");
+            } else if (isIntentRequestToInstallBrokerApp(formattedURL)) {
+                 Logger.info(methodTag, "It is an intent request");
+                // Intent URI format is case sensitive, so we need to provide the original URI.
+                processIntentToInstallBrokerApp(view, url);
             } else if (!isUriSSLProtected(formattedURL)) {
                 Logger.info(methodTag,"Check for SSL protection");
                 processSSLProtectionCheck(view, url);
@@ -337,6 +376,33 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isNonceRedirect(@NonNull final String url) {
         return url.contains(AuthenticationConstants.Broker.SSO_NONCE_PARAMETER);
+    }
+
+    /**
+     * Determines if the provided URL is a valid request to install a broker app.
+     * <p>
+     * This method checks if the URL starts with the intent prefix, is targeting the Google Play Store app,
+     * and is associated with a broker app. It ensures that only valid intent requests are processed.
+     *
+     * @param url The URL to evaluate.
+     * @return {@code true} if the URL is a permitted intent request, {@code false} otherwise.
+     */
+    private boolean isIntentRequestToInstallBrokerApp(@NonNull final String url) {
+        // Check if the URL is an intent request
+        if (!url.startsWith(AuthenticationConstants.Broker.INTENT_PREFIX)) {
+            return false;
+        }
+        // Check if the intent request is for the google play store app
+        if (!url.contains(";package=com.android.vending;")) {
+            return false;
+        }
+        // Check if the url query parameter is for a broker app.
+        for (final BrokerData brokerData : BrokerData.getAllBrokers()) {
+            if (url.contains("id=" + brokerData.getPackageName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isCrossCloudRedirect(@NonNull final String url) {
@@ -600,6 +666,35 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 String.format("The RedirectUri is not as expected. Received %s and expected %s", url,
                         mRedirectUrl));
         view.stopLoading();
+    }
+
+    /**
+     * This method is used to process the intent to install the broker app.
+     * It parses the intent URI and starts the activity if the package name is valid.
+     *
+     * @param view The WebView that will be used to open the URL.
+     * @param intentUrl  The URL to be opened.
+     */
+    private void processIntentToInstallBrokerApp(@NonNull final WebView view, @NonNull final String intentUrl) {
+        final String methodTag = TAG + ":processIntentToInstallBrokerApp";
+        try {
+            final Intent intent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
+            if (intent != null && intent.getPackage() != null) {
+                view.getContext().startActivity(intent);
+                Logger.info(methodTag, "Intent request sent to launch the app: " + intent.getPackage());
+            } else {
+                Logger.warn(methodTag, "Unable to parse the intent URI");
+            }
+        } catch (final URISyntaxException e) {
+            Logger.error(methodTag, "Failed to parse the intent URI due to invalid syntax.", e);
+            returnError(ErrorStrings.URI_SYNTAX_ERROR, e.getMessage());
+        } catch (final ActivityNotFoundException e) {
+            Logger.error(methodTag, "No activity found to handle the intent.", e);
+            returnError(ErrorStrings.ACTIVITY_NOT_FOUND, e.getMessage());
+        } catch (final Throwable throwable) {
+            Logger.error(methodTag, "An unexpected error occurred while processing the intent URI.", throwable);
+            returnError(ErrorStrings.UNEXPECTED_ERROR, throwable.getMessage());
+        }
     }
 
     private void processSSLProtectionCheck(@NonNull final WebView view,
