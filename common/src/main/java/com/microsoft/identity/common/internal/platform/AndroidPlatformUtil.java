@@ -220,6 +220,11 @@ public class AndroidPlatformUtil implements IPlatformUtil {
             return;
         }
 
+        if (StringUtil.isNullOrEmpty(tdbrClaim)) {
+            Logger.warn(methodTag, "Received no tdbr claim, not storing anything in shared preferences..");
+            return;
+        }
+
         // Store the tdbr claim for a specific tenant ID
         Logger.info(methodTag, "Storing telemetry region by tenant: " + tenantId + ", TDBR Claim: " + tdbrClaim);
         final INameValueStorage<String> tdbrValueStore = supplier.getUnencryptedNameValueStore(ClientInfo.TDBR_CLAIM, String.class);
