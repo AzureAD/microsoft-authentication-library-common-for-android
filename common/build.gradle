@@ -369,19 +369,16 @@ tasks.configureEach { task ->
     if (task.name == 'assembleDistRelease') {
         task.dependsOn 'sourcesJar'
     }
-    //Due to gradle version increase, we need to be more explicit in the dependency chain
-    // More information https://discuss.gradle.org/t/g./gradle-8-project-dependency-requirement-clarification/46336
+    // Due to gradle version increase, we need to be more explicit in the dependency chain
+    // More information can be found here: https://docs.gradle.org/8.1/userguide/validation_problems.html#implicit_dependency
     if (task.name == "publishDistDebugPublicationToVsts-maven-adal-androidRepository") {
-        task.dependsOn 'generatePomFileForDistReleasePublication'
+        task.mustRunAfter 'generatePomFileForDistReleasePublication', 'bundleDistReleaseAar'
     }
     if (task.name == "publishDistReleasePublicationToVsts-maven-adal-androidRepository") {
         task.dependsOn 'bundleDistReleaseAar'
     }
-    if (task.name == "publishDistDebugPublicationToVsts-maven-adal-androidRepository") {
-        task.dependsOn 'bundleDistReleaseAar'
-    }
     if (task.name == "generateMetadataFileForDistDebugPublication") {
-        task.dependsOn 'bundleDistReleaseAar'
+        task.mustRunAfter 'bundleDistReleaseAar'
     }
     if (task.name == "generateMetadataFileForDistReleasePublication") {
         task.dependsOn 'bundleDistDebugAar'
@@ -389,7 +386,7 @@ tasks.configureEach { task ->
 }
 
 // This is used to generate the pom file for publishing to external maven in maven-release-jobs.yml.
-// Need to distinguish between distDebug and distRelease for the distination
+// Need to distinguish between distDebug and distRelease for the destination
 tasks.withType(GenerateMavenPom).all {
     def functionName = name.toLowerCase()
     if (functionName.contains("distdebug")) {
