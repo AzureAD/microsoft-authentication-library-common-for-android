@@ -73,16 +73,6 @@ interface ISecretKeyLoader {
     val cipherTransformation: String
 
     /**
-     * The [ISecretKeyGenerator] used to generate new keys when needed.
-     *
-     * This generator is responsible for creating cryptographically secure keys
-     * using the appropriate algorithm and key size for this key loader implementation.
-     *
-     * @return The secret key generator for this key type.
-     */
-    val secretKeyGenerator: ISecretKeyGenerator
-
-    /**
      * Retrieves the secret key for encryption/decryption operations.
      *
      * This method handles the loading of an existing key or generation of a new key

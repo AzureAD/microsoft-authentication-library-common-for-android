@@ -30,6 +30,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
+import com.microsoft.identity.common.java.crypto.key.AES256SecretKeyGenerator;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.FileUtil;
 
@@ -56,6 +57,8 @@ public class AndroidWrappedKeyLoaderTest {
     final String MOCK_KEY_ALIAS = "MOCK_KEY_ALIAS";
     final String MOCK_KEY_FILE_PATH = "MOCK_KEY_FILE_PATH";
     final int TEST_LOOP = 100;
+
+    final String AES_ALGORITHM = "AES";
 
     @Before
     public void setUp() throws Exception {
@@ -113,7 +116,7 @@ public class AndroidWrappedKeyLoaderTest {
         final AndroidWrappedKeyLoader keyLoader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
         final SecretKey secretKey = keyLoader.generateRandomKey();
 
-        Assert.assertEquals(keyLoader.getSecretKeyGenerator().getKeyAlgorithm(), secretKey.getAlgorithm());
+        Assert.assertEquals(AES_ALGORITHM, secretKey.getAlgorithm());
     }
 
     @Test
@@ -125,8 +128,8 @@ public class AndroidWrappedKeyLoaderTest {
         // They're not the same object!
         Assert.assertNotSame(secretKey, storedSecretKey);
 
-        Assert.assertEquals(keyLoader.getSecretKeyGenerator().getKeyAlgorithm(), secretKey.getAlgorithm());
-        Assert.assertEquals(keyLoader.getSecretKeyGenerator().getKeyAlgorithm(), storedSecretKey.getAlgorithm());
+        Assert.assertEquals(AES_ALGORITHM, secretKey.getAlgorithm());
+        Assert.assertEquals(AES_ALGORITHM, storedSecretKey.getAlgorithm());
 
         Assert.assertNotNull(secretKey.getEncoded());
         Assert.assertNotNull(storedSecretKey.getEncoded());
@@ -145,7 +148,7 @@ public class AndroidWrappedKeyLoaderTest {
 
         final SecretKey key = keyLoader.getKeyCache().getData();
         Assert.assertNotNull(key);
-        Assert.assertEquals(keyLoader.getSecretKeyGenerator().getKeyAlgorithm(), secretKey.getAlgorithm());
+        Assert.assertEquals(AES_ALGORITHM, secretKey.getAlgorithm());
         Assert.assertArrayEquals(secretKey.getEncoded(), key.getEncoded());
         Assert.assertEquals(secretKey.getFormat(), key.getFormat());
     }

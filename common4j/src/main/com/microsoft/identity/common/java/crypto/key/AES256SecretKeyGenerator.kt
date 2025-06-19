@@ -39,6 +39,8 @@ class AES256SecretKeyGenerator : ISecretKeyGenerator {
 
     companion object {
         private val TAG = AES256SecretKeyGenerator::class.java.simpleName
+        private const val AES_ALGORITHM = "AES"
+        private const val AES_KEY_SIZE = 256
     }
 
     /**
@@ -46,14 +48,14 @@ class AES256SecretKeyGenerator : ISecretKeyGenerator {
      * @return Key size as an integer value.
      */
     override val keySize: Int
-        get() = 256
+        get() = AES_KEY_SIZE
 
     /**
      * Returns the algorithm name for the key specification.
      * @return String representation of the algorithm name ("AES").
      */
     override val keyAlgorithm: String
-        get() = "AES"
+        get() = AES_ALGORITHM
 
     /**
      * Generates a random AES-256 secret key.

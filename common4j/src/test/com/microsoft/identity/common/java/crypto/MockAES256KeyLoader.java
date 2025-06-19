@@ -40,13 +40,13 @@ public class MockAES256KeyLoader extends AES256KeyLoader {
     private final String mKeyIdentifier;
 
     public MockAES256KeyLoader() throws ClientException {
-        mKey = getSecretKeyGenerator().generateRandomKey();
+        mKey = AES_256_KEY_GENERATOR.generateRandomKey();
         mKeyIdentifier = DEFAULT_MOCK_KEY_IDENTIFIER;
     }
 
     public MockAES256KeyLoader(@NonNull final byte[] secretKey,
                                @NonNull final String keyIdentifier){
-        mKey = getSecretKeyGenerator().generateKeyFromRawBytes(secretKey);
+        mKey = AES_256_KEY_GENERATOR.generateKeyFromRawBytes(secretKey);
         mKeyIdentifier = keyIdentifier;
     }
 

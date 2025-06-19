@@ -52,7 +52,7 @@ public class PredefinedKeyLoader extends AES256KeyLoader {
     public PredefinedKeyLoader(@NonNull final String alias,
                                final byte[] rawBytes) {
         mAlias = alias;
-        mKey = getSecretKeyGenerator().generateKeyFromRawBytes(rawBytes);
+        mKey = AES_256_KEY_GENERATOR.generateKeyFromRawBytes(rawBytes);
     }
 
     @NotNull

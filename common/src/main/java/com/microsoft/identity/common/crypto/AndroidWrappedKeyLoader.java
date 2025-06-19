@@ -189,7 +189,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     protected SecretKey generateRandomKey() throws ClientException {
         final String methodTag = TAG + ":generateRandomKey";
 
-        final SecretKey key = getSecretKeyGenerator().generateRandomKey();
+        final SecretKey key = AES_256_KEY_GENERATOR.generateRandomKey();
         saveSecretKeyToStorage(key);
 
         Logger.info(methodTag, "New key is generated with thumbprint: " +
@@ -224,7 +224,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                 return null;
             }
 
-            final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, getSecretKeyGenerator().getKeyAlgorithm(), keyPair, WRAP_ALGORITHM);
+            final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, AES_256_KEY_GENERATOR.getKeyAlgorithm(), keyPair, WRAP_ALGORITHM);
 
             Logger.info(methodTag, "Key is loaded with thumbprint: " +
                     KeyUtil.getKeyThumbPrint(key));
