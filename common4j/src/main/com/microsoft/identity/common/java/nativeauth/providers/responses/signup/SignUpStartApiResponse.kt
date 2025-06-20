@@ -24,8 +24,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.signup
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.util.isAttributeValidationFailed
 import com.microsoft.identity.common.java.nativeauth.util.isAuthNotSupported
@@ -50,20 +49,22 @@ import java.net.HttpURLConnection
 class SignUpStartApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
-    @SerializedName("continuation_token") val continuationToken: String?,
+    @SerializedName("continuation_token") override val continuationToken: String?,
     @Expose @SerializedName("unverified_attributes") val unverifiedAttributes: List<Map<String, String>>?,
     @Expose @SerializedName("invalid_attributes") val invalidAttributes: List<Map<String, String>>?,
-    @Expose @SerializedName("challenge_type") val challengeType: String?,
-    @SerializedName("error") val error: String?,
+    @SerializedName("error") override val error: String?,
+    @SerializedName("error_description") override val errorDescription: String?,
+    @SerializedName("suberror") val subError: String?,
     @SerializedName("error_codes") val errorCodes: List<Int>?,
-    @SerializedName("error_description") val errorDescription: String?,
-    @SerializedName("suberror") val subError: String?
-) : IApiResponse(statusCode, correlationId) {
+    @Expose @SerializedName("challenge_type") override val challengeType: String?,
+    @SerializedName("redirect_reason") override val redirectReason: String?,
+) : INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
 
     override fun toUnsanitizedString(): String {
         return "SignUpStartApiResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId, challengeType=$challengeType" +
-                "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription, subError=$subError)"
+                "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription, subError=$subError, " +
+                "redirectReason=$redirectReason)"
     }
 
     override fun toString(): String = "SignUpContinueApiResponse(statusCode=$statusCode, " +
@@ -144,7 +145,8 @@ class SignUpStartApiResponse(
             HttpURLConnection.HTTP_OK -> {
                 if (challengeType.isRedirect()) {
                     SignUpStartApiResult.Redirect(
-                        correlationId = correlationId
+                        correlationId = correlationId,
+                        redirectReason = redirectReason.orEmpty()
                     )
                 }
                 else {

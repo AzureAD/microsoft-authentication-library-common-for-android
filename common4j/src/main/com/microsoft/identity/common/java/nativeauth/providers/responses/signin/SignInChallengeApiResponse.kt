@@ -24,11 +24,9 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.signin
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.util.isIntrospectRequired
-import com.microsoft.identity.common.java.nativeauth.util.isInvalidGrant
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidRequest
 import com.microsoft.identity.common.java.nativeauth.util.isOOB
 import com.microsoft.identity.common.java.nativeauth.util.isPassword
@@ -42,19 +40,20 @@ import java.net.HttpURLConnection
 class SignInChallengeApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
-    @SerializedName("continuation_token") val continuationToken: String?,
-    @Expose @SerializedName("challenge_type") val challengeType: String?,
+    @SerializedName("continuation_token") override val continuationToken: String?,
     @Expose @SerializedName("binding_method") val bindingMethod: String?,
     @SerializedName("challenge_target_label") val challengeTargetLabel: String?,
     @Expose @SerializedName("challenge_channel") val challengeChannel: String?,
     @Expose @SerializedName("code_length") val codeLength: Int?,
     @Expose @SerializedName("interval") val interval: Int?,
-    @SerializedName("error") val error: String?,
+    @SerializedName("error") override val error: String?,
+    @SerializedName("error_description") override val errorDescription: String?,
     @SerializedName("suberror") val subError: String?,
-    @SerializedName("error_codes") val errorCodes: List<Int>?,
-    @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
-): IApiResponse(statusCode, correlationId) {
+    @SerializedName("error_codes") val errorCodes: List<Int>?,
+    @Expose @SerializedName("challenge_type") override val challengeType: String?,
+    @SerializedName("redirect_reason") override val redirectReason: String?,
+): INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
 
     override fun toUnsanitizedString(): String {
         return "SignInChallengeApiResponse(statusCode=$statusCode, " +
@@ -62,7 +61,8 @@ class SignInChallengeApiResponse(
                 "bindingMethod=$bindingMethod, challengeTargetLabel=$challengeTargetLabel, " +
                 "challengeChannel=$challengeChannel, codeLength=$codeLength, interval=$interval, " +
                 "error=$error, subError=$subError, errorDescription=$errorDescription, errorCodes=$errorCodes, " +
-                "errorUri=$errorUri)"
+                "errorUri=$errorUri, " +
+                "redirectReason=$redirectReason)"
     }
 
     override fun toString(): String = "SignInChallengeApiResponse(statusCode=$statusCode, " +
@@ -104,7 +104,8 @@ class SignInChallengeApiResponse(
                 return when {
                     challengeType.isRedirect() -> {
                         SignInChallengeApiResult.Redirect(
-                            correlationId = correlationId
+                            correlationId = correlationId,
+                            redirectReason = redirectReason.orEmpty()
                         )
                     }
                     challengeType.isOOB() -> {

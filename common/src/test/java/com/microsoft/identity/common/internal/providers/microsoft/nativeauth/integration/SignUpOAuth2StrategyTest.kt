@@ -47,6 +47,7 @@ import com.microsoft.identity.common.nativeauth.MockApiEndpoint
 import com.microsoft.identity.common.nativeauth.MockApiResponseType
 import com.microsoft.identity.common.nativeauth.MockApiUtils.Companion.configureMockApi
 import junit.framework.TestCase.assertTrue
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -59,7 +60,7 @@ import org.robolectric.annotation.Config
 import java.util.UUID
 
 /**
- * These are integration tests using real API responses instead of mocked API responses. This class
+ * These are integration tests using mocked API responses. This class
  * covers all sign up endpoints.
  * These tests run on the mock API, see: $(MOCK_API_URL) in the variable of the pipeline.
  */
@@ -77,6 +78,7 @@ class SignUpOAuth2StrategyTest {
     private val PASSWORD = "verySafePassword".toCharArray()
     private val CLIENT_ID = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val CHALLENGE_TYPE = "oob password redirect"
+    private val CAPABILITIES = "mfa_required registration_required"
     private val USER_ATTRIBUTES = mapOf("city" to "Dublin")
     private val OOB_CODE = "123456"
     private val CONTINUATION_TOKEN = "iFQ"
@@ -106,6 +108,7 @@ class SignUpOAuth2StrategyTest {
         whenever(mockConfig.getJITChallengeEndpoint()).thenReturn(ApiConstants.MockApi.jitChallengeRequestUrl)
         whenever(mockConfig.getJITContinueEndpoint()).thenReturn(ApiConstants.MockApi.jitContinueRequestUrl)
         whenever(mockConfig.challengeType).thenReturn(CHALLENGE_TYPE)
+        whenever(mockConfig.capabilities).thenReturn(CAPABILITIES)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
             config = mockConfig,
@@ -181,6 +184,7 @@ class SignUpOAuth2StrategyTest {
             signUpStartCommandParameters
         )
         assertTrue(signupResult is SignUpStartApiResult.Redirect)
+        assertNotNull((signupResult as SignUpStartApiResult.Redirect).redirectReason)
     }
 
     @Test
@@ -291,6 +295,29 @@ class SignUpOAuth2StrategyTest {
             signUpSubmitPasswordCommandParameters
         )
         assertTrue(signupResult is SignUpContinueApiResult.Success)
+    }
+
+    @Test
+    fun testPerformSignUpWithSubmitCodeWithRedirectSuccess() {
+        val correlationId = UUID.randomUUID().toString()
+        configureMockApi(
+            endpointType = MockApiEndpoint.SignUpContinue,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+        )
+
+        val signUpSubmitCodeCommandParameters = SignUpSubmitCodeCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .code(OOB_CODE)
+            .continuationToken(CONTINUATION_TOKEN)
+            .correlationId(correlationId)
+            .build()
+
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpSubmitCode(
+            signUpSubmitCodeCommandParameters
+        )
+        assertTrue(signupResult is SignUpContinueApiResult.Redirect)
+        assertNotNull((signupResult as SignUpContinueApiResult.Redirect).redirectReason)
     }
 
     @Test
