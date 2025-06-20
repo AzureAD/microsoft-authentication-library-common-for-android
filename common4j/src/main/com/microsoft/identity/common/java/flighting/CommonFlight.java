@@ -122,6 +122,11 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_JS_API_FOR_AUTHUX("EnableJsApiForAuthUx", true),
 
     /**
+     * Flight to enable handling the UI in edge to edge mode
+     */
+    ENABLE_HANDLING_FOR_EDGE_TO_EDGE("EnableHandlingEdgeToEdge", true),
+
+    /**
      * Flight to enable the new Android wrapped key loader.
      */
     ENABLE_NEW_ANDROID_WRAPPED_KEY_LOADER("EnableNewAndroidWrappedKeyLoader", true);
