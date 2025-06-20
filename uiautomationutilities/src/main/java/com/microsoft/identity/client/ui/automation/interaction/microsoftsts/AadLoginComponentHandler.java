@@ -26,7 +26,6 @@ import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
-import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
@@ -42,7 +41,6 @@ import static org.junit.Assert.fail;
 
 import android.widget.Button;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -80,8 +78,26 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     }
 
     @Override
-    public void handlePasswordField(@NonNull final String password) {
+    public void handlePasswordField(@NonNull final String password, final boolean isMsaAccount) {
         Logger.i(TAG, "Handle Aad Login Password UI..");
+
+        // We need to temporarily handle both possible flows for msa accounts.
+        // 1. If the user is using an MSA account, we may see a screen prompting MFA or OTP, with an option that
+        // says "Other ways to sign in"
+        // 2. No OTP or MFA, just prompted for password right away.
+        if (isMsaAccount) {
+            final UiObject otherWays = UiAutomatorUtils.obtainUiObjectWithExactText("Other ways to sign in");
+            if (otherWays.exists()) {
+                try {
+                    otherWays.click();
+
+                    UiAutomatorUtils.handleButtonClickForObjectWithExactText("Use your password");
+                } catch (final UiObjectNotFoundException e) {
+                    throw new AssertionError(e);
+                }
+            }
+        }
+
         UiAutomatorUtils.obtainUiObjectWithText("password", mFindLoginUiElementTimeout);
         try {
             UiAutomatorUtils.handleInputByClass("android.widget.EditText", password, mFindLoginUiElementTimeout);

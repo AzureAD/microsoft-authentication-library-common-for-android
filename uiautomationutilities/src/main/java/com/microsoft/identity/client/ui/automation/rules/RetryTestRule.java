@@ -24,7 +24,9 @@ package com.microsoft.identity.client.ui.automation.rules;
 
 import com.microsoft.identity.client.ui.automation.BuildConfig;
 import com.microsoft.identity.client.ui.automation.annotations.RetryOnFailure;
+import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -38,6 +40,12 @@ public class RetryTestRule implements TestRule {
 
     private final static String TAG = RetryTestRule.class.getSimpleName();
     private final static int MINIMUM_NUMBER_OF_ATTEMPTS = BuildConfig.MINIMUM_TEST_ATTEMPTS;
+
+    private ITestBroker mBroker;
+
+    public RetryTestRule(final ITestBroker broker) {
+        this.mBroker = broker;
+    }
 
     @Override
     public Statement apply(final Statement base, final Description description) {
@@ -64,9 +72,9 @@ public class RetryTestRule implements TestRule {
                 }
 
                 // If after evaluating annotation, we still have number of attempts less than minimum, increase number of attempts
-                if (numAttempts < MINIMUM_NUMBER_OF_ATTEMPTS) {
-                    numAttempts = MINIMUM_NUMBER_OF_ATTEMPTS;
-                }
+//                if (numAttempts < MINIMUM_NUMBER_OF_ATTEMPTS) {
+//                    numAttempts = MINIMUM_NUMBER_OF_ATTEMPTS;
+//                }
 
                 for (int i = 0; i < numAttempts; i++) {
                     try {
@@ -85,7 +93,13 @@ public class RetryTestRule implements TestRule {
                         " - Giving up after " + numAttempts + " attempts as all attempts have failed :(");
 
                 assert caughtThrowable != null;
-                throw caughtThrowable;
+
+                // Create powerlift incident at the end of retry attempts
+                if (mBroker != null && mBroker instanceof IPowerLiftIntegratedApp && BuildConfig.SEND_POWERLIFT_LOGS) {
+                    PowerLiftIncidentRule.attemptPowerLiftIncident(caughtThrowable, (IPowerLiftIntegratedApp) mBroker);
+                } else {
+                    throw caughtThrowable;
+                }
             }
         };
     }

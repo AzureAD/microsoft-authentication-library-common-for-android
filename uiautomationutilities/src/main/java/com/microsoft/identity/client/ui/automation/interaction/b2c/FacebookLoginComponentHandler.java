@@ -49,7 +49,7 @@ public class FacebookLoginComponentHandler extends AbstractB2CLoginComponentHand
     }
 
     @Override
-    public void handlePasswordField(@NonNull final String password) {
+    public void handlePasswordField(@NonNull final String password, final boolean isMsaAccount) {
         Logger.i(TAG, "Handle Facebook Login Password UI..");
         UiAutomatorUtils.handleInput("m_login_password", password);
         handleNextButton();

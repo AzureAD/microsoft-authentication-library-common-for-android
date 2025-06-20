@@ -48,7 +48,7 @@ public class AdfsLoginComponentHandler extends AadLoginComponentHandler {
     }
 
     @Override
-    public void handlePasswordField(@NonNull final String password) {
+    public void handlePasswordField(@NonNull final String password, final boolean isMsaAccount) {
         Logger.i(TAG, "Handle Adfs Login Password UI..");
         try {
             UiAutomatorUtils.handleInput("passwordInput", password, CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
