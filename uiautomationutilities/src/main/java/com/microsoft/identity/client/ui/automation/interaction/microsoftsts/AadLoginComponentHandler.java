@@ -86,7 +86,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         // says "Other ways to sign in"
         // 2. No OTP or MFA, just prompted for password right away.
         if (isMsaAccount) {
-            final UiObject otherWays = UiAutomatorUtils.obtainUiObjectWithExactText("Other ways to sign in");
+            final UiObject otherWays = UiAutomatorUtils.obtainUiObjectWithExactText("Other ways to sign in", CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
             if (otherWays.exists()) {
                 try {
                     otherWays.click();
