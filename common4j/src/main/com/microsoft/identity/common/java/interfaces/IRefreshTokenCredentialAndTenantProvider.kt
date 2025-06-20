@@ -24,11 +24,11 @@ package com.microsoft.identity.common.java.interfaces;
 
 
 /**
- * Consumer of commons needs to implement [IRefreshTokenCredentialProvider] interface
- * and set it using CommonRefreshTokenCredentialProvider.initializeCommonRefreshTokenCredentialProvider(@NonNull refreshTokenCredentialProvider: IRefreshTokenCredentialProvider)
+ * Consumer of commons needs to implement [IRefreshTokenCredentialAndTenantProvider] interface
+ * and set it using CommonRefreshTokenCredentialAndTenantProvider.initializeCommonRefreshTokenCredentialAndTenantProvider(@NonNull refreshTokenCredentialProvider: IRefreshTokenCredentialProvider)
  * to provide prtCredentialHolder to common module.
  */
-interface IRefreshTokenCredentialProvider {
+interface IRefreshTokenCredentialAndTenantProvider {
 
     /**
      * Gets refresh token credential using nonce retrieved from webview.

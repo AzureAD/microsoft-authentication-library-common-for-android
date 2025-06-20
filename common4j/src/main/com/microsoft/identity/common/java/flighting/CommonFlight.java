@@ -124,7 +124,12 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable the Web CP in WebView.
      */
-    ENABLE_WEB_CP_IN_WEBVIEW("EnableWebCpInWebView", false);
+    ENABLE_WEB_CP_IN_WEBVIEW("EnableWebCpInWebView", false),
+
+    /**
+     * Flight to enable the Web CP feature to specific tenants.
+     */
+    TENANT_LIST_TO_ENABLE_WEB_CP_IN_WEBVIEW("TenantListToEnableWebCpInWebView", "");
 
     private String key;
     private Object defaultValue;

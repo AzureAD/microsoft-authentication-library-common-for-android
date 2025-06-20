@@ -557,27 +557,38 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         final Span span = spanContext != null ?
                 OTelUtility.createSpanFromParent(SpanName.ProcessWebCpRedirects.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessWebCpRedirects.name());
-        final HashMap<String, String> parameters = StringExtensions.getUrlParameters(originalUrl);
-        final String username = parameters.get("login_hint");
-
-        if (username != null && CommonRefreshTokenCredentialProvider.INSTANCE.getTenantId(username) != null) {
-            Logger.info(methodTag, "Loading device CA request in WebView.");
-            span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), true);
-            String httpsUrl = originalUrl.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
-            view.loadUrl(httpsUrl, mRequestHeaders);
-        }
-        else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)) {
-            Logger.info(methodTag, "Loading device CA request in WebView.");
+        if (shouldLoadWebCpUrlInWebView(originalUrl, methodTag)) {
+            Logger.info(methodTag, "Loading device CA Url in WebView.");
             span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), true);
             String httpsUrl = originalUrl.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
             view.loadUrl(httpsUrl, mRequestHeaders);
         } else {
-            Logger.info(methodTag, "Loading device CA request in browser.");
+            Logger.info(methodTag, "Loading device CA Url in browser.");
             span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), false);
             openLinkInBrowser(originalUrl);
             returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
         }
     }
+
+    private boolean shouldLoadWebCpUrlInWebView(@NonNull final String originalUrl, @NonNull final String methodTag) {
+        if (!ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
+            // Enabling this feature for brokered flows only for now.
+            return false;
+        }
+        final String username = StringExtensions.getUrlParameters(originalUrl).get("login_hint");
+        if (username == null) {
+            return false;
+        }
+        final String tenantId = CommonRefreshTokenCredentialProvider.INSTANCE.getTenantId(username);
+        if (tenantId == null) {
+            return false;
+        }
+        final String tenantIdList = CommonFlightsManager.INSTANCE.getFlightsProvider().getStringValue(CommonFlight.TENANT_LIST_TO_ENABLE_WEB_CP_IN_WEBVIEW);
+        final boolean isWebCpFlowEnabledForTenant = !StringUtil.isNullOrEmpty(tenantIdList) && tenantIdList.contains(tenantId);
+        Logger.info(methodTag, "TenantId list is empty? " + StringUtil.isNullOrEmpty(tenantIdList) + ", Is current tenantId in list? " + isWebCpFlowEnabledForTenant);
+        return isWebCpFlowEnabledForTenant || CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW);
+    }
+
 
 
     private void processWebCpEnrollmentUrl(@NonNull final WebView view, @NonNull final String url) {

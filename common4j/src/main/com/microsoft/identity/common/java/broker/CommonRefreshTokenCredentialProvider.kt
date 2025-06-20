@@ -22,20 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.broker
 
+import com.microsoft.identity.common.java.interfaces.IRefreshTokenCredentialAndTenantProvider
 import com.microsoft.identity.common.java.interfaces.IRefreshTokenCredentialProvider
 import com.microsoft.identity.common.java.logging.Logger
 
 /**
- * Consumer of commons needs to implement [IRefreshTokenCredentialProvider] interface
- * and set it using CommonRefreshTokenCredentialProvider.initializeCommonRefreshTokenCredentialProvider(@NonNull refreshTokenCredentialProvider: IRefreshTokenCredentialProvider)
+ * Consumer of commons needs to implement [IRefreshTokenCredentialAndTenantProvider] interface
+ * and set it using CommonRefreshTokenCredentialAndTenantProvider.initializeRefreshTokenCredentialProvider(@NonNull refreshTokenCredentialProvider: IRefreshTokenCredentialProvider)
  * to provide prtCredentialHolder to common module.
  */
-object CommonRefreshTokenCredentialProvider : IRefreshTokenCredentialProvider {
+object CommonRefreshTokenCredentialProvider : IRefreshTokenCredentialAndTenantProvider {
     private val TAG = CommonRefreshTokenCredentialProvider::class.java.simpleName
-    private var mRefreshTokenCredentialProvider: IRefreshTokenCredentialProvider? = null
+    private var mRefreshTokenCredentialProvider: IRefreshTokenCredentialAndTenantProvider? = null
 
     // Note : This method should only be invoked by broker module.
-    fun initializeCommonRefreshTokenCredentialProvider(refreshTokenCredentialProvider: IRefreshTokenCredentialProvider) {
+    fun initializeRefreshTokenCredentialAndTenantProvider(refreshTokenCredentialProvider: IRefreshTokenCredentialAndTenantProvider) {
         val methodTag = "$TAG:initializeCommonRefreshTokenCredentialProvider"
         Logger.info(methodTag, "Initializing common prt credential provider with " + refreshTokenCredentialProvider.javaClass.simpleName)
         mRefreshTokenCredentialProvider = refreshTokenCredentialProvider
@@ -62,7 +63,7 @@ object CommonRefreshTokenCredentialProvider : IRefreshTokenCredentialProvider {
     override fun getTenantId(username: String): String? {
         val methodTag = "$TAG:getTenantId";
         if (mRefreshTokenCredentialProvider != null) {
-            return mRefreshTokenCredentialProvider?.getTenantId()
+            return mRefreshTokenCredentialProvider?.getTenantId(username)
         }
         Logger.warn(methodTag, "mRefreshTokenCredentialHolder is not initialized!")
         return null
