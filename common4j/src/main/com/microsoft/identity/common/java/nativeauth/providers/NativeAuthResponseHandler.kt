@@ -33,6 +33,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpa
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordPollCompletionApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordStartApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.NativeAuthMicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInChallengeApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectApiResponse
@@ -42,8 +43,8 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpContinueApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResponse
 import com.microsoft.identity.common.java.nativeauth.util.ApiResultUtil
+import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import com.microsoft.identity.common.java.net.HttpResponse
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.util.ObjectMapper
 import java.net.HttpURLConnection
 
@@ -89,6 +90,7 @@ class NativeAuthResponseHandler {
                 unverifiedAttributes = null,
                 invalidAttributes = null,
                 challengeType = null,
+                redirectReason = null,
                 subError = null,
                 correlationId = correlationId
             )
@@ -134,6 +136,7 @@ class NativeAuthResponseHandler {
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 continuationToken = null,
                 challengeType = null,
+                redirectReason = null,
                 challengeTargetLabel = null,
                 codeLength = null,
                 bindingMethod = null,
@@ -187,7 +190,9 @@ class NativeAuthResponseHandler {
                 requiredAttributes = null,
                 expiresIn = null,
                 subError = null,
-                correlationId = correlationId
+                correlationId = correlationId,
+                challengeType = null,
+                redirectReason = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -230,6 +235,7 @@ class NativeAuthResponseHandler {
                 errorCodes = null,
                 continuationToken = null,
                 challengeType = null,
+                redirectReason = null,
                 correlationId = correlationId
             )
         }  else {
@@ -275,6 +281,7 @@ class NativeAuthResponseHandler {
                 subError = null,
                 continuationToken = null,
                 challengeType = null,
+                redirectReason = null,
                 bindingMethod = null,
                 challengeTargetLabel = null,
                 challengeChannel = null,
@@ -320,6 +327,7 @@ class NativeAuthResponseHandler {
             SignInIntrospectApiResponse(
                 statusCode = response.statusCode,
                 challengeType = null,
+                redirectReason = null,
                 error = EMPTY_RESPONSE_ERROR,
                 errorDescription = EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION,
                 errorCodes = null,
@@ -388,12 +396,19 @@ class NativeAuthResponseHandler {
         } else {
             val apiResponse = ObjectMapper.deserializeJsonStringToObject(
                 response.body,
-                MicrosoftStsTokenResponse::class.java
+                NativeAuthMicrosoftStsTokenResponse::class.java  // Extended class from MicrosoftStsTokenResponse
             )
-            return SignInTokenApiResult.Success(
-                tokenResponse = apiResponse,
-                correlationId = correlationId
-            )
+            return if (apiResponse.challengeType.isRedirect()) {
+                SignInTokenApiResult.Redirect(
+                    correlationId = correlationId,
+                    redirectReason = apiResponse.redirectReason.orEmpty()
+                )
+            } else {
+                SignInTokenApiResult.Success(
+                    tokenResponse = apiResponse,
+                    correlationId = correlationId
+                )
+            }
         }
     }
     //endregion
@@ -425,6 +440,7 @@ class NativeAuthResponseHandler {
                 errorUri = null,
                 continuationToken = null,
                 challengeType = null,
+                redirectReason = null,
                 correlationId = correlationId
             )
         } else {
@@ -469,6 +485,7 @@ class NativeAuthResponseHandler {
                 errorUri = null,
                 continuationToken = null,
                 challengeType = null,
+                redirectReason = null,
                 bindingMethod = null,
                 challengeTargetLabel = null,
                 challengeChannel = null,
@@ -518,6 +535,7 @@ class NativeAuthResponseHandler {
                 errorUri = null,
                 continuationToken = null,
                 challengeType = null,
+                redirectReason = null,
                 expiresIn = null,
                 subError = null,
                 correlationId = correlationId
@@ -564,7 +582,9 @@ class NativeAuthResponseHandler {
                 continuationToken = null,
                 pollInterval = null,
                 subError = null,
-                correlationId = correlationId
+                correlationId = correlationId,
+                challengeType = null,
+                redirectReason = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -610,7 +630,9 @@ class NativeAuthResponseHandler {
                 continuationToken = null,
                 expiresIn = null,
                 subError = null,
-                correlationId = correlationId
+                correlationId = correlationId,
+                challengeType = null,
+                redirectReason = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
@@ -655,6 +677,7 @@ class NativeAuthResponseHandler {
                 continuationToken = null,
                 correlationId = correlationId,
                 challengeType = null,
+                redirectReason = null,
                 methods = null,
                 errorCodes = null
             )
@@ -700,6 +723,7 @@ class NativeAuthResponseHandler {
                 errorUri = null,
                 continuationToken = null,
                 challengeType = null,
+                redirectReason = null,
                 bindingMethod = null,
                 challengeTarget = null,
                 challengeChannel = null,
@@ -750,7 +774,9 @@ class NativeAuthResponseHandler {
                 continuationToken = null,
                 subError = null,
                 errorCodes = null,
-                correlationId = correlationId
+                correlationId = correlationId,
+                challengeType = null,
+                redirectReason = null
             )
         } else {
             ObjectMapper.deserializeJsonStringToObject(
