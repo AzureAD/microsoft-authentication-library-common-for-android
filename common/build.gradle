@@ -163,6 +163,7 @@ dependencies {
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "com.squareup.moshi:moshi:$rootProject.ext.moshiVersion"
     implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
+    implementation "androidx.core:core:$rootProject.ext.androidxCoreVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintLayoutVersion"
     //For Executive Order work
     implementation "com.yubico.yubikit:android:$rootProject.ext.yubikitAndroidVersion"

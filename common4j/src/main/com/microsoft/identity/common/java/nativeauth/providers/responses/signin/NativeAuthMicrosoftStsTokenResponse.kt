@@ -1,4 +1,3 @@
-package com.microsoft.identity.common.java.opentelemetry;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -21,48 +20,28 @@ package com.microsoft.identity.common.java.opentelemetry;
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.java.nativeauth.providers.responses.signin
 
-public enum SpanName {
-    AcquirePrtUsingBrt,
-    AcquireTokenInteractive,
-    AcquireTokenSilent,
-    SetScopeForDMAgentForFoci,
-    GetAccounts,
-    RemoveAccount,
-    WorkplaceJoin,
-    ATIInteractively,
-    ATISilently,
-    WorkplaceLeave,
-    DeviceState,
-    CertBasedAuth,
-    MSAL_PerformIpcStrategy,
-    DeviceRegistrationApi,
-    WorkplaceJoinApi,
-    AcquireTokenDcf,
-    AcquireTokenDcfAuthRequest,
-    AcquireTokenDcfFetchToken,
-    EncryptionManager,
-    Passthrough,
-    BrokerOperationRequestDispatcher,
-    BrokerDiscoveryManagerPerformDiscoveryProcess,
-    Fido,
-    BrokerAccountServiceRemoveAccounts,
-    AcquirePrtUsingTransferToken,
-    AcquireTransferTokenUsingPrt,
-    SaveTransferTokenToBlockstore,
-    GetBackedUpMsaAccounts,
-    RefreshTransferToken,
-    IsLtwPreInstalled,
-    DeleteTransferToken,
-    RestoreMsaAccounts,
-    OnUpgradeReceiver,
-    UpgradeDeviceRegistration,
-    RemoveBrokerAccount,
-    ProcessNonceFromEstsRedirect,
-    DataStoreCorruptionException,
-    KeyPairGeneration,
-    ProcessCrossCloudRedirect,
-    SwitchBrowserResume,
-    SwitchBrowserProcess,
-    WrappedKeyAlgorithmIdentifier
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
+
+/**
+ * Microsoft STS Token Response extended with native auth parameters
+ * (redirectReason and challengeType) for successful sign-in scenarios.
+ */
+class NativeAuthMicrosoftStsTokenResponse : MicrosoftStsTokenResponse() {
+    
+    /**
+     * The reason for redirect in the authentication flow.
+     */
+    @SerializedName("redirect_reason")
+    var redirectReason: String? = null
+
+    /**
+     * The type of challenge will be redirect when redirect_reason field return
+     */
+    @Expose
+    @SerializedName("challenge_type")
+    var challengeType: String? = null
 }

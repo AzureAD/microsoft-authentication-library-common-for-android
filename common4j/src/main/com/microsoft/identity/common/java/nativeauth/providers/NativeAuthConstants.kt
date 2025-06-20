@@ -60,11 +60,24 @@ object NativeAuthConstants {
      * ChallengeType encapsulates various challenge types supported for authentication by Native Auth
      */
     object ChallengeType {
-        //password is required for authentication
+        //Password is required for authentication
         const val PASSWORD = "password"
         //Authentication is done by presenting an Out of band token
         const val OOB = "oob"
         //Authentication must be performed by following the redirect url
         const val REDIRECT = "redirect"
+    }
+
+    /**
+     * Capabilities encapsulates various capabilities supported for authentication by Native Auth
+     * Valid options are
+     *      MFARequired: The application can accommodate the associated challenge type(s) specified by the user when MFA is required.
+     *      RegistrationRequired: The application can accommodate the associated challenge type(s) specified by the user when registering a new strong authentication method is required.
+     */
+    object Capabilities {
+        //Specifies that the associated challenge type(s) are supported when MFA is required
+        const val MFA_REQUIRED = "mfa_required"
+        //Specifies that the associated challenge type(s) are supported when the registration of a new strong authentication
+        const val REGISTRATION_REQUIRED = "registration_required"
     }
 }

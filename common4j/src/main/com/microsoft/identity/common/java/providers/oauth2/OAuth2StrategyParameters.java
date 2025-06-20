@@ -48,8 +48,18 @@ public class OAuth2StrategyParameters {
 
     // TODO preferably this would live in a dedicated NativeAuthOAuth2StrategyParameters class, but
     // that would require adding generics to Authority.java
+
+    /**
+     * The challenge types supported for authentication declared by client.
+     */
     @Nullable
     public final List<String> mChallengeTypes;
+
+    /**
+     * The capabilities supported for authentication declared by client.
+     */
+    @Nullable
+    public final List<String> mCapabilities;
 
     // TODO: Consider moving this field into MicrosoftStsOAuth2Configuration and updating it's endpoint methods
     //  to use OpenId Configuration.

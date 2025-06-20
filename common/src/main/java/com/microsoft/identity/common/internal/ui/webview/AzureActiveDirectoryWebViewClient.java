@@ -121,6 +121,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final SwitchBrowserRequestHandler mSwitchBrowserRequestHandler;
     private HashMap<String, String> mRequestHeaders;
     private String mRequestUrl;
+    private boolean mAuthUxJavaScriptInterfaceAdded = false;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
@@ -143,6 +144,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // If broker request, and a valid url, expose JavaScript API
             Logger.info(TAG, "Adding AuthUx JavaScript Interface");
             view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
+            mAuthUxJavaScriptInterfaceAdded = true;
         }
     }
 
@@ -150,6 +152,24 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
                 && AuthUxJavaScriptInterface.Companion.isValidUrlForInterface(url)
                 && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+    }
+
+    @Override
+    public void onPageFinished(final WebView view,
+                               final String url) {
+        super.onPageFinished(view, url);
+
+        if (mAuthUxJavaScriptInterfaceAdded) {
+            // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
+            // passing dict objects through Javascript APIs, only Strings and primitive types. Server side will be sending message in a dict
+            String jsScript = "window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".postMessageToBroker = function(message) { " +
+                    "    window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".receiveAuthUxMessage(JSON.stringify(message)); " +
+                    "};";
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                view.evaluateJavascript(jsScript, null);
+            }
+        }
     }
 
     /**
@@ -218,10 +238,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // If broker request, and a valid url, expose JavaScript API
             Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
             view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
-        } else {
+            mAuthUxJavaScriptInterfaceAdded = true;
+        } else if (mAuthUxJavaScriptInterfaceAdded) {
             // Remove AuthUx JavaScript Interface
             Logger.info(methodTag, "Removing AuthUx JavaScript Interface");
             view.removeJavascriptInterface(AuthUxJavaScriptInterface.Companion.getInterfaceName());
+            mAuthUxJavaScriptInterfaceAdded = false;
         }
 
 

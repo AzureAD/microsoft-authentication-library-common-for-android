@@ -32,12 +32,16 @@ import android.widget.RelativeLayout;
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.window.layout.FoldingFeature;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.logging.Logger;
 
 
@@ -51,6 +55,26 @@ public class DualScreenActivity extends FragmentActivity {
         Log.i("DualScreenActivity", "---------Setting content view with layoutResID: ");
         final RelativeLayout contentLayout = findViewById(R.id.dual_screen_content);
         LayoutInflater.from(this).inflate(layoutResID, contentLayout);
+    }
+
+    private void initializeContentView(){
+        super.setContentView(R.layout.dual_screen_layout);
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_HANDLING_FOR_EDGE_TO_EDGE)) {
+            try {
+                ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (view, insets) -> {
+                    int topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
+                    int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
+                    int leftInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).left;
+                    int rightInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).right;
+
+                    view.setPadding(leftInset, topInset, rightInset, bottomInset);
+                    return insets;
+                });
+            } catch (final Throwable throwable) {
+                Logger.warn("DualScreenActivity:initializeContentView", "Failed to set OnApplyWindowInsetsListener");
+            }
+        }
+        adjustLayoutForDualScreenActivity();
     }
 
     public void setFragment(@NonNull final Fragment fragment) {
