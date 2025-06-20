@@ -39,4 +39,6 @@ interface IRefreshTokenCredentialProvider {
      * Gets refresh token credential.
      */
     fun getRefreshTokenCredential(inputUrl : String, username : String) : String?
+
+    fun getTenantId(username: String): String?
 }

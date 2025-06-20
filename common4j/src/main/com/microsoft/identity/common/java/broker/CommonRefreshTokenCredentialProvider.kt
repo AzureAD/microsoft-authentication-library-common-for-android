@@ -58,4 +58,14 @@ object CommonRefreshTokenCredentialProvider : IRefreshTokenCredentialProvider {
         Logger.warn(methodTag, "mRefreshTokenCredentialHolder is not initialized!")
         return null
     }
+
+    override fun getTenantId(username: String): String? {
+        val methodTag = "$TAG:getTenantId";
+        if (mRefreshTokenCredentialProvider != null) {
+            return mRefreshTokenCredentialProvider?.getTenantId()
+        }
+        Logger.warn(methodTag, "mRefreshTokenCredentialHolder is not initialized!")
+        return null
+    }
+
 }

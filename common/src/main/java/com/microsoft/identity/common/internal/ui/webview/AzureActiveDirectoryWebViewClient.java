@@ -60,6 +60,7 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.Switc
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
 import com.microsoft.identity.common.java.authorities.Authority;
+import com.microsoft.identity.common.java.broker.CommonRefreshTokenCredentialProvider;
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.exception.IErrorInformation;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
@@ -556,7 +557,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         final Span span = spanContext != null ?
                 OTelUtility.createSpanFromParent(SpanName.ProcessWebCpRedirects.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessWebCpRedirects.name());
-        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)) {
+        final HashMap<String, String> parameters = StringExtensions.getUrlParameters(originalUrl);
+        final String username = parameters.get("login_hint");
+
+        if (username != null && CommonRefreshTokenCredentialProvider.INSTANCE.getTenantId(username) != null) {
+            Logger.info(methodTag, "Loading device CA request in WebView.");
+            span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), true);
+            String httpsUrl = originalUrl.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
+            view.loadUrl(httpsUrl, mRequestHeaders);
+        }
+        else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)) {
             Logger.info(methodTag, "Loading device CA request in WebView.");
             span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), true);
             String httpsUrl = originalUrl.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
