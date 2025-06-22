@@ -81,6 +81,7 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.Principal;
@@ -457,9 +458,48 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private boolean isWebCpAuthorizeUrl(@NonNull final String url) {
-        // URL is for an authorize request and contains the client_id of the WebCP app.
-        return url.contains(AuthenticationConstants.Broker.WEBCP_AUTHORIZE_URL_PATTERN);
+        // URL should be for authorize request for webcp.
+        final String methodTag = TAG + ":isWebCpAuthorizeUrl";
+        try {
+            final URI uri = new URI(url);
+            final String host = uri.getHost();
+            final String path = uri.getPath();
+
+            if (host == null || path == null) {
+                Logger.info(methodTag, "URL missing host or path");
+                return false;
+            }
+
+            if (!AzureActiveDirectory.isValidCloudHost(new URL(url))) {
+                Logger.info(methodTag, "URL host is not a valid Azure cloud host");
+                return false;
+            }
+
+            if (!path.contains("/authorize")) {
+                Logger.info(methodTag, "URL path does not contain /authorize");
+                return false;
+            }
+
+            final Map<String, String> queryParams = StringExtensions.getUrlParameters(url);
+            final String clientId = queryParams.get("client_id");
+
+            if (StringUtil.isNullOrEmpty(clientId)) {
+                Logger.info(methodTag, "Authorize URL does not contain client_id");
+                return false;
+            }
+
+            final boolean isWebCpClient = AuthenticationConstants.Broker.WEBCP_CLIENT_ID.equalsIgnoreCase(clientId);
+            Logger.info(methodTag, isWebCpClient
+                    ? "WebCP authorize URL contains valid WebCP client_id."
+                    : "Authorize URL contains different client_id.");
+            return isWebCpClient;
+
+        } catch (URISyntaxException | MalformedURLException e) {
+            Logger.info(methodTag, "Invalid URL: " + e.getMessage());
+            return false;
+        }
     }
+
 
     private boolean isHeaderForwardingRequiredUri(@NonNull final String url) {
         // MSAL makes MSA requests first to login.microsoftonline.com, and then gets redirected to login.live.com.
@@ -542,14 +582,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return url.contains(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
     }
 
+    // Decides whether to launch the Company Portal app based on the presence of the IPPhone app and its signature.
     private boolean shouldLaunchCompanyPortal() {
-        PackageHelper packageHelper = new PackageHelper(getActivity().getPackageManager());
-
+        final PackageHelper packageHelper = new PackageHelper(getActivity().getPackageManager());
         return packageHelper.isPackageInstalledAndEnabled(IPPHONE_APP_PACKAGE_NAME)
                 && IPPHONE_APP_SIGNATURE.equals(packageHelper.getSha1SignatureForPackage(IPPHONE_APP_PACKAGE_NAME))
                 && packageHelper.isPackageInstalledAndEnabled(COMPANY_PORTAL_APP_PACKAGE_NAME);
     }
 
+    // Loads the device CA URL in the WebView if the flight is enabled, otherwise opens it in the browser.
     @VisibleForTesting
     protected void loadDeviceCaUrl(@NonNull final String originalUrl, @NonNull final WebView view) {
         final String methodTag = TAG + ":loadDeviceCaUrl";
@@ -569,7 +610,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
-
+    // WebCP enrollment URL is a guided enrollment page showing instructions on how to enroll within the productivity app.
+    // This is a special case where the enrollment is not done in the WebView, but rather in the browser.
     private void processWebCpEnrollmentUrl(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processWebCpEnrollmentUrl";
         final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
