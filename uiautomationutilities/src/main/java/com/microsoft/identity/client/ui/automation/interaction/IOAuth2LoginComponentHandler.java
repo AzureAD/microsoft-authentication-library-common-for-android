@@ -38,9 +38,10 @@ public interface IOAuth2LoginComponentHandler {
     /**
      * Enters the supplied password in the password field of a login page.
      *
-     * @param password the password of the user
+     * @param password     the password of the user
+     * @param isMsaAccount whether or not using msa account
      */
-    void handlePasswordField(final String password);
+    void handlePasswordField(final String password, final boolean isMsaAccount);
 
     /**
      * Clicks the back button on a login page.

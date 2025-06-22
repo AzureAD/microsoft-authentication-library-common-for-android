@@ -55,7 +55,7 @@ public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandle
     }
 
     @Override
-    public void handlePasswordField(@NonNull final String password) {
+    public void handlePasswordField(@NonNull final String password, final boolean isMsaAccount) {
         Logger.i(TAG, "Handle Google Login Password UI..");
         UiAutomatorUtils.handleInput("password", password);
         final UiObject passwordBox = UiAutomatorUtils.obtainUiObjectWithResourceId("password");

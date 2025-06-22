@@ -23,7 +23,6 @@
 package com.microsoft.identity.client.ui.automation.interaction.microsoftsts;
 
 import android.text.TextUtils;
-import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -41,8 +40,6 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import org.junit.Assert;
 
 import java.util.concurrent.TimeUnit;
-
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 
 /**
  * A Prompt Handler for TLS login flows.
@@ -109,7 +106,7 @@ public class TlsPromptHandler extends AbstractPromptHandler {
         }
 
         if (parameters.isPasswordPageExpected() || parameters.getPrompt() == PromptParameter.LOGIN || !parameters.isSessionExpected()) {
-            loginComponentHandler.handlePasswordField(password);
+            loginComponentHandler.handlePasswordField(password, false);
         }
         // installing certificate.
         UiAutomatorUtils.handleButtonClick("android:id/button1");
