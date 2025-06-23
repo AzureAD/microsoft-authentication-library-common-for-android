@@ -38,6 +38,7 @@ import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.nativeauth.providers.requests.NativeAuthRequest.Companion.toJsonString
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInTokenRequest
+import com.microsoft.identity.common.java.util.ObjectMapper
 import com.microsoft.identity.common.nativeauth.ApiConstants
 import io.mockk.every
 import io.mockk.mockk
@@ -55,6 +56,7 @@ class NativeAuthRequestProviderTest {
     private val tenant = "samtoso.onmicrosoft.com"
     private val tokenEndpoint = URL("https://contoso.com/1234/token")
     private val challengeType = "oob redirect"
+    private val capabilities = "mfa_required registration_required"
     private val userAttributes = mapOf("city" to "Dublin")
     private val emptyUserAttributes = emptyMap<String, String>()
     private val oobGrantType = "oob"
@@ -87,6 +89,7 @@ class NativeAuthRequestProviderTest {
         every { getJITContinueEndpoint() } returns ApiConstants.MockApi.jitContinueRequestUrl
         every { challengeType } returns this@NativeAuthRequestProviderTest.challengeType
         every { clientId } returns this@NativeAuthRequestProviderTest.clientId
+        every { capabilities } returns this@NativeAuthRequestProviderTest.capabilities
         every { useMockApiForNativeAuth } returns true
     }
 
@@ -157,6 +160,40 @@ class NativeAuthRequestProviderTest {
         nativeAuthRequestProvider.createSignUpStartRequest(
             commandParameters = commandParameters
         )
+    }
+
+    @Test
+    fun testSignUpStartWithEmptyCapabilitiesShouldThrowNotException() {
+        every { mockConfig.capabilities } returns emptyString
+
+        val commandParameters = SignUpStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .clientId(clientId)
+            .correlationId(correlationId)
+            .build()
+
+        nativeAuthRequestProvider.createSignUpStartRequest(
+            commandParameters = commandParameters
+        )
+    }
+
+    @Test
+    fun testSignUpStartExpectedCapabilitiesStringAddedToRequestBody() {
+        every { mockConfig.capabilities } returns capabilities
+
+        val commandParameters = SignUpStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .clientId(clientId)
+            .correlationId(correlationId)
+            .build()
+
+        val result = nativeAuthRequestProvider.createSignUpStartRequest(
+            commandParameters = commandParameters
+        )
+
+        assertEquals(capabilities, result.parameters.capabilities)
     }
 
     @Test
@@ -487,6 +524,38 @@ class NativeAuthRequestProviderTest {
         nativeAuthRequestProvider.createSignInInitiateRequest(
             commandParameters = commandParameters
         )
+    }
+
+    @Test
+    fun testSignInInitiateWithEmptyCapabilitiesShouldThrowNotException() {
+        every { mockConfig.capabilities } returns emptyString
+
+        val commandParameters = SignInStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .correlationId(correlationId)
+            .build()
+
+        nativeAuthRequestProvider.createSignInInitiateRequest(
+            commandParameters = commandParameters
+        )
+    }
+
+    @Test
+    fun testSignInInitiateExpectedCapabilitiesStringAddedToRequestBody() {
+        every { mockConfig.capabilities } returns capabilities
+
+        val commandParameters = SignInStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .correlationId(correlationId)
+            .build()
+
+        val result = nativeAuthRequestProvider.createSignInInitiateRequest(
+            commandParameters = commandParameters
+        )
+
+        assertEquals(capabilities, result.parameters.capabilities)
     }
 
     @Test
@@ -984,6 +1053,38 @@ class NativeAuthRequestProviderTest {
         nativeAuthRequestProvider.createResetPasswordStartRequest(
             commandParameters = commandParameters
         )
+    }
+
+    @Test
+    fun testResetPasswordStartWithEmptyCapabilitiesShouldNotThrowException() {
+        every { mockConfig.capabilities } returns emptyString
+
+        val commandParameters = ResetPasswordStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .correlationId(correlationId)
+            .build()
+
+        nativeAuthRequestProvider.createResetPasswordStartRequest(
+            commandParameters = commandParameters
+        )
+    }
+
+    @Test
+    fun testResetPasswordStartExpectedCapabilitiesStringAddedToRequestBody() {
+        every { mockConfig.capabilities } returns capabilities
+
+        val commandParameters = ResetPasswordStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .correlationId(correlationId)
+            .build()
+
+        val result = nativeAuthRequestProvider.createResetPasswordStartRequest(
+            commandParameters = commandParameters
+        )
+
+        assertEquals(capabilities, result.parameters.capabilities)
     }
 
     @Test
@@ -1489,5 +1590,66 @@ class NativeAuthRequestProviderTest {
         assertEquals(result.headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID], correlationId)
     }
 
+    // Test for null capabilities filtering in serialization
+
+    @Test
+    fun testSignInInitiateWithNullCapabilitiesFiltersOutFromSerializedRequestBody() {
+        // Set capabilities to null in config
+        every { mockConfig.capabilities } returns null
+
+        val commandParameters = SignInStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .clientId(clientId)
+            .correlationId(correlationId)
+            .build()
+
+        val result = nativeAuthRequestProvider.createSignInInitiateRequest(
+            commandParameters = commandParameters
+        )
+
+        // Verify that the request object has null capabilities
+        assertNull("Capabilities should be null in the request parameters", result.parameters.capabilities)
+
+        // Test that ObjectMapper.serializeObjectToFormUrlEncoded should filter out null values
+        val serializedParams = ObjectMapper.serializeObjectToFormUrlEncoded(result.parameters)
+        
+        // Verify that capabilities parameter is not included in the serialized form
+        Assert.assertFalse(
+            "Serialized request body should not contain 'capabilities' parameter when it is null",
+            serializedParams.contains("capabilities")
+        )
+    }
+
+    @Test
+    fun testSignInInitiateWithNonNullCapabilitiesIncludedInSerializedRequestBody() {
+        // Set capabilities to a valid value in config
+        every { mockConfig.capabilities } returns capabilities
+
+        val commandParameters = SignInStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .clientId(clientId)
+            .correlationId(correlationId)
+            .build()
+
+        val result = nativeAuthRequestProvider.createSignInInitiateRequest(
+            commandParameters = commandParameters
+        )
+
+        // Verify that the request object has the expected capabilities
+        assertEquals("Capabilities should match the configured value", capabilities, result.parameters.capabilities)
+
+        // Test that ObjectMapper.serializeObjectToFormUrlEncoded includes non-null values
+        val serializedParams = ObjectMapper.serializeObjectToFormUrlEncoded(result.parameters)
+        
+        // Verify that capabilities parameter IS included in the serialized form when not null
+        Assert.assertTrue(
+            "Serialized request body should contain 'capabilities' parameter when it has a value",
+            serializedParams.contains("capabilities=${capabilities.replace(" ", "+")}")
+        )
+    }
+
     //endregion
+
 }

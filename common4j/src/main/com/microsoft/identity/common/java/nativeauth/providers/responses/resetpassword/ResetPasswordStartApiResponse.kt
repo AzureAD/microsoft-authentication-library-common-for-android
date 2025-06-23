@@ -24,8 +24,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.resetp
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import com.microsoft.identity.common.java.nativeauth.util.isUnsupportedChallengeType
 import com.microsoft.identity.common.java.nativeauth.util.isUserNotFound
@@ -38,17 +37,19 @@ import java.net.HttpURLConnection
 class ResetPasswordStartApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
-    @SerializedName("continuation_token") val continuationToken: String?,
-    @Expose @SerializedName("challenge_type") val challengeType: String?,
-    @SerializedName("error") val error: String?,
-    @SerializedName("error_description") val errorDescription: String?,
+    @SerializedName("continuation_token") override val continuationToken: String?,
+    @Expose @SerializedName("challenge_type")override val challengeType: String?,
+    @SerializedName("error") override val error: String?,
+    @SerializedName("error_description") override val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
-): IApiResponse(statusCode, correlationId) {
+    @SerializedName("redirect_reason") override val redirectReason: String?,
+): INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
 
     override fun toUnsanitizedString(): String {
         return "ResetPasswordStartApiResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId, challengeType=$challengeType, error=$error, " +
-                "errorUri=$errorUri, errorDescription=$errorDescription)"
+                "errorUri=$errorUri, errorDescription=$errorDescription, " +
+                "redirectReason=$redirectReason)"
     }
 
     override fun toString(): String = "ResetPasswordStartApiResponse(statusCode=$statusCode, " +
@@ -96,7 +97,8 @@ class ResetPasswordStartApiResponse(
             HttpURLConnection.HTTP_OK -> {
                 if (challengeType.isRedirect()) {
                     ResetPasswordStartApiResult.Redirect(
-                        correlationId = correlationId
+                        correlationId = correlationId,
+                        redirectReason = redirectReason.orEmpty()
                     )
                 }
                 else {

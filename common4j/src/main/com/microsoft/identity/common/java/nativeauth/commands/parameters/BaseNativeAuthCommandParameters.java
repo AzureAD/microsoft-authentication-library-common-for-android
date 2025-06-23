@@ -56,6 +56,12 @@ public abstract class BaseNativeAuthCommandParameters extends CommandParameters 
     @Nullable
     public final List<String> challengeType;
 
+    /**
+     * The client capabilities to be sent with the request.
+     */
+    @Nullable
+    public final List<String> capabilities;
+
     @Override
     public void logParameters(String tag, String correlationId) {
         Logger.infoWithObject(tag, null, correlationId, this);
