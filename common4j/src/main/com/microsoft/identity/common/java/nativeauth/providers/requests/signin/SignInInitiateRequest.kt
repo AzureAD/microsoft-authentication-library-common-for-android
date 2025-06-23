@@ -50,7 +50,8 @@ data class SignInInitiateRequest private constructor(
             clientId: String,
             challengeType: String,
             requestUrl: String,
-            headers: Map<String, String?>
+            headers: Map<String, String?>,
+            capabilities: String?
         ): SignInInitiateRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(clientId, "clientId")
@@ -62,7 +63,8 @@ data class SignInInitiateRequest private constructor(
                 parameters = NativeAuthRequestSignInInitiateRequestParameters(
                     username = username,
                     challengeType = challengeType,
-                    clientId = clientId
+                    clientId = clientId,
+                    capabilities = capabilities
                 ),
                 requestUrl = URL(requestUrl),
                 headers = headers
@@ -77,9 +79,10 @@ data class SignInInitiateRequest private constructor(
     data class NativeAuthRequestSignInInitiateRequestParameters(
         val username: String,
         @SerializedName("client_id") override val clientId: String,
-        @SerializedName("challenge_type") val challengeType: String
+        @SerializedName("challenge_type") val challengeType: String,
+        @SerializedName("capabilities") val capabilities: String?
     ) : NativeAuthRequestParameters() {
-        override fun toUnsanitizedString(): String = "NativeAuthRequestSignInInitiateRequestParameters(clientId=$clientId, challengeType=$challengeType)"
+        override fun toUnsanitizedString(): String = "NativeAuthRequestSignInInitiateRequestParameters(clientId=$clientId, challengeType=$challengeType, capabilities=$capabilities)"
 
         override fun toString(): String = "NativeAuthRequestSignInInitiateRequestParameters(clientId=$clientId)"
     }
