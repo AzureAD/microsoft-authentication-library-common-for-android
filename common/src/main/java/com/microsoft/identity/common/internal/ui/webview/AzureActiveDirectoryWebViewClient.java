@@ -481,7 +481,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
 
             final Map<String, String> queryParams = StringExtensions.getUrlParameters(url);
-            final String clientId = queryParams.get("client_id");
+            final String clientId = queryParams.get(AuthenticationConstants.OAuth2.CLIENT_ID);
 
             if (StringUtil.isNullOrEmpty(clientId)) {
                 Logger.info(methodTag, "Authorize URL does not contain client_id");
@@ -494,12 +494,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     : "Authorize URL contains different client_id.");
             return isWebCpClient;
 
-        } catch (URISyntaxException | MalformedURLException e) {
+        } catch (final URISyntaxException | MalformedURLException e) {
             Logger.info(methodTag, "Invalid URL: " + e.getMessage());
             return false;
         }
     }
-
 
     private boolean isHeaderForwardingRequiredUri(@NonNull final String url) {
         // MSAL makes MSA requests first to login.microsoftonline.com, and then gets redirected to login.live.com.
@@ -811,7 +810,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processInvalidUrl(@NonNull final String url) {
         final String methodTag = TAG + ":processInvalidUrl";
 
-        Logger.info(methodTag,"We are declining to override loading and redirect to invalid URL: '"
+        Logger.infoPII(methodTag,"We are declining to override loading and redirect to invalid URL: '"
                 + removeQueryParametersOrRedact(url) + "' the user's url pattern is '" + mRedirectUrl + "'");
     }
 
