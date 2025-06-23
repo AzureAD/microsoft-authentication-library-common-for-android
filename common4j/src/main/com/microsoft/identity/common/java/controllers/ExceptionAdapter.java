@@ -222,7 +222,7 @@ public class ExceptionAdapter {
      * @param errorResponse
      * @return ServiceException, UiRequiredException
      */
-    public static ServiceException getExceptionFromTokenErrorResponse(@NonNull final TokenErrorResponse errorResponse) {
+    static ServiceException getExceptionFromTokenErrorResponse(@NonNull final TokenErrorResponse errorResponse) {
 
         final ServiceException outErr;
 
