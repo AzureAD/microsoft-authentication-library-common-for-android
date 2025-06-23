@@ -2,6 +2,8 @@ package com.microsoft.identity.client.ui.automation.rules;
 
 import android.text.TextUtils;
 
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.powerlift.ThrowableWithPowerLiftIncident;
@@ -32,33 +34,41 @@ public class PowerLiftIncidentRule implements TestRule {
                 try {
                     base.evaluate();
                 } catch (final Throwable originalThrowable) {
-                    String powerLiftIncidentDetails = null;
-                    try {
-                        Logger.e(
-                                TAG,
-                                "Encountered error during test....creating PowerLift incident.",
-                                originalThrowable
-                        );
-                        powerLiftIncidentDetails = powerLiftIntegratedApp.createPowerLiftIncident();
-                    } catch (final Throwable powerLiftError) {
-                        Logger.e(
-                                TAG,
-                                "Oops...something went wrong...unable to create PowerLift incident.",
-                                powerLiftError
-                        );
-                    }
-                    if (TextUtils.isEmpty(powerLiftIncidentDetails)) {
-                        throw originalThrowable;
-                    } else {
-                        assert powerLiftIncidentDetails != null;
-                        throw new ThrowableWithPowerLiftIncident(
-                                powerLiftIntegratedApp,
-                                powerLiftIncidentDetails,
-                                originalThrowable
-                        );
-                    }
+                    attemptPowerLiftIncident(originalThrowable, powerLiftIntegratedApp);
                 }
             }
         };
+    }
+
+    public static void attemptPowerLiftIncident(final Throwable originalThrowable, @Nullable final IPowerLiftIntegratedApp powerLiftIntegratedApp) throws Throwable {
+        if (powerLiftIntegratedApp == null) {
+            throw originalThrowable;
+        }
+
+        String powerLiftIncidentDetails = null;
+        try {
+            Logger.e(
+                    TAG,
+                    "Encountered error during test....creating PowerLift incident.",
+                    originalThrowable
+            );
+            powerLiftIncidentDetails = powerLiftIntegratedApp.createPowerLiftIncident();
+        } catch (final Throwable powerLiftError) {
+            Logger.e(
+                    TAG,
+                    "Oops...something went wrong...unable to create PowerLift incident.",
+                    powerLiftError
+            );
+        }
+        if (TextUtils.isEmpty(powerLiftIncidentDetails)) {
+            throw originalThrowable;
+        } else {
+            assert powerLiftIncidentDetails != null;
+            throw new ThrowableWithPowerLiftIncident(
+                    powerLiftIntegratedApp,
+                    powerLiftIncidentDetails,
+                    originalThrowable
+            );
+        }
     }
 }

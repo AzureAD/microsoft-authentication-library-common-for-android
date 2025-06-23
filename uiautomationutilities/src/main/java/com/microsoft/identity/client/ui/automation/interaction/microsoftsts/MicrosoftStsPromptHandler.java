@@ -66,6 +66,8 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
         final IMicrosoftStsLoginComponentHandler aadLoginComponentHandler =
                 (IMicrosoftStsLoginComponentHandler) loginComponentHandler;
 
+        final Boolean isMsaAccount = isMsaAccount(username);
+
         // if login hint was not provided, then we need to handle either account picker or email
         // field. If it was provided, then we expect to go straight to password field.
         if (!loginHintProvided) {
@@ -89,7 +91,7 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
         }
 
         if (parameters.isPasswordPageExpected() || parameters.getPrompt() == PromptParameter.LOGIN || !parameters.isSessionExpected()) {
-            loginComponentHandler.handlePasswordField(password);
+            loginComponentHandler.handlePasswordField(password, isMsaAccount);
         }
 
         if (parameters.isVerifyYourIdentityPageExpected()) {
@@ -142,10 +144,16 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
 
         if (parameters.isSecondPasswordPageExpected()) {
             try {
-                loginComponentHandler.handlePasswordField(password);
+                loginComponentHandler.handlePasswordField(password, isMsaAccount);
             } catch (AssertionError e) {
                 // Let's not throw an error if we fail on the second password field, sometimes seems to not show up in tests that use it.
             }
         }
+    }
+
+    private Boolean isMsaAccount(@NonNull final String username) {
+        // We'll probably need to update this in the future, if additional MSA accounts get
+        // added to lab that don't have outlook domain
+        return username.contains("outlook.com");
     }
 }
