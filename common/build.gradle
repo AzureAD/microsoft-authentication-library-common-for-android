@@ -1,5 +1,5 @@
 plugins {
-    id 'com.microsoft.identity.buildsystem' version '0.2.3'
+    id 'com.microsoft.identity.buildsystem' version '0.2.5'
     id 'com.android.library'
     id 'pmd'
     id 'checkstyle'
@@ -61,7 +61,11 @@ android {
         buildConfigField("boolean", "trustDebugBrokerFlag", "$trustDebugBrokerFlag")
         buildConfigField("boolean", "bypassRedirectUriCheck", "$bypassRedirectUriCheck")
     }
-
+    //aidl is being set to true since aidl only generated with this set
+    buildFeatures {
+        buildConfig = true
+        aidl = true
+    }
     buildTypes {
         debug {
             testCoverageEnabled enableCodeCoverage
@@ -118,6 +122,7 @@ android {
     sourceSets {
         main {
             manifest.srcFile 'src/main/AndroidManifest.xml'
+            aidl.srcDirs = ['src/main/aidl']
 
             // Also load source from common-java
             java.srcDirs = ['src/main/java', 'src/main/kotlin']
@@ -241,7 +246,7 @@ android.libraryVariants.all { variant ->
 // Create tasks to generate javadoc jar
 android.libraryVariants.all { variant ->
     task("${variant.name}JavadocJar", type: Jar, dependsOn: "${variant.name}Javadoc") {
-        classifier 'javadoc'
+        archiveClassifier.set('javadoc')
         from tasks["${variant.name}Javadoc"].destinationDir
     }
 }
@@ -249,7 +254,7 @@ android.libraryVariants.all { variant ->
 
 tasks.register('sourcesJar', Jar) {
     from android.sourceSets.main.java.srcDirs
-    classifier 'sources'
+    archiveClassifier.set('sources')
     destinationDirectory = reporting.file("$project.buildDir/outputs/jar/")
 }
 
@@ -285,11 +290,10 @@ tasks.register('pmd', Pmd) {
     source = fileTree('src/main/java')
 
     reports {
-        xml.enabled = false
-        html.enabled = true
+        xml.required = false
+        html.required = true
     }
 }
-
 // For publishing to the remote maven repo.
 afterEvaluate {
 
@@ -336,6 +340,7 @@ afterEvaluate {
                 groupId 'com.microsoft.identity'
                 artifactId 'common-debug'
                 //Edit the 'version' here for VSTS RC build
+
                 version = project.version
             }
         }
@@ -365,11 +370,31 @@ tasks.configureEach { task ->
     if (task.name == 'assembleDistRelease') {
         task.dependsOn 'sourcesJar'
     }
+    // Due to gradle version increase, we need to be more explicit in the dependency chain
+    // More information can be found here: https://docs.gradle.org/8.1/userguide/validation_problems.html#implicit_dependency
+    if (task.name == "publishDistDebugPublicationToVsts-maven-adal-androidRepository") {
+        task.mustRunAfter 'generatePomFileForDistReleasePublication', 'bundleDistReleaseAar'
+    }
+    if (task.name == "publishDistReleasePublicationToVsts-maven-adal-androidRepository") {
+        task.dependsOn 'bundleDistReleaseAar'
+    }
+    if (task.name == "generateMetadataFileForDistDebugPublication") {
+        task.mustRunAfter 'bundleDistReleaseAar'
+    }
+    if (task.name == "generateMetadataFileForDistReleasePublication") {
+        task.dependsOn 'bundleDistDebugAar'
+    }
 }
 
-// This is used to generate the pom file for publishing to external maven in maven-release-jobs.yml
+// This is used to generate the pom file for publishing to external maven in maven-release-jobs.yml.
+// Need to distinguish between distDebug and distRelease for the destination
 tasks.withType(GenerateMavenPom).all {
-    destination = layout.buildDirectory.file("poms/${project.name}-${project.version}.pom").get().asFile
+    def functionName = name.toLowerCase()
+    if (functionName.contains("distdebug")) {
+        destination = layout.buildDirectory.file("poms/common-debug-${project.version}.pom").get().asFile
+    } else if (functionName.contains("distrelease")) {
+        destination = layout.buildDirectory.file("poms/common-${project.version}.pom").get().asFile
+    }
 }
 
 def dependenciesSizeInMb = project.hasProperty("dependenciesSizeMb") ? project.dependenciesSizeMb : "15"
