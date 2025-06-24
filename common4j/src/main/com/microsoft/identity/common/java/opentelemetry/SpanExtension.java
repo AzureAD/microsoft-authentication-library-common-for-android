@@ -95,7 +95,7 @@ public class SpanExtension {
      * default Noop implementation in {@link io.opentelemetry.context.ThreadLocalContextStorage}.
      * We just made a custom one since the default one is package-private.
      */
-    enum NoopScope implements Scope {
+    public enum NoopScope implements Scope {
         INSTANCE;
 
         @Override
