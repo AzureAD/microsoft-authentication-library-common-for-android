@@ -223,10 +223,24 @@ public class ExceptionAdapter {
      * @return ServiceException, UiRequiredException
      */
     static ServiceException getExceptionFromTokenErrorResponse(@NonNull final TokenErrorResponse errorResponse) {
+        return getExceptionFromTokenErrorResponse(errorResponse, true);
+    }
+
+    /**
+     * Get an exception object from the given oAuth values.
+     *
+     * @param errorResponse - TokenErrorResponse containing error information
+     * @param allowUiRequiredException - if true, will convert to UiRequiredException if applicable
+     * @return ServiceException, UiRequiredException
+     */
+    static ServiceException getExceptionFromTokenErrorResponse(
+            @NonNull final TokenErrorResponse errorResponse,
+            boolean allowUiRequiredException
+    ) {
 
         final ServiceException outErr;
 
-        if (shouldBeConvertedToUiRequiredException(errorResponse.getError())) {
+        if (allowUiRequiredException && shouldBeConvertedToUiRequiredException(errorResponse.getError())) {
             outErr = new UiRequiredException(
                     errorResponse.getError(),
                     errorResponse.getErrorDescription());
@@ -276,33 +290,38 @@ public class ExceptionAdapter {
                                                                       @NonNull final TokenErrorResponse errorResponse) {
 
         if (isIntunePolicyRequiredError(errorResponse)) {
-            if (commandParameters == null || !(isBrokerTokenCommandParameters(commandParameters))) {
-                Logger.warn(TAG, "In order to properly construct the IntuneAppProtectionPolicyRequiredException we need the command parameters to be supplied.  Returning as service exception instead.");
-                return getExceptionFromTokenErrorResponse(errorResponse);
-            }
-            IntuneAppProtectionPolicyRequiredException policyRequiredException;
-            if (commandParameters instanceof BrokerInteractiveTokenCommandParameters) {
-                policyRequiredException = new IntuneAppProtectionPolicyRequiredException(
-                        errorResponse.getError(),
-                        errorResponse.getErrorDescription(),
-                        (BrokerInteractiveTokenCommandParameters) commandParameters
-                );
-            } else {
-                policyRequiredException = new IntuneAppProtectionPolicyRequiredException(
-                        errorResponse.getError(),
-                        errorResponse.getErrorDescription(),
-                        (BrokerSilentTokenCommandParameters) commandParameters
-                );
-            }
-            policyRequiredException.setSubErrorCode(errorResponse.getSubError());
-            setHttpResponseUsingTokenErrorResponse(policyRequiredException, errorResponse);
+            if (isBrokerTokenCommandParameters(commandParameters)) {
+                final IntuneAppProtectionPolicyRequiredException policyRequiredException;
+                if (commandParameters instanceof BrokerInteractiveTokenCommandParameters) {
+                    policyRequiredException = new IntuneAppProtectionPolicyRequiredException(
+                            errorResponse.getError(),
+                            errorResponse.getErrorDescription(),
+                            (BrokerInteractiveTokenCommandParameters) commandParameters
+                    );
+                } else {
+                    policyRequiredException = new IntuneAppProtectionPolicyRequiredException(
+                            errorResponse.getError(),
+                            errorResponse.getErrorDescription(),
+                            (BrokerSilentTokenCommandParameters) commandParameters
+                    );
+                }
+                policyRequiredException.setSubErrorCode(errorResponse.getSubError());
+                setHttpResponseUsingTokenErrorResponse(policyRequiredException, errorResponse);
 
-            return policyRequiredException;
-        } else {
+                return policyRequiredException;
+            }
+            Logger.warn(TAG, "In order to properly construct the IntuneAppProtectionPolicyRequiredException we need the command parameters to be supplied.  Returning as service exception instead.");
             return getExceptionFromTokenErrorResponse(errorResponse);
         }
 
-
+        if (commandParameters instanceof BrokerSilentTokenCommandParameters) {
+            final BrokerSilentTokenCommandParameters brokerSilentTokenCommandParameters =
+                    (BrokerSilentTokenCommandParameters) commandParameters;
+            // If the request is for a resource account, do not allow UI required exceptions.
+            boolean allowUiRequiredException = !brokerSilentTokenCommandParameters.isRequestForResourceAccount();
+            return getExceptionFromTokenErrorResponse(errorResponse, allowUiRequiredException);
+        }
+        return getExceptionFromTokenErrorResponse(errorResponse);
     }
 
     /**
