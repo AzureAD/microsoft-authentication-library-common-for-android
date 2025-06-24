@@ -166,4 +166,10 @@ public final class PublicApiId {
     public static final String NATIVE_AUTH_JIT_CHALLENGE_AUTH_METHOD = "255";
     public static final String NATIVE_AUTH_JIT_SUBMIT_CHALLENGE = "256";
     //endregion
+
+    // Resource Account APIs
+    //==============================================================================================
+    public static final String BROKER_PROVISION_RESOURCE_ACCOUNT = "137";
+
+    //endregion
 }
