@@ -90,7 +90,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
             if (otherWays.exists()) {
                 try {
                     otherWays.click();
-                    UiAutomatorUtils.handleButtonClickForObjectWithText("password");
+                    UiAutomatorUtils.handleButtonClickForObjectWithRegexMatch("^Use \\w* password$");
                 } catch (final UiObjectNotFoundException e) {
                     throw new AssertionError(e);
                 }
