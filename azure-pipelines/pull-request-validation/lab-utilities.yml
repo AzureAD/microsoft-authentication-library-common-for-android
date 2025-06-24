@@ -11,7 +11,7 @@ resources:
       ref: dev
 
 pool:
-  name: Hosted Windows 2019 with VS2019
+  vmImage: 'windows-2022'
 
 variables:
   - group: MSIDLABVARS
@@ -31,6 +31,8 @@ jobs:
         inputs:
           cwd: $(Build.SourcesDirectory)/common-java-root
           tasks: LabApiUtilities:clean LabApiUtilities:assemble
+          javaHomeSelection: JDKVersion
+          jdkVersionOption: "1.17"
       - template: ../templates/steps/spotbugs.yml
         parameters:
           project: LabApiUtilities
@@ -41,4 +43,6 @@ jobs:
         inputs:
           cwd: $(Build.SourcesDirectory)/common-java-root
           tasks: LabApiUtilities:test -Psugar=true -PlabSecret=$(LabVaultAppCert)
+          javaHomeSelection: JDKVersion
+          jdkVersionOption: "1.17"
 ...

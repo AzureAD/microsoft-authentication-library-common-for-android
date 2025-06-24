@@ -135,7 +135,7 @@ public class MicrosoftClientAssertion extends ClientAssertion {
 
         private Base64URL createSHA1ThumbPrint(@NonNull final X509Certificate clientCertificate)
                 throws CertificateEncodingException, NoSuchAlgorithmException {
-            final MessageDigest mdSha1 = MessageDigest.getInstance(THUMBPRINT_ALGORITHM);
+            final MessageDigest mdSha1 = MessageDigest.getInstance(THUMBPRINT_ALGORITHM); // CodeQL [SM05136] - This is test-only helper code, not used in production
             mdSha1.reset();
             mdSha1.update(clientCertificate.getEncoded());
             return new Base64URL(Base64.encode(mdSha1.digest()).toString());

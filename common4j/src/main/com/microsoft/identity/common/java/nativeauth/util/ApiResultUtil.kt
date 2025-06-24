@@ -24,7 +24,7 @@ package com.microsoft.identity.common.java.nativeauth.util
 
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.util.ObjectMapper
-import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import java.net.HttpURLConnection
 
 /**
@@ -39,7 +39,7 @@ object ApiResultUtil {
      */
     fun logResponse(
         tag: String,
-        response: IApiResponse
+        response: INativeAuthApiResponse
     ) {
         val TAG = tag + ":" + response.javaClass.simpleName
         if (response.statusCode == HttpURLConnection.HTTP_OK) {

@@ -24,8 +24,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.resetp
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import com.microsoft.identity.common.java.nativeauth.util.isExpiredToken
 import com.microsoft.identity.common.java.nativeauth.util.isOOB
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
@@ -39,24 +38,26 @@ import java.net.HttpURLConnection
 class ResetPasswordChallengeApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
-    @SerializedName("continuation_token") val continuationToken: String?,
-    @Expose @SerializedName("challenge_type") val challengeType: String?,
+    @SerializedName("continuation_token") override val continuationToken: String?,
     @Expose @SerializedName("binding_method") val bindingMethod: String?,
     @SerializedName("challenge_target_label") val challengeTargetLabel: String?,
     @Expose @SerializedName("challenge_channel") val challengeChannel: String?,
     @Expose @SerializedName("code_length") val codeLength: Int?,
     @Expose @SerializedName("interval") val interval: Int?,
-    @SerializedName("error") val error: String?,
-    @SerializedName("error_description") val errorDescription: String?,
+    @SerializedName("error") override val error: String?,
+    @SerializedName("error_description") override val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
-): IApiResponse(statusCode, correlationId) {
+    @Expose @SerializedName("challenge_type") override val challengeType: String?,
+    @SerializedName("redirect_reason") override val redirectReason: String?,
+): INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
 
     override fun toUnsanitizedString(): String {
         return "ResetPasswordChallengeApiResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId, challengeType=$challengeType, " +
                 "bindingMethod=$bindingMethod, challengeTargetLabel=$challengeTargetLabel, " +
                 "challengeChannel=$challengeChannel, codeLength=$codeLength, interval=$interval, " +
-                "error=$error, errorDescription=$errorDescription, errorUri=$errorUri)"
+                "error=$error, errorDescription=$errorDescription, errorUri=$errorUri, " +
+                "redirectReason=$redirectReason)"
     }
 
     override fun toString(): String = "ResetPasswordChallengeApiResponse(statusCode=$statusCode, " +
@@ -105,7 +106,8 @@ class ResetPasswordChallengeApiResponse(
                 return when {
                     challengeType.isRedirect() -> {
                         ResetPasswordChallengeApiResult.Redirect(
-                            correlationId = correlationId
+                            correlationId = correlationId,
+                            redirectReason = redirectReason.orEmpty()
                         )
                     }
                     challengeType.isOOB() -> {

@@ -62,7 +62,7 @@ import org.robolectric.annotation.Config
 import java.util.UUID
 
 /**
- * These are integration tests using real API responses instead of mocked API responses. This class
+ * These are integration tests using mocked API responses. This class
  * covers all sign up endpoints.
  * These tests run on the mock API, see: $(MOCK_API_URL) in the variable of the pipeline.
  */
@@ -77,6 +77,7 @@ class SignInOAuthStrategyTest {
     private val PASSWORD = "verySafePassword".toCharArray()
     private val CLIENT_ID = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val CHALLENGE_TYPE = "oob password redirect"
+    private val CAPABILITIES = "mfa_required registration_required"
     private val CONTINUATION_TOKEN = "12345"
     private val CHALLENGE_ID = "079af063-4ea7-4dcd-92ff-2b24f54621ea"
 
@@ -107,6 +108,7 @@ class SignInOAuthStrategyTest {
         whenever(mockConfig.getJITChallengeEndpoint()).thenReturn(ApiConstants.MockApi.jitChallengeRequestUrl)
         whenever(mockConfig.getJITContinueEndpoint()).thenReturn(ApiConstants.MockApi.jitContinueRequestUrl)
         whenever(mockConfig.challengeType).thenReturn(CHALLENGE_TYPE)
+        whenever(mockConfig.capabilities).thenReturn(CAPABILITIES)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
             config = mockConfig,
@@ -162,7 +164,7 @@ class SignInOAuthStrategyTest {
     }
 
     @Test
-    fun testPerformSignInChallengeSuccess() {
+    fun testPerformSignInChallengeWithRedirectSuccess() {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
@@ -177,6 +179,7 @@ class SignInOAuthStrategyTest {
         )
 
         Assert.assertTrue(signInChallengeResult is SignInChallengeApiResult.Redirect)
+        Assert.assertNotNull((signInChallengeResult as SignInChallengeApiResult.Redirect).redirectReason)
     }
 
     @Test
@@ -268,6 +271,7 @@ class SignInOAuthStrategyTest {
             parameters = parameters
         )
         Assert.assertTrue(signInInitiateResult is SignInInitiateApiResult.Redirect)
+        Assert.assertNotNull((signInInitiateResult as SignInInitiateApiResult.Redirect).redirectReason)
     }
 
     @Test
@@ -303,6 +307,7 @@ class SignInOAuthStrategyTest {
         )
 
         Assert.assertTrue(result is SignInIntrospectApiResult.Redirect)
+        Assert.assertNotNull((result as SignInIntrospectApiResult.Redirect).redirectReason)
     }
 
     @Test
@@ -369,6 +374,7 @@ class SignInOAuthStrategyTest {
             correlationId = correlationId
         )
         Assert.assertTrue(signInChallengeResult is SignInChallengeApiResult.Redirect)
+        Assert.assertNotNull((signInChallengeResult as SignInChallengeApiResult.Redirect).redirectReason)
     }
 
     @Test
