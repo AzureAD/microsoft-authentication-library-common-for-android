@@ -225,7 +225,7 @@ stages:
           cwd: $(Build.SourcesDirectory)/broker-java-root
           tasks: LinuxBroker:clean LinuxBroker:assemble --build-cache --info
           publishJUnitResults: false
-          jdkArchitecture: x86
+          jdkArchitecture: x64
           jdkVersionOption: "1.17"
       - task: Bash@3
         displayName: Execute tests
