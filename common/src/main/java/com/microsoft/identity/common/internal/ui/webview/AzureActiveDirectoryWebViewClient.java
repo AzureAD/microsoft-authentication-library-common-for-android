@@ -597,48 +597,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
-    // Loads the device CA URL in the WebView if the flight is enabled, otherwise opens it in the browser.
-    @VisibleForTesting
-    protected void loadDeviceCaUrl(@NonNull final String originalUrl, @NonNull final WebView view) {
-        final String methodTag = TAG + ":loadDeviceCaUrl";
-        final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
-        final Span span = spanContext != null ?
-                OTelUtility.createSpanFromParent(SpanName.ProcessWebCpRedirects.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessWebCpRedirects.name());
-        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)) {
-            Logger.info(methodTag, "Loading device CA request in WebView.");
-            span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), true);
-            String httpsUrl = originalUrl.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
-            view.loadUrl(httpsUrl, mRequestHeaders);
-        } else {
-            Logger.info(methodTag, "Loading device CA request in browser.");
-            span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), false);
-            openLinkInBrowser(originalUrl);
-            returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
-        }
-    }
-
-    // WebCP enrollment URL is a guided enrollment page showing instructions on how to enroll within the productivity app.
-    // This is a special case where the enrollment is not done in the WebView, but rather in the browser.
-    private void processWebCpEnrollmentUrl(@NonNull final WebView view, @NonNull final String url) {
-        final String methodTag = TAG + ":processWebCpEnrollmentUrl";
-        final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
-        final Span span = spanContext != null ?
-                OTelUtility.createSpanFromParent(SpanName.ProcessWebCpRedirects.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessWebCpRedirects.name());
-        span.setAttribute(AttributeName.is_webcp_enrollment_request.name(), true);
-        view.stopLoading();
-        Logger.info(methodTag, "Loading WebCP enrollment url in browser.");
-        // This is a WebCP enrollment URL, so we need to open it in the browser (it does not work in WebView as google enrollment is enforced to be done in browser).
-        openLinkInBrowser(url);
-        // We need to return MDM_FLOW result code as the enrollment is done in browser. But this may sometimes take a few seconds to launch the intent.
-        // So we will wait for a few seconds before returning the result so that the current page in webview does not get closed immediately.
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
-            }
-        }, TimeUnit.SECONDS.toMillis(THREAD_SLEEP_FOR_INTENT_LAUNCH_MS));
-    }
-
     private boolean isDeviceCaRequest(@NonNull final String url) {
         return url.contains(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
     }
