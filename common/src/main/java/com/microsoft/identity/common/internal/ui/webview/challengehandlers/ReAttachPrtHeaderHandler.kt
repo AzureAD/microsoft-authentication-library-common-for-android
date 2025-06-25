@@ -28,22 +28,20 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions
 import com.microsoft.identity.common.java.broker.CommonRefreshTokenCredentialProvider
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.logging.Logger
-import io.opentelemetry.api.internal.StringUtils
 import io.opentelemetry.api.trace.Span
-import java.net.URL
 
 /**
- * Handler for attaching prt credential header on web view in cross cloud redirect scenarios.
+ * Handler for attaching prt credential header on web view in redirect scenarios.
  */
-class CrossCloudChallengeHandler(
+class ReAttachPrtHeaderHandler(
     private val webView: WebView,
     private val headers: HashMap<String, String>,
     private val span : Span
 ) : IChallengeHandler<String, Void> {
-    private val TAG = CrossCloudChallengeHandler::class.java.simpleName
+    private val TAG = ReAttachPrtHeaderHandler::class.java.simpleName
 
     override fun processChallenge(inputUrl: String): Void? {
-        Logger.info(TAG, "Processing challenge of a cross cloud request.")
+        Logger.info(TAG, "Processing challenge to attach prt header.")
         modifyHeadersWithRefreshTokenCredential(inputUrl)
         webView.loadUrl(inputUrl, headers)
         return null
