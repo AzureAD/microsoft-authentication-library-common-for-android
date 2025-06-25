@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.ui.webview;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.admin.DevicePolicyManager;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -61,7 +60,6 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.Switc
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
 import com.microsoft.identity.common.java.authorities.Authority;
-import com.microsoft.identity.common.java.broker.CommonRefreshTokenCredentialProvider;
 import com.microsoft.identity.common.java.broker.CommonTenantInfoProvider;
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.exception.IErrorInformation;
@@ -631,24 +629,34 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     // Method to decide if the WebView should load the WebCP URL based on the flights.
     private boolean isWebCpInWebviewFeatureEnabled(@NonNull final String originalUrl) {
-        final String methodTag = TAG + ":shouldLoadWebCpUrlInWebView";
+        final String methodTag = TAG + ":isWebCpInWebviewFeatureEnabled";
         if (!ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
             // Enabling webcp in webview feature for brokered flows only for now.
             return false;
         }
+
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)) {
+            // Directly enabled via flight rollout.
+            Logger.info(methodTag, "WebCP in WebView feature is enabled.");
+            mIsWebCpInWebViewFeatureEnabled = true;
+            return true;
+        }
+
+        // Else, check if the tenant is in the list of tenants that have this feature enabled.
         final String username = StringExtensions.getUrlParameters(originalUrl).get(AuthenticationConstants.AAD.LOGIN_HINT);
-        if (username == null) {
-            return false;
+        if (!StringUtil.isNullOrEmpty(username)) {
+            final String tenantId = CommonTenantInfoProvider.INSTANCE.getTenantId(username);
+            if (StringUtil.isNullOrEmpty(tenantId)) {
+                return false;
+            }
+            final String tenantIdList = CommonFlightsManager.INSTANCE.getFlightsProvider().getStringValue(CommonFlight.TENANT_LIST_TO_ENABLE_WEB_CP_IN_WEBVIEW);
+            final boolean isFlightEnabledForCurrentTenant = !StringUtil.isNullOrEmpty(tenantIdList) && tenantIdList.contains(tenantId);
+            Logger.info(methodTag, "TenantId list is empty? " + StringUtil.isNullOrEmpty(tenantIdList) + ", Is current tenantId in list? " + isFlightEnabledForCurrentTenant);
+            mIsWebCpInWebViewFeatureEnabled = isFlightEnabledForCurrentTenant;
+            return isFlightEnabledForCurrentTenant;
         }
-        final String tenantId = CommonTenantInfoProvider.INSTANCE.getTenantId(username);
-        if (StringUtil.isNullOrEmpty(tenantId)) {
-            return false;
-        }
-        final String tenantIdList = CommonFlightsManager.INSTANCE.getFlightsProvider().getStringValue(CommonFlight.TENANT_LIST_TO_ENABLE_WEB_CP_IN_WEBVIEW);
-        final boolean isFlightEnabledForCurrentTenant = !StringUtil.isNullOrEmpty(tenantIdList) && tenantIdList.contains(tenantId);
-        Logger.info(methodTag, "TenantId list is empty? " + StringUtil.isNullOrEmpty(tenantIdList) + ", Is current tenantId in list? " + isFlightEnabledForCurrentTenant);
-        mIsWebCpInWebViewFeatureEnabled = isFlightEnabledForCurrentTenant || CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW);
-        return mIsWebCpInWebViewFeatureEnabled;
+
+        return false;
     }
 
     // WebCP enrollment URL is a guided enrollment page showing instructions on how to enroll within the productivity app.
