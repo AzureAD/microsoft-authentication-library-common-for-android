@@ -132,7 +132,20 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl,
                                              @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler) {
-        super(activity, completionCallback, pageLoadedCallback);
+        super(activity, completionCallback, pageLoadedCallback, false);
+        mRedirectUrl = redirectUrl;
+        mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
+        mSwitchBrowserRequestHandler = switchBrowserRequestHandler;
+    }
+
+    public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
+                                             @NonNull final IAuthorizationCompletionCallback completionCallback,
+                                             @NonNull final OnPageLoadedCallback pageLoadedCallback,
+                                             @NonNull final String redirectUrl,
+                                             @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler,
+                                             final boolean enableNewSslErrorHandling
+    ) {
+        super(activity, completionCallback, pageLoadedCallback, enableNewSslErrorHandling);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
         mSwitchBrowserRequestHandler = switchBrowserRequestHandler;
@@ -336,6 +349,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
                 processInvalidUrl(url);
+                // By return false, deferring to WebView to continue loading the url. This does not call webview.loadUrl()
+                // so setting the url as next url to load and marking active.
+                setActiveLoadUrl(url);
                 return false;
             }
         } catch (final ClientException exception) {

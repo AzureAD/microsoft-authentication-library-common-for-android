@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@android:color/white">
 
-    <WebView
+    <com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebView
         android:id="@+id/common_auth_webview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

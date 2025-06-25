@@ -129,7 +129,9 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable the Web CP in WebView.
      */
-    ENABLE_WEB_CP_IN_WEBVIEW("EnableWebCpInWebView", false);
+    ENABLE_WEB_CP_IN_WEBVIEW("EnableWebCpInWebView", false),
+
+    ENABLE_WEB_VIEW_NEW_SSL_HANDLER("EnableWebViewNewSslHandler", true);
 
     private String key;
     private Object defaultValue;

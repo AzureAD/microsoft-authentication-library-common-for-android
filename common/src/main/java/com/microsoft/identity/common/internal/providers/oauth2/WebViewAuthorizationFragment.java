@@ -22,6 +22,17 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_NEW_SSL_ERROR_HANDLER_ENABLED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -36,7 +47,6 @@ import android.view.ViewGroup;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
-import android.webkit.WebView;
 import android.widget.ProgressBar;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -46,40 +56,31 @@ import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
-import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
-import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
-import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
-import com.microsoft.identity.common.internal.ui.webview.ProcessUtil;
-import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
-import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
+import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
+import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebView;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
+import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
+import com.microsoft.identity.common.internal.ui.webview.ProcessUtil;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
-import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.util.ClientExtraSku;
 import com.microsoft.identity.common.logging.Logger;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
-import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
-import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
+import java.util.Arrays;
+import java.util.HashMap;
 
 import io.opentelemetry.api.trace.SpanContext;
 
@@ -93,7 +94,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @VisibleForTesting
     private static final String PKEYAUTH_STATUS = "pkeyAuthStatus";
 
-    private WebView mWebView;
+    private AzureActiveDirectoryWebView mWebView;
 
     private AzureActiveDirectoryWebViewClient mAADWebViewClient;
 
@@ -115,6 +116,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private boolean webViewZoomControlsEnabled;
 
     private boolean webViewZoomEnabled;
+
+    /**
+     * This is used to determine whether the new SSL error handler should be used.
+     * If null, means that the value has not provide. Use default logic.
+     * If true, the new SSL error handler will be used.
+     * If false, the old SSL error handler will be used.
+     */
+    private Boolean webViewNewSslErrorHandlerEnabled;
 
     private final CameraPermissionRequestHandler mCameraPermissionRequestHandler = new CameraPermissionRequestHandler(this);
 
@@ -206,6 +215,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedJavascript);
         outState.putBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         outState.putBoolean(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
+        if (webViewNewSslErrorHandlerEnabled != null) {
+            // save only if not null, otherwise it will be false by default
+            outState.putBoolean(WEB_VIEW_NEW_SSL_ERROR_HANDLER_ENABLED, webViewNewSslErrorHandlerEnabled);
+        }
     }
 
     @Override
@@ -223,6 +236,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mPostPageLoadedJavascript = state.getString(POST_PAGE_LOADED_URL);
         webViewZoomEnabled = state.getBoolean(WEB_VIEW_ZOOM_ENABLED, true);
         webViewZoomControlsEnabled = state.getBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
+        if (state.containsKey(WEB_VIEW_NEW_SSL_ERROR_HANDLER_ENABLED)) {
+            // If the key exists, we retrieve the value.
+            webViewNewSslErrorHandlerEnabled = state.getBoolean(WEB_VIEW_NEW_SSL_ERROR_HANDLER_ENABLED, false);
+        }
     }
 
     @Nullable
@@ -260,12 +277,27 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     }
                 },
                 mRedirectUri,
-                getSwitchBrowserCoordinator().getSwitchBrowserRequestHandler()
+                getSwitchBrowserCoordinator().getSwitchBrowserRequestHandler(),
+                shouldUseWebViewNewSslErrorHandler()
         );
         setUpWebView(view, mAADWebViewClient);
         mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
         launchWebView(mAuthorizationRequestUrl, mRequestHeaders);
         return view;
+    }
+
+    /**
+     * Determines whether the new SSL error handler should be used.
+     *
+     * @return true if the new SSL error handler should be used, false otherwise.
+     */
+    private boolean shouldUseWebViewNewSslErrorHandler() {
+        if (webViewNewSslErrorHandlerEnabled == null) {
+            // if the value was not provided in intent extra, then use from flight.
+            return CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_VIEW_NEW_SSL_HANDLER);
+        }
+
+        return webViewNewSslErrorHandlerEnabled;
     }
 
     @Override
