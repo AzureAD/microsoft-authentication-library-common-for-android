@@ -31,8 +31,10 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CrossCloudChallengeHandler;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHeaderHandler;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
@@ -93,6 +95,8 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_PUBLIC_CLOUD_REDIRECT_URL = "https://login.microsoftonline.com/organizations/oAuth2/v2.0/authorize?x=10";
     private static final String TEST_PASSKEY_REDIRECT_URL = "http-auth:PassKey?challenge=challenge&version=1.0&submitUrl=https://login.microsoftonline.com/common/credential?passKeyAuth=1.0%2fpasskey&context=&relyingPartyIdentifier=login.microsoft.com&allowedCredentials=somevalue";
     private static final String TEST_INTENT_INSTALL_BROKER_REDIRECT_URL = "intent://play.google.com/store/apps/details?id=com.azure.authenticator&referrer=%20adjust_reftag%3Dc6f1p4ErudH2C%26utm_source%3DLanding%2BPage%2BOrganic%2B-%2Bapp%2Bstore%2Bbadges%26utm_campaign%3Dappstore_android&pcampaignid=web_auto_redirect&web_logged_in=0&redirect_entry_point=dp#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.vending;end";
+
+    private static final String TEST_WEB_CP_ENROLLMENT_URL = "https://enterprise.google.com/android/enroll";
 
     @Before
     public void setup() throws ClientException {
@@ -215,10 +219,30 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+    public void testUrlOverrideHandleWebCPEnrollmentUrl() {
+        if(CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)) {
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_WEB_CP_ENROLLMENT_URL));
+        } else {
+            assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_WEB_CP_ENROLLMENT_URL));
+        }
+    }
+
+    @Test
+    public void testLoadDeviceCaUrl() {
+        final WebView mockWebview = Mockito.mock(WebView.class);
+        mWebViewClient.loadDeviceCaUrl(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebview);
+        if(CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)) {
+            Mockito.verify(mockWebview).loadUrl(Mockito.anyString(), Mockito.any());
+        } else {
+            Mockito.verify(mockWebview, Mockito.never()).loadUrl(Mockito.anyString(), Mockito.any());
+        }
+    }
+
+    @Test
     public void testProcessCloudRedirectAndPrtHeaderInternalSuccess() {
-        CrossCloudChallengeHandler mockCrossCloudChallengeHandler = Mockito.mock(CrossCloudChallengeHandler.class);
+        ReAttachPrtHeaderHandler mockCrossCloudChallengeHandler = Mockito.mock(ReAttachPrtHeaderHandler.class);
         try {
-            mWebViewClient.processCloudRedirectAndPrtHeaderInternal(TEST_CROSS_CLOUD_REDIRECT_URL, mockCrossCloudChallengeHandler, mMockWebView, "methodTag", Span.current());
+            mWebViewClient.reAttachPrtHeader(TEST_CROSS_CLOUD_REDIRECT_URL, mockCrossCloudChallengeHandler, mMockWebView, "methodTag", Span.current());
         } catch (Exception e) {
             Assert.fail("Unexpected exception occured " + e);
         }
@@ -226,12 +250,12 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Test
     public void testProcessCloudRedirectAndPrtHeaderInternalException() {
-        CrossCloudChallengeHandler mockCrossCloudChallengeHandler = Mockito.mock(CrossCloudChallengeHandler.class);
+        ReAttachPrtHeaderHandler mockReAttachPrtHandler = Mockito.mock(ReAttachPrtHeaderHandler.class);
         WebView mockWebView = Mockito.mock(WebView.class);
-        Mockito.doThrow(new RuntimeException("Test Exception")).when(mockCrossCloudChallengeHandler).processChallenge(TEST_CROSS_CLOUD_REDIRECT_URL);
+        Mockito.doThrow(new RuntimeException("Test Exception")).when(mockReAttachPrtHandler).processChallenge(TEST_CROSS_CLOUD_REDIRECT_URL);
         try {
-            mWebViewClient.processCloudRedirectAndPrtHeaderInternal(TEST_CROSS_CLOUD_REDIRECT_URL, mockCrossCloudChallengeHandler, mockWebView, "methodTag", Span.current());
-            Mockito.verify(mockCrossCloudChallengeHandler, Mockito.times(1)).processChallenge(TEST_CROSS_CLOUD_REDIRECT_URL);
+            mWebViewClient.reAttachPrtHeader(TEST_CROSS_CLOUD_REDIRECT_URL, mockReAttachPrtHandler, mockWebView, "methodTag", Span.current());
+            Mockito.verify(mockReAttachPrtHandler, Mockito.times(1)).processChallenge(TEST_CROSS_CLOUD_REDIRECT_URL);
             Mockito.verify(mockWebView).loadUrl(Mockito.anyString(), Mockito.any());
         } catch (Exception e) {
             Assert.fail("Failure is not expected. We should have caught the exception and ignored it. " + e);
