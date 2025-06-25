@@ -1,5 +1,6 @@
 vNext
 ----------
+# [MINOR] Replace DisplayMask with Jetpack Window Manager (#2687)
 
 Version 21.3.0
 ----------
