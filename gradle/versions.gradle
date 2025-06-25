@@ -19,6 +19,7 @@ ext {
     coreLibraryDesugaringVersion = "1.1.5"
 
     // Libraries
+    androidxWindowJavaVersion = "1.2.0"
     androidxTestRunnerVersion = "1.4.0"
     androidxTestOrchestratorVersion = "1.4.1"
     androidxTestMonitorVersion = "1.4.0"
