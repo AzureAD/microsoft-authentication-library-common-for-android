@@ -628,7 +628,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     // Method to decide if the WebView should load the WebCP URL based on the flights.
-    private boolean isWebCpInWebviewFeatureEnabled(@NonNull final String originalUrl) {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    protected boolean isWebCpInWebviewFeatureEnabled(@NonNull final String originalUrl) {
         final String methodTag = TAG + ":isWebCpInWebviewFeatureEnabled";
         if (!ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
             // Enabling webcp in webview feature for brokered flows only for now.
