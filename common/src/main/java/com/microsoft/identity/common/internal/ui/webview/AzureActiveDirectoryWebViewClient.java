@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.ui.webview;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.admin.DevicePolicyManager;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
