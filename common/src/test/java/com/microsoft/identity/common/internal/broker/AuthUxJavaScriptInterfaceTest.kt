@@ -63,7 +63,7 @@ class AuthUxJavaScriptInterfaceTest {
     @After
     fun tearDown() {
         // Clear the static map after each test
-        NumberMatchHelper.numberMatchMap.clear()
+        NumberMatchHelper.clearNumberMatchData(context)
     }
 
     @Test
@@ -72,7 +72,7 @@ class AuthUxJavaScriptInterfaceTest {
         authUxJavaScriptInterface.receiveAuthUxMessage(numberMatchTestPayload)
 
         // Verify that the data was stored in NumberMatchHelper
-        val storedValue = NumberMatchHelper.numberMatchMap[mockSessionId]
+        val storedValue = NumberMatchHelper.getNumberMatch(context, mockSessionId)
         Assert.assertTrue(storedValue == mockNumberMatchValue)
     }
 

@@ -91,7 +91,7 @@ class NumberMatchHelper {
         /**
          * Clear all number match data from ContentProvider.
          */
-        fun clearNumberMatchMap(context: Context) {
+        fun clearNumberMatchData(context: Context) {
             val uri = NumberMatchContentProvider.CONTENT_URI
             context.contentResolver.delete(uri, null, null)
         }
