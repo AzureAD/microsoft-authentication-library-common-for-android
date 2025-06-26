@@ -1,6 +1,6 @@
 vNext
 ----------
-- [MINOR] Updating handling of ssl error received in Android WebView's onReceivedSslError callback
+- [MINOR] Updating handling of ssl error received in Android WebView's onReceivedSslError callback (#2691)
 
 Version 21.3.0
 ----------
