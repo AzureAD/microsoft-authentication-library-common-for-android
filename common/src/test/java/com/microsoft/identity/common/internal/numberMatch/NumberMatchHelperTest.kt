@@ -22,63 +22,104 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.numberMatch
 
+import android.content.ContentResolver
+import android.content.ContentValues
+import android.content.Context
+import android.database.Cursor
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mock
+import org.mockito.Mockito
+import org.mockito.MockitoAnnotations
 
 class NumberMatchHelperTest {
 
     private val mockSessionId = "1234"
     private val mockNumberMatchValue = "00"
+    @Mock
+    private lateinit var context: Context
+    @Mock
+    private lateinit var contentResolver: ContentResolver
+    @Mock
+    private lateinit var cursor: Cursor
 
     @Before
     fun setUp() {
-        // Clear the map before each test to ensure a clean state
-        NumberMatchHelper.clearNumberMatchMap()
+        MockitoAnnotations.openMocks(this)
+        Mockito.`when`(context.contentResolver).thenReturn(contentResolver)
     }
 
     @Test
     fun `test storeNumberMatch with valid inputs`() {
-        // Store a valid session ID and number match
-        val sessionId = mockSessionId
-        val numberMatch = mockNumberMatchValue
-        NumberMatchHelper.storeNumberMatch(sessionId, numberMatch)
+        Mockito.`when`(contentResolver.insert(Mockito.any(), Mockito.any(ContentValues::class.java))).thenReturn(null)
+        Mockito.`when`(contentResolver.query(
+            Mockito.any(),
+            Mockito.any(),
+            Mockito.anyString(),
+            Mockito.any(),
+            Mockito.isNull()
+        )).thenReturn(cursor)
+        Mockito.`when`(cursor.moveToFirst()).thenReturn(true)
+        Mockito.`when`(cursor.getColumnIndexOrThrow(Mockito.anyString())).thenReturn(0)
+        Mockito.`when`(cursor.getString(0)).thenReturn(mockNumberMatchValue)
 
-        // Verify that the map contains the correct value
-        assertEquals(mockNumberMatchValue, NumberMatchHelper.numberMatchMap[sessionId])
+        NumberMatchHelper.storeNumberMatch(context, mockSessionId, mockNumberMatchValue)
+        val result = NumberMatchHelper.getNumberMatch(context, mockSessionId)
+        assertEquals(mockNumberMatchValue, result)
     }
 
     @Test
     fun `test storeNumberMatch with null sessionId`() {
-        // Attempt to store a null session ID
-        val numberMatch = mockNumberMatchValue
-        NumberMatchHelper.storeNumberMatch(null, numberMatch)
-
-        // Verify that the map is still empty
-        assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+        NumberMatchHelper.storeNumberMatch(context, null, mockNumberMatchValue)
+        val result = NumberMatchHelper.getNumberMatch(context, null)
+        assertNull(result)
     }
 
     @Test
     fun `test storeNumberMatch with null numberMatch`() {
-        // Attempt to store a null number match
-        val sessionId = mockSessionId
-        NumberMatchHelper.storeNumberMatch(sessionId, null)
-
-        // Verify that the map is still empty
-        assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+        NumberMatchHelper.storeNumberMatch(context, mockSessionId, null)
+        // Should not call insert, so query returns null
+        Mockito.`when`(contentResolver.query(
+            Mockito.any(),
+            Mockito.any(),
+            Mockito.anyString(),
+            Mockito.any(),
+            Mockito.isNull()
+        )).thenReturn(null)
+        val result = NumberMatchHelper.getNumberMatch(context, mockSessionId)
+        assertNull(result)
     }
 
     @Test
-    fun `test clearNumberMatchMap`() {
-        // Add an entry to the map
-        val sessionId = mockSessionId
-        val numberMatch = mockNumberMatchValue
-        NumberMatchHelper.storeNumberMatch(sessionId, numberMatch)
+    fun `test getNumberMatch with non-existent sessionId`() {
+        Mockito.`when`(contentResolver.query(
+            Mockito.any(),
+            Mockito.any(),
+            Mockito.anyString(),
+            Mockito.any(),
+            Mockito.isNull()
+        )).thenReturn(cursor)
+        Mockito.`when`(cursor.moveToFirst()).thenReturn(false)
+        val result = NumberMatchHelper.getNumberMatch(context, "nonexistent")
+        assertNull(result)
+    }
 
-        // Clear the map
-        NumberMatchHelper.clearNumberMatchMap()
-
-        // Verify that the map is empty
-        assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    @Test
+    fun `test getNumberMatch after storing and clearing`() {
+        // Simulate storing
+        Mockito.`when`(contentResolver.insert(Mockito.any(), Mockito.any(ContentValues::class.java))).thenReturn(null)
+        // Simulate clearing by returning a cursor that returns false for moveToFirst
+        Mockito.`when`(contentResolver.query(
+            Mockito.any(),
+            Mockito.any(),
+            Mockito.anyString(),
+            Mockito.any(),
+            Mockito.isNull()
+        )).thenReturn(cursor)
+        Mockito.`when`(cursor.moveToFirst()).thenReturn(false)
+        NumberMatchHelper.storeNumberMatch(context, mockSessionId, mockNumberMatchValue)
+        val result = NumberMatchHelper.getNumberMatch(context, mockSessionId)
+        assertNull(result)
     }
 }

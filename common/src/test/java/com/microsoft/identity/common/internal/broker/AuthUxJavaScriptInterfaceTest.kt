@@ -22,15 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker
 
+import android.content.Context
 import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mock
+import org.mockito.MockitoAnnotations
 
 class AuthUxJavaScriptInterfaceTest {
 
     private lateinit var authUxJavaScriptInterface: AuthUxJavaScriptInterface
+
+    @Mock
+    private lateinit var context: Context
 
     private val mockSessionId = "1234"
     private val mockNumberMatchValue = "00"
@@ -50,7 +56,8 @@ class AuthUxJavaScriptInterfaceTest {
 
     @Before
     fun setUp() {
-        authUxJavaScriptInterface = AuthUxJavaScriptInterface()
+        MockitoAnnotations.openMocks(this)
+        authUxJavaScriptInterface = AuthUxJavaScriptInterface(context)
     }
 
     @After

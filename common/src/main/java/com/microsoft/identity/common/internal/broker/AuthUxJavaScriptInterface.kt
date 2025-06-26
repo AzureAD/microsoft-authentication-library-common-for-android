@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker
 
+import android.content.Context
 import android.webkit.JavascriptInterface
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParseException
@@ -37,7 +38,7 @@ import java.net.URL
  * JavaScript API to receive JSON string payloads from AuthUX in order to facilitate calling various
  * broker methods.
  */
-class AuthUxJavaScriptInterface {
+class AuthUxJavaScriptInterface(private val context: Context) {
 
     // Store number matches in a static hash map
     // No need to persist this storage beyond the current broker process, but we need to keep them
@@ -133,6 +134,7 @@ class AuthUxJavaScriptInterface {
             when (operation) {
                 OperationNames.NUMBER_MATCHING ->
                     NumberMatchHelper.storeNumberMatch(
+                        context,
                         parameters.sessionId,
                         parameters.codeMatch
                     )
