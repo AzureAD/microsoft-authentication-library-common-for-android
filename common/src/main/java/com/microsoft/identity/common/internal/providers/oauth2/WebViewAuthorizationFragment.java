@@ -291,7 +291,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      *
      * @return true if the new SSL error handler should be used, false otherwise.
      */
-    private boolean shouldUseWebViewNewSslErrorHandler() {
+    protected boolean shouldUseWebViewNewSslErrorHandler() {
         if (webViewNewSslErrorHandlerEnabled == null) {
             // if the value was not provided in intent extra, then use from flight.
             return CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_VIEW_NEW_SSL_HANDLER);

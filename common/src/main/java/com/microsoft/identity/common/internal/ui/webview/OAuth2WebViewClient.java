@@ -115,6 +115,13 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         mActiveLoadUrl = activeLoadUrl;
     }
 
+    /**
+     * For Testing
+     */
+    String getActiveLoadUrl() {
+        return mActiveLoadUrl;
+    }
+
     @Override
     public void onReceivedHttpAuthRequest(WebView view, final HttpAuthHandler handler,
                                           String host, String realm) {
@@ -202,8 +209,8 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
                                                   final SslErrorHandler handler,
                                                   final SslError error) {
         // Developer does not have option to control this for now
+        // this calls handler.cancel() to stop loading the affected resource.
         super.onReceivedSslError(view, handler, error);
-        handler.cancel();
 
         final String errMsg = "Received SSL Error during request. For more info see: " + SSL_HELP_URL;
 
@@ -218,10 +225,9 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     private void onReceivedSslErrorInternal(final WebView view,
                                    final SslErrorHandler handler,
                                    final SslError error) {
-        // Developer does not have option to control this for now
         final String methodTag = TAG + ":onReceivedSslErrorInternal";
+        // this calls handler.cancel() to stop loading the affected resource.
         super.onReceivedSslError(view, handler, error);
-        handler.cancel();
 
         // only if the error is for the main frame URL, cancel the flow.
         // otherwise only handler.cancel() is called (above) to stop loading affected resource.
