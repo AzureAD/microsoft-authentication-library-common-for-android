@@ -230,17 +230,17 @@ public class ExceptionAdapter {
      * Get an exception object from the given oAuth values.
      *
      * @param errorResponse - TokenErrorResponse containing error information
-     * @param allowUiRequiredException - if true, will convert to UiRequiredException if applicable
+     * @param allowConvertToUiRequiredException - if true, will convert to UiRequiredException if applicable
      * @return ServiceException, UiRequiredException
      */
     static ServiceException getExceptionFromTokenErrorResponse(
             @NonNull final TokenErrorResponse errorResponse,
-            boolean allowUiRequiredException
+            final boolean allowConvertToUiRequiredException
     ) {
 
         final ServiceException outErr;
 
-        if (allowUiRequiredException && shouldBeConvertedToUiRequiredException(errorResponse.getError())) {
+        if (allowConvertToUiRequiredException && shouldBeConvertedToUiRequiredException(errorResponse.getError())) {
             outErr = new UiRequiredException(
                     errorResponse.getError(),
                     errorResponse.getErrorDescription());
