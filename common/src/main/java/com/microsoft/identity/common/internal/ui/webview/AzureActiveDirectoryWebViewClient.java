@@ -349,9 +349,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
                 processInvalidUrl(url);
-                // By return false, deferring to WebView to continue loading the url. This does not call webview.loadUrl()
-                // so setting the url as next url to load and marking active.
-                setActiveLoadUrl(url);
                 return false;
             }
         } catch (final ClientException exception) {

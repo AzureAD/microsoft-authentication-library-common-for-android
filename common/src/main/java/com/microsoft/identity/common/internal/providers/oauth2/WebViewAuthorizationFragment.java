@@ -47,6 +47,7 @@ import android.view.ViewGroup;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
+import android.webkit.WebView;
 import android.widget.ProgressBar;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -60,7 +61,6 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
 import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
-import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebView;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
@@ -94,7 +94,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @VisibleForTesting
     private static final String PKEYAUTH_STATUS = "pkeyAuthStatus";
 
-    private AzureActiveDirectoryWebView mWebView;
+    private WebView mWebView;
 
     private AzureActiveDirectoryWebViewClient mAADWebViewClient;
 

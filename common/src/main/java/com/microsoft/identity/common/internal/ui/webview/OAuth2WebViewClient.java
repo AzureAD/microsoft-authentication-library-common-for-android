@@ -62,11 +62,6 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     private final OnPageLoadedCallback mPageLoadedCallback;
     private final Activity mActivity;
 
-    /**
-     *  Used to verify that the page loaded in the webview is the expected page.
-     */
-    private String mActiveLoadUrl;
-
     private final boolean mEnableNewSslErrorHandling;
 
     @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "This is only exposed in testing")
@@ -104,22 +99,6 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         mCompletionCallback = completionCallback;
         mPageLoadedCallback = pageLoadedCallback;
         mEnableNewSslErrorHandling = enableNewSslErrorHandling;
-    }
-
-    /**
-     * Sets the expected page to be loaded in the webview.
-     *
-     * @param activeLoadUrl The expected page to be loaded.
-     */
-    public void setActiveLoadUrl(String activeLoadUrl) {
-        mActiveLoadUrl = activeLoadUrl;
-    }
-
-    /**
-     * For Testing
-     */
-    String getActiveLoadUrl() {
-        return mActiveLoadUrl;
     }
 
     @Override
@@ -196,80 +175,19 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     public void onReceivedSslError(final WebView view,
                                    final SslErrorHandler handler,
                                    final SslError error) {
-        final String methodTag = TAG + ":onReceivedSslError";
-        if (this.mEnableNewSslErrorHandling) {
-            onReceivedSslErrorInternal(view, handler, error);
-        } else {
-            // Legacy flow
-            onReceivedSslErrorInternalLegacy(view, handler, error);
-        }
-    }
-
-    private void onReceivedSslErrorInternalLegacy(final WebView view,
-                                                  final SslErrorHandler handler,
-                                                  final SslError error) {
         // Developer does not have option to control this for now
-        // this calls handler.cancel() to stop loading the affected resource.
         super.onReceivedSslError(view, handler, error);
 
         final String errMsg = "Received SSL Error during request. For more info see: " + SSL_HELP_URL;
 
         Logger.error(TAG + ":onReceivedSslError", errMsg, null);
 
-        // Send the result back to the calling activity
-        mCompletionCallback.onChallengeResponseReceived(
-                RawAuthorizationResult.fromException(
-                        new ClientException("Code:" + ERROR_FAILED_SSL_HANDSHAKE, error.toString())));
-    }
-
-    private void onReceivedSslErrorInternal(final WebView view,
-                                   final SslErrorHandler handler,
-                                   final SslError error) {
-        final String methodTag = TAG + ":onReceivedSslErrorInternal";
-        // this calls handler.cancel() to stop loading the affected resource.
-        super.onReceivedSslError(view, handler, error);
-
-        // only if the error is for the main frame URL, cancel the flow.
-        // otherwise only handler.cancel() is called (above) to stop loading affected resource.
-        if (isMainFrameUrl(error.getUrl())) {
-            final String errMsg = "Received SSL Error during request. For more info see: " + SSL_HELP_URL;
-
-            Logger.error(methodTag, errMsg, null);
-
+        if (!mEnableNewSslErrorHandling) {
             // Send the result back to the calling activity
             mCompletionCallback.onChallengeResponseReceived(
                     RawAuthorizationResult.fromException(
                             new ClientException("Code:" + ERROR_FAILED_SSL_HANDSHAKE, error.toString())));
         }
-    }
-
-    /**
-     * Check if the error url is the same as the main url to load. Compares host
-     * as SSL errors apply to the domain
-     */
-    private boolean isMainFrameUrl(final String errorUrl) {
-        final String methodTag = TAG + ":isMainFrameUrl";
-        if (StringUtil.isEmpty(mActiveLoadUrl)) {
-            Logger.warn(methodTag, "Main url is empty.");
-            return false;
-        }
-        if (StringUtil.isEmpty(errorUrl)) {
-            Logger.warn(methodTag, "Received SSL error with null or empty URL.");
-            return false;
-        }
-
-        final String mainUrlHost = Uri.parse(mActiveLoadUrl).getHost();
-        if (StringUtil.isEmpty(mainUrlHost)) {
-            Logger.warn(methodTag, "Main url is malformed: " + mActiveLoadUrl);
-            return false;
-        }
-
-        final String errorUrlHost = Uri.parse(errorUrl).getHost();
-        if (StringUtil.isEmpty(errorUrlHost)) {
-            Logger.warn(methodTag, "Received SSL error with malformed URL: " + errorUrl);
-            return false;
-        }
-        return errorUrlHost.equalsIgnoreCase(mainUrlHost);
     }
 
     @Override

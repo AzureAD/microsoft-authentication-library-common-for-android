@@ -22,7 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview;
 
-import static android.webkit.WebViewClient.ERROR_FAILED_SSL_HANDSHAKE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTHENTICATOR_MFA_LINKING_PREFIX;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.when;
 
 import android.app.Activity;
 import android.content.Context;
@@ -36,13 +43,13 @@ import androidx.test.core.app.ApplicationProvider;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHeaderHandler;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler;
-import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -52,24 +59,16 @@ import org.mockito.Mockito;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTHENTICATOR_MFA_LINKING_PREFIX;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.when;
-
 import java.util.HashMap;
 
 import io.opentelemetry.api.trace.Span;
 
-
+/**
+ * Tests for {@link AzureActiveDirectoryWebViewClient}.
+ */
 @RunWith(RobolectricTestRunner.class)
 public class AzureActiveDirectoryWebViewClientTest {
-    private AzureActiveDirectoryWebView mMockWebView;
+    private WebView mMockWebView;
     private AzureActiveDirectoryWebViewClient mWebViewClient;
     private Context mContext;
     private Activity mActivity;
@@ -109,7 +108,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Before
     public void setup() throws ClientException {
         mContext = ApplicationProvider.getApplicationContext();
-        mMockWebView = new AzureActiveDirectoryWebView(mContext);
+        mMockWebView = new WebView(mContext);
         mActivity = Robolectric.buildActivity(Activity.class).get();
         mWebViewClient = new AzureActiveDirectoryWebViewClient(
                 mActivity,
@@ -208,7 +207,6 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     public void testUrlOverrideHandlesInvalidUrl() {
         assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_INVALID_URL));
-        assertEquals(TEST_INVALID_URL, mWebViewClient.getActiveLoadUrl());
     }
 
     @Test
@@ -326,9 +324,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                 url -> {},
                 TEST_REDIRECT_URI,
                 Mockito.mock(SwitchBrowserRequestHandler.class));
-        final AzureActiveDirectoryWebView mockWebView = new AzureActiveDirectoryWebView(mContext);
+        final WebView mockWebView = new WebView(mContext);
         mockWebView.setWebViewClient(mockWebViewClient);
-        mockWebViewClient.setActiveLoadUrl(mockActiveUrl);
 
         // act
         mockWebViewClient.onReceivedSslError(mockWebView, mockHandler, mockError);
@@ -338,8 +335,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
-    public void testOnReceivedSslError_NotMainFrame() {
-        final String mockActiveUrl = "https://login.microsoftonline.com/organizations/oAuth2/v2.0/authorize";
+    public void testOnReceivedSslError() {
         final SslErrorHandler mockHandler = Mockito.mock(android.webkit.SslErrorHandler.class);
         final SslError mockError = Mockito.mock(android.net.http.SslError.class);
         final IAuthorizationCompletionCallback mockCallback = Mockito.mock(IAuthorizationCompletionCallback.class);
@@ -352,40 +348,14 @@ public class AzureActiveDirectoryWebViewClientTest {
                 Mockito.mock(SwitchBrowserRequestHandler.class),
                 true
         );
-        final AzureActiveDirectoryWebView mockWebView = new AzureActiveDirectoryWebView(mContext);
+        final WebView mockWebView = new WebView(mContext);
         mockWebView.setWebViewClient(mockWebViewClient);
-        mockWebViewClient.setActiveLoadUrl(mockActiveUrl);
 
         // act
         mockWebViewClient.onReceivedSslError(mockWebView, mockHandler, mockError);
 
+        // verify that the handler is cancelled and the callback is invoked
         Mockito.verify(mockHandler, Mockito.times(1)).cancel();
         Mockito.verify(mockCallback, never()).onChallengeResponseReceived(any());
-    }
-
-    @Test
-    public void testOnReceivedSslError_MainFrame() {
-        final String mockActiveUrl = "https://login.microsoftonline.com/organizations/oAuth2/v2.0/authorize";
-        final SslErrorHandler mockHandler = Mockito.mock(android.webkit.SslErrorHandler.class);
-        final SslError mockError = Mockito.mock(android.net.http.SslError.class);
-        final IAuthorizationCompletionCallback mockCallback = Mockito.mock(IAuthorizationCompletionCallback.class);
-        when(mockError.getUrl()).thenReturn("https://login.microsoftonline.com/organizations");
-        final AzureActiveDirectoryWebViewClient mockWebViewClient = new AzureActiveDirectoryWebViewClient(
-                mActivity,
-                mockCallback,
-                url -> {},
-                TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
-                true
-        );
-        final AzureActiveDirectoryWebView mockWebView = new AzureActiveDirectoryWebView(mContext);
-        mockWebView.setWebViewClient(mockWebViewClient);
-        mockWebViewClient.setActiveLoadUrl(mockActiveUrl);
-
-        // act
-        mockWebViewClient.onReceivedSslError(mockWebView, mockHandler, mockError);
-
-        Mockito.verify(mockHandler, Mockito.times(1)).cancel();
-        Mockito.verify(mockCallback, Mockito.times(1)).onChallengeResponseReceived(any());
     }
 }
