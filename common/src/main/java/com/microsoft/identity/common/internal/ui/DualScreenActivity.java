@@ -43,6 +43,7 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.microsoft.device.display.DisplayMask;
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.internal.util.ProcessUtil;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.logging.Logger;
@@ -62,7 +63,7 @@ public class DualScreenActivity extends FragmentActivity {
 
     private void initializeContentView(){
         super.setContentView(R.layout.dual_screen_layout);
-        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_HANDLING_FOR_EDGE_TO_EDGE)) {
+        if (ProcessUtil.isBrokerProcess(getApplicationContext()) && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_HANDLING_FOR_EDGE_TO_EDGE)) {
             try {
                 ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (view, insets) -> {
                     int topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
