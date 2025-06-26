@@ -41,7 +41,6 @@ class NumberMatchHelper {
     // Store number matches in a Content Provider
     companion object {
         val TAG = NumberMatchHelper::class.java.simpleName
-        val numberMatchMap: HashMap<String, String> = HashMap()
         const val SESSION_ID_ATTRIBUTE_NAME = "sessionID"
         const val NUMBER_MATCH_ATTRIBUTE_NAME = "numberMatch"
 
