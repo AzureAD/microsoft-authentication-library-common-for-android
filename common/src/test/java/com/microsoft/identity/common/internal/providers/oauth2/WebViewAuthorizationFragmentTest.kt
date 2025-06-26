@@ -23,8 +23,9 @@
 package com.microsoft.identity.common.internal.providers.oauth2
 
 import android.os.Bundle
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_NEW_SSL_ERROR_HANDLER_ENABLED
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_PRESERVE_FLOW_ON_SSL_ERROR
 import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.java.flighting.IFlightsManager
 import com.microsoft.identity.common.java.flighting.IFlightsProvider
 import org.junit.Assert.assertFalse
@@ -43,11 +44,11 @@ class WebViewAuthorizationFragmentTest {
         val fragment = WebViewAuthorizationFragment()
 
         val bundle = Bundle().apply {
-            putBoolean(WEB_VIEW_NEW_SSL_ERROR_HANDLER_ENABLED, true)
+            putBoolean(WEB_VIEW_PRESERVE_FLOW_ON_SSL_ERROR, true)
         }
 
         fragment.extractState(bundle)
-        assertTrue(fragment.shouldUseWebViewNewSslErrorHandler())
+        assertTrue(fragment.shouldPreserveWebViewFlowOnSslError())
     }
 
     @Test
@@ -55,11 +56,11 @@ class WebViewAuthorizationFragmentTest {
         val fragment = WebViewAuthorizationFragment()
 
         val bundle = Bundle().apply {
-            putBoolean(WEB_VIEW_NEW_SSL_ERROR_HANDLER_ENABLED, false)
+            putBoolean(WEB_VIEW_PRESERVE_FLOW_ON_SSL_ERROR, false)
         }
 
         fragment.extractState(bundle)
-        assertFalse(fragment.shouldUseWebViewNewSslErrorHandler())
+        assertFalse(fragment.shouldPreserveWebViewFlowOnSslError())
     }
 
     @Test
@@ -71,39 +72,45 @@ class WebViewAuthorizationFragmentTest {
         fragment.extractState(bundle)
 
         // default value from flight
-        assertTrue(fragment.shouldUseWebViewNewSslErrorHandler())
+        assertFalse(fragment.shouldPreserveWebViewFlowOnSslError())
     }
 
     @Test
-    fun testExtractState_NewSslErrorHandlerNotSet_FlightProvider_Enabled() {
+    fun testExtractState_NewSslErrorHandlerNotSet_Flight_Enabled() {
         val fragment = WebViewAuthorizationFragment()
-        val flightsManger : IFlightsManager = mock()
+        val flightsManger: IFlightsManager = mock()
         val flightsProvider: IFlightsProvider = mock()
-        whenever(flightsProvider.isFlightEnabled(eq(CommonFlight.ENABLE_WEB_VIEW_NEW_SSL_HANDLER))).thenReturn(true)
+        whenever(flightsProvider.isFlightEnabled(eq(CommonFlight.SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR))).thenReturn(
+            true
+        )
         whenever(flightsManger.getFlightsProvider()).thenReturn(flightsProvider)
-
+        CommonFlightsManager.initializeCommonFlightsManager(
+            flightsManger
+        )
 
         val bundle = Bundle()
 
         fragment.extractState(bundle)
 
-        // default value from flight
-        assertTrue(fragment.shouldUseWebViewNewSslErrorHandler())
+        assertTrue(fragment.shouldPreserveWebViewFlowOnSslError())
+        CommonFlightsManager.resetFlightsManager()
     }
 
     @Test
-    fun testExtractState_NewSslErrorHandlerNotSet_FlightProvider_Disabled() {
+    fun testExtractState_NewSslErrorHandlerNotSet_Flight_Disabled() {
         val fragment = WebViewAuthorizationFragment()
-        val flightsManger : IFlightsManager = mock()
+        val flightsManger: IFlightsManager = mock()
         val flightsProvider: IFlightsProvider = mock()
-        whenever(flightsProvider.isFlightEnabled(eq(CommonFlight.ENABLE_WEB_VIEW_NEW_SSL_HANDLER))).thenReturn(false)
+        whenever(flightsProvider.isFlightEnabled(eq(CommonFlight.SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR))).thenReturn(
+            false
+        )
         whenever(flightsManger.getFlightsProvider()).thenReturn(flightsProvider)
+        CommonFlightsManager.initializeCommonFlightsManager(
+            flightsManger
+        )
+        fragment.extractState(Bundle())
 
-        val bundle = Bundle()
-
-        fragment.extractState(bundle)
-
-        // default value from flight
-        assertTrue(fragment.shouldUseWebViewNewSslErrorHandler())
+        assertFalse(fragment.shouldPreserveWebViewFlowOnSslError())
+        CommonFlightsManager.resetFlightsManager()
     }
 }

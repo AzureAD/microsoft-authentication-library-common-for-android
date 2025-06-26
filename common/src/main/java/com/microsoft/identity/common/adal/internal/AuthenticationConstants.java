@@ -2024,7 +2024,7 @@ public final class AuthenticationConstants {
 
         public static final String WEB_VIEW_ZOOM_ENABLED = "com.microsoft.identity.web.view.zoom.enabled";
 
-        public static final String WEB_VIEW_NEW_SSL_ERROR_HANDLER_ENABLED = "com.microsoft.identity.web.view.new.ssl.error.handler.enabled";
+        public static final String WEB_VIEW_PRESERVE_FLOW_ON_SSL_ERROR = "com.microsoft.identity.web.view.preserve.flow.on.ssl.error";
     }
 
     public static final class AuthorizationIntentAction {

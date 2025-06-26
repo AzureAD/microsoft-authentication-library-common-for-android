@@ -62,7 +62,10 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     private final OnPageLoadedCallback mPageLoadedCallback;
     private final Activity mActivity;
 
-    private final boolean mEnableNewSslErrorHandling;
+    /**
+     * Flag to determine whether the flow should be cancelled on SSL error.
+     */
+    private final boolean mShouldPreserveFlowOnSslError;
 
     @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "This is only exposed in testing")
     @VisibleForTesting
@@ -88,17 +91,18 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
      * @param activity           app Context
      * @param completionCallback Challenge completion callback
      * @param pageLoadedCallback callback to be triggered on page load. For UI purposes.
+     * @param shouldPreserveFlowOnSslError flag to determine whether the flow should be cancelled on SSL error.
      */
     OAuth2WebViewClient(@NonNull final Activity activity,
                         @NonNull final IAuthorizationCompletionCallback completionCallback,
                         @NonNull final OnPageLoadedCallback pageLoadedCallback,
-                        boolean enableNewSslErrorHandling
+                        final boolean shouldPreserveFlowOnSslError
     ) {
         // the validation of redirect url and authorization request should be in upper level before launching the webview.
         mActivity = activity;
         mCompletionCallback = completionCallback;
         mPageLoadedCallback = pageLoadedCallback;
-        mEnableNewSslErrorHandling = enableNewSslErrorHandling;
+        mShouldPreserveFlowOnSslError = shouldPreserveFlowOnSslError;
     }
 
     @Override
@@ -182,7 +186,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
 
         Logger.error(TAG + ":onReceivedSslError", errMsg, null);
 
-        if (!mEnableNewSslErrorHandling) {
+        if (!mShouldPreserveFlowOnSslError) {
             // Send the result back to the calling activity
             mCompletionCallback.onChallengeResponseReceived(
                     RawAuthorizationResult.fromException(

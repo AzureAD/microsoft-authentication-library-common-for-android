@@ -131,7 +131,7 @@ public enum CommonFlight implements IFlightConfig {
      */
     ENABLE_WEB_CP_IN_WEBVIEW("EnableWebCpInWebView", false),
 
-    ENABLE_WEB_VIEW_NEW_SSL_HANDLER("EnableWebViewNewSslHandler", true);
+    SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR("ShouldPreserveWebViewFlowOnSslError", false);
 
     private String key;
     private Object defaultValue;

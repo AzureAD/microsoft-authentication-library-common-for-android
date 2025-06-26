@@ -27,7 +27,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_NEW_SSL_ERROR_HANDLER_ENABLED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_PRESERVE_FLOW_ON_SSL_ERROR;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
@@ -118,12 +118,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private boolean webViewZoomEnabled;
 
     /**
-     * This is used to determine whether the new SSL error handler should be used.
-     * If null, means that the value has not provide. Use default logic.
-     * If true, the new SSL error handler will be used.
-     * If false, the old SSL error handler will be used.
+     * This is used to determine whether to continue after handling SSL error or not.
+     * If null, means that the value is not provided. Use default logic.
+     * If true, continue the flow after SSL error is received (and is handled).
+     * If false, cancel the flow after SSL error is received.
      */
-    private Boolean webViewNewSslErrorHandlerEnabled;
+    private Boolean webViewShouldPreserveFlowOnSslError;
 
     private final CameraPermissionRequestHandler mCameraPermissionRequestHandler = new CameraPermissionRequestHandler(this);
 
@@ -215,9 +215,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedJavascript);
         outState.putBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         outState.putBoolean(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
-        if (webViewNewSslErrorHandlerEnabled != null) {
+        if (webViewShouldPreserveFlowOnSslError != null) {
             // save only if not null, otherwise it will be false by default
-            outState.putBoolean(WEB_VIEW_NEW_SSL_ERROR_HANDLER_ENABLED, webViewNewSslErrorHandlerEnabled);
+            outState.putBoolean(WEB_VIEW_PRESERVE_FLOW_ON_SSL_ERROR, webViewShouldPreserveFlowOnSslError);
         }
     }
 
@@ -236,9 +236,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mPostPageLoadedJavascript = state.getString(POST_PAGE_LOADED_URL);
         webViewZoomEnabled = state.getBoolean(WEB_VIEW_ZOOM_ENABLED, true);
         webViewZoomControlsEnabled = state.getBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
-        if (state.containsKey(WEB_VIEW_NEW_SSL_ERROR_HANDLER_ENABLED)) {
+        if (state.containsKey(WEB_VIEW_PRESERVE_FLOW_ON_SSL_ERROR)) {
             // If the key exists, we retrieve the value.
-            webViewNewSslErrorHandlerEnabled = state.getBoolean(WEB_VIEW_NEW_SSL_ERROR_HANDLER_ENABLED, false);
+            webViewShouldPreserveFlowOnSslError = state.getBoolean(WEB_VIEW_PRESERVE_FLOW_ON_SSL_ERROR, false);
         }
     }
 
@@ -278,7 +278,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 },
                 mRedirectUri,
                 getSwitchBrowserCoordinator().getSwitchBrowserRequestHandler(),
-                shouldUseWebViewNewSslErrorHandler()
+                shouldPreserveWebViewFlowOnSslError()
         );
         setUpWebView(view, mAADWebViewClient);
         mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
@@ -291,13 +291,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      *
      * @return true if the new SSL error handler should be used, false otherwise.
      */
-    protected boolean shouldUseWebViewNewSslErrorHandler() {
-        if (webViewNewSslErrorHandlerEnabled == null) {
+    protected boolean shouldPreserveWebViewFlowOnSslError() {
+        if (webViewShouldPreserveFlowOnSslError == null) {
             // if the value was not provided in intent extra, then use from flight.
-            return CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_VIEW_NEW_SSL_HANDLER);
+            return CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR);
         }
 
-        return webViewNewSslErrorHandlerEnabled;
+        return webViewShouldPreserveFlowOnSslError;
     }
 
     @Override

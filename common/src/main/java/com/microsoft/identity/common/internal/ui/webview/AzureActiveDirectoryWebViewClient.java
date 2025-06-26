@@ -132,10 +132,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl,
                                              @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler) {
-        super(activity, completionCallback, pageLoadedCallback, false);
-        mRedirectUrl = redirectUrl;
-        mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
-        mSwitchBrowserRequestHandler = switchBrowserRequestHandler;
+        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserRequestHandler, false);
     }
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
@@ -143,9 +140,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl,
                                              @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler,
-                                             final boolean enableNewSslErrorHandling
+                                             final boolean shouldPreserveFlowOnSslError
     ) {
-        super(activity, completionCallback, pageLoadedCallback, enableNewSslErrorHandling);
+        super(activity, completionCallback, pageLoadedCallback, shouldPreserveFlowOnSslError);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
         mSwitchBrowserRequestHandler = switchBrowserRequestHandler;
