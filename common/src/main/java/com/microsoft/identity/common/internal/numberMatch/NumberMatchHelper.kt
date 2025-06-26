@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.numberMatch
 
+import android.content.ContentValues
+import android.content.Context
+import android.database.Cursor
 import com.microsoft.identity.common.logging.Logger
 
 /**
@@ -35,9 +38,7 @@ import com.microsoft.identity.common.logging.Logger
  */
 class NumberMatchHelper {
 
-    // Store number matches in a static hash map
-    // No need to persist this storage beyond the current broker process, but we need to keep them
-    // long enough for AuthApp to call the broker api to fetch the number match
+    // Store number matches in a Content Provider
     companion object {
         val TAG = NumberMatchHelper::class.java.simpleName
         val numberMatchMap: HashMap<String, String> = HashMap()
@@ -45,20 +46,22 @@ class NumberMatchHelper {
         const val NUMBER_MATCH_ATTRIBUTE_NAME = "numberMatch"
 
         /**
-         * Method to add a key:value pair of sessionID:numberMatch to static hashmap. This hashmap will be accessed
-         * by broker api to get the number match for a particular sessionID.
+         * Method to add a key:value pair of sessionID:numberMatch to Content Provider.
          */
-        fun storeNumberMatch(sessionId: String?, numberMatch: String?) {
+        fun storeNumberMatch(context: Context, sessionId: String?, numberMatch: String?) {
             val methodTag = "$TAG:storeNumberMatch"
             Logger.info(methodTag,
-                "Adding entry in NumberMatch hashmap for session ID: $sessionId")
+                "Adding entry in NumberMatch Content Provider for session ID: $sessionId")
 
             // If both parameters are non-null, add a new entry to the hashmap
             if (sessionId != null && numberMatch != null) {
-                numberMatchMap[sessionId] = numberMatch
-            }
-            // If either parameter is null, do nothing
-            else {
+                val values = ContentValues().apply {
+                    put(NumberMatchContentProvider.SESSION_ID, sessionId)
+                    put(NumberMatchContentProvider.NUMBER_MATCH_DATA, numberMatch)
+                }
+                val uri = NumberMatchContentProvider.CONTENT_URI
+                context.contentResolver.insert(uri, values)
+            } else {
                 Logger.warn(methodTag,
                     "Either session ID or number match is null. Nothing to add for number match."
                 )
@@ -66,10 +69,32 @@ class NumberMatchHelper {
         }
 
         /**
-         * Clear existing number match key:value pairs
+         * Retrieve numberMatch for a session using ContentProvider.
          */
-        fun clearNumberMatchMap() {
-            numberMatchMap.clear()
+        fun getNumberMatch(context: Context, sessionId: String?): String? {
+            if (sessionId == null) return null
+            val uri = NumberMatchContentProvider.CONTENT_URI
+            val cursor: Cursor? = context.contentResolver.query(
+                uri,
+                arrayOf(NumberMatchContentProvider.NUMBER_MATCH_DATA),
+                "${NumberMatchContentProvider.SESSION_ID} = ?",
+                arrayOf(sessionId),
+                null
+            )
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    return it.getString(it.getColumnIndexOrThrow(NumberMatchContentProvider.NUMBER_MATCH_DATA))
+                }
+            }
+            return null
+        }
+
+        /**
+         * Clear all number match data from ContentProvider.
+         */
+        fun clearNumberMatchMap(context: Context) {
+            val uri = NumberMatchContentProvider.CONTENT_URI
+            context.contentResolver.delete(uri, null, null)
         }
     }
 }
