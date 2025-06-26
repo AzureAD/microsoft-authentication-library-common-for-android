@@ -24,10 +24,11 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.jit
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.nativeauth.providers.IApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidGrant
 import com.microsoft.identity.common.java.nativeauth.util.isOOBValueInvalid
+import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import java.net.HttpURLConnection
 
 /**
@@ -37,16 +38,19 @@ import java.net.HttpURLConnection
 class JITContinueApiResponse(
     @Expose override var statusCode: Int,
     correlationId: String,
-    @SerializedName("continuation_token") val continuationToken: String?,
-    @SerializedName("error") val error: String?,
+    @SerializedName("continuation_token") override val continuationToken: String?,
+    @SerializedName("error") override val error: String?,
+    @SerializedName("error_description") override val errorDescription: String?,
+    @SerializedName("suberror") val subError: String?,
     @SerializedName("error_codes") val errorCodes: List<Int>?,
-    @SerializedName("error_description") val errorDescription: String?,
-    @SerializedName("suberror") val subError: String?
-) : IApiResponse(statusCode, correlationId) {
+    @Expose @SerializedName("challenge_type") override val challengeType: String?,
+    @SerializedName("redirect_reason") override val redirectReason: String?,
+) : INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
     override fun toUnsanitizedString(): String {
         return "JITContinueAPIResponse(statusCode=$statusCode, " +
                 "correlationId=$correlationId " +
-                "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription)"
+                "error=$error, errorCodes=$errorCodes, errorDescription=$errorDescription," +
+                "redirectReason=$redirectReason)"
     }
 
     override fun toString(): String = "JITContinueAPIResponse(statusCode=$statusCode, " +
@@ -80,6 +84,12 @@ class JITContinueApiResponse(
             // Handle success and redirect
             HttpURLConnection.HTTP_OK -> {
                 return when {
+                    challengeType.isRedirect() -> {
+                        JITContinueApiResult.Redirect(
+                            correlationId = correlationId,
+                            redirectReason = redirectReason.orEmpty()
+                        )
+                    }
                     continuationToken.isNullOrBlank() -> {
                         JITContinueApiResult.UnknownError(
                             error = ApiErrorResult.INVALID_STATE,

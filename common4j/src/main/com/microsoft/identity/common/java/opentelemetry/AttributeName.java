@@ -363,5 +363,20 @@ public enum AttributeName {
     /**
      * Records the if the broker handled a switch browser resume,
      */
-    is_switch_browser_resume_handled
+    is_switch_browser_resume_handled,
+
+    /**
+     * Records if the request is a webcp authorize request.
+     */
+    is_webcp_authorize_request,
+
+    /**
+     * Records if the request is a webcp enrollment request.
+     */
+    is_webcp_enrollment_request,
+
+    /**
+     * Records if the webcp is enabled in webview.
+     */
+    is_webcp_in_webview_enabled
 }

@@ -1,6 +1,12 @@
 vNext
 ----------
+
+Version 21.3.0
+----------
 - [MINOR] changes accommodating the WrappedKeyAlgoIdentifier module (#2667)
+- [MINOR] Fixing the sign in screens when edge to edge is enabled (#2665)
+- [MINOR] Native auth: Make native auth MFA feature more backward compatible(#2669)
+- [MINOR] Showing webcp flow in webview (#2673)
 
 Version 21.2.0
 ----------
@@ -30,6 +36,7 @@ Version 21.0.0
 - [PATCH] Fix multiple prompts issue in cross cloud request (#2599)
 - [PATCH] Corrected error handling in cross cloud scenario (#2602)
 - [MINOR] Native auth: Add claimsRequest also to getAccessToken and signIn after signUp/SSPR flows (#2622)
+- [MINOR] Upgrading AGP Version to 8.1.1 (#2587)
 
 Version 20.1.1
 ----------

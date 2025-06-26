@@ -119,7 +119,17 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable exposing the JavaScript API for AuthUx requests
      */
-    ENABLE_JS_API_FOR_AUTHUX("EnableJsApiForAuthUx", true);
+    ENABLE_JS_API_FOR_AUTHUX("EnableJsApiForAuthUx", true),
+
+    /**
+     * Flight to enable handling the UI in edge to edge mode
+     */
+    ENABLE_HANDLING_FOR_EDGE_TO_EDGE("EnableHandlingEdgeToEdge", true),
+
+    /**
+     * Flight to enable the Web CP in WebView.
+     */
+    ENABLE_WEB_CP_IN_WEBVIEW("EnableWebCpInWebView", false);
 
     private String key;
     private Object defaultValue;
