@@ -421,18 +421,20 @@ public class BrokerMsalController extends BaseController {
             //Wait to be notified of the result being returned... we could add a timeout here if we want to
             final Bundle resultBundle = mBrokerResultFuture.get();
 
+            final BrokerResult brokerResult = new MsalBrokerResultAdapter().brokerResultFromBundle(resultBundle);
+
             final String negotiatedBrokerProtocolVersion = interactiveRequestIntent.getStringExtra(NEGOTIATED_BP_VERSION_KEY);
             // For MSA Accounts Broker doesn't save the accounts, instead it just passes the result along,
             // MSAL needs to save this account locally for future token calls.
             // parameters.getOAuth2TokenCache() will be non-null only in case of MSAL native
             // If the request is from MSALCPP , OAuth2TokenCache will be null.
             if (parameters.getOAuth2TokenCache() != null && !BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker(negotiatedBrokerProtocolVersion)) {
-                saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
+                saveMsaAccountToCache(brokerResult, resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS), (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
             }
 
             verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
             result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
-            trackTelemetryRegionFromResultBundle(resultBundle);
+            trackTelemetryRegionFromResultBundle(brokerResult, resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS));
         } catch (final BaseException | ExecutionException e) {
             Telemetry.emit(
                     new ApiEndEvent()
@@ -608,9 +610,10 @@ public class BrokerMsalController extends BaseController {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
 
-                        verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
+                        final BrokerResult brokerResult = mResultAdapter.brokerResultFromBundle(resultBundle);
+                        verifyBrokerVersionIsSupportedFromBrokerResult(brokerResult, parameters.getRequiredBrokerProtocolVersion());
 
-                        AcquireTokenResult acquireTokenResult = mResultAdapter.getDeviceCodeFlowTokenResultFromResultBundle(resultBundle);
+                        AcquireTokenResult acquireTokenResult = mResultAdapter.getDeviceCodeFlowTokenResultFromBrokerResultAndBundle(brokerResult, resultBundle);
                         // If authorization_pending continue polling for token
                         if (acquireTokenResult == null) {
                             // Wait between polls for 5 secs
@@ -618,7 +621,7 @@ public class BrokerMsalController extends BaseController {
                                     "Attempting to sleep thread during Device Code Flow token polling...");
                             return acquireDeviceCodeFlowToken(authorizationResult, parameters);
                         } else {
-                            trackTelemetryRegionFromResultBundle(resultBundle);
+                            trackTelemetryRegionFromResultBundle(brokerResult, resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS));
                             return acquireTokenResult;
                         }
                     }
@@ -1308,14 +1311,11 @@ public class BrokerMsalController extends BaseController {
     /**
      * Checks if the account returns is a MSA Account and sets single on state in cache
      */
-    private void saveMsaAccountToCache(final @NonNull Bundle resultBundle,
+    private void saveMsaAccountToCache(final @NonNull BrokerResult brokerResult, final boolean isSuccess,
                                        @SuppressWarnings(WarningType.rawtype_warning) final @NonNull MsalOAuth2TokenCache msalOAuth2TokenCache) throws BaseException {
         final String methodTag = TAG + ":saveMsaAccountToCache";
 
-        final BrokerResult brokerResult = new MsalBrokerResultAdapter().brokerResultFromBundle(resultBundle);
-
-        if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS) &&
-                AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(brokerResult.getTenantId())) {
+        if (isSuccess && AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(brokerResult.getTenantId())) {
             Logger.info(methodTag, "Result returned for MSA Account, saving to cache");
 
             if (StringUtil.isNullOrEmpty(brokerResult.getClientInfo())) {
@@ -1428,10 +1428,27 @@ public class BrokerMsalController extends BaseController {
         }
     }
 
-    private void trackTelemetryRegionFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
+    /**
+     * Check if have received broker version not supported error.
+     *
+     * @param brokerResult                  Broker result from a broker operation.
+     * @param requiredBrokerProtocolVersion Required broker protocol version sent in request.
+     * @throws UnsupportedBrokerException if result contains broker not supported error.
+     */
+    private void verifyBrokerVersionIsSupportedFromBrokerResult(@Nullable final BrokerResult brokerResult, @Nullable final String requiredBrokerProtocolVersion) throws UnsupportedBrokerException {
+        final String methodTag = TAG + ":verifyBrokerVersionIsSupported";
+
+        // check if result bundle contains unsupported broker version exception
+        if (!brokerResult.isSuccess()
+                && ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE.equals(brokerResult.getErrorCode())) {
+            mHelloCache.saveHandshakeError(requiredBrokerProtocolVersion, CLIENT_MAX_PROTOCOL_VERSION);
+            throw new UnsupportedBrokerException(mActiveBrokerPackageName);
+        }
+    }
+
+    private void trackTelemetryRegionFromResultBundle(@NonNull final BrokerResult brokerResult, final boolean isSuccess) throws BaseException {
         final String methodTag = TAG + ":trackTelemetryRegionFromResultBundle";
-        final BrokerResult brokerResult = new MsalBrokerResultAdapter().brokerResultFromBundle(resultBundle);
-        if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
+        if (isSuccess) {
             if (StringUtil.isNullOrEmpty(brokerResult.getClientInfo())) {
                 return;
             }
