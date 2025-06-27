@@ -422,6 +422,7 @@ public class BrokerMsalController extends BaseController {
             final Bundle resultBundle = mBrokerResultFuture.get();
 
             final BrokerResult brokerResult = new MsalBrokerResultAdapter().brokerResultFromBundle(resultBundle);
+            final boolean isSuccess = resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS);
 
             final String negotiatedBrokerProtocolVersion = interactiveRequestIntent.getStringExtra(NEGOTIATED_BP_VERSION_KEY);
             // For MSA Accounts Broker doesn't save the accounts, instead it just passes the result along,
@@ -429,12 +430,12 @@ public class BrokerMsalController extends BaseController {
             // parameters.getOAuth2TokenCache() will be non-null only in case of MSAL native
             // If the request is from MSALCPP , OAuth2TokenCache will be null.
             if (parameters.getOAuth2TokenCache() != null && !BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker(negotiatedBrokerProtocolVersion)) {
-                saveMsaAccountToCache(brokerResult, resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS), (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
+                saveMsaAccountToCache(brokerResult, isSuccess, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
             }
 
             verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
             result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
-            trackTelemetryRegionFromResultBundle(brokerResult, resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS));
+            trackTelemetryRegionFromResultBundle(brokerResult, isSuccess);
         } catch (final BaseException | ExecutionException e) {
             Telemetry.emit(
                     new ApiEndEvent()
