@@ -131,6 +131,10 @@ public enum CommonFlight implements IFlightConfig {
      */
     ENABLE_WEB_CP_IN_WEBVIEW("EnableWebCpInWebView", false),
 
+    /**
+     * Flight to enable the WebView flow to not cancel and preserve WebView flow on SSL errors.
+     * The web resource running into SSL will itself not be loaded.
+     */
     SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR("ShouldPreserveWebViewFlowOnSslError", false);
 
     private String key;
