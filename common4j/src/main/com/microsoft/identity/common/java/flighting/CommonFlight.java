@@ -129,7 +129,12 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable the Web CP in WebView.
      */
-    ENABLE_WEB_CP_IN_WEBVIEW("EnableWebCpInWebView", false);
+    ENABLE_WEB_CP_IN_WEBVIEW("EnableWebCpInWebView", false),
+
+    /**
+     * Flight to enable using the new EU TDBR Claim sent through ClientInfo
+     */
+    ENABLE_USING_TDBR_CLAIM_FOR_EU_ROUTING("EnableUsingTdbrClaimForEuRouting", true);
 
     private String key;
     private Object defaultValue;

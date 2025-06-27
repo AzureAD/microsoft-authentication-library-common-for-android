@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.opentelemetry
 
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager.getFlightsProvider
 import com.microsoft.identity.common.java.interfaces.IStorageSupplier
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo
@@ -44,6 +46,12 @@ class EUClaimStorageUtil {
             clientInfo: ClientInfo
         ) {
             val methodTag = "$TAG:storeTelemetryRegionByTenant"
+
+            if (!getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_USING_TDBR_CLAIM_FOR_EU_ROUTING)) {
+                // If flight is not enabled, just return, don't store anything
+                return;
+            }
+
             val tenantId = clientInfo.utid
             val tdbrClaim = clientInfo.tdbrClaim
 
