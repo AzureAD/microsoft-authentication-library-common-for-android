@@ -677,6 +677,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (StringUtil.isNullOrEmpty(username)) {
             return null;
         }
+
         return CommonTenantInfoProvider.INSTANCE.getHomeTenantId(username);
     }
 
