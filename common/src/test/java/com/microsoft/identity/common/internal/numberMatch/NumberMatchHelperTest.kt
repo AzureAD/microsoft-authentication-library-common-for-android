@@ -130,7 +130,7 @@ class NumberMatchHelperTest {
 
     @Test
     fun `clearNumberMatchData should call delete on contentResolver`() {
-        NumberMatchHelper.clearNumberMatchData(context)
+        NumberMatchHelper.clearNumberMatch(context)
         verify(contentResolver, times(1)).delete(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any())
     }
 }

@@ -28,6 +28,12 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.provider.BaseColumns
 
+/**
+ * Helper class to manage database creation and version management for Number Match feature.
+ * This class creates and upgrades the SQLite database used by NumberMatchContentProvider.
+ *
+ * @param context The context to use for locating paths to the the database
+ */
 class NumberMatchDbHelper(context: Context) : SQLiteOpenHelper(context, "number_match.db", null, 1) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -43,4 +49,3 @@ class NumberMatchDbHelper(context: Context) : SQLiteOpenHelper(context, "number_
         onCreate(db)
     }
 }
-

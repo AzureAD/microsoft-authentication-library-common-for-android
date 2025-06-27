@@ -86,7 +86,7 @@ class AuthUxJavaScriptInterfaceTest {
 
     @After
     fun tearDown() {
-//        NumberMatchHelper.clearNumberMatchData(context)
+        NumberMatchHelper.clearNumberMatch(context)
     }
 
     @Test

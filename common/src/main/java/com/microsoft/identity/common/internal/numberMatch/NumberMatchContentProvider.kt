@@ -30,6 +30,13 @@ import android.database.Cursor
 import android.net.Uri
 import com.microsoft.identity.common.logging.Logger
 
+/**
+ * ContentProvider implementation for the Number Match feature.
+ * This provider exposes CRUD operations for number match data, allowing secure storage and retrieval
+ * of session IDs and number match values for authentication flows.
+ *
+ * The provider uses NumberMatchDbHelper for database management and exposes its data via a content URI.
+ */
 class NumberMatchContentProvider : ContentProvider() {
     companion object {
         const val AUTHORITY = "com.microsoft.identity.common.internal.numberMatch.provider"
