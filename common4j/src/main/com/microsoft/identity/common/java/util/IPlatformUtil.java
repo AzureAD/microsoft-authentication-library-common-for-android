@@ -25,8 +25,6 @@ package com.microsoft.identity.common.java.util;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.java.interfaces.IStorageSupplier;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.List;

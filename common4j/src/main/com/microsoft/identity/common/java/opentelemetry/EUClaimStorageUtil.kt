@@ -30,9 +30,9 @@ import com.microsoft.identity.common.java.util.StringUtil
 /**
  * Utility class for storing telemetry region TDBR claims by tenant.
  */
-class EUClaimStorageUtility {
+class EUClaimStorageUtil {
     companion object {
-        private val TAG = EUClaimStorageUtility::class.java.simpleName
+        private val TAG = EUClaimStorageUtil::class.java.simpleName
 
         /**
          * Store telemetry region by tenant.

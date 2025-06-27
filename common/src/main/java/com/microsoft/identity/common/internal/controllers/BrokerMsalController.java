@@ -101,7 +101,7 @@ import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.UnsupportedBrokerException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
-import com.microsoft.identity.common.java.opentelemetry.EUClaimStorageUtility;
+import com.microsoft.identity.common.java.opentelemetry.EUClaimStorageUtil;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
@@ -1326,7 +1326,7 @@ public class BrokerMsalController extends BaseController {
             try {
                 final ClientInfo clientInfo = new ClientInfo(brokerResult.getClientInfo());
                 // Store the telemetry region info in shared preferences
-                EUClaimStorageUtility.Companion.storeTelemetryRegionByTenant(mComponents.getStorageSupplier(), clientInfo);
+                EUClaimStorageUtil.Companion.storeTelemetryRegionByTenant(mComponents.getStorageSupplier(), clientInfo);
 
                 final MicrosoftStsAccount microsoftStsAccount = new MicrosoftStsAccount(
                         new IDToken(brokerResult.getIdToken()),
@@ -1440,7 +1440,7 @@ public class BrokerMsalController extends BaseController {
                 final ClientInfo clientInfo = new ClientInfo(brokerResult.getClientInfo());
 
                 // Store the telemetry region info in shared preferences
-                EUClaimStorageUtility.Companion.storeTelemetryRegionByTenant(mComponents.getStorageSupplier(), clientInfo);
+                EUClaimStorageUtil.Companion.storeTelemetryRegionByTenant(mComponents.getStorageSupplier(), clientInfo);
             } catch (Exception e) {
                 Logger.error(methodTag, "Exception while trying to store telemetry region from client info in broker result.", e);
             }
