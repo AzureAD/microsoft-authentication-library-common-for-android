@@ -221,7 +221,7 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         }
 
         if (StringUtil.isNullOrEmpty(tdbrClaim)) {
-            Logger.warn(methodTag, "Received no tdbr claim, not storing anything in shared preferences..");
+            Logger.warn(methodTag, "Received no tdbr claim, not storing anything in shared preferences.");
             return;
         }
 
