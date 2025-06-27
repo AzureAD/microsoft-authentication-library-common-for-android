@@ -27,12 +27,20 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import org.junit.Assert.*
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.mockito.ArgumentMatchers
 import org.mockito.Mock
 import org.mockito.Mockito
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
+import org.robolectric.RobolectricTestRunner
+import org.junit.runner.RunWith
 
+@RunWith(RobolectricTestRunner::class)
 class NumberMatchHelperTest {
 
     private val mockSessionId = "1234"
@@ -47,79 +55,82 @@ class NumberMatchHelperTest {
     @Before
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        Mockito.`when`(context.contentResolver).thenReturn(contentResolver)
+        Mockito.reset(context, contentResolver, cursor)
+        `when`(context.contentResolver).thenReturn(contentResolver)
+        `when`(contentResolver.insert(ArgumentMatchers.any(), ArgumentMatchers.any(ContentValues::class.java))).thenReturn(null)
+        `when`(contentResolver.delete(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(1)
+        `when`(contentResolver.query(
+            ArgumentMatchers.any(),
+            ArgumentMatchers.any(),
+            ArgumentMatchers.anyString(),
+            ArgumentMatchers.any(),
+            ArgumentMatchers.isNull()
+        )).thenReturn(cursor)
+        `when`(cursor.moveToFirst()).thenReturn(true)
+        `when`(cursor.getColumnIndexOrThrow(ArgumentMatchers.anyString())).thenReturn(0)
+        `when`(cursor.getString(0)).thenReturn(mockNumberMatchValue)
+    }
+
+    @After
+    fun tearDown() {
+        Mockito.reset(context, contentResolver, cursor)
     }
 
     @Test
-    fun `test storeNumberMatch with valid inputs`() {
-        Mockito.`when`(contentResolver.insert(Mockito.any(), Mockito.any(ContentValues::class.java))).thenReturn(null)
-        Mockito.`when`(contentResolver.query(
-            Mockito.any(),
-            Mockito.any(),
-            Mockito.anyString(),
-            Mockito.any(),
-            Mockito.isNull()
-        )).thenReturn(cursor)
-        Mockito.`when`(cursor.moveToFirst()).thenReturn(true)
-        Mockito.`when`(cursor.getColumnIndexOrThrow(Mockito.anyString())).thenReturn(0)
-        Mockito.`when`(cursor.getString(0)).thenReturn(mockNumberMatchValue)
-
+    fun `storeNumberMatch should insert when sessionId and numberMatch are not null`() {
         NumberMatchHelper.storeNumberMatch(context, mockSessionId, mockNumberMatchValue)
+        verify(contentResolver, times(1)).insert(ArgumentMatchers.any(), ArgumentMatchers.any(ContentValues::class.java))
+    }
+
+    @Test
+    fun `storeNumberMatch should not insert when sessionId is null`() {
+        NumberMatchHelper.storeNumberMatch(context, null, mockNumberMatchValue)
+        verify(contentResolver, times(0)).insert(ArgumentMatchers.any(), ArgumentMatchers.any(ContentValues::class.java))
+    }
+
+    @Test
+    fun `storeNumberMatch should not insert when numberMatch is null`() {
+        NumberMatchHelper.storeNumberMatch(context, mockSessionId, null)
+        verify(contentResolver, times(0)).insert(ArgumentMatchers.any(), ArgumentMatchers.any(ContentValues::class.java))
+    }
+
+    @Test
+    fun `getNumberMatch should return value when sessionId exists`() {
+        `when`(cursor.moveToFirst()).thenReturn(true)
+        `when`(cursor.getString(0)).thenReturn(mockNumberMatchValue)
         val result = NumberMatchHelper.getNumberMatch(context, mockSessionId)
         assertEquals(mockNumberMatchValue, result)
     }
 
     @Test
-    fun `test storeNumberMatch with null sessionId`() {
-        NumberMatchHelper.storeNumberMatch(context, null, mockNumberMatchValue)
+    fun `getNumberMatch should return null when sessionId is null`() {
         val result = NumberMatchHelper.getNumberMatch(context, null)
         assertNull(result)
     }
 
     @Test
-    fun `test storeNumberMatch with null numberMatch`() {
-        NumberMatchHelper.storeNumberMatch(context, mockSessionId, null)
-        // Should not call insert, so query returns null
-        Mockito.`when`(contentResolver.query(
-            Mockito.any(),
-            Mockito.any(),
-            Mockito.anyString(),
-            Mockito.any(),
-            Mockito.isNull()
+    fun `getNumberMatch should return null when cursor is null`() {
+        `when`(contentResolver.query(
+            ArgumentMatchers.any(),
+            ArgumentMatchers.any(),
+            ArgumentMatchers.anyString(),
+            ArgumentMatchers.any(),
+            ArgumentMatchers.isNull()
         )).thenReturn(null)
         val result = NumberMatchHelper.getNumberMatch(context, mockSessionId)
         assertNull(result)
     }
 
     @Test
-    fun `test getNumberMatch with non-existent sessionId`() {
-        Mockito.`when`(contentResolver.query(
-            Mockito.any(),
-            Mockito.any(),
-            Mockito.anyString(),
-            Mockito.any(),
-            Mockito.isNull()
-        )).thenReturn(cursor)
-        Mockito.`when`(cursor.moveToFirst()).thenReturn(false)
-        val result = NumberMatchHelper.getNumberMatch(context, "nonexistent")
+    fun `getNumberMatch should return null when cursor is empty`() {
+        `when`(cursor.moveToFirst()).thenReturn(false)
+        val result = NumberMatchHelper.getNumberMatch(context, mockSessionId)
         assertNull(result)
     }
 
     @Test
-    fun `test getNumberMatch after storing and clearing`() {
-        // Simulate storing
-        Mockito.`when`(contentResolver.insert(Mockito.any(), Mockito.any(ContentValues::class.java))).thenReturn(null)
-        // Simulate clearing by returning a cursor that returns false for moveToFirst
-        Mockito.`when`(contentResolver.query(
-            Mockito.any(),
-            Mockito.any(),
-            Mockito.anyString(),
-            Mockito.any(),
-            Mockito.isNull()
-        )).thenReturn(cursor)
-        Mockito.`when`(cursor.moveToFirst()).thenReturn(false)
-        NumberMatchHelper.storeNumberMatch(context, mockSessionId, mockNumberMatchValue)
-        val result = NumberMatchHelper.getNumberMatch(context, mockSessionId)
-        assertNull(result)
+    fun `clearNumberMatchData should call delete on contentResolver`() {
+        NumberMatchHelper.clearNumberMatchData(context)
+        verify(contentResolver, times(1)).delete(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any())
     }
 }

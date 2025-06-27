@@ -22,21 +22,33 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker
 
+import android.content.ContentResolver
 import android.content.Context
+import android.database.Cursor
+import android.net.Uri
 import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mock
+import org.mockito.Mockito
+import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
+import org.robolectric.RobolectricTestRunner
+import org.junit.runner.RunWith
 
+@RunWith(RobolectricTestRunner::class)
 class AuthUxJavaScriptInterfaceTest {
 
     private lateinit var authUxJavaScriptInterface: AuthUxJavaScriptInterface
 
     @Mock
     private lateinit var context: Context
+    @Mock
+    private lateinit var contentResolver: ContentResolver
+    @Mock
+    private lateinit var cursor: Cursor
 
     private val mockSessionId = "1234"
     private val mockNumberMatchValue = "00"
@@ -57,13 +69,24 @@ class AuthUxJavaScriptInterfaceTest {
     @Before
     fun setUp() {
         MockitoAnnotations.openMocks(this)
+        Mockito.reset(context, contentResolver, cursor)
+        // Mock contentResolver on context
+        `when`(context.contentResolver).thenReturn(contentResolver)
+        // Mock insert, delete, and query for contentResolver
+        `when`(contentResolver.insert(Mockito.any(Uri::class.java), Mockito.any())).thenReturn(null)
+        `when`(contentResolver.delete(Mockito.any(Uri::class.java), Mockito.any(), Mockito.any())).thenReturn(1)
+        // Mock query for getNumberMatch
+        `when`(contentResolver.query(Mockito.any(Uri::class.java), Mockito.any(), Mockito.anyString(), Mockito.any(), Mockito.isNull())).thenReturn(cursor)
+        // Mock cursor for getNumberMatch
+        `when`(cursor.moveToFirst()).thenReturn(true)
+        `when`(cursor.getColumnIndexOrThrow(Mockito.anyString())).thenReturn(0)
+        `when`(cursor.getString(0)).thenReturn(mockNumberMatchValue)
         authUxJavaScriptInterface = AuthUxJavaScriptInterface(context)
     }
 
     @After
     fun tearDown() {
-        // Clear the static map after each test
-        NumberMatchHelper.clearNumberMatchData(context)
+//        NumberMatchHelper.clearNumberMatchData(context)
     }
 
     @Test
