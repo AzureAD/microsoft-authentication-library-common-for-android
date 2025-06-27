@@ -39,10 +39,10 @@ object CommonTenantInfoProvider : ITenantInfoProvider{
         mTenantInfoProvider = tenantInfoProvider
     }
 
-    override fun getTenantId(username: String): String? {
+    override fun getHomeTenantId(username: String): String? {
         val methodTag = "$TAG:getTenantId";
         if (mTenantInfoProvider != null) {
-            return mTenantInfoProvider!!.getTenantId(username)
+            return mTenantInfoProvider!!.getHomeTenantId(username)
         }
         Logger.warn(methodTag, "mTenantInfoProvider is not initialized!")
         return null

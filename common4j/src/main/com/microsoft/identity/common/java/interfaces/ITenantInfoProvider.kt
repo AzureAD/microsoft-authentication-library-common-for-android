@@ -28,6 +28,6 @@ package com.microsoft.identity.common.java.interfaces
  * to provide tenantInfo holder to common module.
  */
 interface ITenantInfoProvider {
-    // Returns the tenant ID for the account with given username.
-    fun getTenantId(username: String): String?
+    // Returns the home tenant ID for the account with given username.
+    fun getHomeTenantId(username: String): String?
 }

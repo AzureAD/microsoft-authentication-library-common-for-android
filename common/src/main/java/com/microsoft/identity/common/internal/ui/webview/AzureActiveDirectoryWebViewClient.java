@@ -643,8 +643,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             return true;
         }
 
-        // Else, check if the tenant is in the list of tenants that have this feature enabled.
-        final String tenantId = getTenantIdFromUrl(originalUrl);
+        // Else, check if the home tenant is in the list of tenants that have this feature enabled.
+        final String tenantId = getHomeTenantIdFromUrl(originalUrl);
         if (StringUtil.isNullOrEmpty(tenantId)) {
             return false;
         }
@@ -656,12 +656,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return isFlightEnabledForCurrentTenant;
     }
 
-    private String getTenantIdFromUrl(@NonNull final String url) {
+    private String getHomeTenantIdFromUrl(@NonNull final String url) {
         final String username = StringExtensions.getUrlParameters(url).get(AuthenticationConstants.AAD.LOGIN_HINT);
         if (StringUtil.isNullOrEmpty(username)) {
             return null;
         }
-        return CommonTenantInfoProvider.INSTANCE.getTenantId(username);
+        return CommonTenantInfoProvider.INSTANCE.getHomeTenantId(username);
     }
 
     // WebCP enrollment URL is a guided enrollment page showing instructions on how to enroll within the productivity app.
