@@ -644,20 +644,24 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
 
         // Else, check if the tenant is in the list of tenants that have this feature enabled.
-        final String username = StringExtensions.getUrlParameters(originalUrl).get(AuthenticationConstants.AAD.LOGIN_HINT);
-        if (!StringUtil.isNullOrEmpty(username)) {
-            final String tenantId = CommonTenantInfoProvider.INSTANCE.getTenantId(username);
-            if (StringUtil.isNullOrEmpty(tenantId)) {
-                return false;
-            }
-            final String tenantIdList = CommonFlightsManager.INSTANCE.getFlightsProvider().getStringValue(CommonFlight.TENANT_LIST_TO_ENABLE_WEB_CP_IN_WEBVIEW);
-            final boolean isFlightEnabledForCurrentTenant = !StringUtil.isNullOrEmpty(tenantIdList) && tenantIdList.contains(tenantId);
-            Logger.info(methodTag, "TenantId list is empty? " + StringUtil.isNullOrEmpty(tenantIdList) + ", Is current tenantId in list? " + isFlightEnabledForCurrentTenant);
-            mIsWebCpInWebViewFeatureEnabled = isFlightEnabledForCurrentTenant;
-            return isFlightEnabledForCurrentTenant;
+        final String tenantId = getTenantIdFromUrl(originalUrl);
+        if (StringUtil.isNullOrEmpty(tenantId)) {
+            return false;
         }
+        
+        final String tenantIdList = CommonFlightsManager.INSTANCE.getFlightsProvider().getStringValue(CommonFlight.TENANT_LIST_TO_ENABLE_WEB_CP_IN_WEBVIEW);
+        final boolean isFlightEnabledForCurrentTenant = !StringUtil.isNullOrEmpty(tenantIdList) && tenantIdList.contains(tenantId);
+        Logger.info(methodTag, "TenantId list is empty? " + StringUtil.isNullOrEmpty(tenantIdList) + ", Is current tenantId in list? " + isFlightEnabledForCurrentTenant);
+        mIsWebCpInWebViewFeatureEnabled = isFlightEnabledForCurrentTenant;
+        return isFlightEnabledForCurrentTenant;
+    }
 
-        return false;
+    private String getTenantIdFromUrl(@NonNull final String url) {
+        final String username = StringExtensions.getUrlParameters(url).get(AuthenticationConstants.AAD.LOGIN_HINT);
+        if (StringUtil.isNullOrEmpty(username)) {
+            return null;
+        }
+        return CommonTenantInfoProvider.INSTANCE.getTenantId(username);
     }
 
     // WebCP enrollment URL is a guided enrollment page showing instructions on how to enroll within the productivity app.
@@ -693,7 +697,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             getActivity().startActivity(intent);
         } catch (android.content.ActivityNotFoundException e) {
-            Logger.error(methodTag,"Failed to open the Authenticator application.", e);
+            Logger.error(methodTag,"Failed to open the intent for google enrollment.", e);
         }
     }
 

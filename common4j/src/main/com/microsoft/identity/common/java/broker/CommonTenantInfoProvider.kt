@@ -33,7 +33,6 @@ object CommonTenantInfoProvider : ITenantInfoProvider{
     private val TAG = CommonTenantInfoProvider::class.java.simpleName
     private var mTenantInfoProvider: ITenantInfoProvider? = null
 
-    // Note : This method should only be invoked by broker module.
     fun initializeCommonTenantInfoProvider(tenantInfoProvider: ITenantInfoProvider) {
         val methodTag = "$TAG:initializeCommonTenantInfoProvider"
         Logger.info(methodTag, "Initializing common tenant information provider with " + tenantInfoProvider.javaClass.simpleName)
