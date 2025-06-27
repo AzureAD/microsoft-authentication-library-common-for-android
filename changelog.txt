@@ -7,6 +7,7 @@ Version 21.3.0
 - [MINOR] Fixing the sign in screens when edge to edge is enabled (#2665)
 - [MINOR] Native auth: Make native auth MFA feature more backward compatible(#2669)
 - [MINOR] Showing webcp flow in webview (#2673)
+- [MINOR] Construct broker app link redirect based on broker pkg name (#2682)
 
 Version 21.2.0
 ----------

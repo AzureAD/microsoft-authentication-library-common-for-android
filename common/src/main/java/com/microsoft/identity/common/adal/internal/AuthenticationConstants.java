@@ -1499,39 +1499,19 @@ public final class AuthenticationConstants {
         public static final String POWERLIFT_TENANT_ID = "powerLiftTenantId";
 
         /**
-         * The App Link redirect URL for the Authenticator app.
+         * The scheme for the app link redirect URI used by the broker.
          */
-        public static final String AUTHENTICATOR_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/authenticator";
+        public static final String BROKER_APP_LINK_REDIRECT_URL_SCHEME = "https";
 
         /**
-         * The App Link redirect URL for the LTW app.
+         * The host for the app link redirect URIs used by the broker.
          */
-        public static final String LTW_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/ltw";
+        public static final String BROKER_APP_LINK_REDIRECT_URL_HOST = "login.microsoftonline.com";
 
         /**
-         * App Link redirect URL for the CP app.
+         * The path prefix for the app link redirect URIs used by the broker.
          */
-        public static final String COMPANY_PORTAL_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/cp";
-
-        /**
-         * App Link redirect URL for the BrokerHost app.
-         */
-        public static final String BROKER_HOST_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/brokerhost";
-
-        /**
-         * App Link redirect URL for the Mock Auth app.
-         */
-        public static final String MOCK_LTW_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/mockltw";
-
-        /**
-         * App Link redirect URL for the Mock CP app.
-         */
-        public static final String MOCK_CP_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/mockcp";
-
-        /**
-         * App Link redirect URL for the Mock Auth app.
-         */
-        public static final String MOCK_AUTH_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/mockauth";
+        public static final String BROKER_APP_LINK_REDIRECT_URL_PATH_PREFIX = "androidbroker";
 
         /**
          * Bundle identifiers for x-ms-clitelem info.
