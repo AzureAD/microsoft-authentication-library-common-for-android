@@ -29,8 +29,10 @@ import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.IPopManagerSupplier;
+import com.microsoft.identity.common.java.interfaces.IStorageSupplier;
 import com.microsoft.identity.common.java.interfaces.PlatformComponents;
 import com.microsoft.identity.common.java.net.DefaultHttpClientWrapper;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
 import com.microsoft.identity.common.java.util.IBroadcaster;
@@ -187,6 +189,11 @@ public class MockPlatformComponentsFactory {
         @Override
         public List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList) {
             return originalList;
+        }
+
+        @Override
+        public void storeTelemetryRegionByTenant(@edu.umd.cs.findbugs.annotations.NonNull IStorageSupplier supplier, @edu.umd.cs.findbugs.annotations.NonNull ClientInfo clientInfo) {
+            // Do nothing
         }
     };
 
