@@ -131,11 +131,4 @@ public interface IPlatformUtil {
      */
     @Nullable
     List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList);
-
-    /**
-     * Store telemetry region by tenant.
-     *
-     * @param clientInfo the client info containing tenant information and tdbr claim
-     */
-    void storeTelemetryRegionByTenant(@NonNull IStorageSupplier supplier, @NonNull ClientInfo clientInfo);
 }

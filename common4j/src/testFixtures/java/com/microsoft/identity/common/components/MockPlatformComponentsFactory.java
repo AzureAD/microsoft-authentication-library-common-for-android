@@ -190,11 +190,6 @@ public class MockPlatformComponentsFactory {
         public List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList) {
             return originalList;
         }
-
-        @Override
-        public void storeTelemetryRegionByTenant(@edu.umd.cs.findbugs.annotations.NonNull IStorageSupplier supplier, @edu.umd.cs.findbugs.annotations.NonNull ClientInfo clientInfo) {
-            // Do nothing
-        }
     };
 
     public static final IBrowserSelector NON_FUNCTIONAL_BROWSER_SELECTOR = new NoopBrowserSelector();
