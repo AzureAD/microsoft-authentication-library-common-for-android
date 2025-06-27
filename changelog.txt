@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Use tdbr claim to route telemetry traffic to EU region (#2679)
 
 Version 21.3.0
 ----------
