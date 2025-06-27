@@ -29,6 +29,8 @@ import com.google.gson.JsonSyntaxException
 import com.google.gson.stream.MalformedJsonException
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.logging.Logger
 import java.net.MalformedURLException
 import java.net.URL
@@ -115,10 +117,11 @@ class AuthUxJavaScriptInterface {
                 "Correlation ID during JavaScript Call: [${payloadObject.correlationId}]"
             )
 
-
-            // TODO: Leaving these here, as these will be relevant for next WebCP feature
-            // val actionName = payloadObject.actionName
-            // val actionComponent = payloadObject.actionComponent
+            val span = SpanExtension.current()
+            val actionName = payloadObject.actionName
+            span.setAttribute(AttributeName.authux_js_action_name.name, actionName)
+            val actionComponent = payloadObject.actionComponent
+            span.setAttribute(AttributeName.authux_js_action_component.name, actionComponent)
 
             val parameters = payloadObject.params
             if (parameters == null) {
@@ -127,6 +130,9 @@ class AuthUxJavaScriptInterface {
             }
 
             val operation = parameters.operation
+            if (operation != null) {
+                span.setAttribute(AttributeName.authux_js_operation.name, operation)
+            }
 
             Logger.info(methodTag, "Function name: [$operation]")
 
