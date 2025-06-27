@@ -57,6 +57,8 @@ import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IStorageSupplier;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -213,8 +215,6 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         final String tenantId = clientInfo.getUtid();
         final String tdbrClaim = clientInfo.getTdbrClaim();
 
-
-
         if (StringUtil.isNullOrEmpty(tenantId)) {
             Logger.warn(methodTag, "tenantId is null or empty. Not storing telemetry region by tenant.");
             return;
@@ -229,6 +229,9 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         Logger.info(methodTag, "Storing telemetry region by tenant: " + tenantId + ", TDBR Claim: " + tdbrClaim);
         final INameValueStorage<String> tdbrValueStore = supplier.getUnencryptedNameValueStore(ClientInfo.TDBR_CLAIM, String.class);
         tdbrValueStore.put(tenantId, tdbrClaim);
+
+        // Attach tenant id to the current span
+        SpanExtension.current().setAttribute(AttributeName.tenant_id.name(), tenantId);
     }
 
     /**

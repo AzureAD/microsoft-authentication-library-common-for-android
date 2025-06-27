@@ -28,6 +28,10 @@ package com.microsoft.identity.common.java.opentelemetry;
  */
 public enum AttributeName {
     /**
+     * The tenant id for the home tenant of the account for which PRT is required.
+     */
+    tenant_id,
+    /**
      * The length of the response body returned from network request.
      */
     response_body_length,
