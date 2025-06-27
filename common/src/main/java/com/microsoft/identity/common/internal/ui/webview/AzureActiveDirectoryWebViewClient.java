@@ -677,12 +677,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean processPlayStoreURLForBrokerApps(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processPlayStoreURL";
 
-        if (!(url.startsWith(PLAY_STORE_INSTALL_APP_PREFIX + COMPANY_PORTAL_APP_PACKAGE_NAME))
-                && !(url.startsWith(PLAY_STORE_INSTALL_APP_PREFIX + AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME))) {
-            Logger.info(methodTag, "The URI is either trying to open an unknown application or contains unknown query parameters");
-            return false;
-        }
-
         final String appPackageName = (url.contains(COMPANY_PORTAL_APP_PACKAGE_NAME) ?
                 COMPANY_PORTAL_APP_PACKAGE_NAME : AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
         Logger.info(methodTag, "Request to open PlayStore to install package : '" + appPackageName + "'");
@@ -693,8 +687,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             getActivity().startActivity(intent);
             view.stopLoading();
             if (appPackageName.equalsIgnoreCase(COMPANY_PORTAL_APP_PACKAGE_NAME) && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)) {
-                // If the flight is enabled, we will return the result code to the activity to indicate that the MDM flow has started.
-                // Note that this is only for CP app as we are not aware of any other flows reaching this code path.
+                // If the flight for webcp is enabled, we will return the result code to the activity to indicate that the MDM flow has started.
+                // Note that this is only for CP app as we are not aware of any other flows (other than webcp) reaching this code path.
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
             }
             return true;

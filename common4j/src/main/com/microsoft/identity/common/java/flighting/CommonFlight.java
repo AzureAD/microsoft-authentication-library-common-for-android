@@ -131,6 +131,9 @@ public enum CommonFlight implements IFlightConfig {
      */
     ENABLE_WEB_CP_IN_WEBVIEW("EnableWebCpInWebView", false),
 
+    /**
+     * Flight to enable the Playstore URL launch for broker apps.
+     */
     ENABLE_PLAYSTORE_URL_LAUNCH("EnablePlaystoreUrlLaunch", true);
 
     private String key;
