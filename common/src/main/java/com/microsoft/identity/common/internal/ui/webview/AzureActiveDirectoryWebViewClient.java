@@ -94,9 +94,11 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_APP_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_ERROR;
+import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_PLAYSTORE_URL_LAUNCH;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -305,6 +307,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (isPlayStoreUrl(formattedURL)) {
                 Logger.info(methodTag,"Request to open PlayStore.");
                 return processPlayStoreURL(view, url);
+            } else if(CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(ENABLE_PLAYSTORE_URL_LAUNCH) && isPlaystoreUrlToInstallBrokerApp(formattedURL)) {
+                Logger.info(methodTag,"Request to open PlayStore for broker app install.");
+                return processPlayStoreURLForBrokerApps(view, url);
             } else if (isAuthAppMFAUrl(formattedURL)) {
                 Logger.info(methodTag,"Request to link account with Authenticator.");
                 processAuthAppMFAUrl(url);
@@ -366,6 +371,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isPlayStoreUrl(@NonNull final String url) {
         return url.startsWith(PLAY_STORE_INSTALL_PREFIX);
+    }
+
+    private boolean isPlaystoreUrlToInstallBrokerApp(@NonNull final String url) {
+        if (url.startsWith(PLAY_STORE_INSTALL_APP_PREFIX)) {
+            // Check if the url query parameter is for a broker app.
+            for (final BrokerData brokerData : BrokerData.getAllBrokers()) {
+                if (url.contains("id=" + brokerData.getPackageName())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private boolean isPkeyAuthUrl(@NonNull final String url) {
@@ -466,7 +483,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final String path = uri.getPath();
 
             if (host == null || path == null) {
-                Logger.info(methodTag, "URL missing host or path");
+                Logger.verbose(methodTag, "URL missing host or path");
                 return false;
             }
 
@@ -654,6 +671,33 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
 
         return true;
+    }
+
+    // This method processes the Play Store URL for broker apps. We check if the URL is for installing the Company Portal app or the Azure Authenticator app.
+    private boolean processPlayStoreURLForBrokerApps(@NonNull final WebView view, @NonNull final String url) {
+        final String methodTag = TAG + ":processPlayStoreURL";
+
+        final String appPackageName = (url.contains(COMPANY_PORTAL_APP_PACKAGE_NAME) ?
+                COMPANY_PORTAL_APP_PACKAGE_NAME : AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+        Logger.info(methodTag, "Request to open PlayStore to install package : '" + appPackageName + "'");
+
+        try {
+            final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(PLAY_STORE_INSTALL_APP_PREFIX + appPackageName));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            getActivity().startActivity(intent);
+            view.stopLoading();
+            if (appPackageName.equalsIgnoreCase(COMPANY_PORTAL_APP_PACKAGE_NAME) && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)) {
+                // If the flight for webcp is enabled, we will return the result code to the activity to indicate that the MDM flow has started.
+                // Note that this is only for CP app as we are not aware of any other flows (other than webcp) reaching this code path.
+                returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
+            }
+            return true;
+        } catch (android.content.ActivityNotFoundException e) {
+            //if GooglePlay is not present on the device.
+            Logger.error(methodTag, "PlayStore is not present on the device", e);
+        }
+
+        return false;
     }
 
     private void processAuthAppMFAUrl(String url) {
