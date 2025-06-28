@@ -614,16 +614,26 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         final Span span = spanContext != null ?
                 OTelUtility.createSpanFromParent(SpanName.ProcessWebCpRedirects.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessWebCpRedirects.name());
-        if (isWebCpInWebviewFeatureEnabled(originalUrl)) {
-            Logger.info(methodTag, "Loading device CA request in WebView.");
-            span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), true);
-            String httpsUrl = originalUrl.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
-            view.loadUrl(httpsUrl, mRequestHeaders);
-        } else {
-            Logger.info(methodTag, "Loading device CA request in browser.");
-            span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), false);
-            openLinkInBrowser(originalUrl);
-            returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            if (isWebCpInWebviewFeatureEnabled(originalUrl)) {
+                Logger.info(methodTag, "Loading device CA request in WebView.");
+                span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), true);
+                String httpsUrl = originalUrl.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
+                view.loadUrl(httpsUrl, mRequestHeaders);
+            } else {
+                Logger.info(methodTag, "Loading device CA request in browser.");
+                span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), false);
+                openLinkInBrowser(originalUrl);
+                returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
+            }
+            span.setStatus(StatusCode.OK);
+        } catch (final Throwable throwable) {
+            Logger.error(methodTag, "Failed to load device CA URL in WebView.", throwable);
+            span.recordException(throwable);
+            span.setStatus(StatusCode.ERROR);
+            returnError(UNKNOWN_ERROR, throwable.getMessage());
+        } finally {
+            span.end();
         }
     }
 
@@ -671,19 +681,29 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         final Span span = spanContext != null ?
                 OTelUtility.createSpanFromParent(SpanName.ProcessWebCpRedirects.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessWebCpRedirects.name());
-        span.setAttribute(AttributeName.is_webcp_enrollment_request.name(), true);
-        view.stopLoading();
-        Logger.info(methodTag, "Loading WebCP enrollment url in browser.");
-        // This is a WebCP enrollment URL, so we need to open it in the browser (it does not work in WebView as google enrollment is enforced to be done in browser).
-        openGoogleEnrollmentUrl(url);
-        // We need to return MDM_FLOW result code as the enrollment is done in browser. But this may sometimes take a few seconds to launch the intent.
-        // So we will wait for a few seconds before returning the result so that the current page in webview does not get closed immediately.
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
-            }
-        }, TimeUnit.SECONDS.toMillis(THREAD_SLEEP_FOR_INTENT_LAUNCH_MS));
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            span.setAttribute(AttributeName.is_webcp_enrollment_request.name(), true);
+            view.stopLoading();
+            Logger.info(methodTag, "Loading WebCP enrollment url in browser.");
+            // This is a WebCP enrollment URL, so we need to open it in the browser (it does not work in WebView as google enrollment is enforced to be done in browser).
+            openGoogleEnrollmentUrl(url);
+            // We need to return MDM_FLOW result code as the enrollment is done in browser. But this may sometimes take a few seconds to launch the intent due to slowness on the device.
+            // So we will wait for a few seconds before returning the result so that the current page in webview does not get closed immediately.
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
+                }
+            }, TimeUnit.SECONDS.toMillis(THREAD_SLEEP_FOR_INTENT_LAUNCH_MS));
+            span.setStatus(StatusCode.OK);
+        } catch (final Throwable throwable) {
+            Logger.error(methodTag, "Failed to process WebCP enrollment URL.", throwable);
+            span.recordException(throwable);
+            span.setStatus(StatusCode.ERROR);
+            returnError(UNKNOWN_ERROR, throwable.getMessage());
+        } finally {
+            span.end();
+        }
     }
 
     // Opens the Google enrollment URL in the browser or the default intent handler (like DPC)
@@ -989,7 +1009,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // No op if an exception happens
             Logger.warn(methodTag, "Error attaching PRT header." + e);
             span.recordException(e);
-            view.loadUrl(url, mRequestHeaders);
+            view.loadUrl(url);
         } finally {
             span.end();
         }
