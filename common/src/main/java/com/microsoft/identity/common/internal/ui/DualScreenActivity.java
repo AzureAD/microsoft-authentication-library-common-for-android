@@ -22,15 +22,17 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui;
 
-import android.app.Activity;
-import android.content.Context;
-import android.graphics.Rect;
+import android.content.res.Configuration;
 import android.os.Build;
+import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.WindowManager;
 import android.widget.RelativeLayout;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.view.ViewCompat;
@@ -39,8 +41,6 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.window.java.layout.WindowInfoTrackerCallbackAdapter;
-import androidx.window.layout.DisplayFeature;
-import androidx.window.layout.FoldingFeature;
 import androidx.window.layout.WindowInfoTracker;
 
 import com.microsoft.identity.common.R;
@@ -48,48 +48,89 @@ import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.logging.Logger;
 
-// This activity readjusts its child layouts so that they're displayed on both single-screen and dual-screen device correctly.
-// https://learn.microsoft.com/en-us/previous-versions/dual-screen/android/surface-duo-dimensions
+/**
+ * This activity is designed to handle dual-screen devices, such as the Surface Duo.
+ * <p>
+ * This activity readjusts its child layouts so that they're displayed on both single-screen and dual-screen device correctly.
+ * It uses the WindowInfoTracker to listen for changes in the display features, such as folding features.
+ * <p>
+ * documentation:
+ * <a href="https://developer.android.com/develop/ui/compose/layouts/adaptive/foldables/learn-about-foldables">Foldables</a>
+ * <a href="https://learn.microsoft.com/en-us/previous-versions/dual-screen/android/surface-duo-dimensions">SurfaceDuo</a>
+ * <a href="https://learn.microsoft.com/en-us/previous-versions/dual-screen/android/jetpack/window-manager/?tabs=views">Jetpack Window Manager</a>
+ */
 public class DualScreenActivity extends FragmentActivity {
+    private static final String TAG = DualScreenActivity.class.getSimpleName();
+    private WindowInfoTrackerCallbackAdapter mWindowInfoTrackerCallback;
 
-    private FoldingFeature mFoldingFeature;
+    private FoldingFeatureInfo mLastFoldingFeature = null;
 
+    @RequiresApi(api = Build.VERSION_CODES.P)
     @Override
-    protected void onStart() {
-        super.onStart();
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         // Initialize WindowInfoTracker and register for display feature changes
         final WindowInfoTracker windowInfoTracker = WindowInfoTracker.getOrCreate(this);
-        final WindowInfoTrackerCallbackAdapter windowInfoTrackerCallback =
-                new WindowInfoTrackerCallbackAdapter(windowInfoTracker);
-
-        // The Surface Duo, upon its original release, defaulted to Android 10.
-        // The Surface Duo 2, upon its original release, defaulted to Android 11.
-        // Hence, windowLayoutInfo will be available for these devices.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            windowInfoTrackerCallback.addWindowLayoutInfoListener(
-                    this,
-                    getMainExecutor(),
-                    windowLayoutInfo -> {
-                        mFoldingFeature = null; // Reset the folding feature before checking
-                        for (final DisplayFeature displayFeature : windowLayoutInfo.getDisplayFeatures()) {
-                            if (displayFeature instanceof FoldingFeature) {
-                                mFoldingFeature = (FoldingFeature) displayFeature;
-                            }
-                        }
-                        adjustLayoutForDualScreenActivity();
-                    });
-        }
+        mWindowInfoTrackerCallback = new WindowInfoTrackerCallbackAdapter(windowInfoTracker);
+        mWindowInfoTrackerCallback.addWindowLayoutInfoListener(
+                this,
+                getMainExecutor(),
+                windowLayoutInfo -> {
+                    // Create a new folding feature info from the windowLayoutInfo
+                    final FoldingFeatureInfo foldingFeatureInfo = FoldingFeatureInfo
+                            .Companion
+                            .constructFromWindowLayoutInfo(windowLayoutInfo);
+                    adjustLayout(foldingFeatureInfo);
+                });
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        final String methodTag = TAG + ":onDestroy";
+        // Remove the window layout info listener to prevent memory leaks
+        if (mWindowInfoTrackerCallback != null) {
+            try {
+                mWindowInfoTrackerCallback.removeWindowLayoutInfoListener(
+                        layoutInfo -> {
+                            // This is a no-op, but we need to provide a Consumer to remove the listener.
+                        }
+                );
+                Logger.info(methodTag, "Window layout info listener removed.");
+            } catch (final Exception e) {
+                Logger.error(methodTag, "Failed to remove window layout info listener", e);
+            }
+        }
+        Log.i(TAG, "DualScreenActivity destroyed.---------------------------------------------------------");
+    }
+
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // Re-adjust the layout when the configuration changes, for example, when the device is rotated.
+        // On devices running Android 8.1 (API level 27) and below, we rely on this method to adjust the layout.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            final String methodTag = TAG + ":onConfigurationChanged";
+            Logger.info(methodTag, "Adjusting layout for dual screen activity due to configuration change.");
+            //adjustLayoutForDualScreenActivity();
+            Log.i(TAG, "PEDRO: Folding feature legacy");
+            adjustLayout(null);
+        }
+        // For Android 9 (API 28) and above, the WindowInfoTracker handles layout adjustments
+    }
+
+
+    @Override
     public void setContentView(int layoutResID) {
+        Log.w(TAG, "setContentView called with layoutResID: " + layoutResID);
         initializeContentView();
 
         final RelativeLayout contentLayout = findViewById(com.microsoft.identity.common.R.id.dual_screen_content);
         LayoutInflater.from(this).inflate(layoutResID, contentLayout);
     }
 
-    private void initializeContentView(){
+    private void initializeContentView() {
         super.setContentView(R.layout.dual_screen_layout);
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_HANDLING_FOR_EDGE_TO_EDGE)) {
             try {
@@ -106,7 +147,9 @@ public class DualScreenActivity extends FragmentActivity {
                 Logger.warn("DualScreenActivity:initializeContentView", "Failed to set OnApplyWindowInsetsListener");
             }
         }
-        adjustLayoutForDualScreenActivity();
+        //adjustLayoutForDualScreenActivity();
+        //adjustLayout(null);
+        handleSingleScreenMode();
     }
 
     public void setFragment(@NonNull final Fragment fragment) {
@@ -118,9 +161,105 @@ public class DualScreenActivity extends FragmentActivity {
                 .commit();
     }
 
-    private void adjustLayoutForDualScreenActivity() {
-        boolean isAppSpanned = isAppSpanned(this);
+    /**
+     * private void adjustLayoutForDualScreenActivity() {
+     * // Base layout for dual screen activity.
+     * final ConstraintSet constraintSet = new ConstraintSet();
+     * constraintSet.connect(R.id.dual_screen_content, ConstraintSet.LEFT, R.id.dual_screen_layout, ConstraintSet.LEFT, 0);
+     * constraintSet.connect(R.id.dual_screen_content, ConstraintSet.RIGHT, R.id.dual_screen_layout, ConstraintSet.RIGHT, 0);
+     * constraintSet.connect(R.id.dual_screen_content, ConstraintSet.TOP, R.id.dual_screen_layout, ConstraintSet.TOP, 0);
+     * constraintSet.connect(R.id.dual_screen_content, ConstraintSet.BOTTOM, R.id.dual_screen_layout, ConstraintSet.BOTTOM, 0);
+     * <p>
+     * constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.LEFT, R.id.dual_screen_layout, ConstraintSet.LEFT, 0);
+     * constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.RIGHT, R.id.dual_screen_layout, ConstraintSet.RIGHT, 0);
+     * constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.TOP, R.id.dual_screen_layout, ConstraintSet.TOP, 0);
+     * constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.BOTTOM, R.id.dual_screen_layout, ConstraintSet.BOTTOM, 0);
+     * <p>
+     * getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+     * <p>
+     * if (isFoldingFeatureSeparating()) {
+     * if (isVertical()) {
+     * int hingeWidth = getFoldingFeatureRectBounds().width() / 2;
+     * <p>
+     * // WebView is on the right.
+     * constraintSet.connect(R.id.dual_screen_content, ConstraintSet.LEFT, R.id.vertical_guideline, ConstraintSet.RIGHT, hingeWidth);
+     * <p>
+     * // Empty view is on the left.
+     * constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.RIGHT, R.id.vertical_guideline, ConstraintSet.LEFT, 0);
+     * } else {
+     * int hingeHeight = getFoldingFeatureRectBounds().height() / 2;
+     * <p>
+     * // WebView is on the top.
+     * constraintSet.connect(R.id.dual_screen_content, ConstraintSet.BOTTOM, R.id.horizontal_guideline, ConstraintSet.TOP, hingeHeight);
+     * <p>
+     * // Empty view is in the bottom.
+     * constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.TOP, R.id.horizontal_guideline, ConstraintSet.BOTTOM, 0);
+     * <p>
+     * // In spanned vertical mode, keyboard will always be on the lower screen.
+     * // This means we do not need to shrink the webview.
+     * getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
+     * }
+     * } else {
+     * // Shrink empty view. If constraint is not set, then its size will be (0,0).
+     * constraintSet.clear(R.id.dual_screen_empty_view);
+     * }
+     * <p>
+     * final ConstraintLayout dualScreenLayout = findViewById(R.id.dual_screen_layout);
+     * constraintSet.applyTo(dualScreenLayout);
+     * // Request layout to apply the changes
+     * dualScreenLayout.post(dualScreenLayout::requestLayout);
+     * if (mFoldingStateCallback != null) {
+     * mFoldingStateCallback.onFoldingStateChanged(mFoldingFeature);
+     * }
+     * }
+     */
 
+    private void handleSingleScreenMode() {
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
+        final ConstraintSet constraintSet = new ConstraintSet();
+        constraintSet.connect(R.id.dual_screen_content, ConstraintSet.LEFT, R.id.dual_screen_layout, ConstraintSet.LEFT, 0);
+        constraintSet.connect(R.id.dual_screen_content, ConstraintSet.RIGHT, R.id.dual_screen_layout, ConstraintSet.RIGHT, 0);
+        constraintSet.connect(R.id.dual_screen_content, ConstraintSet.TOP, R.id.dual_screen_layout, ConstraintSet.TOP, 0);
+        constraintSet.connect(R.id.dual_screen_content, ConstraintSet.BOTTOM, R.id.dual_screen_layout, ConstraintSet.BOTTOM, 0);
+
+        final ConstraintLayout dualScreenLayout = findViewById(R.id.dual_screen_layout);
+        constraintSet.applyTo(dualScreenLayout);
+    }
+
+    private synchronized void adjustLayout(final FoldingFeatureInfo foldingFeatureInfo) {
+        // Get current time to check against debounce period
+        Log.i(TAG, "=================  Current feature info: " + foldingFeatureInfo + " Previous: " + mLastFoldingFeature);
+        final boolean isNewFeature = compareFoldingFeatures(foldingFeatureInfo, mLastFoldingFeature);
+        mLastFoldingFeature = foldingFeatureInfo;
+        if (isNewFeature) {
+            Log.i(TAG, "No change in folding feature, skipping layout adjustment.");
+            return; // No change in folding feature, skip layout adjustment
+        }
+        if (foldingFeatureInfo == null) {
+            Log.i(TAG, "Defaulting to single screen mode.");
+            handleSingleScreenMode();
+        } else if (foldingFeatureInfo.isSeparating()) {
+            Log.i(TAG, "Handle dual screen mode with separating folding feature.");
+            handleDualScreenMode(foldingFeatureInfo);
+        } else {
+            Log.i(TAG, "Handle single screen mode.");
+            handleSingleScreenMode();
+        }
+        mLastFoldingFeature = foldingFeatureInfo;
+    }
+
+    private boolean compareFoldingFeatures(final FoldingFeatureInfo newFeature, final FoldingFeatureInfo oldFeature) {
+        if (newFeature == null && oldFeature == null) {
+            return true; // Both are null, considered equal
+        }
+        if (newFeature == null || oldFeature == null) {
+            return false; // One is null, the other is not
+        }
+        return newFeature.equals(oldFeature); // Compare properties of the features
+    }
+
+    private void handleDualScreenMode(final FoldingFeatureInfo foldingFeatureInfo) {
         final ConstraintSet constraintSet = new ConstraintSet();
         constraintSet.connect(R.id.dual_screen_content, ConstraintSet.LEFT, R.id.dual_screen_layout, ConstraintSet.LEFT, 0);
         constraintSet.connect(R.id.dual_screen_content, ConstraintSet.RIGHT, R.id.dual_screen_layout, ConstraintSet.RIGHT, 0);
@@ -134,74 +273,41 @@ public class DualScreenActivity extends FragmentActivity {
 
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
-        if (isAppSpanned && mFoldingFeature != null) {
-            if (mFoldingFeature.getOrientation() == FoldingFeature.Orientation.VERTICAL) {
-                int hingeWidth = mFoldingFeature.getBounds().width() / 2;
+        if (foldingFeatureInfo.getOrientation() == FoldingFeatureInfo.Orientation.VERTICAL) {
+            int hingeWidth = foldingFeatureInfo.getBounds().width() / 2;
 
-                // WebView is on the right.
-                constraintSet.connect(R.id.dual_screen_content, ConstraintSet.LEFT, R.id.vertical_guideline, ConstraintSet.RIGHT, hingeWidth);
+            // WebView is on the right.
+            constraintSet.connect(R.id.dual_screen_content, ConstraintSet.LEFT, R.id.vertical_guideline, ConstraintSet.RIGHT, hingeWidth);
 
-                // Empty view is on the left.
-                constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.RIGHT, R.id.vertical_guideline, ConstraintSet.LEFT, 0);
-            } else {
-                int hingeHeight = mFoldingFeature.getBounds().height() / 2;
-
-                // WebView is on the top.
-                constraintSet.connect(R.id.dual_screen_content, ConstraintSet.BOTTOM, R.id.horizontal_guideline, ConstraintSet.TOP, hingeHeight);
-
-                // Empty view is in the bottom.
-                constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.TOP, R.id.horizontal_guideline, ConstraintSet.BOTTOM, 0);
-
-                // In spanned vertical mode, keyboard will always be on the lower screen.
-                // This means we do not need to shrink the webview.
-                getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
-            }
+            // Empty view is on the left.
+            constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.RIGHT, R.id.vertical_guideline, ConstraintSet.LEFT, 0);
         } else {
-            // Shrink empty view. If constraint is not set, then its size will be (0,0).
-            constraintSet.clear(R.id.dual_screen_empty_view);
-        }
+            int hingeHeight = foldingFeatureInfo.getBounds().height() / 2;
 
+            // WebView is on the top.
+            constraintSet.connect(R.id.dual_screen_content, ConstraintSet.BOTTOM, R.id.horizontal_guideline, ConstraintSet.TOP, hingeHeight);
+
+            // Empty view is in the bottom.
+            constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.TOP, R.id.horizontal_guideline, ConstraintSet.BOTTOM, 0);
+
+            // In spanned vertical mode, keyboard will always be on the lower screen.
+            // This means we do not need to shrink the webview.
+            getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
+        }
         final ConstraintLayout dualScreenLayout = findViewById(R.id.dual_screen_layout);
+
+      //  final ConstraintLayout dualScreenLayout = findViewById(R.id.dual_screen_layout);
         constraintSet.applyTo(dualScreenLayout);
+        //dualScreenLayout.requestLayout();
+/*    dualScreenLayout.post(() -> {
+        constraintSet.applyTo(dualScreenLayout);
+        dualScreenLayout.requestLayout(); // Explicit request to re-layout
+
+    });*/
         // Request layout to apply the changes
-        dualScreenLayout.post(dualScreenLayout::requestLayout);
+         //dualScreenLayout.post(dualScreenLayout::requestLayout);
+
     }
 
-    /**
-     * Returns true if the app is being spanned across two screens.
-     */
-    public boolean isAppSpanned(final Activity activity) {
-        // Check if it's a fold/hinge that separates the display into two distinct areas
-        if (mFoldingFeature != null &&
-                (mFoldingFeature.getState() == FoldingFeature.State.FLAT ||
-                        mFoldingFeature.getState() == FoldingFeature.State.HALF_OPENED)) {
-            final Rect windowRect = getWindowRect(activity);
-            return mFoldingFeature.getBounds().intersect(windowRect);
-        }
-        // If no folding feature is present or it doesn't intersect the app window, return false
-        return false;
-    }
 
-    /**
-     * Get the device's rotation.
-     *
-     * @return Surface.ROTATION_0, Surface.ROTATION_90, Surface.ROTATION_180 or Surface.ROTATION_270
-     */
-    public int getRotation(Activity activity) {
-        WindowManager wm = (WindowManager) activity.getSystemService(Context.WINDOW_SERVICE);
-        int rotation = 0;
-        if (wm != null) {
-            rotation = wm.getDefaultDisplay().getRotation();
-        }
-        return rotation;
-    }
-
-    /**
-     * Returns the area of the displaying window.
-     */
-    private Rect getWindowRect(final Activity activity) {
-        Rect windowRect = new Rect();
-        activity.getWindowManager().getDefaultDisplay().getRectSize(windowRect);
-        return windowRect;
-    }
 }
