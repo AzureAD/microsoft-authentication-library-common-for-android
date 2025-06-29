@@ -37,7 +37,11 @@ interface IRestrictionsManager {
         // String keys
         const val PREFERRED_AUTH_CONFIG = "preferred_auth_config"
         // Boolean keys
-        const val SUPPRESS_CAMERA_CONSENT = "sdm_suppress_camera_consent"
+        // SDM_SUPPRESS_CAMERA_CONSENT key was used in the past to suppress camera consent for the SDM QR PIN mode.
+        // It is now deprecated and replaced with the new key SUPPRESS_CAMERA_CONSENT.
+        // This key is kept for backward compatibility.
+        const val SDM_SUPPRESS_CAMERA_CONSENT = "sdm_suppress_camera_consent"
+        const val SUPPRESS_CAMERA_CONSENT = "suppress_camera_consent"
 
         /**
          * Creates a request bundle with the keys to be requested from the app restrictions manager.
