@@ -28,6 +28,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
@@ -47,6 +48,8 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.Switc
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
@@ -130,8 +133,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                     }
                 },
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
-                true);
+                Mockito.mock(SwitchBrowserRequestHandler.class)
+        );
         HashMap<String, String> dummyHeaders = new HashMap<>();
         dummyHeaders.put("key", "value");
         mWebViewClient.setRequestHeaders(dummyHeaders);
@@ -303,8 +306,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                         }
                     },
                     TEST_REDIRECT_URI,
-                    Mockito.mock(SwitchBrowserRequestHandler.class),
-                    true
+                    Mockito.mock(SwitchBrowserRequestHandler.class)
             );
             mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PASSKEY_REDIRECT_URL);
         } catch (ClassCastException e) {
@@ -339,6 +341,11 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Test
     public void testOnReceivedSslError() {
+        final IFlightsManager mockFlightsManager = Mockito.mock(IFlightsManager.class);
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(eq(CommonFlight.SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR))).thenReturn(true);
+        when(mockFlightsManager.getFlightsProvider()).thenReturn(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
         final SslErrorHandler mockHandler = Mockito.mock(android.webkit.SslErrorHandler.class);
         final SslError mockError = Mockito.mock(android.net.http.SslError.class);
         final IAuthorizationCompletionCallback mockCallback = Mockito.mock(IAuthorizationCompletionCallback.class);
@@ -348,8 +355,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
-                true
+                Mockito.mock(SwitchBrowserRequestHandler.class)
         );
         final WebView mockWebView = new WebView(mContext);
         mockWebView.setWebViewClient(mockWebViewClient);
@@ -360,5 +366,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         // verify that the handler is cancelled and the callback is invoked
         Mockito.verify(mockHandler, Mockito.times(1)).cancel();
         Mockito.verify(mockCallback, never()).onChallengeResponseReceived(any());
+
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 }

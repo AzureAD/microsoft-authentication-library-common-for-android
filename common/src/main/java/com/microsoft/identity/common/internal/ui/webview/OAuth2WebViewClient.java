@@ -46,6 +46,10 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmC
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmChallengeHandler;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.logging.Logger;
@@ -61,11 +65,6 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     private final IAuthorizationCompletionCallback mCompletionCallback;
     private final OnPageLoadedCallback mPageLoadedCallback;
     private final Activity mActivity;
-
-    /**
-     * Flag to determine whether the flow should be cancelled on SSL error.
-     */
-    private final boolean mShouldPreserveFlowOnSslError;
 
     @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "This is only exposed in testing")
     @VisibleForTesting
@@ -91,18 +90,15 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
      * @param activity           app Context
      * @param completionCallback Challenge completion callback
      * @param pageLoadedCallback callback to be triggered on page load. For UI purposes.
-     * @param shouldPreserveFlowOnSslError flag to determine whether the flow should be cancelled on SSL error.
      */
     OAuth2WebViewClient(@NonNull final Activity activity,
                         @NonNull final IAuthorizationCompletionCallback completionCallback,
-                        @NonNull final OnPageLoadedCallback pageLoadedCallback,
-                        final boolean shouldPreserveFlowOnSslError
+                        @NonNull final OnPageLoadedCallback pageLoadedCallback
     ) {
         // the validation of redirect url and authorization request should be in upper level before launching the webview.
         mActivity = activity;
         mCompletionCallback = completionCallback;
         mPageLoadedCallback = pageLoadedCallback;
-        mShouldPreserveFlowOnSslError = shouldPreserveFlowOnSslError;
     }
 
     @Override
@@ -180,13 +176,14 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
                                    final SslErrorHandler handler,
                                    final SslError error) {
         // Developer does not have option to control this for now
+        final String methodTag = TAG + ":onReceivedSslError";
         super.onReceivedSslError(view, handler, error);
+        final String errMsg = "Received SSL Error during request. For more info see: " + SSL_HELP_URL + ". Error: " + error.toString();
 
-        final String errMsg = "Received SSL Error during request. For more info see: " + SSL_HELP_URL;
-
-        Logger.error(TAG + ":onReceivedSslError", errMsg, null);
-
-        if (!mShouldPreserveFlowOnSslError) {
+        Logger.warn(methodTag, errMsg);
+        SpanExtension.current()
+                .setAttribute(AttributeName.web_view_ssl_primary_error_code.name(), error.getPrimaryError());
+        if (!CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR)) {
             // Send the result back to the calling activity
             mCompletionCallback.onChallengeResponseReceived(
                     RawAuthorizationResult.fromException(

