@@ -659,7 +659,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
 
             // Else, check if the home tenant is in the list of tenants that have this feature enabled.
-            final String homeTenantId = mUtid != null? mUtid : getHomeTenantIdFromUrl(originalUrl);
+            final String homeTenantId = !StringUtil.isNullOrEmpty(mUtid)? mUtid : getHomeTenantIdFromUrl(originalUrl);
             if (StringUtil.isNullOrEmpty(homeTenantId)) {
                 Logger.info(methodTag, "Home tenantId is empty");
                 return false;

@@ -7,6 +7,7 @@ vNext
 - [MINOR] Flighting webcp in webview (#2686)
 - [MINOR] Construct broker app link redirect based on broker pkg name (#2682)
 - [MINOR] Update keyword to suppress camera consent (#2694)
+- [MINOR] Using utid for webcp flow whenever (#2695)
 
 Version 21.3.0
 ----------
