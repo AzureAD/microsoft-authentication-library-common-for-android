@@ -124,7 +124,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable handling the UI in edge to edge mode
      */
-    ENABLE_HANDLING_FOR_EDGE_TO_EDGE("EnableHandlingEdgeToEdge", true),
+    ENABLE_HANDLING_FOR_EDGE_TO_EDGE("EnableHandlingEdgeToEdge", false),
 
     /**
      * Flight to enable the Web CP in WebView.
