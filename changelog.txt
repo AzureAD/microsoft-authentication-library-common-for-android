@@ -1,14 +1,16 @@
 vNext
 ----------
 - [MINOR] Updating handling of ssl error received in Android WebView's onReceivedSslError callback (#2691)
+- [MINOR] Fixing the sign in screens when edge to edge is enabled (#2665)
+- [MINOR] Showing webcp flow in webview (#2673)
+- [MINOR] Native auth: Make native auth MFA feature more backward compatible(#2669)
+- [MINOR] Flighting webcp in webview (#2686)
+- [MINOR] Construct broker app link redirect based on broker pkg name (#2682)
+- [MINOR] Update keyword to suppress camera consent (#2694)
 
 Version 21.3.0
 ----------
 - [MINOR] changes accommodating the WrappedKeyAlgoIdentifier module (#2667)
-- [MINOR] Fixing the sign in screens when edge to edge is enabled (#2665)
-- [MINOR] Native auth: Make native auth MFA feature more backward compatible(#2669)
-- [MINOR] Showing webcp flow in webview (#2673)
-- [MINOR] Construct broker app link redirect based on broker pkg name (#2682)
 
 Version 21.2.0
 ----------
