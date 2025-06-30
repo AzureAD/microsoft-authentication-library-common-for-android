@@ -40,6 +40,7 @@ interface IRestrictionsManager {
         // SDM_SUPPRESS_CAMERA_CONSENT key was used in the past to suppress camera consent for the SDM QR PIN mode.
         // It is now deprecated and replaced with the new key SUPPRESS_CAMERA_CONSENT.
         // This key is kept for backward compatibility.
+        @Deprecated("Use SUPPRESS_CAMERA_CONSENT instead")
         const val SDM_SUPPRESS_CAMERA_CONSENT = "sdm_suppress_camera_consent"
         const val SUPPRESS_CAMERA_CONSENT = "suppress_camera_consent"
 
