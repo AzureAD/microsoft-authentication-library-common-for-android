@@ -57,12 +57,14 @@ class AuthFidoChallengeHandler (
     private val lifecycleOwner: LifecycleOwner?
 ) : IChallengeHandler<FidoChallenge, Void> {
     val TAG = AuthFidoChallengeHandler::class.simpleName.toString()
-    private val parentAttributeNames = arrayListOf(
-        AttributeName.correlation_id,
-        AttributeName.tenant_id,
-        AttributeName.account_type,
-        AttributeName.calling_package_name
-    )
+    companion object {
+        private val parentAttributeNames = arrayListOf(
+            AttributeName.correlation_id,
+            AttributeName.tenant_id,
+            AttributeName.account_type,
+            AttributeName.calling_package_name
+        )
+    }
 
     override fun processChallenge(fidoChallenge: FidoChallenge): Void? {
         val methodTag = "$TAG:processChallenge"

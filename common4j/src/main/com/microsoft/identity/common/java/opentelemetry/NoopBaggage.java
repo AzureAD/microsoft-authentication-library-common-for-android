@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.BaggageBuilder;
 import io.opentelemetry.api.baggage.BaggageEntry;
+import io.opentelemetry.api.baggage.BaggageEntryMetadata;
 
 /**
  * A custom noop implementation of {@link Baggage}.
@@ -52,12 +53,32 @@ public class NoopBaggage implements Baggage {
 
     @Nullable
     @Override
-    public String getEntryValue(String entryKey) {
+    public String getEntryValue(final String entryKey) {
         return null;
     }
 
     @Override
     public BaggageBuilder toBuilder() {
-        return null;
+        return new NoopBaggageBuilder();
+    }
+    /**
+     * A no-op implementation of {@link BaggageBuilder}.
+     */
+    private static class NoopBaggageBuilder implements BaggageBuilder {
+
+        @Override
+        public BaggageBuilder put(final String key, final String value, final BaggageEntryMetadata entryMetadata) {
+            return this;
+        }
+
+        @Override
+        public BaggageBuilder remove(final String key) {
+            return this;
+        }
+
+        @Override
+        public Baggage build() {
+            return new NoopBaggage();
+        }
     }
 }
