@@ -129,8 +129,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                     }
                 },
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
-                "homeTenantId");
+                Mockito.mock(SwitchBrowserRequestHandler.class));
         HashMap<String, String> dummyHeaders = new HashMap<>();
         dummyHeaders.put("key", "value");
         mWebViewClient.setRequestHeaders(dummyHeaders);
@@ -375,8 +374,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                         }
                     },
                     TEST_REDIRECT_URI,
-                    Mockito.mock(SwitchBrowserRequestHandler.class),
-                    "homeTenantId");
+                    Mockito.mock(SwitchBrowserRequestHandler.class));
             mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PASSKEY_REDIRECT_URL);
         } catch (ClassCastException e) {
             Assert.fail("Failure is not expected. The class checks should have prevented this." + e);
