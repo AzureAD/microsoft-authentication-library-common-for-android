@@ -399,6 +399,8 @@ public class AuthenticationConstants {
          * String as Query parameter key to send a V1 request to V2 endpoint
          */
         public static final String IT_VER_PARAM = "itver";
+
+        public static final String HOME_TENANT_ID = "home_tenant_id";
     }
 
     /**

@@ -50,5 +50,6 @@ data class AuthorizationActivityParameters @JvmOverloads constructor(
     val webViewZoomEnabled: Boolean = true,
     val webViewZoomControlsEnabled: Boolean = true,
     val sourceLibraryName: String? = null,
-    val sourceLibraryVersion: String? = null
+    val sourceLibraryVersion: String? = null,
+    val homeTenantId: String? = null
 )
