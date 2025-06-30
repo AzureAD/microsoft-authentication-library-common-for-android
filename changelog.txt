@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Update keyword to suppress camera consent (#2694)
 
 Version 21.3.0
 ----------
