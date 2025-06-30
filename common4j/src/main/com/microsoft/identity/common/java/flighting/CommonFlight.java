@@ -139,7 +139,13 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable the Web CP for a tenant list.
      */
-    TENANT_LIST_TO_ENABLE_WEB_CP_IN_WEBVIEW("TenantListToEnableWebCpInWebView", "");
+    TENANT_LIST_TO_ENABLE_WEB_CP_IN_WEBVIEW("TenantListToEnableWebCpInWebView", ""),
+
+    /**
+     * Flight to enable the WebView flow to not cancel and preserve WebView flow on SSL errors.
+     * The web resource running into SSL will itself not be loaded.
+     */
+    SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR("ShouldPreserveWebViewFlowOnSslError", false);
 
     private String key;
     private Object defaultValue;
