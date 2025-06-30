@@ -641,29 +641,35 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     protected boolean isWebCpInWebviewFeatureEnabled(@NonNull final String originalUrl) {
         final String methodTag = TAG + ":isWebCpInWebviewFeatureEnabled";
-        if (!ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
-            // Enabling webcp in webview feature for brokered flows only for now.
+        try {
+            if (!ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
+                // Enabling webcp in webview feature for brokered flows only for now.
+                return false;
+            }
+
+            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)) {
+                // Directly enabled via flight rollout.
+                Logger.info(methodTag, "WebCP in WebView feature is enabled.");
+                mIsWebCpInWebViewFeatureEnabled = true;
+                return true;
+            }
+
+            // Else, check if the home tenant is in the list of tenants that have this feature enabled.
+            final String tenantId = getHomeTenantIdFromUrl(originalUrl);
+            if (StringUtil.isNullOrEmpty(tenantId)) {
+                return false;
+            }
+
+            final String tenantIdList = CommonFlightsManager.INSTANCE.getFlightsProvider().getStringValue(CommonFlight.TENANT_LIST_TO_ENABLE_WEB_CP_IN_WEBVIEW);
+            final boolean isFlightEnabledForCurrentTenant = !StringUtil.isNullOrEmpty(tenantIdList) && tenantIdList.contains(tenantId);
+            Logger.info(methodTag, "TenantId list is empty? " + StringUtil.isNullOrEmpty(tenantIdList) + ", Is current tenantId in list? " + isFlightEnabledForCurrentTenant);
+            mIsWebCpInWebViewFeatureEnabled = isFlightEnabledForCurrentTenant;
+            return isFlightEnabledForCurrentTenant;
+        } catch (final Throwable throwable) {
+            // Catching any unexpected exceptions to avoid breaking the flow. We will anyway remove this block once the feature is fully rolled out.
+            Logger.error(methodTag, "Failed to check if WebCP in WebView feature is enabled.", throwable);
             return false;
         }
-
-        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)) {
-            // Directly enabled via flight rollout.
-            Logger.info(methodTag, "WebCP in WebView feature is enabled.");
-            mIsWebCpInWebViewFeatureEnabled = true;
-            return true;
-        }
-
-        // Else, check if the home tenant is in the list of tenants that have this feature enabled.
-        final String tenantId = getHomeTenantIdFromUrl(originalUrl);
-        if (StringUtil.isNullOrEmpty(tenantId)) {
-            return false;
-        }
-        
-        final String tenantIdList = CommonFlightsManager.INSTANCE.getFlightsProvider().getStringValue(CommonFlight.TENANT_LIST_TO_ENABLE_WEB_CP_IN_WEBVIEW);
-        final boolean isFlightEnabledForCurrentTenant = !StringUtil.isNullOrEmpty(tenantIdList) && tenantIdList.contains(tenantId);
-        Logger.info(methodTag, "TenantId list is empty? " + StringUtil.isNullOrEmpty(tenantIdList) + ", Is current tenantId in list? " + isFlightEnabledForCurrentTenant);
-        mIsWebCpInWebViewFeatureEnabled = isFlightEnabledForCurrentTenant;
-        return isFlightEnabledForCurrentTenant;
     }
 
     private String getHomeTenantIdFromUrl(@NonNull final String url) {
@@ -716,8 +722,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // Important for the enrollment flow to work correctly.
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             getActivity().startActivity(intent);
-        } catch (android.content.ActivityNotFoundException e) {
+        } catch (final ActivityNotFoundException e) {
             Logger.error(methodTag,"Failed to open the intent for google enrollment.", e);
+            throw e;
         }
     }
 
@@ -759,15 +766,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             getActivity().startActivity(intent);
             view.stopLoading();
-            if (appPackageName.equalsIgnoreCase(COMPANY_PORTAL_APP_PACKAGE_NAME) && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)) {
+            if (appPackageName.equalsIgnoreCase(COMPANY_PORTAL_APP_PACKAGE_NAME) && (mIsWebCpInWebViewFeatureEnabled)) {
                 // If the flight for webcp is enabled, we will return the result code to the activity to indicate that the MDM flow has started.
                 // Note that this is only for CP app as we are not aware of any other flows (other than webcp) reaching this code path.
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
             }
+
             return true;
-        } catch (android.content.ActivityNotFoundException e) {
+        } catch (final ActivityNotFoundException e) {
             //if GooglePlay is not present on the device.
             Logger.error(methodTag, "PlayStore is not present on the device", e);
+        } catch(final Exception e) {
+            Logger.error(methodTag, "Failed to intercept install broker playstore URL and launch the intent", e);
         }
 
         return false;
@@ -1005,10 +1015,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             reAttachPrtHandler.processChallenge(url);
             span.setStatus(StatusCode.OK);
-        } catch (final Exception e) {
+        } catch (final Throwable e) {
             // No op if an exception happens
             Logger.warn(methodTag, "Error attaching PRT header." + e);
             span.recordException(e);
+            span.setStatus(StatusCode.ERROR);
             view.loadUrl(url);
         } finally {
             span.end();
