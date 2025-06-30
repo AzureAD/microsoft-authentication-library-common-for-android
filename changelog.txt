@@ -8,6 +8,7 @@ Version 21.3.0
 - [MINOR] Native auth: Make native auth MFA feature more backward compatible(#2669)
 - [MINOR] Using Baggage to propagate attributes from parent Span (##2671)
 - [MINOR] Showing webcp flow in webview (#2673)
+- [MINOR] Construct broker app link redirect based on broker pkg name (#2682)
 
 Version 21.2.0
 ----------
