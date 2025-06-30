@@ -34,10 +34,10 @@ import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter;
 import com.microsoft.identity.common.java.exception.TerminalException;
 import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
 import com.microsoft.identity.common.java.opentelemetry.TextMapPropagatorExtension;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -66,36 +66,32 @@ public class AuthorizationActivity extends DualScreenActivity {
         super.onCreate(savedInstanceState);
 
         final String methodTag = TAG + ":onCreate";
-        if (getIntent().getExtras() != null) {
+        final Bundle bundle = getIntent().getExtras();
+        if (bundle != null) {
             try {
-                mSpanContext = new CommonMoshiJsonAdapter().fromJson(
-                        getIntent().getExtras().getString(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT),
+                String spanContextJson = bundle.getString(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT);
+                mSpanContext = StringUtil.isNullOrEmpty(spanContextJson) ? null : new CommonMoshiJsonAdapter().fromJson(
+                        spanContextJson,
                         SerializableSpanContext.class
                 );
-                // Extract OtelContext from the carrier if it exists
-                final Map<String, String> carrier;
+
+                final HashMap<String, String> carrier;
+                // For Android Tiramisu and above, we use the new Serializable interface, which is a bit safer because it performs type checking at the framework level.
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                    carrier = getIntent().getExtras() != null ?
-                            getIntent().getExtras().getSerializable(OTEL_CONTEXT_CARRIER, HashMap.class) :
-                            new HashMap<>();
+                    carrier = bundle.getSerializable(OTEL_CONTEXT_CARRIER, HashMap.class);
                 } else {
-                    @SuppressWarnings("unchecked")
-                    Map<String, String> temp = getIntent().getExtras() != null ?
-                            (Map<String, String>) getIntent().getExtras().getSerializable(OTEL_CONTEXT_CARRIER) :
-                            new HashMap<>();
-                    carrier = temp;
+                    carrier = (HashMap<String, String>) bundle.getSerializable(OTEL_CONTEXT_CARRIER);
                 }
                 mOtelContext = TextMapPropagatorExtension.extract(carrier);
-
-            } catch (final TerminalException e) {
-                // Don't want to block any features if an error occurs during deserialization of the span context.
-                mSpanContext = null;
+            } catch (final TerminalException | ClassCastException | NullPointerException e) {
+                // Don't want to block any features if an error occurs during deserialization.
+                Logger.warn(methodTag, "Exception thrown during extraction: " + e.getMessage());
             }
         }
         final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());
         if (fragment instanceof AuthorizationFragment) {
             mFragment = (AuthorizationFragment) fragment;
-            mFragment.setInstanceState(getIntent().getExtras());
+            mFragment.setInstanceState(bundle);
         } else {
             final IllegalStateException ex = new IllegalStateException("Unexpected fragment type.");
             Logger.error(methodTag, "Did not receive AuthorizationFragment from factory", ex);

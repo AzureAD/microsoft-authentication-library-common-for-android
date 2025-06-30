@@ -39,12 +39,12 @@ import com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFie
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.DiagnosticContext
+import com.microsoft.identity.common.java.opentelemetry.OtelContextExtension
 import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.java.opentelemetry.TextMapPropagatorExtension
 import com.microsoft.identity.common.java.ui.AuthorizationAgent
 import com.microsoft.identity.common.java.util.CommonURIBuilder
-import io.opentelemetry.context.Context
 import java.net.URISyntaxException
 
 
@@ -123,7 +123,7 @@ object AuthorizationActivityFactory {
             )
             putExtra(
                 OTEL_CONTEXT_CARRIER,
-                TextMapPropagatorExtension.inject(Context.current())
+                TextMapPropagatorExtension.inject(OtelContextExtension.current())
             )
             if (parameters.sourceLibraryName != null) {
                 putExtra(PRODUCT, parameters.sourceLibraryName)

@@ -22,8 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.opentelemetry;
 
+import com.microsoft.identity.common.java.logging.Logger;
+
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
@@ -38,10 +42,7 @@ import io.opentelemetry.context.propagation.TextMapSetter;
  */
 public final class TextMapPropagatorExtension {
 
-    private static final TextMapPropagator PROPAGATOR = TextMapPropagator.composite(
-            W3CTraceContextPropagator.getInstance(),
-            W3CBaggagePropagator.getInstance()
-    );
+    private static final String TAG = TextMapPropagatorExtension.class.getSimpleName();
 
     /**
      * Private constructor to prevent instantiation.
@@ -56,46 +57,67 @@ public final class TextMapPropagatorExtension {
      * @param context The context to inject. If null, the current context will be used.
      * @return A map containing the injected context properties.
      */
-    public static HashMap<String, String> inject(Context context) {
-        final HashMap<String, String> carrier = new HashMap<>();
-        final Context contextToInject = context != null ? context : Context.current();
+    public static HashMap<String, String> inject(final Context context) {
+        try {
+            final HashMap<String, String> carrier = new HashMap<>();
+            final Context contextToInject = context != null ? context : Context.current();
 
-        final TextMapSetter<Map<String, String>> setter = new TextMapSetter<Map<String, String>>() {
-            @Override
-            public void set(Map<String, String> carrier, String key, String value) {
-                if (carrier != null && key != null && value != null) {
-                    carrier.put(key, value);
+            final TextMapSetter<Map<String, String>> setter = new TextMapSetter<Map<String, String>>() {
+                @Override
+                public void set(Map<String, String> carrier, String key, String value) {
+                    if (carrier != null && key != null && value != null) {
+                        carrier.put(key, value);
+                    }
                 }
-            }
-        };
+            };
 
-        PROPAGATOR.inject(contextToInject, carrier, setter);
-        return carrier;
+            final TextMapPropagator propagator = TextMapPropagator.composite(
+                    W3CTraceContextPropagator.getInstance(),
+                    W3CBaggagePropagator.getInstance()
+            );
+            propagator.inject(contextToInject, carrier, setter);
+            return carrier;
+        } catch (final Exception e) {
+            // Log the error and return an empty map if injection fails
+            Logger.error(TAG + ":inject", "Failed to inject context", e);
+            return new HashMap<>();
+        }
     }
 
     /**
      * Extracts context from a carrier map.
      *
      * @param carrier The carrier containing context information.
-     * @return The extracted context, or the current context if extraction fails.
+     * @return The extracted context, or null if extraction fails.
      */
-    public static Context extract(Map<String, String> carrier) {
-        if (carrier == null || carrier.isEmpty()) {
-            return Context.current();
+    @Nullable
+    public static Context extract(final Map<String, String> carrier) {
+        try {
+            if (carrier == null || carrier.isEmpty()) {
+                return Context.current();
+            }
+
+            final TextMapGetter<Map<String, String>> getter = new TextMapGetter<Map<String, String>>() {
+                @Override
+                public String get(final Map<String, String> carrier, final String key) {
+                    return carrier.get(key);
+                }
+
+                @Override
+                public Iterable<String> keys(final Map<String, String> carrier) {
+                    return carrier.keySet();
+                }
+            };
+
+            final TextMapPropagator propagator = TextMapPropagator.composite(
+                    W3CTraceContextPropagator.getInstance(),
+                    W3CBaggagePropagator.getInstance()
+            );
+            return propagator.extract(Context.current(), carrier, getter);
+        } catch (final Exception e) {
+            // Log the error and return null if extraction fails
+            Logger.error(TAG + ":extract", "Failed to extract context", e);
+            return null;
         }
-
-        final TextMapGetter<Map<String, String>> getter = new TextMapGetter<Map<String, String>>() {
-            @Override
-            public String get(Map<String, String> carrier, String key) {
-                return carrier.get(key);
-            }
-
-            @Override
-            public Iterable<String> keys(Map<String, String> carrier) {
-                return carrier.keySet();
-            }
-        };
-
-        return PROPAGATOR.extract(Context.current(), carrier, getter);
     }
 }

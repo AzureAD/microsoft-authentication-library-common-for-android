@@ -30,10 +30,11 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChal
 import com.microsoft.identity.common.java.constants.FidoConstants
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.PASSKEY_PROTOCOL_ERROR_PREFIX_STRING
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.BaggageExtension
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.java.opentelemetry.SpanName
 import com.microsoft.identity.common.logging.Logger
-import io.opentelemetry.api.baggage.Baggage
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.context.Context
@@ -68,10 +69,10 @@ class AuthFidoChallengeHandler (
         Logger.info(methodTag, "Processing FIDO challenge.")
         val span : Span
         if (oTelContext != null) {
-            val parentSpan = Span.fromContext(oTelContext)
+            val parentSpan = SpanExtension.fromContext(oTelContext)
             val spanContext = parentSpan.spanContext
             span = OTelUtility.createSpanFromParent(SpanName.Fido.name, spanContext)
-            val baggage = Baggage.fromContext(oTelContext)
+            val baggage = BaggageExtension.fromContext(oTelContext)
             parentAttributeNames.forEach { attributeName ->
                 baggage.getEntryValue(attributeName.name)?.let { value ->
                     span.setAttribute(attributeName.name, value)
