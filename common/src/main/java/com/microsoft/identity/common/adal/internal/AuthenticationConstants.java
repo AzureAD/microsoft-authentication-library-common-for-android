@@ -1387,6 +1387,11 @@ public final class AuthenticationConstants {
         public static final String PLAY_STORE_INSTALL_PREFIX = "market://details?id=";
 
         /**
+         * Another prefix in the redirect for PlayStore.
+         */
+        public static final String PLAY_STORE_INSTALL_APP_PREFIX = "https://play.google.com/store/apps/details?id=";
+
+        /**
          * String for expiration buffer.
          * Integer for token expiration buffer. see {@link AuthenticationSettings#mExpirationBuffer}
          */

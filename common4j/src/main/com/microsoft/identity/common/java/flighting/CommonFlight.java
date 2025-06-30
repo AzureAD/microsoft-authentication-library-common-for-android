@@ -132,6 +132,11 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_WEB_CP_IN_WEBVIEW("EnableWebCpInWebView", false),
 
     /**
+     * Flight to enable the Playstore URL launch for broker apps.
+     */
+    ENABLE_PLAYSTORE_URL_LAUNCH("EnablePlaystoreUrlLaunch", true),
+
+    /**
      * Flight to enable the WebView flow to not cancel and preserve WebView flow on SSL errors.
      * The web resource running into SSL will itself not be loaded.
      */
