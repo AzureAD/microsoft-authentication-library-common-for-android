@@ -131,19 +131,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean mAuthUxJavaScriptInterfaceAdded = false;
     private boolean mIsWebCpInWebViewFeatureEnabled = false;
 
-    private String mHomeTenantId;
+    private String mUtid;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl,
                                              @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler,
-                                             @Nullable final String homeTenantId) {
+                                             @Nullable final String utid) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
         mSwitchBrowserRequestHandler = switchBrowserRequestHandler;
-        mHomeTenantId = homeTenantId;
+        mUtid = utid;
     }
 
     /**
@@ -659,7 +659,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
 
             // Else, check if the home tenant is in the list of tenants that have this feature enabled.
-            final String homeTenantId = mHomeTenantId != null? mHomeTenantId : getHomeTenantIdFromUrl(originalUrl);
+            final String homeTenantId = mUtid != null? mUtid : getHomeTenantIdFromUrl(originalUrl);
             if (StringUtil.isNullOrEmpty(homeTenantId)) {
                 Logger.info(methodTag, "Home tenantId is empty");
                 return false;

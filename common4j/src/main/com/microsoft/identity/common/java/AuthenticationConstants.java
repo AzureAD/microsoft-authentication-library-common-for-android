@@ -400,7 +400,7 @@ public class AuthenticationConstants {
          */
         public static final String IT_VER_PARAM = "itver";
 
-        public static final String HOME_TENANT_ID = "home_tenant_id";
+        public static final String UTID = "utid";
     }
 
     /**

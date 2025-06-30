@@ -81,8 +81,7 @@ import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.HOME_TENANT_ID;
-
+import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.UTID;
 
 import io.opentelemetry.api.trace.SpanContext;
 
@@ -119,7 +118,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private boolean webViewZoomEnabled;
 
-    private String mHomeTenantId;
+    private String mUtid;
 
     private final CameraPermissionRequestHandler mCameraPermissionRequestHandler = new CameraPermissionRequestHandler(this);
 
@@ -211,6 +210,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedJavascript);
         outState.putBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         outState.putBoolean(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
+        outState.putString(UTID, mUtid);
     }
 
     @Override
@@ -228,7 +228,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mPostPageLoadedJavascript = state.getString(POST_PAGE_LOADED_URL);
         webViewZoomEnabled = state.getBoolean(WEB_VIEW_ZOOM_ENABLED, true);
         webViewZoomControlsEnabled = state.getBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
-        mHomeTenantId = state.getString(HOME_TENANT_ID);
+        mUtid = state.getString(UTID);
     }
 
     @Nullable
@@ -267,7 +267,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 },
                 mRedirectUri,
                 getSwitchBrowserCoordinator().getSwitchBrowserRequestHandler(),
-                mHomeTenantId
+                utid
         );
         setUpWebView(view, mAADWebViewClient);
         mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
