@@ -214,7 +214,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mAuthIntent = state.getParcelable(AUTH_INTENT);
         mPkeyAuthStatus = state.getBoolean(PKEYAUTH_STATUS, false);
         mAuthorizationRequestUrl = state.getString(REQUEST_URL);
-        mAuthorizationRequestUrl = "https://n6mjfm.csb.app/";
         final Context context = getContext();
         if (context != null) {
             isBrokerRequest = ProcessUtil.isRunningOnAuthService(context);
