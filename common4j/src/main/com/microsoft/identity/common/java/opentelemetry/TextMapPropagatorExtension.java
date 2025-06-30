@@ -64,7 +64,7 @@ public final class TextMapPropagatorExtension {
 
             final TextMapSetter<Map<String, String>> setter = new TextMapSetter<Map<String, String>>() {
                 @Override
-                public void set(Map<String, String> carrier, String key, String value) {
+                public void set(final Map<String, String> carrier, final String key, final String value) {
                     if (carrier != null && key != null && value != null) {
                         carrier.put(key, value);
                     }
