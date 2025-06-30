@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.SSL_HELP_URL;
+
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -48,19 +50,25 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
-import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.logging.Logger;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.SSL_HELP_URL;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.LongCounter;
 
 public abstract class OAuth2WebViewClient extends WebViewClient {
     /* constants */
     private static final String TAG = OAuth2WebViewClient.class.getSimpleName();
+
+    private static final LongCounter sWebViewSslErrorCount = OTelUtility.createLongCounter(
+            "web_view_ssl_error_count",
+            "Number of SSL errors received in onReceivedSslError"
+    );
 
     private final IAuthorizationCompletionCallback mCompletionCallback;
     private final OnPageLoadedCallback mPageLoadedCallback;
@@ -181,8 +189,10 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         final String errMsg = "Received SSL Error during request. For more info see: " + SSL_HELP_URL + ". Error: " + error.toString();
 
         Logger.warn(methodTag, errMsg);
-        SpanExtension.current()
-                .setAttribute(AttributeName.web_view_ssl_primary_error_code.name(), error.getPrimaryError());
+        final Attributes attributes = Attributes.builder()
+                .put(AttributeName.web_view_ssl_primary_error_code.name(), error.getPrimaryError())
+                .build();
+        sWebViewSslErrorCount.add(1, attributes);
         if (!CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR)) {
             // Send the result back to the calling activity
             mCompletionCallback.onChallengeResponseReceived(
