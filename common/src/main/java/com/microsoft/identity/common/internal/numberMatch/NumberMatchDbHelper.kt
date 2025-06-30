@@ -34,7 +34,8 @@ class NumberMatchDbHelper(context: Context) : SQLiteOpenHelper(context, "number_
             "CREATE TABLE ${NumberMatchContentProvider.TABLE_NAME} (" +
                     "${BaseColumns._ID} INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "${NumberMatchContentProvider.SESSION_ID} TEXT UNIQUE, " +
-                    "${NumberMatchContentProvider.NUMBER_MATCH_DATA} TEXT)"
+                    "${NumberMatchContentProvider.NUMBER_MATCH_DATA} TEXT," +
+                    "${NumberMatchContentProvider.EXPIRY_TIME} INTEGER NOT NULL)"
         )
     }
 

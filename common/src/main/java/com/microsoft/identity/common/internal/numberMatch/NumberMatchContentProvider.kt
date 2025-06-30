@@ -27,8 +27,11 @@ import android.content.ContentProvider
 import android.content.ContentValues
 import android.content.UriMatcher
 import android.database.Cursor
+import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import com.microsoft.identity.common.logging.Logger
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class NumberMatchContentProvider : ContentProvider() {
     companion object {
@@ -37,10 +40,16 @@ class NumberMatchContentProvider : ContentProvider() {
         const val SESSION_ID = "sessionId"
         const val NUMBER_MATCH_DATA = "numberMatchData"
         const val CODE_NUMBER_MATCH = 1
+        const val EXPIRY_TIME = "expiryTime"
+        const val ENTRY_EXPIRY_TIME_IN_MS = 5 * 60 * 1000
+        private val deletionLock = Any()
         val TAG = NumberMatchContentProvider::class.java.simpleName
         val CONTENT_URI: Uri = Uri.parse("content://$AUTHORITY/$TABLE_NAME")
         private val uriMatcher = UriMatcher(UriMatcher.NO_MATCH).apply {
             addURI(AUTHORITY, TABLE_NAME, CODE_NUMBER_MATCH)
+        }
+        private val threadExecutor : ExecutorService by lazy {
+            Executors.newSingleThreadExecutor()
         }
     }
 
@@ -89,7 +98,18 @@ class NumberMatchContentProvider : ContentProvider() {
         validateURI(uri)
 
         val db = dbHelper.writableDatabase
-        val id = db.insert(TABLE_NAME, null, values)
+
+        // Add timestamp to the new entry
+        val currentTime = System.currentTimeMillis()
+        val updatedValues = ContentValues(values).apply {
+            put(EXPIRY_TIME, currentTime)
+        }
+
+        // Delete expired entries
+        deleteExpiredDataInBackground(currentTime, db)
+
+        // Insert the new entry
+        val id = db.insert(TABLE_NAME, null, updatedValues)
         if (id > 0) {
             Logger.info(TAG, "Insert successful: id=$id")
             return Uri.withAppendedPath(CONTENT_URI, id.toString())
@@ -125,6 +145,15 @@ class NumberMatchContentProvider : ContentProvider() {
         if (uriMatcher.match(uri) != CODE_NUMBER_MATCH) {
             Logger.warn(TAG, "Unknown URI: $uri")
             throw IllegalArgumentException("Unknown URI: $uri")
+        }
+    }
+
+    private fun deleteExpiredDataInBackground(currentTime: Long, db: SQLiteDatabase, ) {
+        threadExecutor.execute {
+            synchronized(deletionLock) {
+                val expiryTime = currentTime - ENTRY_EXPIRY_TIME_IN_MS
+                db.delete(TABLE_NAME, "timestamp < ?", arrayOf(expiryTime.toString()))
+            }
         }
     }
 }
