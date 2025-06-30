@@ -267,7 +267,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 },
                 mRedirectUri,
                 getSwitchBrowserCoordinator().getSwitchBrowserRequestHandler(),
-                utid
+                mUtid
         );
         setUpWebView(view, mAADWebViewClient);
         mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);

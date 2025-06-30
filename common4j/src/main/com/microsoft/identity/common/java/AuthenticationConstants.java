@@ -400,6 +400,9 @@ public class AuthenticationConstants {
          */
         public static final String IT_VER_PARAM = "itver";
 
+        /**
+         * String for the tenant unique id
+         */
         public static final String UTID = "utid";
     }
 

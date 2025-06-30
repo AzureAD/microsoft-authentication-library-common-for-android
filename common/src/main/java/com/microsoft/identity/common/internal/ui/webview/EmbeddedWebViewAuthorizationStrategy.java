@@ -90,7 +90,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
 
         String sourceLibraryName = null;
         String sourceLibraryVersion = null;
-        String homeTenantId = null;
+        String utid = null;
 
         // TODO: Pretty sure this type check wouldn't be necessary, since all authorization requests that go through this path will
         //  extend MicrosoftAuthorizationRequest. Perhaps we can change the Generic type to extend MicrosoftAuthorizationRequest rather than just AuthorizationRequest.
@@ -99,10 +99,10 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
             sourceLibraryVersion = ((MicrosoftAuthorizationRequest) mAuthorizationRequest).getLibraryVersion();
         }
         if (mAuthorizationRequest instanceof MicrosoftStsAuthorizationRequest) {
-            homeTenantId = ((MicrosoftStsAuthorizationRequest) mAuthorizationRequest).getUtid();
+            utid = ((MicrosoftStsAuthorizationRequest) mAuthorizationRequest).getUtid();
         }
 
-        final Intent authIntent = buildAuthorizationActivityStartIntent(requestUrl, sourceLibraryName, sourceLibraryVersion, homeTenantId);
+        final Intent authIntent = buildAuthorizationActivityStartIntent(requestUrl, sourceLibraryName, sourceLibraryVersion, utid);
 
         launchIntent(authIntent);
         return mAuthorizationResultFuture;
@@ -121,7 +121,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
             URI requestUrl,
             @Nullable final String sourceLibraryName,
             @Nullable final String sourceLibraryVersion,
-            @Nullable final String homeTenantId) {
+            @Nullable final String utid) {
         // RedirectURI used to get the auth code in nested app auth is that of a hub app (brkRedirectURI)       
         final String redirectUri = mAuthorizationRequest.getBrkRedirectUri() != null ? mAuthorizationRequest.getBrkRedirectUri() : mAuthorizationRequest.getRedirectUri();
         final AuthorizationActivityParameters authorizationActivityParameters = new AuthorizationActivityParameters(
@@ -135,7 +135,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
                 mAuthorizationRequest.isWebViewZoomControlsEnabled(),
                 sourceLibraryName,
                 sourceLibraryVersion,
-                homeTenantId
+                utid
         );
         return AuthorizationActivityFactory.getAuthorizationActivityIntent(authorizationActivityParameters);
     }
