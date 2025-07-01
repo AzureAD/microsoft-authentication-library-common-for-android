@@ -137,8 +137,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                     }
                 },
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class)
-        );
+                Mockito.mock(SwitchBrowserRequestHandler.class),
+                "homeTenantId");
         HashMap<String, String> dummyHeaders = new HashMap<>();
         dummyHeaders.put("key", "value");
         mWebViewClient.setRequestHeaders(dummyHeaders);
@@ -176,7 +176,14 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Test
     public void testUrlOverrideHandlesPlayStoreRequest() {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_PLAYSTORE_URL_LAUNCH)).thenReturn(true);
+
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PLAYSTORE_FOR_BROKER_APP_URL));
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     @Test
@@ -252,6 +259,7 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         assertTrue(mockWebViewClient.isWebCpInWebviewFeatureEnabled(TEST_WEB_CP_ENROLLMENT_URL));
         assertTrue(mockWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_WEB_CP_ENROLLMENT_URL));
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     @Test
@@ -383,8 +391,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                         }
                     },
                     TEST_REDIRECT_URI,
-                    Mockito.mock(SwitchBrowserRequestHandler.class)
-            );
+                    Mockito.mock(SwitchBrowserRequestHandler.class),
+                    "homeTenantId");
             mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PASSKEY_REDIRECT_URL);
         } catch (ClassCastException e) {
             Assert.fail("Failure is not expected. The class checks should have prevented this." + e);
@@ -405,7 +413,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class));
+                Mockito.mock(SwitchBrowserRequestHandler.class),
+                "homeTenantId");
         final WebView mockWebView = new WebView(mContext);
         mockWebView.setWebViewClient(mockWebViewClient);
 
@@ -432,7 +441,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class)
+                Mockito.mock(SwitchBrowserRequestHandler.class),
+                "homeTenantId"
         );
         final WebView mockWebView = new WebView(mContext);
         mockWebView.setWebViewClient(mockWebViewClient);
