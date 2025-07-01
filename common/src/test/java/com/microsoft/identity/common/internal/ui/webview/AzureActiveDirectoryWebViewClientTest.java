@@ -413,7 +413,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class));
+                Mockito.mock(SwitchBrowserRequestHandler.class),
+                "homeTenantId");
         final WebView mockWebView = new WebView(mContext);
         mockWebView.setWebViewClient(mockWebViewClient);
 
@@ -440,7 +441,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class)
+                Mockito.mock(SwitchBrowserRequestHandler.class),
+                "homeTenantId"
         );
         final WebView mockWebView = new WebView(mContext);
         mockWebView.setWebViewClient(mockWebViewClient);
