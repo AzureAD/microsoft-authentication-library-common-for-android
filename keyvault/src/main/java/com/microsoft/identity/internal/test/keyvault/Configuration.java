@@ -16,7 +16,7 @@ package com.microsoft.identity.internal.test.keyvault;
 
 public class Configuration {
     private static ApiClient defaultApiClient = new ApiClient();
-    private static ApiClient buildAutomationtApiClient = new ApiClient(ApiClient.BUILD_AUTOMATION_VAULT_BASE_PATH);
+    private static ApiClient buildAutomationApiClient = new ApiClient(ApiClient.BUILD_AUTOMATION_VAULT_BASE_PATH);
 
     /**
      * Get the default API client, which would be used when creating API
@@ -31,12 +31,12 @@ public class Configuration {
 
     /**
      * The URL for this client is ApiClient.BUILD_AUTOMATION_VAULT_BASE_PATH,
-     * i.e. the buildautomation KeyVault.
+     * i.e. the MobileBuildVault KeyVault.
      *
      * @return API client
      */
-    public static ApiClient getBuildAutomationVaultApiClient() {
-        return buildAutomationtApiClient;
+    public static ApiClient getMobileBuildAutomationVaultApiClient() {
+        return buildAutomationApiClient;
     }
 
     /**
