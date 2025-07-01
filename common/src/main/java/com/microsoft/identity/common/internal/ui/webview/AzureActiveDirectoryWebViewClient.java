@@ -250,7 +250,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (shouldExposeJavaScriptInterface(url)) {
             // If broker request, and a valid url, expose JavaScript API
             Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
-            view.addJavascriptInterface(new AuthUxJavaScriptInterface(getActivity().getApplicationContext()),
+            view.addJavascriptInterface(new AuthUxJavaScriptInterface(),
                     AuthUxJavaScriptInterface.Companion.getInterfaceName());
             mAuthUxJavaScriptInterfaceAdded = true;
         } else if (mAuthUxJavaScriptInterfaceAdded) {
