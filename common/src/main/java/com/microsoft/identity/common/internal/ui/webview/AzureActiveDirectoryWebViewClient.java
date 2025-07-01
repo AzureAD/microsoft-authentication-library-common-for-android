@@ -131,15 +131,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean mAuthUxJavaScriptInterfaceAdded = false;
     private boolean mIsWebCpInWebViewFeatureEnabled = false;
 
+    private String mUtid;
+
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl,
-                                             @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler) {
+                                             @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler,
+                                             @Nullable final String utid) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
         mSwitchBrowserRequestHandler = switchBrowserRequestHandler;
+        mUtid = utid;
     }
 
     /**
@@ -655,13 +659,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
 
             // Else, check if the home tenant is in the list of tenants that have this feature enabled.
-            final String tenantId = getHomeTenantIdFromUrl(originalUrl);
-            if (StringUtil.isNullOrEmpty(tenantId)) {
+            final String homeTenantId = !StringUtil.isNullOrEmpty(mUtid)? mUtid : getHomeTenantIdFromUrl(originalUrl);
+            if (StringUtil.isNullOrEmpty(homeTenantId)) {
+                Logger.info(methodTag, "Home tenantId is empty");
                 return false;
             }
 
             final String tenantIdList = CommonFlightsManager.INSTANCE.getFlightsProvider().getStringValue(CommonFlight.TENANT_LIST_TO_ENABLE_WEB_CP_IN_WEBVIEW);
-            final boolean isFlightEnabledForCurrentTenant = !StringUtil.isNullOrEmpty(tenantIdList) && tenantIdList.contains(tenantId);
+            final boolean isFlightEnabledForCurrentTenant = !StringUtil.isNullOrEmpty(tenantIdList) && tenantIdList.contains(homeTenantId);
             Logger.info(methodTag, "TenantId list is empty? " + StringUtil.isNullOrEmpty(tenantIdList) + ", Is current tenantId in list? " + isFlightEnabledForCurrentTenant);
             mIsWebCpInWebViewFeatureEnabled = isFlightEnabledForCurrentTenant;
             return isFlightEnabledForCurrentTenant;
