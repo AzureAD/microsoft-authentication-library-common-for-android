@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.numberMatch
 
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.logging.Logger
 
 /**
@@ -54,6 +56,8 @@ class NumberMatchHelper {
             // If both parameters are non-null, add a new entry to the hashmap
             if (sessionId != null && numberMatch != null) {
                 numberMatchMap[sessionId] = numberMatch
+                val span = SpanExtension.current()
+                span.setAttribute(AttributeName.stored_number_match_entry.name, true)
             }
             // If either parameter is null, do nothing
             else {
