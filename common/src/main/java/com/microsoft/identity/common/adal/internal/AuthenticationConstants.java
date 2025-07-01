@@ -1481,6 +1481,11 @@ public final class AuthenticationConstants {
         public static final String GET_NUMBER_MATCH_RESULT = "number_match";
 
         /**
+         * SessionID for the number match operation.
+         */
+        public static final String SESSION_ID = "session_id";
+
+        /**
          * Time out for the AccountManager's remove account operation in broker.
          */
         public static final int ACCOUNT_MANAGER_REMOVE_ACCOUNT_TIMEOUT_IN_MILLISECONDS = 5000;
