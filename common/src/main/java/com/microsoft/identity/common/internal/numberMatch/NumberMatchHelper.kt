@@ -35,24 +35,28 @@ import com.microsoft.identity.common.logging.Logger
  */
 class NumberMatchHelper {
 
-    // Store number matches in a Content Provider
+    // Store number matches in a static hash map
+    // No need to persist this storage beyond the current broker process, but we need to keep them
+    // long enough for AuthApp to call the broker api to fetch the number match
     companion object {
         val TAG = NumberMatchHelper::class.java.simpleName
         val numberMatchMap: HashMap<String, String> = HashMap()
 
         /**
-         * Method to add a key:value pair of sessionID:numberMatch to Content Provider. This hashmap will be accessed
+         * Method to add a key:value pair of sessionID:numberMatch to static hashmap. This hashmap will be accessed
          * by broker api to get the number match for a particular sessionID.
          */
         fun storeNumberMatch(sessionId: String?, numberMatch: String?) {
             val methodTag = "$TAG:storeNumberMatch"
             Logger.info(methodTag,
-                "Adding entry in NumberMatch Content Provider for session ID: $sessionId")
+                "Adding entry in NumberMatch hashmap for session ID: $sessionId")
 
             // If both parameters are non-null, add a new entry to the hashmap
             if (sessionId != null && numberMatch != null) {
                 numberMatchMap[sessionId] = numberMatch
-            } else {
+            }
+            // If either parameter is null, do nothing
+            else {
                 Logger.warn(methodTag,
                     "Either session ID or number match is null. Nothing to add for number match."
                 )

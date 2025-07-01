@@ -37,7 +37,7 @@ import java.net.URL
  * JavaScript API to receive JSON string payloads from AuthUX in order to facilitate calling various
  * broker methods.
  */
-class AuthUxJavaScriptInterface() {
+class AuthUxJavaScriptInterface {
 
     // Store number matches in a static hash map
     // No need to persist this storage beyond the current broker process, but we need to keep them
