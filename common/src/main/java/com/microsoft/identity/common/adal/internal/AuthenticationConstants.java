@@ -1194,13 +1194,13 @@ public final class AuthenticationConstants {
          * The only supported detection of this phone is the application install state.
          * App signature of Teams Phone app to detect it for the MDM Device CA redirect.
          */
-        public static final String IPPHONE_APP_SIGNATURE = "fcg80qvoM1YMKJZibjBwQcDfOno=";
+        public static final String IPPHONE_APP_SHA512_RELEASE_SIGNATURE = "iPULpH0pq8ms1Qy7cOzGsVRQN7/zW4IbW+UKcajvtrTrzM5o5VcaghNEA1Ho4Wq7ay0efqqJcalxa8eHxVnHKA==";
 
         /**
          * Signing certificate thumbprint of the DEBUG-signed Teams IP Phones (Sakurai devices)
          * to unblock any teams local debug development.
          */
-        public static final String IPPHONE_APP_DEBUG_SIGNATURE = "VCpKgbYCXucoq1mZ4BZPsh5taNE=";
+        public static final String IPPHONE_APP_SHA512_DEBUG_SIGNATURE = "FOoI98kyj+dXPZYW191TjF6017ljKj47G+RCQPYjIcXD7uhhTpw7pqznTABB0ZjB1/DZetRgr284pyLumvXN6A==";
 
         /**
          * The value for pkeyauth redirect.
