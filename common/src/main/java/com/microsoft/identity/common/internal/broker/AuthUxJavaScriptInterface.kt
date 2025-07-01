@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker
 
-import android.content.Context
 import android.webkit.JavascriptInterface
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParseException

@@ -41,7 +41,8 @@ class NumberMatchHelper {
         val numberMatchMap: HashMap<String, String> = HashMap()
 
         /**
-         * Method to add a key:value pair of sessionID:numberMatch to Content Provider.
+         * Method to add a key:value pair of sessionID:numberMatch to Content Provider. This hashmap will be accessed
+         * by broker api to get the number match for a particular sessionID.
          */
         fun storeNumberMatch(sessionId: String?, numberMatch: String?) {
             val methodTag = "$TAG:storeNumberMatch"
@@ -59,7 +60,7 @@ class NumberMatchHelper {
         }
 
         /**
-         * Clear all number match data from ContentProvider.
+         * Clear existing number match key:value pairs
          */
         fun clearNumberMatchMap() {
             numberMatchMap.clear()
