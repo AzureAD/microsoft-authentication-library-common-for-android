@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.numberMatch
 
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.logging.Logger
 
 /**
@@ -41,8 +43,6 @@ class NumberMatchHelper {
     companion object {
         val TAG = NumberMatchHelper::class.java.simpleName
         val numberMatchMap: HashMap<String, String> = HashMap()
-        const val SESSION_ID_ATTRIBUTE_NAME = "sessionID"
-        const val NUMBER_MATCH_ATTRIBUTE_NAME = "numberMatch"
 
         /**
          * Method to add a key:value pair of sessionID:numberMatch to static hashmap. This hashmap will be accessed
@@ -53,15 +53,19 @@ class NumberMatchHelper {
             Logger.info(methodTag,
                 "Adding entry in NumberMatch hashmap for session ID: $sessionId")
 
+            val span = SpanExtension.current()
+
             // If both parameters are non-null, add a new entry to the hashmap
             if (sessionId != null && numberMatch != null) {
                 numberMatchMap[sessionId] = numberMatch
+                span.setAttribute(AttributeName.stored_number_match_entry.name, true)
             }
             // If either parameter is null, do nothing
             else {
                 Logger.warn(methodTag,
                     "Either session ID or number match is null. Nothing to add for number match."
                 )
+                span.setAttribute(AttributeName.stored_number_match_entry.name, false)
             }
         }
 
