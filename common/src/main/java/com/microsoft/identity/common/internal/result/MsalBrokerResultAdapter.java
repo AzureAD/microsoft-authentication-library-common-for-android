@@ -802,7 +802,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      * @throws BaseException
      * @throws ClientException
      */
-    public AcquireTokenResult getDeviceCodeFlowTokenResultFromBrokerResultAndBundle(@NonNull final BrokerResult brokerResult, @NonNull final Bundle resultBundle) throws BaseException, ClientException {
+    public AcquireTokenResult getDeviceCodeFlowTokenResultFromResultBundle(@NonNull final BrokerResult brokerResult, @NonNull final Bundle resultBundle) throws BaseException, ClientException {
         final Span span = OTelUtility.createSpan(SpanName.AcquireTokenDcfFetchToken.name());
 
         span.setAttribute(AttributeName.correlation_id.name(), brokerResult.getCorrelationId());
