@@ -382,5 +382,11 @@ public enum AttributeName {
     /**
      * Records if the webcp is enabled in webview.
      */
-    is_webcp_in_webview_enabled
+    is_webcp_in_webview_enabled,
+
+    /**
+     * Records the if webview received an SSL error and
+     * corresponding primary error code.
+     */
+    web_view_ssl_primary_error_code
 }
