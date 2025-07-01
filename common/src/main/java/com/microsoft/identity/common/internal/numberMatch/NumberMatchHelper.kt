@@ -53,10 +53,11 @@ class NumberMatchHelper {
             Logger.info(methodTag,
                 "Adding entry in NumberMatch hashmap for session ID: $sessionId")
 
+            val span = SpanExtension.current()
+
             // If both parameters are non-null, add a new entry to the hashmap
             if (sessionId != null && numberMatch != null) {
                 numberMatchMap[sessionId] = numberMatch
-                val span = SpanExtension.current()
                 span.setAttribute(AttributeName.stored_number_match_entry.name, true)
             }
             // If either parameter is null, do nothing
@@ -64,6 +65,7 @@ class NumberMatchHelper {
                 Logger.warn(methodTag,
                     "Either session ID or number match is null. Nothing to add for number match."
                 )
+                span.setAttribute(AttributeName.stored_number_match_entry.name, false)
             }
         }
 
