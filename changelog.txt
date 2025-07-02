@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Update Broker ATS flow for Resource Account (#2704)
 - [MINOR] Updating handling of ssl error received in Android WebView's onReceivedSslError callback (#2691)
 - [MINOR] Fixing the sign in screens when edge to edge is enabled (#2665)
 - [MINOR] Showing webcp flow in webview (#2673)
