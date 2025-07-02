@@ -23,38 +23,21 @@
 
 package com.microsoft.identity.common.java.controllers;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import com.microsoft.identity.common.java.TestUtils;
-import com.microsoft.identity.common.java.authorities.Authority;
-import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
-import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
-import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.TerminalException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
-import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.TimeoutException;
-
-import lombok.SneakyThrows;
 
 @RunWith(JUnit4.class)
 public class ExceptionAdapterTests {
@@ -63,8 +46,8 @@ public class ExceptionAdapterTests {
     public void testBaseExceptionFromException_TerminalException() throws Exception{
         TerminalException t = new TerminalException("errorMsg", ClientException.KEY_RING_WRITE_FAILURE);
         BaseException e = ExceptionAdapter.baseExceptionFromException(t);
-        assertEquals(e.getErrorCode(), t.getErrorCode());
-        assertEquals(e.getCause(), t);
+        Assert.assertEquals(e.getErrorCode(), t.getErrorCode());
+        Assert.assertEquals(e.getCause(), t);
     }
 
     @Test
@@ -76,38 +59,9 @@ public class ExceptionAdapterTests {
         tokenErrorResponse.setSubError("basic_action");
 
         BaseException e = ExceptionAdapter.getExceptionFromTokenErrorResponse(tokenErrorResponse);
-        assertTrue("Expected exception of UiRequiredException type", e instanceof UiRequiredException);
-        assertEquals(e.getErrorCode(), tokenErrorResponse.getError());
-        assertEquals(e.getMessage(), tokenErrorResponse.getErrorDescription());
-    }
-
-    @Test
-    public void testMFATokenErrorResponse_allowUiRequiredException_True() {
-        final MicrosoftTokenErrorResponse tokenErrorResponse = new MicrosoftTokenErrorResponse();
-        tokenErrorResponse.setError("invalid_grant");
-        tokenErrorResponse.setErrorDescription("AADSTS50076: Due to a configuration change made by your administrator, or because you moved to a new location, you must use multi-factor authentication to access '7ae46e1'. Trace ID: 01276277-3a30020d900900 Correlation ID: 6209e18a-f89b-4f14-a05e-0371c6757adb Timestamp: 2024-11-14 13:09:18Z");
-        tokenErrorResponse.setErrorCodes(new ArrayList<Long>(Arrays.asList(50076L)));
-        tokenErrorResponse.setSubError("basic_action");
-
-        BaseException e = ExceptionAdapter.getExceptionFromTokenErrorResponse(tokenErrorResponse, true);
-        assertTrue("Expected exception of UiRequiredException type", e instanceof UiRequiredException);
-        assertEquals(e.getErrorCode(), tokenErrorResponse.getError());
-        assertEquals(e.getMessage(), tokenErrorResponse.getErrorDescription());
-    }
-
-    @Test
-    public void testMFATokenErrorResponse_allowUiRequiredException_False() {
-        final MicrosoftTokenErrorResponse tokenErrorResponse = new MicrosoftTokenErrorResponse();
-        tokenErrorResponse.setError("invalid_grant");
-        tokenErrorResponse.setErrorDescription("AADSTS50076: Due to a configuration change made by your administrator, or because you moved to a new location, you must use multi-factor authentication to access '7ae46e1'. Trace ID: 01276277-3a30020d900900 Correlation ID: 6209e18a-f89b-4f14-a05e-0371c6757adb Timestamp: 2024-11-14 13:09:18Z");
-        tokenErrorResponse.setErrorCodes(new ArrayList<Long>(Arrays.asList(50076L)));
-        tokenErrorResponse.setSubError("basic_action");
-
-        BaseException e = ExceptionAdapter.getExceptionFromTokenErrorResponse(tokenErrorResponse, false);
-        assertFalse("Expected exception of UiRequiredException type", e instanceof UiRequiredException);
-        assertTrue("Expected exception of UiRequiredException type", e instanceof ServiceException);
-        assertEquals(e.getErrorCode(), tokenErrorResponse.getError());
-        assertEquals(e.getMessage(), tokenErrorResponse.getErrorDescription());
+        Assert.assertTrue("Expected exception of UiRequiredException type", e instanceof UiRequiredException);
+        Assert.assertEquals(e.getErrorCode(), tokenErrorResponse.getError());
+        Assert.assertEquals(e.getMessage(), tokenErrorResponse.getErrorDescription());
     }
 
     @Test
@@ -116,7 +70,7 @@ public class ExceptionAdapterTests {
         ServiceException outErr = new ServiceException("errorCode", description, null);
         outErr.setCliTelemErrorCode("50076");
         ServiceException result = ExceptionAdapter.convertToNativeAuthException(outErr);
-        assertEquals("Multi-factor authentication is required, which can't be fulfilled as part of this flow. Please sign out and perform a new sign in operation. Please see exception details for more information." + description, result.getMessage());
+        Assert.assertEquals("Multi-factor authentication is required, which can't be fulfilled as part of this flow. Please sign out and perform a new sign in operation. Please see exception details for more information." + description, result.getMessage());
     }
 
     @Test
@@ -125,91 +79,12 @@ public class ExceptionAdapterTests {
         ServiceException outErr = new ServiceException("errorCode", description, null);
         outErr.setCliTelemErrorCode("50142");
         ServiceException result = ExceptionAdapter.convertToNativeAuthException(outErr);
-        assertEquals("User password change is required, which can't be fulfilled as part of this flow.Please reset the password and perform a new sign in operation. Please see exception details for more information." + description, result.getMessage());
+        Assert.assertEquals("User password change is required, which can't be fulfilled as part of this flow.Please reset the password and perform a new sign in operation. Please see exception details for more information." + description, result.getMessage());
     }
 
     @Test
     public void testClientExceptionFromException_TimeoutException() {
         final TimeoutException t = new TimeoutException();
-        assertEquals(ClientException.TIMED_OUT, ExceptionAdapter.clientExceptionFromException(t).getErrorCode());
-    }
-
-    @SneakyThrows
-    @Test
-    public void testGetExceptionFromTokenErrorResponse_WithBrokerSilentTokenCommandParameters_PolicyProtectionRequired() {
-        final BrokerSilentTokenCommandParameters commandParameters = mock(BrokerSilentTokenCommandParameters.class);
-        final Authority authority = mock(Authority.class);
-        when(authority.getAuthorityURL()).thenReturn(new URL("https://login.microsoftonline.com/organizations"));
-        when(commandParameters.getAuthority()).thenReturn(authority);
-        when(commandParameters.isRequestForResourceAccount()).thenReturn(false);
-        final TokenErrorResponse errorResponse = new TokenErrorResponse();
-        errorResponse.setError(OAuth2ErrorCode.UNAUTHORIZED_CLIENT);
-        errorResponse.setSubError(OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED);
-        errorResponse.setErrorDescription("Intune policy required.");
-
-        ServiceException exception = ExceptionAdapter.getExceptionFromTokenErrorResponse(commandParameters, errorResponse);
-
-        assertTrue(exception instanceof IntuneAppProtectionPolicyRequiredException);
-        assertEquals(OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED, exception.getSubErrorCode());
-        assertEquals("Intune policy required.", exception.getMessage());
-    }
-
-    @Test
-    public void testGetExceptionFromTokenErrorResponse_NullCommandParameters_PolicyProtectionRequired() {
-        final TokenErrorResponse errorResponse = new TokenErrorResponse();
-        errorResponse.setError(OAuth2ErrorCode.UNAUTHORIZED_CLIENT);
-        errorResponse.setSubError(OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED);
-        errorResponse.setErrorDescription("Intune policy required.");
-
-        ServiceException exception = ExceptionAdapter.getExceptionFromTokenErrorResponse(null, errorResponse);
-
-        assertFalse(exception instanceof UiRequiredException);
-        assertEquals(OAuth2ErrorCode.UNAUTHORIZED_CLIENT, exception.getErrorCode());
-        assertEquals("Intune policy required.", exception.getMessage());
-    }
-
-    @Test
-    public void testGetExceptionFromTokenErrorResponse_WithBrokerSilentTokenCommandParameters_ResourceAccount() {
-        final BrokerSilentTokenCommandParameters commandParameters = mock(BrokerSilentTokenCommandParameters.class);
-        when(commandParameters.isRequestForResourceAccount()).thenReturn(true);
-
-        final TokenErrorResponse errorResponse = new TokenErrorResponse();
-        errorResponse.setError(OAuth2ErrorCode.INVALID_GRANT);
-        errorResponse.setErrorDescription("UI required.");
-
-        ServiceException exception = ExceptionAdapter.getExceptionFromTokenErrorResponse(commandParameters, errorResponse);
-
-        assertFalse(exception instanceof UiRequiredException);
-        assertEquals(OAuth2ErrorCode.INVALID_GRANT, exception.getErrorCode());
-        assertEquals("UI required.", exception.getMessage());
-    }
-
-    @Test
-    public void testGetExceptionFromTokenErrorResponse_WithBrokerSilentTokenCommandParameters() {
-        final BrokerSilentTokenCommandParameters commandParameters = mock(BrokerSilentTokenCommandParameters.class);
-        when(commandParameters.isRequestForResourceAccount()).thenReturn(false);
-
-        final TokenErrorResponse errorResponse = new TokenErrorResponse();
-        errorResponse.setError(OAuth2ErrorCode.INVALID_GRANT);
-        errorResponse.setErrorDescription("UI required.");
-
-        ServiceException exception = ExceptionAdapter.getExceptionFromTokenErrorResponse(commandParameters, errorResponse);
-
-        assertTrue(exception instanceof UiRequiredException);
-        assertEquals(OAuth2ErrorCode.INVALID_GRANT, exception.getErrorCode());
-        assertEquals("UI required.", exception.getMessage());
-    }
-
-    @Test
-    public void testGetExceptionFromTokenErrorResponse_NullCommandParameters() {
-        final TokenErrorResponse errorResponse = new TokenErrorResponse();
-        errorResponse.setError(OAuth2ErrorCode.INVALID_GRANT);
-        errorResponse.setErrorDescription("UI required.");
-
-        ServiceException exception = ExceptionAdapter.getExceptionFromTokenErrorResponse(null, errorResponse);
-
-        assertTrue(exception instanceof UiRequiredException);
-        assertEquals(OAuth2ErrorCode.INVALID_GRANT, exception.getErrorCode());
-        assertEquals("UI required.", exception.getMessage());
+        Assert.assertEquals(ClientException.TIMED_OUT, ExceptionAdapter.clientExceptionFromException(t).getErrorCode());
     }
 }
