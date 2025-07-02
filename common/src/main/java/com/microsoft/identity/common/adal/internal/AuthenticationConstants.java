@@ -1476,6 +1476,16 @@ public final class AuthenticationConstants {
         public static final String GET_FLIGHTS_RESULT = "active_flights";
 
         /**
+         * The Bundle key name of the result of the number match operation.
+         */
+        public static final String GET_NUMBER_MATCH_RESULT = "number_match";
+
+        /**
+         * SessionID for the number match operation.
+         */
+        public static final String SESSION_ID = "session_id";
+
+        /**
          * Time out for the AccountManager's remove account operation in broker.
          */
         public static final int ACCOUNT_MANAGER_REMOVE_ACCOUNT_TIMEOUT_IN_MILLISECONDS = 5000;
@@ -1656,6 +1666,7 @@ public final class AuthenticationConstants {
             BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_VERSION_1, null),
             BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_3, null),
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_3, null),
+
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
             UNKNOWN(null, null, null),
             DEVICE_REGISTRATION_PROTOCOLS(DEVICE_REGISTRATION_PROTOCOLS_PATH, null, null),
@@ -1674,7 +1685,9 @@ public final class AuthenticationConstants {
             WEBAPPS_GET_SUPPORTED_WEB_APPS_CONTRACTS(WEBAPPS_GET_SUPPORTED_WEB_APPS_CONTRACTS_PATH, null, null),
             WEBAPPS_EXECUTE_WEB_APPS_REQUEST(WEBAPPS_EXECUTE_WEB_APPS_REQUEST_PATH, null, null),
             PROVISION_RESOURCE_ACCOUNT(PROVISION_RESOURCE_ACCOUNT_PATH, null, null),
-            GET_AAD_DEVICE_ID(GET_AAD_DEVICE_ID_PATH, null, null);
+            GET_AAD_DEVICE_ID(GET_AAD_DEVICE_ID_PATH, null, null),
+            BROKER_GET_NUMBER_MATCH(BROKER_API_GET_NUMBER_MATCH_PATH, BROKER_VERSION_3, null);
+
 
             /**
              * The content provider path that the API exists behind.
@@ -1793,6 +1806,11 @@ public final class AuthenticationConstants {
          * Broker api path constant for adding flight information.
          */
         public static final String BROKER_API_GET_FLIGHTS_PATH = "/brokerApi/getFlights";
+
+        /**
+         * Broker api path constant for getting number match.
+         */
+        public static final String BROKER_API_GET_NUMBER_MATCH_PATH = "/brokerApi/getNumberMatch";
 
         /**
          * ContentProvider path for retrieving Broker Discovery Metadata.
