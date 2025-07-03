@@ -59,12 +59,12 @@ public class MockStorageEncryptionManager extends StorageEncryptionManager {
     }
 
     @Override
-    public @NonNull ISecretKeyProvider getKeyLoaderForEncryption() throws ClientException {
+    public @NonNull ISecretKeyProvider getKeyProviderForEncryption() throws ClientException {
         return mEncryptKey;
     }
 
     @Override
-    public @NonNull List<ISecretKeyProvider> getKeyLoaderForDecryption(@NonNull byte[] cipherText) throws ClientException {
+    public @NonNull List<ISecretKeyProvider> getKeyProviderForDecryption(@NonNull byte[] cipherText) throws ClientException {
         return mDecryptKey;
     }
 }

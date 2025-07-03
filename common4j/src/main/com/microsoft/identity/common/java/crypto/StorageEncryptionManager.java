@@ -88,9 +88,9 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
 
     /**
      * Length of key identifiers that are appended before the encrypted data.
-     * See: PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER,
-     *      AndroidWrappedKeyLoader.WRAPPED_KEY_KEY_IDENTIFIER,
-     *      KeyringKeyLoader.KEY_IDENTIFIER
+     * See: PredefinedkeyProvider.USER_PROVIDED_KEY_IDENTIFIER,
+     *      AndroidWrappedkeyProvider.WRAPPED_KEY_KEY_IDENTIFIER,
+     *      KeyringkeyProvider.KEY_IDENTIFIER
      */
     public static final int KEY_IDENTIFIER_LENGTH = 4;
 
@@ -128,23 +128,23 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
         final Throwable exception;
 
         // load key for encryption if not loaded
-        final ISecretKeyProvider keyLoader = getKeyLoaderForEncryption();
-        if (keyLoader == null) {
+        final ISecretKeyProvider keyProvider = getKeyProviderForEncryption();
+        if (keyProvider == null) {
             // Developer error. Throw.
-            throw new IllegalStateException("Cannot find a matching Keyloader.");
+            throw new IllegalStateException("Cannot find a matching keyProvider.");
         }
 
         try {
-            final SecretKey encryptionKey = keyLoader.getKey();
+            final SecretKey encryptionKey = keyProvider.getKey();
             final SecretKey encryptionHMACKey = KeyUtil.getHMacKey(encryptionKey);
-            final byte[] keyIdentifier = keyLoader.getKeyTypeIdentifier().getBytes(ENCODING_UTF8);
+            final byte[] keyIdentifier = keyProvider.getKeyTypeIdentifier().getBytes(ENCODING_UTF8);
 
             // IV: Initialization vector that is needed to start CBC
             final byte[] iv = mGenerator.generate();
             final IvParameterSpec ivSpec = new IvParameterSpec(iv);
 
             // Set to encrypt mode
-            final Cipher cipher = Cipher.getInstance(keyLoader.getCipherTransformation());
+            final Cipher cipher = Cipher.getInstance(keyProvider.getCipherTransformation());
             final Mac mac = Mac.getInstance(HMAC_ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, encryptionKey, ivSpec);
 
@@ -212,19 +212,19 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             return cipherText;
         }
 
-        final List<ISecretKeyProvider> keysForDecryption = getKeyLoaderForDecryption(cipherText);
+        final List<ISecretKeyProvider> keysForDecryption = getKeyProviderForDecryption(cipherText);
         if (keysForDecryption.size() == 0) {
             // Developer error. Throw.
-            throw new IllegalStateException("Cannot find a matching Keyloader.");
+            throw new IllegalStateException("Cannot find a matching keyProvider.");
         }
 
         final List<Throwable> suppressedException = new ArrayList<>();
-        for (final ISecretKeyProvider keyLoader : keysForDecryption) {
+        for (final ISecretKeyProvider keyProvider : keysForDecryption) {
             try {
-                return decryptWithSecretKey(dataBytes, keyLoader);
+                return decryptWithSecretKey(dataBytes, keyProvider);
             } catch (final Throwable e) {
-                Logger.warn(methodTag, "Failed to decrypt with key:" + keyLoader.getAlias() +
-                        " thumbprint : " + KeyUtil.getKeyThumbPrint(keyLoader));
+                Logger.warn(methodTag, "Failed to decrypt with key:" + keyProvider.getAlias() +
+                        " thumbprint : " + KeyUtil.getKeyThumbPrint(keyProvider));
                 suppressedException.add(e);
             }
         }
@@ -275,27 +275,27 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
      *
      * @param encryptedBlobWithoutEncodeVersion the encrypted blob with the format of
      *                                          [KeyIdentifier][encryptedData][iv][MACDigest].
-     * @param keyLoader                         a {@link ISecretKeyProvider} to load the decryption key from.
+     * @param keyProvider                         a {@link ISecretKeyProvider} to load the decryption key from.
      */
     private byte[] decryptWithSecretKey(final byte[] encryptedBlobWithoutEncodeVersion,
-                                        @NonNull final ISecretKeyProvider keyLoader)
+                                        @NonNull final ISecretKeyProvider keyProvider)
             throws ClientException {
         final String errCode;
         final Throwable exception;
         try {
-            final SecretKey secretKey = keyLoader.getKey();
+            final SecretKey secretKey = keyProvider.getKey();
             final SecretKey hmacKey = KeyUtil.getHMacKey(secretKey);
 
             // byte input array: [keyVersion][encryptedData][IV][macDigest]
             final int ivIndex = encryptedBlobWithoutEncodeVersion.length - IV_LENGTH - MAC_DIGEST_LENGTH;
             final int macDigestIndex = encryptedBlobWithoutEncodeVersion.length - MAC_DIGEST_LENGTH;
-            final int encryptedDataIndex = keyLoader.getKeyTypeIdentifier().getBytes(ENCODING_UTF8).length;
+            final int encryptedDataIndex = keyProvider.getKeyTypeIdentifier().getBytes(ENCODING_UTF8).length;
             final int encryptedDataLength = ivIndex - encryptedDataIndex;
 
             // Calculate digest again and compare to the appended value
             // incoming message: version+encryptedData+IV+Digest
             // Digest of EncryptedData+IV excluding the digest itself.
-            final Cipher cipher = Cipher.getInstance(keyLoader.getCipherTransformation());
+            final Cipher cipher = Cipher.getInstance(keyProvider.getCipherTransformation());
             final Mac mac = Mac.getInstance(HMAC_ALGORITHM);
             mac.init(hmacKey);
             mac.update(encryptedBlobWithoutEncodeVersion, 0, macDigestIndex);
@@ -489,10 +489,10 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
     /**
      * Get Secret Key to use in encryption/decryption.
      *
-     * @return a SecretKey loader.
+     * @return a SecretKey provider.
      */
     @NonNull
-    public abstract ISecretKeyProvider getKeyLoaderForEncryption() throws ClientException;
+    public abstract ISecretKeyProvider getKeyProviderForEncryption() throws ClientException;
 
     /**
      * Identify the encrypted blob and return a list of potential candidate key loaders for decryption.
@@ -501,5 +501,5 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
      * @return a prioritized list of SecretKey (earlier keys is more likely to be the correct one).
      **/
     @NonNull
-    abstract public List<ISecretKeyProvider> getKeyLoaderForDecryption(final byte[] cipherText) throws ClientException;
+    abstract public List<ISecretKeyProvider> getKeyProviderForDecryption(final byte[] cipherText) throws ClientException;
 }

@@ -54,7 +54,7 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
     public static final String WRAPPED_KEY_FILE_NAME = "adalks";
 
     private final PredefinedKeyProvider mPredefinedKeyLoader;
-    private final ISecretKeyProvider mKeyStoreKeyLoader;
+    private final ISecretKeyProvider mKeyStoreKeyProvider;
 
     public AndroidAuthSdkStorageEncryptionManager(@NonNull final Context context) {
         if (AuthenticationSettings.INSTANCE.getSecretKeyData() == null) {
@@ -64,7 +64,7 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
                     AuthenticationSettings.INSTANCE.getSecretKeyData());
         }
 
-        mKeyStoreKeyLoader = new AndroidWrappedKeyLoader(
+        mKeyStoreKeyProvider = new AndroidWrappedKeyProvider(
                 WRAPPING_KEY_ALIAS,
                 WRAPPED_KEY_FILE_NAME,
                 context
@@ -73,17 +73,17 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
 
     @Override
     @NonNull
-    public ISecretKeyProvider getKeyLoaderForEncryption() {
+    public ISecretKeyProvider getKeyProviderForEncryption() {
         if (mPredefinedKeyLoader != null) {
             return mPredefinedKeyLoader;
         }
 
-        return mKeyStoreKeyLoader;
+        return mKeyStoreKeyProvider;
     }
 
     @Override
     @NonNull
-    public List<ISecretKeyProvider> getKeyLoaderForDecryption(byte[] cipherText) {
+    public List<ISecretKeyProvider> getKeyProviderForDecryption(byte[] cipherText) {
         final String methodTag = TAG + ":getKeyLoaderForDecryption";
 
         final String keyIdentifier = getKeyIdentifierFromCipherText(cipherText);
@@ -95,8 +95,8 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
                         "Cipher Text is encrypted by USER_PROVIDED_KEY_IDENTIFIER, " +
                                 "but mPredefinedKeyLoader is null.");
             }
-        } else if (mKeyStoreKeyLoader.getKeyTypeIdentifier().equalsIgnoreCase(keyIdentifier)) {
-            return Collections.singletonList(mKeyStoreKeyLoader);
+        } else if (mKeyStoreKeyProvider.getKeyTypeIdentifier().equalsIgnoreCase(keyIdentifier)) {
+            return Collections.singletonList(mKeyStoreKeyProvider);
         }
 
         Logger.warn(methodTag,

@@ -22,8 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
+import com.microsoft.identity.common.java.crypto.key.AES256SecretKeyGenerator;
 import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
 import com.microsoft.identity.common.java.exception.ClientException;
+
 
 import org.jetbrains.annotations.NotNull;
 
@@ -31,24 +33,37 @@ import javax.crypto.SecretKey;
 
 import lombok.NonNull;
 
-public class MockAES256KeyLoaderWithGetKeyError implements ISecretKeyProvider {
-    public static String FAIL_TO_LOAD_KEY_ERROR = "FAIL_TO_LOAD_KEY_ERROR";
-    public static String MOCK_KEY_IDENTIFIER = "MOCK_ERROR_ID";
-    public static String MOCK_ERROR = "MOCK_ERROR";
+public class MockAES256KeyProvider implements ISecretKeyProvider {
+    public static String DEFAULT_MOCK_KEY_IDENTIFIER = "MOCK_ID";
+    public static String MOCK_ALIAS = "MOCK_ALIAS";
 
-    @Override
-    public @NonNull String getAlias() {
-        return MOCK_ERROR;
+    private final SecretKey mKey;
+    private final String mKeyIdentifier;
+
+    public MockAES256KeyProvider() throws ClientException {
+        mKey = AES256SecretKeyGenerator.INSTANCE.generateRandomKey();
+        mKeyIdentifier = DEFAULT_MOCK_KEY_IDENTIFIER;
+    }
+
+    public MockAES256KeyProvider(@NonNull final byte[] secretKey,
+                                 @NonNull final String keyIdentifier){
+        mKey = AES256SecretKeyGenerator.INSTANCE.generateKeyFromRawBytes(secretKey);
+        mKeyIdentifier = keyIdentifier;
     }
 
     @Override
-    public @NonNull SecretKey getKey() throws ClientException {
-        throw new ClientException(FAIL_TO_LOAD_KEY_ERROR);
+    public @NonNull String getAlias() {
+        return MOCK_ALIAS;
+    }
+
+    @Override
+    public @NonNull SecretKey getKey() {
+        return mKey;
     }
 
     @Override
     public @NonNull String getKeyTypeIdentifier() {
-        return MOCK_KEY_IDENTIFIER;
+        return mKeyIdentifier;
     }
 
     @NotNull

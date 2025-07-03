@@ -74,7 +74,7 @@ import lombok.NonNull;
  * Instead, the actual key that we use to encrypt/decrypt data is 'wrapped/encrypted' with the keystore key
  * before it get saved to the file.
  */
-public class AndroidWrappedKeyLoader implements ISecretKeyProvider {
+public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
 
     /**
      * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
@@ -83,7 +83,7 @@ public class AndroidWrappedKeyLoader implements ISecretKeyProvider {
      */
     private static final String CIPHER_TRANSFORMATION = "AES/CBC/PKCS5Padding";
 
-    private static final String TAG = AndroidWrappedKeyLoader.class.getSimpleName() + "#";
+    private static final String TAG = AndroidWrappedKeyProvider.class.getSimpleName() + "#";
 
     /**
      * Should KeyStore and key file check for validity before every key load be skipped.
@@ -146,9 +146,9 @@ public class AndroidWrappedKeyLoader implements ISecretKeyProvider {
      * @param filePath          Path to the file for storing the wrapped key.
      * @param context           Android's {@link Context}
      */
-    public AndroidWrappedKeyLoader(@NonNull final String alias,
-                                   @NonNull final String filePath,
-                                   @NonNull final Context context) {
+    public AndroidWrappedKeyProvider(@NonNull final String alias,
+                                     @NonNull final String filePath,
+                                     @NonNull final Context context) {
         mAlias = alias;
         mFilePath = filePath;
         mContext = context;
