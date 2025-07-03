@@ -36,26 +36,11 @@ import javax.crypto.spec.SecretKeySpec
  * create them from raw byte arrays.
  */
 class AES256SecretKeyGenerator : ISecretKeyGenerator {
-
     companion object {
         private val TAG = AES256SecretKeyGenerator::class.java.simpleName
         private const val AES_ALGORITHM = "AES"
         private const val AES_KEY_SIZE = 256
     }
-
-    /**
-     * Returns the key size in bits (256 for AES-256).
-     * @return Key size as an integer value.
-     */
-    override val keySize: Int
-        get() = AES_KEY_SIZE
-
-    /**
-     * Returns the algorithm name for the key specification.
-     * @return String representation of the algorithm name ("AES").
-     */
-    override val keyAlgorithm: String
-        get() = AES_ALGORITHM
 
     /**
      * Generates a random AES-256 secret key.
@@ -68,8 +53,8 @@ class AES256SecretKeyGenerator : ISecretKeyGenerator {
     override fun generateRandomKey(): SecretKey {
         val methodTag = "$TAG:generateRandomKey"
         try {
-            val keygen = KeyGenerator.getInstance(keyAlgorithm)
-            keygen.init(keySize, SecureRandom())
+            val keygen = KeyGenerator.getInstance(AES_ALGORITHM)
+            keygen.init(AES_KEY_SIZE, SecureRandom())
             return keygen.generateKey()
         } catch (e: NoSuchAlgorithmException) {
             val clientException = ClientException(
@@ -89,6 +74,6 @@ class AES256SecretKeyGenerator : ISecretKeyGenerator {
      * @return A [SecretKey] created from the provided raw bytes.
      */
     override fun generateKeyFromRawBytes(rawBytes: ByteArray): SecretKey {
-        return SecretKeySpec(rawBytes, keyAlgorithm)
+        return SecretKeySpec(rawBytes, AES_ALGORITHM)
     }
 }

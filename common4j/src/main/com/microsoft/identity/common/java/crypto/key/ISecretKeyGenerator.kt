@@ -32,19 +32,6 @@ import javax.crypto.SecretKey
  */
 interface ISecretKeyGenerator {
     /**
-     * The size of the key in bits.
-     * This is used when generating random keys to determine the key strength.
-     */
-    val keySize: Int
-
-    /**
-     * The algorithm name for the key.
-     * This should be compatible with cryptographic providers, such as
-     * those used with KeyGenerator.getInstance(algorithm).
-     */
-    val keyAlgorithm: String
-
-    /**
      * Generates a cryptographically secure random secret key.
      *
      * @return A randomly generated [SecretKey] instance.

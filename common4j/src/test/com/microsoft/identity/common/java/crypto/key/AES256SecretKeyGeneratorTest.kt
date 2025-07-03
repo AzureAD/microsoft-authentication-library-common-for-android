@@ -42,18 +42,6 @@ class AES256SecretKeyGeneratorTest {
     }
 
     @Test
-    fun testKeySize() {
-        // Verify that the key size is 256 bits for AES-256
-        Assert.assertEquals(256, secretKeyGenerator.keySize)
-    }
-
-    @Test
-    fun testKeyAlgorithm() {
-        // Verify that the key algorithm is "AES"
-        Assert.assertEquals("AES", secretKeyGenerator.keyAlgorithm)
-    }
-
-    @Test
     fun testGenerateRandomKey() {
         // Generate a random key
         val secretKey = secretKeyGenerator.generateRandomKey()
