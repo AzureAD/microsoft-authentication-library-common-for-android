@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
-import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
+import com.microsoft.identity.common.java.crypto.key.AbstractAES256SecretKeyProvider;
 import com.microsoft.identity.common.java.exception.ClientException;
 
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +31,7 @@ import javax.crypto.SecretKey;
 
 import lombok.NonNull;
 
-public class MockAES256KeyLoaderWithGetKeyError extends AES256KeyLoader  {
+public class MockAES256KeyLoaderWithGetKeyError extends AbstractAES256SecretKeyProvider {
     public static String FAIL_TO_LOAD_KEY_ERROR = "FAIL_TO_LOAD_KEY_ERROR";
     public static String MOCK_KEY_IDENTIFIER = "MOCK_ERROR_ID";
     public static String MOCK_ERROR = "MOCK_ERROR";

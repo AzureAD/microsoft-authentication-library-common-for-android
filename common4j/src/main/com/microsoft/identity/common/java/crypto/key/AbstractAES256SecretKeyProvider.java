@@ -26,12 +26,12 @@ package com.microsoft.identity.common.java.crypto.key;
 /**
  * Abstract base class for loading AES-256 secret keys.
  * <p>
- * This class implements the {@link ISecretKeyLoader} interface and provides a default
+ * This class implements the {@link ISecretKeyProvider} interface and provides a default
  * implementation for retrieving an AES-256 key generator. It serves as a base class
  * for concrete implementations that handle the loading of AES-256 secret keys from
  * various sources.
  */
-public abstract class AES256KeyLoader implements ISecretKeyLoader {
+public abstract class AbstractAES256SecretKeyProvider implements ISecretKeyProvider {
     /**
      * Shared instance of AES256SecretKeyGenerator.
      * Created once and reused across all instances to avoid unnecessary object creation.

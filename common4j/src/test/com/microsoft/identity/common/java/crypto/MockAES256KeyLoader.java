@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
-import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
+import com.microsoft.identity.common.java.crypto.key.AbstractAES256SecretKeyProvider;
 import com.microsoft.identity.common.java.exception.ClientException;
 
 
@@ -32,7 +32,7 @@ import javax.crypto.SecretKey;
 
 import lombok.NonNull;
 
-public class MockAES256KeyLoader extends AES256KeyLoader {
+public class MockAES256KeyLoader extends AbstractAES256SecretKeyProvider {
     public static String DEFAULT_MOCK_KEY_IDENTIFIER = "MOCK_ID";
     public static String MOCK_ALIAS = "MOCK_ALIAS";
 

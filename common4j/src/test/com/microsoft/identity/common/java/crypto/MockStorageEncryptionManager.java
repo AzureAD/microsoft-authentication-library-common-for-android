@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
-import com.microsoft.identity.common.java.crypto.key.ISecretKeyLoader;
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
 import com.microsoft.identity.common.java.exception.ClientException;
 
 import java.util.ArrayList;
@@ -33,21 +33,21 @@ import lombok.NonNull;
 
 public class MockStorageEncryptionManager extends StorageEncryptionManager {
 
-    private final ISecretKeyLoader mEncryptKey;
-    private final List<ISecretKeyLoader> mDecryptKey;
+    private final ISecretKeyProvider mEncryptKey;
+    private final List<ISecretKeyProvider> mDecryptKey;
 
     MockStorageEncryptionManager(@NonNull final byte[] iv,
-                                 @Nullable final ISecretKeyLoader key) throws ClientException {
+                                 @Nullable final ISecretKeyProvider key) throws ClientException {
         this(iv,
                 key,
-                new ArrayList<ISecretKeyLoader>() {{
+                new ArrayList<ISecretKeyProvider>() {{
                     add(key);
                 }});
     }
 
     MockStorageEncryptionManager(@NonNull final byte[] iv,
-                                 @Nullable final ISecretKeyLoader encryptKey,
-                                 @Nullable final List<ISecretKeyLoader> decryptKey) throws ClientException {
+                                 @Nullable final ISecretKeyProvider encryptKey,
+                                 @Nullable final List<ISecretKeyProvider> decryptKey) throws ClientException {
         super(new IVGenerator() {
             @Override
             public byte[] generate() {
@@ -59,12 +59,12 @@ public class MockStorageEncryptionManager extends StorageEncryptionManager {
     }
 
     @Override
-    public @NonNull ISecretKeyLoader getKeyLoaderForEncryption() throws ClientException {
+    public @NonNull ISecretKeyProvider getKeyLoaderForEncryption() throws ClientException {
         return mEncryptKey;
     }
 
     @Override
-    public @NonNull List<ISecretKeyLoader> getKeyLoaderForDecryption(@NonNull byte[] cipherText) throws ClientException {
+    public @NonNull List<ISecretKeyProvider> getKeyLoaderForDecryption(@NonNull byte[] cipherText) throws ClientException {
         return mDecryptKey;
     }
 }

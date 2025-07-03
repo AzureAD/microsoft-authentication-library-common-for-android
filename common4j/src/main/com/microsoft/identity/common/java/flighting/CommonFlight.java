@@ -145,12 +145,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable the WebView flow to not cancel and preserve WebView flow on SSL errors.
      * The web resource running into SSL will itself not be loaded.
      */
-    SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR("ShouldPreserveWebViewFlowOnSslError", false),
-
-    /**
-     * Flight to enable the new Android wrapped key loader.
-     */
-    ENABLE_NEW_ANDROID_WRAPPED_KEY_LOADER("EnableNewAndroidWrappedKeyLoader", true);
+    SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR("ShouldPreserveWebViewFlowOnSslError", false);
 
     private String key;
     private Object defaultValue;

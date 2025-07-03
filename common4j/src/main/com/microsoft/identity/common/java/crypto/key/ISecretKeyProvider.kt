@@ -28,9 +28,9 @@ import javax.crypto.SecretKey
 /**
  * Interface defining how a [SecretKey] is loaded, cached, sourced, and used.
  *
- * [ISecretKeyLoader] provides a consistent abstraction layer for cryptographic key operations
+ * [ISecretKeyProvider] provides a consistent abstraction layer for cryptographic key operations
  */
-interface ISecretKeyLoader {
+interface ISecretKeyProvider {
     /**
      * Returns this key's alias or name.
      *
@@ -45,7 +45,7 @@ interface ISecretKeyLoader {
     /**
      * Gets an identifier of this key type.
      *
-     * The key type identifier is used to distinguish between different key types
+     * The key type identifier is used to dy typistinguish between different kees
      * in the system. This value might be padded into encrypted strings to indicate
      * the key used for encryption, enabling correct key selection during decryption.
      *

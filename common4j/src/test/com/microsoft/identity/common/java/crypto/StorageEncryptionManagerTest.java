@@ -22,8 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
-import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
-import com.microsoft.identity.common.java.crypto.key.ISecretKeyLoader;
+import com.microsoft.identity.common.java.crypto.key.AbstractAES256SecretKeyProvider;
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 
@@ -87,7 +87,7 @@ public class StorageEncryptionManagerTest {
     @Test(expected = RuntimeException.class)
     public void testDecryptNullKeyLoader() throws ClientException {
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null,
-                new ArrayList<ISecretKeyLoader>() {{
+                new ArrayList<ISecretKeyProvider>() {{
                     add(null);
                 }});
         manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
@@ -96,7 +96,7 @@ public class StorageEncryptionManagerTest {
 
     @Test(expected = RuntimeException.class)
     public void testDecrypt_empty_KeyLoader_throws() throws ClientException {
-        final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null, Collections.<ISecretKeyLoader>emptyList());
+        final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null, Collections.<ISecretKeyProvider>emptyList());
         manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
         Assert.fail("decrypt() should throw an exception but it succeeds.");
     }
@@ -128,12 +128,12 @@ public class StorageEncryptionManagerTest {
 
     @Test
     public void testDecryptFailToLoadOneOfTheKeys() throws ClientException {
-        final AES256KeyLoader failingKeyLoader = new MockAES256KeyLoaderWithGetKeyError();
-        final AES256KeyLoader successKeyLoader = new MockAES256KeyLoader(PREDEFINED_KEY, PREDEFINED_KEY_IDENTIFIER);
+        final AbstractAES256SecretKeyProvider failingKeyLoader = new MockAES256KeyLoaderWithGetKeyError();
+        final AbstractAES256SecretKeyProvider successKeyLoader = new MockAES256KeyLoader(PREDEFINED_KEY, PREDEFINED_KEY_IDENTIFIER);
 
         // Key order doesn't matter.
         final StorageEncryptionManager manager_failFirst = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null,
-                new ArrayList<ISecretKeyLoader>(){{
+                new ArrayList<ISecretKeyProvider>(){{
                     add(failingKeyLoader);
                     add(successKeyLoader);
                 }});
@@ -141,7 +141,7 @@ public class StorageEncryptionManagerTest {
         Assert.assertArrayEquals(TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY, manager_failFirst.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY));
 
         final StorageEncryptionManager manager_failSecond = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null,
-                new ArrayList<ISecretKeyLoader>(){{
+                new ArrayList<ISecretKeyProvider>(){{
                     add(successKeyLoader);
                     add(failingKeyLoader);
                 }});
@@ -151,11 +151,11 @@ public class StorageEncryptionManagerTest {
 
     @Test
     public void testDecryptMatchingKeyNotFound() throws ClientException {
-        final AES256KeyLoader decryptKeyLoader = new MockAES256KeyLoader();
-        final AES256KeyLoader decryptKeyLoader_2 = new MockAES256KeyLoader();
+        final AbstractAES256SecretKeyProvider decryptKeyLoader = new MockAES256KeyLoader();
+        final AbstractAES256SecretKeyProvider decryptKeyLoader_2 = new MockAES256KeyLoader();
 
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null,
-                new ArrayList<ISecretKeyLoader>(){{
+                new ArrayList<ISecretKeyProvider>(){{
                     add(decryptKeyLoader);
                     add(decryptKeyLoader_2);
                 }});

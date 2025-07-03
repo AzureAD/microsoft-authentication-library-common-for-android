@@ -64,12 +64,12 @@ public class KeyUtil {
     private static final String HMAC_KEYSPEC_ALGORITHM = "AES";
 
     /**
-     * Derive a thumbprint from the given {@link ISecretKeyLoader}.
+     * Derive a thumbprint from the given {@link ISecretKeyProvider}.
      *
-     * @param keyLoader ISecretKeyLoader to obtain the key (calculate the thumbprint from).
+     * @param keyLoader ISecretKeyProvider to obtain the key (calculate the thumbprint from).
      * @return a thumbprint. Will return {@link KeyUtil#UNKNOWN_THUMBPRINT} if it fails to derived one.
      */
-    public static String getKeyThumbPrint(final @NonNull ISecretKeyLoader keyLoader) {
+    public static String getKeyThumbPrint(final @NonNull ISecretKeyProvider keyLoader) {
         final String methodName = ":getKeyThumbPrint";
         try {
             return getKeyThumbPrint(keyLoader.getKey());
