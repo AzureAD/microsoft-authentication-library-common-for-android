@@ -69,7 +69,7 @@ public class PredefinedKeyProvider implements ISecretKeyProvider {
 
     @NotNull
     @Override
-    public SecretKey getKey() throws ClientException {
+    public SecretKey getKey() {
         return mKey;
     }
 

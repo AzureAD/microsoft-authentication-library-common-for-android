@@ -415,7 +415,8 @@ public class AndroidKeyStoreUtil {
         final Throwable exception;
         final String errCode;
         try {
-            final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm);
+            //TODO: Once the new KeyProvider is fully implemented, we can remove this suppression.
+            final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm); // CodeQL [SM05136] Used on AndroidWrappedKeyLoader, will be removed once the new KeyProvider is fully implemented.
             wrapCipher.init(Cipher.UNWRAP_MODE, keyPairForUnwrapping.getPrivate());
             return (SecretKey) wrapCipher.unwrap(wrappedKeyBlob, wrappedKeyAlgorithm, Cipher.SECRET_KEY);
         } catch (final IllegalArgumentException e) {
