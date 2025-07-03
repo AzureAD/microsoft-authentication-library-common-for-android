@@ -123,7 +123,7 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
     }
 
     public void testGetDecryptionKey_ForUnencryptedText_returns_empty_keyprovider() {
-        AuthenticationSettings.INSTANCE.setIgnoreKeyproviderNotFoundError(false);
+        AuthenticationSettings.INSTANCE.setIgnoreKeyProviderNotFoundError(false);
         final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context);
         final List<ISecretKeyProvider> keyproviderList = manager.getKeyProviderForDecryption("Unencrypted".getBytes(ENCODING_UTF8));
         Assert.assertEquals(0, keyproviderList.size());
