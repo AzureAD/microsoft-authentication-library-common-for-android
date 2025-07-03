@@ -20,27 +20,30 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.jwt;
+package com.microsoft.identity.common.internal.mocks;
 
-import com.microsoft.identity.common.java.authorities.Authority;
-import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.IFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 
-import java.security.cert.CertificateEncodingException;
+import org.jetbrains.annotations.NotNull;
 
-import lombok.NonNull;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
-/**
- * Interface for signing JWT for broker token requests
- * given JWT payload.
- */
-public interface IJwtRequestSigner {
-    /**
-     * Generate signed JWT given payload.
-     * Payload is provided as {@link JwtRequestBody}
-     * @param jwtRequestBody JWT payload
-     * @return Return signed JWT string (encodedJwtHeader.encodedJwtBody.Signature(encodedJwtHeader, encodedJwtBody))
-     */
-    @NonNull
-    String getSignedJwt(@NonNull final JwtRequestBody jwtRequestBody,
-                        @NonNull final Authority authority) throws ClientException, CertificateEncodingException;
+@Setter
+@Accessors(prefix = "m")
+public class MockCommonFlightsManager implements IFlightsManager {
+    private IFlightsProvider mMockCommonFlightsProvider;
+
+    @NotNull
+    @Override
+    public IFlightsProvider getFlightsProvider() {
+        return mMockCommonFlightsProvider;
+    }
+
+    @NotNull
+    @Override
+    public IFlightsProvider getFlightsProviderForTenant(@NotNull String tenantId) {
+        return mMockCommonFlightsProvider;
+    }
 }

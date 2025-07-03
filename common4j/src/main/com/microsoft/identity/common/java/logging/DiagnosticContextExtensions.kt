@@ -20,27 +20,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.jwt;
+package com.microsoft.identity.common.java.logging
 
-import com.microsoft.identity.common.java.authorities.Authority;
-import com.microsoft.identity.common.java.exception.ClientException;
-
-import java.security.cert.CertificateEncodingException;
-
-import lombok.NonNull;
+import com.microsoft.identity.common.java.AuthenticationConstants
+import com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT
 
 /**
- * Interface for signing JWT for broker token requests
- * given JWT payload.
+ * Extension function to set up the [DiagnosticContext] with correlation ID, SDK type, and SDK version.
+ * @return An [AutoCloseable] that clears the context when closed.
  */
-public interface IJwtRequestSigner {
-    /**
-     * Generate signed JWT given payload.
-     * Payload is provided as {@link JwtRequestBody}
-     * @param jwtRequestBody JWT payload
-     * @return Return signed JWT string (encodedJwtHeader.encodedJwtBody.Signature(encodedJwtHeader, encodedJwtBody))
-     */
-    @NonNull
-    String getSignedJwt(@NonNull final JwtRequestBody jwtRequestBody,
-                        @NonNull final Authority authority) throws ClientException, CertificateEncodingException;
+fun DiagnosticContext.withInitializedContext(
+    correlationId: String,
+    sdkType: String,
+    sdkVersion: String
+): AutoCloseable {
+    val requestContext = RequestContext().apply {
+        put(DiagnosticContext.CORRELATION_ID, correlationId)
+        put(PRODUCT, sdkType)
+        put(AuthenticationConstants.SdkPlatformFields.VERSION, sdkVersion)
+    }
+    setRequestContext(requestContext)
+    return AutoCloseable {
+        clear()
+    }
 }

@@ -20,27 +20,20 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.jwt;
+package com.microsoft.identity.common.shadows;
 
-import com.microsoft.identity.common.java.authorities.Authority;
-import com.microsoft.identity.common.java.exception.ClientException;
 
-import java.security.cert.CertificateEncodingException;
+import android.content.Context;
 
-import lombok.NonNull;
+import com.microsoft.identity.common.internal.ui.webview.ProcessUtil;
 
-/**
- * Interface for signing JWT for broker token requests
- * given JWT payload.
- */
-public interface IJwtRequestSigner {
-    /**
-     * Generate signed JWT given payload.
-     * Payload is provided as {@link JwtRequestBody}
-     * @param jwtRequestBody JWT payload
-     * @return Return signed JWT string (encodedJwtHeader.encodedJwtBody.Signature(encodedJwtHeader, encodedJwtBody))
-     */
-    @NonNull
-    String getSignedJwt(@NonNull final JwtRequestBody jwtRequestBody,
-                        @NonNull final Authority authority) throws ClientException, CertificateEncodingException;
+import org.robolectric.annotation.Implements;
+
+@Implements(ProcessUtil.class)
+public class ShadowProcessUtil {
+    public static boolean isRunningOnAuthService(final Context context) {
+        // This is a shadow class, so we can return true to simulate that the process is running on the auth service.
+        // In a real scenario, this would check the actual process name.
+        return true;
+    }
 }

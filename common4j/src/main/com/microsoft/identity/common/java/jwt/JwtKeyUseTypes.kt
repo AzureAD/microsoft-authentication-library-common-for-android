@@ -20,27 +20,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.jwt;
+package com.microsoft.identity.common.java.jwt
 
-import com.microsoft.identity.common.java.authorities.Authority;
-import com.microsoft.identity.common.java.exception.ClientException;
-
-import java.security.cert.CertificateEncodingException;
-
-import lombok.NonNull;
-
-/**
- * Interface for signing JWT for broker token requests
- * given JWT payload.
- */
-public interface IJwtRequestSigner {
-    /**
-     * Generate signed JWT given payload.
-     * Payload is provided as {@link JwtRequestBody}
-     * @param jwtRequestBody JWT payload
-     * @return Return signed JWT string (encodedJwtHeader.encodedJwtBody.Signature(encodedJwtHeader, encodedJwtBody))
-     */
-    @NonNull
-    String getSignedJwt(@NonNull final JwtRequestBody jwtRequestBody,
-                        @NonNull final Authority authority) throws ClientException, CertificateEncodingException;
+object JwtKeyUseTypes {
+    const val RESOURCE_ACCOUNT: String = "resource_account"
 }
