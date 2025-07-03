@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.crypto;
 
+import static com.microsoft.identity.common.java.crypto.key.AES256SecretKeyGenerator.AES_ALGORITHM;
+
 import android.content.Context;
 import android.os.Build;
 import android.security.KeyPairGeneratorSpec;
@@ -32,7 +34,8 @@ import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
 import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
-import com.microsoft.identity.common.java.crypto.key.AbstractAES256SecretKeyProvider;
+import com.microsoft.identity.common.java.crypto.key.AES256SecretKeyGenerator;
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
@@ -71,7 +74,7 @@ import lombok.NonNull;
  * Instead, the actual key that we use to encrypt/decrypt data is 'wrapped/encrypted' with the keystore key
  * before it get saved to the file.
  */
-public class AndroidWrappedKeyLoader extends AbstractAES256SecretKeyProvider {
+public class AndroidWrappedKeyLoader implements ISecretKeyProvider {
 
     /**
      * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
@@ -189,7 +192,7 @@ public class AndroidWrappedKeyLoader extends AbstractAES256SecretKeyProvider {
     protected SecretKey generateRandomKey() throws ClientException {
         final String methodTag = TAG + ":generateRandomKey";
 
-        final SecretKey key = AES_256_KEY_GENERATOR.generateRandomKey();
+        final SecretKey key = AES256SecretKeyGenerator.INSTANCE.generateRandomKey();
         saveSecretKeyToStorage(key);
 
         Logger.info(methodTag, "New key is generated with thumbprint: " +
@@ -224,7 +227,7 @@ public class AndroidWrappedKeyLoader extends AbstractAES256SecretKeyProvider {
                 return null;
             }
 
-            final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, KEY_ALGORITHM, keyPair, WRAP_ALGORITHM);
+            final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, AES_ALGORITHM, keyPair, WRAP_ALGORITHM);
 
             Logger.info(methodTag, "Key is loaded with thumbprint: " +
                     KeyUtil.getKeyThumbPrint(key));

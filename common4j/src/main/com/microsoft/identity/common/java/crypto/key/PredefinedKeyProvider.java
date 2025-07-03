@@ -33,7 +33,7 @@ import lombok.NonNull;
 /**
  * For loading an AES-256 key from a provided rawbytes array.
  */
-public class PredefinedKeyProvider extends AbstractAES256SecretKeyProvider {
+public class PredefinedKeyProvider implements ISecretKeyProvider {
     /**
      * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
      * Java AES/CBC/PKCS5Padding is default(!) algorithm name, thus PKCS5 here
@@ -52,7 +52,7 @@ public class PredefinedKeyProvider extends AbstractAES256SecretKeyProvider {
     public PredefinedKeyProvider(@NonNull final String alias,
                                  final byte[] rawBytes) {
         mAlias = alias;
-        mKey = AES_256_KEY_GENERATOR.generateKeyFromRawBytes(rawBytes);
+        mKey = AES256SecretKeyGenerator.INSTANCE.generateKeyFromRawBytes(rawBytes);
     }
 
     @NotNull

@@ -24,7 +24,7 @@ package com.microsoft.identity.common.shadows;
 
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.java.crypto.key.PredefinedKeyProvider;
-import com.microsoft.identity.common.java.crypto.key.AbstractAES256SecretKeyProvider;
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
 
 import org.robolectric.annotation.Implements;
 
@@ -35,14 +35,14 @@ import java.util.List;
 public class ShadowAndroidSdkStorageEncryptionManager {
 
     final byte[] encryptionKey = new byte[]{22, 78, -69, -66, 84, -65, 119, -9, -34, -80, 60, 67, -12, -117, 86, -47, -84, -24, -18, 121, 70, 32, -110, 51, -93, -10, -93, -110, 124, -68, -42, -119};
-    final AbstractAES256SecretKeyProvider mUserDefinedKey = new PredefinedKeyProvider("MOCK_ALIAS", encryptionKey);
+    final ISecretKeyProvider mUserDefinedKey = new PredefinedKeyProvider("MOCK_ALIAS", encryptionKey);
 
-    public AbstractAES256SecretKeyProvider getKeyLoaderForEncryption() {
+    public ISecretKeyProvider getKeyLoaderForEncryption() {
         return mUserDefinedKey;
     }
 
-    public List<AbstractAES256SecretKeyProvider> getKeyLoaderForDecryption(byte[] cipherText) {
-        return new ArrayList<AbstractAES256SecretKeyProvider>() {{
+    public List<ISecretKeyProvider> getKeyLoaderForDecryption(byte[] cipherText) {
+        return new ArrayList<ISecretKeyProvider>() {{
             add(mUserDefinedKey);
         }};
     }

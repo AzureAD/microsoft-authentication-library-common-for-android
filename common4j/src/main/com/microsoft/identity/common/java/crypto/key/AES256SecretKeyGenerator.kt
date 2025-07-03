@@ -35,12 +35,10 @@ import javax.crypto.spec.SecretKeySpec
  * This class provides functionality to generate random AES-256 secret keys or
  * create them from raw byte arrays.
  */
-class AES256SecretKeyGenerator : ISecretKeyGenerator {
-    companion object {
-        private val TAG = AES256SecretKeyGenerator::class.java.simpleName
-        private const val AES_ALGORITHM = "AES"
-        private const val AES_KEY_SIZE = 256
-    }
+object AES256SecretKeyGenerator : ISecretKeyGenerator {
+    private val TAG = AES256SecretKeyGenerator::class.java.simpleName
+    const val AES_ALGORITHM = "AES"
+    const val AES_KEY_SIZE = 256
 
     /**
      * Generates a random AES-256 secret key.
