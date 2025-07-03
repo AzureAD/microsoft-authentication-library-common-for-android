@@ -117,7 +117,7 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
             final List<ISecretKeyProvider> keyproviderList = manager.getKeyProviderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
         } catch (IllegalStateException ex) {
             Assert.assertEquals(
-                    "Cipher Text is encrypted by USER_PROVIDED_KEY_IDENTIFIER, but mPredefinedKeyprovider is null.",
+                    "Cipher Text is encrypted by USER_PROVIDED_KEY_IDENTIFIER, but mPredefinedKeyProvider is null.",
                     ex.getMessage());
         }
     }

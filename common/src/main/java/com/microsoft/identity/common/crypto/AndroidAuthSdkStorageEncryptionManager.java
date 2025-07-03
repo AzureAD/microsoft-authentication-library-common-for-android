@@ -53,14 +53,14 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
      */
     public static final String WRAPPED_KEY_FILE_NAME = "adalks";
 
-    private final PredefinedKeyProvider mPredefinedKeyLoader;
+    private final PredefinedKeyProvider mPredefinedKeyProvider;
     private final ISecretKeyProvider mKeyStoreKeyProvider;
 
     public AndroidAuthSdkStorageEncryptionManager(@NonNull final Context context) {
         if (AuthenticationSettings.INSTANCE.getSecretKeyData() == null) {
-            mPredefinedKeyLoader = null;
+            mPredefinedKeyProvider = null;
         } else {
-            mPredefinedKeyLoader = new PredefinedKeyProvider("USER_DEFINED_KEY",
+            mPredefinedKeyProvider = new PredefinedKeyProvider("USER_DEFINED_KEY",
                     AuthenticationSettings.INSTANCE.getSecretKeyData());
         }
 
@@ -74,8 +74,8 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
     @Override
     @NonNull
     public ISecretKeyProvider getKeyProviderForEncryption() {
-        if (mPredefinedKeyLoader != null) {
-            return mPredefinedKeyLoader;
+        if (mPredefinedKeyProvider != null) {
+            return mPredefinedKeyProvider;
         }
 
         return mKeyStoreKeyProvider;
@@ -88,12 +88,12 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
 
         final String keyIdentifier = getKeyIdentifierFromCipherText(cipherText);
         if (PredefinedKeyProvider.USER_PROVIDED_KEY_IDENTIFIER.equalsIgnoreCase(keyIdentifier)) {
-            if (mPredefinedKeyLoader != null) {
-                return Collections.singletonList(mPredefinedKeyLoader);
+            if (mPredefinedKeyProvider != null) {
+                return Collections.singletonList(mPredefinedKeyProvider);
             } else {
                 throw new IllegalStateException(
                         "Cipher Text is encrypted by USER_PROVIDED_KEY_IDENTIFIER, " +
-                                "but mPredefinedKeyLoader is null.");
+                                "but mPredefinedKeyProvider is null.");
             }
         } else if (mKeyStoreKeyProvider.getKeyTypeIdentifier().equalsIgnoreCase(keyIdentifier)) {
             return Collections.singletonList(mKeyStoreKeyProvider);
