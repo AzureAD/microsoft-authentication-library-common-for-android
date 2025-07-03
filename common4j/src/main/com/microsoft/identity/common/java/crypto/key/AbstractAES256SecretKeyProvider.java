@@ -37,4 +37,6 @@ public abstract class AbstractAES256SecretKeyProvider implements ISecretKeyProvi
      * Created once and reused across all instances to avoid unnecessary object creation.
      */
     protected static final ISecretKeyGenerator AES_256_KEY_GENERATOR = new AES256SecretKeyGenerator();
+
+    protected static final String KEY_ALGORITHM = "AES";
 }

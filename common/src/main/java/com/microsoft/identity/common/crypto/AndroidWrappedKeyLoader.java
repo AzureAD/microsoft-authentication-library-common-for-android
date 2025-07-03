@@ -224,7 +224,7 @@ public class AndroidWrappedKeyLoader extends AbstractAES256SecretKeyProvider {
                 return null;
             }
 
-            final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, AES_256_KEY_GENERATOR.getKeyAlgorithm(), keyPair, WRAP_ALGORITHM);
+            final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, KEY_ALGORITHM, keyPair, WRAP_ALGORITHM);
 
             Logger.info(methodTag, "Key is loaded with thumbprint: " +
                     KeyUtil.getKeyThumbPrint(key));
