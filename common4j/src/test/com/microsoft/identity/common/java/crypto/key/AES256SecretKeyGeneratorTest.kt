@@ -38,7 +38,7 @@ class AES256SecretKeyGeneratorTest {
     @Before
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        secretKeyGenerator = AES256SecretKeyGenerator()
+        secretKeyGenerator = AES256SecretKeyGenerator
     }
 
     @Test

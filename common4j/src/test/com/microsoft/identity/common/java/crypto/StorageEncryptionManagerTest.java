@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
-import com.microsoft.identity.common.java.crypto.key.AbstractAES256SecretKeyProvider;
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
 import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
@@ -128,8 +128,8 @@ public class StorageEncryptionManagerTest {
 
     @Test
     public void testDecryptFailToLoadOneOfTheKeys() throws ClientException {
-        final AbstractAES256SecretKeyProvider failingKeyLoader = new MockAES256KeyLoaderWithGetKeyError();
-        final AbstractAES256SecretKeyProvider successKeyLoader = new MockAES256KeyLoader(PREDEFINED_KEY, PREDEFINED_KEY_IDENTIFIER);
+        final ISecretKeyProvider failingKeyLoader = new MockAES256KeyLoaderWithGetKeyError();
+        final ISecretKeyProvider successKeyLoader = new MockAES256KeyLoader(PREDEFINED_KEY, PREDEFINED_KEY_IDENTIFIER);
 
         // Key order doesn't matter.
         final StorageEncryptionManager manager_failFirst = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null,
@@ -151,8 +151,8 @@ public class StorageEncryptionManagerTest {
 
     @Test
     public void testDecryptMatchingKeyNotFound() throws ClientException {
-        final AbstractAES256SecretKeyProvider decryptKeyLoader = new MockAES256KeyLoader();
-        final AbstractAES256SecretKeyProvider decryptKeyLoader_2 = new MockAES256KeyLoader();
+        final ISecretKeyProvider decryptKeyLoader = new MockAES256KeyLoader();
+        final ISecretKeyProvider decryptKeyLoader_2 = new MockAES256KeyLoader();
 
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null,
                 new ArrayList<ISecretKeyProvider>(){{
