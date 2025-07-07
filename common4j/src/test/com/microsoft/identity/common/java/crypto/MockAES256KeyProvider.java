@@ -26,6 +26,7 @@ import com.microsoft.identity.common.java.crypto.key.AES256SecretKeyGenerator;
 import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
 import com.microsoft.identity.common.java.exception.ClientException;
 
+
 import org.jetbrains.annotations.NotNull;
 
 import javax.crypto.SecretKey;

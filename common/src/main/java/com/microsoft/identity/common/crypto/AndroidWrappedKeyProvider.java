@@ -86,6 +86,12 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
     private static final String TAG = AndroidWrappedKeyProvider.class.getSimpleName() + "#";
 
     /**
+     * Should KeyStore and key file check for validity before every key load be skipped.
+     */
+    @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
+    public static boolean sSkipKeyInvalidationCheck = false;
+
+    /**
      * Algorithm for key wrapping.
      */
     private static final String WRAP_ALGORITHM = "RSA/ECB/PKCS1Padding";
@@ -94,6 +100,11 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
      * Algorithm for the wrapping key itself.
      */
     private static final String WRAP_KEY_ALGORITHM = "RSA";
+
+    /**
+     * Indicate that token item is encrypted with the key loaded in this class.
+     */
+    public static final String WRAPPED_KEY_KEY_IDENTIFIER = "A001";
 
     // Exposed for testing only.
     /* package */ static final int KEY_FILE_SIZE = 1024;
@@ -114,7 +125,7 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
     private final CachedData<SecretKey> mKeyCache = new CachedData<SecretKey>() {
         @Override
         public SecretKey getData() {
-            if (!AndroidWrappedKeyLoaderFactory.INSTANCE.getSkipKeyInvalidationCheck() &&
+            if (!sSkipKeyInvalidationCheck &&
                     (!AndroidKeyStoreUtil.canLoadKey(mAlias) || !getKeyFile().exists())) {
                 this.clear();
             }
@@ -152,7 +163,7 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
     @Override
     @NonNull
     public String getKeyTypeIdentifier() {
-        return "WRAPPED_KEY_KEY_IDENTIFIER";
+        return WRAPPED_KEY_KEY_IDENTIFIER;
     }
 
     /**

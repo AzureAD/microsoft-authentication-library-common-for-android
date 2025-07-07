@@ -478,7 +478,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
         // It does not fail fast on the first not equal byte to protect against
         // timing attack.
         for (int i = start; i < end; i++) {
-            result |= (byte) (expected[i - start] ^ encryptedBlob[i]);
+            result |= expected[i - start] ^ encryptedBlob[i];
         }
 
         if (result != 0) {
