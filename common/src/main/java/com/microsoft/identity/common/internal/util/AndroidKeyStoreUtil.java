@@ -363,7 +363,7 @@ public class AndroidKeyStoreUtil {
         try {
             Logger.verbose(methodTag, "Wrap secret key with a KeyPair.");
             final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm);
-            wrapCipher.init(Cipher.WRAP_MODE, keyToWrap.getPublic());
+            wrapCipher.init(Cipher.WRAP_MODE, keyToWrap.getPublic()); // CodeQL [SM05136] Used on AndroidWrappedKeyLoader, will be removed once the new KeyProvider is fully implemented.
             return wrapCipher.wrap(key);
         } catch (final NoSuchPaddingException e) {
             errCode = NO_SUCH_PADDING;
