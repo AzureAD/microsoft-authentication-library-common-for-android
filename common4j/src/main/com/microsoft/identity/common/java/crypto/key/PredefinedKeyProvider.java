@@ -85,10 +85,4 @@ public class PredefinedKeyProvider implements ISecretKeyProvider {
     public String getCipherTransformation() {
         return CIPHER_TRANSFORMATION;
     }
-
-    @Override
-    @NonNull
-    public String getCipherTransformation(){
-        return CIPHER_ALGORITHM;
-    }
 }

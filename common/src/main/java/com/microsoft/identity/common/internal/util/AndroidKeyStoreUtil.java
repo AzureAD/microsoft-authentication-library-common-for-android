@@ -423,15 +423,14 @@ public class AndroidKeyStoreUtil {
         final String errCode;
         try {
             Log.i(methodTag, "unwrap a key with algorithm: " + wrapAlgorithm);
-            final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm);
+            //TODO: Once the new KeyProvider is fully implemented, we can remove this suppression.
+            final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm); // CodeQL [SM05136] Used on AndroidWrappedKeyLoader, will be removed once the new KeyProvider is fully implemented.
+
             if (algorithmParameterSpec != null) {
                 wrapCipher.init(Cipher.UNWRAP_MODE, keyPairForUnwrapping.getPrivate(), algorithmParameterSpec);
             } else {
                 wrapCipher.init(Cipher.UNWRAP_MODE, keyPairForUnwrapping.getPrivate());
             }
-            //TODO: Once the new KeyProvider is fully implemented, we can remove this suppression.
-            final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm); // CodeQL [SM05136] Used on AndroidWrappedKeyLoader, will be removed once the new KeyProvider is fully implemented.
-            wrapCipher.init(Cipher.UNWRAP_MODE, keyPairForUnwrapping.getPrivate());
             return (SecretKey) wrapCipher.unwrap(wrappedKeyBlob, wrappedKeyAlgorithm, Cipher.SECRET_KEY);
         } catch (final IllegalArgumentException e) {
             // There is issue with Android KeyStore when lock screen type is changed which could

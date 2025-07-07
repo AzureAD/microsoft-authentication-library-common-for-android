@@ -86,15 +86,6 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
     private static final String TAG = AndroidWrappedKeyProvider.class.getSimpleName() + "#";
 
     /**
-     * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
-     * Java AES/CBC/PKCS5Padding is default(!) algorithm name, thus PKCS5 here
-     * probably doing PKCS7. We decide to go with Java default string.
-     */
-    private static final String CIPHER_TRANSFORMATION = "AES/CBC/PKCS5Padding";
-    private static final String TAG = AndroidWrappedKeyLoader.class.getSimpleName() + "#";
-
-
-    /**
      * Algorithm for key wrapping.
      */
     private static final String WRAP_ALGORITHM = "RSA/ECB/PKCS1Padding";
@@ -161,7 +152,7 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
     @Override
     @NonNull
     public String getKeyTypeIdentifier() {
-        return WRAPPED_KEY_KEY_IDENTIFIER;
+        return "WRAPPED_KEY_KEY_IDENTIFIER";
     }
 
     /**
@@ -225,7 +216,7 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
                 return null;
             }
 
-            final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, AES_ALGORITHM, keyPair, WRAP_ALGORITHM);
+            final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, AES_ALGORITHM, keyPair, WRAP_ALGORITHM, null);
 
             Logger.info(methodTag, "Key is loaded with thumbprint: " +
                     KeyUtil.getKeyThumbPrint(key));

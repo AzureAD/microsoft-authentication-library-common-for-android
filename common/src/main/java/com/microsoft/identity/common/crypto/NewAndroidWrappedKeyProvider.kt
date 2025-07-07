@@ -25,7 +25,8 @@ package com.microsoft.identity.common.crypto
 import android.content.Context
 import com.microsoft.identity.common.crypto.AndroidWrappedKeyLoaderFactory.WRAPPED_KEY_KEY_IDENTIFIER
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil
-import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader
+import com.microsoft.identity.common.java.crypto.key.AES256SecretKeyGenerator
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider
 import com.microsoft.identity.common.java.crypto.key.KeyUtil
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.util.CachedData
@@ -41,12 +42,12 @@ import javax.crypto.SecretKey
  * Instead, the actual key that we use to encrypt/decrypt data is 'wrapped/encrypted' with the keystore key
  * before it get saved to the file.
  */
-class NewAndroidWrappedKeyLoader @JvmOverloads constructor(
+class NewAndroidWrappedKeyProvider @JvmOverloads constructor(
     override val alias: String,
     private val mFilePath: String,
     private val mContext: Context,
     private val mKekManager: IKekManager = AndroidKeyStoreRsaKekManager(alias, mContext)
-) : AES256KeyLoader() {
+) : ISecretKeyProvider {
 
 
     // Exposed for testing only.
@@ -88,7 +89,8 @@ class NewAndroidWrappedKeyLoader @JvmOverloads constructor(
                 keyCache.data = keyFromStorage
                 return keyFromStorage
             }
-            secretKeyGenerator.generateRandomKey().let { newKey ->
+
+            AES256SecretKeyGenerator.generateRandomKey().let { newKey ->
                 Logger.info(
                     methodTag, "New key is generated with thumbprint: " +
                             KeyUtil.getKeyThumbPrint(newKey)
@@ -129,7 +131,7 @@ class NewAndroidWrappedKeyLoader @JvmOverloads constructor(
                     methodTag, "Key algorithm file is empty, " +
                             "using SecretKeyGenerator to get the key algorithm"
                 )
-                secretKeyGenerator.keyAlgorithm
+                AES256SecretKeyGenerator.AES_ALGORITHM
             }
             val key = mKekManager.unwrapKey(wrappedSecretKey, keyAlgorithm)
             Logger.info(
@@ -210,7 +212,7 @@ class NewAndroidWrappedKeyLoader @JvmOverloads constructor(
         get() = WRAPPED_KEY_KEY_IDENTIFIER
 
     companion object {
-        private val TAG = NewAndroidWrappedKeyLoader::class.java.simpleName
+        private val TAG = NewAndroidWrappedKeyProvider::class.java.simpleName
 
         // Exposed for testing only.
         const val KEY_FILE_SIZE: Int = 1024
