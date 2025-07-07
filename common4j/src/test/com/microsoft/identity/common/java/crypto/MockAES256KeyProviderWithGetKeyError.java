@@ -20,30 +20,40 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.crypto.key;
+package com.microsoft.identity.common.java.crypto;
+
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 import org.jetbrains.annotations.NotNull;
 
+import javax.crypto.SecretKey;
 
-public abstract class AES256KeyLoader implements ISecretKeyLoader {
+import lombok.NonNull;
 
-    /**
-     * Shared instance of AES256SecretKeyGenerator.
-     * Created once and reused across all instances to avoid unnecessary object creation.
-     */
-    private static final ISecretKeyGenerator AES_256_KEY_GENERATOR = new AES256SecretKeyGenerator();
+public class MockAES256KeyProviderWithGetKeyError implements ISecretKeyProvider {
+    public static String FAIL_TO_LOAD_KEY_ERROR = "FAIL_TO_LOAD_KEY_ERROR";
+    public static String MOCK_KEY_IDENTIFIER = "MOCK_ERROR_ID";
+    public static String MOCK_ERROR = "MOCK_ERROR";
 
-    /**
-     * Returns an AES-256 secret key generator.
-     * <p>
-     * This implementation returns a shared instance of {@link AES256SecretKeyGenerator}
-     * to avoid unnecessary object creation, as the generator is stateless.
-     *
-     * @return A shared instance of {@link AES256SecretKeyGenerator}
-     */
     @Override
+    public @NonNull String getAlias() {
+        return MOCK_ERROR;
+    }
+
+    @Override
+    public @NonNull SecretKey getKey() throws ClientException {
+        throw new ClientException(FAIL_TO_LOAD_KEY_ERROR);
+    }
+
+    @Override
+    public @NonNull String getKeyTypeIdentifier() {
+        return MOCK_KEY_IDENTIFIER;
+    }
+
     @NotNull
-    public ISecretKeyGenerator getSecretKeyGenerator() {
-        return AES_256_KEY_GENERATOR;
+    @Override
+    public String getCipherTransformation() {
+        return "AES/CBC/PKCS5Padding";
     }
 }

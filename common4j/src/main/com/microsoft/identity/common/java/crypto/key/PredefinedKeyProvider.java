@@ -22,6 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto.key;
 
+import com.microsoft.identity.common.java.exception.ClientException;
+
+import org.jetbrains.annotations.NotNull;
+
 import javax.crypto.SecretKey;
 
 import lombok.NonNull;
@@ -29,7 +33,13 @@ import lombok.NonNull;
 /**
  * For loading an AES-256 key from a provided rawbytes array.
  */
-public class PredefinedKeyLoader extends AES256KeyLoader {
+public class PredefinedKeyProvider implements ISecretKeyProvider {
+    /**
+     * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
+     * Java AES/CBC/PKCS5Padding is default(!) algorithm name, thus PKCS5 here
+     * probably doing PKCS7. We decide to go with Java default string.
+     */
+    private static final String CIPHER_TRANSFORMATION = "AES/CBC/PKCS5Padding";
 
     /**
      * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
@@ -46,28 +56,34 @@ public class PredefinedKeyLoader extends AES256KeyLoader {
     private final String mAlias;
     private final SecretKey mKey;
 
-    public PredefinedKeyLoader(@NonNull final String alias,
-                               final byte @NonNull [] rawBytes) {
+    public PredefinedKeyProvider(@NonNull final String alias,
+                                 final byte[] rawBytes) {
         mAlias = alias;
-        mKey = getSecretKeyGenerator().generateKeyFromRawBytes(rawBytes);
+        mKey = AES256SecretKeyGenerator.INSTANCE.generateKeyFromRawBytes(rawBytes);
     }
 
+    @NotNull
     @Override
-    @NonNull
     public String getAlias() {
         return mAlias;
     }
 
+    @NotNull
     @Override
-    @NonNull
+    public String getKeyTypeIdentifier() {
+        return USER_PROVIDED_KEY_IDENTIFIER;
+    }
+
+    @NotNull
+    @Override
     public SecretKey getKey() {
         return mKey;
     }
 
+    @NotNull
     @Override
-    @NonNull
-    public String getKeyTypeIdentifier() {
-        return USER_PROVIDED_KEY_IDENTIFIER;
+    public String getCipherTransformation() {
+        return CIPHER_TRANSFORMATION;
     }
 
     @Override

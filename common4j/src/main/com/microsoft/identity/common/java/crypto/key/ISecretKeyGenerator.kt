@@ -25,20 +25,12 @@ package com.microsoft.identity.common.java.crypto.key
 import com.microsoft.identity.common.java.exception.ClientException
 import javax.crypto.SecretKey
 
+/**
+ * Interface for secret key generation.
+ * Implementations of this interface provide functionality to generate cryptographic
+ * secret keys either randomly or from raw byte arrays.
+ */
 interface ISecretKeyGenerator {
-    /**
-     * The size of the key in bits.
-     * This is used when generating random keys to determine the key strength.
-     */
-    val keySize: Int
-
-    /**
-     * The algorithm name for the key.
-     * This should be compatible with cryptographic providers, such as
-     * those used with KeyGenerator.getInstance(algorithm).
-     */
-    val keyAlgorithm: String
-
     /**
      * Generates a cryptographically secure random secret key.
      *

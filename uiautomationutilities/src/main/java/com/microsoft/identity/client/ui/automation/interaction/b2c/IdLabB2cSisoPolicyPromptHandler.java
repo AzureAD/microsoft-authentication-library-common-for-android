@@ -66,7 +66,7 @@ public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
         }
 
         if (!parameters.isSessionExpected()) {
-            loginComponentHandler.handlePasswordField(password);
+            loginComponentHandler.handlePasswordField(password, false);
 
             if (loginComponentHandler instanceof GoogleLoginComponentHandler &&
                     b2CProvider == B2CProviderWrapper.Google){

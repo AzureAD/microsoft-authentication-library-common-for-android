@@ -91,7 +91,8 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             clientId = config.clientId,
             challengeType = config.challengeType,
             requestUrl = signInInitiateEndpoint,
-            headers = getRequestHeaders(commandParameters.getCorrelationId())
+            headers = getRequestHeaders(commandParameters.getCorrelationId()),
+            capabilities = config.capabilities
         )
     }
     //endregion
@@ -221,7 +222,8 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             username = commandParameters.username,
             challengeType = config.challengeType,
             requestUrl = resetPasswordStartEndpoint,
-            headers = getRequestHeaders(commandParameters.getCorrelationId())
+            headers = getRequestHeaders(commandParameters.getCorrelationId()),
+            capabilities = config.capabilities
         )
     }
     //endregion
@@ -263,10 +265,11 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             username = commandParameters.username,
             password = commandParameters.password,
             attributes = commandParameters.userAttributes,
-            challengeType = config.challengeType,
             clientId = config.clientId,
+            challengeType = config.challengeType,
             requestUrl = signUpStartEndpoint,
-            headers = getRequestHeaders(commandParameters.getCorrelationId())
+            headers = getRequestHeaders(commandParameters.getCorrelationId()),
+            capabilities = config.capabilities
         )
     }
     //endregion

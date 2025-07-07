@@ -26,8 +26,8 @@ import android.content.Context;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.java.crypto.StorageEncryptionManager;
-import com.microsoft.identity.common.java.crypto.key.ISecretKeyLoader;
-import com.microsoft.identity.common.java.crypto.key.PredefinedKeyLoader;
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
+import com.microsoft.identity.common.java.crypto.key.PredefinedKeyProvider;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Collections;
@@ -53,49 +53,50 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
      */
     public static final String WRAPPED_KEY_FILE_NAME = "adalks";
 
-    private final PredefinedKeyLoader mPredefinedKeyLoader;
-    private final ISecretKeyLoader mKeyStoreKeyLoader;
+    private final PredefinedKeyProvider mPredefinedKeyProvider;
+    private final ISecretKeyProvider mKeyStoreKeyProvider;
 
     public AndroidAuthSdkStorageEncryptionManager(@NonNull final Context context) {
         if (AuthenticationSettings.INSTANCE.getSecretKeyData() == null) {
-            mPredefinedKeyLoader = null;
+            mPredefinedKeyProvider = null;
         } else {
-            mPredefinedKeyLoader = new PredefinedKeyLoader("USER_DEFINED_KEY",
+            mPredefinedKeyProvider = new PredefinedKeyProvider("USER_DEFINED_KEY",
                     AuthenticationSettings.INSTANCE.getSecretKeyData());
         }
 
-        mKeyStoreKeyLoader = new AndroidWrappedKeyLoader(
+        mKeyStoreKeyProvider = new AndroidWrappedKeyProvider(
                 WRAPPING_KEY_ALIAS,
                 WRAPPED_KEY_FILE_NAME,
-                context);
+                context
+        );
     }
 
     @Override
     @NonNull
-    public ISecretKeyLoader getKeyLoaderForEncryption() {
-        if (mPredefinedKeyLoader != null) {
-            return mPredefinedKeyLoader;
+    public ISecretKeyProvider getKeyProviderForEncryption() {
+        if (mPredefinedKeyProvider != null) {
+            return mPredefinedKeyProvider;
         }
 
-        return mKeyStoreKeyLoader;
+        return mKeyStoreKeyProvider;
     }
 
     @Override
     @NonNull
-    public List<ISecretKeyLoader> getKeyLoaderForDecryption(byte[] cipherText) {
+    public List<ISecretKeyProvider> getKeyProviderForDecryption(byte[] cipherText) {
         final String methodTag = TAG + ":getKeyLoaderForDecryption";
 
         final String keyIdentifier = getKeyIdentifierFromCipherText(cipherText);
-        if (PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER.equalsIgnoreCase(keyIdentifier)) {
-            if (mPredefinedKeyLoader != null) {
-                return Collections.singletonList(mPredefinedKeyLoader);
+        if (PredefinedKeyProvider.USER_PROVIDED_KEY_IDENTIFIER.equalsIgnoreCase(keyIdentifier)) {
+            if (mPredefinedKeyProvider != null) {
+                return Collections.singletonList(mPredefinedKeyProvider);
             } else {
                 throw new IllegalStateException(
                         "Cipher Text is encrypted by USER_PROVIDED_KEY_IDENTIFIER, " +
-                                "but mPredefinedKeyLoader is null.");
+                                "but mPredefinedKeyProvider is null.");
             }
-        } else if (AndroidWrappedKeyLoaderFactory.WRAPPED_KEY_KEY_IDENTIFIER.equalsIgnoreCase(keyIdentifier)) {
-            return Collections.singletonList(mKeyStoreKeyLoader);
+        } else if (mKeyStoreKeyProvider.getKeyTypeIdentifier().equalsIgnoreCase(keyIdentifier)) {
+            return Collections.singletonList(mKeyStoreKeyProvider);
         }
 
         Logger.warn(methodTag,

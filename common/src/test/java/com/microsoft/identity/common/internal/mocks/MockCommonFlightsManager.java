@@ -20,40 +20,30 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.crypto;
+package com.microsoft.identity.common.internal.mocks;
 
-import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
-import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.IFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 
 import org.jetbrains.annotations.NotNull;
 
-import javax.crypto.SecretKey;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
-import lombok.NonNull;
+@Setter
+@Accessors(prefix = "m")
+public class MockCommonFlightsManager implements IFlightsManager {
+    private IFlightsProvider mMockCommonFlightsProvider;
 
-public class MockAES256KeyLoaderWithGetKeyError extends AES256KeyLoader  {
-    public static String FAIL_TO_LOAD_KEY_ERROR = "FAIL_TO_LOAD_KEY_ERROR";
-    public static String MOCK_KEY_IDENTIFIER = "MOCK_ERROR_ID";
-    public static String MOCK_ERROR = "MOCK_ERROR";
-
+    @NotNull
     @Override
-    public @NonNull String getAlias() {
-        return MOCK_ERROR;
-    }
-
-    @Override
-    public @NonNull SecretKey getKey() throws ClientException {
-        throw new ClientException(FAIL_TO_LOAD_KEY_ERROR);
-    }
-
-    @Override
-    public @NonNull String getKeyTypeIdentifier() {
-        return MOCK_KEY_IDENTIFIER;
+    public IFlightsProvider getFlightsProvider() {
+        return mMockCommonFlightsProvider;
     }
 
     @NotNull
     @Override
-    public String getCipherTransformation() {
-        return "AES/CBC/PKCS5Padding";
+    public IFlightsProvider getFlightsProviderForTenant(@NotNull String tenantId) {
+        return mMockCommonFlightsProvider;
     }
 }

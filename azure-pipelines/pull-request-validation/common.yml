@@ -13,7 +13,7 @@ resources:
     ref: dev
 
 pool:
-  name: Hosted Windows 2019 with VS2019
+  vmImage: 'windows-2022'
 
 jobs:
 - job: build_test
@@ -38,7 +38,7 @@ jobs:
     displayName: Assemble Local
     inputs:
       javaHomeSelection: JDKVersion
-      jdkVersionOption: "1.11"
+      jdkVersionOption: "1.17"
       tasks: clean common:assembleLocal
       publishJUnitResults: false
       jdkArchitecture: x64
@@ -48,14 +48,14 @@ jobs:
     displayName: Run Unit tests
     inputs:
       javaHomeSelection: JDKVersion
-      jdkVersionOption: "1.11"
+      jdkVersionOption: "1.17"
       tasks: common:testLocalDebugUnitTest -PlabSecret=$(LabVaultAppCert) -PmockApiUrl=$(MOCK_API_URL) 
   - task: Gradle@3
     displayName: Check Dependencies size
     condition: eq(variables['system.pullRequest.targetBranch'], 'dev')
     inputs:
       tasks: common:dependenciesSizeCheck -PdependenciesSizeCheckConfig=distReleaseRuntimeClasspath
-      jdkVersionOption: "1.11"
+      jdkVersionOption: "1.17"
 
 - job: spotbugs
   displayName: SpotBugs
@@ -68,6 +68,7 @@ jobs:
   - template: ../templates/steps/spotbugs.yml
     parameters:
       project: common
+    
 - job: lint
   displayName: Lint
   cancelTimeoutInMinutes: 1
@@ -87,5 +88,5 @@ jobs:
       tasks: clean common:lintLocalDebug
       publishJUnitResults: false
       javaHomeSelection: JDKVersion
-      jdkVersionOption: "1.11"
+      jdkVersionOption: "1.17"
 ...
