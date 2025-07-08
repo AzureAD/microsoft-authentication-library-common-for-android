@@ -45,7 +45,7 @@ public class B2CIdLabLocalLoginComponentHandler extends AbstractB2CLoginComponen
     }
 
     @Override
-    public void handlePasswordField(@NonNull final String password) {
+    public void handlePasswordField(@NonNull final String password, final boolean isMsaAccount) {
         Logger.i(TAG, "Handle B2C IdLab Local Login Password UI..");
         UiAutomatorUtils.handleInput("password", password);
         handleNextButton();

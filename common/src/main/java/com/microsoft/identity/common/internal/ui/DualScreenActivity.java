@@ -35,12 +35,17 @@ import android.widget.RelativeLayout;
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.microsoft.device.display.DisplayMask;
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.List;
 
@@ -57,6 +62,21 @@ public class DualScreenActivity extends FragmentActivity {
 
     private void initializeContentView(){
         super.setContentView(R.layout.dual_screen_layout);
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_HANDLING_FOR_EDGE_TO_EDGE)) {
+            try {
+                ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (view, insets) -> {
+                    int topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
+                    int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
+                    int leftInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).left;
+                    int rightInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).right;
+
+                    view.setPadding(leftInset, topInset, rightInset, bottomInset);
+                    return insets;
+                });
+            } catch (final Throwable throwable) {
+                Logger.warn("DualScreenActivity:initializeContentView", "Failed to set OnApplyWindowInsetsListener");
+            }
+        }
         adjustLayoutForDualScreenActivity();
     }
 
@@ -180,15 +200,21 @@ public class DualScreenActivity extends FragmentActivity {
      */
     private Rect getHinge(final Context context,
                           int rotation) {
+        final String methodTag = "DualScreenActivity:getHinge";
         // Hinge's coordinates of its 4 edges in different mode
         // Double Landscape Rect(0, 1350 - 1800, 1434)
         // Double Portrait  Rect(1350, 0 - 1434, 1800)
-        final DisplayMask displayMask = DisplayMask.fromResourcesRect(context);
-        List<Rect> boundings = displayMask.getBoundingRectsForRotation(rotation);
-        if (boundings.size() == 0) {
+        try {
+            final DisplayMask displayMask = DisplayMask.fromResourcesRect(context);
+            List<Rect> boundings = displayMask.getBoundingRectsForRotation(rotation);
+            if (boundings.size() == 0) {
+                return new Rect(0, 0, 0, 0);
+            }
+            return boundings.get(0);
+        } catch (final Throwable throwable) {
+            Logger.error(methodTag, "Failed to get hinge rect", throwable);
             return new Rect(0, 0, 0, 0);
         }
-        return boundings.get(0);
     }
 
     /**

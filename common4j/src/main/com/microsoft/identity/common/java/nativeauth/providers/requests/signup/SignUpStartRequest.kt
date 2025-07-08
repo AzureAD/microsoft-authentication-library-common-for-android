@@ -54,7 +54,8 @@ data class SignUpStartRequest private constructor(
             clientId: String,
             challengeType: String,
             requestUrl: String,
-            headers: Map<String, String?>
+            headers: Map<String, String?>,
+            capabilities: String?
         ): SignUpStartRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(clientId, "clientId")
@@ -68,7 +69,8 @@ data class SignUpStartRequest private constructor(
                     password = password,
                     attributes = attributes?.toJsonString(attributes),
                     challengeType = challengeType,
-                    clientId = clientId
+                    clientId = clientId,
+                    capabilities = capabilities
                 ),
                 requestUrl = URL(requestUrl),
                 headers = headers
@@ -89,9 +91,10 @@ data class SignUpStartRequest private constructor(
         @JsonAdapter(CharArrayJsonAdapter::class) val password: CharArray?,
         val attributes: String? = null,
         @SerializedName("client_id") override val clientId: String,
-        @SerializedName("challenge_type") val challengeType: String
+        @SerializedName("challenge_type") val challengeType: String,
+        @SerializedName("capabilities") val capabilities: String?
     ) : NativeAuthRequestParameters() {
-        override fun toUnsanitizedString(): String = "NativeAuthRequestSignUpStartRequestParameters(clientId=$clientId, challengeType=$challengeType)"
+        override fun toUnsanitizedString(): String = "NativeAuthRequestSignUpStartRequestParameters(clientId=$clientId, challengeType=$challengeType, capabilities=$capabilities)"
 
         override fun toString(): String = "NativeAuthRequestSignUpStartRequestParameters(clientId=$clientId)"
     }

@@ -114,7 +114,38 @@ public enum CommonFlight implements IFlightConfig {
     /** Flight to enable the new key generation without PURPOSE_WRAP_KEY. Default is true.
      * This is applicable for API >= 23
      */
-    ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY("EnableNewKeyGenSpecForWrapWithoutPurposeWrapKey", true);
+    ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY("EnableNewKeyGenSpecForWrapWithoutPurposeWrapKey", true),
+
+    /**
+     * Flight to enable exposing the JavaScript API for AuthUx requests
+     */
+    ENABLE_JS_API_FOR_AUTHUX("EnableJsApiForAuthUx", true),
+
+    /**
+     * Flight to enable handling the UI in edge to edge mode
+     */
+    ENABLE_HANDLING_FOR_EDGE_TO_EDGE("EnableHandlingEdgeToEdge", false),
+
+    /**
+     * Flight to enable the Web CP in WebView.
+     */
+    ENABLE_WEB_CP_IN_WEBVIEW("EnableWebCpInWebView", false),
+
+    /**
+     * Flight to enable the Playstore URL launch for broker apps.
+     */
+    ENABLE_PLAYSTORE_URL_LAUNCH("EnablePlaystoreUrlLaunch", false),
+    
+    /**
+     * Flight to enable the Web CP for a tenant list.
+     */
+    TENANT_LIST_TO_ENABLE_WEB_CP_IN_WEBVIEW("TenantListToEnableWebCpInWebView", ""),
+
+    /**
+     * Flight to enable the WebView flow to not cancel and preserve WebView flow on SSL errors.
+     * The web resource running into SSL will itself not be loaded.
+     */
+    SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR("ShouldPreserveWebViewFlowOnSslError", false);
 
     private String key;
     private Object defaultValue;

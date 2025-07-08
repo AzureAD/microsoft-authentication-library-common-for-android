@@ -69,7 +69,7 @@ public class RulesHelper {
         RuleChain ruleChain = RuleChain.outerRule(new AutomationLoggingRule());
 
         Log.i(TAG, "Adding RetryTestRule");
-        ruleChain = ruleChain.around(new RetryTestRule());
+        ruleChain = ruleChain.around(new RetryTestRule(broker));
 
         Log.i(TAG, "Adding Timeout Rule");
         ruleChain = ruleChain.around(timeout);
@@ -106,11 +106,6 @@ public class RulesHelper {
 
             Log.i(TAG, "Adding InstallBrokerTestRule");
             ruleChain = ruleChain.around(new InstallBrokerTestRule(broker));
-
-            if (broker instanceof IPowerLiftIntegratedApp && BuildConfig.SEND_POWERLIFT_LOGS) {
-                Log.i(TAG, "Adding PowerLiftIncidentRule");
-                ruleChain = ruleChain.around(new PowerLiftIncidentRule((IPowerLiftIntegratedApp) broker));
-            }
 
             Log.i(TAG, "Adding DeviceEnrollmentFailureRecoveryRule");
             ruleChain = ruleChain.around(new DeviceEnrollmentFailureRecoveryRule());

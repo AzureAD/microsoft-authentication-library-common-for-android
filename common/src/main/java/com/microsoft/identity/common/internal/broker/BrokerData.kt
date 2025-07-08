@@ -67,6 +67,13 @@ data class BrokerData(val packageName : String,
         return "$packageName::$signingCertificateThumbprint"
     }
 
+    fun getAppLinkRedirectUri(): String {
+        val scheme = AuthenticationConstants.Broker.BROKER_APP_LINK_REDIRECT_URL_SCHEME
+        val host = AuthenticationConstants.Broker.BROKER_APP_LINK_REDIRECT_URL_HOST
+        val pathPrefix = AuthenticationConstants.Broker.BROKER_APP_LINK_REDIRECT_URL_PATH_PREFIX
+        return "$scheme://$host/$pathPrefix/$packageName"
+    }
+
     companion object {
         val TAG = BrokerData::class.simpleName
 
@@ -158,6 +165,7 @@ data class BrokerData(val packageName : String,
             AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME,
             AuthenticationConstants.Broker.LTW_APP_SHA512_DEBUG_SIGNATURE,
             "debugLTW"
+
         )
 
         @JvmStatic

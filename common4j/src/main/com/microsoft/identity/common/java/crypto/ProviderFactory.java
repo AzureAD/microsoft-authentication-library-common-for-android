@@ -62,7 +62,7 @@ public class ProviderFactory {
                                    @Nullable final Provider provider) throws ClientException {
         try {
             if (provider != null) {
-                return Cipher.getInstance(algorithm, provider);
+                return Cipher.getInstance(algorithm, provider); // CodeQL [SM05136] Used to decrypt SK, and the algorithm used is defined by ESTS.
             }
             return Cipher.getInstance(algorithm);
         } catch (final NoSuchAlgorithmException e) {

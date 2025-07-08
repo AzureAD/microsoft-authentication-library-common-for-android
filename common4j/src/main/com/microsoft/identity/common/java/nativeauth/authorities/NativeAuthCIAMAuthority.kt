@@ -76,7 +76,7 @@ class NativeAuthCIAMAuthority (
         mAuthorityUrlString = authorityUrl
     }
 
-    private fun createNativeAuthOAuth2Configuration(challengeTypes: List<String>?): NativeAuthOAuth2Configuration {
+    private fun createNativeAuthOAuth2Configuration(challengeTypes: List<String>?, capabilities: List<String>?): NativeAuthOAuth2Configuration {
        LogSession.logMethodCall(
            tag = TAG,
            correlationId = null,
@@ -85,7 +85,8 @@ class NativeAuthCIAMAuthority (
         return NativeAuthOAuth2Configuration(
             authorityUrl = this.authorityURL,
             clientId = this.clientId,
-            challengeType = getChallengeTypesWithDefault(challengeTypes)
+            challengeType = getChallengeTypesWithDefault(challengeTypes),
+            capabilities = getCapabilities(capabilities)
         )
     }
 
@@ -110,9 +111,19 @@ class NativeAuthCIAMAuthority (
         return challengeTypesWithDefault
     }
 
+    private fun getCapabilities(capabilities: List<String>?): String {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = null,
+            "${TAG}.getCapabilities"
+        )
+
+        return capabilities.orEmpty().distinct().joinToString(" ")
+    }
+
     @Throws(ClientException::class)
     override fun createOAuth2Strategy(parameters: OAuth2StrategyParameters): NativeAuthOAuth2Strategy {
-        val config = createNativeAuthOAuth2Configuration(parameters.mChallengeTypes)
+        val config = createNativeAuthOAuth2Configuration(parameters.mChallengeTypes, parameters.mCapabilities)
 
         // CIAM Authorities can fetch endpoints from open id configuration. We disable this option.
         parameters.setUsingOpenIdConfiguration(NATIVE_AUTH_USE_OPENID_CONFIGURATION)

@@ -363,5 +363,46 @@ public enum AttributeName {
     /**
      * Records the if the broker handled a switch browser resume,
      */
-    is_switch_browser_resume_handled
+    is_switch_browser_resume_handled,
+
+    /**
+     * Records if the request is a webcp authorize request.
+     */
+    is_webcp_authorize_request,
+
+    /**
+     * Records if the request is a webcp enrollment request.
+     */
+    is_webcp_enrollment_request,
+
+    /**
+     * Records if the webcp is enabled in webview.
+     */
+    is_webcp_in_webview_enabled,
+
+    /**
+     * Records the if webview received an SSL error and
+     * corresponding primary error code.
+     */
+    web_view_ssl_primary_error_code,
+
+    /**
+     * Record action name from Webview JavaScript Payload
+     */
+    authux_js_action_name,
+
+    /**
+     * Record action component from Webview JavaScript Payload
+     */
+    authux_js_action_component,
+
+    /**
+     * Record operation name from Webview JavaScript Payload
+     */
+    authux_js_operation,
+
+    /**
+     * Record whether or not the request stored a number match entry.
+     */
+    stored_number_match_entry
 }

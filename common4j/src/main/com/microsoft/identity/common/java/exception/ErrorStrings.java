@@ -460,4 +460,18 @@ public final class ErrorStrings {
      */
     public static final String GET_PENDING_INTENT_CANCELED = "get_pending_intent_canceled";
 
+    /**
+     * Error occurred while attempting to parse a URI due to a syntax error.
+     */
+    public static final String URI_SYNTAX_ERROR = "uri_syntax_error";
+
+    /**
+     * Error occurred if the activity can not be found to execute the given Intent
+     */
+    public static final String ACTIVITY_NOT_FOUND = "activity_not_found";
+
+    /**
+     * A generic error code used when no other error code is applicable.
+     */
+    public static final String UNEXPECTED_ERROR = "unexpected_error";
 }
