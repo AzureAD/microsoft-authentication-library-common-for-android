@@ -35,25 +35,25 @@ import org.junit.Test
 import org.mockito.Mockito.*
 
 @RunWith(RobolectricTestRunner::class)
-class CrossCloudChallengeHandlerTest {
+class ReAttachPrtHeaderHandlerTest {
 
     private lateinit var webView: WebView
     private lateinit var headers: HashMap<String, String>
     private lateinit var span: Span
-    private lateinit var crossCloudChallengeHandler: CrossCloudChallengeHandler
+    private lateinit var reAttachPrtHeaderHandler: ReAttachPrtHeaderHandler
 
     @Before
     fun setUp() {
         webView = mock(WebView::class.java)
         headers = HashMap()
         span = mock(Span::class.java)
-        crossCloudChallengeHandler = CrossCloudChallengeHandler(webView, headers, span)
+        reAttachPrtHeaderHandler = ReAttachPrtHeaderHandler(webView, headers, span)
     }
 
     @Test
     fun `testProcessChallenge success`() {
         val testUrl = "https://example.com?login_hint=testuser"
-        crossCloudChallengeHandler.processChallenge(testUrl)
+        reAttachPrtHeaderHandler.processChallenge(testUrl)
         verify(webView).loadUrl(eq(testUrl), eq(headers))
     }
 
@@ -70,7 +70,7 @@ class CrossCloudChallengeHandlerTest {
         } throws Exception()
 
         try {
-            crossCloudChallengeHandler.processChallenge(testUrl)
+            reAttachPrtHeaderHandler.processChallenge(testUrl)
         } catch (e: Exception) {
             verify(webView, never()).loadUrl(eq(testUrl), eq(headers))
         }
@@ -91,7 +91,7 @@ class CrossCloudChallengeHandlerTest {
         } returns refreshTokenCredential
 
         // Call the method
-        crossCloudChallengeHandler.modifyHeadersWithRefreshTokenCredential(url)
+        reAttachPrtHeaderHandler.modifyHeadersWithRefreshTokenCredential(url)
         verify(span).setAttribute(
             AttributeName.is_new_refresh_token_cred_header_attached.name,
             true
@@ -102,7 +102,7 @@ class CrossCloudChallengeHandlerTest {
     @Test
     fun `modifyHeadersWithRefreshTokenCredential should not update headers when login_hint is missing`() {
         val url = "https://login.microsoftonline.com"
-        crossCloudChallengeHandler.modifyHeadersWithRefreshTokenCredential(url)
+        reAttachPrtHeaderHandler.modifyHeadersWithRefreshTokenCredential(url)
         verify(span, never()).setAttribute(
             AttributeName.is_new_refresh_token_cred_header_attached.name,
             true
@@ -112,7 +112,7 @@ class CrossCloudChallengeHandlerTest {
     @Test
     fun `modifyHeadersWithRefreshTokenCredential null refresh token credential`() {
         val url = "https://login.microsoftonline.com?login_hint=testuser"
-        crossCloudChallengeHandler.modifyHeadersWithRefreshTokenCredential(url)
+        reAttachPrtHeaderHandler.modifyHeadersWithRefreshTokenCredential(url)
         verify(span, never()).setAttribute(
             AttributeName.is_new_refresh_token_cred_header_attached.name,
             true

@@ -399,6 +399,11 @@ public class AuthenticationConstants {
          * String as Query parameter key to send a V1 request to V2 endpoint
          */
         public static final String IT_VER_PARAM = "itver";
+
+        /**
+         * String for the tenant unique id
+         */
+        public static final String UTID = "utid";
     }
 
     /**

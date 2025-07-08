@@ -1194,13 +1194,13 @@ public final class AuthenticationConstants {
          * The only supported detection of this phone is the application install state.
          * App signature of Teams Phone app to detect it for the MDM Device CA redirect.
          */
-        public static final String IPPHONE_APP_SIGNATURE = "fcg80qvoM1YMKJZibjBwQcDfOno=";
+        public static final String IPPHONE_APP_SHA512_RELEASE_SIGNATURE = "iPULpH0pq8ms1Qy7cOzGsVRQN7/zW4IbW+UKcajvtrTrzM5o5VcaghNEA1Ho4Wq7ay0efqqJcalxa8eHxVnHKA==";
 
         /**
          * Signing certificate thumbprint of the DEBUG-signed Teams IP Phones (Sakurai devices)
          * to unblock any teams local debug development.
          */
-        public static final String IPPHONE_APP_DEBUG_SIGNATURE = "VCpKgbYCXucoq1mZ4BZPsh5taNE=";
+        public static final String IPPHONE_APP_SHA512_DEBUG_SIGNATURE = "FOoI98kyj+dXPZYW191TjF6017ljKj47G+RCQPYjIcXD7uhhTpw7pqznTABB0ZjB1/DZetRgr284pyLumvXN6A==";
 
         /**
          * The value for pkeyauth redirect.
@@ -1266,6 +1266,16 @@ public final class AuthenticationConstants {
          * Redirect URL from WebCP that should launch the Intune Company Portal app.
          */
         public static final String WEBCP_LAUNCH_COMPANY_PORTAL_URL = BROWSER_EXT_WEB_CP + "enrollment";
+
+        /**
+         * Redirect URL from WebCP that should launch the enrollment flow.
+         */
+        public static final String WEBCP_ENROLLMENT_URL = "https://enterprise.google.com/android/enroll";
+
+        /**
+         * WebCP clientId.
+         */
+        public static final String WEBCP_CLIENT_ID  = "74bcdadc-2fdc-4bb3-8459-76d06952a0e9";
 
         /**
          * A query param indicating that this is an intune device CA link.
@@ -1377,6 +1387,11 @@ public final class AuthenticationConstants {
         public static final String PLAY_STORE_INSTALL_PREFIX = "market://details?id=";
 
         /**
+         * Another prefix in the redirect for PlayStore.
+         */
+        public static final String PLAY_STORE_INSTALL_APP_PREFIX = "https://play.google.com/store/apps/details?id=";
+
+        /**
          * String for expiration buffer.
          * Integer for token expiration buffer. see {@link AuthenticationSettings#mExpirationBuffer}
          */
@@ -1461,6 +1476,16 @@ public final class AuthenticationConstants {
         public static final String GET_FLIGHTS_RESULT = "active_flights";
 
         /**
+         * The Bundle key name of the result of the number match operation.
+         */
+        public static final String GET_NUMBER_MATCH_RESULT = "number_match";
+
+        /**
+         * SessionID for the number match operation.
+         */
+        public static final String SESSION_ID = "session_id";
+
+        /**
          * Time out for the AccountManager's remove account operation in broker.
          */
         public static final int ACCOUNT_MANAGER_REMOVE_ACCOUNT_TIMEOUT_IN_MILLISECONDS = 5000;
@@ -1484,39 +1509,19 @@ public final class AuthenticationConstants {
         public static final String POWERLIFT_TENANT_ID = "powerLiftTenantId";
 
         /**
-         * The App Link redirect URL for the Authenticator app.
+         * The scheme for the app link redirect URI used by the broker.
          */
-        public static final String AUTHENTICATOR_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/authenticator";
+        public static final String BROKER_APP_LINK_REDIRECT_URL_SCHEME = "https";
 
         /**
-         * The App Link redirect URL for the LTW app.
+         * The host for the app link redirect URIs used by the broker.
          */
-        public static final String LTW_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/ltw";
+        public static final String BROKER_APP_LINK_REDIRECT_URL_HOST = "login.microsoftonline.com";
 
         /**
-         * App Link redirect URL for the CP app.
+         * The path prefix for the app link redirect URIs used by the broker.
          */
-        public static final String COMPANY_PORTAL_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/cp";
-
-        /**
-         * App Link redirect URL for the BrokerHost app.
-         */
-        public static final String BROKER_HOST_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/brokerhost";
-
-        /**
-         * App Link redirect URL for the Mock Auth app.
-         */
-        public static final String MOCK_LTW_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/mockltw";
-
-        /**
-         * App Link redirect URL for the Mock CP app.
-         */
-        public static final String MOCK_CP_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/mockcp";
-
-        /**
-         * App Link redirect URL for the Mock Auth app.
-         */
-        public static final String MOCK_AUTH_APP_LINK_REDIRECT_URL = "https://login.microsoftonline.com/mockauth";
+        public static final String BROKER_APP_LINK_REDIRECT_URL_PATH_PREFIX = "androidbroker";
 
         /**
          * Bundle identifiers for x-ms-clitelem info.
@@ -1661,6 +1666,7 @@ public final class AuthenticationConstants {
             BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_VERSION_1, null),
             BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_3, null),
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_3, null),
+
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
             UNKNOWN(null, null, null),
             DEVICE_REGISTRATION_PROTOCOLS(DEVICE_REGISTRATION_PROTOCOLS_PATH, null, null),
@@ -1679,7 +1685,9 @@ public final class AuthenticationConstants {
             WEBAPPS_GET_SUPPORTED_WEB_APPS_CONTRACTS(WEBAPPS_GET_SUPPORTED_WEB_APPS_CONTRACTS_PATH, null, null),
             WEBAPPS_EXECUTE_WEB_APPS_REQUEST(WEBAPPS_EXECUTE_WEB_APPS_REQUEST_PATH, null, null),
             PROVISION_RESOURCE_ACCOUNT(PROVISION_RESOURCE_ACCOUNT_PATH, null, null),
-            GET_AAD_DEVICE_ID(GET_AAD_DEVICE_ID_PATH, null, null);
+            GET_AAD_DEVICE_ID(GET_AAD_DEVICE_ID_PATH, null, null),
+            BROKER_GET_NUMBER_MATCH(BROKER_API_GET_NUMBER_MATCH_PATH, BROKER_VERSION_3, null);
+
 
             /**
              * The content provider path that the API exists behind.
@@ -1798,6 +1806,11 @@ public final class AuthenticationConstants {
          * Broker api path constant for adding flight information.
          */
         public static final String BROKER_API_GET_FLIGHTS_PATH = "/brokerApi/getFlights";
+
+        /**
+         * Broker api path constant for getting number match.
+         */
+        public static final String BROKER_API_GET_NUMBER_MATCH_PATH = "/brokerApi/getNumberMatch";
 
         /**
          * ContentProvider path for retrieving Broker Discovery Metadata.

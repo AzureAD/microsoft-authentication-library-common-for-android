@@ -20,30 +20,32 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.shadows;
+package com.microsoft.identity.common.java.crypto.key
 
-import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
-import com.microsoft.identity.common.java.crypto.key.PredefinedKeyProvider;
-import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
+import com.microsoft.identity.common.java.exception.ClientException
+import javax.crypto.SecretKey
 
-import org.robolectric.annotation.Implements;
+/**
+ * Interface for secret key generation.
+ * Implementations of this interface provide functionality to generate cryptographic
+ * secret keys either randomly or from raw byte arrays.
+ */
+interface ISecretKeyGenerator {
+    /**
+     * Generates a cryptographically secure random secret key.
+     *
+     * @return A randomly generated [SecretKey] instance.
+     * @throws ClientException If an error occurs during key generation,
+     *                        such as when the algorithm is not available.
+     */
+    @Throws(ClientException::class)
+    fun generateRandomKey(): SecretKey
 
-import java.util.ArrayList;
-import java.util.List;
-
-@Implements(AndroidAuthSdkStorageEncryptionManager.class)
-public class ShadowAndroidSdkStorageEncryptionManager {
-
-    final byte[] encryptionKey = new byte[]{22, 78, -69, -66, 84, -65, 119, -9, -34, -80, 60, 67, -12, -117, 86, -47, -84, -24, -18, 121, 70, 32, -110, 51, -93, -10, -93, -110, 124, -68, -42, -119};
-    final ISecretKeyProvider mUserDefinedKey = new PredefinedKeyProvider("MOCK_ALIAS", encryptionKey);
-
-    public ISecretKeyProvider getKeyLoaderForEncryption() {
-        return mUserDefinedKey;
-    }
-
-    public List<ISecretKeyProvider> getKeyLoaderForDecryption(byte[] cipherText) {
-        return new ArrayList<ISecretKeyProvider>() {{
-            add(mUserDefinedKey);
-        }};
-    }
+    /**
+     * Creates a secret key from the provided raw bytes.
+     *
+     * @param rawBytes The raw byte array to create the key from.
+     * @return A [SecretKey] created from the provided raw bytes.
+     */
+    fun generateKeyFromRawBytes(rawBytes: ByteArray): SecretKey
 }

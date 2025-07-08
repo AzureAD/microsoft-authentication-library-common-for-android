@@ -22,42 +22,60 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto.key;
 
+import com.microsoft.identity.common.java.exception.ClientException;
+
+import org.jetbrains.annotations.NotNull;
+
+import javax.crypto.SecretKey;
+
 import lombok.NonNull;
 
-public abstract class AES256KeyLoader extends AbstractSecretKeyLoader {
-    private static final String TAG = AES256KeyLoader.class.getSimpleName();
-
-    /**
-     * Key size
-     */
-    private static final int KEY_SIZE = 256;
-
-    /**
-     * Key spec algorithm.
-     */
-    public static final String AES_ALGORITHM = "AES";
-
+/**
+ * For loading an AES-256 key from a provided rawbytes array.
+ */
+public class PredefinedKeyProvider implements ISecretKeyProvider {
     /**
      * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
      * Java AES/CBC/PKCS5Padding is default(!) algorithm name, thus PKCS5 here
      * probably doing PKCS7. We decide to go with Java default string.
      */
-    private static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";
+    private static final String CIPHER_TRANSFORMATION = "AES/CBC/PKCS5Padding";
 
-    @Override
-    @NonNull
-    public String getKeySpecAlgorithm() {
-        return AES_ALGORITHM;
+    /**
+     * Indicate that the token item is encrypted with the user provided key.
+     */
+    public static final String USER_PROVIDED_KEY_IDENTIFIER = "U001";
+
+    private final String mAlias;
+    private final SecretKey mKey;
+
+    public PredefinedKeyProvider(@NonNull final String alias,
+                                 final byte[] rawBytes) {
+        mAlias = alias;
+        mKey = AES256SecretKeyGenerator.INSTANCE.generateKeyFromRawBytes(rawBytes);
     }
 
+    @NotNull
     @Override
-    @NonNull
-    public String getCipherAlgorithm(){
-        return CIPHER_ALGORITHM;
+    public String getAlias() {
+        return mAlias;
     }
 
+    @NotNull
     @Override
-    protected int getKeySize() {
-        return KEY_SIZE;
+    public String getKeyTypeIdentifier() {
+        return USER_PROVIDED_KEY_IDENTIFIER;
+    }
+
+    @NotNull
+    @Override
+    public SecretKey getKey() {
+        return mKey;
+    }
+
+    @NotNull
+    @Override
+    public String getCipherTransformation() {
+        return CIPHER_TRANSFORMATION;
     }
 }

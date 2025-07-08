@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.jwt;
 
+import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.exception.ClientException;
 
 import java.security.cert.CertificateEncodingException;
@@ -39,5 +40,7 @@ public interface IJwtRequestSigner {
      * @param jwtRequestBody JWT payload
      * @return Return signed JWT string (encodedJwtHeader.encodedJwtBody.Signature(encodedJwtHeader, encodedJwtBody))
      */
-    @NonNull String getSignedJwt(@NonNull final JwtRequestBody jwtRequestBody) throws ClientException, CertificateEncodingException;
+    @NonNull
+    String getSignedJwt(@NonNull final JwtRequestBody jwtRequestBody,
+                        @NonNull final Authority authority) throws ClientException, CertificateEncodingException;
 }
