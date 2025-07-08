@@ -22,49 +22,53 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
+import com.microsoft.identity.common.java.crypto.key.AES256SecretKeyGenerator;
 import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
 import com.microsoft.identity.common.java.exception.ClientException;
 
-import java.util.ArrayList;
-import java.util.List;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
+
+import javax.crypto.SecretKey;
+
 import lombok.NonNull;
 
-public class MockStorageEncryptionManager extends StorageEncryptionManager {
+public class MockAES256KeyProvider implements ISecretKeyProvider {
+    public static String DEFAULT_MOCK_KEY_IDENTIFIER = "MOCK_ID";
+    public static String MOCK_ALIAS = "MOCK_ALIAS";
 
-    private final ISecretKeyProvider mEncryptKey;
-    private final List<ISecretKeyProvider> mDecryptKey;
+    private final SecretKey mKey;
+    private final String mKeyIdentifier;
 
-    MockStorageEncryptionManager(@NonNull final byte[] iv,
-                                 @Nullable final ISecretKeyProvider key) throws ClientException {
-        this(iv,
-                key,
-                new ArrayList<ISecretKeyProvider>() {{
-                    add(key);
-                }});
+    public MockAES256KeyProvider() throws ClientException {
+        mKey = AES256SecretKeyGenerator.INSTANCE.generateRandomKey();
+        mKeyIdentifier = DEFAULT_MOCK_KEY_IDENTIFIER;
     }
 
-    MockStorageEncryptionManager(@NonNull final byte[] iv,
-                                 @Nullable final ISecretKeyProvider encryptKey,
-                                 @Nullable final List<ISecretKeyProvider> decryptKey) throws ClientException {
-        super(new IVGenerator() {
-            @Override
-            public byte[] generate() {
-                return iv.clone();
-            }
-        });
-        mEncryptKey = encryptKey;
-        mDecryptKey = decryptKey;
+    public MockAES256KeyProvider(@NonNull final byte[] secretKey,
+                                 @NonNull final String keyIdentifier){
+        mKey = AES256SecretKeyGenerator.INSTANCE.generateKeyFromRawBytes(secretKey);
+        mKeyIdentifier = keyIdentifier;
     }
 
     @Override
-    public @NonNull ISecretKeyProvider getKeyProviderForEncryption() throws ClientException {
-        return mEncryptKey;
+    public @NonNull String getAlias() {
+        return MOCK_ALIAS;
     }
 
     @Override
-    public @NonNull List<ISecretKeyProvider> getKeyProviderForDecryption(@NonNull byte[] cipherText) throws ClientException {
-        return mDecryptKey;
+    public @NonNull SecretKey getKey() {
+        return mKey;
+    }
+
+    @Override
+    public @NonNull String getKeyTypeIdentifier() {
+        return mKeyIdentifier;
+    }
+
+    @NotNull
+    @Override
+    public String getCipherTransformation() {
+        return "AES/CBC/PKCS5Padding";
     }
 }

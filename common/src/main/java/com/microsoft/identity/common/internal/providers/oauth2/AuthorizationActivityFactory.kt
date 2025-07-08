@@ -34,6 +34,7 @@ import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoo
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters
 import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter
 import com.microsoft.identity.common.internal.util.ProcessUtil
+import com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.UTID
 import com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT
 import com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration
@@ -130,6 +131,9 @@ object AuthorizationActivityFactory {
             }
             if (parameters.sourceLibraryVersion != null) {
                 putExtra(VERSION, parameters.sourceLibraryVersion)
+            }
+            if (parameters.utid != null) {
+                putExtra(UTID, parameters.utid)
             }
         }
         return intent

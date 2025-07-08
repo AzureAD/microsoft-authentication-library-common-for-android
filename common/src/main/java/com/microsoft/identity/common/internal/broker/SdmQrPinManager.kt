@@ -23,7 +23,9 @@
 package com.microsoft.identity.common.internal.broker
 
 import com.microsoft.identity.common.internal.broker.IRestrictionsManager.BrokerRestrictionsManagerKeys.PREFERRED_AUTH_CONFIG
+import com.microsoft.identity.common.internal.broker.IRestrictionsManager.BrokerRestrictionsManagerKeys.SDM_SUPPRESS_CAMERA_CONSENT
 import com.microsoft.identity.common.internal.broker.IRestrictionsManager.BrokerRestrictionsManagerKeys.SUPPRESS_CAMERA_CONSENT
+import com.microsoft.identity.common.internal.broker.IRestrictionsManager.BrokerRestrictionsManagerKeys.buildMultiValueRequest
 import com.microsoft.identity.common.logging.Logger
 
 /**
@@ -80,11 +82,15 @@ object SdmQrPinManager {
         val methodTag = "$TAG:isCameraConsentSuppressed"
         val defaultValue = false
         restrictionsManager?.let { manager ->
-            return manager.getBoolean(
-                key = SUPPRESS_CAMERA_CONSENT,
-                brokerAppPackageName = authenticatorPackageName,
-                defaultValue = defaultValue
+            val multiValueRequest = buildMultiValueRequest(
+                booleanKeys = setOf(SUPPRESS_CAMERA_CONSENT, SDM_SUPPRESS_CAMERA_CONSENT)
             )
+            val values = manager.getMultiValues(
+                brokerAppPackageName = authenticatorPackageName,
+                bundleOfKeys = multiValueRequest
+            )
+            return values.getBoolean(SUPPRESS_CAMERA_CONSENT, defaultValue) ||
+                    values.getBoolean(SDM_SUPPRESS_CAMERA_CONSENT, defaultValue)
         } ?: run {
             Logger.warn(methodTag, "Broker restrictions manager is not initialized.")
             return defaultValue

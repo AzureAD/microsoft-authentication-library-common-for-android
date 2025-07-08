@@ -20,45 +20,14 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.crypto;
+package com.microsoft.identity.common.java.interfaces
 
-import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
-import com.microsoft.identity.common.java.exception.ClientException;
-
-import javax.crypto.SecretKey;
-
-import lombok.NonNull;
-
-public class MockAES256KeyLoader extends AES256KeyLoader {
-    public static String DEFAULT_MOCK_KEY_IDENTIFIER = "MOCK_ID";
-    public static String MOCK_ALIAS = "MOCK_ALIAS";
-
-    private final SecretKey mKey;
-    private final String mKeyIdentifier;
-
-    public MockAES256KeyLoader() throws ClientException {
-        mKey = generateRandomKey();
-        mKeyIdentifier = DEFAULT_MOCK_KEY_IDENTIFIER;
-    }
-
-    public MockAES256KeyLoader(@NonNull final byte[] secretKey,
-                               @NonNull final String keyIdentifier){
-        mKey = generateKeyFromRawBytes(secretKey);
-        mKeyIdentifier = keyIdentifier;
-    }
-
-    @Override
-    public @NonNull String getAlias() {
-        return MOCK_ALIAS;
-    }
-
-    @Override
-    public @NonNull SecretKey getKey() {
-        return mKey;
-    }
-
-    @Override
-    public @NonNull String getKeyTypeIdentifier() {
-        return mKeyIdentifier;
-    }
+/**
+ * Consumer of commons needs to implement [ITenantInfoProvider] interface
+ * and set it using CommonTenantInfoProvider.initializeCommonTenantInfoProvider(@NonNull tenantInfoProvider: ITenantInfoProvider)
+ * to provide tenantInfo holder to common module.
+ */
+interface ITenantInfoProvider {
+    // Returns the home tenant ID for the account with given username.
+    fun getHomeTenantId(username: String): String?
 }

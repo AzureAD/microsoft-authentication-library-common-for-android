@@ -20,46 +20,40 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.crypto.key;
+package com.microsoft.identity.common.java.crypto;
+
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
+import com.microsoft.identity.common.java.exception.ClientException;
+
+import org.jetbrains.annotations.NotNull;
 
 import javax.crypto.SecretKey;
 
 import lombok.NonNull;
 
-/**
- * For loading an AES-256 key from a provided rawbytes array.
- */
-public class PredefinedKeyLoader extends AES256KeyLoader {
+public class MockAES256KeyProviderWithGetKeyError implements ISecretKeyProvider {
+    public static String FAIL_TO_LOAD_KEY_ERROR = "FAIL_TO_LOAD_KEY_ERROR";
+    public static String MOCK_KEY_IDENTIFIER = "MOCK_ERROR_ID";
+    public static String MOCK_ERROR = "MOCK_ERROR";
 
-    /**
-     * Indicate that the token item is encrypted with the user provided key.
-     */
-    public static final String USER_PROVIDED_KEY_IDENTIFIER = "U001";
-
-    private final String mAlias;
-    private final SecretKey mKey;
-
-    public PredefinedKeyLoader(@NonNull final String alias,
-                               @NonNull final byte[] rawBytes) {
-        mAlias = alias;
-        mKey = generateKeyFromRawBytes(rawBytes);
+    @Override
+    public @NonNull String getAlias() {
+        return MOCK_ERROR;
     }
 
     @Override
-    @NonNull
-    public String getAlias() {
-        return mAlias;
+    public @NonNull SecretKey getKey() throws ClientException {
+        throw new ClientException(FAIL_TO_LOAD_KEY_ERROR);
     }
 
     @Override
-    @NonNull
-    public SecretKey getKey() {
-        return mKey;
+    public @NonNull String getKeyTypeIdentifier() {
+        return MOCK_KEY_IDENTIFIER;
     }
 
+    @NotNull
     @Override
-    @NonNull
-    public String getKeyTypeIdentifier() {
-        return USER_PROVIDED_KEY_IDENTIFIER;
+    public String getCipherTransformation() {
+        return "AES/CBC/PKCS5Padding";
     }
 }

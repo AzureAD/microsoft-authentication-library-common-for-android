@@ -22,6 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -46,40 +56,32 @@ import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
-import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
-import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
-import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
-import com.microsoft.identity.common.internal.ui.webview.ProcessUtil;
-import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
-import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
+import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
+import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
+import com.microsoft.identity.common.internal.ui.webview.ProcessUtil;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
-import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.util.ClientExtraSku;
 import com.microsoft.identity.common.logging.Logger;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Arrays;
+import java.util.HashMap;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
-import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
-import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
+import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.UTID;
 
 import io.opentelemetry.api.trace.SpanContext;
 
@@ -115,6 +117,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private boolean webViewZoomControlsEnabled;
 
     private boolean webViewZoomEnabled;
+
+    private String mUtid;
 
     private final CameraPermissionRequestHandler mCameraPermissionRequestHandler = new CameraPermissionRequestHandler(this);
 
@@ -206,6 +210,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedJavascript);
         outState.putBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         outState.putBoolean(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
+        outState.putString(UTID, mUtid);
     }
 
     @Override
@@ -223,6 +228,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mPostPageLoadedJavascript = state.getString(POST_PAGE_LOADED_URL);
         webViewZoomEnabled = state.getBoolean(WEB_VIEW_ZOOM_ENABLED, true);
         webViewZoomControlsEnabled = state.getBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
+        mUtid = state.getString(UTID);
     }
 
     @Nullable
@@ -260,7 +266,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     }
                 },
                 mRedirectUri,
-                getSwitchBrowserCoordinator().getSwitchBrowserRequestHandler()
+                getSwitchBrowserCoordinator().getSwitchBrowserRequestHandler(),
+                mUtid
         );
         setUpWebView(view, mAADWebViewClient);
         mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
