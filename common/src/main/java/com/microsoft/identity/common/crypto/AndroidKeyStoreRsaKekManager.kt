@@ -36,6 +36,7 @@ import java.security.KeyPair
 import java.security.spec.AlgorithmParameterSpec
 import javax.crypto.SecretKey
 
+
 /**
  * Implementation of [IKekManager] that uses Android KeyStore system with RSA key pairs
  * for key encryption key (KEK) management.
@@ -53,33 +54,16 @@ import javax.crypto.SecretKey
 class AndroidKeyStoreRsaKekManager @JvmOverloads constructor(
     private val keyAlias: String,
     context: Context,
-    private val cryptoParameterSpecFactory: CryptoParameterSpecFactory = CryptoParameterSpecFactory(
-        context,
-        keyAlias
-    )
+    private val cryptoParameterSpecFactory: CryptoParameterSpecFactory =
+        CryptoParameterSpecFactory(context, keyAlias)
 ) : IKekManager {
 
     companion object {
         private val TAG: String = AndroidKeyStoreRsaKekManager::class.java.simpleName
 
-        /**
-         * Algorithm used to generate the RSA wrapping key.
-         * RSA is used for asymmetric key wrapping operations where the public key
-         * encrypts (wraps) the data key and the private key decrypts (unwraps) it.
-         */
-        private const val KEK_ALGORITHM = "RSA"
     }
 
-    /**
-     * Returns the primary cipher transformation to be used for cryptographic operations.
-     *
-     *
-     * The transformation string specifies the algorithm, mode, and padding in the format
-     * "algorithm/mode/padding" (e.g., "RSA/ECB/PKCS1Padding").
-     *
-     * @return The cipher transformation string for cryptographic operations
-     */
-    override val cipherTransformation: String = getMainCipherSpec().transformation
+
 
     /**
      * Checks if a key encryption key (KEK) exists in the Android KeyStore for the specified alias.
@@ -111,13 +95,7 @@ class AndroidKeyStoreRsaKekManager @JvmOverloads constructor(
     override fun unwrapKey(wrappedSecretKey: ByteArray, secretKeyAlgorithm: String): SecretKey {
         val methodTag = "$TAG:unwrapKey"
 
-        val span = OTelUtility.createSpanFromParent(
-            SpanName.KeyPairUnWrap.name,
-            SpanExtension.current().spanContext
-        )
-        // Attempt to read the key pair from the Android KeyStore
         val keyPair = AndroidKeyStoreUtil.readKey(keyAlias) ?: run {
-            // If no key pair exists, we can't proceed with unwrapping
             val error = ClientException(
                 ClientException.KEY_LOAD_FAILURE,
                 "No existing keypair found for alias: $keyAlias"
@@ -125,50 +103,19 @@ class AndroidKeyStoreRsaKekManager @JvmOverloads constructor(
             Logger.error(methodTag, error.message, error)
             throw error
         }
-        // If we have a key pair, proceed to unwrap the key using available cipher specs
-        val specs = cryptoParameterSpecFactory.getPrioritizedCipherParameterSpecs()
-        val failures = mutableListOf<Throwable>()
-        try {
-            SpanExtension.makeCurrentSpan(span).use { _ ->
-                // Try each spec in order of priority
-                for ((params, transformation) in specs) {
-                    try {
-                        // Attempt to unwrap the key using the current spec
-                        val unwrappedKey = AndroidKeyStoreUtil.unwrap(
-                            wrappedSecretKey,
-                            secretKeyAlgorithm,
-                            keyPair,
-                            transformation,
-                            params
-                        )
-                        span.setAttribute(
-                            AttributeName.key_pair_unwrap_transformation.name,
-                            transformation
-                        )
-                        span.setStatus(StatusCode.OK)
-                        return unwrappedKey
-                    } catch (throwable: Throwable) {
-                        // Continue to the next spec if this one fails
-                        Logger.warn(methodTag, "Failed to unwrap key with spec: $transformation")
-                        failures.add(throwable)
-                    }
-                }
-                // If we reach here, all attempts to unwrap the key have failed
-                failures.forEach { exception ->
-                    Logger.error(methodTag, "Unwrap failure with: ${exception.message}", exception)
-                }
-                val finalError = failures.lastOrNull() ?: ClientException(
-                    ClientException.UNKNOWN_CRYPTO_ERROR,
-                    "No specs available to attempt key unwrapping."
+        return executeWithFallbacks(
+            specs = cryptoParameterSpecFactory.getPrioritizedCipherParameterSpecs(),
+            spanName = SpanName.KeyPairUnWrap.name,
+            operation = { cipherParameterSpec ->
+                AndroidKeyStoreUtil.unwrap(
+                    wrappedSecretKey,
+                    secretKeyAlgorithm,
+                    keyPair,
+                    cipherParameterSpec.transformation,
+                    cipherParameterSpec.algorithmParameterSpec
                 )
-                span.setStatus(StatusCode.ERROR)
-                span.recordException(finalError)
-                throw ExceptionAdapter.clientExceptionFromException(finalError)
-
             }
-        } finally {
-            span.end() // Span is ended only once, after all attempts
-        }
+        )
     }
 
     /**
@@ -190,12 +137,12 @@ class AndroidKeyStoreRsaKekManager @JvmOverloads constructor(
             Logger.info(methodTag, "No existing keypair found for alias. Generating a new keypair.")
             keyPair = generateKeyPair()
         }
-
+        val cipherParamsSpec = cryptoParameterSpecFactory.getPrioritizedCipherParameterSpecs().first()
         return AndroidKeyStoreUtil.wrap(
             keyToWrap,
             keyPair,
-            getMainCipherSpec().transformation,
-            getMainCipherSpec().algorithmParameterSpecs
+            cipherParamsSpec.transformation,
+            cipherParamsSpec.algorithmParameterSpec
         )
     }
 
@@ -215,116 +162,75 @@ class AndroidKeyStoreRsaKekManager @JvmOverloads constructor(
      */
     @Throws(ClientException::class)
     private fun generateKeyPair(): KeyPair {
-        val methodTag = "$TAG:generateKeyPair"
-        val span = OTelUtility.createSpanFromParent(
-            SpanName.KeyPairGeneration.name,
-            SpanExtension.current().spanContext
+        return executeWithFallbacks(
+            specs = cryptoParameterSpecFactory.getPrioritizedKeyGenParameterSpecs(),
+            spanName = SpanName.KeyPairGeneration.name,
+            operation = { keyGenParameterSpec ->
+                val keypairGenStartTime = System.currentTimeMillis()
+                val keyPair = AndroidKeyStoreUtil.generateKeyPair(
+                    keyGenParameterSpec.algorithm,
+                    keyGenParameterSpec.algorithmParameterSpec
+                )
+                val elapsedTime = System.currentTimeMillis() - keypairGenStartTime
+                SpanExtension.current().setAttribute(AttributeName.elapsed_time_keypair_generation.name, elapsedTime)
+                return@executeWithFallbacks keyPair
+            }
         )
+    }
 
-        val specs = cryptoParameterSpecFactory.getPrioritizedKeyGenParameterSpecs()
+    /**
+     * Executes a cryptographic operation with a fallback mechanism, iterating through a list of
+     * specifications until the operation succeeds.
+     *
+     * This generic function is designed to handle operations that might fail with certain
+     * configurations, providing resilience by attempting multiple alternatives. It also integrates
+     * with OpenTelemetry to trace the execution and log relevant information for monitoring.
+     *
+     * @param T The type of the specification object.
+     * @param R The return type of the cryptographic operation.
+     * @param specs A list of specifications to try in order.
+     * @param spanName The name for the OpenTelemetry span that will trace the operation.
+     * @param operation A lambda function that takes a spec and performs the cryptographic operation, returning the result.
+     * @return The result of the successful cryptographic operation.
+     * @throws ClientException if all attempts fail.
+     */
+    private fun <T, R> executeWithFallbacks(
+        specs: List<T>,
+        spanName: String,
+        operation: (T) -> R
+    ): R {
+        val methodTag = "$TAG:executeWithFallbacks"
+        val span = OTelUtility.createSpanFromParent(spanName, SpanExtension.current().spanContext)
         val failures = mutableListOf<Throwable>()
+
         try {
             SpanExtension.makeCurrentSpan(span).use { _ ->
-                // Try each spec in order of priority
-                for ((keyGenParameterSpec, description) in specs) {
+                for (spec in specs) {
                     try {
-                        val keyPair = attemptKeyPairGeneration(keyGenParameterSpec)
-                        span.setAttribute(
-                            AttributeName.key_pair_gen_successful_method.name,
-                            description
-                        )
-                        Logger.info(
-                            methodTag,
-                            "Successfully generated key pair using: $description"
-                        )
+                        val result = operation(spec)
                         span.setStatus(StatusCode.OK)
-                        return keyPair
+                        //Logger.info(methodTag, "Successfully executed ${spanName} with spec: ${spec.getDescription()}")
+                        return result
                     } catch (throwable: Throwable) {
-                        // Log the failure but continue to the next spec
-                        Logger.warn(methodTag, "Failed to generate keypair with spec: $description")
-                        throwable.message?.let {
-                            span.setAttribute(AttributeName.keypair_gen_exception.name, it)
-                        }
+                        Logger.warn(methodTag, "Failed to execute $spanName with")
                         failures.add(throwable)
                     }
                 }
 
-                // If we reach here, all attempts to unwrap the key have failed
+                // If we reach here, all attempts have failed
                 failures.forEach { exception ->
-                    Logger.error(
-                        methodTag,
-                        "KeyPair generation fail with: ${exception.message}",
-                        exception
-                    )
+                    Logger.error(methodTag, "Operation failed with: ${exception.message}", exception)
                 }
                 val finalError = failures.lastOrNull() ?: ClientException(
                     ClientException.UNKNOWN_CRYPTO_ERROR,
-                    "Failed to generate key pair after trying all available specs."
+                    "Operation failed after trying all available specs."
                 )
                 span.setStatus(StatusCode.ERROR)
                 span.recordException(finalError)
                 throw ExceptionAdapter.clientExceptionFromException(finalError)
             }
         } finally {
-            span.end() // Span is ended only once, after all attempts
+            span.end()
         }
-    }
-
-    /**
-     * Attempts to generate a key pair using the provided algorithm parameter specification.
-     *
-     *
-     * This method records the time taken for key generation for performance monitoring.
-     *
-     * @param keyPairGenSpec The algorithm parameter specification for key generation
-     * @return The generated KeyPair
-     * @throws ClientException if key generation fails
-     */
-    @Throws(ClientException::class)
-    private fun attemptKeyPairGeneration(keyPairGenSpec: AlgorithmParameterSpec): KeyPair {
-        val keypairGenStartTime = System.currentTimeMillis()
-        val keyPair = AndroidKeyStoreUtil.generateKeyPair(KEK_ALGORITHM, keyPairGenSpec)
-        recordKeyGenerationTime(keypairGenStartTime)
-        return keyPair
-    }
-
-    /**
-     * Records the elapsed time for key pair generation in the current span
-     * for performance monitoring and diagnostics.
-     *
-     * @param keypairGenStartTime The timestamp when the key generation process started
-     */
-    private fun recordKeyGenerationTime(keypairGenStartTime: Long) {
-        val elapsedTime = System.currentTimeMillis() - keypairGenStartTime
-        SpanExtension.current()
-            .setAttribute(AttributeName.elapsed_time_keypair_generation.name, elapsedTime)
-    }
-
-    /**
-     * Retrieves the main cipher specification to be used for cryptographic operations.
-     *
-     * This method returns the highest priority cipher specification from the available
-     * specifications provided by the crypto parameter spec factory. The main cipher spec
-     * is used for key wrapping operations.
-     *
-     * @return The highest priority CipherSpec to use for operations
-     * @throws ClientException if no cipher specifications are available
-     */
-    private fun getMainCipherSpec(): CipherSpec {
-        val methodTag = "$TAG:getMainCipherSpec"
-        val specs = cryptoParameterSpecFactory.getPrioritizedCipherParameterSpecs()
-        if (specs.isEmpty()) {
-            // This should never happen, there should always be at least one spec
-            Logger.error(
-                methodTag,
-                "No cipher specifications available for key wrapping.",
-                null
-            )
-            throw ClientException(
-                ClientException.NO_SUCH_ALGORITHM,
-                "No cipher specifications available for key wrapping."
-            )
-        }
-        return specs[0]
     }
 }

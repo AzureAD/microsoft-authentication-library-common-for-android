@@ -24,13 +24,31 @@ package com.microsoft.identity.common.crypto
 
 import java.security.spec.AlgorithmParameterSpec
 
+
+interface CryptoSpec{
+    val algorithmParameterSpec: AlgorithmParameterSpec?
+}
+
 /**
- * Represents a cipher specification that includes the algorithm parameters and transformation.
+ * Data class to hold cipher parameter specifications.
  *
- * @property algorithmParameterSpecs The algorithm parameter specifications, or null if not applicable.
- * @property transformation The transformation string for the cipher.
+ * @property algorithmParameterSpec The algorithm parameter specification (can be null).
+ * @property transformation The transformation string (e.g., "RSA/ECB/PKCS1Padding").
  */
 data class CipherSpec(
-    val algorithmParameterSpecs: AlgorithmParameterSpec?,
-    val transformation: String
-)
+    override val algorithmParameterSpec: AlgorithmParameterSpec?,
+    val transformation: String,
+) : CryptoSpec
+
+/**
+ * Data class to hold key generation parameter specifications.
+ *
+ * @property algorithmParameterSpec The key generation parameter specification.
+ * @property description A descriptive string for the specification.
+ */
+data class KeyGenSpec(
+    val description: String,
+    val algorithm: String,
+    override val algorithmParameterSpec: AlgorithmParameterSpec
+) : CryptoSpec
+
