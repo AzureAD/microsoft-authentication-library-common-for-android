@@ -136,6 +136,7 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
     }
 
     // Exposed for testing only.
+    @VisibleForTesting
     /* package */ void clearKeyFromCache() {
         sKeyCacheMap.remove(mFilePath);
     }
