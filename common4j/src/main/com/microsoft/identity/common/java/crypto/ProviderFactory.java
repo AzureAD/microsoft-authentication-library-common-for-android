@@ -62,9 +62,9 @@ public class ProviderFactory {
                                    @Nullable final Provider provider) throws ClientException {
         try {
             if (provider != null) {
-                return Cipher.getInstance(algorithm, provider);
+                return Cipher.getInstance(algorithm, provider); // CodeQL [SM05136] Used to decrypt SK, and the algorithm used is defined by ESTS.
             }
-            return Cipher.getInstance(algorithm);
+            return Cipher.getInstance(algorithm); // CodeQL [SM05136] Used to decrypt SK, and the algorithm used is defined by ESTS.
         } catch (final NoSuchAlgorithmException e) {
             throw new ClientException(ClientException.NO_SUCH_ALGORITHM, e.getMessage(), e);
         } catch (final NoSuchPaddingException e) {

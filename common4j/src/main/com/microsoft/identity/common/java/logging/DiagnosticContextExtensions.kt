@@ -20,44 +20,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.crypto.key;
+package com.microsoft.identity.common.java.logging
 
-import lombok.NonNull;
+import com.microsoft.identity.common.java.AuthenticationConstants
+import com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT
 
-public abstract class AES256KeyLoader extends AbstractSecretKeyLoader {
-    private static final String TAG = AES256KeyLoader.class.getSimpleName();
-
-    /**
-     * Key size
-     */
-    private static final int KEY_SIZE = 256;
-
-    /**
-     * Key spec algorithm.
-     */
-    public static final String AES_ALGORITHM = "AES";
-
-    /**
-     * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
-     * Java AES/CBC/PKCS5Padding is default(!) algorithm name, thus PKCS5 here
-     * probably doing PKCS7. We decide to go with Java default string.
-     */
-    private static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";
-
-    @Override
-    @NonNull
-    public String getKeySpecAlgorithm() {
-        return AES_ALGORITHM;
+/**
+ * Extension function to set up the [DiagnosticContext] with correlation ID, SDK type, and SDK version.
+ * @return An [AutoCloseable] that clears the context when closed.
+ */
+fun DiagnosticContext.withInitializedContext(
+    correlationId: String,
+    sdkType: String,
+    sdkVersion: String
+): AutoCloseable {
+    val requestContext = RequestContext().apply {
+        put(DiagnosticContext.CORRELATION_ID, correlationId)
+        put(PRODUCT, sdkType)
+        put(AuthenticationConstants.SdkPlatformFields.VERSION, sdkVersion)
     }
-
-    @Override
-    @NonNull
-    public String getCipherAlgorithm(){
-        return CIPHER_ALGORITHM;
-    }
-
-    @Override
-    protected int getKeySize() {
-        return KEY_SIZE;
+    setRequestContext(requestContext)
+    return AutoCloseable {
+        clear()
     }
 }

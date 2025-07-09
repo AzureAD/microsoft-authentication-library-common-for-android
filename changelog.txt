@@ -1,5 +1,7 @@
 vNext
 ----------
+- [MINOR] Replace AbstractSecretKeyLoader with ISecretKeyProvider (#2666)
+- [MINOR] Update IP phone app teams signature constants to use SHA-512 format (#2700)
 
 Version 21.4.0
 ----------

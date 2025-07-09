@@ -20,30 +20,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.shadows;
+package com.microsoft.identity.common.java.jwt
 
-import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
-import com.microsoft.identity.common.java.crypto.key.PredefinedKeyProvider;
-import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
-
-import org.robolectric.annotation.Implements;
-
-import java.util.ArrayList;
-import java.util.List;
-
-@Implements(AndroidAuthSdkStorageEncryptionManager.class)
-public class ShadowAndroidSdkStorageEncryptionManager {
-
-    final byte[] encryptionKey = new byte[]{22, 78, -69, -66, 84, -65, 119, -9, -34, -80, 60, 67, -12, -117, 86, -47, -84, -24, -18, 121, 70, 32, -110, 51, -93, -10, -93, -110, 124, -68, -42, -119};
-    final ISecretKeyProvider mUserDefinedKey = new PredefinedKeyProvider("MOCK_ALIAS", encryptionKey);
-
-    public ISecretKeyProvider getKeyLoaderForEncryption() {
-        return mUserDefinedKey;
-    }
-
-    public List<ISecretKeyProvider> getKeyLoaderForDecryption(byte[] cipherText) {
-        return new ArrayList<ISecretKeyProvider>() {{
-            add(mUserDefinedKey);
-        }};
-    }
+object JwtKeyUseTypes {
+    const val RESOURCE_ACCOUNT: String = "resource_account"
 }

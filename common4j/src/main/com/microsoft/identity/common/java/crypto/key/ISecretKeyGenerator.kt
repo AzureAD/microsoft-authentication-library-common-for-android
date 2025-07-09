@@ -20,45 +20,32 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.crypto;
+package com.microsoft.identity.common.java.crypto.key
 
-import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
-import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException
+import javax.crypto.SecretKey
 
-import javax.crypto.SecretKey;
+/**
+ * Interface for secret key generation.
+ * Implementations of this interface provide functionality to generate cryptographic
+ * secret keys either randomly or from raw byte arrays.
+ */
+interface ISecretKeyGenerator {
+    /**
+     * Generates a cryptographically secure random secret key.
+     *
+     * @return A randomly generated [SecretKey] instance.
+     * @throws ClientException If an error occurs during key generation,
+     *                        such as when the algorithm is not available.
+     */
+    @Throws(ClientException::class)
+    fun generateRandomKey(): SecretKey
 
-import lombok.NonNull;
-
-public class MockAES256KeyLoader extends AES256KeyLoader {
-    public static String DEFAULT_MOCK_KEY_IDENTIFIER = "MOCK_ID";
-    public static String MOCK_ALIAS = "MOCK_ALIAS";
-
-    private final SecretKey mKey;
-    private final String mKeyIdentifier;
-
-    public MockAES256KeyLoader() throws ClientException {
-        mKey = generateRandomKey();
-        mKeyIdentifier = DEFAULT_MOCK_KEY_IDENTIFIER;
-    }
-
-    public MockAES256KeyLoader(@NonNull final byte[] secretKey,
-                               @NonNull final String keyIdentifier){
-        mKey = generateKeyFromRawBytes(secretKey);
-        mKeyIdentifier = keyIdentifier;
-    }
-
-    @Override
-    public @NonNull String getAlias() {
-        return MOCK_ALIAS;
-    }
-
-    @Override
-    public @NonNull SecretKey getKey() {
-        return mKey;
-    }
-
-    @Override
-    public @NonNull String getKeyTypeIdentifier() {
-        return mKeyIdentifier;
-    }
+    /**
+     * Creates a secret key from the provided raw bytes.
+     *
+     * @param rawBytes The raw byte array to create the key from.
+     * @return A [SecretKey] created from the provided raw bytes.
+     */
+    fun generateKeyFromRawBytes(rawBytes: ByteArray): SecretKey
 }

@@ -23,9 +23,9 @@
 
 package com.microsoft.identity.common.internal.broker;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_DEBUG_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SHA512_DEBUG_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SHA512_RELEASE_SIGNATURE;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -124,7 +124,7 @@ public class PackageHelper {
             final Signature[] signatures = getSignatures(packageInfo);
             if (signatures != null && signatures.length > 0) {
                 final Signature signature = signatures[0];
-                MessageDigest md = MessageDigest.getInstance(useSha512 ? "SHA-512" : "SHA");
+                MessageDigest md = MessageDigest.getInstance(useSha512 ? "SHA-512" : "SHA"); // CodeQL [SM05136] MSAL still uses SHA-1 format in redirect url.
                 md.update(signature.toByteArray());
                 return Base64.encodeToString(md.digest(), Base64.NO_WRAP);
             }
@@ -293,9 +293,9 @@ public class PackageHelper {
 
         if (packageName.equals(IPPHONE_APP_PACKAGE_NAME) &&
                 isPackageInstalledAndEnabled(IPPHONE_APP_PACKAGE_NAME)) {
-            final String currentSignatureForTeamsApp = getSha1SignatureForPackage(IPPHONE_APP_PACKAGE_NAME);
-            if (IPPHONE_APP_SIGNATURE.equals(currentSignatureForTeamsApp) ||
-                    IPPHONE_APP_DEBUG_SIGNATURE.equals(currentSignatureForTeamsApp)) {
+            final String currentSignatureForTeamsApp = getSha512SignatureForPackage(IPPHONE_APP_PACKAGE_NAME);
+            if (IPPHONE_APP_SHA512_RELEASE_SIGNATURE.equals(currentSignatureForTeamsApp) ||
+                    IPPHONE_APP_SHA512_DEBUG_SIGNATURE.equals(currentSignatureForTeamsApp)) {
                 return true;
             }
         }
