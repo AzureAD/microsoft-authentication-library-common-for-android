@@ -31,6 +31,7 @@ import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 
 import androidx.annotation.RequiresApi;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
 import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
@@ -129,6 +130,7 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
 
     // Exposed for testing only.
     @Nullable
+    @VisibleForTesting
     /* package */ SecretKey getKeyFromCache() {
         return sKeyCacheMap.get(mFilePath);
     }
