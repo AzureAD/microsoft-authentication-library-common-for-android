@@ -183,7 +183,7 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
             return key;
         }
 
-        Logger.info(methodTag, "Key not in cache is empty, loading key from storage");
+        Logger.info(methodTag, "Key not in cache or cache is empty, loading key from storage");
         key = readSecretKeyFromStorage();
 
         // If key doesn't exist, generate a new one.
