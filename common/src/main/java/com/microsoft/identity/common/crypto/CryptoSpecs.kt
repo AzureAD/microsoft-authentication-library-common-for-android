@@ -37,8 +37,16 @@ interface CryptoSpec{
  */
 data class CipherSpec(
     override val algorithmParameterSpec: AlgorithmParameterSpec?,
-    val transformation: String,
-) : CryptoSpec
+    val algorithm: String,
+    val mode: String,
+    val padding: String,
+) : CryptoSpec {
+    val transformation = "$algorithm/$mode/$padding"
+
+    override fun toString(): String {
+        return "CipherSpec(transformation='$transformation')"
+    }
+}
 
 /**
  * Data class to hold key generation parameter specifications.
@@ -49,6 +57,11 @@ data class CipherSpec(
 data class KeyGenSpec(
     val description: String,
     val algorithm: String,
-    override val algorithmParameterSpec: AlgorithmParameterSpec
-) : CryptoSpec
+    val encryptionPadding : String,
+    override val algorithmParameterSpec: AlgorithmParameterSpec,
+    ) : CryptoSpec {
+    override fun toString(): String {
+        return "KeyGenSpec(description='$description', algorithm='$algorithm', encryptionPadding='$encryptionPadding')"
+    }
+}
 

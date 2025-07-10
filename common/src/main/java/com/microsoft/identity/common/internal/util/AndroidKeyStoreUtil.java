@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.util;
 
 import android.os.Build;
+import android.security.keystore.KeyInfo;
 import android.util.Log;
 
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
@@ -47,6 +49,10 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -480,6 +486,53 @@ public class AndroidKeyStoreUtil {
         );
 
         throw clientException;
+    }
+
+    public static synchronized @Nullable KeyInfo getKeyInfo(@NonNull final String alias) {
+        final String methodTag = TAG + ":getKeyInfo";
+        try {
+            final KeyStore keyStore = getKeyStore();
+            keyStore.load(null);
+
+            final PrivateKey privateKey = (PrivateKey) keyStore.getKey(alias, null);
+            final KeyFactory factory = KeyFactory.getInstance(privateKey.getAlgorithm(), ANDROID_KEY_STORE_TYPE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Logger.verbose(methodTag, "Getting KeyInfo for alias");
+                return factory.getKeySpec(privateKey, KeyInfo.class);
+            }
+        } catch (final Exception e) {
+            Logger.warn(methodTag, "Failed to get KeyInfo for alias, swallowing exception");
+        }
+        return null;
+    }
+
+    /**
+     * Returns a list of encryption paddings supported by the key pair.
+     *
+     * @param keyPair The key pair for which to get the encryption paddings.
+     * @return A list of encryption paddings supported by the key pair.
+     */
+    public static synchronized List<String> getEncryptionPaddings(@NonNull final KeyPair keyPair) {
+        final String methodTag = TAG + ":getEncryptionPaddings";
+        try {
+            final PrivateKey privateKey = keyPair.getPrivate();
+            final KeyFactory keyFactory = KeyFactory.getInstance(privateKey.getAlgorithm(), ANDROID_KEY_STORE_TYPE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                final KeyInfo keyInfo = keyFactory.getKeySpec(privateKey, KeyInfo.class);
+                final List<String> encryptionPaddings = new ArrayList<>();
+                // keyInfo.getEncryptionPaddings() returns a list of encryption paddings supported by the key.
+                // We remove the "Padding" suffix from each padding name to match the expected format.
+                for (final String padding : keyInfo.getEncryptionPaddings()) {
+                    encryptionPaddings.add(padding.replace("Padding", ""));
+                }
+                return encryptionPaddings;
+            } else {
+                Logger.warn(methodTag, "getKeyInfo is not supported on this Android version");
+            }
+        } catch (final Exception e) {
+            Logger.warn(methodTag, "Failed to get KeyInfo for alias, swallowing exception");
+        }
+        return Collections.emptyList();
     }
 
 }

@@ -76,13 +76,20 @@ class CryptoParameterSpecFactory(
 
     private companion object {
         private val TAG = CryptoParameterSpecFactory::class.java.simpleName
+        // Algorithm used for RSA key generation and encryption
+        private const val RSA_ALGORITHM = "RSA"
+        // Default key size for RSA keys
         private const val KEY_SIZE: Int = 2048
+        // Descriptive identifiers for different key generation specifications
         private const val MODERN_SPEC_WITH_PURPOSE_WRAP_KEY = "modern_spec_with_wrap_key"
         private const val MODERN_SPEC_WITHOUT_PURPOSE_WRAP_KEY = "modern_spec_without_wrap_key"
         private const val LEGACY_SPEC = "legacy_key_gen_spec"
-        private const val OAEP_TRANSFORMATION = "RSA/NONE/OAEPwithSHA-256andMGF1Padding"
-        private const val PKCS1_TRANSFORMATION = "RSA/ECB/PKCS1Padding"
-        private const val RSA_ALGORITHM = "RSA"
+        // Padding schemes and modes used in cipher operations
+        private const val PKCS1_PADDING = "PKCS1Padding"
+        private const val OAEP_PADDING_WITH_256MGF1 = "OAEPWithSHA-256AndMGF1Padding"
+        private const val MODE_ECB = "ECB"
+        private const val MODE_NONE = "NONE"
+        // OAEP parameter specification for RSA encryption
         private val OAEP_SPECS = OAEPParameterSpec(
             "SHA-256",  // main digest
             "MGF1",  // mask generation function
@@ -96,19 +103,23 @@ class CryptoParameterSpecFactory(
         flightsProvider.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY)
     private val keySpecWithoutPurposeKey =
         flightsProvider.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY)
-    private val keySpecWithOAEP =
+    private val supportsEncryptionPaddingRsaOaep =
         flightsProvider.isFlightEnabled(CommonFlight.ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING)
 
 
     // Cipher parameter specifications
     private val pkcs1CipherSpec = CipherSpec(
         algorithmParameterSpec = null,
-        transformation = PKCS1_TRANSFORMATION,
+        algorithm = RSA_ALGORITHM,
+        mode = MODE_ECB,
+        padding = PKCS1_PADDING
     )
 
     private val oaepCipherSpec = CipherSpec(
         algorithmParameterSpec = OAEP_SPECS,
-        transformation = OAEP_TRANSFORMATION,
+        algorithm = RSA_ALGORITHM,
+        mode = MODE_NONE,
+        padding = OAEP_PADDING_WITH_256MGF1,
     )
 
     // Key generation parameter specifications
@@ -120,6 +131,7 @@ class CryptoParameterSpecFactory(
                     KeyProperties.PURPOSE_WRAP_KEY
         ),
         description = MODERN_SPEC_WITH_PURPOSE_WRAP_KEY,
+        encryptionPadding = getEncryptionPaddings(),
         algorithm = RSA_ALGORITHM
     )
 
@@ -130,12 +142,14 @@ class CryptoParameterSpecFactory(
                     KeyProperties.PURPOSE_DECRYPT
         ),
         description = MODERN_SPEC_WITHOUT_PURPOSE_WRAP_KEY,
+        encryptionPadding = getEncryptionPaddings(),
         algorithm = RSA_ALGORITHM
     )
 
     private val keyGenParamSpecLegacy = KeyGenSpec(
         algorithmParameterSpec = getLegacyKeyGenParamSpec(),
         description = LEGACY_SPEC,
+        encryptionPadding = PKCS1_PADDING,
         algorithm = RSA_ALGORITHM
     )
 
@@ -181,25 +195,11 @@ class CryptoParameterSpecFactory(
      */
     @RequiresApi(api = Build.VERSION_CODES.M)
     private fun createKeyGenParameterSpec(purposes: Int): AlgorithmParameterSpec {
-        val methodTag = "$TAG:createKeyGenParameterSpec"
-
-        val builder = KeyGenParameterSpec.Builder(keyAlias, purposes)
+        return KeyGenParameterSpec.Builder(keyAlias, purposes)
             .setKeySize(KEY_SIZE)
-
-        return when {
-            keySpecWithOAEP -> {
-                Logger.info(methodTag, "Using OAEP padding with SHA-256 and SHA-1 digests")
-                builder
-                    .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA1)
-                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
-            }
-            else -> {
-                Logger.info(methodTag, "Using PKCS1 padding with SHA-256 and SHA-512 digests")
-                builder
-                    .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
-                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
-            }
-        }.build()
+            .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
+           .setEncryptionPaddings(getEncryptionPaddings())
+           .build()
     }
 
     init {
@@ -209,8 +209,17 @@ class CryptoParameterSpecFactory(
             "Initialized with keyAlias: $keyAlias, API level: ${Build.VERSION.SDK_INT}, " +
                     "With flight flags - PurposeWrapKey: $keySpecWithPurposeKey, " +
                     "WithoutPurposeKey: $keySpecWithoutPurposeKey, " +
-                    "WithOAEP: $keySpecWithOAEP"
+                    "WithOAEP: $supportsEncryptionPaddingRsaOaep"
         )
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun getEncryptionPaddings(): String {
+        return if (supportsEncryptionPaddingRsaOaep) {
+            KeyProperties.ENCRYPTION_PADDING_RSA_OAEP
+        } else {
+            KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
+        }
     }
 
     /**
@@ -227,7 +236,7 @@ class CryptoParameterSpecFactory(
         val methodTag = "$TAG:getPrioritizedCipherParameterSpecs"
         val specs = mutableListOf<CipherSpec>()
         // Add OAEP padding spec first (if enabled) as it provides stronger security
-        if (keySpecWithOAEP) {
+        if (supportsEncryptionPaddingRsaOaep) {
             specs.add(oaepCipherSpec)
         }
         // Always include legacy PKCS1 padding as a fallback for compatibility
@@ -273,5 +282,13 @@ class CryptoParameterSpecFactory(
 
         Logger.info(methodTag, "Options: ${specs.joinToString { it.description }}")
         return specs
+    }
+
+    /**
+     * Returns the PKCS1 cipher specification.
+     *
+     */
+    fun getPkcs1CipherSpec(): CipherSpec {
+        return pkcs1CipherSpec
     }
 }

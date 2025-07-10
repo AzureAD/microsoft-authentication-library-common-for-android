@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.crypto
 
 import com.microsoft.identity.common.java.exception.ClientException
+import java.security.KeyPair
 import javax.crypto.SecretKey
 
 /**
@@ -31,14 +32,6 @@ import javax.crypto.SecretKey
  * Implementations can handle different algorithms and API versions.
  */
 interface IKekManager {
-    /**
-     * Gets the appropriate cipher transformation to use with the generated keys.
-     * The transformation string specifies the algorithm, mode, and padding to be
-     * used for encryption/decryption operations.
-     *
-     * @return The cipher transformation string in the format "algorithm/mode/padding"
-     */
-    val cipherTransformation: String
 
     /**
      * Wraps (encrypts) a secret key using the Key Encryption Key managed by this interface.
@@ -64,16 +57,6 @@ interface IKekManager {
      * or insufficient permissions
      */
     @Throws(ClientException::class)
-    fun unwrapKey(wrappedSecretKey: ByteArray, secretKeyAlgorithm: String): SecretKey
+    fun unwrapKey(keyPair: KeyPair, wrappedSecretKey: ByteArray, secretKeyAlgorithm: String): SecretKey
 
-    /**
-     * Checks if the Key Encryption Key exists and is accessible.
-     * This can be used to verify if a KEK is available before attempting operations.
-     *
-     * @return true if the KEK exists and is accessible, false otherwise
-     * @throws ClientException If checking for key existence fails due to
-     * security framework errors or insufficient permissions
-     */
-    @Throws(ClientException::class)
-    fun kekExists(): Boolean
 }

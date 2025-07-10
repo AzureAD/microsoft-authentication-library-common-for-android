@@ -31,6 +31,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
+import com.microsoft.identity.common.java.crypto.key.AES256SecretKeyGenerator;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.FileUtil;
 
@@ -132,7 +133,7 @@ public class AndroidWrappedKeyProviderTest {
 
     @Test
     public void testReadKeyDirectly() throws ClientException {
-        final AndroidWrappedKeyProvider keyProvider = initkeyProviderWithKeyEntry();
+        final NewAndroidWrappedKeyProvider keyProvider = initkeyProviderWithKeyEntry();
         final SecretKey secretKey = keyProvider.getKey();
         final SecretKey storedSecretKey = keyProvider.readSecretKeyFromStorage();
 
@@ -254,7 +255,7 @@ public class AndroidWrappedKeyProviderTest {
      */
     @Test
     public void testLoadDeletedKeyStoreKey() throws ClientException {
-        final AndroidWrappedKeyProvider keyProvider = initkeyProviderWithKeyEntry();
+        final NewAndroidWrappedKeyProvider keyProvider = initkeyProviderWithKeyEntry();
 
         AndroidKeyStoreUtil.deleteKey(MOCK_KEY_ALIAS);
 
@@ -265,7 +266,7 @@ public class AndroidWrappedKeyProviderTest {
 
     @Test
     public void testLoadDeletedKeyFile() throws ClientException {
-        final AndroidWrappedKeyProvider keyProvider = initkeyProviderWithKeyEntry();
+        final NewAndroidWrappedKeyProvider keyProvider = initkeyProviderWithKeyEntry();
 
         FileUtil.deleteFile(getKeyFile());
 
@@ -291,7 +292,7 @@ public class AndroidWrappedKeyProviderTest {
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
         // Assume AES key was created elsewhere
-        SecretKey aesKey = new AES256SecretKeyGenerator().generateRandomKey();
+        SecretKey aesKey = AES256SecretKeyGenerator.INSTANCE.generateRandomKey();
 
         // Use OAEPParameterSpec with SHA-256 as main digest but SHA-1 for MGF1
         OAEPParameterSpec oaepParams = new OAEPParameterSpec(
@@ -314,9 +315,9 @@ public class AndroidWrappedKeyProviderTest {
     }
 
 
-    private NewAndroidWrappedKeyProvider initKeyLoaderWithKeyEntry() throws ClientException {
-        final NewAndroidWrappedKeyProvider keyLoader = new NewAndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
-        final SecretKey key = keyLoader.getKey();
+    private NewAndroidWrappedKeyProvider initkeyProviderWithKeyEntry() throws ClientException {
+        final NewAndroidWrappedKeyProvider keyProvider = new NewAndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
+        final SecretKey key = keyProvider.getKey();
         Assert.assertNotNull(key);
         Assert.assertNotNull(keyProvider.getKeyCache().getData());
         return keyProvider;

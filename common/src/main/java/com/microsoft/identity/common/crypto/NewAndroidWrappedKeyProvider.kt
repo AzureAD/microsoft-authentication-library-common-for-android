@@ -33,6 +33,7 @@ import com.microsoft.identity.common.java.util.CachedData
 import com.microsoft.identity.common.java.util.FileUtil
 import com.microsoft.identity.common.logging.Logger
 import java.io.File
+import java.security.KeyPair
 import javax.crypto.SecretKey
 
 /**
@@ -112,11 +113,14 @@ class NewAndroidWrappedKeyProvider @JvmOverloads constructor(
     fun readSecretKeyFromStorage(): SecretKey? {
         val methodTag = "$TAG:readSecretKeyFromStorage"
         try {
-            if (!mKekManager.kekExists()) {
+            // Check if the KeyPair exists in the AndroidKeyStore.
+            val keyPair = AndroidKeyStoreUtil.readKey(alias) ?: run {
                 Logger.info(methodTag, "key does not exist in keystore")
                 deleteSecretKeyFromStorage()
                 return null
             }
+
+            // Check if the key file exists.
             val wrappedSecretKey = FileUtil.readFromFile(keyFile, KEY_FILE_SIZE) ?: run {
                 Logger.warn(methodTag, "Key file is empty")
                 // Do not delete the KeyStoreKeyPair even if the key file is empty. This caused credential cache
@@ -126,14 +130,8 @@ class NewAndroidWrappedKeyProvider @JvmOverloads constructor(
                 keyCache.clear()
                 return null
             }
-            val keyAlgorithm = FileUtil.readStringFromFile(keyAlgorithmFile) ?: run {
-                Logger.warn(
-                    methodTag, "Key algorithm file is empty, " +
-                            "using SecretKeyGenerator to get the key algorithm"
-                )
-                AES256SecretKeyGenerator.AES_ALGORITHM
-            }
-            val key = mKekManager.unwrapKey(wrappedSecretKey, keyAlgorithm)
+
+            val key = mKekManager.unwrapKey(keyPair, wrappedSecretKey, "AES")
             Logger.info(
                 methodTag,
                 "Key is loaded with thumbprint: " + KeyUtil.getKeyThumbPrint(key)
@@ -206,7 +204,7 @@ class NewAndroidWrappedKeyProvider @JvmOverloads constructor(
         )
 
     override val cipherTransformation: String
-        get() = mKekManager.cipherTransformation
+        get() = "AES/CBC/PKCS5Padding"
 
     override val keyTypeIdentifier: String
         get() = WRAPPED_KEY_KEY_IDENTIFIER
