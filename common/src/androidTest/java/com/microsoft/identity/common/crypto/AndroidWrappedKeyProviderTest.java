@@ -133,7 +133,7 @@ public class AndroidWrappedKeyProviderTest {
 
     @Test
     public void testReadKeyDirectly() throws ClientException {
-        final NewAndroidWrappedKeyProvider keyProvider = initkeyProviderWithKeyEntry();
+        final OAEPAndroidWrappedKeyProvider keyProvider = initkeyProviderWithKeyEntry();
         final SecretKey secretKey = keyProvider.getKey();
         final SecretKey storedSecretKey = keyProvider.readSecretKeyFromStorage();
 
@@ -255,7 +255,7 @@ public class AndroidWrappedKeyProviderTest {
      */
     @Test
     public void testLoadDeletedKeyStoreKey() throws ClientException {
-        final NewAndroidWrappedKeyProvider keyProvider = initkeyProviderWithKeyEntry();
+        final OAEPAndroidWrappedKeyProvider keyProvider = initkeyProviderWithKeyEntry();
 
         AndroidKeyStoreUtil.deleteKey(MOCK_KEY_ALIAS);
 
@@ -266,7 +266,7 @@ public class AndroidWrappedKeyProviderTest {
 
     @Test
     public void testLoadDeletedKeyFile() throws ClientException {
-        final NewAndroidWrappedKeyProvider keyProvider = initkeyProviderWithKeyEntry();
+        final OAEPAndroidWrappedKeyProvider keyProvider = initkeyProviderWithKeyEntry();
 
         FileUtil.deleteFile(getKeyFile());
 
@@ -315,8 +315,8 @@ public class AndroidWrappedKeyProviderTest {
     }
 
 
-    private NewAndroidWrappedKeyProvider initkeyProviderWithKeyEntry() throws ClientException {
-        final NewAndroidWrappedKeyProvider keyProvider = new NewAndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
+    private OAEPAndroidWrappedKeyProvider initkeyProviderWithKeyEntry() throws ClientException {
+        final OAEPAndroidWrappedKeyProvider keyProvider = new OAEPAndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
         final SecretKey key = keyProvider.getKey();
         Assert.assertNotNull(key);
         Assert.assertNotNull(keyProvider.getKeyCache().getData());
@@ -324,14 +324,14 @@ public class AndroidWrappedKeyProviderTest {
     }
 
     /**
-     * Helper method to generate a random key using NewAndroidWrappedKeyProvider.
+     * Helper method to generate a random key using OAEPAndroidWrappedKeyProvider.
      * This method is used to substitute the call to keyLoader.generateRandomKey() in tests.
      *
-     * @param keyLoader The NewAndroidWrappedKeyProvider instance to use
+     * @param keyLoader The OAEPAndroidWrappedKeyProvider instance to use
      * @return The generated SecretKey
      * @throws ClientException if key generation fails
      */
-    private SecretKey generateRandomKey(NewAndroidWrappedKeyProvider keyLoader) throws ClientException {
+    private SecretKey generateRandomKey(OAEPAndroidWrappedKeyProvider keyLoader) throws ClientException {
         // Get the key will generate a new one if it doesn't exist
         SecretKey key = keyLoader.getKey();
 

@@ -25,15 +25,30 @@ package com.microsoft.identity.common.crypto
 import java.security.spec.AlgorithmParameterSpec
 
 
-interface CryptoSpec{
+/**
+ * A base interface for cryptographic specifications.
+ *
+ * This interface provides a common structure for different types of cryptographic parameter
+ * specifications used throughout the application. It ensures that any specification class
+ * includes an [AlgorithmParameterSpec], which is a standard Java Security class for specifying
+ * algorithm parameters.
+ */
+interface CryptoSpec {
     val algorithmParameterSpec: AlgorithmParameterSpec?
 }
 
 /**
- * Data class to hold cipher parameter specifications.
+ * Data class to hold cipher parameter specifications for encryption and decryption operations.
  *
- * @property algorithmParameterSpec The algorithm parameter specification (can be null).
- * @property transformation The transformation string (e.g., "RSA/ECB/PKCS1Padding").
+ * This class defines the components needed to create a [javax.crypto.Cipher] instance,
+ * including the algorithm, block mode, and padding scheme. It also constructs the full
+ * transformation string required by the Cipher API.
+ *
+ * @property algorithmParameterSpec The algorithm parameter specification (e.g., [javax.crypto.spec.OAEPParameterSpec]),
+ * which can be null if not required by the transformation.
+ * @property algorithm The name of the cryptographic algorithm (e.g., "RSA").
+ * @property mode The block cipher mode of operation (e.g., "ECB", "CBC").
+ * @property padding The padding scheme used for the cipher (e.g., "PKCS1Padding", "OAEPwithSHA-256andMGF1Padding").
  */
 data class CipherSpec(
     override val algorithmParameterSpec: AlgorithmParameterSpec?,
@@ -41,6 +56,10 @@ data class CipherSpec(
     val mode: String,
     val padding: String,
 ) : CryptoSpec {
+    /**
+     * The full transformation string (e.g., "RSA/ECB/PKCS1Padding") used to initialize a
+     * [javax.crypto.Cipher] instance.
+     */
     val transformation = "$algorithm/$mode/$padding"
 
     override fun toString(): String {
@@ -49,19 +68,26 @@ data class CipherSpec(
 }
 
 /**
- * Data class to hold key generation parameter specifications.
+ * Data class to hold parameter specifications for cryptographic key generation.
  *
- * @property algorithmParameterSpec The key generation parameter specification.
- * @property description A descriptive string for the specification.
+ * This class encapsulates all the necessary information to generate a new cryptographic key pair,
+ * including a description for logging, the algorithm, the padding scheme to be associated with the key,
+ * and the detailed algorithm parameter specification.
+ *
+ * @property description A descriptive string for the specification, useful for logging and debugging.
+ * @property algorithm The key generation algorithm, typically "RSA".
+ * @property encryptionPadding The encryption padding scheme that the generated key will support
+ * (e.g., [android.security.keystore.KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1]).
+ * @property algorithmParameterSpec The detailed key generation parameter specification, such as
+ * [android.security.keystore.KeyGenParameterSpec] or [android.security.KeyPairGeneratorSpec].
  */
 data class KeyGenSpec(
     val description: String,
     val algorithm: String,
-    val encryptionPadding : String,
+    val encryptionPadding: String,
     override val algorithmParameterSpec: AlgorithmParameterSpec,
-    ) : CryptoSpec {
+) : CryptoSpec {
     override fun toString(): String {
         return "KeyGenSpec(description='$description', algorithm='$algorithm', encryptionPadding='$encryptionPadding')"
     }
 }
-

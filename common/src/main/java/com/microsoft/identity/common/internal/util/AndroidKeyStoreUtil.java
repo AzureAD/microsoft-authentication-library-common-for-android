@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.util;
 
 import android.os.Build;
 import android.security.keystore.KeyInfo;
-import android.util.Log;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -49,9 +48,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.spec.AlgorithmParameterSpec;
-import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -369,7 +366,6 @@ public class AndroidKeyStoreUtil {
         final Throwable exception;
         final String errCode;
         try {
-            Log.i(methodTag, "Wrap a key with algorithm: " + wrapAlgorithm);
             final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm);
             if (algorithmParameterSpec != null) {
                 wrapCipher.init(Cipher.WRAP_MODE, keyToWrap.getPublic(), algorithmParameterSpec);
@@ -419,7 +415,7 @@ public class AndroidKeyStoreUtil {
      * @param wrapAlgorithm        the algorithm used to wrap the key.
      * @return the unwrapped key.
      */
-    public static synchronized SecretKey unwrap(@NonNull final byte[] wrappedKeyBlob,
+    public static synchronized SecretKey unwrap(final byte[] wrappedKeyBlob,
                                                 @NonNull final String wrappedKeyAlgorithm,
                                                 @NonNull final KeyPair keyPairForUnwrapping,
                                                 @NonNull final String wrapAlgorithm,
@@ -428,10 +424,8 @@ public class AndroidKeyStoreUtil {
         final Throwable exception;
         final String errCode;
         try {
-            Log.i(methodTag, "unwrap a key with algorithm: " + wrapAlgorithm);
             //TODO: Once the new KeyProvider is fully implemented, we can remove this suppression.
             final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm); // CodeQL [SM05136] Used on AndroidWrappedKeyLoader, will be removed once the new KeyProvider is fully implemented.
-
             if (algorithmParameterSpec != null) {
                 wrapCipher.init(Cipher.UNWRAP_MODE, keyPairForUnwrapping.getPrivate(), algorithmParameterSpec);
             } else {
@@ -488,24 +482,6 @@ public class AndroidKeyStoreUtil {
         throw clientException;
     }
 
-    public static synchronized @Nullable KeyInfo getKeyInfo(@NonNull final String alias) {
-        final String methodTag = TAG + ":getKeyInfo";
-        try {
-            final KeyStore keyStore = getKeyStore();
-            keyStore.load(null);
-
-            final PrivateKey privateKey = (PrivateKey) keyStore.getKey(alias, null);
-            final KeyFactory factory = KeyFactory.getInstance(privateKey.getAlgorithm(), ANDROID_KEY_STORE_TYPE);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                Logger.verbose(methodTag, "Getting KeyInfo for alias");
-                return factory.getKeySpec(privateKey, KeyInfo.class);
-            }
-        } catch (final Exception e) {
-            Logger.warn(methodTag, "Failed to get KeyInfo for alias, swallowing exception");
-        }
-        return null;
-    }
-
     /**
      * Returns a list of encryption paddings supported by the key pair.
      *
@@ -534,5 +510,4 @@ public class AndroidKeyStoreUtil {
         }
         return Collections.emptyList();
     }
-
 }

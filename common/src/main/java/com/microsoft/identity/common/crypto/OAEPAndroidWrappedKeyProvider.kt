@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.crypto
 
 import android.content.Context
-import com.microsoft.identity.common.crypto.AndroidWrappedKeyLoaderFactory.WRAPPED_KEY_KEY_IDENTIFIER
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil
 import com.microsoft.identity.common.java.crypto.key.AES256SecretKeyGenerator
 import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider
@@ -33,7 +32,6 @@ import com.microsoft.identity.common.java.util.CachedData
 import com.microsoft.identity.common.java.util.FileUtil
 import com.microsoft.identity.common.logging.Logger
 import java.io.File
-import java.security.KeyPair
 import javax.crypto.SecretKey
 
 /**
@@ -43,7 +41,7 @@ import javax.crypto.SecretKey
  * Instead, the actual key that we use to encrypt/decrypt data is 'wrapped/encrypted' with the keystore key
  * before it get saved to the file.
  */
-class NewAndroidWrappedKeyProvider @JvmOverloads constructor(
+class OAEPAndroidWrappedKeyProvider @JvmOverloads constructor(
     override val alias: String,
     private val mFilePath: String,
     private val mContext: Context,
@@ -54,7 +52,7 @@ class NewAndroidWrappedKeyProvider @JvmOverloads constructor(
     // Exposed for testing only.
     val keyCache: CachedData<SecretKey?> = object : CachedData<SecretKey?>() {
         override fun getData(): SecretKey? {
-            if (AndroidWrappedKeyLoaderFactory.skipKeyInvalidationCheck) {
+            if (AndroidWrappedKeyProviderFactory.skipKeyInvalidationCheck) {
                 return super.getData()
             }
             if ((!AndroidKeyStoreUtil.canLoadKey(alias) || !keyFile.exists())) {
@@ -96,7 +94,7 @@ class NewAndroidWrappedKeyProvider @JvmOverloads constructor(
                     methodTag, "New key is generated with thumbprint: " +
                             KeyUtil.getKeyThumbPrint(newKey)
                 )
-                saveSecretKeyToStorage(newKey, newKey.algorithm)
+                saveSecretKeyToStorage(newKey)
                 keyCache.data = newKey
                 return newKey
             }
@@ -154,9 +152,7 @@ class NewAndroidWrappedKeyProvider @JvmOverloads constructor(
      */
     @Throws(ClientException::class)
     private fun saveSecretKeyToStorage(
-        unencryptedKey: SecretKey,
-        keyAlgorithm: String
-    ) {
+        unencryptedKey: SecretKey) {
         /*
          * !!WARNING!!
          * Multiple apps as of Today (1/4/2022) can still share a linux user id, by configuring
@@ -176,7 +172,6 @@ class NewAndroidWrappedKeyProvider @JvmOverloads constructor(
          */
         val keyWrapped = mKekManager.wrapKey(unencryptedKey)
         FileUtil.writeDataToFile(keyWrapped, keyFile)
-        FileUtil.writeStringToFile(keyAlgorithm, keyAlgorithmFile)
     }
 
     /**
@@ -207,10 +202,10 @@ class NewAndroidWrappedKeyProvider @JvmOverloads constructor(
         get() = "AES/CBC/PKCS5Padding"
 
     override val keyTypeIdentifier: String
-        get() = WRAPPED_KEY_KEY_IDENTIFIER
+        get() = "WRAPPED_KEY_KEY_IDENTIFIER"
 
     companion object {
-        private val TAG = NewAndroidWrappedKeyProvider::class.java.simpleName
+        private val TAG = OAEPAndroidWrappedKeyProvider::class.java.simpleName
 
         // Exposed for testing only.
         const val KEY_FILE_SIZE: Int = 1024

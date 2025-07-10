@@ -42,12 +42,12 @@ import javax.crypto.spec.PSource
 import javax.security.auth.x500.X500Principal
 
 /**
- * Factory class to create various cryptographic parameter specifications
- * for key generation and cipher operations.
+ * A factory for creating cryptographic parameter specifications for key generation and cipher operations.
  *
- * This class encapsulates the logic to determine which key generation and cipher specs
- * to use based on the Android API level and feature flags. It implements a fallback mechanism
- * to ensure compatibility across different Android versions and device implementations.
+ * This class encapsulates the logic for determining the appropriate key generation and cipher
+ * specifications based on the Android API level and configurable feature flags. It provides a
+ * fallback mechanism to ensure compatibility across different Android versions and device-specific
+ * hardware implementations.
  *
  * Key features:
  * - Creates appropriate key generation specifications based on Android API level
@@ -76,19 +76,24 @@ class CryptoParameterSpecFactory(
 
     private companion object {
         private val TAG = CryptoParameterSpecFactory::class.java.simpleName
+
         // Algorithm used for RSA key generation and encryption
         private const val RSA_ALGORITHM = "RSA"
+
         // Default key size for RSA keys
         private const val KEY_SIZE: Int = 2048
+
         // Descriptive identifiers for different key generation specifications
         private const val MODERN_SPEC_WITH_PURPOSE_WRAP_KEY = "modern_spec_with_wrap_key"
         private const val MODERN_SPEC_WITHOUT_PURPOSE_WRAP_KEY = "modern_spec_without_wrap_key"
         private const val LEGACY_SPEC = "legacy_key_gen_spec"
+
         // Padding schemes and modes used in cipher operations
         private const val PKCS1_PADDING = "PKCS1Padding"
-        private const val OAEP_PADDING_WITH_256MGF1 = "OAEPWithSHA-256AndMGF1Padding"
+        private const val OAEP_PADDING_WITH_256MGF1 = "OAEPwithSHA-256andMGF1Padding"
         private const val MODE_ECB = "ECB"
         private const val MODE_NONE = "NONE"
+
         // OAEP parameter specification for RSA encryption
         private val OAEP_SPECS = OAEPParameterSpec(
             "SHA-256",  // main digest
@@ -123,28 +128,32 @@ class CryptoParameterSpecFactory(
     )
 
     // Key generation parameter specifications
-    @RequiresApi(Build.VERSION_CODES.P)
-    private val keyGenParamSpecWithPurposeWrapKey = KeyGenSpec(
-        algorithmParameterSpec = createKeyGenParameterSpec(
-            KeyProperties.PURPOSE_ENCRYPT or
-                    KeyProperties.PURPOSE_DECRYPT or
-                    KeyProperties.PURPOSE_WRAP_KEY
-        ),
-        description = MODERN_SPEC_WITH_PURPOSE_WRAP_KEY,
-        encryptionPadding = getEncryptionPaddings(),
-        algorithm = RSA_ALGORITHM
-    )
+    @delegate:RequiresApi(Build.VERSION_CODES.P)
+    private val keyGenParamSpecWithPurposeWrapKey by lazy {
+        KeyGenSpec(
+            algorithmParameterSpec = createKeyGenParameterSpec(
+                KeyProperties.PURPOSE_ENCRYPT or
+                        KeyProperties.PURPOSE_DECRYPT or
+                        KeyProperties.PURPOSE_WRAP_KEY
+            ),
+            description = MODERN_SPEC_WITH_PURPOSE_WRAP_KEY,
+            encryptionPadding = getEncryptionPaddings(),
+            algorithm = RSA_ALGORITHM
+        )
+    }
 
-    @RequiresApi(Build.VERSION_CODES.M)
-    private val keyGenParamSpecWithoutPurposeWrapKey = KeyGenSpec(
-        algorithmParameterSpec = createKeyGenParameterSpec(
-            KeyProperties.PURPOSE_ENCRYPT or
-                    KeyProperties.PURPOSE_DECRYPT
-        ),
-        description = MODERN_SPEC_WITHOUT_PURPOSE_WRAP_KEY,
-        encryptionPadding = getEncryptionPaddings(),
-        algorithm = RSA_ALGORITHM
-    )
+    @delegate:RequiresApi(Build.VERSION_CODES.M)
+    private val keyGenParamSpecWithoutPurposeWrapKey by lazy {
+        KeyGenSpec(
+            algorithmParameterSpec = createKeyGenParameterSpec(
+                KeyProperties.PURPOSE_ENCRYPT or
+                        KeyProperties.PURPOSE_DECRYPT
+            ),
+            description = MODERN_SPEC_WITHOUT_PURPOSE_WRAP_KEY,
+            encryptionPadding = getEncryptionPaddings(),
+            algorithm = RSA_ALGORITHM
+        )
+    }
 
     private val keyGenParamSpecLegacy = KeyGenSpec(
         algorithmParameterSpec = getLegacyKeyGenParamSpec(),
@@ -198,8 +207,8 @@ class CryptoParameterSpecFactory(
         return KeyGenParameterSpec.Builder(keyAlias, purposes)
             .setKeySize(KEY_SIZE)
             .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
-           .setEncryptionPaddings(getEncryptionPaddings())
-           .build()
+            .setEncryptionPaddings(getEncryptionPaddings())
+            .build()
     }
 
     init {
@@ -234,14 +243,8 @@ class CryptoParameterSpecFactory(
      */
     fun getPrioritizedCipherParameterSpecs(): List<CipherSpec> {
         val methodTag = "$TAG:getPrioritizedCipherParameterSpecs"
-        val specs = mutableListOf<CipherSpec>()
-        // Add OAEP padding spec first (if enabled) as it provides stronger security
-        if (supportsEncryptionPaddingRsaOaep) {
-            specs.add(oaepCipherSpec)
-        }
-        // Always include legacy PKCS1 padding as a fallback for compatibility
-        specs.add(pkcs1CipherSpec)
-        Logger.info(methodTag, "Options: ${specs.joinToString { it.transformation }}")
+        val specs = listOf(oaepCipherSpec, pkcs1CipherSpec)
+        Logger.info(methodTag, "Ciphers: $specs")
         return specs
     }
 
@@ -281,7 +284,7 @@ class CryptoParameterSpecFactory(
         specs.add(keyGenParamSpecLegacy)
 
         Logger.info(methodTag, "Options: ${specs.joinToString { it.description }}")
-        return specs
+        return specs.toList()
     }
 
     /**

@@ -34,8 +34,7 @@ import com.microsoft.identity.common.java.flighting.CommonFlightsManager
  * specific loader implementation should be used, allowing for runtime switching between
  * different implementations without affecting client code.
  */
-object AndroidWrappedKeyLoaderFactory {
-    const val WRAPPED_KEY_KEY_IDENTIFIER: String = "A001"
+object AndroidWrappedKeyProviderFactory {
     var skipKeyInvalidationCheck: Boolean = false
     /**
      * Creates an appropriate wrapped key loader instance based on current feature flags.
@@ -49,7 +48,7 @@ object AndroidWrappedKeyLoaderFactory {
      * @param context The Android application context needed for file and security operations
      * @return An implementation of [ISecretKeyProvider] that can load the specified wrapped key
      */
-    fun createWrappedKeyLoader(
+    fun createWrappedKeyProvider(
         keyIdentifier: String,
         fileName: String,
         context: android.content.Context
@@ -60,7 +59,7 @@ object AndroidWrappedKeyLoaderFactory {
                 .isFlightEnabled(CommonFlight.ENABLE_NEW_ANDROID_WRAPPED_KEY_LOADER)
 
         return if (useNewAndroidWrappedKeyLoader) {
-            NewAndroidWrappedKeyProvider(
+            OAEPAndroidWrappedKeyProvider(
                 keyIdentifier,
                 fileName,
                 context
