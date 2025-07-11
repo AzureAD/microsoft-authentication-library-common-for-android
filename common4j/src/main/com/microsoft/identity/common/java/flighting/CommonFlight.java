@@ -127,9 +127,9 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING("EnableOAEPWithSHAAndMGF1Padding", true),
 
     /**
-     * Flight to enable the new Android wrapped key loader.
+     * Flight to enable the OAEP Android Wrapped Key Loader.
      */
-    ENABLE_NEW_ANDROID_WRAPPED_KEY_LOADER("EnableNewAndroidWrappedKeyLoader", true),
+    ENABLE_OAEP_ANDROID_WRAPPED_KEY_LOADER("EnableOaepAndroidWrappedKeyLoader", true),
 
     /**
      * Flight to enable handling the UI in edge to edge mode

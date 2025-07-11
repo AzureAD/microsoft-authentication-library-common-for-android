@@ -53,12 +53,12 @@ object AndroidWrappedKeyProviderFactory {
         fileName: String,
         context: android.content.Context
     ): ISecretKeyProvider {
-        val useNewAndroidWrappedKeyLoader =
+        val enableOaepAndroidWrappedKeyLoader =
             CommonFlightsManager
                 .getFlightsProvider()
-                .isFlightEnabled(CommonFlight.ENABLE_NEW_ANDROID_WRAPPED_KEY_LOADER)
+                .isFlightEnabled(CommonFlight.ENABLE_OAEP_ANDROID_WRAPPED_KEY_LOADER)
 
-        return if (useNewAndroidWrappedKeyLoader) {
+        return if (enableOaepAndroidWrappedKeyLoader) {
             OAEPAndroidWrappedKeyProvider(
                 keyIdentifier,
                 fileName,

@@ -501,6 +501,7 @@ public class AndroidKeyStoreUtil {
                 for (final String padding : keyInfo.getEncryptionPaddings()) {
                     encryptionPaddings.add(padding.replace("Padding", ""));
                 }
+                Logger.info(methodTag, "Supported encryption paddings: " + encryptionPaddings);
                 return encryptionPaddings;
             } else {
                 Logger.warn(methodTag, "getKeyInfo is not supported on this Android version");
