@@ -126,7 +126,7 @@ public class AndroidWrappedKeyProviderTest {
     @Test
     public void testGenerateKey() throws ClientException {
         final NewAndroidWrappedKeyProvider keyProvider = new NewAndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
-        final SecretKey secretKey = keyProvider.generateRandomKey();
+        final SecretKey secretKey = keyProvider.generateNewSecretKey();
 
         Assert.assertEquals(AES_ALGORITHM, secretKey.getAlgorithm());
     }
@@ -169,7 +169,7 @@ public class AndroidWrappedKeyProviderTest {
     public void testLoadKeyFromCorruptedFile_TruncatedExisingKey() throws ClientException {
         // Create a new Keystore-wrapped key.
         final NewAndroidWrappedKeyProvider keyProvider = new NewAndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
-        keyProvider.generateRandomKey();
+        keyProvider.generateNewSecretKey();
 
         final byte[] wrappedKey = FileUtil.readFromFile(getKeyFile(), NewAndroidWrappedKeyProvider.KEY_FILE_SIZE);
         Assert.assertNotNull(wrappedKey);
@@ -196,7 +196,7 @@ public class AndroidWrappedKeyProviderTest {
     public void testLoadKeyFromCorruptedFile_InjectGarbage() throws ClientException {
         // Create a new Keystore-wrapped key.
         final NewAndroidWrappedKeyProvider keyProvider = new NewAndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
-        keyProvider.generateRandomKey();
+        keyProvider.generateNewSecretKey();
 
         final byte[] wrappedKey = FileUtil.readFromFile(getKeyFile(), NewAndroidWrappedKeyProvider.KEY_FILE_SIZE);
         Assert.assertNotNull(wrappedKey);

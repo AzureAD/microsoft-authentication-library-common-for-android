@@ -59,7 +59,7 @@ object AndroidWrappedKeyProviderFactory {
                 .isFlightEnabled(CommonFlight.ENABLE_OAEP_ANDROID_WRAPPED_KEY_LOADER)
 
         return if (enableOaepAndroidWrappedKeyLoader) {
-            OAEPAndroidWrappedKeyProvider(
+            NewAndroidWrappedKeyProvider(
                 keyIdentifier,
                 fileName,
                 context
