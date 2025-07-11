@@ -134,7 +134,8 @@ class SwitchBrowserProtocolCoordinator(
             SwitchBrowserUriHelper.statesMatch(authorizationRequest, state)
             // Validate the state from auth request and redirect URL is the same
             val resumeUri = SwitchBrowserUriHelper.buildResumeUri(actionUri, state)
-            val headers = hashMapOf(AUTHORIZATION to code)
+            val authorizationHeaderValue = "Bearer $code"
+            val headers = hashMapOf(AUTHORIZATION to authorizationHeaderValue)
             onSuccessAction(resumeUri, headers)
             // Reset the challenge state after processing the resume action
             switchBrowserRequestHandler.resetChallengeState()
