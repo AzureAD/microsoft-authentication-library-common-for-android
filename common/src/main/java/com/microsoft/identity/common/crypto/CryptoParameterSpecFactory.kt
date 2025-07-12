@@ -24,22 +24,15 @@ package com.microsoft.identity.common.crypto
 
 import android.content.Context
 import android.os.Build
-import android.security.KeyPairGeneratorSpec
-import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import androidx.annotation.RequiresApi
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager.getFlightsProvider
 import com.microsoft.identity.common.java.flighting.IFlightsProvider
 import com.microsoft.identity.common.logging.Logger
-import java.math.BigInteger
-import java.security.spec.AlgorithmParameterSpec
 import java.security.spec.MGF1ParameterSpec
-import java.util.Calendar
-import java.util.Locale
 import javax.crypto.spec.OAEPParameterSpec
 import javax.crypto.spec.PSource
-import javax.security.auth.x500.X500Principal
 
 /**
  * A factory for creating cryptographic parameter specifications for key generation and cipher operations.
@@ -69,8 +62,8 @@ import javax.security.auth.x500.X500Principal
  * This factory helps navigate these limitations by providing appropriate fallback mechanisms.
  */
 class CryptoParameterSpecFactory(
-    private val context: Context,
-    private val keyAlias: String,
+    context: Context,
+    keyAlias: String,
     flightsProvider: IFlightsProvider = getFlightsProvider()
 ) {
 
@@ -108,12 +101,12 @@ class CryptoParameterSpecFactory(
         flightsProvider.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY)
     private val keySpecWithoutPurposeKey =
         flightsProvider.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY)
-    private val supportsEncryptionPaddingRsaOaep =
+    private val supportsKeyGenEncryptionPaddingRsaOaep =
         flightsProvider.isFlightEnabled(CommonFlight.ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING)
 
 
     // Cipher parameter specifications
-    private val pkcs1CipherSpec = CipherSpec(
+    val pkcs1CipherSpec = CipherSpec(
         algorithmParameterSpec = null,
         algorithm = RSA_ALGORITHM,
         mode = MODE_ECB,
@@ -127,89 +120,50 @@ class CryptoParameterSpecFactory(
         padding = OAEP_PADDING_WITH_256MGF1,
     )
 
-    // Key generation parameter specifications
-    @delegate:RequiresApi(Build.VERSION_CODES.P)
-    private val keyGenParamSpecWithPurposeWrapKey by lazy {
+
+    @RequiresApi(Build.VERSION_CODES.P)
+    private val keyGenParamSpecWithPurposeWrapKey =
         KeyGenSpec(
-            algorithmParameterSpec = createKeyGenParameterSpec(
-                KeyProperties.PURPOSE_ENCRYPT or
-                        KeyProperties.PURPOSE_DECRYPT or
-                        KeyProperties.PURPOSE_WRAP_KEY
+            keyAlias = keyAlias,
+            purposes = KeyProperties.PURPOSE_ENCRYPT or
+                    KeyProperties.PURPOSE_DECRYPT or
+                    KeyProperties.PURPOSE_WRAP_KEY,
+            keySize = KEY_SIZE,
+            digestAlgorithms = listOf(
+                KeyProperties.DIGEST_SHA256,
+                KeyProperties.DIGEST_SHA512
             ),
             description = MODERN_SPEC_WITH_PURPOSE_WRAP_KEY,
-            encryptionPadding = getEncryptionPaddings(),
+            encryptionPaddings = getEncryptionPaddings(),
             algorithm = RSA_ALGORITHM
         )
-    }
 
-    @delegate:RequiresApi(Build.VERSION_CODES.M)
-    private val keyGenParamSpecWithoutPurposeWrapKey by lazy {
+    @RequiresApi(Build.VERSION_CODES.M)
+    private val keyGenParamSpecWithoutPurposeWrapKey =
         KeyGenSpec(
-            algorithmParameterSpec = createKeyGenParameterSpec(
-                KeyProperties.PURPOSE_ENCRYPT or
-                        KeyProperties.PURPOSE_DECRYPT
+            keyAlias = keyAlias,
+            purposes = KeyProperties.PURPOSE_ENCRYPT or
+                    KeyProperties.PURPOSE_DECRYPT,
+            keySize = KEY_SIZE,
+            digestAlgorithms = listOf(
+                KeyProperties.DIGEST_SHA256,
+                KeyProperties.DIGEST_SHA512
             ),
             description = MODERN_SPEC_WITHOUT_PURPOSE_WRAP_KEY,
-            encryptionPadding = getEncryptionPaddings(),
+            encryptionPaddings = getEncryptionPaddings(),
             algorithm = RSA_ALGORITHM
         )
-    }
 
-    private val keyGenParamSpecLegacy = KeyGenSpec(
-        algorithmParameterSpec = getLegacyKeyGenParamSpec(),
+
+    private val keyGenParamSpecLegacy = LegacyKeyGenSpec(
+        context = context,
+        keyAlias = keyAlias,
+        keySize = KEY_SIZE,
         description = LEGACY_SPEC,
-        encryptionPadding = PKCS1_PADDING,
+        encryptionPaddings = listOf(PKCS1_PADDING),
         algorithm = RSA_ALGORITHM
     )
 
-    /**
-     * Generates a legacy algorithm parameter specification using KeyPairGeneratorSpec.
-     *
-     * This approach is used for API levels below 23 (Android M) or as a fallback
-     * when more modern specifications fail. It creates a self-signed certificate
-     * with a 100-year validity period.
-     *
-     * @return A [KeyPairGeneratorSpec] configured for the key alias and application context
-     */
-    private fun getLegacyKeyGenParamSpec(): AlgorithmParameterSpec {
-        // Generate a self-signed cert.
-        val certInfo = String.format(
-            Locale.ROOT, "CN=%s, OU=%s",
-            keyAlias,
-            context.packageName
-        )
-        val start = Calendar.getInstance()
-        val end = Calendar.getInstance()
-        val certValidYears = 100
-        end.add(Calendar.YEAR, certValidYears)
-
-        return KeyPairGeneratorSpec.Builder(context)
-            .setAlias(keyAlias)
-            .setSubject(X500Principal(certInfo))
-            .setSerialNumber(BigInteger.ONE)
-            .setStartDate(start.time)
-            .setEndDate(end.time)
-            .build()
-    }
-
-    /**
-     * Helper method to create an appropriate key generation parameter specification.
-     *
-     * This method configures the specification with the appropriate padding and digest
-     * algorithms based on feature flags. It supports both OAEP (stronger) and PKCS1
-     * (more compatible) padding schemes.
-     *
-     * @param purposes The key usage purposes (combinations of KeyProperties.PURPOSE_* constants)
-     * @return A [KeyGenParameterSpec] configured according to current settings
-     */
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    private fun createKeyGenParameterSpec(purposes: Int): AlgorithmParameterSpec {
-        return KeyGenParameterSpec.Builder(keyAlias, purposes)
-            .setKeySize(KEY_SIZE)
-            .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
-            .setEncryptionPaddings(getEncryptionPaddings())
-            .build()
-    }
 
     init {
         val methodTag = "$TAG:init"
@@ -218,17 +172,17 @@ class CryptoParameterSpecFactory(
             "Initialized with keyAlias: $keyAlias, API level: ${Build.VERSION.SDK_INT}, " +
                     "With flight flags - PurposeWrapKey: $keySpecWithPurposeKey, " +
                     "WithoutPurposeKey: $keySpecWithoutPurposeKey, " +
-                    "WithOAEP: $supportsEncryptionPaddingRsaOaep"
+                    "supportsKeyGenEncryptionPaddingRsaOaep: $supportsKeyGenEncryptionPaddingRsaOaep"
         )
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
-    private fun getEncryptionPaddings(): String {
-        return if (supportsEncryptionPaddingRsaOaep) {
-            KeyProperties.ENCRYPTION_PADDING_RSA_OAEP
-        } else {
-            KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
+
+    private fun getEncryptionPaddings(): List<String> {
+        val paddings = mutableListOf(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
+        if (supportsKeyGenEncryptionPaddingRsaOaep) {
+            paddings.add(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
         }
+        return paddings.toList()
     }
 
     /**
@@ -264,10 +218,10 @@ class CryptoParameterSpecFactory(
      *
      * @return List of [KeyGenSpec] objects ordered by priority (highest first)
      */
-    fun getPrioritizedKeyGenParameterSpecs(): List<KeyGenSpec> {
+    fun getPrioritizedKeyGenParameterSpecs(): List<IKeyGenSpec> {
         val methodTag = "$TAG:getPrioritizedKeyGenParameterSpecs"
 
-        val specs = mutableListOf<KeyGenSpec>()
+        val specs = mutableListOf<IKeyGenSpec>()
 
         // Add specs in order of preference
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && keySpecWithPurposeKey) {
@@ -285,13 +239,5 @@ class CryptoParameterSpecFactory(
 
         Logger.info(methodTag, "Options: ${specs.joinToString { it.description }}")
         return specs.toList()
-    }
-
-    /**
-     * Returns the PKCS1 cipher specification.
-     *
-     */
-    fun getPkcs1CipherSpec(): CipherSpec {
-        return pkcs1CipherSpec
     }
 }

@@ -23,12 +23,7 @@
 package com.microsoft.identity.common.crypto
 
 import android.content.Context
-import android.os.Build
-import android.security.KeyPairGeneratorSpec
-import android.security.keystore.KeyGenParameterSpec
-import android.security.keystore.KeyProperties
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.annotation.VisibleForTesting
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil
 import com.microsoft.identity.common.java.controllers.ExceptionAdapter
@@ -36,27 +31,19 @@ import com.microsoft.identity.common.java.crypto.key.AES256SecretKeyGenerator
 import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider
 import com.microsoft.identity.common.java.crypto.key.KeyUtil
 import com.microsoft.identity.common.java.exception.ClientException
-import com.microsoft.identity.common.java.flighting.CommonFlight
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager.getFlightsProvider
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.java.opentelemetry.SpanName
 import com.microsoft.identity.common.java.util.FileUtil
-import com.microsoft.identity.common.java.util.StringUtil
 import com.microsoft.identity.common.logging.Logger
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import io.opentelemetry.api.trace.StatusCode
 import java.io.File
-import java.math.BigInteger
 import java.security.KeyPair
-import java.security.spec.AlgorithmParameterSpec
-import java.util.Calendar
-import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 import javax.crypto.SecretKey
-import javax.security.auth.x500.X500Principal
 
 /**
  * This class doesn't really use the KeyStore-generated key directly.
@@ -237,179 +224,15 @@ class NewAndroidWrappedKeyProvider(
     }
 
 
-    /**
-     * Generate a new key pair wrapping key, based on API level uses different spec to generate
-     * the key pair.
-     * @return a key pair
-     */
-    @Throws(ClientException::class)
-    private fun generateNewKeyPair(): KeyPair {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            generateNewKeyPairAPI28AndAbove()
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            generateNewKeyPairAPI23AndAbove()
-        } else {
-            generateKeyPairWithLegacySpec()
-        }
-    }
 
-    /**
-     * Call this for API level >= 28. Starting level API 28 PURPOSE_WRAP_KEY is added. Based on flights
-     * this method may or may not use the PURPOSE_WRAP_KEY along with PURPOSE_ENCRYPT and PURPOSE_DECRYPT. The logic
-     * if (wrap key flight enabled) use all three purposes
-     * else if (new key gen flight enabled) use only encrypt and decrypt purposes
-     * else use legacy spec.
-     * @return key pair
-     */
-    @RequiresApi(Build.VERSION_CODES.P)
-    @Throws(
-        ClientException::class
-    )
-    private fun generateNewKeyPairAPI28AndAbove(): KeyPair {
-        return if (getFlightsProvider()
-                .isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY)
-        ) {
-            generateWrappingKeyPair_WithPurposeWrapKey()
-        } else if (getFlightsProvider()
-                .isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY)
-        ) {
-            generateWrappingKeyPair()
-        } else {
-            generateKeyPairWithLegacySpec()
-        }
-    }
 
-    /**
-     * Call this for API level >= 23. Based on flight new key gen spec is used else legacy which
-     * is deprecated starting API 23.
-     * @return key pair
-     */
-    @RequiresApi(Build.VERSION_CODES.M)
-    @Throws(
-        ClientException::class
-    )
-    private fun generateNewKeyPairAPI23AndAbove(): KeyPair {
-        return if (getFlightsProvider()
-                .isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY)
-        ) {
-            generateWrappingKeyPair()
-        } else {
-            generateKeyPairWithLegacySpec()
-        }
-    }
 
-    /**
-     * Generate a new key pair wrapping key based on legacy logic. Call this for API < 23 or as fallback
-     * until new key gen specs are stable.
-     * @return key pair generated with legacy spec
-     * @throws ClientException if there is an error generating the key pair.
-     */
-    @Throws(ClientException::class)
-    private fun generateKeyPairWithLegacySpec(): KeyPair {
-        val span = SpanExtension.current()
-        try {
-            val keyPairGenSpec =
-                legacySpecForKeyStoreKey
-            val keyPair = attemptKeyPairGeneration(keyPairGenSpec)
-            span.setAttribute(
-                AttributeName.key_pair_gen_successful_method.name,
-                "legacy_key_gen_spec"
-            )
-            return keyPair
-        } catch (e: Throwable) {
-            Logger.error(
-                TAG + ":generateKeyPairWithLegacySpec",
-                "Error generating keypair with legacy spec.",
-                e
-            )
-            throw ExceptionAdapter.clientExceptionFromException(e)
-        }
-    }
 
-    /**
-     * Generate a new key pair wrapping key, based on API level >= 28. This method uses new key gen spec
-     * with PURPOSE_WRAP_KEY. If this fails, it will fallback to generateWrappingKeyPair() which does not use
-     * PURPOSE_WRAP_KEY (still uses new key gen spec).
-     */
-    @RequiresApi(Build.VERSION_CODES.P)
-    @Throws(
-        ClientException::class
-    )
-    private fun generateWrappingKeyPair_WithPurposeWrapKey(): KeyPair {
-        val methodTag = TAG + ":generateWrappingKeyPair_WithPurposeWrapKey"
-        val span = SpanExtension.current()
-        try {
-            Logger.info(methodTag, "Generating new keypair with new spec with purpose_wrap_key")
-            val purposes =
-                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT or KeyProperties.PURPOSE_WRAP_KEY
-            val keyPairGenSpec = getSpecForWrappingKey(purposes)
-            val keyPair = attemptKeyPairGeneration(keyPairGenSpec)
-            span.setAttribute(
-                AttributeName.key_pair_gen_successful_method.name,
-                "new_key_gen_spec_with_wrap"
-            )
-            return keyPair
-        } catch (e: Throwable) {
-            Logger.error(
-                methodTag, "Error generating keypair with new spec with purpose_wrap_key." +
-                        "Attempting without purpose_wrap_key.", e
-            )
-            if (!StringUtil.isNullOrEmpty(e.message)) {
-                span.setAttribute(AttributeName.keypair_gen_exception.name, e.message)
-            }
-            return generateWrappingKeyPair()
-        }
-    }
 
-    /**
-     * Generate a new key pair wrapping key, based on API level >= 23. This method uses new key gen spec
-     * with purposes PURPOSE_ENCRYPT and PURPOSE_DECRYPT. If this fails, it will fallback to generateKeyPairWithLegacySpec()
-     * which uses olg key gen spec.
-     */
-    @RequiresApi(Build.VERSION_CODES.M)
-    @Throws(
-        ClientException::class
-    )
-    private fun generateWrappingKeyPair(): KeyPair {
-        val methodTag = TAG + ":generateWrappingKeyPair"
-        val span = SpanExtension.current()
-        try {
-            Logger.info(methodTag, "Generating new keypair with new spec without wrap key")
-            val purposes = KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-            val keyPairGenSpec = getSpecForWrappingKey(purposes)
-            val keyPair = attemptKeyPairGeneration(keyPairGenSpec)
-            span.setAttribute(
-                AttributeName.key_pair_gen_successful_method.name,
-                "new_key_gen_spec_without_wrap"
-            )
-            return keyPair
-        } catch (e: Throwable) {
-            Logger.error(
-                methodTag, "Error generating keypair with new spec." +
-                        "Attempting with legacy spec.", e
-            )
-            if (!StringUtil.isNullOrEmpty(e.message)) {
-                span.setAttribute(AttributeName.keypair_gen_exception.name, e.message)
-            }
-            return generateKeyPairWithLegacySpec()
-        }
-    }
 
-    @Throws(ClientException::class)
-    private fun attemptKeyPairGeneration(keyPairGenSpec: AlgorithmParameterSpec): KeyPair {
-        val keypairGenStartTime = System.currentTimeMillis()
-        val keyPair = AndroidKeyStoreUtil.generateKeyPair(
-            WRAP_KEY_ALGORITHM, keyPairGenSpec
-        )
-        recordKeyGenerationTime(keypairGenStartTime)
-        return keyPair
-    }
 
-    private fun recordKeyGenerationTime(keypairGenStartTime: Long) {
-        val elapsedTime = System.currentTimeMillis() - keypairGenStartTime
-        SpanExtension.current()
-            .setAttribute(AttributeName.elapsed_time_keypair_generation.name, elapsedTime)
-    }
+
+
 
     /**
      * Wipe all the data associated from this key.
@@ -422,64 +245,27 @@ class NewAndroidWrappedKeyProvider(
         sKeyCacheMap.remove(mFilePath)
     }
 
-    private val legacySpecForKeyStoreKey: AlgorithmParameterSpec
-        /**
-         * Generate a self-signed cert and derive an AlgorithmParameterSpec from that.
-         * This is for the key to be generated in [KeyStore] via [KeyPairGenerator]
-         * Note : This is now only for API level < 23 or as fallback.
-         *
-         * @return a [AlgorithmParameterSpec] for the keystore key (that we'll use to wrap the secret key).
-         */
-        get() {
-            // Generate a self-signed cert.
-            val certInfo = String.format(
-                Locale.ROOT, "CN=%s, OU=%s",
-                alias,
-                mContext.packageName
-            )
 
-            val start = Calendar.getInstance()
-            val end = Calendar.getInstance()
-            val certValidYears = 100
-            end.add(Calendar.YEAR, certValidYears)
-
-            return KeyPairGeneratorSpec.Builder(mContext)
-                .setAlias(alias)
-                .setSubject(X500Principal(certInfo))
-                .setSerialNumber(BigInteger.ONE)
-                .setStartDate(start.time)
-                .setEndDate(end.time)
-                .build()
-        }
-
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    private fun getSpecForWrappingKey(purposes: Int): AlgorithmParameterSpec {
-        return KeyGenParameterSpec.Builder(alias, purposes)
-            .setKeySize(2048)
-            .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
-            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
-            .build()
-    }
 
     private fun selectCompatibleCipherSpec(keyPair: KeyPair): CipherSpec {
         val methodTag = "$TAG:selectCompatibleCipherSpec"
         val supportedPaddings = AndroidKeyStoreUtil.getEncryptionPaddings(keyPair)
-        val availableSpecs = cryptoParameterSpecFactory.getPrioritizedCipherParameterSpecs()
+        val availableCipherSpecs = cryptoParameterSpecFactory.getPrioritizedCipherParameterSpecs()
         Logger.verbose(
             methodTag,
             "Supported paddings by the keyPair: $supportedPaddings" +
-                    ",Specs available in order of priority: $availableSpecs"
+                    ",Specs available in order of priority: $availableCipherSpecs"
         )
-        for (spec in availableSpecs) {
+        for (cipherSpec in availableCipherSpecs) {
             for (padding in supportedPaddings) {
-                if (spec.padding.contains(padding, ignoreCase = true)) {
-                    return spec
+                if (cipherSpec.padding.contains(padding, ignoreCase = true)) {
+                    return cipherSpec
                 }
             }
         }
         Logger.warn(methodTag, "No supported cipher specification found for wrapping the key.")
         // Fallback to PKCS#1 padding if no compatible spec is found, instead of throwing an error.
-        return cryptoParameterSpecFactory.getPkcs1CipherSpec()
+        return cryptoParameterSpecFactory.pkcs1CipherSpec
     }
 
 
@@ -554,15 +340,6 @@ class NewAndroidWrappedKeyProvider(
         @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
         var sSkipKeyInvalidationCheck: Boolean = false
 
-        /**
-         * Algorithm for key wrapping.
-         */
-        private const val WRAP_ALGORITHM = "RSA/ECB/PKCS1Padding"
-
-        /**
-         * Algorithm for the wrapping key itself.
-         */
-        private const val WRAP_KEY_ALGORITHM = "RSA"
 
         /**
          * Indicate that token item is encrypted with the key loaded in this class.

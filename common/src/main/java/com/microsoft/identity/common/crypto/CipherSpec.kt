@@ -25,17 +25,6 @@ package com.microsoft.identity.common.crypto
 import java.security.spec.AlgorithmParameterSpec
 
 
-/**
- * A base interface for cryptographic specifications.
- *
- * This interface provides a common structure for different types of cryptographic parameter
- * specifications used throughout the application. It ensures that any specification class
- * includes an [AlgorithmParameterSpec], which is a standard Java Security class for specifying
- * algorithm parameters.
- */
-interface CryptoSpec {
-    val algorithmParameterSpec: AlgorithmParameterSpec?
-}
 
 /**
  * Data class to hold cipher parameter specifications for encryption and decryption operations.
@@ -51,11 +40,11 @@ interface CryptoSpec {
  * @property padding The padding scheme used for the cipher (e.g., "PKCS1Padding", "OAEPwithSHA-256andMGF1Padding").
  */
 data class CipherSpec(
-    override val algorithmParameterSpec: AlgorithmParameterSpec?,
-    val algorithm: String,
-    val mode: String,
+    val algorithmParameterSpec: AlgorithmParameterSpec?,
+    private val algorithm: String,
+    private val mode: String,
     val padding: String,
-) : CryptoSpec {
+) {
     /**
      * The full transformation string (e.g., "RSA/ECB/PKCS1Padding") used to initialize a
      * [javax.crypto.Cipher] instance.
@@ -67,27 +56,3 @@ data class CipherSpec(
     }
 }
 
-/**
- * Data class to hold parameter specifications for cryptographic key generation.
- *
- * This class encapsulates all the necessary information to generate a new cryptographic key pair,
- * including a description for logging, the algorithm, the padding scheme to be associated with the key,
- * and the detailed algorithm parameter specification.
- *
- * @property description A descriptive string for the specification, useful for logging and debugging.
- * @property algorithm The key generation algorithm, typically "RSA".
- * @property encryptionPadding The encryption padding scheme that the generated key will support
- * (e.g., [android.security.keystore.KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1]).
- * @property algorithmParameterSpec The detailed key generation parameter specification, such as
- * [android.security.keystore.KeyGenParameterSpec] or [android.security.KeyPairGeneratorSpec].
- */
-data class KeyGenSpec(
-    val description: String,
-    val algorithm: String,
-    val encryptionPadding: String,
-    override val algorithmParameterSpec: AlgorithmParameterSpec,
-) : CryptoSpec {
-    override fun toString(): String {
-        return "KeyGenSpec(description='$description', algorithm='$algorithm', encryptionPadding='$encryptionPadding')"
-    }
-}
