@@ -23,14 +23,11 @@
 
 package com.microsoft.identity.common.internal.util;
 
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
@@ -39,14 +36,10 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
 
-import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -72,46 +65,59 @@ public class AndroidKeyStoreUtilTest {
     }
 
     @Test
-    public void testUnwrap_Success() throws Exception {
-        // Mock Cipher for successful unwrap
-        try (MockedStatic<Cipher> mockedCipher = Mockito.mockStatic(Cipher.class)) {
-            Cipher mockCipher = mock(Cipher.class);
-            when(mockCipher.unwrap(any(byte[].class), any(String.class), any(int.class)))
-                    .thenReturn(mSecretKey);
-            mockedCipher.when(() -> Cipher.getInstance(TEST_WRAP_ALGORITHM))
-                    .thenReturn(mockCipher);
+    public void testUnwrap_Success() throws ClientException {
+        // Test successful wrapping
+        final byte[] wrapped = AndroidKeyStoreUtil.wrap(
+                mSecretKey,
+                mKeyPair,
+                TEST_WRAP_ALGORITHM
+        );
 
-            // Test successful unwrap
-            SecretKey result = AndroidKeyStoreUtil.unwrap(
+        // Test successful unwrap
+        final SecretKey unwrapped = AndroidKeyStoreUtil.unwrap(
+                wrapped,
+                TEST_KEY_ALGORITHM,
+                mKeyPair,
+                TEST_WRAP_ALGORITHM
+        );
+
+        assertNotNull(unwrapped);
+        assertEquals(mSecretKey, unwrapped);
+    }
+
+    @Test
+    public void testUnwrap_NoSuchAlgorithm() {
+        try {
+            final byte[] wrapped = AndroidKeyStoreUtil.wrap(
+                    mSecretKey,
+                    mKeyPair,
+                    TEST_WRAP_ALGORITHM
+            );
+
+            final SecretKey secretKey = AndroidKeyStoreUtil.unwrap(
+                    wrapped,
+                    TEST_KEY_ALGORITHM,
+                    mKeyPair,
+                    "NoAlg"
+            );
+            fail("Should have thrown ClientException");
+        } catch (final ClientException e) {
+            assertEquals(NO_SUCH_ALGORITHM, e.getErrorCode());
+        }
+    }
+
+    @Test
+    public void testUnwrap_InvalidKey() {
+        try {
+            AndroidKeyStoreUtil.unwrap(
                     TEST_WRAPPED_KEY_BYTES,
                     TEST_KEY_ALGORITHM,
                     mKeyPair,
                     TEST_WRAP_ALGORITHM
             );
-
-            assertNotNull(result);
-            assertEquals(mSecretKey, result);
-            verify(mockCipher, times(1)).init(Cipher.UNWRAP_MODE, mKeyPair.getPrivate());
-        }
-    }
-
-    @Test
-    public void testUnwrap_NoSuchAlgorithm() throws Exception {
-        try (MockedStatic<Cipher> mockedCipher = Mockito.mockStatic(Cipher.class)) {
-            mockedCipher.when(() -> Cipher.getInstance(TEST_WRAP_ALGORITHM))
-                    .thenThrow(new NoSuchAlgorithmException("Test failure"));
-
-            try {
-                AndroidKeyStoreUtil.unwrap(
-                        TEST_WRAPPED_KEY_BYTES,
-                        TEST_KEY_ALGORITHM,
-                        mKeyPair,
-                        TEST_WRAP_ALGORITHM
-                );
-                fail("Should have thrown ClientException");
-            } catch (ClientException e) {
-                assertEquals("NO_SUCH_ALGORITHM", e.getErrorCode());
-            }
+            fail("Should have thrown ClientException");
+        } catch (final ClientException e) {
+            assertEquals(INVALID_KEY, e.getErrorCode());
         }
     }
 }
