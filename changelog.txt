@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Fix caching of secret key and add retries for InvalidKeyException during unwrap (#2659)
 - [MINOR] Replace AbstractSecretKeyLoader with ISecretKeyProvider (#2666)
 - [MINOR] Update IP phone app teams signature constants to use SHA-512 format (#2700)
 - [MINOR] Updating handling of ssl error received in Android WebView's onReceivedSslError callback (#2691)

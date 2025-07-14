@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.crypto;
 
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
+
 import android.content.Context;
 import android.security.KeyPairGeneratorSpec;
 import android.security.keystore.KeyGenParameterSpec;
@@ -60,8 +62,6 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.OAEPParameterSpec;
 import javax.crypto.spec.PSource;
 import javax.security.auth.x500.X500Principal;
-
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
 
 public class AndroidWrappedKeyProviderTest {
 
