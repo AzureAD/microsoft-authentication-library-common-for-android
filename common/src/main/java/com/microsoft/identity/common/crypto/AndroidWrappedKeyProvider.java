@@ -132,6 +132,12 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
     @Nullable
     @VisibleForTesting
     /* package */ SecretKey getKeyFromCache() {
+        final String methodTag = TAG + ":getKeyFromCache";
+        if (!sSkipKeyInvalidationCheck &&
+                (!AndroidKeyStoreUtil.canLoadKey(mAlias) || !this.getKeyFile().exists())) {
+            Logger.warn(methodTag, "Key is invalid, removing from cache");
+            clearKeyFromCache();
+        }
         return sKeyCacheMap.get(mFilePath);
     }
 
@@ -176,12 +182,8 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
     @NonNull
     public synchronized SecretKey getKey() throws ClientException {
         final String methodTag = TAG + ":getKey";
-        if (!sSkipKeyInvalidationCheck &&
-                (!AndroidKeyStoreUtil.canLoadKey(mAlias) || !this.getKeyFile().exists())) {
-            sKeyCacheMap.remove(mFilePath);
-        }
 
-        SecretKey key = sKeyCacheMap.get(mFilePath);
+        SecretKey key = this.getKeyFromCache();
         if (key != null) {
             return key;
         }
