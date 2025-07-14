@@ -347,7 +347,7 @@ public class AndroidKeyStoreUtilTest {
     // Real implementation tests for getEncryptionPaddings
     @Test
     @Config(sdk = Build.VERSION_CODES.M) // API 23
-    public void testGetEncryptionPaddings_ModernAPI_ReturnsProcessedPaddings() throws Exception {
+    public void testGetKeyPairEncryptionPaddings_ModernAPI_ReturnsProcessedPaddings() throws Exception {
         // Arrange
         String[] paddingsFromKeyInfo = {"RSA_PKCS1Padding", "RSA_OAEPPadding"};
 
@@ -359,7 +359,7 @@ public class AndroidKeyStoreUtilTest {
             when(mockKeyInfo.getEncryptionPaddings()).thenReturn(paddingsFromKeyInfo);
 
             // Act - Call the REAL method, not mocked
-            List<String> result = AndroidKeyStoreUtil.getEncryptionPaddings(mockKeyPair);
+            List<String> result = AndroidKeyStoreUtil.getKeyPairEncryptionPaddings(mockKeyPair);
 
             // Assert - Verify the actual processing logic worked
             assertNotNull(result);
@@ -371,7 +371,7 @@ public class AndroidKeyStoreUtilTest {
 
     @Test
     @Config(sdk = Build.VERSION_CODES.M) // API 23
-    public void testGetEncryptionPaddings_ModernAPI_SinglePadding() throws Exception {
+    public void testGetKeyPairEncryptionPaddings_ModernAPI_SinglePadding() throws Exception {
         // Arrange
         String[] paddingsFromKeyInfo = {"RSA_PKCS1Padding"};
 
@@ -383,7 +383,7 @@ public class AndroidKeyStoreUtilTest {
             when(mockKeyInfo.getEncryptionPaddings()).thenReturn(paddingsFromKeyInfo);
 
             // Act
-            List<String> result = AndroidKeyStoreUtil.getEncryptionPaddings(mockKeyPair);
+            List<String> result = AndroidKeyStoreUtil.getKeyPairEncryptionPaddings(mockKeyPair);
 
             // Assert
             assertNotNull(result);
@@ -394,7 +394,7 @@ public class AndroidKeyStoreUtilTest {
 
     @Test
     @Config(sdk = Build.VERSION_CODES.M) // API 23
-    public void testGetEncryptionPaddings_ModernAPI_EmptyPaddingsArray() throws Exception {
+    public void testGetKeyPairEncryptionPaddings_ModernAPI_EmptyPaddingsArray() throws Exception {
         // Arrange
         String[] paddingsFromKeyInfo = {};
 
@@ -406,7 +406,7 @@ public class AndroidKeyStoreUtilTest {
             when(mockKeyInfo.getEncryptionPaddings()).thenReturn(paddingsFromKeyInfo);
 
             // Act
-            List<String> result = AndroidKeyStoreUtil.getEncryptionPaddings(mockKeyPair);
+            List<String> result = AndroidKeyStoreUtil.getKeyPairEncryptionPaddings(mockKeyPair);
 
             // Assert
             assertNotNull(result);
@@ -416,14 +416,14 @@ public class AndroidKeyStoreUtilTest {
 
     @Test
     @Config(sdk = Build.VERSION_CODES.M) // API 23
-    public void testGetEncryptionPaddings_ModernAPI_KeyFactoryException_ReturnsEmptyList() {
+    public void testGetKeyPairEncryptionPaddings_ModernAPI_KeyFactoryException_ReturnsEmptyList() {
         // Arrange
         try (MockedStatic<KeyFactory> keyFactoryMock = mockStatic(KeyFactory.class)) {
             keyFactoryMock.when(() -> KeyFactory.getInstance(RSA_ALGORITHM, ANDROID_KEYSTORE_PROVIDER))
                     .thenThrow(new NoSuchAlgorithmException("Algorithm not found"));
 
             // Act
-            List<String> result = AndroidKeyStoreUtil.getEncryptionPaddings(mockKeyPair);
+            List<String> result = AndroidKeyStoreUtil.getKeyPairEncryptionPaddings(mockKeyPair);
 
             // Assert
             assertNotNull(result);
@@ -433,7 +433,7 @@ public class AndroidKeyStoreUtilTest {
 
     @Test
     @Config(sdk = Build.VERSION_CODES.M) // API 23
-    public void testGetEncryptionPaddings_ModernAPI_KeySpecException_ReturnsEmptyList() throws Exception {
+    public void testGetKeyPairEncryptionPaddings_ModernAPI_KeySpecException_ReturnsEmptyList() throws Exception {
         // Arrange
         try (MockedStatic<KeyFactory> keyFactoryMock = mockStatic(KeyFactory.class)) {
             keyFactoryMock.when(() -> KeyFactory.getInstance(RSA_ALGORITHM, ANDROID_KEYSTORE_PROVIDER))
@@ -442,7 +442,7 @@ public class AndroidKeyStoreUtilTest {
                     .thenThrow(new InvalidKeySpecException("Invalid key spec"));
 
             // Act
-            List<String> result = AndroidKeyStoreUtil.getEncryptionPaddings(mockKeyPair);
+            List<String> result = AndroidKeyStoreUtil.getKeyPairEncryptionPaddings(mockKeyPair);
 
             // Assert
             assertNotNull(result);
@@ -452,14 +452,14 @@ public class AndroidKeyStoreUtilTest {
 
     @Test
     @Config(sdk = Build.VERSION_CODES.M) // API 23
-    public void testGetEncryptionPaddings_ModernAPI_NoSuchProviderException_ReturnsEmptyList() {
+    public void testGetKeyPairEncryptionPaddings_ModernAPI_NoSuchProviderException_ReturnsEmptyList() {
         // Arrange
         try (MockedStatic<KeyFactory> keyFactoryMock = mockStatic(KeyFactory.class)) {
             keyFactoryMock.when(() -> KeyFactory.getInstance(RSA_ALGORITHM, ANDROID_KEYSTORE_PROVIDER))
                     .thenThrow(new NoSuchProviderException("Provider not found"));
 
             // Act
-            List<String> result = AndroidKeyStoreUtil.getEncryptionPaddings(mockKeyPair);
+            List<String> result = AndroidKeyStoreUtil.getKeyPairEncryptionPaddings(mockKeyPair);
 
             // Assert
             assertNotNull(result);
@@ -469,7 +469,7 @@ public class AndroidKeyStoreUtilTest {
 
     @Test
     @Config(sdk = Build.VERSION_CODES.M) // API 23
-    public void testGetEncryptionPaddings_ModernAPI_RuntimeException_ReturnsEmptyList() throws Exception {
+    public void testGetKeyPairEncryptionPaddings_ModernAPI_RuntimeException_ReturnsEmptyList() throws Exception {
         // Arrange
         try (MockedStatic<KeyFactory> keyFactoryMock = mockStatic(KeyFactory.class)) {
             keyFactoryMock.when(() -> KeyFactory.getInstance(RSA_ALGORITHM, ANDROID_KEYSTORE_PROVIDER))
@@ -478,7 +478,7 @@ public class AndroidKeyStoreUtilTest {
                     .thenThrow(new RuntimeException("Unexpected runtime error"));
 
             // Act
-            List<String> result = AndroidKeyStoreUtil.getEncryptionPaddings(mockKeyPair);
+            List<String> result = AndroidKeyStoreUtil.getKeyPairEncryptionPaddings(mockKeyPair);
 
             // Assert
             assertNotNull(result);
@@ -488,9 +488,9 @@ public class AndroidKeyStoreUtilTest {
 
     @Test
     @Config(sdk = Build.VERSION_CODES.LOLLIPOP) // API 21, before M
-    public void testGetEncryptionPaddings_LegacyAPI_ReturnsEmptyList() {
+    public void testGetKeyPairEncryptionPaddings_LegacyAPI_ReturnsEmptyList() {
         // Act - Call the REAL method on legacy API
-        List<String> result = AndroidKeyStoreUtil.getEncryptionPaddings(mockKeyPair);
+        List<String> result = AndroidKeyStoreUtil.getKeyPairEncryptionPaddings(mockKeyPair);
 
         // Assert - Should return empty list because API < 23
         assertNotNull(result);
@@ -499,9 +499,9 @@ public class AndroidKeyStoreUtilTest {
 
     @Test
     @Config(sdk = Build.VERSION_CODES.KITKAT) // API 19, before M
-    public void testGetEncryptionPaddings_VeryLegacyAPI_ReturnsEmptyList() {
+    public void testGetKeyPairEncryptionPaddings_VeryLegacyAPI_ReturnsEmptyList() {
         // Act - Call the REAL method on very legacy API
-        List<String> result = AndroidKeyStoreUtil.getEncryptionPaddings(mockKeyPair);
+        List<String> result = AndroidKeyStoreUtil.getKeyPairEncryptionPaddings(mockKeyPair);
 
         // Assert - Should return empty list because API < 23
         assertNotNull(result);
@@ -510,7 +510,7 @@ public class AndroidKeyStoreUtilTest {
 
     @Test
     @Config(sdk = Build.VERSION_CODES.M) // API 23
-    public void testGetEncryptionPaddings_ModernAPI_PaddingsWithoutSuffix_ReturnedAsIs() throws Exception {
+    public void testGetKeyPairEncryptionPaddings_ModernAPI_PaddingsWithoutSuffix_ReturnedAsIs() throws Exception {
         // Arrange - Test case where paddings don't have "Padding" suffix
         String[] paddingsFromKeyInfo = {"RSA_PKCS1", "RSA_OAEP", "SomethingElse"};
 
@@ -522,7 +522,7 @@ public class AndroidKeyStoreUtilTest {
             when(mockKeyInfo.getEncryptionPaddings()).thenReturn(paddingsFromKeyInfo);
 
             // Act
-            List<String> result = AndroidKeyStoreUtil.getEncryptionPaddings(mockKeyPair);
+            List<String> result = AndroidKeyStoreUtil.getKeyPairEncryptionPaddings(mockKeyPair);
 
             // Assert - Should return as-is since no "Padding" suffix to strip
             assertNotNull(result);
@@ -535,7 +535,7 @@ public class AndroidKeyStoreUtilTest {
 
     @Test
     @Config(sdk = Build.VERSION_CODES.M) // API 23
-    public void testGetEncryptionPaddings_ModernAPI_MixedPaddingFormats() throws Exception {
+    public void testGetKeyPairEncryptionPaddings_ModernAPI_MixedPaddingFormats() throws Exception {
         // Arrange - Test mix of paddings with and without "Padding" suffix
         String[] paddingsFromKeyInfo = {"RSA_PKCS1Padding", "RSA_OAEP", "AESPadding"};
 
@@ -547,7 +547,7 @@ public class AndroidKeyStoreUtilTest {
             when(mockKeyInfo.getEncryptionPaddings()).thenReturn(paddingsFromKeyInfo);
 
             // Act
-            List<String> result = AndroidKeyStoreUtil.getEncryptionPaddings(mockKeyPair);
+            List<String> result = AndroidKeyStoreUtil.getKeyPairEncryptionPaddings(mockKeyPair);
 
             // Assert - Should strip "Padding" where present, leave others as-is
             assertNotNull(result);

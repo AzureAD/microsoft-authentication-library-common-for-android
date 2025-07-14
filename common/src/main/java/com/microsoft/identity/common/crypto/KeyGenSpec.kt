@@ -31,7 +31,9 @@ import java.util.Calendar
 import java.util.Locale
 import javax.security.auth.x500.X500Principal
 
-
+/**
+ * Interface for key generation specifications.
+ */
 interface IKeyGenSpec {
     val keyAlias: String
     val description: String
@@ -45,18 +47,17 @@ interface IKeyGenSpec {
 }
 
 /**
- * Data class to hold parameter specifications for cryptographic key generation.
+ * Modern key generation specification for Android API 23+.
  *
- * This class encapsulates all the necessary information to generate a new cryptographic key pair,
- * including a description for logging, the algorithm, the padding scheme to be associated with the key,
- * and the detailed algorithm parameter specification.
+ * Uses [KeyGenParameterSpec] with configurable purposes, digest algorithms, and encryption paddings.
  *
- * @property description A descriptive string for the specification, useful for logging and debugging.
- * @property algorithm The key generation algorithm, typically "RSA".
- * @property encryptionPaddings The encryption paddings supported for the key generation,
- * (e.g., [android.security.keystore.KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1]).
- * @property algorithmParameterSpec The detailed key generation parameter specification, such as
- * [android.security.keystore.KeyGenParameterSpec] or [android.security.KeyPairGeneratorSpec].
+ * @property purposes Key usage purposes (e.g., ENCRYPT, DECRYPT, WRAP_KEY)
+ * @property digestAlgorithms Supported digest algorithms (e.g., SHA-256, SHA-512)
+ * @property keyAlias Unique identifier for the key in KeyStore
+ * @property keySize RSA key size in bits (typically 2048)
+ * @property description Human-readable identifier for logging
+ * @property algorithm Key generation algorithm (typically "RSA")
+ * @property encryptionPaddings Supported padding schemes (e.g., PKCS1, OAEP)
  */
 data class KeyGenSpec(
     private val purposes: Int,
@@ -69,23 +70,20 @@ data class KeyGenSpec(
 ) : IKeyGenSpec {
     override fun toString() = print()
 
+    /**
+     * Converts digest algorithms list to array format required by KeyGenParameterSpec.
+     */
     private fun getDigestAlgorithms(): Array<String> {
         return digestAlgorithms.toTypedArray()
     }
 
+    /**
+     * Converts encryption paddings list to array format required by KeyGenParameterSpec.
+     */
     private fun getEncryptionPaddings(): Array<String> {
         return encryptionPaddings.toTypedArray()
     }
 
-    /**
-     * Helper method to create an appropriate key generation parameter specification.
-     *
-     * This method configures the specification with the appropriate padding and digest
-     * algorithms based on feature flags. It supports both OAEP (stronger) and PKCS1
-     * (more compatible) padding schemes.
-     *
-     * @return A [KeyGenParameterSpec] configured according to current settings
-     */
     override val algorithmParameterSpec: AlgorithmParameterSpec =
         KeyGenParameterSpec.Builder(keyAlias, purposes)
             .setKeySize(keySize)
@@ -95,6 +93,19 @@ data class KeyGenSpec(
 
 }
 
+/**
+ * Legacy key generation specification for Android API < 23.
+ *
+ * Uses [KeyPairGeneratorSpec] to generate self-signed certificates with 100-year validity.
+ * Provides fallback compatibility for devices that don't support modern KeyStore APIs.
+ *
+ * @property context Android context for KeyStore access
+ * @property keyAlias Unique identifier for the key in KeyStore
+ * @property keySize RSA key size in bits (typically 2048)
+ * @property description Human-readable identifier for logging
+ * @property algorithm Key generation algorithm (typically "RSA")
+ * @property encryptionPaddings Supported padding schemes (typically PKCS1 only)
+ */
 data class LegacyKeyGenSpec(
     private val context: Context,
     override val keyAlias: String,
@@ -108,6 +119,11 @@ data class LegacyKeyGenSpec(
 
     override fun toString() = print()
 
+    /**
+     * Creates legacy KeyPairGeneratorSpec with self-signed certificate.
+     *
+     * Generates certificate with 100-year validity using app package name as issuer.
+     */
     private fun getLegacyKeyGenParamSpec(): AlgorithmParameterSpec {
         // Generate a self-signed cert.
         val certInfo = String.format(
@@ -128,6 +144,4 @@ data class LegacyKeyGenSpec(
             .setEndDate(end.time)
             .build()
     }
-
 }
-

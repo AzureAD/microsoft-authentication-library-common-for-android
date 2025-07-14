@@ -101,9 +101,20 @@ class CryptoParameterSpecFactory(
         flightsProvider.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY)
     private val keySpecWithoutPurposeKey =
         flightsProvider.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY)
-    private val supportsKeyGenEncryptionPaddingRsaOaep =
+    private val enableKeyGenEncryptionPaddingRsaOaep =
         flightsProvider.isFlightEnabled(CommonFlight.ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING)
 
+    init {
+        val methodTag = "$TAG:init"
+        Logger.verbose(
+            methodTag,
+            "Initialized CryptoParameterSpecFactory - " +
+                    "API: ${Build.VERSION.SDK_INT}, " +
+                    "flags: [purposeKey=$keySpecWithPurposeKey, " +
+                    "withoutPurposeKey=$keySpecWithoutPurposeKey, " +
+                    "oaepSupported=$enableKeyGenEncryptionPaddingRsaOaep]"
+        )
+    }
 
     // Cipher parameter specifications
     val pkcs1CipherSpec = CipherSpec(
@@ -120,7 +131,7 @@ class CryptoParameterSpecFactory(
         padding = OAEP_PADDING_WITH_256MGF1,
     )
 
-
+    // Key generation parameter specifications
     @RequiresApi(Build.VERSION_CODES.P)
     private val keyGenParamSpecWithPurposeWrapKey =
         KeyGenSpec(
@@ -134,7 +145,7 @@ class CryptoParameterSpecFactory(
                 KeyProperties.DIGEST_SHA512
             ),
             description = MODERN_SPEC_WITH_PURPOSE_WRAP_KEY,
-            encryptionPaddings = getEncryptionPaddings(),
+            encryptionPaddings = getEncryptionPaddingsForKeyGen(),
             algorithm = RSA_ALGORITHM
         )
 
@@ -150,10 +161,9 @@ class CryptoParameterSpecFactory(
                 KeyProperties.DIGEST_SHA512
             ),
             description = MODERN_SPEC_WITHOUT_PURPOSE_WRAP_KEY,
-            encryptionPaddings = getEncryptionPaddings(),
+            encryptionPaddings = getEncryptionPaddingsForKeyGen(),
             algorithm = RSA_ALGORITHM
         )
-
 
     private val keyGenParamSpecLegacy = LegacyKeyGenSpec(
         context = context,
@@ -164,36 +174,23 @@ class CryptoParameterSpecFactory(
         algorithm = RSA_ALGORITHM
     )
 
-
-    init {
-        val methodTag = "$TAG:init"
-        Logger.info(
-            methodTag,
-            "Initialized with keyAlias: $keyAlias, API level: ${Build.VERSION.SDK_INT}, " +
-                    "With flight flags - PurposeWrapKey: $keySpecWithPurposeKey, " +
-                    "WithoutPurposeKey: $keySpecWithoutPurposeKey, " +
-                    "supportsKeyGenEncryptionPaddingRsaOaep: $supportsKeyGenEncryptionPaddingRsaOaep"
-        )
-    }
-
-
-    private fun getEncryptionPaddings(): List<String> {
+    //TODO: check if additional flag is needed to enable OAEP padding
+    private fun getEncryptionPaddingsForKeyGen(): List<String> {
         val paddings = mutableListOf(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
-        if (supportsKeyGenEncryptionPaddingRsaOaep) {
+        if (enableKeyGenEncryptionPaddingRsaOaep) {
             paddings.add(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
         }
-        return paddings.toList()
+        return paddings
     }
 
+
     /**
-     * Returns a prioritized list of cipher parameter specifications to try in sequence.
+     * Returns cipher specifications ordered by security preference.
      *
-     * This allows the calling code to attempt operations with the most secure/preferred
-     * specification first, then fall back to more compatible options if needed.
+     * The list prioritizes OAEP padding (when enabled by feature flag) over PKCS1
+     * for better security, with PKCS1 always included for compatibility.
      *
-     * The list is ordered with the most preferred specification first (OAEP if enabled, then PKCS1).
-     *
-     * @return List of [CipherSpec] objects ordered by preference (highest priority first)
+     * @return List of [CipherSpec] objects ordered by preference (most secure first)
      */
     fun getPrioritizedCipherParameterSpecs(): List<CipherSpec> {
         val methodTag = "$TAG:getPrioritizedCipherParameterSpecs"
@@ -202,25 +199,17 @@ class CryptoParameterSpecFactory(
         return specs
     }
 
+
     /**
-     * Returns a prioritized list of key generation parameter specifications to try in sequence.
+     * Returns key generation specifications ordered by API level compatibility.
      *
-     * This helps handle fallback scenarios where the preferred spec might not work
-     * on all devices or with all existing keys. Each specification has a descriptive
-     * identifier for logging and debugging purposes.
+     * Prioritizes modern Android KeyStore features (API 23+) when enabled by feature flags,
+     * with legacy fallback always included for maximum compatibility.
      *
-     * The method considers:
-     * 1. Android API level (supporting modern APIs from Android M/23 and P/28)
-     * 2. Feature flags that enable/disable specific key generation approaches
-     * 3. Backward compatibility with existing keys
-     *
-     * The list always includes a legacy specification as a last resort fallback option.
-     *
-     * @return List of [KeyGenSpec] objects ordered by priority (highest first)
+     * @return List of [IKeyGenSpec] objects ordered by preference (most modern first)
      */
     fun getPrioritizedKeyGenParameterSpecs(): List<IKeyGenSpec> {
         val methodTag = "$TAG:getPrioritizedKeyGenParameterSpecs"
-
         val specs = mutableListOf<IKeyGenSpec>()
 
         // Add specs in order of preference
@@ -237,7 +226,7 @@ class CryptoParameterSpecFactory(
         // Always include legacy spec as last resort fallback
         specs.add(keyGenParamSpecLegacy)
 
-        Logger.info(methodTag, "Options: ${specs.joinToString { it.description }}")
-        return specs.toList()
+        Logger.info(methodTag, "Key generation specs: ${specs.joinToString { it.description }}")
+        return specs
     }
 }

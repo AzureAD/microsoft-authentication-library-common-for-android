@@ -129,7 +129,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable the OAEP Android Wrapped Key Loader.
      */
-    ENABLE_OAEP_ANDROID_WRAPPED_KEY_LOADER("EnableOaepAndroidWrappedKeyLoader", true),
+    ENABLE_KEYSTORE_BACKED_SECRET_KEY_PROVIDER("EnableKeyStoreBackedSecretKeyProvider", false),
 
     /**
      * Flight to enable handling the UI in edge to edge mode

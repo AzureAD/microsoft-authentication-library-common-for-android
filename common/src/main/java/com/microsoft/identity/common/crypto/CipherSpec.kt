@@ -24,20 +24,18 @@ package com.microsoft.identity.common.crypto
 
 import java.security.spec.AlgorithmParameterSpec
 
-
-
 /**
- * Data class to hold cipher parameter specifications for encryption and decryption operations.
+ * Cipher parameter specification for cryptographic operations.
  *
- * This class defines the components needed to create a [javax.crypto.Cipher] instance,
- * including the algorithm, block mode, and padding scheme. It also constructs the full
- * transformation string required by the Cipher API.
+ * Encapsulates the components required to initialize a [javax.crypto.Cipher] instance:
+ * algorithm, mode, padding, and optional algorithm parameters.
  *
- * @property algorithmParameterSpec The algorithm parameter specification (e.g., [javax.crypto.spec.OAEPParameterSpec]),
- * which can be null if not required by the transformation.
- * @property algorithm The name of the cryptographic algorithm (e.g., "RSA").
- * @property mode The block cipher mode of operation (e.g., "ECB", "CBC").
- * @property padding The padding scheme used for the cipher (e.g., "PKCS1Padding", "OAEPwithSHA-256andMGF1Padding").
+ * @property algorithmParameterSpec Optional algorithm parameters (e.g., [javax.crypto.spec.OAEPParameterSpec])
+ * @property algorithm Cryptographic algorithm (e.g., "RSA")
+ * @property mode Block cipher mode (e.g., "ECB", "CBC")
+ * @property padding Padding scheme (e.g., "PKCS1Padding", "OAEPwithSHA-256andMGF1Padding")
+ *
+ * @see <a href="https://developer.android.com/reference/javax/crypto/Cipher">javax.crypto.Cipher</a>
  */
 data class CipherSpec(
     val algorithmParameterSpec: AlgorithmParameterSpec?,
@@ -46,8 +44,7 @@ data class CipherSpec(
     val padding: String,
 ) {
     /**
-     * The full transformation string (e.g., "RSA/ECB/PKCS1Padding") used to initialize a
-     * [javax.crypto.Cipher] instance.
+     * Complete transformation string for [javax.crypto.Cipher.getInstance].
      */
     val transformation = "$algorithm/$mode/$padding"
 
@@ -55,4 +52,3 @@ data class CipherSpec(
         return "CipherSpec(transformation='$transformation')"
     }
 }
-

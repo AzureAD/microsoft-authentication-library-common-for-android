@@ -366,9 +366,14 @@ public enum AttributeName {
     is_switch_browser_resume_handled,
 
     /**
-     * Records the transformation used to unwrap a key pair.
+     * Records the Cipher used to encrypt/decrypt the keypair.
      */
-    key_pair_unwrap_transformation,
+    secret_key_wrapping_cipher,
+
+    /**
+     * Records the operation used to wrap/unwrap the secret key.
+     */
+    secret_key_wrapping_operation,
 
     /**
      * Records if the request is a webcp authorize request.

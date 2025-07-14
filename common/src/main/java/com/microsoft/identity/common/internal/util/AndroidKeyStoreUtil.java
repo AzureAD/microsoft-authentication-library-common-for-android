@@ -483,13 +483,17 @@ public class AndroidKeyStoreUtil {
     }
 
     /**
-     * Returns a list of encryption paddings supported by the key pair.
+     * Returns encryption paddings supported by a KeyStore key pair.
+     * <p>
+     * Extracts supported padding schemes from the key's metadata on API 23+.
+     * Strips "Padding" suffix from padding names for consistent formatting.
      *
-     * @param keyPair The key pair for which to get the encryption paddings.
-     * @return A list of encryption paddings supported by the key pair.
+     * @param keyPair The key pair to query for supported encryption paddings
+     * @return List of supported padding names (e.g., "PKCS1", "OAEP"),
+     *         or empty list on API < 23 or if retrieval fails
      */
-    public static synchronized List<String> getEncryptionPaddings(@NonNull final KeyPair keyPair) {
-        final String methodTag = TAG + ":getEncryptionPaddings";
+    public static synchronized List<String> getKeyPairEncryptionPaddings(@NonNull final KeyPair keyPair) {
+        final String methodTag = TAG + ":getKeyPairEncryptionPaddings";
         try {
             final PrivateKey privateKey = keyPair.getPrivate();
             final KeyFactory keyFactory = KeyFactory.getInstance(privateKey.getAlgorithm(), ANDROID_KEY_STORE_TYPE);
@@ -504,10 +508,10 @@ public class AndroidKeyStoreUtil {
                 Logger.info(methodTag, "Supported encryption paddings: " + encryptionPaddings);
                 return encryptionPaddings;
             } else {
-                Logger.warn(methodTag, "getKeyInfo is not supported on this Android version");
+                Logger.warn(methodTag, "KeyInfo not available on API < 23");
             }
         } catch (final Exception e) {
-            Logger.warn(methodTag, "Failed to get KeyInfo for alias, swallowing exception");
+            Logger.warn(methodTag, "Failed to retrieve key padding information" + ": " + e.getMessage());
         }
         return Collections.emptyList();
     }
