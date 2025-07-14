@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.crypto;
 
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
+
 import android.content.Context;
 import android.security.KeyPairGeneratorSpec;
 
@@ -46,8 +48,6 @@ import java.util.Date;
 
 import javax.crypto.SecretKey;
 import javax.security.auth.x500.X500Principal;
-
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
 
 public class AndroidWrappedKeyProviderTest {
 
@@ -144,7 +144,7 @@ public class AndroidWrappedKeyProviderTest {
         final AndroidWrappedKeyProvider keyProvider = new AndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
         final SecretKey secretKey = keyProvider.getKey();
 
-        final SecretKey key = keyProvider.getKeyCache().getData();
+        final SecretKey key = keyProvider.getKeyFromCache();
         Assert.assertNotNull(key);
         Assert.assertEquals(AES_ALGORITHM, secretKey.getAlgorithm());
         Assert.assertArrayEquals(secretKey.getEncoded(), key.getEncoded());
@@ -228,7 +228,7 @@ public class AndroidWrappedKeyProviderTest {
 
         long timeStartLoopNotCached = System.nanoTime();
         for (int i = 0; i < 100; i++) {
-            keyProvider.getKeyCache().clear();
+            keyProvider.clearKeyFromCache();
             keyProvider.getKey();
         }
         long timeFinishLoopNotCached = System.nanoTime();
@@ -246,7 +246,7 @@ public class AndroidWrappedKeyProviderTest {
         AndroidKeyStoreUtil.deleteKey(MOCK_KEY_ALIAS);
 
         // Cached key also be wiped.
-        final SecretKey key = keyProvider.getKeyCache().getData();
+        final SecretKey key = keyProvider.getKeyFromCache();
         Assert.assertNull(key);
     }
 
@@ -257,7 +257,7 @@ public class AndroidWrappedKeyProviderTest {
         FileUtil.deleteFile(getKeyFile());
 
         // Cached key also be wiped.
-        final SecretKey key = keyProvider.getKeyCache().getData();
+        final SecretKey key = keyProvider.getKeyFromCache();
         Assert.assertNull(key);
     }
 
@@ -265,7 +265,7 @@ public class AndroidWrappedKeyProviderTest {
         final AndroidWrappedKeyProvider keyProvider = new AndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
         final SecretKey key = keyProvider.getKey();
         Assert.assertNotNull(key);
-        Assert.assertNotNull(keyProvider.getKeyCache().getData());
+        Assert.assertNotNull(keyProvider.getKeyFromCache());
         return keyProvider;
     }
 }
