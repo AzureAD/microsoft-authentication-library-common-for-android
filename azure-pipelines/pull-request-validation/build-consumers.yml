@@ -195,15 +195,6 @@ stages:
         clean: true
         submodules: recursive
         persistCredentials: True
-      - task: Bash@3
-        displayName: Set Java Home
-        inputs:
-          targetType: 'inline'
-          script: |
-            echo "Current Java Home: $JAVA_HOME"
-            export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64
-            export PATH=$JAVA_HOME/bin:$PATH
-            tree /usr/lib/jvm
       - task: AzureKeyVault@2
         displayName: 'Get Key vault LabAuth'
         inputs:
@@ -242,6 +233,14 @@ stages:
           workingDirectory: $(Build.SourcesDirectory)/broker-java-root
           targetType: 'inline'
           script: |
+            # Set Java 17
+            tree /usr/lib/jvm
+            echo "Current Java Home: $JAVA_HOME"
+            export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64
+            export PATH=$JAVA_HOME/bin:$PATH
+            echo "New Java Home: $JAVA_HOME"
+            java -version  # Verify Java 17 is being used
+            
             sudo apt-get install -y dbus-x11
             sudo apt-get install -y dos2unix
             dos2unix gradlew
@@ -250,10 +249,6 @@ stages:
             eval $(dbus-launch --sh-syntax)
             sudo apt install gnome-keyring
             /usr/bin/gnome-keyring-daemon --start --components=secrets
-            
-            # Set Java 17
-            echo "New Java Home: $JAVA_HOME"
-            java -version  # Verify Java 17 is being used
             
             ./gradlew LinuxBroker:linuxBrokerUnitTestCoverageReport -PcodeCoverageEnabled=true -PlabSecret=$(LabAuth) -Psystemd_mode_enabled=false --build-cache --info
       - task: PublishTestResults@2
