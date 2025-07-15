@@ -31,6 +31,7 @@ import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 
 import androidx.annotation.RequiresApi;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
 import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
@@ -44,7 +45,6 @@ import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
-import com.microsoft.identity.common.java.util.CachedData;
 import com.microsoft.identity.common.java.util.FileUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
@@ -57,6 +57,8 @@ import java.security.KeyStore;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.crypto.SecretKey;
 import javax.security.auth.x500.X500Principal;
@@ -109,6 +111,10 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
     // Exposed for testing only.
     /* package */ static final int KEY_FILE_SIZE = 1024;
 
+    /**
+     * SecretKey cache. Maps wrapped secret key file path to the SecretKey.
+     */
+    private static final ConcurrentMap<String, SecretKey> sKeyCacheMap = new ConcurrentHashMap<>();
     private final Context mContext;
 
     /**
@@ -122,21 +128,23 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
      */
     private final String mFilePath;
 
-    private final CachedData<SecretKey> mKeyCache = new CachedData<SecretKey>() {
-        @Override
-        public SecretKey getData() {
-            if (!sSkipKeyInvalidationCheck &&
-                    (!AndroidKeyStoreUtil.canLoadKey(mAlias) || !getKeyFile().exists())) {
-                this.clear();
-            }
-            return super.getData();
+    // Exposed for testing only.
+    @Nullable
+    @VisibleForTesting
+    /* package */ SecretKey getKeyFromCache() {
+        final String methodTag = TAG + ":getKeyFromCache";
+        if (!sSkipKeyInvalidationCheck &&
+                (!AndroidKeyStoreUtil.canLoadKey(mAlias) || !this.getKeyFile().exists())) {
+            Logger.warn(methodTag, "Key is invalid, removing from cache");
+            clearKeyFromCache();
         }
-    };
+        return sKeyCacheMap.get(mFilePath);
+    }
 
     // Exposed for testing only.
-    @NonNull
-    /* package */ CachedData<SecretKey> getKeyCache() {
-        return mKeyCache;
+    @VisibleForTesting
+    /* package */ void clearKeyFromCache() {
+        sKeyCacheMap.remove(mFilePath);
     }
 
     /**
@@ -173,18 +181,23 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
     @Override
     @NonNull
     public synchronized SecretKey getKey() throws ClientException {
-        SecretKey key = mKeyCache.getData();
+        final String methodTag = TAG + ":getKey";
 
-        if (key == null) {
-            key = readSecretKeyFromStorage();
+        SecretKey key = this.getKeyFromCache();
+        if (key != null) {
+            return key;
         }
+
+        Logger.info(methodTag, "Key not in cache or cache is empty, loading key from storage");
+        key = readSecretKeyFromStorage();
 
         // If key doesn't exist, generate a new one.
         if (key == null) {
+            Logger.info(methodTag, "Key does not exist in storage, generating a new key");
             key = generateRandomKey();
         }
 
-        mKeyCache.setData(key);
+        sKeyCacheMap.put(mFilePath, key);
         return key;
     }
 
@@ -223,7 +236,7 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
                 // Do not delete the KeyStoreKeyPair even if the key file is empty. This caused credential cache
                 // to be deleted in Office because of sharedUserId allowing keystore to be shared amongst apps.
                 FileUtil.deleteFile(getKeyFile());
-                mKeyCache.clear();
+                sKeyCacheMap.remove(mFilePath);
                 return null;
             }
 
@@ -427,7 +440,7 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
     public void deleteSecretKeyFromStorage() throws ClientException {
         AndroidKeyStoreUtil.deleteKey(mAlias);
         FileUtil.deleteFile(getKeyFile());
-        mKeyCache.clear();
+        sKeyCacheMap.remove(mFilePath);
     }
 
     /**
