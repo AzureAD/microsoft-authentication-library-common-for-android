@@ -26,14 +26,11 @@ import static com.microsoft.identity.common.java.exception.ClientException.INVAL
 
 import android.content.Context;
 import android.security.KeyPairGeneratorSpec;
-import android.security.keystore.KeyGenParameterSpec;
-import android.security.keystore.KeyProperties;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
-import com.microsoft.identity.common.java.crypto.key.AES256SecretKeyGenerator;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.FileUtil;
 
@@ -44,23 +41,12 @@ import org.junit.Test;
 
 import java.io.File;
 import java.math.BigInteger;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
 import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.spec.AlgorithmParameterSpec;
-import java.security.spec.MGF1ParameterSpec;
 import java.util.Arrays;
 import java.util.Date;
 
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.OAEPParameterSpec;
-import javax.crypto.spec.PSource;
 import javax.security.auth.x500.X500Principal;
 
 public class AndroidWrappedKeyProviderTest {
@@ -275,72 +261,11 @@ public class AndroidWrappedKeyProviderTest {
         Assert.assertNull(key);
     }
 
-    @Test
-    public void test1() throws ClientException, NoSuchAlgorithmException, NoSuchProviderException,
-            NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException, IllegalBlockSizeException {
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(
-                KeyProperties.KEY_ALGORITHM_RSA, "AndroidKeyStore");
-
-        keyPairGenerator.initialize(new KeyGenParameterSpec.Builder(
-                "my_rsa_key_alias", // alias for keystore
-                KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
-                .setKeySize(2048)
-                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
-                .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA1) // allow both digests
-                .build());
-
-        KeyPair keyPair = keyPairGenerator.generateKeyPair();
-
-        // Assume AES key was created elsewhere
-        SecretKey aesKey = AES256SecretKeyGenerator.INSTANCE.generateRandomKey();
-
-        // Use OAEPParameterSpec with SHA-256 as main digest but SHA-1 for MGF1
-        OAEPParameterSpec oaepParams = new OAEPParameterSpec(
-                "SHA-256", "MGF1", MGF1ParameterSpec.SHA1, PSource.PSpecified.DEFAULT);
-
-        Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPPadding");
-        cipher.init(Cipher.WRAP_MODE, keyPair.getPublic(), oaepParams);
-
-        byte[] wrappedKey = cipher.wrap(aesKey);
-
-        Cipher cipher2 = Cipher.getInstance("RSA/ECB/OAEPPadding");
-        cipher2.init(Cipher.UNWRAP_MODE, keyPair.getPrivate(), oaepParams);
-
-        // Unwrap the key back into SecretKey object
-        SecretKey unwrappedKey = (SecretKey) cipher2.unwrap(wrappedKey, "AES", Cipher.SECRET_KEY);
-
-        // Verify the keys match
-        Assert.assertEquals(aesKey.getAlgorithm(), unwrappedKey.getAlgorithm());
-        Assert.assertArrayEquals(aesKey.getEncoded(), unwrappedKey.getEncoded());
-    }
-
-
     private KeyStoreBackedSecretKeyProvider initkeyProviderWithKeyEntry() throws ClientException {
         final KeyStoreBackedSecretKeyProvider keyProvider = new KeyStoreBackedSecretKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
         final SecretKey key = keyProvider.getKey();
         Assert.assertNotNull(key);
         Assert.assertNotNull(keyProvider.getKeyFromCache());
         return keyProvider;
-    }
-
-    /**
-     * Helper method to generate a random key using KeyStoreBackedSecretKeyProvider.
-     * This method is used to substitute the call to keyLoader.generateRandomKey() in tests.
-     *
-     * @param keyLoader The KeyStoreBackedSecretKeyProvider instance to use
-     * @return The generated SecretKey
-     * @throws ClientException if key generation fails
-     */
-    private SecretKey generateRandomKey(KeyStoreBackedSecretKeyProvider keyLoader) throws ClientException {
-        // Get the key will generate a new one if it doesn't exist
-        SecretKey key = keyLoader.getKey();
-
-        // Clear the cache to ensure it's regenerated next time
-        keyLoader.clearKeyFromCache();
-
-        // Generate a new key by getting the key again which will create a new one
-        key = keyLoader.getKey();
-
-        return key;
     }
 }
