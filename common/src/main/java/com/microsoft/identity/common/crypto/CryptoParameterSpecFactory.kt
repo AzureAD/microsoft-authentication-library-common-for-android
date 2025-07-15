@@ -132,8 +132,8 @@ class CryptoParameterSpecFactory(
     )
 
     // Key generation parameter specifications
-    @RequiresApi(Build.VERSION_CODES.P)
-    private val keyGenParamSpecWithPurposeWrapKey =
+    @delegate:RequiresApi(Build.VERSION_CODES.P)
+    private val keyGenParamSpecWithPurposeWrapKey by lazy {
         KeyGenSpec(
             keyAlias = keyAlias,
             purposes = KeyProperties.PURPOSE_ENCRYPT or
@@ -148,9 +148,10 @@ class CryptoParameterSpecFactory(
             encryptionPaddings = getEncryptionPaddingsForKeyGen(),
             algorithm = RSA_ALGORITHM
         )
+    }
 
-    @RequiresApi(Build.VERSION_CODES.M)
-    private val keyGenParamSpecWithoutPurposeWrapKey =
+    @delegate:RequiresApi(Build.VERSION_CODES.M)
+    private val keyGenParamSpecWithoutPurposeWrapKey by lazy {
         KeyGenSpec(
             keyAlias = keyAlias,
             purposes = KeyProperties.PURPOSE_ENCRYPT or
@@ -164,6 +165,7 @@ class CryptoParameterSpecFactory(
             encryptionPaddings = getEncryptionPaddingsForKeyGen(),
             algorithm = RSA_ALGORITHM
         )
+        }
 
     private val keyGenParamSpecLegacy = LegacyKeyGenSpec(
         context = context,
