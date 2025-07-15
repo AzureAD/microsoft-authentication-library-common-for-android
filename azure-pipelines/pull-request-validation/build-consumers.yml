@@ -243,6 +243,7 @@ stages:
             /usr/bin/gnome-keyring-daemon --start --components=secrets
             
             # Set Java 17
+            tree /usr/lib/jvm
             echo "Current Java Home: $JAVA_HOME"
             export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
             export PATH=$JAVA_HOME/bin:$PATH
