@@ -195,10 +195,6 @@ stages:
         clean: true
         submodules: recursive
         persistCredentials: True
-      - task: UseJavaVersion@1
-        inputs:
-          versionSpec: '17'
-          architecture: 'x64'
       - task: AzureKeyVault@2
         displayName: 'Get Key vault LabAuth'
         inputs:
@@ -245,6 +241,14 @@ stages:
             eval $(dbus-launch --sh-syntax)
             sudo apt install gnome-keyring
             /usr/bin/gnome-keyring-daemon --start --components=secrets
+            
+            # Set Java 17
+            echo "Current Java Home: $JAVA_HOME"
+            export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+            export PATH=$JAVA_HOME/bin:$PATH
+            echo "New Java Home: $JAVA_HOME"
+            java -version  # Verify Java 17 is being used
+            
             ./gradlew LinuxBroker:linuxBrokerUnitTestCoverageReport -PcodeCoverageEnabled=true -PlabSecret=$(LabAuth) -Psystemd_mode_enabled=false --build-cache --info
       - task: PublishTestResults@2
         condition: succeededOrFailed()
