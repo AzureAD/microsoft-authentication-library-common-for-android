@@ -83,6 +83,43 @@ public class AndroidWrappedKeyProviderTest {
         }
     }
 
+    private SecretKey getKeyFromCache(ISecretKeyProvider keyProvider) {
+        if (keyProvider instanceof AndroidWrappedKeyProvider) {
+            return ((AndroidWrappedKeyProvider) keyProvider).getKeyFromCache();
+        } else if (keyProvider instanceof KeyStoreBackedSecretKeyProvider) {
+            return ((KeyStoreBackedSecretKeyProvider) keyProvider).getKeyFromCache();
+        }
+        throw new IllegalArgumentException("Unsupported key provider type: " + keyProvider.getClass().getName());
+    }
+
+    private void clearKeyFromCache(ISecretKeyProvider keyProvider) {
+        if (keyProvider instanceof AndroidWrappedKeyProvider) {
+            ((AndroidWrappedKeyProvider) keyProvider).clearKeyFromCache();
+        } else if (keyProvider instanceof KeyStoreBackedSecretKeyProvider) {
+            ((KeyStoreBackedSecretKeyProvider) keyProvider).clearKeyFromCache();
+        } else {
+            throw new IllegalArgumentException("Unsupported key provider type: " + keyProvider.getClass().getName());
+        }
+    }
+
+    private SecretKey readSecretKeyFromStorage(ISecretKeyProvider keyProvider) throws ClientException {
+        if (keyProvider instanceof AndroidWrappedKeyProvider) {
+            return ((AndroidWrappedKeyProvider) keyProvider).readSecretKeyFromStorage();
+        } else if (keyProvider instanceof KeyStoreBackedSecretKeyProvider) {
+            return ((KeyStoreBackedSecretKeyProvider) keyProvider).readSecretKeyFromStorage();
+        }
+        throw new IllegalArgumentException("Unsupported key provider type: " + keyProvider.getClass().getName());
+    }
+
+    private SecretKey generateNewSecretKey(ISecretKeyProvider keyProvider) throws ClientException {
+        if (keyProvider instanceof AndroidWrappedKeyProvider) {
+            return ((AndroidWrappedKeyProvider) keyProvider).generateRandomKey();
+        } else if (keyProvider instanceof KeyStoreBackedSecretKeyProvider) {
+            return ((KeyStoreBackedSecretKeyProvider) keyProvider).generateNewSecretKey();
+        }
+        throw new IllegalArgumentException("Unsupported key provider type: " + keyProvider.getClass().getName());
+    }
+
     final Context context = ApplicationProvider.getApplicationContext();
     final String MOCK_KEY_ALIAS = "MOCK_KEY_ALIAS";
     final String MOCK_KEY_FILE_PATH = "MOCK_KEY_FILE_PATH";
@@ -296,45 +333,8 @@ public class AndroidWrappedKeyProviderTest {
     private ISecretKeyProvider initkeyProviderWithKeyEntry() throws ClientException {
         final ISecretKeyProvider keyProvider = createProvider();
         final SecretKey key = keyProvider.getKey();
+        Assert.assertNotNull(key);
         Assert.assertNotNull(getKeyFromCache(keyProvider));
         return keyProvider;
     }
-
-    private SecretKey getKeyFromCache(ISecretKeyProvider keyProvider) {
-        if (keyProvider instanceof AndroidWrappedKeyProvider) {
-            return ((AndroidWrappedKeyProvider) keyProvider).getKeyFromCache();
-        } else if (keyProvider instanceof KeyStoreBackedSecretKeyProvider) {
-            return ((KeyStoreBackedSecretKeyProvider) keyProvider).getKeyFromCache();
-        }
-        throw new IllegalArgumentException("Unsupported key provider type: " + keyProvider.getClass().getName());
-    }
-
-    private void clearKeyFromCache(ISecretKeyProvider keyProvider) {
-        if (keyProvider instanceof AndroidWrappedKeyProvider) {
-            ((AndroidWrappedKeyProvider) keyProvider).clearKeyFromCache();
-        } else if (keyProvider instanceof KeyStoreBackedSecretKeyProvider) {
-            ((KeyStoreBackedSecretKeyProvider) keyProvider).clearKeyFromCache();
-        } else {
-            throw new IllegalArgumentException("Unsupported key provider type: " + keyProvider.getClass().getName());
-        }
-    }
-
-    private SecretKey readSecretKeyFromStorage(ISecretKeyProvider keyProvider) throws ClientException {
-        if (keyProvider instanceof AndroidWrappedKeyProvider) {
-            return ((AndroidWrappedKeyProvider) keyProvider).readSecretKeyFromStorage();
-        } else if (keyProvider instanceof KeyStoreBackedSecretKeyProvider) {
-            return ((KeyStoreBackedSecretKeyProvider) keyProvider).readSecretKeyFromStorage();
-        }
-        throw new IllegalArgumentException("Unsupported key provider type: " + keyProvider.getClass().getName());
-    }
-
-    private SecretKey generateNewSecretKey(ISecretKeyProvider keyProvider) throws ClientException {
-        if (keyProvider instanceof AndroidWrappedKeyProvider) {
-            return ((AndroidWrappedKeyProvider) keyProvider).generateRandomKey();
-        } else if (keyProvider instanceof KeyStoreBackedSecretKeyProvider) {
-            return ((KeyStoreBackedSecretKeyProvider) keyProvider).generateNewSecretKey();
-        }
-        throw new IllegalArgumentException("Unsupported key provider type: " + keyProvider.getClass().getName());
-    }
-
 }
