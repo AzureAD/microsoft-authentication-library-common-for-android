@@ -1,7 +1,12 @@
 vNext
 ----------
+- [PATCH] Fix caching of secret key and add retries for InvalidKeyException during unwrap (#2659)
 - [MINOR] Replace AbstractSecretKeyLoader with ISecretKeyProvider (#2666)
 - [MINOR] Update IP phone app teams signature constants to use SHA-512 format (#2700)
+- [MINOR] Using Baggage to propagate attributes from parent Span (#2671)
+
+Version 21.4.0
+----------
 - [MINOR] Updating handling of ssl error received in Android WebView's onReceivedSslError callback (#2691)
 - [MINOR] Fixing the sign in screens when edge to edge is enabled (#2665)
 - [MINOR] Showing webcp flow in webview (#2673)
@@ -10,7 +15,6 @@ vNext
 - [MINOR] Construct broker app link redirect based on broker pkg name (#2682)
 - [MINOR] Update keyword to suppress camera consent (#2694)
 - [MINOR] Using utid for webcp flow whenever (#2695)
-- [MINOR] Using Baggage to propagate attributes from parent Span (##2671)
 
 Version 21.3.0
 ----------

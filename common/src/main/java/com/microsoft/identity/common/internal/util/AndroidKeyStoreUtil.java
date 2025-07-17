@@ -87,8 +87,6 @@ public class AndroidKeyStoreUtil {
     private AndroidKeyStoreUtil() {
     }
 
-    private static KeyStore mKeyStore;
-
     private static final LongCounter sFailedAndroidKeyStoreUnwrapOperationCount = OTelUtility.createLongCounter(
             "failed_keystore_key_unwrap_operation_count",
             "Number of failed Android KeyStore unwrap operations"
@@ -96,11 +94,9 @@ public class AndroidKeyStoreUtil {
 
     private static synchronized KeyStore getKeyStore()
             throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
-        if (mKeyStore == null){
-            mKeyStore = KeyStore.getInstance(ANDROID_KEY_STORE_TYPE);
-            mKeyStore.load(null);
-        }
-        return mKeyStore;
+        final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE_TYPE);
+        keyStore.load(null);
+        return keyStore;
     }
 
     /**
@@ -307,8 +303,7 @@ public class AndroidKeyStoreUtil {
         final Throwable exception;
         final String errCode;
         try {
-            final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE_TYPE);
-            keyStore.load(null);
+            final KeyStore keyStore = getKeyStore();
             keyStore.deleteEntry(aliasOfKeyToDelete);
             return;
         } catch (final KeyStoreException e) {
@@ -362,8 +357,8 @@ public class AndroidKeyStoreUtil {
         final String errCode;
         try {
             Logger.verbose(methodTag, "Wrap secret key with a KeyPair.");
-            final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm);
-            wrapCipher.init(Cipher.WRAP_MODE, keyToWrap.getPublic()); // CodeQL [SM05136] Used on AndroidWrappedKeyLoader, will be removed once the new KeyProvider is fully implemented.
+            final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm); // CodeQL [SM05136] Used on AndroidWrappedKeyLoader, will be removed once the new KeyProvider is fully implemented.
+            wrapCipher.init(Cipher.WRAP_MODE, keyToWrap.getPublic());
             return wrapCipher.wrap(key);
         } catch (final NoSuchPaddingException e) {
             errCode = NO_SUCH_PADDING;
