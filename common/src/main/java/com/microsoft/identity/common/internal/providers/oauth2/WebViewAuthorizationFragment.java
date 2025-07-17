@@ -239,9 +239,41 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mProgressBar = view.findViewById(R.id.common_auth_webview_progressbar);
 
         final FragmentActivity activity = getActivity();
+
         if (activity == null) {
             return null;
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            activity.getWindow().setDecorFitsSystemWindows(false);
+            view.setOnApplyWindowInsetsListener((v, insets) -> {
+                android.graphics.Insets systemBarInsets = insets.getInsets(
+                        android.view.WindowInsets.Type.systemBars()
+                );
+                android.graphics.Insets imeInsets = insets.getInsets(
+                        android.view.WindowInsets.Type.ime()
+                );
+
+                v.setPadding(
+                        systemBarInsets.left,
+                        systemBarInsets.top,
+                        systemBarInsets.right,
+                        imeInsets.bottom
+                );
+
+                return insets;
+            });
+        } else {
+            if (activity.getWindow() != null) {
+                activity.getWindow().setSoftInputMode(
+                        android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE |
+                                android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN
+                );
+            }
+        }
+
+        view.setFitsSystemWindows(true);
+
         mAADWebViewClient = new AzureActiveDirectoryWebViewClient(
                 activity,
                 new AuthorizationCompletionCallback(),
@@ -324,6 +356,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setUseWideViewPort(true);
         mWebView.getSettings().setBuiltInZoomControls(webViewZoomControlsEnabled);
         mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
+        mWebView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+        mWebView.setFocusable(true);
+        mWebView.setFocusableInTouchMode(true);
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
         mWebView.setWebChromeClient(new WebChromeClient() {
