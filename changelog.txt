@@ -3,6 +3,7 @@ vNext
 - [PATCH] Fix caching of secret key and add retries for InvalidKeyException during unwrap (#2659)
 - [MINOR] Replace AbstractSecretKeyLoader with ISecretKeyProvider (#2666)
 - [MINOR] Update IP phone app teams signature constants to use SHA-512 format (#2700)
+- [PATCH] Fix a few small switch browser bugs (#2710)
 
 Version 21.4.0
 ----------
@@ -14,7 +15,6 @@ Version 21.4.0
 - [MINOR] Construct broker app link redirect based on broker pkg name (#2682)
 - [MINOR] Update keyword to suppress camera consent (#2694)
 - [MINOR] Using utid for webcp flow whenever (#2695)
-- [PATCH] Fix a few small switch browser bugs (#2710)
 
 Version 21.3.0
 ----------
