@@ -82,9 +82,9 @@ object KeyStoreBackedSecretKeyProviderFactory {
 
         return if (enableKeyStoreBackedSecretKeyProvider) {
             KeyStoreBackedSecretKeyProvider(
-                keyIdentifier,
-                fileName,
-                context
+                context = context,
+                alias = keyIdentifier,
+                filePath = fileName
             )
         } else {
             AndroidWrappedKeyProvider(

@@ -30,9 +30,6 @@ import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager.getFlightsProvider
 import com.microsoft.identity.common.java.flighting.IFlightsProvider
 import com.microsoft.identity.common.logging.Logger
-import java.security.spec.MGF1ParameterSpec
-import javax.crypto.spec.OAEPParameterSpec
-import javax.crypto.spec.PSource
 
 /**
  * A factory for creating cryptographic parameter specifications for key generation and cipher operations.
@@ -80,20 +77,6 @@ class CryptoParameterSpecFactory(
         private const val MODERN_SPEC_WITH_PURPOSE_WRAP_KEY = "modern_spec_with_wrap_key"
         private const val MODERN_SPEC_WITHOUT_PURPOSE_WRAP_KEY = "modern_spec_without_wrap_key"
         private const val LEGACY_SPEC = "legacy_key_gen_spec"
-
-        // Padding schemes and modes used in cipher operations
-        private const val PKCS1_PADDING = "PKCS1Padding"
-        private const val OAEP_PADDING_WITH_256MGF1 = "OAEPwithSHA-256andMGF1Padding"
-        private const val MODE_ECB = "ECB"
-        private const val MODE_NONE = "NONE"
-
-        // OAEP parameter specification for RSA encryption
-        private val OAEP_SPECS = OAEPParameterSpec(
-            "SHA-256",  // main digest
-            "MGF1",  // mask generation function
-            MGF1ParameterSpec.SHA1,  // MGF1 digest
-            PSource.PSpecified.DEFAULT // label (usually default)
-        )
     }
 
     // Feature flags to control which key generation specs to use
@@ -115,21 +98,6 @@ class CryptoParameterSpecFactory(
                     "oaepSupported=$enableKeyGenEncryptionPaddingRsaOaep]"
         )
     }
-
-    // Cipher parameter specifications
-    val pkcs1CipherSpec = CipherSpec(
-        algorithmParameterSpec = null,
-        algorithm = RSA_ALGORITHM,
-        mode = MODE_ECB,
-        padding = PKCS1_PADDING
-    )
-
-    private val oaepCipherSpec = CipherSpec(
-        algorithmParameterSpec = OAEP_SPECS,
-        algorithm = RSA_ALGORITHM,
-        mode = MODE_NONE,
-        padding = OAEP_PADDING_WITH_256MGF1,
-    )
 
     // Key generation parameter specifications
     @delegate:RequiresApi(Build.VERSION_CODES.P)
@@ -165,18 +133,18 @@ class CryptoParameterSpecFactory(
             encryptionPaddings = getEncryptionPaddingsForKeyGen(),
             algorithm = RSA_ALGORITHM
         )
-        }
+    }
 
     private val keyGenParamSpecLegacy = LegacyKeyGenSpec(
         context = context,
         keyAlias = keyAlias,
         keySize = KEY_SIZE,
         description = LEGACY_SPEC,
-        encryptionPaddings = listOf(PKCS1_PADDING),
+        encryptionPaddings = listOf("PKCS1Padding"),
         algorithm = RSA_ALGORITHM
     )
 
-    //TODO: check if additional flag is needed to enable OAEP padding
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun getEncryptionPaddingsForKeyGen(): List<String> {
         val paddings = mutableListOf(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
         if (enableKeyGenEncryptionPaddingRsaOaep) {
@@ -184,7 +152,6 @@ class CryptoParameterSpecFactory(
         }
         return paddings
     }
-
 
     /**
      * Returns cipher specifications ordered by security preference.
@@ -196,11 +163,13 @@ class CryptoParameterSpecFactory(
      */
     fun getPrioritizedCipherParameterSpecs(): List<CipherSpec> {
         val methodTag = "$TAG:getPrioritizedCipherParameterSpecs"
-        val specs = listOf(oaepCipherSpec, pkcs1CipherSpec)
+        val specs = listOf(
+            CipherSpec.oaepCipherSpec,
+            CipherSpec.pkcs1CipherSpec
+        )
         Logger.info(methodTag, "Ciphers: $specs")
         return specs
     }
-
 
     /**
      * Returns key generation specifications ordered by API level compatibility.

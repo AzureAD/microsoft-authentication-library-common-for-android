@@ -124,7 +124,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable the new KEK algorithm for encryption/decryption of keys.
      */
-    ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING("EnableOAEPWithSHAAndMGF1Padding", true),
+    ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING("EnableOAEPWithSHAAndMGF1Padding", false),
 
     /**
      * Flight to enable the OAEP Android Wrapped Key Loader.

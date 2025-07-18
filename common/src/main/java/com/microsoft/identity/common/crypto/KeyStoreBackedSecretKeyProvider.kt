@@ -48,16 +48,18 @@ import javax.crypto.SecretKey
  * The secret key is wrapped using a KeyPair stored in the Android KeyStore.
  *
  * @param alias The alias for the key in the Android KeyStore.
- * @param mFilePath The file path where the wrapped secret key is stored.
- * @param mContext The context used to access the Android KeyStore and file system.
+ * @param filePath The file path where the wrapped secret key is stored.
+ * @param context The context used to access the Android KeyStore and file system.
  */
-class KeyStoreBackedSecretKeyProvider(
+class KeyStoreBackedSecretKeyProvider  @JvmOverloads constructor(
+    context: Context,
     override val alias: String,
-    private val mFilePath: String,
-    mContext: Context
+    private val filePath: String,
+    private val cryptoParameterSpecFactory: CryptoParameterSpecFactory = CryptoParameterSpecFactory(context, alias)
 ) : ISecretKeyProvider {
     companion object {
         private const val TAG = "KeyStoreBackedSecretKeyProvider"
+
         /**
          * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
          * Java AES/CBC/PKCS5Padding is default(!) algorithm name, thus PKCS5 here
@@ -83,27 +85,21 @@ class KeyStoreBackedSecretKeyProvider(
     override val cipherTransformation = AES_CBC_PKCS5_PADDING_TRANSFORMATION
 
     /**
-     * CryptoParameterSpecFactory is used to select the compatible cipher spec for wrapping/unwrapping the secret key.
-     */
-    private val cryptoParameterSpecFactory: CryptoParameterSpecFactory =
-        CryptoParameterSpecFactory(mContext, alias)
-
-    /**
      * File where the wrapped secret key is stored.
      */
     private val keyFile =
-        File(mContext.getDir(mContext.packageName, Context.MODE_PRIVATE), mFilePath)
+        File(context.getDir(context.packageName, Context.MODE_PRIVATE), filePath)
 
     @get:VisibleForTesting
     val keyFromCache: SecretKey?
         get() {
             clearCachedKeyIfCantLoadOrFileDoesNotExist()
-            return sKeyCacheMap[mFilePath]
+            return sKeyCacheMap[filePath]
         }
 
     @VisibleForTesting
     fun clearKeyFromCache() {
-        sKeyCacheMap.remove(mFilePath)
+        sKeyCacheMap.remove(filePath)
     }
 
     /**
@@ -114,14 +110,14 @@ class KeyStoreBackedSecretKeyProvider(
     fun deleteSecretKeyFromStorage() {
         AndroidKeyStoreUtil.deleteKey(alias)
         FileUtil.deleteFile(keyFile)
-        sKeyCacheMap.remove(mFilePath)
+        sKeyCacheMap.remove(filePath)
     }
 
     private fun clearCachedKeyIfCantLoadOrFileDoesNotExist() {
         val shouldClearCache = !KeyStoreBackedSecretKeyProviderFactory.skipKeyInvalidationCheck &&
                 (!AndroidKeyStoreUtil.canLoadKey(alias) || !keyFile.exists())
         if (shouldClearCache) {
-            sKeyCacheMap.remove(mFilePath)
+            sKeyCacheMap.remove(filePath)
         }
     }
 
@@ -149,7 +145,7 @@ class KeyStoreBackedSecretKeyProvider(
             }
 
             readSecretKeyFromStorage()?.let {
-                sKeyCacheMap[mFilePath] = it
+                sKeyCacheMap[filePath] = it
                 Logger.info(
                     methodTag,
                     "Key loaded from storage and cached with thumbprint: " +
@@ -159,7 +155,7 @@ class KeyStoreBackedSecretKeyProvider(
             }
 
             val newKey = generateNewSecretKey()
-            sKeyCacheMap[mFilePath] = newKey
+            sKeyCacheMap[filePath] = newKey
             Logger.info(
                 methodTag,
                 "New key is generated and cached with thumbprint: " +
@@ -198,12 +194,12 @@ class KeyStoreBackedSecretKeyProvider(
          */
         val methodTag = "$TAG:generateRandomKey"
         val newSecretKey = AES256SecretKeyGenerator.generateRandomKey()
-        val keyPair : KeyPair = AndroidKeyStoreUtil.readKey(alias)
+        val keyPair: KeyPair = AndroidKeyStoreUtil.readKey(alias)
             ?: run {
                 Logger.info(methodTag, "No existing keypair found. Generating a new one.")
                 generateKeyPair()
-        }
-        val keyWrapped = wrapSecretKey(newSecretKey,keyPair)
+            }
+        val keyWrapped = wrapSecretKey(newSecretKey, keyPair)
         FileUtil.writeDataToFile(keyWrapped, keyFile)
         return newSecretKey
     }
@@ -252,13 +248,19 @@ class KeyStoreBackedSecretKeyProvider(
         keyPair: KeyPair
     ): ByteArray {
         val methodTag = "$TAG:wrapSecretKey"
-        val span = OTelUtility.createSpanFromParent(SpanName.SecretKeyWrapping.name, SpanExtension.current().spanContext)
+        val span = OTelUtility.createSpanFromParent(
+            SpanName.SecretKeyWrapping.name,
+            SpanExtension.current().spanContext
+        )
 
         return try {
             SpanExtension.makeCurrentSpan(span).use { _ ->
                 span.setAttribute(AttributeName.secret_key_wrapping_operation.name, methodTag)
                 val cipherParamsSpec = selectCompatibleCipherSpec(keyPair)
-                span.setAttribute(AttributeName.secret_key_wrapping_cipher.name, cipherParamsSpec.toString())
+                span.setAttribute(
+                    AttributeName.secret_key_wrapping_cipher.name,
+                    cipherParamsSpec.toString()
+                )
                 Logger.info(methodTag, "Wrapping secret key with cipher spec: $cipherParamsSpec")
                 val wrappedKey = AndroidKeyStoreUtil.wrap(
                     secretKey,
@@ -284,13 +286,19 @@ class KeyStoreBackedSecretKeyProvider(
         keyPair: KeyPair
     ): SecretKey {
         val methodTag = "$TAG:unwrapSecretKey"
-        val span = OTelUtility.createSpanFromParent(SpanName.SecretKeyWrapping.name, SpanExtension.current().spanContext)
+        val span = OTelUtility.createSpanFromParent(
+            SpanName.SecretKeyWrapping.name,
+            SpanExtension.current().spanContext
+        )
 
         return try {
             SpanExtension.makeCurrentSpan(span).use { _ ->
                 span.setAttribute(AttributeName.secret_key_wrapping_operation.name, methodTag)
                 val cipherParamsSpec = selectCompatibleCipherSpec(keyPair)
-                span.setAttribute(AttributeName.secret_key_wrapping_cipher.name, cipherParamsSpec.toString())
+                span.setAttribute(
+                    AttributeName.secret_key_wrapping_cipher.name,
+                    cipherParamsSpec.toString()
+                )
                 Logger.info(methodTag, "Wrapping secret key with cipher spec: $cipherParamsSpec")
                 val key = AndroidKeyStoreUtil.unwrap(
                     wrappedSecretKey,
@@ -333,14 +341,14 @@ class KeyStoreBackedSecretKeyProvider(
         for (cipherSpec in availableCipherSpecs) {
             for (padding in supportedPaddings) {
                 if (cipherSpec.padding.contains(padding, ignoreCase = true)) {
-                    Logger.info(methodTag,  "Selected cipher spec: $cipherSpec")
+                    Logger.info(methodTag, "Selected cipher spec: $cipherSpec")
                     return cipherSpec
                 }
             }
         }
         Logger.warn(methodTag, "No supported cipher specification found for wrapping the key.")
         // Fallback to PKCS#1 padding if no compatible spec is found, instead of throwing an error.
-        return cryptoParameterSpecFactory.pkcs1CipherSpec
+        return CipherSpec.pkcs1CipherSpec
     }
 
     /**
@@ -355,24 +363,38 @@ class KeyStoreBackedSecretKeyProvider(
     @Throws(ClientException::class)
     private fun generateKeyPair(): KeyPair {
         val methodTag = "$TAG:generateKeyPair"
-        val span = OTelUtility.createSpanFromParent(SpanName.KeyPairGeneration.name, SpanExtension.current().spanContext)
+        val span = OTelUtility.createSpanFromParent(
+            SpanName.KeyPairGeneration.name,
+            SpanExtension.current().spanContext
+        )
         val failures = mutableListOf<Throwable>()
         return try {
             SpanExtension.makeCurrentSpan(span).use { _ ->
                 val specs = cryptoParameterSpecFactory.getPrioritizedKeyGenParameterSpecs()
                 validateSpecsAvailable(specs)
-
                 for ((index, spec) in specs.withIndex()) {
-                    Logger.verbose(methodTag, "Attempting key generation with spec ${index + 1}: $spec")
+                    Logger.verbose(
+                        methodTag,
+                        "Attempting key generation with spec ${index + 1}: $spec"
+                    )
                     attemptKeyGeneration(spec)
                         .onSuccess { keyPair ->
-                            Logger.info(methodTag, "Key pair generated successfully with spec: $spec")
-                            span.setAttribute(AttributeName.key_pair_gen_successful_method.name, spec.toString())
+                            Logger.info(
+                                methodTag,
+                                "Key pair generated successfully with spec: $spec"
+                            )
+                            span.setAttribute(
+                                AttributeName.key_pair_gen_successful_method.name,
+                                spec.toString()
+                            )
                             span.setStatus(StatusCode.OK)
                             return@use keyPair
                         }
                         .onFailure { throwable ->
-                            Logger.warn(methodTag, "Failed to generate key pair with spec: $spec, error: ${throwable.message}")
+                            Logger.warn(
+                                methodTag,
+                                "Failed to generate key pair with spec: $spec, error: ${throwable.message}"
+                            )
                             failures.add(throwable)
                         }
                 }
@@ -422,7 +444,8 @@ class KeyStoreBackedSecretKeyProvider(
                 spec.algorithmParameterSpec
             )
             val elapsedTime = System.currentTimeMillis() - startTime
-            SpanExtension.current().setAttribute(AttributeName.elapsed_time_keypair_generation.name, elapsedTime)
+            SpanExtension.current()
+                .setAttribute(AttributeName.elapsed_time_keypair_generation.name, elapsedTime)
             keyPair
         }
     }
@@ -445,9 +468,14 @@ class KeyStoreBackedSecretKeyProvider(
         }
 
         failures.forEach { exception ->
-            Logger.error(methodTag, "Key pair generation failed with: ${exception.message}", exception)
+            Logger.error(
+                methodTag,
+                "Key pair generation failed with: ${exception.message}",
+                exception
+            )
         }
-        SpanExtension.current().setAttribute(AttributeName.keypair_gen_exception.name, errorMessages)
+        SpanExtension.current()
+            .setAttribute(AttributeName.keypair_gen_exception.name, errorMessages)
 
         val finalError = failures.last()
         SpanExtension.current().setStatus(StatusCode.ERROR)

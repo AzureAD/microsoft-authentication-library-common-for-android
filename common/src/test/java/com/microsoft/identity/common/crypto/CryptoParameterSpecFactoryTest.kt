@@ -62,7 +62,8 @@ class CryptoParameterSpecFactoryTest {
     fun testGetPrioritizedCipherParameterSpec() {
         // Re-create the factory with the updated flags
         cryptoParameterSpecFactory = CryptoParameterSpecFactory(
-            mockContext!!, TEST_KEY_ALIAS,
+            mockContext!!,
+            TEST_KEY_ALIAS,
             mockFlightsProvider!!
         )
 

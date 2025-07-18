@@ -23,6 +23,9 @@
 package com.microsoft.identity.common.crypto
 
 import java.security.spec.AlgorithmParameterSpec
+import java.security.spec.MGF1ParameterSpec
+import javax.crypto.spec.OAEPParameterSpec
+import javax.crypto.spec.PSource
 
 /**
  * Cipher parameter specification for cryptographic operations.
@@ -50,5 +53,36 @@ data class CipherSpec(
 
     override fun toString(): String {
         return "CipherSpec(transformation='$transformation')"
+    }
+
+    companion object {
+        private const val RSA_ALGORITHM = "RSA"
+        private const val OAEP_PADDING_WITH_256MGF1 = "OAEPwithSHA-256andMGF1Padding"
+        private const val MODE_ECB = "ECB"
+        private const val MODE_NONE = "NONE"
+        private const val PKCS1_PADDING = "PKCS1Padding"
+
+        // OAEP parameter specification for RSA encryption
+        private val OAEP_SPECS = OAEPParameterSpec(
+            "SHA-256",  // main digest
+            "MGF1",  // mask generation function
+            MGF1ParameterSpec.SHA1,  // MGF1 digest
+            PSource.PSpecified.DEFAULT // label (usually default)
+        )
+
+        // Cipher parameter specifications
+         val pkcs1CipherSpec = CipherSpec(
+            algorithmParameterSpec = null,
+            algorithm = RSA_ALGORITHM,
+            mode = MODE_ECB,
+            padding = PKCS1_PADDING
+        )
+
+        val oaepCipherSpec = CipherSpec(
+            algorithmParameterSpec = OAEP_SPECS,
+            algorithm = RSA_ALGORITHM,
+            mode = MODE_NONE,
+            padding = OAEP_PADDING_WITH_256MGF1,
+        )
     }
 }
