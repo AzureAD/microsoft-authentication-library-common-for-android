@@ -299,7 +299,7 @@ class KeyStoreBackedSecretKeyProvider  @JvmOverloads constructor(
                     AttributeName.secret_key_wrapping_cipher.name,
                     cipherParamsSpec.toString()
                 )
-                Logger.info(methodTag, "Wrapping secret key with cipher spec: $cipherParamsSpec")
+                Logger.info(methodTag, "Unwrapping secret key with cipher spec: $cipherParamsSpec")
                 val key = AndroidKeyStoreUtil.unwrap(
                     wrappedSecretKey,
                     AES256SecretKeyGenerator.AES_ALGORITHM,
