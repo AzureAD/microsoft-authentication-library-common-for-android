@@ -52,7 +52,7 @@ class SwitchBrowserProtocolCoordinatorTest {
         val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
         doNothing().`when`(mockSwitchBrowserRequestHandler).resetChallengeState()
         val code = "switch_browser_code"
-        val actionUrl = "test.example.com/switchbrowser/path"
+        val actionUrl = "https://test.example.com/switchbrowser/path"
         val state = "123"
         val extras = Bundle().apply {
             putString(SWITCH_BROWSER.CODE, code)
@@ -77,7 +77,7 @@ class SwitchBrowserProtocolCoordinatorTest {
         val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
         doNothing().`when`(mockSwitchBrowserRequestHandler).resetChallengeState()
         val code = "switch_browser_code"
-        val actionUrl = "test.example.com/switchbrowser/path"
+        val actionUrl = "https://test.example.com/switchbrowser/path"
         val extras = Bundle().apply {
             putString(SWITCH_BROWSER.CODE, code)
             putString(SWITCH_BROWSER.ACTION_URI, actionUrl)
