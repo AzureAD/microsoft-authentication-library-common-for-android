@@ -150,7 +150,12 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to control the timeout to wait for tenant based flight in WebCP.
      */
-    WEB_CP_WAIT_TIMEOUT_FOR_FLIGHTS("WebCpWaitTimeoutForFlights", 3000);
+    WEB_CP_WAIT_TIMEOUT_FOR_FLIGHTS("WebCpWaitTimeoutForFlights", 3000),
+
+    /**
+     * Flight to enable WebView security settings to prevent unauthorized access.
+     */
+    ENABLE_WEBVIEW_SECURITY_SETTINGS("EnableWebViewSecuritySettings", false);
 
     private String key;
     private Object defaultValue;
