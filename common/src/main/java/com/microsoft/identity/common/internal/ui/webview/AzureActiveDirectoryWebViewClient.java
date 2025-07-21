@@ -296,7 +296,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
                 if (mSwitchBrowserRequestHandler.isSwitchBrowserRequest(formattedURL, mRedirectUrl)) {
                     Logger.info(methodTag,"Request to switch browser.");
-                    processSwitchBrowserRequest(formattedURL);
+                    processSwitchBrowserRequest(url);
                 } else {
                     Logger.info(methodTag,"It is a redirect request.");
                     processRedirectUrl(view, url);
