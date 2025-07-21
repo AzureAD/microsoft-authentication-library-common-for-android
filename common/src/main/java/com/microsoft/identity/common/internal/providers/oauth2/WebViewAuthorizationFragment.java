@@ -300,11 +300,20 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
         // Create the Web View to show the page
         mWebView = view.findViewById(R.id.common_auth_webview);
-        WebSettings userAgentSetting = mWebView.getSettings();
-        final String userAgent = userAgentSetting.getUserAgentString();
-        mWebView.getSettings().setUserAgentString(
+        final WebSettings webSettings = mWebView.getSettings();
+        final String userAgent = webSettings.getUserAgentString();
+        webSettings.setUserAgentString(
                 userAgent + AuthenticationConstants.Broker.CLIENT_TLS_NOT_SUPPORTED);
-        mWebView.getSettings().setJavaScriptEnabled(true);
+        webSettings.setJavaScriptEnabled(true);
+
+        // Security settings to prevent unauthorized access - controlled by flight
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_SECURITY_SETTINGS)) {
+            webSettings.setAllowFileAccess(false);
+            webSettings.setAllowContentAccess(false);
+            webSettings.setAllowFileAccessFromFileURLs(false);
+            webSettings.setAllowUniversalAccessFromFileURLs(false);
+        }
+
         mWebView.requestFocus(View.FOCUS_DOWN);
 
         // Set focus to the view for touch event
