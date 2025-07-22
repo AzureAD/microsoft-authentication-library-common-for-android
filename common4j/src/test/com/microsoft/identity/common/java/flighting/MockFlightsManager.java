@@ -44,6 +44,18 @@ public class MockFlightsManager implements IFlightsManager {
     @NotNull
     @Override
     public IFlightsProvider getFlightsProviderForTenant(@NotNull String tenantId, long waitForConfigsWithTimeoutInMs) {
+        return this.getFlightsProviderForTenant(tenantId);
+    }
+
+    @NotNull
+    @Override
+    public IFlightsProvider getFlightsProvider(long waitForConfigsWithTimeoutInMs) {
+        return this.getFlightsProvider();
+    }
+
+    @NotNull
+    @Override
+    public IFlightsProvider getFlightsProviderForTenant(@NotNull String tenantId) {
         if (mMockBrokerFlightsProviderForTenant == null) {
             return mMockBrokerFlightsProvider;
         } else {
