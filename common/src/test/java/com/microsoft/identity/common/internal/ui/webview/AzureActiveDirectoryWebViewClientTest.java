@@ -28,6 +28,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
@@ -430,7 +431,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         final IFlightsManager mockFlightsManager = Mockito.mock(IFlightsManager.class);
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         when(mockFlightsProvider.isFlightEnabled(eq(CommonFlight.SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR))).thenReturn(true);
-        when(mockFlightsManager.getFlightsProvider(any())).thenReturn(mockFlightsProvider);
+        when(mockFlightsManager.getFlightsProvider(anyLong())).thenReturn(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
         final SslErrorHandler mockHandler = Mockito.mock(android.webkit.SslErrorHandler.class);
         final SslError mockError = Mockito.mock(android.net.http.SslError.class);
