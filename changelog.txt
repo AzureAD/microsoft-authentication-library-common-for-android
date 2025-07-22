@@ -1,5 +1,8 @@
 vNext
 ----------
+
+Version 21.5.0-RC1
+----------
 - [PATCH] Fix caching of secret key and add retries for InvalidKeyException during unwrap (#2659)
 - [MINOR] Replace AbstractSecretKeyLoader with ISecretKeyProvider (#2666)
 - [MINOR] Update IP phone app teams signature constants to use SHA-512 format (#2700)
