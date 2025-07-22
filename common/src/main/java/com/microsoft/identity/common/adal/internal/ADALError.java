@@ -23,6 +23,7 @@
 
 package com.microsoft.identity.common.adal.internal;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -676,6 +677,7 @@ public enum ADALError {
      * @param context {@link Context}
      * @return Error description
      */
+    @SuppressLint("DiscouragedApi")
     public String getLocalizedDescription(Context context) {
         // Optional overwrite to error descriptions from resource files.
         // Application can repeat the resource entries from libraries.
@@ -684,7 +686,6 @@ public enum ADALError {
         // order.
         if (context != null) {
             Configuration conf = context.getResources().getConfiguration();
-            @SuppressWarnings("deprecation")
             Resources resources = new Resources(context.getAssets(), context.getResources()
                     .getDisplayMetrics(), conf);
             return resources.getString(resources.getIdentifier(this.name(), "string",

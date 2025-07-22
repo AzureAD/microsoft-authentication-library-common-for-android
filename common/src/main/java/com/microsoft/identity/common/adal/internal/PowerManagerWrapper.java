@@ -22,12 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 import android.os.PowerManager;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 /**
  * Wrapper class for PowerManager.
@@ -65,7 +65,7 @@ public class PowerManagerWrapper {
      * @param connectionContext Context used to query if app is in idle mode.
      * @return true if the device is in doze/idle mode.
      */
-    @TargetApi(Build.VERSION_CODES.M)
+    @RequiresApi(Build.VERSION_CODES.M)
     public boolean isDeviceIdleMode(final Context connectionContext) {
         return ((PowerManager) connectionContext.getSystemService(Context.POWER_SERVICE)).isDeviceIdleMode();
     }
@@ -130,7 +130,7 @@ public class PowerManagerWrapper {
      * @param connectionContext Context used to query if app is ignoring battery optimizations.
      * @return true if the given application package name is on the device's power allow list.
      */
-    @TargetApi(Build.VERSION_CODES.M)
+    @RequiresApi(Build.VERSION_CODES.M)
     public boolean isIgnoringBatteryOptimizations(final Context connectionContext) {
         return ((PowerManager) connectionContext.getSystemService(Context.POWER_SERVICE)).isIgnoringBatteryOptimizations(connectionContext.getPackageName());
     }
