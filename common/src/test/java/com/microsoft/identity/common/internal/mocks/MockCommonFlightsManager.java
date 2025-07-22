@@ -58,6 +58,6 @@ public class MockCommonFlightsManager implements IFlightsManager {
     @NonNull
     @Override
     public IFlightsProvider getFlightsProviderForTenant(@NonNull String tenantId, long waitForConfigsWithTimeoutInMs) {
-        return this.getFlightsProvider();
+        return this.getFlightsProviderForTenant(tenantId);
     }
 }

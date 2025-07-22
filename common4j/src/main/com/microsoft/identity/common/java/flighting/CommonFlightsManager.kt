@@ -55,7 +55,7 @@ object CommonFlightsManager : IFlightsManager {
     }
 
     override fun getFlightsProviderForTenant(tenantId: String, waitForConfigsWithTimeoutInMs: Long): IFlightsProvider {
-        return mFlightsManager.getFlightsProviderForTenant(tenantId)
+        return mFlightsManager.getFlightsProviderForTenant(tenantId, waitForConfigsWithTimeoutInMs)
     }
 
     /**

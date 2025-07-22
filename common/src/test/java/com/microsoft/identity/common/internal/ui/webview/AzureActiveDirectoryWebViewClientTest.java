@@ -430,7 +430,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         final IFlightsManager mockFlightsManager = Mockito.mock(IFlightsManager.class);
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         when(mockFlightsProvider.isFlightEnabled(eq(CommonFlight.SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR))).thenReturn(true);
-        when(mockFlightsManager.getFlightsProvider()).thenReturn(mockFlightsProvider);
+        when(mockFlightsManager.getFlightsProvider(any())).thenReturn(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
         final SslErrorHandler mockHandler = Mockito.mock(android.webkit.SslErrorHandler.class);
         final SslError mockError = Mockito.mock(android.net.http.SslError.class);
