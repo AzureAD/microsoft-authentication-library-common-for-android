@@ -32,10 +32,21 @@ interface IFlightsManager {
      * Flights provider applicable by default. Features should always this
      * unless the feature behaviour is tenant specific one same device.
      */
-    fun getFlightsProvider(): IFlightsProvider
+    fun getFlightsProvider(): IFlightsProvider = getFlightsProvider(0)
+
+    /**
+     * Flights provider applicable by default. Features should always this
+     * unless the feature behaviour is tenant specific one same device.
+     */
+    fun getFlightsProvider(waitForConfigsWithTimeoutInMs: Long = 0): IFlightsProvider
 
     /**
      * Flights provider for the given tenant
      */
-    fun getFlightsProviderForTenant(tenantId: String): IFlightsProvider
+    fun getFlightsProviderForTenant(tenantId: String): IFlightsProvider = getFlightsProviderForTenant(tenantId, 0)
+
+    /**
+     * Flights provider for the given tenant
+     */
+    fun getFlightsProviderForTenant(tenantId: String, waitForConfigsWithTimeoutInMs: Long = 0): IFlightsProvider
 }
