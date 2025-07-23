@@ -272,7 +272,7 @@ public class AzureActiveDirectory
         } catch (final URISyntaxException e) {
             throw new ClientException(
                     OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD,
-                    "IOException while requesting metadata",
+                    "URISyntaxException while requesting metadata",
                     e
             );
         }
