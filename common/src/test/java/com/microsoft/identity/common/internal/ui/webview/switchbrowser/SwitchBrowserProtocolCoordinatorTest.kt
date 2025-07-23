@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.ui.webview.switchbrowser
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
@@ -52,7 +53,7 @@ class SwitchBrowserProtocolCoordinatorTest {
         val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
         doNothing().`when`(mockSwitchBrowserRequestHandler).resetChallengeState()
         val code = "switch_browser_code"
-        val actionUrl = "test.example.com/switchbrowser/path"
+        val actionUrl = "https://test.example.com/switchbrowser/path"
         val state = "123"
         val extras = Bundle().apply {
             putString(SWITCH_BROWSER.CODE, code)
@@ -65,8 +66,11 @@ class SwitchBrowserProtocolCoordinatorTest {
         // Call the method to be tested
         coordinator.processSwitchBrowserResume("https://auth.com?state=$state",extras) { uri, headers ->
             // Verify the resume URI
-            Assert.assertEquals(actionUrl, uri.host + uri.path)
-            Assert.assertEquals(code, headers[AUTHORIZATION])
+            val actionUri = Uri.parse(actionUrl)
+            Assert.assertEquals(actionUri.scheme, uri.scheme)
+            Assert.assertEquals(actionUri.host, uri.host)
+            Assert.assertEquals(actionUri.path, uri.path)
+            Assert.assertEquals("Bearer $code", headers[AUTHORIZATION])
         }
     }
 
@@ -77,7 +81,7 @@ class SwitchBrowserProtocolCoordinatorTest {
         val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
         doNothing().`when`(mockSwitchBrowserRequestHandler).resetChallengeState()
         val code = "switch_browser_code"
-        val actionUrl = "test.example.com/switchbrowser/path"
+        val actionUrl = "https://test.example.com/switchbrowser/path"
         val extras = Bundle().apply {
             putString(SWITCH_BROWSER.CODE, code)
             putString(SWITCH_BROWSER.ACTION_URI, actionUrl)
@@ -88,8 +92,11 @@ class SwitchBrowserProtocolCoordinatorTest {
         // Call the method to be tested
         coordinator.processSwitchBrowserResume("https://auth.com",extras) { uri, headers ->
             // Verify the resume URI
-            Assert.assertEquals(actionUrl, uri.host + uri.path)
-            Assert.assertEquals(code, headers[AUTHORIZATION])
+            val actionUri = Uri.parse(actionUrl)
+            Assert.assertEquals(actionUri.scheme, uri.scheme)
+            Assert.assertEquals(actionUri.host, uri.host)
+            Assert.assertEquals(actionUri.path, uri.path)
+            Assert.assertEquals("Bearer $code", headers[AUTHORIZATION])
         }
     }
 
