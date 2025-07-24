@@ -85,7 +85,7 @@ public class AuthorizationActivity extends DualScreenActivity {
                 mOtelContext = TextMapPropagatorExtension.extract(carrier);
             } catch (final TerminalException | ClassCastException | NullPointerException e) {
                 // Don't want to block any features if an error occurs during deserialization.
-                Logger.warn(methodTag, "Exception thrown during extraction: " + e.getMessage());
+                Logger.error(methodTag, "Exception thrown during extraction: " + e.getMessage(), e);
             }
         }
         final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());

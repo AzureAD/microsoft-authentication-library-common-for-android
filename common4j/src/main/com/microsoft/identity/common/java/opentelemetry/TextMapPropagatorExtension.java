@@ -35,21 +35,16 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import lombok.experimental.UtilityClass;
 
 /**
  * Extension class for handling OpenTelemetry context propagation.
  * Provides utility methods for injecting and extracting context which contains Baggage and SpanContext.
  */
+@UtilityClass
 public final class TextMapPropagatorExtension {
 
     private static final String TAG = TextMapPropagatorExtension.class.getSimpleName();
-
-    /**
-     * Private constructor to prevent instantiation.
-     */
-    private TextMapPropagatorExtension() {
-        // This utility class is not meant to be instantiated
-    }
 
     /**
      * Injects the current context into a carrier.
