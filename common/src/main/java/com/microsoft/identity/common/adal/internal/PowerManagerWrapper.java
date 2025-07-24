@@ -128,7 +128,7 @@ public class PowerManagerWrapper {
      * Wrap the calling to method isIgnoringBatteryOptimizations() of final class PowerManager.
      *
      * @param connectionContext Context used to query if app is ignoring battery optimizations.
-     * @return true if the given application package name is on the device's power whitelist.
+     * @return true if the given application package name is on the device's power allow list.
      */
     @TargetApi(Build.VERSION_CODES.M)
     public boolean isIgnoringBatteryOptimizations(final Context connectionContext) {
