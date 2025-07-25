@@ -61,7 +61,7 @@ import com.microsoft.identity.common.logging.Logger
 class CryptoParameterSpecFactory(
     context: Context,
     keyAlias: String,
-    flightsProvider: IFlightsProvider = getFlightsProvider()
+    val flightsProvider: IFlightsProvider = getFlightsProvider()
 ) {
 
     private companion object {
@@ -79,12 +79,12 @@ class CryptoParameterSpecFactory(
         private const val LEGACY_SPEC = "legacy_key_gen_spec"
     }
 
-    // Feature flags to control which key generation specs to use
-    private val keySpecWithPurposeKey =
+    // Feature flags to control which key generation specs to use. (evaluated every time accessed)
+    private val keySpecWithPurposeKey get() =
         flightsProvider.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY)
-    private val keySpecWithoutPurposeKey =
+    private val keySpecWithoutPurposeKey get() =
         flightsProvider.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY)
-    private val enableKeyGenEncryptionPaddingRsaOaep =
+    private val enableKeyGenEncryptionPaddingRsaOaep get() =
         flightsProvider.isFlightEnabled(CommonFlight.ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING)
 
     init {

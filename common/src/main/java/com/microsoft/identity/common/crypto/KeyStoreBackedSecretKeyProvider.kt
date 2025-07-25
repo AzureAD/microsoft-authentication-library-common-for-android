@@ -136,17 +136,12 @@ class KeyStoreBackedSecretKeyProvider  @JvmOverloads constructor(
             val methodTag = "$TAG:getKey"
 
             keyFromCache?.let {
-                Logger.info(
-                    methodTag,
-                    "Key is already cached, returning cached key with thumbprint: " +
-                            KeyUtil.getKeyThumbPrint(it)
-                )
                 return it
             }
 
             readSecretKeyFromStorage()?.let {
                 sKeyCacheMap[filePath] = it
-                Logger.info(
+                Logger.verbose(
                     methodTag,
                     "Key loaded from storage and cached with thumbprint: " +
                             KeyUtil.getKeyThumbPrint(it)
@@ -156,7 +151,7 @@ class KeyStoreBackedSecretKeyProvider  @JvmOverloads constructor(
 
             val newKey = generateNewSecretKey()
             sKeyCacheMap[filePath] = newKey
-            Logger.info(
+            Logger.verbose(
                 methodTag,
                 "New key is generated and cached with thumbprint: " +
                         KeyUtil.getKeyThumbPrint(newKey)
@@ -192,7 +187,7 @@ class KeyStoreBackedSecretKeyProvider  @JvmOverloads constructor(
          * application using a shared linux user id... and avoid these applications from
          * stomping/overwriting one another's keypair.
          */
-        val methodTag = "$TAG:generateRandomKey"
+        val methodTag = "$TAG:generateNewSecretKey"
         val newSecretKey = AES256SecretKeyGenerator.generateRandomKey()
         val keyPair: KeyPair = AndroidKeyStoreUtil.readKey(alias)
             ?: run {
