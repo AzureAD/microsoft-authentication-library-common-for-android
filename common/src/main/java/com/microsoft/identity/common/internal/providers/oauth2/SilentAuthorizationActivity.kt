@@ -20,38 +20,32 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.providers.oauth2;
+package com.microsoft.identity.common.internal.providers.oauth2
 
-/**
- * Enum for representing different authorization status values.
- */
-public enum AuthorizationStatus {
-    /**
-     * Code is successfully returned.
-     */
-    SUCCESS,
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import androidx.fragment.app.Fragment
 
-    /**
-     * User press device back button,
-     * or the authz session was cancelled in order to proceed with the flow (not an error).
-     */
-    USER_CANCEL,
 
-    /**
-     * Sdk cancelled Auth flow.
-     */
-    SDK_CANCEL,
+class SilentAuthorizationActivity : AuthorizationActivity() {
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        window.decorView.alpha = 0f
+        super.onCreate(savedInstanceState)
+    }
 
-    /**
-     * Returned URI contains error.
-     */
-    FAIL,
+    override fun setFragment(fragment: Fragment) {
+        // Create a container for the fragment, but do not display it.
+        val container = FrameLayout(this)
+        container.id = View.generateViewId()
+        container.layoutParams = ViewGroup.LayoutParams(0, 0)
+        container.visibility = View.GONE
 
-    /**
-     * AuthenticationActivity detects the invalid request.
-     */
-    INVALID_REQUEST,
+        setContentView(container)
 
-    TIMED_OUT,
-    //TODO:  Investigate how chrome tab returns http timeout error
+        supportFragmentManager
+            .beginTransaction()
+            .replace(container.id, fragment)
+            .commitNow()
+    }
 }

@@ -73,6 +73,8 @@ object AuthorizationActivityFactory {
             // already uses the current task, attempting to manually simulate that behavior ends up supplying an incorrect
             // Fragment to the activity.
             intent = Intent(parameters.context, CurrentTaskAuthorizationActivity::class.java)
+        } else if (parameters.silentFlow){
+            intent = Intent(parameters.context, SilentAuthorizationActivity::class.java)
         } else {
             intent = Intent(parameters.context, AuthorizationActivity::class.java)
         }
@@ -128,6 +130,10 @@ object AuthorizationActivityFactory {
             if (parameters.utid != null) {
                 putExtra(UTID, parameters.utid)
             }
+            putExtra(
+                AuthenticationConstants.AuthorizationIntentKey.WEB_VEW_SILENT_FLOW,
+                parameters.silentFlow
+            )
         }
         return intent
     }
@@ -152,7 +158,11 @@ object AuthorizationActivityFactory {
 
         fragment =
             if (authorizationAgent == AuthorizationAgent.WEBVIEW) {
-                WebViewAuthorizationFragment()
+                if(intent.getBooleanExtra(AuthenticationConstants.AuthorizationIntentKey.WEB_VEW_SILENT_FLOW, false)) {
+                    SilentWebViewAuthorizationFragment()
+                } else {
+                    WebViewAuthorizationFragment()
+                }
             } else {
                 if (libraryConfig.isAuthorizationInCurrentTask) {
                     CurrentTaskBrowserAuthorizationFragment()

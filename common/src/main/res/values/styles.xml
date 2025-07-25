@@ -48,4 +48,12 @@
         <item name="android:windowTitleSize">20sp</item>
     </style>
 
+    <!-- Transparent Activity Theme -->
+    <style name="TransparentActivityTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
 </resources>

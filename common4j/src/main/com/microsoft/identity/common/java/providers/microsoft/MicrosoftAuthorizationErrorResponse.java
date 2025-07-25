@@ -111,6 +111,16 @@ public class MicrosoftAuthorizationErrorResponse extends AuthorizationErrorRespo
     public static final String INSUFFICIENT_DEVICE_REGISTRATION_ERROR_DESCRIPTION = "Device registration needs to be upgraded with strong keys";
 
     /**
+     * Error string to return if the authorization request times out..
+     */
+    public static final String TIMED_OUT = "authorization_timed_out";
+
+    /**
+     * Error description string to return if the authorization request times out.
+     */
+    public static final String TIMED_OUT_DESCRIPTION = "The authorization request timed out.";
+
+    /**
      * Constructor of {@link MicrosoftAuthorizationErrorResponse}.
      *
      * @param error            error string returned from the Authorization Server.

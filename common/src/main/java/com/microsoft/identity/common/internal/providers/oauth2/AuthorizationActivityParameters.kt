@@ -54,5 +54,6 @@ data class AuthorizationActivityParameters @JvmOverloads constructor(
     /**
      * The tenant unique id
      */
-    val utid: String? = null
+    val utid: String? = null,
+    val silentFlow: Boolean = false
 )
