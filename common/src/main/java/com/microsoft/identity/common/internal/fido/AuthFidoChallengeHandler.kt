@@ -30,12 +30,14 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChal
 import com.microsoft.identity.common.java.constants.FidoConstants
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.PASSKEY_PROTOCOL_ERROR_PREFIX_STRING
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.BaggageExtension
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.java.opentelemetry.SpanName
 import com.microsoft.identity.common.logging.Logger
 import io.opentelemetry.api.trace.Span
-import io.opentelemetry.api.trace.SpanContext
 import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.context.Context
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import java.util.*
@@ -51,18 +53,35 @@ import java.util.*
 class AuthFidoChallengeHandler (
     private val fidoManager: IFidoManager,
     private val webView: WebView,
-    private val spanContext : SpanContext?,
+    private val oTelContext: Context?,
     private val lifecycleOwner: LifecycleOwner?
 ) : IChallengeHandler<FidoChallenge, Void> {
     val TAG = AuthFidoChallengeHandler::class.simpleName.toString()
+    companion object {
+        private val parentAttributeNames = arrayListOf(
+            AttributeName.correlation_id,
+            AttributeName.tenant_id,
+            AttributeName.account_type,
+            AttributeName.calling_package_name
+        )
+    }
 
     override fun processChallenge(fidoChallenge: FidoChallenge): Void? {
         val methodTag = "$TAG:processChallenge"
         Logger.info(methodTag, "Processing FIDO challenge.")
-        val span = if (spanContext != null) {
-            OTelUtility.createSpanFromParent(SpanName.Fido.name, spanContext)
+        val span : Span
+        if (oTelContext != null) {
+            val parentSpan = SpanExtension.fromContext(oTelContext)
+            val spanContext = parentSpan.spanContext
+            span = OTelUtility.createSpanFromParent(SpanName.Fido.name, spanContext)
+            val baggage = BaggageExtension.fromContext(oTelContext)
+            parentAttributeNames.forEach { attributeName ->
+                baggage.getEntryValue(attributeName.name)?.let { value ->
+                    span.setAttribute(attributeName.name, value)
+                }
+            }
         } else {
-            OTelUtility.createSpan(SpanName.Fido.name)
+            span = OTelUtility.createSpan(SpanName.Fido.name)
         }
         span.setAttribute(
             AttributeName.fido_challenge_handler.name,
