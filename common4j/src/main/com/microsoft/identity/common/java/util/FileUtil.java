@@ -27,11 +27,10 @@ import com.microsoft.identity.common.java.logging.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -53,17 +52,13 @@ public class FileUtil {
      * @param data a data blob to be written.
      * @param file file to write to.
      */
-    public static void writeDataToFile(@NonNull final byte[] data,
+    public static void writeDataToFile(final byte @NonNull [] data,
                                        @NonNull final File file) throws ClientException {
         final String methodName = ":writeKeyData";
 
-        try {
-            final OutputStream out = new FileOutputStream(file);
-            try {
-                out.write(data);
-            } finally {
-                out.close();
-            }
+
+        try (OutputStream out = Files.newOutputStream(file.toPath())) {
+            out.write(data);
         } catch (IOException e) {
             final ClientException clientException = new ClientException(
                     IO_ERROR,
@@ -97,20 +92,16 @@ public class FileUtil {
             return null;
         }
 
-        try {
-            final InputStream in = new FileInputStream(file);
 
-            try {
-                final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-                final byte[] buffer = new byte[dataSize];
-                int count;
-                while ((count = in.read(buffer)) != -1) {
-                    bytes.write(buffer, 0, count);
-                }
-                return bytes.toByteArray();
-            } finally {
-                in.close();
+
+        try (InputStream in = Files.newInputStream(file.toPath())) {
+            final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            final byte[] buffer = new byte[dataSize];
+            int count;
+            while ((count = in.read(buffer)) != -1) {
+                bytes.write(buffer, 0, count);
             }
+            return bytes.toByteArray();
         } catch (IOException e) {
             final ClientException clientException = new ClientException(
                     IO_ERROR,

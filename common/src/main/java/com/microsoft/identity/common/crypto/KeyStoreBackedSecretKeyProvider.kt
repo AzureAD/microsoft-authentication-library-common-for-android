@@ -250,11 +250,11 @@ class KeyStoreBackedSecretKeyProvider  @JvmOverloads constructor(
 
         return try {
             SpanExtension.makeCurrentSpan(span).use { _ ->
-                span.setAttribute(AttributeName.secret_key_wrapping_operation.name, methodTag)
+                span.setAttribute(AttributeName.secret_key_wrapping_operation.name, "WRAP")
                 val cipherParamsSpec = selectCompatibleCipherSpec(keyPair)
                 span.setAttribute(
-                    AttributeName.secret_key_wrapping_cipher.name,
-                    cipherParamsSpec.toString()
+                    AttributeName.secret_key_wrapping_transformation.name,
+                    cipherParamsSpec.transformation
                 )
                 Logger.info(methodTag, "Wrapping secret key with cipher spec: $cipherParamsSpec")
                 val wrappedKey = AndroidKeyStoreUtil.wrap(
@@ -288,11 +288,11 @@ class KeyStoreBackedSecretKeyProvider  @JvmOverloads constructor(
 
         return try {
             SpanExtension.makeCurrentSpan(span).use { _ ->
-                span.setAttribute(AttributeName.secret_key_wrapping_operation.name, methodTag)
+                span.setAttribute(AttributeName.secret_key_wrapping_operation.name, "UNWRAP")
                 val cipherParamsSpec = selectCompatibleCipherSpec(keyPair)
                 span.setAttribute(
-                    AttributeName.secret_key_wrapping_cipher.name,
-                    cipherParamsSpec.toString()
+                    AttributeName.secret_key_wrapping_transformation.name,
+                    cipherParamsSpec.transformation
                 )
                 Logger.info(methodTag, "Unwrapping secret key with cipher spec: $cipherParamsSpec")
                 val key = AndroidKeyStoreUtil.unwrap(
@@ -379,8 +379,16 @@ class KeyStoreBackedSecretKeyProvider  @JvmOverloads constructor(
                                 "Key pair generated successfully with spec: $spec"
                             )
                             span.setAttribute(
-                                AttributeName.key_pair_gen_successful_method.name,
-                                spec.toString()
+                                AttributeName.key_pair_gen_description.name,
+                                spec.description
+                            )
+                            span.setAttribute(
+                                AttributeName.key_pair_gen_algorithm.name,
+                                spec.algorithm
+                            )
+                            span.setAttribute(
+                                AttributeName.key_pair_gen_encryptionPaddings.name,
+                                spec.encryptionPaddings.toString()
                             )
                             span.setStatus(StatusCode.OK)
                             return@use keyPair

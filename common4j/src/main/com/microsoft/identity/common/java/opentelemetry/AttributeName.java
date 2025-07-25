@@ -326,6 +326,21 @@ public enum AttributeName {
     key_pair_gen_successful_method,
 
     /**
+     * Describes the keypair generation operation.
+     */
+    key_pair_gen_description,
+
+    /**
+     * Indicates the algorithm used to generate a keypair.
+     */
+    key_pair_gen_algorithm,
+
+    /**
+     * Indicates the encryption paddings used to generate a keypair.
+     */
+    key_pair_gen_encryptionPaddings,
+
+    /**
      * Indicates the exception in generating a keypair.
      */
     keypair_gen_exception,
@@ -366,9 +381,9 @@ public enum AttributeName {
     is_switch_browser_resume_handled,
 
     /**
-     * Records the Cipher used to encrypt/decrypt the keypair.
+     * Records the Cipher transformation used to encrypt/decrypt the keypair.
      */
-    secret_key_wrapping_cipher,
+    secret_key_wrapping_transformation,
 
     /**
      * Records the operation used to wrap/unwrap the secret key.
