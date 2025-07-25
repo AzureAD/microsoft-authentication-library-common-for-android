@@ -338,6 +338,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             }
         }
 
+        if (exception instanceof UiRequiredException) {
+            builder.userName(exception.getUsername());
+        }
+
         if (exception instanceof IntuneAppProtectionPolicyRequiredException) {
             // Record MAM flow in telemetry
             SpanExtension.current().setAttribute(AttributeName.is_mam_flow.name(), true);
@@ -692,6 +696,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode)) {
             exception.setSubErrorCode(brokerResult.getSubErrorCode());
         }
+        exception.setUsername(brokerResult.getUserName());
         return exception;
     }
 
