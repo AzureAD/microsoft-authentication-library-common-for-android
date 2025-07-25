@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.OTEL_CONTEXT_CARRIER;
+
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
@@ -31,9 +33,14 @@ import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter;
 import com.microsoft.identity.common.java.exception.TerminalException;
 import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
+import com.microsoft.identity.common.java.opentelemetry.TextMapPropagatorExtension;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.util.HashMap;
+
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.context.Context;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
@@ -43,6 +50,11 @@ public class AuthorizationActivity extends DualScreenActivity {
     @Getter
     @Accessors(prefix = "m")
     private SpanContext mSpanContext;
+
+    @Getter
+    @Accessors(prefix = "m")
+    private Context mOtelContext;
+
     private AuthorizationFragment mFragment;
 
     public AuthorizationFragment getFragment() {
@@ -54,21 +66,32 @@ public class AuthorizationActivity extends DualScreenActivity {
         super.onCreate(savedInstanceState);
 
         final String methodTag = TAG + ":onCreate";
-        if (getIntent().getExtras() != null) {
+        final Bundle bundle = getIntent().getExtras();
+        if (bundle != null) {
             try {
-                mSpanContext = new CommonMoshiJsonAdapter().fromJson(
-                        getIntent().getExtras().getString(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT),
+                String spanContextJson = bundle.getString(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT);
+                mSpanContext = StringUtil.isNullOrEmpty(spanContextJson) ? null : new CommonMoshiJsonAdapter().fromJson(
+                        spanContextJson,
                         SerializableSpanContext.class
                 );
-            } catch (final TerminalException e) {
-                // Don't want to block any features if an error occurs during deserialization of the span context.
-                mSpanContext = null;
+
+                final HashMap<String, String> carrier;
+                // For Android Tiramisu and above, we use the new Serializable interface, which is a bit safer because it performs type checking at the framework level.
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                    carrier = bundle.getSerializable(OTEL_CONTEXT_CARRIER, HashMap.class);
+                } else {
+                    carrier = (HashMap<String, String>) bundle.getSerializable(OTEL_CONTEXT_CARRIER);
+                }
+                mOtelContext = TextMapPropagatorExtension.extract(carrier);
+            } catch (final TerminalException | ClassCastException | NullPointerException e) {
+                // Don't want to block any features if an error occurs during deserialization.
+                Logger.error(methodTag, "Exception thrown during extraction: " + e.getMessage(), e);
             }
         }
         final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());
         if (fragment instanceof AuthorizationFragment) {
             mFragment = (AuthorizationFragment) fragment;
-            mFragment.setInstanceState(getIntent().getExtras());
+            mFragment.setInstanceState(bundle);
         } else {
             final IllegalStateException ex = new IllegalStateException("Unexpected fragment type.");
             Logger.error(methodTag, "Did not receive AuthorizationFragment from factory", ex);
