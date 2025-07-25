@@ -18,10 +18,13 @@
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CO
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 package com.microsoft.identity.common.java.opentelemetry;
 
 import com.microsoft.identity.common.java.logging.Logger;
+
+import javax.annotation.Nullable;
 
 import io.opentelemetry.context.Context;
 
@@ -65,4 +68,23 @@ public class OtelContextExtension {
         }
     }
 
+    /**
+     * Returns the current context, or a root context if an error occurs.
+     * See {@link Context#current()}
+     *
+     * @return the current context, or null if not available.
+     */
+    @Nullable
+    public static Context current() {
+        try {
+            return Context.current();
+        } catch (final NoSuchMethodError error) {
+            Logger.error(
+                    TAG + ":current",
+                    error.getMessage(),
+                    error
+            );
+            return null;
+        }
+    }
 }
