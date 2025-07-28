@@ -100,7 +100,7 @@ public class SpanExtension {
     public static Span fromContext(@NonNull final Context context) {
         try {
             return Span.fromContext(context);
-        } catch (final Exception error) {
+        } catch (final Exception | NoSuchMethodError error) {
             Logger.error(TAG + ":fromContext", error.getMessage(), error);
             return new NoopSpan(INVALID);
         }
