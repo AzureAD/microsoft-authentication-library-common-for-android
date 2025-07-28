@@ -72,7 +72,7 @@ public final class TextMapPropagatorExtension {
             );
             propagator.inject(contextToInject, carrier, setter);
             return carrier;
-        } catch (final Exception | NoSuchMethodError e) {
+        } catch (final Throwable e) {
             // Log the error and return an empty map if injection fails
             Logger.error(TAG + ":inject", "Failed to inject context", e);
             return new HashMap<>();
@@ -109,7 +109,7 @@ public final class TextMapPropagatorExtension {
                     W3CBaggagePropagator.getInstance()
             );
             return propagator.extract(Context.current(), carrier, getter);
-        } catch (final Exception | NoSuchMethodError e) {
+        } catch (final Throwable e) {
             // Log the error and return null if extraction fails
             Logger.error(TAG + ":extract", "Failed to extract context", e);
             return null;
