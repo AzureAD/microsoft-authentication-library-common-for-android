@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.request
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.internal.broker.BrokerResult
 import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter
 import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter.REMOVE_RT_FROM_AAD_RESULT_MSAL_PROTOCOL_VERSION
@@ -30,6 +31,7 @@ import com.microsoft.identity.common.java.cache.ICacheRecord
 import com.microsoft.identity.common.java.dto.AadDeviceIdRecord
 import com.microsoft.identity.common.java.dto.AccountRecord
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.exception.UiRequiredException
 import com.microsoft.identity.common.java.request.SdkType
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult
 import com.microsoft.identity.internal.testutils.MockRecords
@@ -320,5 +322,28 @@ class MsalBrokerResultAdapterTests {
             // Expected exception
             assertEquals(mockException.errorCode, e.errorCode)
         }
+    }
+
+    @Test
+    @SneakyThrows
+    fun testBundleFromBaseException_UiRequiredException() {
+        val mockErrorCode = "invalid_grant"
+        val mockErrorMessage = "invalid_grant"
+        val mockUsername = "mock_username"
+
+        val uiRequiredException = UiRequiredException(mockErrorCode, mockErrorMessage).apply {
+            username = mockUsername
+        }
+
+        val resultAdapter = MsalBrokerResultAdapter()
+        val resultBundle = resultAdapter.bundleFromBaseException(uiRequiredException, null)
+
+        assertEquals(false, resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS))
+        val brokerResult = resultAdapter.brokerResultFromBundle(resultBundle)
+
+        assertEquals(mockErrorCode, brokerResult.errorCode)
+        assertEquals(mockErrorMessage, brokerResult.errorMessage)
+        assertEquals(mockUsername, brokerResult.userName)
+        assertEquals(UiRequiredException.sName, brokerResult.exceptionType)
     }
 }
