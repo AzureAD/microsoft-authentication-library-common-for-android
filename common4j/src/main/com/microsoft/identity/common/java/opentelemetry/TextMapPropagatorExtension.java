@@ -72,7 +72,7 @@ public final class TextMapPropagatorExtension {
             );
             propagator.inject(contextToInject, carrier, setter);
             return carrier;
-        } catch (final Throwable e) {
+        } catch (final Exception | NoSuchMethodError e) {
             // Log the error and return an empty map if injection fails
             Logger.error(TAG + ":inject", "Failed to inject context", e);
             return new HashMap<>();
