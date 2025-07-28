@@ -109,7 +109,7 @@ public final class TextMapPropagatorExtension {
                     W3CBaggagePropagator.getInstance()
             );
             return propagator.extract(Context.current(), carrier, getter);
-        } catch (final Throwable e) {
+        } catch (final Exception | NoSuchMethodError e) {
             // Log the error and return null if extraction fails
             Logger.error(TAG + ":extract", "Failed to extract context", e);
             return null;
