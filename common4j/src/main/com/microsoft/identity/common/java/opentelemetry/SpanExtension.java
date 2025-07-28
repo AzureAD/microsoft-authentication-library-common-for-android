@@ -85,7 +85,7 @@ public class SpanExtension {
     public static Scope makeCurrentSpan(@NonNull final Span span) {
         try {
             return span.makeCurrent();
-        } catch (final AbstractMethodError | Exception | NoSuchMethodError exception) {
+        } catch (final AbstractMethodError | Exception exception) {
             Logger.error(TAG + ":makeCurrentSpan", exception.getMessage(), exception);
             return NoopScope.INSTANCE;
         }
