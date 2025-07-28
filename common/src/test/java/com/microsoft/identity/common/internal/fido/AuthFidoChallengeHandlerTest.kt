@@ -66,7 +66,7 @@ class AuthFidoChallengeHandlerTest {
         authFidoChallengeHandler = AuthFidoChallengeHandler(
             fidoManager = testFidoManager,
             webView = webView,
-            spanContext = null,
+            oTelContext = null,
             lifecycleOwner = testLifecycleOwner
         )
     }
@@ -126,7 +126,7 @@ class AuthFidoChallengeHandlerTest {
         authFidoChallengeHandler = AuthFidoChallengeHandler(
             fidoManager = testFidoManager,
             webView = webView,
-            spanContext = null,
+            oTelContext = null,
             lifecycleOwner = null
         )
         assertFalse(webView.urlLoaded)
