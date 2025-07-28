@@ -85,7 +85,7 @@ public class SpanExtension {
     public static Scope makeCurrentSpan(@NonNull final Span span) {
         try {
             return span.makeCurrent();
-        } catch (final AbstractMethodError | Exception exception) {
+        } catch (final AbstractMethodError | Exception | NoSuchMethodError exception) {
             Logger.error(TAG + ":makeCurrentSpan", exception.getMessage(), exception);
             return NoopScope.INSTANCE;
         }
@@ -100,7 +100,7 @@ public class SpanExtension {
     public static Span fromContext(@NonNull final Context context) {
         try {
             return Span.fromContext(context);
-        } catch (final Exception error) {
+        } catch (final Exception | NoSuchMethodError error) {
             Logger.error(TAG + ":fromContext", error.getMessage(), error);
             return new NoopSpan(INVALID);
         }
