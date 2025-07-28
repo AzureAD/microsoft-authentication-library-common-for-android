@@ -31,22 +31,28 @@ interface IFlightsManager {
     /**
      * Flights provider applicable by default. Features should always this
      * unless the feature behaviour is tenant specific one same device.
+     * Calls [getFlightsProvider] with a default timeout of 0 milliseconds. 0 indicates no wait.
      */
     fun getFlightsProvider(): IFlightsProvider = getFlightsProvider(0)
 
     /**
-     * Flights provider applicable by default. Features should always this
+     * Flights provider applicable by default. Features should always use this
      * unless the feature behaviour is tenant specific one same device.
+     * @param waitForConfigsWithTimeoutInMs The timeout in milliseconds to wait for initial configurations from source.
      */
     fun getFlightsProvider(waitForConfigsWithTimeoutInMs: Long = 0): IFlightsProvider
 
     /**
      * Flights provider for the given tenant
+     * @param tenantId The tenant ID for which the flights provider is requested.
+     * Calls [getFlightsProviderForTenant] with a default timeout of 0 milliseconds. 0 indicates no wait.
      */
     fun getFlightsProviderForTenant(tenantId: String): IFlightsProvider = getFlightsProviderForTenant(tenantId, 0)
 
     /**
      * Flights provider for the given tenant
+     * @param tenantId The tenant ID for which the flights provider is requested.
+     * @param waitForConfigsWithTimeoutInMs The timeout in milliseconds to wait for initial configurations from source.
      */
     fun getFlightsProviderForTenant(tenantId: String, waitForConfigsWithTimeoutInMs: Long = 0): IFlightsProvider
 }
