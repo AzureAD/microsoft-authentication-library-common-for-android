@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.mocks;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.java.flighting.IFlightsManager;
 import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 
@@ -45,5 +47,17 @@ public class MockCommonFlightsManager implements IFlightsManager {
     @Override
     public IFlightsProvider getFlightsProviderForTenant(@NotNull String tenantId) {
         return mMockCommonFlightsProvider;
+    }
+
+    @NonNull
+    @Override
+    public IFlightsProvider getFlightsProvider(long waitForConfigsWithTimeoutInMs) {
+        return this.getFlightsProvider();
+    }
+
+    @NonNull
+    @Override
+    public IFlightsProvider getFlightsProviderForTenant(@NonNull String tenantId, long waitForConfigsWithTimeoutInMs) {
+        return this.getFlightsProviderForTenant(tenantId);
     }
 }

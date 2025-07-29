@@ -53,16 +53,9 @@ import lombok.NonNull;
 public class OpenIdProviderConfigurationClient {
 
     private static final String TAG = OpenIdProviderConfigurationClient.class.getSimpleName();
-    private static final String HTTPS_SCHEME = "https";
-    private static final String WELL_KNOWN_CONFIG_HOST = "login.microsoftonline.com";
     private static final String WELL_KNOWN_CONFIG_PATH = "/v2.0/.well-known/openid-configuration";
-    private static final ExecutorService sBackgroundExecutor = Executors.newCachedThreadPool();
     private static final Map<URI, OpenIdProviderConfiguration> sConfigCache = new HashMap<>();
     private static final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
-
-    public interface OpenIdProviderConfigurationCallback
-            extends TaskCompletedCallbackWithError<OpenIdProviderConfiguration, Exception> {
-    }
 
     private static final Gson GSON = new Gson();
 
@@ -74,43 +67,6 @@ public class OpenIdProviderConfigurationClient {
         }
 
         return sanitizedIssuer;
-    }
-
-    public void loadOpenIdProviderConfiguration(
-            @NonNull final OpenIdProviderConfigurationCallback callback, @NonNull final String authority) {
-        sBackgroundExecutor.submit(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    callback.onTaskCompleted(loadOpenIdProviderConfigurationFromAuthority(authority));
-                } catch (ServiceException e) {
-                    callback.onError(e);
-                }
-            }
-        });
-    }
-
-    /**
-     * Get OpenID provider configuration.
-     *
-     * @return OpenIdProviderConfiguration
-     */
-    public synchronized OpenIdProviderConfiguration loadOpenIdProviderConfigurationFromTenant(@NonNull final String tenantIdentifier)
-            throws ServiceException {
-        try {
-            final String tenantedAuthorityUrl = new CommonURIBuilder()
-                    .setScheme(HTTPS_SCHEME)
-                    .setHost(WELL_KNOWN_CONFIG_HOST)
-                    .setPathSegments(tenantIdentifier)
-                    .build().toString();
-            return loadOpenIdProviderConfigurationInternal(tenantedAuthorityUrl, null);
-        } catch (final URISyntaxException e) {
-            throw new ServiceException(
-                    OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD,
-                    "IOException while requesting metadata",
-                    e
-            );
-        }
     }
 
     /**
