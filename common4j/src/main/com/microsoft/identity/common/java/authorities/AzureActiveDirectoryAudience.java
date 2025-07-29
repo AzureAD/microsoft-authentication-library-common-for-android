@@ -87,7 +87,15 @@ public abstract class AzureActiveDirectoryAudience {
         final OpenIdProviderConfiguration providerConfiguration =
                 loadOpenIdProviderConfigurationMetadata(authority);
 
-        final String issuer = providerConfiguration.getIssuer();
+        return getTenantIdFromOpenIdProviderConfiguration(providerConfiguration);
+    }
+
+    /**
+     * Util method to extract tenant UUID from the OpenIdProviderConfiguration's Issuer. It's expected
+     * configuration is of AAD authority, so that tenant UUID is present in the path of the issuer.
+     */
+    public static String getTenantIdFromOpenIdProviderConfiguration(@NonNull final OpenIdProviderConfiguration configuration) throws ClientException {
+        final String issuer = configuration.getIssuer();
         final CommonURIBuilder issuerUri;
         try {
             issuerUri = new CommonURIBuilder(issuer);
@@ -108,9 +116,9 @@ public abstract class AzureActiveDirectoryAudience {
 
             throw new ClientException(errMsg);
         }
-        final String tenantUUID = paths.get(0);
+        final String tenantUuid = paths.get(0);
 
-        if (!StringUtil.isUuid(tenantUUID)) {
+        if (!StringUtil.isUuid(tenantUuid)) {
             final String errMsg = "OpenId Metadata did not contain UUID in the path ";
             Logger.error(
                     TAG,
@@ -120,7 +128,7 @@ public abstract class AzureActiveDirectoryAudience {
 
             throw new ClientException(errMsg);
         }
-        return tenantUUID;
+        return tenantUuid;
     }
 
     /**
