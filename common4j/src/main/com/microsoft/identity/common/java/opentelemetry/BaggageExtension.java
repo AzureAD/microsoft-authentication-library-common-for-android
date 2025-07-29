@@ -55,7 +55,7 @@ public class BaggageExtension {
                 return SpanExtension.NoopScope.INSTANCE;
             }
             return baggage.storeInContext(Context.current()).makeCurrent();
-        } catch (final Exception e) {
+        } catch (final Exception | NoSuchMethodError e) {
             Logger.error(TAG + ":makeBaggageCurrent", "Failed to make baggage current", e);
             return SpanExtension.NoopScope.INSTANCE;
         }
@@ -69,7 +69,7 @@ public class BaggageExtension {
     public static Baggage fromContext(final Context context) {
         try {
             return Baggage.fromContext(context);
-        } catch (final Exception e) {
+        } catch (final Exception | NoSuchMethodError e) {
             Logger.error(TAG + ":fromContext", "Failed to get baggage from context", e);
             return new NoopBaggage();
         }
