@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Ensure username is set in Broker Result when UiRequiredException is sent in result (#2720)
 - [PATCH] Fix caching of secret key during unwrap (#2659)
 - [MINOR] Improve tenant-based flighting for broker supporting code (#2717)
 - [MINOR] Replace AbstractSecretKeyLoader with ISecretKeyProvider (#2666)
