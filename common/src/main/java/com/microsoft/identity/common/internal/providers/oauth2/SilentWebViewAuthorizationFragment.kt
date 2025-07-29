@@ -27,16 +27,30 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.lifecycleScope
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult
 import com.microsoft.identity.common.logging.Logger
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+/**
+ * Fragment for handling silent web view authorization flows. It hides all UI and makes it transparent.
+ * This is to support scenario where the app needs to perform authorization without expecting user interaction,
+ * and notifying user. It is equivalent to the silent flow. Such flow is non-ideal but may be required by protocol.
+ * Current requirement is for SWAG (Sign-in-with Apple/Google) flow for Copilot, to allow them to silently migrate
+ * users from their stack to MSA.
+ */
 class SilentWebViewAuthorizationFragment : WebViewAuthorizationFragment() {
 
     companion object {
         private const val TAG = "SilentWebViewAuthorizationFragment"
+        private const val DEFAULT_WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIME_OUT = 5000L
     }
+
+    private var webViewSilentAuthorizationFlowTimeOut: Long = DEFAULT_WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIME_OUT
+        set(value) {
+            field = value.coerceIn(1000L, 20000L) // Validate range
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -46,7 +60,17 @@ class SilentWebViewAuthorizationFragment : WebViewAuthorizationFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        cancelAuthorizationOnTimeOut(5000)
+        cancelAuthorizationOnTimeOut(webViewSilentAuthorizationFlowTimeOut)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putLong(WEB_VEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT, webViewSilentAuthorizationFlowTimeOut)
+    }
+
+    override fun extractState(state: Bundle) {
+        super.extractState(state)
+        webViewSilentAuthorizationFlowTimeOut = state.getLong(WEB_VEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT, DEFAULT_WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIME_OUT)
     }
 
     /**
@@ -57,7 +81,7 @@ class SilentWebViewAuthorizationFragment : WebViewAuthorizationFragment() {
      * @param timeOutInMs The timeout duration in milliseconds.
      */
     private fun cancelAuthorizationOnTimeOut(timeOutInMs : Long) = viewLifecycleOwner.lifecycleScope.launch{
-        val methodTag = "$TAG:cancel"
+        val methodTag = "$TAG:cancelAuthorizationOnTimeOut"
         delay(timeOutInMs)
         Logger.info(methodTag, "Received Authorization flow cancel request from SDK")
         sendResult(RawAuthorizationResult.ResultCode.TIMED_OUT)

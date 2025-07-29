@@ -76,8 +76,12 @@ object AuthorizationActivityFactory {
             // already uses the current task, attempting to manually simulate that behavior ends up supplying an incorrect
             // Fragment to the activity.
             intent = Intent(parameters.context, CurrentTaskAuthorizationActivity::class.java)
-        } else if (parameters.silentFlow){
+        } else if (parameters.webViewEnableSilentAuthorizationFlowTimeOutMs != null){
             intent = Intent(parameters.context, SilentAuthorizationActivity::class.java)
+            intent.putExtra(
+                AuthenticationConstants.AuthorizationIntentKey.WEB_VEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT,
+                parameters.webViewEnableSilentAuthorizationFlowTimeOutMs
+            )
         } else {
             intent = Intent(parameters.context, AuthorizationActivity::class.java)
         }
@@ -137,10 +141,6 @@ object AuthorizationActivityFactory {
             if (parameters.utid != null) {
                 putExtra(UTID, parameters.utid)
             }
-            putExtra(
-                AuthenticationConstants.AuthorizationIntentKey.WEB_VEW_SILENT_FLOW,
-                parameters.silentFlow
-            )
         }
         return intent
     }
@@ -165,7 +165,7 @@ object AuthorizationActivityFactory {
 
         fragment =
             if (authorizationAgent == AuthorizationAgent.WEBVIEW) {
-                if(intent.getBooleanExtra(AuthenticationConstants.AuthorizationIntentKey.WEB_VEW_SILENT_FLOW, false)) {
+                if (intent.hasExtra(AuthenticationConstants.AuthorizationIntentKey.WEB_VEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT)) {
                     SilentWebViewAuthorizationFragment()
                 } else {
                     WebViewAuthorizationFragment()
