@@ -2,6 +2,7 @@ vNext
 ----------
 - [MINOR] Send username in broker response for UiRequiredException (#2720)
 - [PATCH] Fix caching of secret key during unwrap (#2659)
+- [MINOR] Improve tenant-based flighting for broker supporting code (#2717)
 - [MINOR] Replace AbstractSecretKeyLoader with ISecretKeyProvider (#2666)
 - [MINOR] Update IP phone app teams signature constants to use SHA-512 format (#2700)
 - [MINOR] Using Baggage to propagate attributes from parent Span (#2671)
