@@ -79,7 +79,7 @@ object AuthorizationActivityFactory {
         } else if (parameters.webViewEnableSilentAuthorizationFlowTimeOutMs != null){
             intent = Intent(parameters.context, SilentAuthorizationActivity::class.java)
             intent.putExtra(
-                AuthenticationConstants.AuthorizationIntentKey.WEB_VEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT,
+                AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT,
                 parameters.webViewEnableSilentAuthorizationFlowTimeOutMs
             )
         } else {
@@ -165,7 +165,7 @@ object AuthorizationActivityFactory {
 
         fragment =
             if (authorizationAgent == AuthorizationAgent.WEBVIEW) {
-                if (intent.hasExtra(AuthenticationConstants.AuthorizationIntentKey.WEB_VEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT)) {
+                if (intent.hasExtra(AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT)) {
                     SilentWebViewAuthorizationFragment()
                 } else {
                     WebViewAuthorizationFragment()

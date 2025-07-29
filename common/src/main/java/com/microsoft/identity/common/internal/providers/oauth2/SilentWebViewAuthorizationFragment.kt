@@ -27,7 +27,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.lifecycleScope
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult
 import com.microsoft.identity.common.logging.Logger
 import kotlinx.coroutines.delay
@@ -45,11 +45,13 @@ class SilentWebViewAuthorizationFragment : WebViewAuthorizationFragment() {
     companion object {
         private const val TAG = "SilentWebViewAuthorizationFragment"
         private const val DEFAULT_WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIME_OUT = 5000L
+        private const val MIN_WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT = 1000L
+        private const val MAX_WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT = 20000L
     }
 
     private var webViewSilentAuthorizationFlowTimeOut: Long = DEFAULT_WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIME_OUT
         set(value) {
-            field = value.coerceIn(1000L, 20000L) // Validate range
+            field = value.coerceIn(MIN_WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT, MAX_WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT) // Validate range
         }
 
     override fun onCreateView(
@@ -65,12 +67,12 @@ class SilentWebViewAuthorizationFragment : WebViewAuthorizationFragment() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putLong(WEB_VEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT, webViewSilentAuthorizationFlowTimeOut)
+        outState.putLong(WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT, webViewSilentAuthorizationFlowTimeOut)
     }
 
     override fun extractState(state: Bundle) {
         super.extractState(state)
-        webViewSilentAuthorizationFlowTimeOut = state.getLong(WEB_VEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT, DEFAULT_WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIME_OUT)
+        webViewSilentAuthorizationFlowTimeOut = state.getLong(WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT, DEFAULT_WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIME_OUT)
     }
 
     /**

@@ -135,8 +135,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
                 mAuthorizationRequest.isWebViewZoomControlsEnabled(),
                 sourceLibraryName,
                 sourceLibraryVersion,
-                utid,
-                5000L
+                utid
         );
         return AuthorizationActivityFactory.getAuthorizationActivityIntent(authorizationActivityParameters);
     }
