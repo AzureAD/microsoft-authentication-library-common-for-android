@@ -39,6 +39,7 @@ import kotlinx.coroutines.launch
  * and notifying user. It is equivalent to the silent flow. Such flow is non-ideal but may be required by protocol.
  * Current requirement is for SWAG (Sign-in-with Apple/Google) flow for Copilot, to allow them to silently migrate
  * users from their stack to MSA.
+ * Similar change for activity in [SilentAuthorizationActivity].
  */
 class SilentWebViewAuthorizationFragment : WebViewAuthorizationFragment() {
 

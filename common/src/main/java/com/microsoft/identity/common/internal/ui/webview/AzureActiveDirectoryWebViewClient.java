@@ -179,9 +179,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     "    window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".receiveAuthUxMessage(JSON.stringify(message)); " +
                     "};";
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                view.evaluateJavascript(jsScript, null);
-            }
+            view.evaluateJavascript(jsScript, null);
         }
     }
 

@@ -27,9 +27,17 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
 
-
+/**
+ * Activity for handling silent web view authorization flows. It hides all UI and makes it transparent.
+ * This is to support scenario where the app needs to perform authorization without expecting user interaction,
+ * and notifying user. It is equivalent to the silent flow. Such flow is non-ideal but may be required by protocol.
+ * Current requirement is for SWAG (Sign-in-with Apple/Google) flow for Copilot, to allow them to silently migrate
+ * users from their stack to MSA. Similar change for fragment [SilentWebViewAuthorizationFragment].
+ */
 class SilentAuthorizationActivity : AuthorizationActivity() {
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        // Set the content view to a transparent layout. This along with
+        // theme will ensure that the activity is transparent.
         window.decorView.alpha = 0f
         super.onCreate(savedInstanceState)
     }

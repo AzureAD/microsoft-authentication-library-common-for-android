@@ -27,15 +27,14 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -62,7 +61,7 @@ import java.util.HashMap;
 import lombok.SneakyThrows;
 
 /**
- * Tests for @link{AuthorizationActivityFactory}.
+ * Tests for {@link AuthorizationActivityFactory}.
  */
 @RunWith(RobolectricTestRunner.class)
 public class AuthorizationActivityFactoryTest {
@@ -224,10 +223,10 @@ public class AuthorizationActivityFactoryTest {
     @Test
     public void testGetAuthorizationFragmentFromStartIntentWebView() {
         // Create intent with silent flow enabled
-        final Intent silentFlowIntent = new Intent();
-        silentFlowIntent.putExtra(AUTHORIZATION_AGENT, AuthorizationAgent.WEBVIEW);
+        final Intent intent = new Intent();
+        intent.putExtra(AUTHORIZATION_AGENT, AuthorizationAgent.WEBVIEW);
 
-        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(silentFlowIntent);
+        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
 
         assertEquals(WebViewAuthorizationFragment.class, fragment.getClass());
     }

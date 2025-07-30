@@ -1,6 +1,7 @@
 vNext
 ----------
 - [MINOR] Add support to allow OneAuth to run silent/invisible authorization flow (#2722)
+- [MAJOR] Bump TargetSdk to 35, minSdk to 24, AGP to 8.10.0 (#2713)
 - [MINOR] Improve tenant-based flighting for broker supporting code (#2717)
 - [PATCH] Fix caching of secret key during unwrap (#2659)
 - [MINOR] Replace AbstractSecretKeyLoader with ISecretKeyProvider (#2666)
