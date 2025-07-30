@@ -69,8 +69,8 @@ public class DualScreenActivity extends FragmentActivity {
             // This will also guarantee that the icons on those bars are always visible.
             setTheme(R.style.Theme_AppCompat_Light);
             EdgeToEdge.enable(this,
-                    SystemBarStyle.light(Color.TRANSPARENT,Color.TRANSPARENT),
-                    SystemBarStyle.light(Color.TRANSPARENT,Color.TRANSPARENT));
+                    SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+                    SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT));
         }
     }
 
