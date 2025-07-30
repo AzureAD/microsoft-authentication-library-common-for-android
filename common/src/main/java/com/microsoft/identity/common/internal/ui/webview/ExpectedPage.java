@@ -22,9 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview;
 
-import androidx.annotation.VisibleForTesting;
-
-@VisibleForTesting
 public class ExpectedPage{
     String mExpectedPageUrlStartsWith;
     OnPageLoadedCallback mCallback;
