@@ -61,10 +61,10 @@ public class ExceptionAdapterTests {
 
     @Test
     public void testBaseExceptionFromException_TerminalException() throws Exception{
-        TerminalException t = new TerminalException("errorMsg", ClientException.KEY_RING_WRITE_FAILURE);
-        BaseException e = ExceptionAdapter.baseExceptionFromException(t);
-        assertEquals(e.getErrorCode(), t.getErrorCode());
-        assertEquals(e.getCause(), t);
+        final TerminalException t = new TerminalException("errorMsg", ClientException.KEY_RING_WRITE_FAILURE);
+        final BaseException e = ExceptionAdapter.baseExceptionFromException(t);
+        assertEquals(t.getErrorCode(), e.getErrorCode());
+        assertEquals(t, e.getCause());
     }
 
     @Test
@@ -77,8 +77,8 @@ public class ExceptionAdapterTests {
 
         BaseException e = ExceptionAdapter.getExceptionFromTokenErrorResponse(tokenErrorResponse);
         assertTrue("Expected exception of UiRequiredException type", e instanceof UiRequiredException);
-        assertEquals(e.getErrorCode(), tokenErrorResponse.getError());
-        assertEquals(e.getMessage(), tokenErrorResponse.getErrorDescription());
+        assertEquals(tokenErrorResponse.getError(), e.getErrorCode());
+        assertEquals(tokenErrorResponse.getErrorDescription(), e.getMessage());
     }
 
     @Test
@@ -91,8 +91,8 @@ public class ExceptionAdapterTests {
 
         BaseException e = ExceptionAdapter.getExceptionFromTokenErrorResponse(tokenErrorResponse, true);
         assertTrue("Expected exception of UiRequiredException type", e instanceof UiRequiredException);
-        assertEquals(e.getErrorCode(), tokenErrorResponse.getError());
-        assertEquals(e.getMessage(), tokenErrorResponse.getErrorDescription());
+        assertEquals(tokenErrorResponse.getError(), e.getErrorCode());
+        assertEquals(tokenErrorResponse.getErrorDescription(), e.getMessage());
     }
 
     @Test
@@ -106,8 +106,8 @@ public class ExceptionAdapterTests {
         BaseException e = ExceptionAdapter.getExceptionFromTokenErrorResponse(tokenErrorResponse, false);
         assertFalse("Expected exception of UiRequiredException type", e instanceof UiRequiredException);
         assertTrue("Expected exception of UiRequiredException type", e instanceof ServiceException);
-        assertEquals(e.getErrorCode(), tokenErrorResponse.getError());
-        assertEquals(e.getMessage(), tokenErrorResponse.getErrorDescription());
+        assertEquals(tokenErrorResponse.getError(), e.getErrorCode());
+        assertEquals(tokenErrorResponse.getErrorDescription(), e.getMessage());
     }
 
     @Test
