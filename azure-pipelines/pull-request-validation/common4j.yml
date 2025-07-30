@@ -1,6 +1,7 @@
 # File: azure-pipelines\pull-request-validation\common4j.yml
 # Description: Run test in common4j
 # Variable: 'MOCK_API_URL' was defined in the Variables tab
+# Variable: 'NATIVE_AUTH_CONFIG_STRING' was defined in the Variables tab
 # Uses Java 11
 name: $(date:yyyyMMdd)$(rev:.r)
 trigger: none
@@ -42,7 +43,7 @@ jobs:
     displayName: Run the unit tests.
     inputs:
       cwd: $(Build.SourcesDirectory)/common-java-root
-      tasks: common4j:test -Psugar=true -PmockApiUrl=$(MOCK_API_URL)
+      tasks: common4j:test -Psugar=true -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
       javaHomeOption: JDKVersion
       jdkVersionOption: 1.17
 ...

@@ -49,6 +49,10 @@ public class BuildValues {
 
     private static String MOCK_API_URL = BuildConfig.MOCK_API_URL;
 
+    private static String NATIVE_AUTH_CONFIG_STRING = BuildConfig.NATIVE_AUTH_CONFIG_STRING;
+
+    private static String NATIVE_AUTH_CONFIG_FILE_PATH = BuildConfig.NATIVE_AUTH_CONFIG_FILE_PATH;
+
     public static Boolean shouldUseMockApiForNativeAuth()
     {
         return USE_MOCK_API_FOR_NATIVE_AUTH_AUTHORITY;
@@ -60,5 +64,13 @@ public class BuildValues {
 
     public static String getMockApiUrl() {
         return MOCK_API_URL;
+    }
+
+    public static String getNativeAuthConfigString() {
+        return NATIVE_AUTH_CONFIG_STRING;
+    }
+
+    public static String getNativeAuthConfigFilePath() {
+        return NATIVE_AUTH_CONFIG_FILE_PATH;
     }
 }

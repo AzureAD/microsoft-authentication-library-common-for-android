@@ -1,5 +1,6 @@
 # File: azure-pipelines\pull-request-validation\common.yml
 # Variable: 'MOCK_API_URL' was defined in the Variables tab
+# Variable: 'NATIVE_AUTH_CONFIG_STRING' was defined in the Variables tab
 # Description: Assemble and run unit test
 name: $(date:yyyyMMdd)$(rev:.r)
 trigger: none
@@ -49,7 +50,7 @@ jobs:
     inputs:
       javaHomeSelection: JDKVersion
       jdkVersionOption: "1.17"
-      tasks: common:testLocalDebugUnitTest -PlabSecret=$(LabVaultAppCert) -PmockApiUrl=$(MOCK_API_URL) 
+      tasks: common:testLocalDebugUnitTest -PlabSecret=$(LabVaultAppCert) -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
   - task: Gradle@3
     displayName: Check Dependencies size
     condition: eq(variables['system.pullRequest.targetBranch'], 'dev')
