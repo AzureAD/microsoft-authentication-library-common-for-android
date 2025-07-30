@@ -52,6 +52,8 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
+import com.microsoft.identity.common.components.MockPlatformComponentsFactory;
+import com.microsoft.identity.common.internal.platform.AndroidPlatformUtil;
 import com.microsoft.identity.common.java.cache.BrokerApplicationMetadata;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.cache.CacheKeyValueDelegate;
@@ -84,6 +86,7 @@ import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowSharedPreferences;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -96,7 +99,6 @@ public class BrokerOAuth2TokenCacheTest {
 
     private static final int TEST_APP_UID = 1337;
 
-    private Context mContext;
     private IPlatformComponents mPlatformComponents;
 
     private MicrosoftStsOAuth2Strategy mockStrategy;
@@ -118,7 +120,6 @@ public class BrokerOAuth2TokenCacheTest {
     private IBrokerApplicationMetadataCache mApplicationMetadataCache;
     private int[] testAppUids;
 
-
     @Before
     public void setUp() {
 
@@ -127,8 +128,9 @@ public class BrokerOAuth2TokenCacheTest {
         mockResponse = PowerMockito.mock(MicrosoftStsTokenResponse.class);
         mMockCredentialAdapter = PowerMockito.mock(IAccountCredentialAdapter.class);
 
-        mContext = ApplicationProvider.getApplicationContext();
-        mPlatformComponents = AndroidPlatformComponentsFactory.createFromContext(mContext);
+        mPlatformComponents = MockPlatformComponentsFactory.getNonFunctionalBuilder()
+                .platformUtil(new AndroidPlatformUtil(ApplicationProvider.getApplicationContext(), null))
+                .build();
 
         mApplicationMetadataCache = new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents);
 
@@ -790,7 +792,7 @@ public class BrokerOAuth2TokenCacheTest {
         for (final int testUid : testAppUids) {
             // Create the cache to query...
             mBrokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
-                    AndroidPlatformComponentsFactory.createFromContext(mContext),
+                    mPlatformComponents,
                     testUid,
                     mApplicationMetadataCache,
                     new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {
@@ -860,7 +862,7 @@ public class BrokerOAuth2TokenCacheTest {
         for (final int testUid : testAppUids) {
             // Create the cache to query...
             mBrokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
-                    AndroidPlatformComponentsFactory.createFromContext(mContext),
+                    mPlatformComponents,
                     testUid,
                     mApplicationMetadataCache,
                     new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {

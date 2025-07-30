@@ -31,13 +31,11 @@ import com.microsoft.identity.internal.test.labapi.Pair
 import com.microsoft.identity.internal.testutils.nativeauth.api.models.EmailContent
 import com.microsoft.identity.internal.testutils.nativeauth.api.models.InboxContent
 import com.squareup.okhttp.Call
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.TimeZone
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 
 /**
@@ -46,7 +44,9 @@ import java.util.UUID
 class TemporaryEmailService {
 
     private val api = TemporaryEmailApi()
-    private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    private val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").apply {
+        timeZone = TimeZone.getTimeZone("UTC")
+    }
     private val numberOfRetries = 3
     private val retryDelayMs: Long = 4000
     private val newEmailCutoff = 5.0
@@ -85,12 +85,16 @@ class TemporaryEmailService {
                 Thread.sleep(retryDelayMs)
 
                 //API returns dates in the UTC timezone, so system time should also be converted
-                val currentTime = ZonedDateTime.ofInstant(Instant.now(), ZoneOffset.UTC)
+                val currentTime = Date()
 
                 val inboxEmails = api.retrieveMailbox(emailAddress)
 
                 val newEmailId = inboxEmails
-                    .filter { Duration.between(LocalDateTime.parse(it.date, dateFormatter), currentTime).seconds < newEmailCutoff }
+                    .filter {
+                        val emailDate = dateFormatter.parse(it.date)
+                        val diffInMillis = currentTime.time - emailDate.time
+                        TimeUnit.MILLISECONDS.toSeconds(diffInMillis) < newEmailCutoff
+                    }
                     .map { it.id }
                     .firstOrNull()
 
@@ -236,4 +240,3 @@ class TemporaryEmailService {
         }
     }
 }
-

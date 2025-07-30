@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.net;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
@@ -107,7 +106,6 @@ public class DefaultConnectionService implements IConnectionService {
      * @return true if the device is API23 and one or both of the following is true: the device is in doze or the company
      * portal is in standby, false otherwise.
      */
-    @TargetApi(Build.VERSION_CODES.M)
     public boolean isNetworkDisabledFromOptimizations() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             final PowerManagerWrapper powerManagerWrapper = PowerManagerWrapper.getInstance();

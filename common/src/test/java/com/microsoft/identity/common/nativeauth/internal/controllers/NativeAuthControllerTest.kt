@@ -25,6 +25,7 @@ package com.microsoft.identity.common.nativeauth.internal.controllers
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory
+import com.microsoft.identity.common.components.MockPlatformComponentsFactory
 import com.microsoft.identity.common.internal.controllers.LocalMSALController
 import com.microsoft.identity.common.internal.util.capture
 import com.microsoft.identity.common.java.AuthenticationConstants
@@ -150,9 +151,7 @@ class NativeAuthControllerTest {
     fun setup() {
         MockitoAnnotations.initMocks(this)
         context = ApplicationProvider.getApplicationContext()
-        platformComponents = AndroidPlatformComponentsFactory.createFromContext(
-            context
-        )
+        platformComponents = MockPlatformComponentsFactory.getNonFunctionalBuilder().build()
     }
 
     // region Sign In
