@@ -67,7 +67,7 @@ public class DualScreenActivity extends FragmentActivity {
             // We don't support dark mode in broker/common activities yet.
             // Until then, having everything consistently rendered with a white background looks better.
             // This will also guarantee that the icons on those bars are always visible.
-            setTheme(R.style.Theme_AppCompat_Light);
+            setTheme(R.style.DualScreenActivityTheme);
             EdgeToEdge.enable(this,
                     SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
                     SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT));
