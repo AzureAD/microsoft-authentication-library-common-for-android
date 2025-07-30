@@ -24,7 +24,6 @@ package com.microsoft.identity.common.crypto;
 
 import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.security.KeyPairGeneratorSpec;
 
