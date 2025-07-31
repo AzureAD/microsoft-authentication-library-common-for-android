@@ -40,10 +40,9 @@ import com.microsoft.identity.common.R
  */
 class SilentAuthorizationActivity : AuthorizationActivity() {
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
-        // Set the content view to a transparent layout. This along with
-        // theme will ensure that the activity is transparent.
-        // window.decorView.alpha = 0f
         super.onCreate(savedInstanceState)
+        // ensure edge to edge settings.
+        setEdgeToEdge()
     }
 
     override fun setFragment(fragment: Fragment) {
