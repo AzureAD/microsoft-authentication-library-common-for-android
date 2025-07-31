@@ -26,7 +26,6 @@ import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.internal.cache.BaseActiveBrokerCache.Companion.isNotExpired
 import com.microsoft.identity.common.internal.cache.IActiveBrokerCache
 import com.microsoft.identity.common.internal.cache.IClientActiveBrokerCache
-import java.time.Instant
 
 /**
  * An [IActiveBrokerCache] which stores values in-memory.
@@ -58,6 +57,6 @@ class InMemoryActiveBrokerCache: IClientActiveBrokerCache {
 
     @Synchronized
     override fun setShouldUseAccountManagerForTheNextMilliseconds(time: Long) {
-        shouldUseAccountManagerUntil = Instant.now().toEpochMilli() + time
+        shouldUseAccountManagerUntil = System.currentTimeMillis() + time
     }
 }

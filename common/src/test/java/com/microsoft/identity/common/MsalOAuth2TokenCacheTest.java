@@ -28,6 +28,8 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
+import com.microsoft.identity.common.components.MockPlatformComponentsFactory;
+import com.microsoft.identity.common.internal.platform.AndroidPlatformUtil;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -214,8 +216,6 @@ public class MsalOAuth2TokenCacheTest {
         }
     }
 
-    Context mContext;
-
     @Before
     public void setUp() throws Exception {
         mockStrategy = PowerMockito.mock(MicrosoftStsOAuth2Strategy.class);
@@ -269,10 +269,8 @@ public class MsalOAuth2TokenCacheTest {
         // Mocks
         configureMocksForTestBundle(defaultTestBundleV2);
 
-        // Context and related init
-        mContext = ApplicationProvider.getApplicationContext();
+        final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
 
-        final IPlatformComponents components = AndroidPlatformComponentsFactory.createFromContext(mContext);
         mSharedPreferencesFileManager = components.getStorageSupplier().getEncryptedNameValueStore(
                 "test_prefs",
                 String.class
