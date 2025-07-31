@@ -48,10 +48,18 @@
         <item name="android:windowTitleSize">20sp</item>
     </style>
 
+    <!-- Transparent Activity Theme -->
+    <style name="TransparentActivityTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Translucent</item>
+    </style>
+
     <!-- Theme for DualScreenActivity.
         Force set to a light theme (to status and navigation bars) since broker/common activities always have white background. -->
     <style name="DualScreenActivityTheme" parent="Base.Theme.AppCompat.Light">
         <item name="android:background">#FFFFFF</item>
     </style>
-
 </resources>
