@@ -49,8 +49,8 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.microsoft.device.display.DisplayMask;
 import com.microsoft.identity.common.R;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.List;
@@ -67,10 +67,8 @@ public class DualScreenActivity extends FragmentActivity {
             // We don't support dark mode in broker/common activities yet.
             // Until then, having everything consistently rendered with a white background looks better.
             // This will also guarantee that the icons on those bars are always visible.
-            setTheme(R.style.DualScreenActivityTheme);
-            EdgeToEdge.enable(this,
-                    SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
-                    SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT));
+            setTheme(getThemeResId());
+            setEdgeToEdge();
         }
     }
 
@@ -218,7 +216,7 @@ public class DualScreenActivity extends FragmentActivity {
     /**
      * Returns the area of the display that is not functional for displaying content.
      *
-     * @param Context
+     * @param context
      * @param rotation Surface.ROTATION_0, Surface.ROTATION_90, Surface.ROTATION_180 or Surface.ROTATION_270
      */
     private Rect getHinge(final Context context,
@@ -247,5 +245,19 @@ public class DualScreenActivity extends FragmentActivity {
         Rect windowRect = new Rect();
         activity.getWindowManager().getDefaultDisplay().getRectSize(windowRect);
         return windowRect;
+    }
+
+    protected int getThemeResId() {
+        return R.style.DualScreenActivityTheme;
+    }
+
+    /**
+     * Enable default edge-to-edge mode for this and derived activities.
+     * This will set the status and navigation bars to light mode with transparent background.
+     */
+    protected void setEdgeToEdge() {
+        EdgeToEdge.enable(this,
+                SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+                SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT));
     }
 }

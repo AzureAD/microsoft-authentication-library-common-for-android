@@ -1,14 +1,17 @@
 vNext
 ----------
+- [MINOR] Ensure username is set in Broker Result when UiRequiredException is sent in the result (#2720)
+- [MINOR] Add support to allow OneAuth to run silent/invisible authorization flow (#2722)
 - [MINOR] Full edge to edge support (#2721)
 - [MAJOR] Bump TargetSdk to 35, minSdk to 24, AGP to 8.10.0 (#2713)
-- [Minor] Improve tenant-based flighting for broker supporting code (#2717)
-- [PATCH] Fix caching of secret key and add retries for InvalidKeyException during unwrap (#2659)
+- [MINOR] Improve tenant-based flighting for broker supporting code (#2717)
+- [PATCH] Fix caching of secret key during unwrap (#2659)
 - [MINOR] Replace AbstractSecretKeyLoader with ISecretKeyProvider (#2666)
 - [MINOR] Update IP phone app teams signature constants to use SHA-512 format (#2700)
 - [MINOR] Using Baggage to propagate attributes from parent Span (#2671)
 - [PATCH] Fix a few small switch browser bugs (#2710)
 - [MINOR] Update Nimbus version (#2724)
+- [MINOR] Using tenant based flighting for webcp (#2723)
 
 Version 21.4.0
 ----------
