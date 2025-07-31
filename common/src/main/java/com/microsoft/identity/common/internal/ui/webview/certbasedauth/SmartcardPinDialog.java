@@ -73,7 +73,8 @@ public class SmartcardPinDialog extends SmartcardDialog {
             @Override
             public void run() {
                 //Inflate Pin EditText layout
-                mPinLayout = mActivity.getLayoutInflater().inflate(R.layout.pin_textview_layout, null);
+                mPinLayout = mActivity.getLayoutInflater().inflate(R.layout.pin_textview_layout,
+                        mActivity.findViewById(android.R.id.content), false);
                 //Start building dialog
                 final AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.CertAlertDialogTheme)
                         //Sets topmost text of dialog.

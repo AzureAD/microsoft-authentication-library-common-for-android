@@ -696,7 +696,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode)) {
             exception.setSubErrorCode(brokerResult.getSubErrorCode());
         }
-        exception.setUsername(brokerResult.getUserName());
+        if (!StringUtil.isNullOrEmpty(brokerResult.getUserName())) {
+            exception.setUsername(brokerResult.getUserName());
+        }
         return exception;
     }
 

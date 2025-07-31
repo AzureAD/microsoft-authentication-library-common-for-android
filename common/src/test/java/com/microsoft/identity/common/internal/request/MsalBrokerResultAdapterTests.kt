@@ -38,6 +38,9 @@ import com.microsoft.identity.internal.testutils.MockRecords
 import lombok.SneakyThrows
 import org.junit.Assert
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -345,5 +348,37 @@ class MsalBrokerResultAdapterTests {
         assertEquals(mockErrorMessage, brokerResult.errorMessage)
         assertEquals(mockUsername, brokerResult.userName)
         assertEquals(UiRequiredException.sName, brokerResult.exceptionType)
+
+        val receivedException = resultAdapter.getBaseExceptionFromBundle(resultBundle) as UiRequiredException
+        assertNotNull(receivedException)
+        assertEquals(mockUsername, receivedException.username)
+        assertEquals(mockErrorCode, receivedException.errorCode)
+        assertEquals(mockErrorMessage, receivedException.message)
+    }
+
+    @Test
+    @SneakyThrows
+    fun testBundleFromBaseException_UiRequiredException_NoUsername() {
+        val mockErrorCode = "invalid_grant"
+        val mockErrorMessage = "invalid_grant"
+
+        val uiRequiredException = UiRequiredException(mockErrorCode, mockErrorMessage)
+
+        val resultAdapter = MsalBrokerResultAdapter()
+        val resultBundle = resultAdapter.bundleFromBaseException(uiRequiredException, null)
+
+        assertEquals(false, resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS))
+        val brokerResult = resultAdapter.brokerResultFromBundle(resultBundle)
+
+        assertEquals(mockErrorCode, brokerResult.errorCode)
+        assertEquals(mockErrorMessage, brokerResult.errorMessage)
+        assertNull(brokerResult.userName)
+        assertEquals(UiRequiredException.sName, brokerResult.exceptionType)
+
+        val receivedException = resultAdapter.getBaseExceptionFromBundle(resultBundle) as UiRequiredException
+        assertNotNull(receivedException)
+        assertNull(receivedException.username)
+        assertEquals(mockErrorCode, receivedException.errorCode)
+        assertEquals(mockErrorMessage, receivedException.message)
     }
 }
