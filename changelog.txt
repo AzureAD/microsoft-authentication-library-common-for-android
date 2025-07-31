@@ -8,6 +8,7 @@ vNext
 - [MINOR] Update IP phone app teams signature constants to use SHA-512 format (#2700)
 - [MINOR] Using Baggage to propagate attributes from parent Span (#2671)
 - [PATCH] Fix a few small switch browser bugs (#2710)
+- [MINOR] Update Nimbus version (#2724)
 
 Version 21.4.0
 ----------
