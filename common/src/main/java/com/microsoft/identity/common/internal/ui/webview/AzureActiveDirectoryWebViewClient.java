@@ -662,7 +662,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             SpanExtension.current().setAttribute(AttributeName.web_cp_flight_get_time.name(), (System.currentTimeMillis() - webCpGetFlightStartTime));
             if (isWebCpFlightEnabled) {
                 // Directly enabled via flight rollout.
-                Logger.info(methodTag, "WebCP in WebView feature is enabled. "+ waitForFlightsTimeOut);
+                Logger.info(methodTag, "WebCP in WebView feature is enabled. ");
                 mIsWebCpInWebViewFeatureEnabled = true;
                 return true;
             }
