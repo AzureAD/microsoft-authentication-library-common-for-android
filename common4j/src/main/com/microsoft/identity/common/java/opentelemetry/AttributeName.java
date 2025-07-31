@@ -427,5 +427,11 @@ public enum AttributeName {
     /**
      * Record whether or not the request stored a number match entry.
      */
-    stored_number_match_entry
+    stored_number_match_entry,
+
+    /**
+     * Records the time (in milliseconds) spent on flight check for webcp.
+     */
+    web_cp_flight_get_time
+
 }
