@@ -338,10 +338,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             }
         }
 
-        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ADD_USERNAME_IN_UI_REQUIRED_EXCEPTION_BROKER_RESULT)) {
-            if (exception instanceof UiRequiredException) {
-                builder.userName(exception.getUsername());
-            }
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ADD_USERNAME_IN_UI_REQUIRED_EXCEPTION_BROKER_RESULT)
+                && exception instanceof UiRequiredException
+        ) {
+            builder.userName(exception.getUsername());
         }
 
         if (exception instanceof IntuneAppProtectionPolicyRequiredException) {
