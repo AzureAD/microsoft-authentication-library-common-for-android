@@ -23,9 +23,11 @@
 package com.microsoft.identity.common.internal.providers.oauth2
 
 import android.graphics.Color
+import android.os.Build
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.activity.enableEdgeToEdge
 import androidx.fragment.app.Fragment
 import com.microsoft.identity.common.R
 
@@ -70,7 +72,10 @@ class SilentAuthorizationActivity : AuthorizationActivity() {
     /**
      * Don't enable edge-to-edge explicitly, as the this activity is supposed to be transparent
      */
-    override fun edgeToEdge() {
-        // no-op for silent authorization activity
+    override fun setEdgeToEdge() {
+        this.enableEdgeToEdge()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
     }
 }

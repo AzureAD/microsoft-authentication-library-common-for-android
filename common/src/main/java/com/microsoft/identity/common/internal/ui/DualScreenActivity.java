@@ -31,7 +31,6 @@ import android.graphics.Rect;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Surface;
-import android.view.View;
 import android.view.WindowManager;
 import android.widget.RelativeLayout;
 
@@ -50,8 +49,8 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.microsoft.device.display.DisplayMask;
 import com.microsoft.identity.common.R;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.List;
@@ -69,7 +68,7 @@ public class DualScreenActivity extends FragmentActivity {
             // Until then, having everything consistently rendered with a white background looks better.
             // This will also guarantee that the icons on those bars are always visible.
             setTheme(getThemeResId());
-            edgeToEdge();
+            setEdgeToEdge();
         }
     }
 
@@ -256,7 +255,7 @@ public class DualScreenActivity extends FragmentActivity {
      * Enable default edge-to-edge mode for this and derived activities.
      * This will set the status and navigation bars to light mode with transparent background.
      */
-    protected void edgeToEdge() {
+    protected void setEdgeToEdge() {
         EdgeToEdge.enable(this,
                 SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
                 SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT));
