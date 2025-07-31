@@ -31,6 +31,7 @@ import android.graphics.Rect;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Surface;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.RelativeLayout;
 
@@ -67,7 +68,7 @@ public class DualScreenActivity extends FragmentActivity {
             // We don't support dark mode in broker/common activities yet.
             // Until then, having everything consistently rendered with a white background looks better.
             // This will also guarantee that the icons on those bars are always visible.
-            setTheme(R.style.DualScreenActivityTheme);
+            setTheme(getThemeResId());
             EdgeToEdge.enable(this,
                     SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
                     SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT));
@@ -85,24 +86,27 @@ public class DualScreenActivity extends FragmentActivity {
     private void initializeContentView(){
         super.setContentView(R.layout.dual_screen_layout);
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_HANDLING_FOR_EDGE_TO_EDGE)) {
-            try {
-                ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (view, insets) -> {
-                    // Set the padding of the view to the insets of system bars, display cutout, system gestures, and Input (keyboards).
-                    final Insets inset = insets.getInsets(WindowInsetsCompat.Type.systemBars()
-                            | WindowInsetsCompat.Type.displayCutout()
-                            | WindowInsetsCompat.Type.systemGestures()
-                            | WindowInsetsCompat.Type.ime());
-                    view.setPadding(inset.left, inset.top, inset.right, inset.bottom);
-                    return insets;
-                });
-            } catch (final Throwable throwable) {
-                Logger.warn("DualScreenActivity:initializeContentView", "Failed to set OnApplyWindowInsetsListener");
-            }
+            applyInsets(findViewById(android.R.id.content));
         }
 
         adjustLayoutForDualScreenActivity();
     }
 
+    protected void applyInsets(@NonNull final View v) {
+        try {
+            ViewCompat.setOnApplyWindowInsetsListener(v, (view, insets) -> {
+                // Set the padding of the view to the insets of system bars, display cutout, system gestures, and Input (keyboards).
+                final Insets inset = insets.getInsets(WindowInsetsCompat.Type.systemBars()
+                        | WindowInsetsCompat.Type.displayCutout()
+                        | WindowInsetsCompat.Type.systemGestures()
+                        | WindowInsetsCompat.Type.ime());
+                view.setPadding(inset.left, inset.top, inset.right, inset.bottom);
+                return insets;
+            });
+        } catch (final Throwable throwable) {
+            Logger.warn("DualScreenActivity:initializeContentView", "Failed to set OnApplyWindowInsetsListener");
+        }
+    }
     public void setFragment(@NonNull final Fragment fragment) {
         initializeContentView();
         getSupportFragmentManager()
@@ -218,7 +222,7 @@ public class DualScreenActivity extends FragmentActivity {
     /**
      * Returns the area of the display that is not functional for displaying content.
      *
-     * @param Context
+     * @param context
      * @param rotation Surface.ROTATION_0, Surface.ROTATION_90, Surface.ROTATION_180 or Surface.ROTATION_270
      */
     private Rect getHinge(final Context context,
@@ -247,5 +251,9 @@ public class DualScreenActivity extends FragmentActivity {
         Rect windowRect = new Rect();
         activity.getWindowManager().getDefaultDisplay().getRectSize(windowRect);
         return windowRect;
+    }
+
+    protected int getThemeResId() {
+        return R.style.DualScreenActivityTheme;
     }
 }

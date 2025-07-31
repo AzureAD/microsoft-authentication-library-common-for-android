@@ -22,10 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2
 
+import android.graphics.Color
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
+import com.microsoft.identity.common.R
 
 /**
  * Activity for handling silent web view authorization flows. It hides all UI and makes it transparent.
@@ -38,22 +42,31 @@ class SilentAuthorizationActivity : AuthorizationActivity() {
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         // Set the content view to a transparent layout. This along with
         // theme will ensure that the activity is transparent.
-        window.decorView.alpha = 0f
+        // window.decorView.alpha = 0f
         super.onCreate(savedInstanceState)
     }
 
     override fun setFragment(fragment: Fragment) {
         // Create a container for the fragment, but do not display it.
-        val container = FrameLayout(this)
-        container.id = View.generateViewId()
-        container.layoutParams = ViewGroup.LayoutParams(0, 0)
-        container.visibility = View.GONE
-
+        val container = FrameLayout(this).apply {
+            id = View.generateViewId()
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            setBackgroundColor(Color.TRANSPARENT)
+            visibility = View.GONE
+        }
         setContentView(container)
 
+        applyInsets(container)
         supportFragmentManager
             .beginTransaction()
             .replace(container.id, fragment)
             .commitNow()
+    }
+
+    override fun getThemeResId(): Int {
+        return R.style.TransparentActivityTheme
     }
 }
