@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Ensure username is set in Broker Result when UiRequiredException is sent in the result (#2720)
 - [MINOR] Add support to allow OneAuth to run silent/invisible authorization flow (#2722)
 - [MINOR] Full edge to edge support (#2721)
 - [MAJOR] Bump TargetSdk to 35, minSdk to 24, AGP to 8.10.0 (#2713)

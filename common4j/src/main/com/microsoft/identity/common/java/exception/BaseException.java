@@ -216,7 +216,7 @@ public class BaseException extends Exception implements IErrorInformation, ITele
         return mUsername;
     }
 
-    public void setUsername(@NonNull final String username) {
+    public void setUsername(@Nullable final String username) {
         this.mUsername = username;
     }
 
