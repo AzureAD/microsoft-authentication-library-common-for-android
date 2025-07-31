@@ -26,8 +26,6 @@ import android.graphics.Color
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
 import com.microsoft.identity.common.R
 
@@ -59,7 +57,6 @@ class SilentAuthorizationActivity : AuthorizationActivity() {
         }
         setContentView(container)
 
-        applyInsets(container)
         supportFragmentManager
             .beginTransaction()
             .replace(container.id, fragment)
@@ -68,5 +65,12 @@ class SilentAuthorizationActivity : AuthorizationActivity() {
 
     override fun getThemeResId(): Int {
         return R.style.TransparentActivityTheme
+    }
+
+    /**
+     * Don't enable edge-to-edge explicitly, as the this activity is supposed to be transparent
+     */
+    override fun edgeToEdge() {
+        // no-op for silent authorization activity
     }
 }

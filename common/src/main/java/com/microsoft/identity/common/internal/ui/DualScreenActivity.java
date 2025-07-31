@@ -69,9 +69,7 @@ public class DualScreenActivity extends FragmentActivity {
             // Until then, having everything consistently rendered with a white background looks better.
             // This will also guarantee that the icons on those bars are always visible.
             setTheme(getThemeResId());
-            EdgeToEdge.enable(this,
-                    SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
-                    SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT));
+            edgeToEdge();
         }
     }
 
@@ -86,27 +84,24 @@ public class DualScreenActivity extends FragmentActivity {
     private void initializeContentView(){
         super.setContentView(R.layout.dual_screen_layout);
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_HANDLING_FOR_EDGE_TO_EDGE)) {
-            applyInsets(findViewById(android.R.id.content));
+            try {
+                ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (view, insets) -> {
+                    // Set the padding of the view to the insets of system bars, display cutout, system gestures, and Input (keyboards).
+                    final Insets inset = insets.getInsets(WindowInsetsCompat.Type.systemBars()
+                            | WindowInsetsCompat.Type.displayCutout()
+                            | WindowInsetsCompat.Type.systemGestures()
+                            | WindowInsetsCompat.Type.ime());
+                    view.setPadding(inset.left, inset.top, inset.right, inset.bottom);
+                    return insets;
+                });
+            } catch (final Throwable throwable) {
+                Logger.warn("DualScreenActivity:initializeContentView", "Failed to set OnApplyWindowInsetsListener");
+            }
         }
 
         adjustLayoutForDualScreenActivity();
     }
 
-    protected void applyInsets(@NonNull final View v) {
-        try {
-            ViewCompat.setOnApplyWindowInsetsListener(v, (view, insets) -> {
-                // Set the padding of the view to the insets of system bars, display cutout, system gestures, and Input (keyboards).
-                final Insets inset = insets.getInsets(WindowInsetsCompat.Type.systemBars()
-                        | WindowInsetsCompat.Type.displayCutout()
-                        | WindowInsetsCompat.Type.systemGestures()
-                        | WindowInsetsCompat.Type.ime());
-                view.setPadding(inset.left, inset.top, inset.right, inset.bottom);
-                return insets;
-            });
-        } catch (final Throwable throwable) {
-            Logger.warn("DualScreenActivity:initializeContentView", "Failed to set OnApplyWindowInsetsListener");
-        }
-    }
     public void setFragment(@NonNull final Fragment fragment) {
         initializeContentView();
         getSupportFragmentManager()
@@ -255,5 +250,15 @@ public class DualScreenActivity extends FragmentActivity {
 
     protected int getThemeResId() {
         return R.style.DualScreenActivityTheme;
+    }
+
+    /**
+     * Enable default edge-to-edge mode for this and derived activities.
+     * This will set the status and navigation bars to light mode with transparent background.
+     */
+    protected void edgeToEdge() {
+        EdgeToEdge.enable(this,
+                SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+                SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT));
     }
 }
