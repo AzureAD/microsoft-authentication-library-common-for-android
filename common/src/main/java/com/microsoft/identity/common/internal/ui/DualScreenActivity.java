@@ -26,15 +26,21 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.graphics.Rect;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Surface;
 import android.view.WindowManager;
 import android.widget.RelativeLayout;
 
+import androidx.activity.EdgeToEdge;
+import androidx.activity.SystemBarStyle;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
+import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
@@ -53,6 +59,22 @@ import java.util.List;
 public class DualScreenActivity extends FragmentActivity {
 
     @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_HANDLING_FOR_EDGE_TO_EDGE)) {
+            // Force set to a light theme (to status and navigation bars) since broker/common activities always have white background.
+            // We don't support dark mode in broker/common activities yet.
+            // Until then, having everything consistently rendered with a white background looks better.
+            // This will also guarantee that the icons on those bars are always visible.
+            setTheme(R.style.DualScreenActivityTheme);
+            EdgeToEdge.enable(this,
+                    SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+                    SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT));
+        }
+    }
+
+    @Override
     public void setContentView(int layoutResID) {
         initializeContentView();
 
@@ -65,18 +87,19 @@ public class DualScreenActivity extends FragmentActivity {
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_HANDLING_FOR_EDGE_TO_EDGE)) {
             try {
                 ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (view, insets) -> {
-                    int topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
-                    int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
-                    int leftInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).left;
-                    int rightInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).right;
-
-                    view.setPadding(leftInset, topInset, rightInset, bottomInset);
+                    // Set the padding of the view to the insets of system bars, display cutout, system gestures, and Input (keyboards).
+                    final Insets inset = insets.getInsets(WindowInsetsCompat.Type.systemBars()
+                            | WindowInsetsCompat.Type.displayCutout()
+                            | WindowInsetsCompat.Type.systemGestures()
+                            | WindowInsetsCompat.Type.ime());
+                    view.setPadding(inset.left, inset.top, inset.right, inset.bottom);
                     return insets;
                 });
             } catch (final Throwable throwable) {
                 Logger.warn("DualScreenActivity:initializeContentView", "Failed to set OnApplyWindowInsetsListener");
             }
         }
+
         adjustLayoutForDualScreenActivity();
     }
 
