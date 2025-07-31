@@ -650,25 +650,24 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 return false;
             }
 
-            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)) {
-                // Directly enabled via flight rollout.
-                Logger.info(methodTag, "WebCP in WebView feature is enabled.");
-                mIsWebCpInWebViewFeatureEnabled = true;
-                return true;
-            }
-
-            // Else, check if the home tenant is in the list of tenants that have this feature enabled.
             final String homeTenantId = !StringUtil.isNullOrEmpty(mUtid)? mUtid : getHomeTenantIdFromUrl(originalUrl);
             if (StringUtil.isNullOrEmpty(homeTenantId)) {
                 Logger.info(methodTag, "Home tenantId is empty");
                 return false;
             }
 
-            final String tenantIdList = CommonFlightsManager.INSTANCE.getFlightsProvider().getStringValue(CommonFlight.TENANT_LIST_TO_ENABLE_WEB_CP_IN_WEBVIEW);
-            final boolean isFlightEnabledForCurrentTenant = !StringUtil.isNullOrEmpty(tenantIdList) && tenantIdList.contains(homeTenantId);
-            Logger.info(methodTag, "TenantId list is empty? " + StringUtil.isNullOrEmpty(tenantIdList) + ", Is current tenantId in list? " + isFlightEnabledForCurrentTenant);
-            mIsWebCpInWebViewFeatureEnabled = isFlightEnabledForCurrentTenant;
-            return isFlightEnabledForCurrentTenant;
+            final long webCpGetFlightStartTime = System.currentTimeMillis();
+            final int waitForFlightsTimeOut = CommonFlightsManager.INSTANCE.getFlightsProvider().getIntValue(CommonFlight.WEB_CP_WAIT_TIMEOUT_FOR_FLIGHTS);
+            final boolean isWebCpFlightEnabled = CommonFlightsManager.INSTANCE.getFlightsProviderForTenant(homeTenantId, waitForFlightsTimeOut).isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW);
+            SpanExtension.current().setAttribute(AttributeName.web_cp_flight_get_time.name(), (System.currentTimeMillis() - webCpGetFlightStartTime));
+            if (isWebCpFlightEnabled) {
+                // Directly enabled via flight rollout.
+                Logger.info(methodTag, "WebCP in WebView feature is enabled. "+ waitForFlightsTimeOut);
+                mIsWebCpInWebViewFeatureEnabled = true;
+                return true;
+            }
+
+            return false;
         } catch (final Throwable throwable) {
             // Catching any unexpected exceptions to avoid breaking the flow. We will anyway remove this block once the feature is fully rolled out.
             Logger.error(methodTag, "Failed to check if WebCP in WebView feature is enabled.", throwable);

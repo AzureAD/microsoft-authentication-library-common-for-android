@@ -150,7 +150,12 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable adding username field in broker request for UiRequiredException from broker.
      */
-    ADD_USERNAME_IN_UI_REQUIRED_EXCEPTION_BROKER_RESULT("AddUsernameInUiRequiredExceptionBrokerResult", true);
+    ADD_USERNAME_IN_UI_REQUIRED_EXCEPTION_BROKER_RESULT("AddUsernameInUiRequiredExceptionBrokerResult", true),
+
+    /**
+     * Flight to control the timeout to wait for tenant based flight in WebCP.
+     */
+    WEB_CP_WAIT_TIMEOUT_FOR_FLIGHTS("WebCpWaitTimeoutForFlights", 3000);
 
     private String key;
     private Object defaultValue;
