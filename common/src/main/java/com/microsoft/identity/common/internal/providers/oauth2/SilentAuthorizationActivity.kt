@@ -70,10 +70,13 @@ class SilentAuthorizationActivity : AuthorizationActivity() {
     }
 
     /**
-     * Don't enable edge-to-edge explicitly, as the this activity is supposed to be transparent
+     * Enables edge to edge setting for silent authorization activity.
      */
     override fun setEdgeToEdge() {
+        // enableEdgeToEdge with default value
         this.enableEdgeToEdge()
+
+        // Disable navigation bar contrast enforcement to ensure the navigation bar is transparent
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             window.isNavigationBarContrastEnforced = false
         }
