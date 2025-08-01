@@ -1,5 +1,8 @@
 vNext
 ----------
+
+Version 22.0.0-RC1
+----------
 - [MINOR] Ensure username is set in Broker Result when UiRequiredException is sent in the result (#2720)
 - [MINOR] Add support to allow OneAuth to run silent/invisible authorization flow (#2722)
 - [MINOR] Full edge to edge support (#2721)
