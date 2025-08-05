@@ -872,6 +872,14 @@ public abstract class BaseController {
                 ((MicrosoftTokenRequest) refreshTokenRequest).setPKeyAuthHeaderAllowed(
                         ((BrokerSilentTokenCommandParameters) parameters).isPKeyAuthHeaderAllowed()
                 );
+
+                // set enrollment id if available
+                // This is used to support MAM scenarios where the broker needs to send the enrollment id to the service
+                // For BrokerLocalController, PRT is not used but RT may have device claim so MAM enrollment is still possible
+                // as long as the broker sends the enrollment id.
+                if (!StringUtil.isNullOrEmpty(parameters.getMamEnrollmentId())) {
+                    ((MicrosoftTokenRequest) refreshTokenRequest).setMicrosoftEnrollmentId(parameters.getMamEnrollmentId());
+                }
             }
         }
 
