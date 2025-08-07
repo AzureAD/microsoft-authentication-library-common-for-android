@@ -344,7 +344,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (mIsWebCpInWebViewFeatureEnabled && isWebCpAuthorizeUrl(url)) {
                 processWebCpAuthorize(view, url);
             } else {
-                Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
+                Logger.info(methodTag,"This maybe a valid URI, but nottt special handling for this mentioned URI, hence deferring to WebView for loading.");
                 processInvalidUrl(url);
                 return false;
             }
