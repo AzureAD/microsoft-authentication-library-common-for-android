@@ -88,10 +88,9 @@ public class DualScreenActivity extends FragmentActivity {
                     // Set the padding of the view to the insets of system bars, display cutout, system gestures, and Input (keyboards).
                     final Insets inset = insets.getInsets(WindowInsetsCompat.Type.systemBars()
                             | WindowInsetsCompat.Type.displayCutout()
-                            | WindowInsetsCompat.Type.systemGestures()
                             | WindowInsetsCompat.Type.ime());
                     view.setPadding(inset.left, inset.top, inset.right, inset.bottom);
-                    return insets;
+                    return WindowInsetsCompat.CONSUMED;
                 });
             } catch (final Throwable throwable) {
                 Logger.warn("DualScreenActivity:initializeContentView", "Failed to set OnApplyWindowInsetsListener");
