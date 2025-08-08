@@ -13,6 +13,7 @@ vNext
 - [MINOR] Update Nimbus version (#2724)
 - [MINOR] Using tenant based flighting for webcp (#2723)
 - [PATCH] Fix for enrollment id not sent to /token from local controller (#2726)
+- [PATCH] Handle BadTokenException gracefully in CBA dialogs (#2731)
 
 Version 21.4.0
 ----------
