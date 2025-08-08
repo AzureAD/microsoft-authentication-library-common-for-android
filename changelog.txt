@@ -1,6 +1,10 @@
 vNext
 ----------
 
+Version 22.0.1
+----------
+- [PATCH] Remove System Gesture Inset (#2730)
+
 Version 22.0.0
 ----------
 - [MINOR] Ensure username is set in Broker Result when UiRequiredException is sent in the result (#2720)
