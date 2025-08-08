@@ -587,7 +587,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private void processDeviceCaRequest(@NonNull final WebView view, @NonNull final String url) {
-        final String methodTag = TAG + ":handleDeviceCaRequest";
+        final String methodTag = TAG + ":processDeviceCaRequest";
         Logger.info(methodTag, "This is a device CA request.");
 
         if (shouldLaunchCompanyPortal()) {
