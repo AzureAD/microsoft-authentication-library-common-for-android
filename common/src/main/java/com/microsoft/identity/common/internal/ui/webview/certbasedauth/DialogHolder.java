@@ -23,11 +23,13 @@
 package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 import android.app.Activity;
+import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.List;
 
@@ -38,6 +40,9 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public class DialogHolder implements IDialogHolder {
+
+    private final String TAG = DialogHolder.class.getSimpleName();
+
     //Current host activity.
     private final Activity mActivity;
     //The current dialog that is showing, if any.
@@ -61,12 +66,22 @@ public class DialogHolder implements IDialogHolder {
     public synchronized void showCertPickerDialog(@NonNull final List<ICertDetails> certList,
                                                   @NonNull final SmartcardCertPickerDialog.PositiveButtonListener positiveButtonListener,
                                                   @NonNull final ICancelCbaCallback cancelCbaCallback) {
-        final SmartcardCertPickerDialog certPickerDialog = new SmartcardCertPickerDialog(
-                certList,
-                positiveButtonListener,
-                cancelCbaCallback,
-                mActivity);
-        showDialog(certPickerDialog);
+        try {
+            final SmartcardCertPickerDialog certPickerDialog = new SmartcardCertPickerDialog(
+                    certList,
+                    positiveButtonListener,
+                    cancelCbaCallback,
+                    mActivity);
+            showDialog(certPickerDialog);
+        } catch (final WindowManager.BadTokenException e) {
+            // This can happen if the activity is finishing or has been destroyed,
+            // or when the user navigates away from the app while a dialog is being shown.
+            // In this case, we simply do not show the dialog and will call the cancel callback.
+            Logger.error(TAG + ":showCertPickerDialog",
+                    "Failed to show CertPickerDialog due to BadTokenException. Activity may be finishing or destroyed.",
+                    e);
+            cancelCbaCallback.onCancel();
+        }
     }
 
     /**
@@ -76,12 +91,22 @@ public class DialogHolder implements IDialogHolder {
      */
     public synchronized void showPinDialog(@NonNull final SmartcardPinDialog.PositiveButtonListener positiveButtonListener,
                                            @NonNull final ICancelCbaCallback cancelCbaCallback) {
-        final SmartcardPinDialog pinDialog = new SmartcardPinDialog(
-                positiveButtonListener,
-                cancelCbaCallback,
-                mActivity);
-        //PinDialog should always be called after a positive button press.
-        showDialog(pinDialog);
+        try {
+            final SmartcardPinDialog pinDialog = new SmartcardPinDialog(
+                    positiveButtonListener,
+                    cancelCbaCallback,
+                    mActivity);
+            //PinDialog should always be called after a positive button press.
+            showDialog(pinDialog);
+        } catch (final WindowManager.BadTokenException e) {
+            // This can happen if the activity is finishing or has been destroyed,
+            // or when the user navigates away from the app while a dialog is being shown.
+            // In this case, we simply do not show the dialog and will call the cancel callback.
+            Logger.error(TAG + ":showPinDialog",
+                    "Failed to show PinDialog due to BadTokenException. Activity may be finishing or destroyed.",
+                    e);
+            cancelCbaCallback.onCancel();
+        }
     }
 
     /**
@@ -91,18 +116,26 @@ public class DialogHolder implements IDialogHolder {
      */
     public synchronized void showErrorDialog(final int titleStringResourceId,
                                              final int messageStringResourceId) {
-        showDialog(new SmartcardErrorDialog(
-                titleStringResourceId,
-                messageStringResourceId,
-                R.string.smartcard_error_dialog_positive_button, //Default dismiss text.
-                new IDismissCallback() {
-                    @Override
-                    public void onDismiss() {
-                        //Call dismissDialog
-                        dismissDialog();
-                    }
-                },
-                mActivity));
+        try {
+            showDialog(new SmartcardErrorDialog(
+                    titleStringResourceId,
+                    messageStringResourceId,
+                    R.string.smartcard_error_dialog_positive_button, //Default dismiss text.
+                    new IDismissCallback() {
+                        @Override
+                        public void onDismiss() {
+                            //Call dismissDialog
+                            dismissDialog();
+                        }
+                    },
+                    mActivity));
+        } catch (final WindowManager.BadTokenException e) {
+            // This can happen if the activity is finishing or has been destroyed,
+            // or when the user navigates away from the app while a dialog is being shown.
+            Logger.error(TAG + ":showErrorDialog",
+                    "Failed to show ErrorDialog due to BadTokenException. Activity may be finishing or destroyed.",
+                    e);
+        }
     }
 
     /**
@@ -114,18 +147,26 @@ public class DialogHolder implements IDialogHolder {
     public synchronized void showErrorDialog(final int titleStringResourceId,
                                              final int messageStringResourceId,
                                              final int dismissButtonStringResourceId) {
-        showDialog(new SmartcardErrorDialog(
-                titleStringResourceId,
-                messageStringResourceId,
-                dismissButtonStringResourceId,
-                new IDismissCallback() {
-                    @Override
-                    public void onDismiss() {
-                        //Call dismissDialog
-                        dismissDialog();
-                    }
-                },
-                mActivity));
+        try {
+            showDialog(new SmartcardErrorDialog(
+                    titleStringResourceId,
+                    messageStringResourceId,
+                    dismissButtonStringResourceId,
+                    new IDismissCallback() {
+                        @Override
+                        public void onDismiss() {
+                            //Call dismissDialog
+                            dismissDialog();
+                        }
+                    },
+                    mActivity));
+        } catch (final WindowManager.BadTokenException e) {
+            // This can happen if the activity is finishing or has been destroyed,
+            // or when the user navigates away from the app while a dialog is being shown.
+            Logger.error(TAG + ":showErrorDialog",
+                    "Failed to show ErrorDialog due to BadTokenException. Activity may be finishing or destroyed.",
+                    e);
+        }
     }
 
     /**
@@ -136,11 +177,22 @@ public class DialogHolder implements IDialogHolder {
      */
     public synchronized void showUserChoiceDialog(@NonNull final UserChoiceDialog.PositiveButtonListener positiveButtonListener,
                                                   @NonNull final ICancelCbaCallback cancelCbaCallback) {
-        showDialog(new UserChoiceDialog(
-                positiveButtonListener,
-                 cancelCbaCallback,
-                mActivity
-        ));
+        try {
+            showDialog(new UserChoiceDialog(
+                    positiveButtonListener,
+                    cancelCbaCallback,
+                    mActivity
+            ));
+        } catch (final WindowManager.BadTokenException e) {
+            // This can happen if the activity is finishing or has been destroyed,
+            // or when the user navigates away from the app while a dialog is being shown.
+            // In this case, we simply do not show the dialog and will call the cancel callback.
+            // We log the exception but do not crash the app.
+            Logger.error(TAG + ":showUserChoiceDialog",
+                    "Failed to show UserChoiceDialog due to BadTokenException. Activity may be finishing or destroyed.",
+                    e);
+            cancelCbaCallback.onCancel();
+        }
     }
 
     /**
@@ -149,17 +201,34 @@ public class DialogHolder implements IDialogHolder {
      * @param cancelCbaCallback A Callback that holds code to be run when CBA is being cancelled.
      */
     public synchronized void showSmartcardPromptDialog(@NonNull final ICancelCbaCallback cancelCbaCallback) {
-        showDialog(new SmartcardPromptDialog(
-                cancelCbaCallback,
-                mActivity
-        ));
+        try {
+            showDialog(new SmartcardPromptDialog(
+                    cancelCbaCallback,
+                    mActivity
+            ));
+        } catch (final WindowManager.BadTokenException e) {
+            // This can happen if the activity is finishing or has been destroyed,
+            // or when the user navigates away from the app while a dialog is being shown.
+            Logger.error(TAG + ":showSmartcardPromptDialog",
+                    "Failed to show SmartcardPromptDialog due to BadTokenException. Activity may be finishing or destroyed.",
+                    e);
+            cancelCbaCallback.onCancel();
+        }
     }
 
     /**
      * Builds and shows a SmartcardDialog that reminds the user to remain holding their smartcard device to their phone.
      */
     public synchronized void showSmartcardNfcLoadingDialog() {
-        showDialog(new SmartcardNfcLoadingDialog(mActivity));
+        try {
+            showDialog(new SmartcardNfcLoadingDialog(mActivity));
+        } catch (final WindowManager.BadTokenException e) {
+            // This can happen if the activity is finishing or has been destroyed,
+            // or when the user navigates away from the app while a dialog is being shown.
+            Logger.error(TAG + ":showSmartcardNfcLoadingDialog",
+                    "Failed to show SmartcardNfcLoadingDialog due to BadTokenException. Activity may be finishing or destroyed.",
+                    e);
+        }
     }
 
     /**
@@ -167,9 +236,18 @@ public class DialogHolder implements IDialogHolder {
      * @param cancelCbaCallback A Callback that holds code to be run when CBA is being cancelled.
      */
     public synchronized void showSmartcardNfcPromptDialog(@NonNull final ICancelCbaCallback cancelCbaCallback) {
-        showDialog(new SmartcardNfcPromptDialog(
-                cancelCbaCallback,
-                mActivity));
+        try {
+            showDialog(new SmartcardNfcPromptDialog(
+                    cancelCbaCallback,
+                    mActivity));
+        } catch (final WindowManager.BadTokenException e) {
+            // This can happen if the activity is finishing or has been destroyed,
+            // or when the user navigates away from the app while a dialog is being shown.
+            Logger.error(TAG + ":showSmartcardNfcPromptDialog",
+                    "Failed to show SmartcardNfcPromptDialog due to BadTokenException. Activity may be finishing or destroyed.",
+                    e);
+            cancelCbaCallback.onCancel();
+        }
     }
 
     /**
@@ -177,10 +255,20 @@ public class DialogHolder implements IDialogHolder {
      * @param dismissCallback a callback that holds logic to be run upon dismissal of the dialog.
      */
     public synchronized void showSmartcardNfcReminderDialog(@NonNull final IDismissCallback dismissCallback) {
-        showDialog(new SmartcardNfcReminderDialog(
-                dismissCallback,
-                mActivity
-        ));
+        try {
+            showDialog(new SmartcardNfcReminderDialog(
+                    dismissCallback,
+                    mActivity
+            ));
+        } catch (final WindowManager.BadTokenException e) {
+            // This can happen if the activity is finishing or has been destroyed,
+            // or when the user navigates away from the app while a dialog is being shown.
+            Logger.error(TAG + ":showSmartcardNfcReminderDialog",
+                    "Failed to show SmartcardNfcReminderDialog due to BadTokenException. Activity may be finishing or destroyed.",
+                    e);
+            // Call the dismissCallback since we couldn't show the dialog
+            dismissCallback.onDismiss();
+        }
     }
 
     /**
@@ -189,15 +277,23 @@ public class DialogHolder implements IDialogHolder {
      */
     @Override
     public synchronized void showSmartcardRemovalPromptDialog(@Nullable final IDismissCallback dismissCallback) {
-        showDialog(new SmartcardRemovalPromptDialog(new IDismissCallback() {
-            @Override
-            public void onDismiss() {
-                dismissDialog();
-                if (dismissCallback != null) {
-                    dismissCallback.onDismiss();
+        try {
+            showDialog(new SmartcardRemovalPromptDialog(new IDismissCallback() {
+                @Override
+                public void onDismiss() {
+                    dismissDialog();
+                    if (dismissCallback != null) {
+                        dismissCallback.onDismiss();
+                    }
                 }
-            }
-        }, mActivity));
+            }, mActivity));
+        } catch (final WindowManager.BadTokenException e) {
+            // This can happen if the activity is finishing or has been destroyed,
+            // or when the user navigates away from the app while a dialog is being shown.
+            Logger.error(TAG + ":showSmartcardRemovalPromptDialog",
+                    "Failed to show SmartcardRemovalPromptDialog due to BadTokenException. Activity may be finishing or destroyed.",
+                    e);
+        }
     }
 
     /**
