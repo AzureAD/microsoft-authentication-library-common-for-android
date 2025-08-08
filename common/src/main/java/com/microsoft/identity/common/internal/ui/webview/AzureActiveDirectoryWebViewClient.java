@@ -344,7 +344,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (mIsWebCpInWebViewFeatureEnabled && isWebCpAuthorizeUrl(url)) {
                 processWebCpAuthorize(view, url);
             } else if (isDeviceCaRequest(url)) {
-                 // Exception for device CA requests due to a corner case in eSTS for webapps/confidential clients, which should be handled by the WebView.
+                 // Special handling for device CA requests due to a corner case in eSTS for webapps/confidential clients, which should be handled by the WebView.
                 processDeviceCaRequest(view, url);
             } else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
