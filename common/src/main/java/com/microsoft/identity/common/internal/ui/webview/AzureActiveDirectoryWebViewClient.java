@@ -665,6 +665,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         try {
             if (!ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
                 // Enabling webcp in webview feature for brokered flows only for now.
+                Logger.info(methodTag, "Not running on AuthService, skipping WebCP in WebView feature check.");
                 return false;
             }
 
@@ -680,7 +681,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             SpanExtension.current().setAttribute(AttributeName.web_cp_flight_get_time.name(), (System.currentTimeMillis() - webCpGetFlightStartTime));
             if (isWebCpFlightEnabled) {
                 // Directly enabled via flight rollout.
-                Logger.info(methodTag, "WebCP in WebView feature is enabled. ");
+                Logger.info(methodTag, "WebCP in WebView feature is enabled.");
                 mIsWebCpInWebViewFeatureEnabled = true;
                 return true;
             }

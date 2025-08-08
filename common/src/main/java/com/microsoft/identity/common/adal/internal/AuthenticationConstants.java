@@ -1285,7 +1285,7 @@ public final class AuthenticationConstants {
         /**
          *  The scheme for HTTPS URLs.
          */
-        public static final String HTTPS_SCHEME = "https://";
+        public static final String HTTPS_SCHEME = "https";
 
         /**
          * Activity name to launch company portal.
