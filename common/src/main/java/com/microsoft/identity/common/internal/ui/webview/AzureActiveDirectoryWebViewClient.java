@@ -343,7 +343,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processWebCpEnrollmentUrl(view, url);
             } else if (mIsWebCpInWebViewFeatureEnabled && isWebCpAuthorizeUrl(url)) {
                 processWebCpAuthorize(view, url);
-            } else if (isDeviceCaRequest(url)) {
+            } else if (isDeviceCaRequest(url) && isHttpsScheme(url)) {
                  // Special handling for device CA requests due to a corner case in eSTS for webapps/confidential clients, which should be handled by the WebView.
                 processDeviceCaRequest(view, url);
             } else {
@@ -613,6 +613,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isDeviceCaRequest(@NonNull final String url) {
         return url.contains(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+    }
+
+    private boolean isHttpsScheme(@NonNull final String url) {
+        return url.startsWith(AuthenticationConstants.Broker.HTTPS_SCHEME);
     }
 
     // Decides whether to launch the Company Portal app based on the presence of the IPPhone app and its signature.

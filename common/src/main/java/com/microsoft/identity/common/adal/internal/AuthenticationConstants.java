@@ -1283,6 +1283,11 @@ public final class AuthenticationConstants {
         public static final String BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "&ismdmurl=1";
 
         /**
+         * The scheme for HTTPS URLs.
+         */
+        public static final String HTTPS_SCHEME = "https://";
+
+        /**
          * Activity name to launch company portal.
          */
         public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = Broker.COMPANY_PORTAL_APP_PACKAGE_NAME + ".views.SplashActivity";
