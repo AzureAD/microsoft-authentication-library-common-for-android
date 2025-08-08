@@ -343,6 +343,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processWebCpEnrollmentUrl(view, url);
             } else if (mIsWebCpInWebViewFeatureEnabled && isWebCpAuthorizeUrl(url)) {
                 processWebCpAuthorize(view, url);
+            } else if (isDeviceCaRequest(url)) {
+                 // Exception for device CA requests due to a corner case in eSTS for webapps/confidential clients, which should be handled by the WebView.
+                processDeviceCaRequest(view, url);
             } else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
                 processInvalidUrl(url);
@@ -575,27 +578,32 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         view.stopLoading();
 
         if (isDeviceCaRequest(url)) {
-            Logger.info(methodTag, "This is a device CA request.");
-
-            if (shouldLaunchCompanyPortal()) {
-                // If CP is installed, redirect to CP.
-                // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
-                //       CP is currently working on this.
-                //       Until that comes, we'll only handle this in ipphone.
-                try {
-                    launchCompanyPortal();
-                    return;
-                } catch (final Exception ex) {
-                    Logger.warn(methodTag, "Failed to launch Company Portal, falling back to browser.");
-                }
-            }
-
-            loadDeviceCaUrl(url, view);
+           processDeviceCaRequest(view, url);
         } else {
             Logger.info(methodTag, "Not a device CA request. Redirecting to browser.");
             openLinkInBrowser(url);
             returnResult(RawAuthorizationResult.ResultCode.CANCELLED);
         }
+    }
+
+    private void processDeviceCaRequest(@NonNull final WebView view, @NonNull final String url) {
+        final String methodTag = TAG + ":handleDeviceCaRequest";
+        Logger.info(methodTag, "This is a device CA request.");
+
+        if (shouldLaunchCompanyPortal()) {
+            // If CP is installed, redirect to CP.
+            // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
+            //       CP is currently working on this.
+            //       Until that comes, we'll only handle this in ipphone.
+            try {
+                launchCompanyPortal();
+                return;
+            } catch (final Exception ex) {
+                Logger.warn(methodTag, "Failed to launch Company Portal, falling back to browser.");
+            }
+        }
+
+        loadDeviceCaUrl(url, view);
     }
 
     private boolean isDeviceCaRequest(@NonNull final String url) {
@@ -647,6 +655,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         try {
             if (!ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
                 // Enabling webcp in webview feature for brokered flows only for now.
+                Logger.info(methodTag, "Not running on AuthService, skipping WebCP in WebView feature check.");
                 return false;
             }
 
@@ -662,7 +671,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             SpanExtension.current().setAttribute(AttributeName.web_cp_flight_get_time.name(), (System.currentTimeMillis() - webCpGetFlightStartTime));
             if (isWebCpFlightEnabled) {
                 // Directly enabled via flight rollout.
-                Logger.info(methodTag, "WebCP in WebView feature is enabled. ");
+                Logger.info(methodTag, "WebCP in WebView feature is enabled.");
                 mIsWebCpInWebViewFeatureEnabled = true;
                 return true;
             }
