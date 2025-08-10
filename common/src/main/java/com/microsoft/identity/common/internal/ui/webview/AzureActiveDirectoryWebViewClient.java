@@ -135,6 +135,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private HashMap<String, String> mRequestHeaders;
     private String mRequestUrl;
     private boolean mInWebCpFlow = false;
+    private boolean mAuthUxJavaScriptInterfaceAdded = false;
+    private final boolean mShouldHandleWebCpInWebView;
+
 
     private final String mUtid;
 
@@ -143,12 +146,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl,
                                              @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler,
-                                             @Nullable final String utid) {
+                                             @Nullable final String utid,
+                                             final boolean webViewWebcpEnabled) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
         mSwitchBrowserRequestHandler = switchBrowserRequestHandler;
         mUtid = utid;
+        mShouldHandleWebCpInWebView = webViewWebcpEnabled;
     }
 
     /**
@@ -706,7 +711,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             if (!ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
                 // Enabling webcp in webview feature for brokered flows only for now.
                 Logger.info(methodTag, "Not running on AuthService, skipping WebCP in WebView feature check.");
-                return false;
+                if (mShouldHandleWebCpInWebView)
+                    mInWebCpFlow = true;
+                return mShouldHandleWebCpInWebView;
             }
 
             final String homeTenantId = !StringUtil.isNullOrEmpty(mUtid)? mUtid : getHomeTenantIdFromUrl(originalUrl);
