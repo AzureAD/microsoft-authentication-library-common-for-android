@@ -343,7 +343,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processWebCpEnrollmentUrl(view, url);
             } else if (mIsWebCpInWebViewFeatureEnabled && isWebCpAuthorizeUrl(url)) {
                 processWebCpAuthorize(view, url);
-            } else if (isDeviceCaRequest(url) && isHttpsScheme(url)) {
+            } else if (isDeviceCaRequest(url) && isHttpsScheme(url) && isWebCpInWebviewFeatureEnabled(url)) {
                  // Special handling for device CA requests due to a corner case in eSTS for webapps/confidential clients, which should be handled by the WebView.
                 processDeviceCaRequest(view, url);
             } else {
@@ -358,6 +358,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             view.stopLoading();
         }
         return true;
+    }
+
+    private boolean shouldHandleWebAppCaRequest(@NonNull final String url) {
+        return isWebCpInWebviewFeatureEnabled(url);
     }
 
     private boolean isUriSSLProtected(@NonNull final String url) {
