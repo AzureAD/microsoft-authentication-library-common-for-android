@@ -360,10 +360,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return true;
     }
 
-    private boolean shouldHandleWebAppCaRequest(@NonNull final String url) {
-        return isWebCpInWebviewFeatureEnabled(url);
-    }
-
     private boolean isUriSSLProtected(@NonNull final String url) {
         return url.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX);
     }
