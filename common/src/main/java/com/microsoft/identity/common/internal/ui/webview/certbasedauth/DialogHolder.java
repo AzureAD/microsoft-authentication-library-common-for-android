@@ -293,6 +293,9 @@ public class DialogHolder implements IDialogHolder {
             Logger.error(TAG + ":showSmartcardRemovalPromptDialog",
                     "Failed to show SmartcardRemovalPromptDialog due to BadTokenException. Activity may be finishing or destroyed.",
                     e);
+            if (dismissCallback != null) {
+                dismissCallback.onDismiss();
+            }
         }
     }
 

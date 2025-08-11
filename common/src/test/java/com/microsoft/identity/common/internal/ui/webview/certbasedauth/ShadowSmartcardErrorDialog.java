@@ -22,9 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
-import android.app.Activity;
-import android.app.Dialog;
-
 import org.robolectric.annotation.Implementation;
 import org.robolectric.annotation.Implements;
 
