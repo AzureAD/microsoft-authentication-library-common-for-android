@@ -187,6 +187,20 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+    @Config(shadows = {
+            ShadowProcessUtil.class})
+    public void testUrlHandlesHttpsDeviceCARequestUrlFlightOff() {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)).thenReturn(false);
+
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER));
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
+    @Test
     public void testUrlOverrideHandlesInstallRequest() {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_INSTALL_REQUEST_URL));
     }
