@@ -20,6 +20,7 @@ Version 22.0.0
 - [PATCH] Fix a few small switch browser bugs (#2710)
 - [MINOR] Update Nimbus version (#2724)
 - [MINOR] Using tenant based flighting for webcp (#2723)
+- [PATCH] Fix for enrollment id not sent to /token from local controller (#2726)
 
 Version 21.4.0
 ----------

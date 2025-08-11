@@ -579,7 +579,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         view.stopLoading();
 
         if (isDeviceCaRequest(url)) {
-            processDeviceCaRequest(view, url);
+           processDeviceCaRequest(view, url);
         } else {
             Logger.info(methodTag, "Not a device CA request. Redirecting to browser.");
             openLinkInBrowser(url);
@@ -615,7 +615,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean isDeviceCaRequest(@NonNull final String url) {
         return url.contains(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
     }
-
 
     private boolean isHttpsScheme(@NonNull final String url) {
         return url.startsWith(AuthenticationConstants.Broker.HTTPS_SCHEME);

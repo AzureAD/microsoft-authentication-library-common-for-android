@@ -1283,7 +1283,7 @@ public final class AuthenticationConstants {
         public static final String BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "&ismdmurl=1";
 
         /**
-         *  The scheme for HTTPS URLs.
+         * The scheme for HTTPS URLs.
          */
         public static final String HTTPS_SCHEME = "https";
 
