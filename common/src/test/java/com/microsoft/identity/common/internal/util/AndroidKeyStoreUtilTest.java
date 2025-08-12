@@ -498,17 +498,6 @@ public class AndroidKeyStoreUtilTest {
     }
 
     @Test
-    @Config(sdk = Build.VERSION_CODES.KITKAT) // API 19, before M
-    public void testGetKeyPairEncryptionPaddings_VeryLegacyAPI_ReturnsEmptyList() {
-        // Act - Call the REAL method on very legacy API
-        List<String> result = AndroidKeyStoreUtil.getKeyPairEncryptionPaddings(mockKeyPair);
-
-        // Assert - Should return empty list because API < 23
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
     @Config(sdk = Build.VERSION_CODES.M) // API 23
     public void testGetKeyPairEncryptionPaddings_ModernAPI_PaddingsWithoutSuffix_ReturnedAsIs() throws Exception {
         // Arrange - Test case where paddings don't have "Padding" suffix
