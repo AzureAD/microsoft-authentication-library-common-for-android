@@ -64,6 +64,7 @@ stages:
     shouldRunUnitTest: true
     shouldPublishLibrariesAsPipelinesArtifacts: true
     shouldPublishToInternalFeed: true
+    passNewDiscoveryFlag: true
 #    dependsOn:
 #      - common4j
 - stage: validateConsumers
