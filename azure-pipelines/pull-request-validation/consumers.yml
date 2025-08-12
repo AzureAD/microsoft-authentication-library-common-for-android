@@ -1,0 +1,9 @@
+resources:
+  repositories:
+    - repository: AuthClientAndroidPipelines
+      type: git
+      name: AuthClientAndroidPipelines
+      ref: refs/heads/main
+
+extends:
+  template: templates/build/libraries/build-and-publish-common.yml@AuthClientAndroidPipelines
