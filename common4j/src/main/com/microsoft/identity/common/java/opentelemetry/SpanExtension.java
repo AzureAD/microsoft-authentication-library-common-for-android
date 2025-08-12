@@ -28,6 +28,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.TraceId;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ImplicitContextKeyed;
 import io.opentelemetry.context.Scope;
 import lombok.NonNull;
@@ -91,11 +92,26 @@ public class SpanExtension {
     }
 
     /**
+     * A safe implementation of {@link Span#fromContext(Context)} that doesn't crash.
+     *
+     * @param context the {@link Context} from which to extract the {@link Span}
+     * @return a {@link Span}
+     */
+    public static Span fromContext(@NonNull final Context context) {
+        try {
+            return Span.fromContext(context);
+        } catch (final Exception | NoSuchMethodError error) {
+            Logger.error(TAG + ":fromContext", error.getMessage(), error);
+            return new NoopSpan(INVALID);
+        }
+    }
+
+    /**
      * This is a custom No-op implementation of {@link Scope}. This should be viewed the same as the
      * default Noop implementation in {@link io.opentelemetry.context.ThreadLocalContextStorage}.
      * We just made a custom one since the default one is package-private.
      */
-    enum NoopScope implements Scope {
+    public enum NoopScope implements Scope {
         INSTANCE;
 
         @Override

@@ -203,14 +203,10 @@ object SwitchBrowserUriHelper {
         actionUri: String,
         queryParams: HashMap<String, String> = hashMapOf()
     ): Uri {
-        val paths = actionUri.split("/")
-        val authority = paths[0]
-        val uriBuilder = Uri.Builder()
-            .scheme("https")
-            .encodedAuthority(authority)
-        for (i in 1 until paths.size) {
-            uriBuilder.appendPath(paths[i])
-        }
+        val uri = Uri.parse(actionUri)
+
+        val uriBuilder = uri.buildUpon()
+
         for ((key, value) in queryParams.entries) {
             uriBuilder.appendQueryParameter(key, value)
         }

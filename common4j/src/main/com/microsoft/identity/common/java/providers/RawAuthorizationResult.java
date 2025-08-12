@@ -116,7 +116,12 @@ public class RawAuthorizationResult {
          * sufficient. Stronger device registration (backed by hardware bound keys)
          * required
          */
-        INSUFFICIENT_DEVICE_REGISTRATION(2010);
+        INSUFFICIENT_DEVICE_REGISTRATION(2010),
+
+        /**
+         * This is used to indicate that the authorization was cancelled due to timeout.
+         */
+        TIMED_OUT(2011);
 
         private final int mCode;
 

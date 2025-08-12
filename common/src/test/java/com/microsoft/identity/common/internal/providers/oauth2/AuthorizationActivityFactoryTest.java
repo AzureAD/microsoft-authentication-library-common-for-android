@@ -27,11 +27,13 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -40,6 +42,8 @@ import static org.mockito.Mockito.when;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+
+import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleApi;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential;
@@ -57,7 +61,7 @@ import java.util.HashMap;
 import lombok.SneakyThrows;
 
 /**
- * Tests for @link{AuthorizationActivityFactory}.
+ * Tests for {@link AuthorizationActivityFactory}.
  */
 @RunWith(RobolectricTestRunner.class)
 public class AuthorizationActivityFactoryTest {
@@ -76,7 +80,6 @@ public class AuthorizationActivityFactoryTest {
     private final String sourceLibraryName = "TestLibrary";
     private final String sourceLibraryVersion = "1.0.0";
     final String idToken = "idToken";
-    private final String clientId = "clientId";
     private final AuthorizationActivityParameters authorizationActivityParameters = new AuthorizationActivityParameters(
             context,
             authIntent,
@@ -111,6 +114,7 @@ public class AuthorizationActivityFactoryTest {
         final String idTokenHeaderValue = receivedHeaders.get("header1");
         assertNotNull(idTokenHeaderValue);
         assertEquals("value1", idTokenHeaderValue);
+        assertFalse(resultIntent.hasExtra(WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT));
     }
 
     @SneakyThrows
@@ -180,4 +184,76 @@ public class AuthorizationActivityFactoryTest {
         assertEquals(idToken, idTokenHeaderValue);
     }
 
+    @Test
+    public void testGetAuthorizationActivityIntentWithSilentFlow() {
+        // Create parameters with silent flow enabled
+        final AuthorizationActivityParameters silentFlowParameters = new AuthorizationActivityParameters(
+                context,
+                authIntent,
+                requestUrl,
+                redirectUri,
+                requestHeaders,
+                authorizationAgent,
+                webViewZoomEnabled,
+                webViewZoomControlsEnabled,
+                sourceLibraryName,
+                sourceLibraryVersion,
+                null,
+                10000L  // silent flow enabled
+        );
+
+        final Intent resultIntent = AuthorizationActivityFactory.getAuthorizationActivityIntent(
+                silentFlowParameters
+        );
+
+        // Verify it creates SilentAuthorizationActivity
+        assertNotNull(resultIntent.getComponent());
+        assertEquals(SilentAuthorizationActivity.class.getName(), resultIntent.getComponent().getClassName());
+        assertEquals(authIntent, resultIntent.getParcelableExtra(AUTH_INTENT));
+        assertEquals(redirectUri, resultIntent.getStringExtra(REDIRECT_URI));
+        assertEquals(authorizationAgent, resultIntent.getSerializableExtra(AUTHORIZATION_AGENT));
+        assertEquals(webViewZoomEnabled, resultIntent.getBooleanExtra(WEB_VIEW_ZOOM_ENABLED, false));
+        assertEquals(webViewZoomControlsEnabled, resultIntent.getBooleanExtra(WEB_VIEW_ZOOM_CONTROLS_ENABLED, false));
+        assertEquals(sourceLibraryName, resultIntent.getStringExtra(PRODUCT));
+        assertEquals(sourceLibraryVersion, resultIntent.getStringExtra(VERSION));
+        assertEquals(requestUrl, resultIntent.getStringExtra(REQUEST_URL));
+        assertEquals(10000L, resultIntent.getLongExtra(WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT, 0));
+    }
+
+    @Test
+    public void testGetAuthorizationFragmentFromStartIntentWebView() {
+        // Create intent with silent flow enabled
+        final Intent intent = new Intent();
+        intent.putExtra(AUTHORIZATION_AGENT, AuthorizationAgent.WEBVIEW);
+
+        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
+
+        assertEquals(WebViewAuthorizationFragment.class, fragment.getClass());
+    }
+
+    @Test
+    public void testGetAuthorizationFragmentFromStartIntentWebViewWithSilentFlow() {
+        // Create intent with silent flow enabled
+        final Intent silentFlowIntent = new Intent();
+        silentFlowIntent.putExtra(AUTHORIZATION_AGENT, AuthorizationAgent.WEBVIEW);
+        silentFlowIntent.putExtra(WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT, 10000L); // 10 seconds timeout
+
+        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(silentFlowIntent);
+
+        // Verify it creates SilentWebViewAuthorizationFragment for WebView with silent flow
+        assertEquals(SilentWebViewAuthorizationFragment.class, fragment.getClass());
+    }
+
+    @Test
+    public void testGetAuthorizationFragmentFromStartIntentWithSilentFlowNonWebView() {
+        // Create intent with silent flow enabled but non-WebView agent
+        final Intent silentFlowIntent = new Intent();
+        silentFlowIntent.putExtra(AUTHORIZATION_AGENT, AuthorizationAgent.BROWSER);
+        silentFlowIntent.putExtra(WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT, 10000L);
+
+        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(silentFlowIntent);
+
+        // Verify it creates BrowserAuthorizationFragment even with silent flow when not WebView
+        assertEquals(BrowserAuthorizationFragment.class, fragment.getClass());
+    }
 }

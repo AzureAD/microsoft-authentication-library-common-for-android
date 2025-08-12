@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.broker;
 
 import static com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache.DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -58,8 +59,9 @@ public class SDMBroadcastReceiver {
      * @param context application context.
      * @param sharedDeviceModeCallback a callback to be called when SDM broadcast is received.
      */
-    synchronized public static void initialize( @NonNull final Context context,
-                                   @NonNull final SharedDeviceModeCallback sharedDeviceModeCallback) {
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
+    synchronized public static void initialize(@NonNull final Context context,
+                                               @NonNull final SharedDeviceModeCallback sharedDeviceModeCallback) {
         if (sSDMBroadcastReceiver == null) {
             sSDMBroadcastReceiver = new BroadcastReceiver() {
                 @Override
@@ -69,7 +71,7 @@ public class SDMBroadcastReceiver {
             };
 
             final IntentFilter filter = new IntentFilter(SharedDeviceModeConstants.CURRENT_ACCOUNT_CHANGED_BROADCAST_IDENTIFIER);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 context.registerReceiver(sSDMBroadcastReceiver, filter, Context.RECEIVER_EXPORTED);
             } else {
                 context.registerReceiver(sSDMBroadcastReceiver, filter);

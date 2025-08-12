@@ -50,12 +50,12 @@ object CommonFlightsManager : IFlightsManager {
         mFlightsManager = DefaultValueFlightsManager
     }
 
-    override fun getFlightsProvider(): IFlightsProvider {
-        return mFlightsManager.getFlightsProvider()
+    override fun getFlightsProvider(waitForConfigsWithTimeoutInMs: Long): IFlightsProvider {
+        return mFlightsManager.getFlightsProvider(waitForConfigsWithTimeoutInMs)
     }
 
-    override fun getFlightsProviderForTenant(tenantId: String): IFlightsProvider {
-        return mFlightsManager.getFlightsProviderForTenant(tenantId)
+    override fun getFlightsProviderForTenant(tenantId: String, waitForConfigsWithTimeoutInMs: Long): IFlightsProvider {
+        return mFlightsManager.getFlightsProviderForTenant(tenantId, waitForConfigsWithTimeoutInMs)
     }
 
     /**
@@ -97,11 +97,14 @@ object CommonFlightsManager : IFlightsManager {
      * default value for the flight config provided.
      */
     private object DefaultValueFlightsManager : IFlightsManager {
-        override fun getFlightsProvider(): IFlightsProvider {
+        override fun getFlightsProvider(waitForConfigsWithTimeoutInMs: Long): IFlightsProvider {
             return DefaultValueFlightsProvider
         }
 
-        override fun getFlightsProviderForTenant(tenantId: String): IFlightsProvider {
+        override fun getFlightsProviderForTenant(
+            tenantId: String,
+            waitForConfigsWithTimeoutInMs: Long
+        ): IFlightsProvider {
             return DefaultValueFlightsProvider
         }
     }

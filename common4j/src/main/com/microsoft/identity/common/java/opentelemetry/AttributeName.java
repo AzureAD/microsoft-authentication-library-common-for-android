@@ -381,14 +381,27 @@ public enum AttributeName {
     is_switch_browser_resume_handled,
 
     /**
-     * Records the Cipher transformation used to encrypt/decrypt the keypair.
+     * The tenant id for the home tenant of the account for which PRT is required.
      */
-    secret_key_wrapping_transformation,
+    tenant_id,
 
     /**
-     * Records the operation used to wrap/unwrap the secret key.
+     * Indicates the type of account such as AAD or MSA.
      */
-    secret_key_wrapping_operation,
+    account_type,
+
+    /**
+     * Indicates the broker app that emits the event.
+     * The broker is not necessarily the active broker.
+     * e.g. An inactive broker app might be invoked during OnUpgrade.
+     * (It should be renamed, but that would mess up the dashboard)
+     */
+    active_broker_package_name,
+
+    /**
+     * Indicates the current broker package name processing the request.
+     */
+    current_broker_package_name,
 
     /**
      * Records if the request is a webcp authorize request.
@@ -429,5 +442,20 @@ public enum AttributeName {
     /**
      * Record whether or not the request stored a number match entry.
      */
-    stored_number_match_entry
+    stored_number_match_entry,
+
+    /**
+     * Records the time (in milliseconds) spent on flight check for webcp.
+     */
+    web_cp_flight_get_time,
+
+    /**
+     * Records the Cipher transformation used to encrypt/decrypt the keypair.
+     */
+    secret_key_wrapping_transformation,
+
+    /**
+     * Records the operation used to wrap/unwrap the secret key.
+     */
+    secret_key_wrapping_operation
 }

@@ -104,6 +104,7 @@ import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_P
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
 /**
@@ -178,9 +179,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     "    window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".receiveAuthUxMessage(JSON.stringify(message)); " +
                     "};";
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                view.evaluateJavascript(jsScript, null);
-            }
+            view.evaluateJavascript(jsScript, null);
         }
     }
 
@@ -269,7 +268,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag,"WebView detected request for passkey protocol.");
                 final FidoChallenge challenge = FidoChallenge.createFromRedirectUri(url);
                 final Activity currentActivity = getActivity();
-                final SpanContext spanContext = currentActivity instanceof AuthorizationActivity ? ((AuthorizationActivity)currentActivity).getSpanContext() : null;
+                final Context oTelContext = currentActivity instanceof AuthorizationActivity ? ((AuthorizationActivity)currentActivity).getOtelContext() : null;
                 // The legacyManager should only be getting added if the device is on Android 13 or lower and the library is MSAL/OneAuth with fragment or dialog mode.
                 // The legacyManager logic should be removed once a larger majority of users are on Android 14+.
                 final IFidoManager legacyManager =
@@ -285,7 +284,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                 legacyManager
                         ),
                         view,
-                        spanContext,
+                        oTelContext,
                         ViewTreeLifecycleOwner.get(view));
                 challengeHandler.processChallenge(challenge);
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED) && isNonceRedirect(formattedURL)) {
@@ -296,7 +295,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
                 if (mSwitchBrowserRequestHandler.isSwitchBrowserRequest(formattedURL, mRedirectUrl)) {
                     Logger.info(methodTag,"Request to switch browser.");
-                    processSwitchBrowserRequest(formattedURL);
+                    processSwitchBrowserRequest(url);
                 } else {
                     Logger.info(methodTag,"It is a redirect request.");
                     processRedirectUrl(view, url);
@@ -344,6 +343,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processWebCpEnrollmentUrl(view, url);
             } else if (mIsWebCpInWebViewFeatureEnabled && isWebCpAuthorizeUrl(url)) {
                 processWebCpAuthorize(view, url);
+            } else if (isDeviceCaRequest(url) && isHttpsScheme(url) && isWebCpInWebviewFeatureEnabled(url)) {
+                 // Special handling for device CA requests due to a corner case in eSTS for webapps/confidential clients, which should be handled by the WebView.
+                processDeviceCaRequest(view, url);
             } else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
                 processInvalidUrl(url);
@@ -576,22 +578,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         view.stopLoading();
 
         if (isDeviceCaRequest(url)) {
-            Logger.info(methodTag, "This is a device CA request.");
-
-            if (shouldLaunchCompanyPortal()) {
-                // If CP is installed, redirect to CP.
-                // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
-                //       CP is currently working on this.
-                //       Until that comes, we'll only handle this in ipphone.
-                try {
-                    launchCompanyPortal();
-                    return;
-                } catch (final Exception ex) {
-                    Logger.warn(methodTag, "Failed to launch Company Portal, falling back to browser.");
-                }
-            }
-
-            loadDeviceCaUrl(url, view);
+           processDeviceCaRequest(view, url);
         } else {
             Logger.info(methodTag, "Not a device CA request. Redirecting to browser.");
             openLinkInBrowser(url);
@@ -599,8 +586,37 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
+    /**
+     * Processed device CA requests detected in the web flow.
+     * @param view The {@link WebView} instance in which the request originated.
+     * @param url  The URL representing the device CA request.
+     */
+    private void processDeviceCaRequest(@NonNull final WebView view, @NonNull final String url) {
+        final String methodTag = TAG + ":processDeviceCaRequest";
+        Logger.info(methodTag, "This is a device CA request.");
+
+        if (shouldLaunchCompanyPortal()) {
+            // If CP is installed, redirect to CP.
+            // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
+            //       CP is currently working on this.
+            //       Until that comes, we'll only handle this in ipphone.
+            try {
+                launchCompanyPortal();
+                return;
+            } catch (final Exception ex) {
+                Logger.warn(methodTag, "Failed to launch Company Portal, falling back to browser.");
+            }
+        }
+
+        loadDeviceCaUrl(url, view);
+    }
+
     private boolean isDeviceCaRequest(@NonNull final String url) {
         return url.contains(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+    }
+
+    private boolean isHttpsScheme(@NonNull final String url) {
+        return url.startsWith(AuthenticationConstants.Broker.HTTPS_SCHEME);
     }
 
     // Decides whether to launch the Company Portal app based on the presence of the IPPhone app and its signature.
@@ -648,28 +664,28 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         try {
             if (!ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
                 // Enabling webcp in webview feature for brokered flows only for now.
+                Logger.info(methodTag, "Not running on AuthService, skipping WebCP in WebView feature check.");
                 return false;
             }
 
-            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)) {
-                // Directly enabled via flight rollout.
-                Logger.info(methodTag, "WebCP in WebView feature is enabled.");
-                mIsWebCpInWebViewFeatureEnabled = true;
-                return true;
-            }
-
-            // Else, check if the home tenant is in the list of tenants that have this feature enabled.
             final String homeTenantId = !StringUtil.isNullOrEmpty(mUtid)? mUtid : getHomeTenantIdFromUrl(originalUrl);
             if (StringUtil.isNullOrEmpty(homeTenantId)) {
                 Logger.info(methodTag, "Home tenantId is empty");
                 return false;
             }
 
-            final String tenantIdList = CommonFlightsManager.INSTANCE.getFlightsProvider().getStringValue(CommonFlight.TENANT_LIST_TO_ENABLE_WEB_CP_IN_WEBVIEW);
-            final boolean isFlightEnabledForCurrentTenant = !StringUtil.isNullOrEmpty(tenantIdList) && tenantIdList.contains(homeTenantId);
-            Logger.info(methodTag, "TenantId list is empty? " + StringUtil.isNullOrEmpty(tenantIdList) + ", Is current tenantId in list? " + isFlightEnabledForCurrentTenant);
-            mIsWebCpInWebViewFeatureEnabled = isFlightEnabledForCurrentTenant;
-            return isFlightEnabledForCurrentTenant;
+            final long webCpGetFlightStartTime = System.currentTimeMillis();
+            final int waitForFlightsTimeOut = CommonFlightsManager.INSTANCE.getFlightsProvider().getIntValue(CommonFlight.WEB_CP_WAIT_TIMEOUT_FOR_FLIGHTS);
+            final boolean isWebCpFlightEnabled = CommonFlightsManager.INSTANCE.getFlightsProviderForTenant(homeTenantId, waitForFlightsTimeOut).isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW);
+            SpanExtension.current().setAttribute(AttributeName.web_cp_flight_get_time.name(), (System.currentTimeMillis() - webCpGetFlightStartTime));
+            if (isWebCpFlightEnabled) {
+                // Directly enabled via flight rollout.
+                Logger.info(methodTag, "WebCP in WebView feature is enabled.");
+                mIsWebCpInWebViewFeatureEnabled = true;
+                return true;
+            }
+
+            return false;
         } catch (final Throwable throwable) {
             // Catching any unexpected exceptions to avoid breaking the flow. We will anyway remove this block once the feature is fully rolled out.
             Logger.error(methodTag, "Failed to check if WebCP in WebView feature is enabled.", throwable);
