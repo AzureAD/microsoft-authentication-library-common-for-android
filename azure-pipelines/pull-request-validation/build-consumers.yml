@@ -55,6 +55,17 @@ stages:
     vmImage: 'windows-2022'
   jobs:
     - template: ../templates/steps/fetch-pr-labels.yml
+
+- template: templates/build/libraries/build-and-publish-common.yml@AuthClientAndroidPipelines
+  parameters:
+    version: 0.0.000
+    common4jVersion: 0.0.000
+    buildFlags: ""
+    shouldRunUnitTest: true
+    shouldPublishLibrariesAsPipelinesArtifacts: true
+    shouldPublishToInternalFeed: true
+#    dependsOn:
+#      - common4j
 - stage: validateConsumers
   # Validate Consumers
   displayName: 'Validate'
