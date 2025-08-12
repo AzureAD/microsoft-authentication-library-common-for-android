@@ -41,6 +41,11 @@ resources:
     name: AzureAD/azure-activedirectory-library-for-android
     ref: dev
     endpoint: ANDROID_GITHUB
+  - repository: AuthClientAndroidPipelines
+    type: git
+    name: AuthClientAndroidPipelines
+    ref: refs/heads/main
+
 
 stages:
 - stage: getLabel
