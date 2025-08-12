@@ -51,11 +51,14 @@ import javax.crypto.SecretKey
  * @param filePath The file path where the wrapped secret key is stored.
  * @param context The context used to access the Android KeyStore and file system.
  */
-class KeyStoreBackedSecretKeyProvider  @JvmOverloads constructor(
+class KeyStoreBackedSecretKeyProvider @JvmOverloads constructor(
     context: Context,
     override val alias: String,
     private val filePath: String,
-    private val cryptoParameterSpecFactory: CryptoParameterSpecFactory = CryptoParameterSpecFactory(context, alias)
+    private val cryptoParameterSpecFactory: CryptoParameterSpecFactory = CryptoParameterSpecFactory(
+        context,
+        alias
+    )
 ) : ISecretKeyProvider {
     companion object {
         private const val TAG = "KeyStoreBackedSecretKeyProvider"
@@ -194,8 +197,12 @@ class KeyStoreBackedSecretKeyProvider  @JvmOverloads constructor(
                 Logger.info(methodTag, "No existing keypair found. Generating a new one.")
                 generateKeyPair()
             }
-        val keyWrapped = wrapSecretKey(newSecretKey, keyPair)
-        FileUtil.writeDataToFile(keyWrapped, keyFile)
+        val (keyWrapped, cipher) = wrapSecretKey(newSecretKey, keyPair)
+        WrappedSecretKey(
+            byteArray = keyWrapped,
+            algorithm = AES256SecretKeyGenerator.AES_ALGORITHM,
+            cipherTransformation = cipher.transformation
+        ).storeOnFile(keyFile)
         return newSecretKey
     }
 
@@ -216,7 +223,7 @@ class KeyStoreBackedSecretKeyProvider  @JvmOverloads constructor(
                 return null
             }
 
-            val wrappedSecretKey = FileUtil.readFromFile(keyFile, KEY_FILE_SIZE)
+            val wrappedSecretKey = WrappedSecretKey.loadFromFile(keyFile, KEY_FILE_SIZE)
             if (wrappedSecretKey == null) {
                 Logger.warn(methodTag, "Key file is empty")
                 // Do not delete the KeyStoreKeyPair even if the key file is empty. This caused credential cache
@@ -241,7 +248,7 @@ class KeyStoreBackedSecretKeyProvider  @JvmOverloads constructor(
     private fun wrapSecretKey(
         secretKey: SecretKey,
         keyPair: KeyPair
-    ): ByteArray {
+    ): Pair<ByteArray, CipherSpec> {
         val methodTag = "$TAG:wrapSecretKey"
         val span = OTelUtility.createSpanFromParent(
             SpanName.SecretKeyWrapping.name,
@@ -251,7 +258,11 @@ class KeyStoreBackedSecretKeyProvider  @JvmOverloads constructor(
         return try {
             SpanExtension.makeCurrentSpan(span).use { _ ->
                 span.setAttribute(AttributeName.secret_key_wrapping_operation.name, "WRAP")
-                val cipherParamsSpec = selectCompatibleCipherSpec(keyPair)
+                val cipherParamsSpec = getKeyPairCompatibleCipherSpecs(keyPair).firstOrNull()
+                    ?: throw ClientException(
+                        ClientException.UNKNOWN_CRYPTO_ERROR,
+                        "No compatible cipher specs found for key pair: $keyPair"
+                    )
                 span.setAttribute(
                     AttributeName.secret_key_wrapping_transformation.name,
                     cipherParamsSpec.transformation
@@ -264,7 +275,7 @@ class KeyStoreBackedSecretKeyProvider  @JvmOverloads constructor(
                     cipherParamsSpec.algorithmParameterSpec
                 )
                 span.setStatus(StatusCode.OK)
-                wrappedKey
+                wrappedKey to cipherParamsSpec
             }
         } catch (exception: Exception) {
             Logger.error(methodTag, "Failed to wrap secret key", exception)
@@ -277,7 +288,7 @@ class KeyStoreBackedSecretKeyProvider  @JvmOverloads constructor(
     }
 
     private fun unwrapSecretKey(
-        wrappedSecretKey: ByteArray,
+        wrappedSecretKey: WrappedSecretKey,
         keyPair: KeyPair
     ): SecretKey {
         val methodTag = "$TAG:unwrapSecretKey"
@@ -289,15 +300,21 @@ class KeyStoreBackedSecretKeyProvider  @JvmOverloads constructor(
         return try {
             SpanExtension.makeCurrentSpan(span).use { _ ->
                 span.setAttribute(AttributeName.secret_key_wrapping_operation.name, "UNWRAP")
-                val cipherParamsSpec = selectCompatibleCipherSpec(keyPair)
+                val cipherParamsSpec = getKeyPairCompatibleCipherSpecs(keyPair).firstOrNull { spec ->
+                    spec.transformation.contains(wrappedSecretKey.cipherTransformation, ignoreCase = true)
+                } ?: throw ClientException(
+                        ClientException.UNKNOWN_CRYPTO_ERROR,
+                        "No compatible cipher specs found for key pair: $keyPair"
+                )
+                
                 span.setAttribute(
                     AttributeName.secret_key_wrapping_transformation.name,
                     cipherParamsSpec.transformation
                 )
                 Logger.info(methodTag, "Unwrapping secret key with cipher spec: $cipherParamsSpec")
                 val key = AndroidKeyStoreUtil.unwrap(
-                    wrappedSecretKey,
-                    AES256SecretKeyGenerator.AES_ALGORITHM,
+                    wrappedSecretKey.byteArray,
+                    wrappedSecretKey.algorithm,
                     keyPair,
                     cipherParamsSpec.transformation,
                     cipherParamsSpec.algorithmParameterSpec
@@ -316,16 +333,18 @@ class KeyStoreBackedSecretKeyProvider  @JvmOverloads constructor(
     }
 
     /**
-     * Selects the most compatible cipher specification for the given key pair.
+     * Get all compatible cipher specifications for the given key pair in priority order.
      *
      * Matches key pair's supported encryption paddings with available cipher specs,
-     * prioritizing more secure options first. Falls back to PKCS1 if no match found.
+     * returning all compatible specs prioritized by security (most secure first).
+     * Returns an empty list if no compatible specs are found.
      *
-     * @param keyPair The key pair to find compatible cipher spec for
-     * @return Compatible [CipherSpec] or PKCS1 fallback
+     * @param keyPair The key pair to find compatible cipher specs for
+     * @return List of compatible [CipherSpec] ordered by priority (most secure first)
      */
-    private fun selectCompatibleCipherSpec(keyPair: KeyPair): CipherSpec {
-        val methodTag = "$TAG:selectCompatibleCipherSpec"
+    @Throws(ClientException::class)
+    private fun getKeyPairCompatibleCipherSpecs(keyPair: KeyPair): List<CipherSpec> {
+        val methodTag = "$TAG:selectCompatibleCipherSpecs"
         val supportedPaddings = AndroidKeyStoreUtil.getKeyPairEncryptionPaddings(keyPair)
         val availableCipherSpecs = cryptoParameterSpecFactory.getPrioritizedCipherParameterSpecs()
         Logger.verbose(
@@ -333,18 +352,15 @@ class KeyStoreBackedSecretKeyProvider  @JvmOverloads constructor(
             "Supported paddings by the keyPair: $supportedPaddings" +
                     ",Specs available in order of priority: $availableCipherSpecs"
         )
-        for (cipherSpec in availableCipherSpecs) {
-            for (padding in supportedPaddings) {
-                if (cipherSpec.padding.contains(padding, ignoreCase = true)) {
-                    Logger.info(methodTag, "Selected cipher spec: $cipherSpec")
-                    return cipherSpec
-                }
+        val compatibleSpecs = availableCipherSpecs.filter { spec ->
+            supportedPaddings.any { padding ->
+                spec.padding.contains(padding, ignoreCase = true)
             }
         }
-        Logger.warn(methodTag, "No supported cipher specification found for wrapping the key.")
-        // Fallback to PKCS#1 padding if no compatible spec is found, instead of throwing an error.
-        return CipherSpec.pkcs1CipherSpec
+        Logger.verbose(methodTag, "Found ${compatibleSpecs.size} compatible cipher specs: $compatibleSpecs")
+        return compatibleSpecs
     }
+
 
     /**
      * Generates a new RSA key pair using prioritized specifications with fallback support.
@@ -486,4 +502,3 @@ class KeyStoreBackedSecretKeyProvider  @JvmOverloads constructor(
         throw ExceptionAdapter.clientExceptionFromException(finalError)
     }
 }
-
