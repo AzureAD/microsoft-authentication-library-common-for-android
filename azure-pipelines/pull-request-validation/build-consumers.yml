@@ -60,18 +60,6 @@ stages:
     vmImage: 'windows-2022'
   jobs:
     - template: ../templates/steps/fetch-pr-labels.yml
-
-- template: templates/build/libraries/build-and-publish-common.yml@AuthClientAndroidPipelines
-  parameters:
-    version: 0.0.000
-    common4jVersion: 0.0.000
-    buildFlags: ""
-    shouldRunUnitTest: true
-    shouldPublishLibrariesAsPipelinesArtifacts: true
-    shouldPublishToInternalFeed: true
-    passNewDiscoveryFlag: true
-#    dependsOn:
-#      - common4j
 - stage: validateConsumers
   # Validate Consumers
   displayName: 'Validate'
@@ -119,6 +107,30 @@ stages:
         }
       name: echovar
       displayName: Echo branch name
+
+  - job: publishCommon
+    displayName: Publish Common
+    dependsOn:
+      - setupBranch
+    variables:
+      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
+    steps:
+      - checkout: common
+        displayName: Checkout common repository
+        clean: true
+        persistCredentials: True
+      - template: ../templates/steps/automation-cert.yml
+      - task: Gradle@3
+        displayName: Publish Common
+        inputs:
+          tasks: clean common:publish
+          jdkArchitecture: x64
+          jdkVersionOption: "1.17"
+
+
+
+
   # msal
   - job: msalValidation
     displayName: MSAL
