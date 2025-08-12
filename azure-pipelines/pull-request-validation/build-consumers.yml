@@ -41,6 +41,11 @@ resources:
     name: AzureAD/azure-activedirectory-library-for-android
     ref: dev
     endpoint: ANDROID_GITHUB
+  - repository: common
+    type: github
+    name: AzureAD/microsoft-authentication-library-common-for-android
+    ref: dev
+    endpoint: ANDROID_GITHUB
   - repository: AuthClientAndroidPipelines
     type: git
     name: AuthClientAndroidPipelines
