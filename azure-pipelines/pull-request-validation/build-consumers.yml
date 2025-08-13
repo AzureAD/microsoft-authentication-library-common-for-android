@@ -20,6 +20,8 @@ variables:
     value: ""
 - name: robolectricSdkVersion
   value: 28
+- name: projVersion
+  value: "0.0.0$(Build.BuildId)"
 - group: AndroidAuthClientAutomationSecrets
 - group: MSIDLABVARS
 - group: devex-ciam-test
@@ -116,12 +118,29 @@ stages:
         persistCredentials: True
       - template: ../templates/steps/automation-cert.yml
       - task: Gradle@3
-        displayName: Publish Common
+        displayName: Assemble Common 4j
         inputs:
-          tasks: clean common:publish  -PprojVersion=0.0.01-dev
+          tasks: common4j:assemble  -PprojVersion=$(projVersion)
           jdkArchitecture: x64
           jdkVersionOption: "1.17"
-
+      - task: Gradle@3
+        displayName: Publish Common 4j
+        inputs:
+          tasks: common4j:publish  -PprojVersion=$(projVersion)
+          jdkArchitecture: x64
+          jdkVersionOption: "1.17"
+      - task: Gradle@3
+        displayName: Assemble Common
+        inputs:
+          tasks: common:assembleDis  -PprojVersion=$(projVersion) -PdistCommon4jVersion=$(projVersion)
+          jdkArchitecture: x64
+          jdkVersionOption: "1.17"
+      - task: Gradle@3
+        displayName: Publish Common
+        inputs:
+          tasks: common:publish  -PprojVersion=$(projVersion) -PdistCommon4jVersion=$(projVersion)
+          jdkArchitecture: x64
+          jdkVersionOption: "1.17"
   # msal
   - job: msalValidation
     displayName: MSAL
