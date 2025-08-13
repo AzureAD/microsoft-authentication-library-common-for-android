@@ -71,24 +71,23 @@ extends:
         enabled: false
       policheck:
         enabled: false
-
     stages:
-    - stage: getLabel
-      jobs:
-      - job: alternateSchedule
-        displayName: Set up alternating schedule
-        steps:
-        - script: echo "flights is set to "
-          displayName: "Check flights Value"
-  
 
+
+#    - stage: getLabel
+#      jobs:
+#      - job: alternateSchedule
+#        displayName: Set up alternating schedule
+#        steps:
+#        - script: echo "flights is set to "
+#          displayName: "Check flights Value"
     - template: scripts/fetch-pr-labels.yml@AuthClientAndroidPipelines
 
     - stage: validateConsumers
       # Validate Consumers
       displayName: 'Validate'
       dependsOn: fetchPrLabels
-      condition: eq(dependencies.fetchPrLabels.getLabelsJob.outputs['fetchPrCILabel.prLabels'], 'Skip-Consumers-Check')
+      condition: not(contains(dependencies.fetchPrLabels.getLabelsJob.outputs['fetchPrCILabel.prLabels'], 'Skip-Consumers-Check'))
       jobs:
       # setup
       - job: setupBranch
