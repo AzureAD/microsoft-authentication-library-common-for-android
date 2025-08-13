@@ -129,47 +129,42 @@ extends:
 
 
 
+      - job: publishCommon
+        displayName: Publish Common
+        steps:
+          - checkout: self
+            displayName: Checkout common repository
+            clean: true
+            persistCredentials: True
+          - bash: |
+              echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME]VSTS"
+              echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)"
+            displayName: 'Set Environmnet variables'
+          - task: Gradle@3
+            displayName: Assemble Common 4j
+            inputs:
+              tasks: common4j:assemble  -PprojVersion=$(projVersion)
+              jdkArchitecture: x64
+              jdkVersionOption: "1.17"
+          - task: Gradle@3
+            displayName: Publish Common 4j
+            inputs:
+              tasks: common4j:publish  -PprojVersion=$(projVersion)
+              jdkArchitecture: x64
+              jdkVersionOption: "1.17"
+          - task: Gradle@3
+            displayName: Assemble Common
+            inputs:
+              tasks: common:assembleDis  -PprojVersion=$(projVersion) -PdistCommon4jVersion=$(projVersion)
+              jdkArchitecture: x64
+              jdkVersionOption: "1.17"
+          - task: Gradle@3
+            displayName: Publish Common
+            inputs:
+              tasks: common:publish  -PprojVersion=$(projVersion) -PdistCommon4jVersion=$(projVersion)
+              jdkArchitecture: x64
+              jdkVersionOption: "1.17"
 
-
-#      - job: publishCommon
-#        displayName: Publish Common
-#        dependsOn:
-#          - setupBranch
-#        condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
-#        steps:
-#          - checkout: self
-#            displayName: Checkout common repository
-#            clean: true
-#            persistCredentials: True
-#          - bash: |
-#              echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME]VSTS"
-#              echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)"
-#            displayName: 'Set Environmnet variables'
-#          - task: Gradle@3
-#            displayName: Assemble Common 4j
-#            inputs:
-#              tasks: common4j:assemble  -PprojVersion=$(projVersion)
-#              jdkArchitecture: x64
-#              jdkVersionOption: "1.17"
-#          - task: Gradle@3
-#            displayName: Publish Common 4j
-#            inputs:
-#              tasks: common4j:publish  -PprojVersion=$(projVersion)
-#              jdkArchitecture: x64
-#              jdkVersionOption: "1.17"
-#          - task: Gradle@3
-#            displayName: Assemble Common
-#            inputs:
-#              tasks: common:assembleDis  -PprojVersion=$(projVersion) -PdistCommon4jVersion=$(projVersion)
-#              jdkArchitecture: x64
-#              jdkVersionOption: "1.17"
-#          - task: Gradle@3
-#            displayName: Publish Common
-#            inputs:
-#              tasks: common:publish  -PprojVersion=$(projVersion) -PdistCommon4jVersion=$(projVersion)
-#              jdkArchitecture: x64
-#              jdkVersionOption: "1.17"
-#
 #      - template: templates/build/testApps/build-one-auth-test-app.yml@AuthClientAndroidPipelines
 #        parameters:
 #          commonVersion: $(projVersion)
