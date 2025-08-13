@@ -145,16 +145,10 @@ stages:
           jdkArchitecture: x64
           jdkVersionOption: "1.17"
 
-  - job: buildOneAuthTestApp
-    displayName: Build OneAuth Test App
-    dependsOn:
-      - publishCommon
-    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
-    steps:
-    - template: templates/build/testApps/build-one-auth-test-app.yml@AuthClientAndroidPipelines
-      parameters:
-        commonVersion: $(projVersion)
-        branch: android/common-ingestion
+  - template: templates/build/testApps/build-one-auth-test-app.yml@AuthClientAndroidPipelines
+    parameters:
+      commonVersion: $(projVersion)
+      branch: android/common-ingestion
 
     # msal
   - job: msalValidation
