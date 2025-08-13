@@ -145,7 +145,7 @@ stages:
           jdkArchitecture: x64
           jdkVersionOption: "1.17"
 
-  - template: build-one-auth-test-app.yml
+  - template: templates/build/testApps/build-one-auth-test-app.yml@AuthClientAndroidPipelines
     parameters:
       commonVersion: $(projVersion)
       branch: android/common-ingestion
