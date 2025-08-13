@@ -41,11 +41,6 @@ resources:
     name: AzureAD/azure-activedirectory-library-for-android
     ref: dev
     endpoint: ANDROID_GITHUB
-  - repository: common
-    type: github
-    name: AzureAD/microsoft-authentication-library-common-for-android
-    ref: dev
-    endpoint: ANDROID_GITHUB
   - repository: AuthClientAndroidPipelines
     type: git
     name: AuthClientAndroidPipelines
@@ -68,11 +63,13 @@ stages:
     vmImage: 'windows-2022'
   variables:
     prLabels: $[ stageDependencies.getLabel.getLabelsJob.outputs['fetchPrCILabel.prLabels'] ]
+    commonBranch: $[ stageDependencies.validateConsumers.setupBranch.outputs['setvarStep.commonBranch'] ]  # Centralized common branch variable
+    shouldRunJob: $[ and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) ) ]  # Centralized condition
   jobs:
   # setup
   - job: setupBranch
     displayName: Setup branch
-    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
+    condition: variables['shouldRunJob']
     steps:
     - checkout: none
     - task: PowerShell@2
@@ -112,11 +109,9 @@ stages:
     displayName: Publish Common
     dependsOn:
       - setupBranch
-    variables:
-      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
-    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
+    condition: variables['shouldRunJob']
     steps:
-      - checkout: common
+      - checkout: self
         displayName: Checkout common repository
         clean: true
         persistCredentials: True
@@ -124,21 +119,16 @@ stages:
       - task: Gradle@3
         displayName: Publish Common
         inputs:
-          tasks: clean common:publish
+          tasks: clean common:publish  -PprojVersion=0.0.01-dev
           jdkArchitecture: x64
           jdkVersionOption: "1.17"
-
-
-
 
   # msal
   - job: msalValidation
     displayName: MSAL
     dependsOn:
       - setupBranch
-    variables:
-      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
-    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
+    condition: variables['shouldRunJob']
     steps:
     - checkout: msal
       displayName: Checkout msal repository
@@ -175,9 +165,7 @@ stages:
     timeoutInMinutes: 120
     dependsOn:
       - setupBranch
-    variables:
-      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
-    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
+    condition: variables['shouldRunJob']
     pool:
       name: MSSecurity-1ES-Build-Agents-Pool
       image: MSSecurity-1ES-Windows-2022
@@ -217,10 +205,7 @@ stages:
     displayName: Linux Broker
     dependsOn:
       - setupBranch
-    variables:
-      - name: commonBranch
-        value: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
-    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
+    condition: variables['shouldRunJob']
     pool:
       vmImage: 'ubuntu-22.04'
     steps:
@@ -296,9 +281,7 @@ stages:
     displayName: ADAL
     dependsOn:
       - setupBranch
-    variables:
-      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
-    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
+    condition: variables['shouldRunJob']
     steps:
     - checkout: adal
       displayName: Checkout adal repository
