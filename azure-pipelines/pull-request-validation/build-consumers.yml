@@ -77,17 +77,7 @@ extends:
       policheck:
         enabled: false
     stages:
-
-
-#    - stage: getLabel
-#      jobs:
-#      - job: alternateSchedule
-#        displayName: Set up alternating schedule
-#        steps:
-#        - script: echo "flights is set to "
-#          displayName: "Check flights Value"
     - template: scripts/fetch-pr-labels.yml@AuthClientAndroidPipelines
-
     - stage: validateConsumers
       # Validate Consumers
       displayName: 'Validate'
@@ -131,8 +121,8 @@ extends:
             }
           name: echovar
           displayName: Echo branch name
-
-
+      # ---------------------------------------------------------------------------
+      # Publish Common
       - job: publishCommon
         displayName: Publish Common
         steps:
@@ -168,13 +158,15 @@ extends:
               tasks: common:publish  -PprojVersion=$(projVersion) -PdistCommon4jVersion=$(projVersion)
               jdkArchitecture: x64
               jdkVersionOption: "1.17"
-
+      # ---------------------------------------------------------------------------
+      # OneAuth
       - template: templates/build/testApps/build-one-auth-test-app.yml@AuthClientAndroidPipelines
         parameters:
           commonVersion: $(projVersion)
           branch: android/common-ingestion
           dependsOnJob: publishCommon
-        # msal
+      # ---------------------------------------------------------------------------
+      # MSAL
       - job: msalValidation
         displayName: MSAL
         dependsOn:
@@ -209,7 +201,8 @@ extends:
             tasks: msal:testLocalDebugUnitTest -Plabtest -PlabSecret=$(LabVaultAppCert) -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
             jdkArchitecture: x64
             jdkVersionOption: "1.17"
-      # broker
+      # ---------------------------------------------------------------------------
+      # Broker
       - job: brokerValidation
         displayName: Broker
         cancelTimeoutInMinutes: 1
@@ -251,6 +244,7 @@ extends:
             tasks: AADAuthenticator:localDebugAADAuthenticatorUnitTestCoverageReport --build-cache --info -Plabtest -PlabSecret=$(LabVaultAppCert) -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PpowerLiftApiKey=$(powerliftApiKey) -PcodeCoverageEnabled=true ${{variables.shouldSkipLongRunningTest}}
             jdkArchitecture: x64
             jdkVersionOption: "1.17"
+      # ---------------------------------------------------------------------------
       # Linux broker
       - job: linuxBrokerValidation
         displayName: Linux Broker
@@ -327,6 +321,7 @@ extends:
               testResultsFormat: 'JUnit'
               testResultsFiles: '**/TEST-*.xml'
               searchFolder: 'LinuxBroker'
+      # ---------------------------------------------------------------------------
       # adal
       - job: adalValidation
         displayName: ADAL
