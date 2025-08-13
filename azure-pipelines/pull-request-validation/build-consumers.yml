@@ -65,6 +65,12 @@ extends:
         name: MSSecurity-1ES-Build-Agents-Pool
         image: MSSecurity-1ES-Windows-2022
         os: windows
+      sourceRepositoriesToScan:
+        include:
+        - repository: common
+        - repository: broker
+        - repository: adal
+        - repository: msal
       credscan:
         suppressionsFile: $(Build.SourcesDirectory)/config/credscan/suppression.json
       spotBugs:
