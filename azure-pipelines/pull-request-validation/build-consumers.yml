@@ -67,7 +67,7 @@ extends:
         os: windows
       sourceRepositoriesToScan:
         include:
-        - repository: common
+        - repository: self
         - repository: broker
         - repository: adal
         - repository: msal
