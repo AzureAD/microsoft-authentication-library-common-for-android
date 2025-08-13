@@ -82,7 +82,7 @@ extends:
       # Validate Consumers
       displayName: 'Validate'
       dependsOn: fetchPrLabels
-      condition: not(contains(dependencies.fetchPrLabels.getLabelsJob.outputs['fetchPrCILabel.prLabels'], 'Skip-Consumers-Check'))
+      condition: and(succeeded(), not(contains(dependencies.fetchPrLabels.getLabelsJob.outputs['fetchPrCILabel.prLabels'], 'Skip-Consumers-Check')))
       jobs:
       # setup
       - job: setupBranch
