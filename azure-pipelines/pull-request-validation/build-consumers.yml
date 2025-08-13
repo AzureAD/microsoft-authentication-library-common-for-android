@@ -144,7 +144,15 @@ stages:
           tasks: common:publish  -PprojVersion=$(projVersion) -PdistCommon4jVersion=$(projVersion)
           jdkArchitecture: x64
           jdkVersionOption: "1.17"
-  # msal
+
+  - template: build-one-auth-test-app.yml
+    parameters:
+      commonVersion: $(projVersion)
+      branch: android/common-ingestion
+      dependsOn:
+        - publishCommon
+    
+    # msal
   - job: msalValidation
     displayName: MSAL
     dependsOn:
