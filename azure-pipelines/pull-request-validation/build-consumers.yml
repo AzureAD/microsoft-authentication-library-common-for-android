@@ -171,7 +171,6 @@ extends:
         displayName: MSAL
         dependsOn:
           - setupBranch
-        condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
         steps:
         - checkout: msal
           displayName: Checkout msal repository
@@ -209,11 +208,6 @@ extends:
         timeoutInMinutes: 120
         dependsOn:
           - setupBranch
-        condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
-        pool:
-          name: MSSecurity-1ES-Build-Agents-Pool
-          image: MSSecurity-1ES-Windows-2022
-          os: windows
         steps:
         - checkout: broker
           displayName: Checkout broker repository
@@ -250,9 +244,6 @@ extends:
         displayName: Linux Broker
         dependsOn:
           - setupBranch
-        condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
-        pool:
-          vmImage: 'ubuntu-22.04'
         steps:
           - checkout: broker
             displayName: Checkout broker repository
@@ -327,7 +318,6 @@ extends:
         displayName: ADAL
         dependsOn:
           - setupBranch
-        condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
         steps:
         - checkout: adal
           displayName: Checkout adal repository
