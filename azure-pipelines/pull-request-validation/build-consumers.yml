@@ -169,6 +169,7 @@ extends:
         parameters:
           commonVersion: $(projVersion)
           branch: android/common-ingestion
+          dependsOnJob: publishCommon
 
 #        # msal
 #      - job: msalValidation
