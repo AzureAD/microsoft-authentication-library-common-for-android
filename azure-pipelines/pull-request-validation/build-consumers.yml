@@ -83,55 +83,51 @@ extends:
   
 
     - template: scripts/fetch-pr-labels.yml@AuthClientAndroidPipelines
-#    - stage: validateConsumers
-#      # Validate Consumers
-#      displayName: 'Validate'
-#      dependsOn: getLabel
-#      pool:
-#        vmImage: 'windows-2022'
-#      variables:
-#        prLabels: $[ stageDependencies.getLabel.getLabelsJob.outputs['fetchPrCILabel.prLabels'] ]
-#        commonBranch: $[ stageDependencies.validateConsumers.setupBranch.outputs['setvarStep.commonBranch'] ]  # Centralized common branch variable
-#      jobs:
-#      # setup
-#      - job: setupBranch
-#        displayName: Setup branch
-#        condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
-#        steps:
-#        - checkout: none
-#        - task: PowerShell@2
-#          name: setvarStep
-#          displayName: Set var branch
-#          inputs:
-#            targetType: inline
-#            script: |
-#              $branch = switch ( '$(Build.Reason)' )
-#              {
-#                  PullRequest
-#                  {
-#                    '$(System.PullRequest.SourceBranch)'
-#                  }
-#                  Manual
-#                  {
-#                    '$(commonBranchName)'
-#                  }
-#                  default
-#                  {
-#                    ''
-#                  }
-#              }
-#              Write-Output "$branch"
-#              echo "##vso[task.setvariable variable=commonBranch;isOutput=true]$branch"
-#        - powershell: |
-#            if ("$(setvarStep.commonBranch)" -eq "") {
-#              Write-Output "commonBranchName is not set using default common"
-#            }
-#            else{
-#              Write-Output "Using common branch $(setvarStep.commonBranch) in consumers"
-#            }
-#          name: echovar
-#          displayName: Echo branch name
-#
+
+    - stage: validateConsumers
+      # Validate Consumers
+      displayName: 'Validate'
+      dependsOn: fetchPrLabels
+      condition: eq(dependencies.fetchPrLabels.getLabelsJob.outputs['fetchPrCILabel.prLabels'], 'Skip-Consumers-Check')
+      jobs:
+      # setup
+      - job: setupBranch
+        displayName: Setup branch
+        steps:
+        - checkout: none
+        - task: PowerShell@2
+          name: setvarStep
+          displayName: Set var branch
+          inputs:
+            targetType: inline
+            script: |
+              $branch = switch ( '$(Build.Reason)' )
+              {
+                  PullRequest
+                  {
+                    '$(System.PullRequest.SourceBranch)'
+                  }
+                  Manual
+                  {
+                    '$(commonBranchName)'
+                  }
+                  default
+                  {
+                    ''
+                  }
+              }
+              Write-Output "$branch"
+              echo "##vso[task.setvariable variable=commonBranch;isOutput=true]$branch"
+        - powershell: |
+            if ("$(setvarStep.commonBranch)" -eq "") {
+              Write-Output "commonBranchName is not set using default common"
+            }
+            else{
+              Write-Output "Using common branch $(setvarStep.commonBranch) in consumers"
+            }
+          name: echovar
+          displayName: Echo branch name
+
 
 
 
