@@ -165,11 +165,11 @@ extends:
               jdkArchitecture: x64
               jdkVersionOption: "1.17"
 
-#      - template: templates/build/testApps/build-one-auth-test-app.yml@AuthClientAndroidPipelines
-#        parameters:
-#          commonVersion: $(projVersion)
-#          branch: android/common-ingestion
-#
+      - template: templates/build/testApps/build-one-auth-test-app.yml@AuthClientAndroidPipelines
+        parameters:
+          commonVersion: $(projVersion)
+          branch: android/common-ingestion
+
 #        # msal
 #      - job: msalValidation
 #        displayName: MSAL
