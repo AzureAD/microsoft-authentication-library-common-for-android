@@ -54,7 +54,7 @@ import java.util.List;
  */
 public class OneAuthTestApp extends App implements IFirstPartyApp {
     private final static String TAG = "OneAuthTestApp";
-    public final static String ONEAUTH_TESTAPP_PACKAGE_NAME = "com.msft.oneauth.testapp";
+    public final static String ONEAUTH_TESTAPP_PACKAGE_NAME = "com.msft.authentication.testapp";
     public final static String ONEAUTH_TESTAPP_NAME = "OneAuth Testapp";
     public final static String ONEAUTH_TESTAPP_APK = "OneAuthTestApp.apk";
     public final static String OLD_ONEAUTH_TESTAPP_APK = "OldOneAuthTestApp.apk";
@@ -114,7 +114,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
 
     public String acquireTokenSilent() {
         // Click Get Access token button
-        UiAutomatorUtils.handleButtonClick("com.msft.oneauth.testapp:id/get_access_token_button");
+        UiAutomatorUtils.handleButtonClick(getResourceId("get_access_token_button"));
         try {
             // Add a delay so that UI is updated with the token successfully
             Thread.sleep(5000);
@@ -129,7 +129,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
                         @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
         Logger.i(TAG, "Adding username and password on login screen..");
         try {
-            final UiObject signInBtn = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/sign_in_button");
+            final UiObject signInBtn = UiAutomatorUtils.obtainUiObjectWithResourceId(getResourceId("sign_in_button"));
             scrollToElement(signInBtn);
             signInBtn.click();
             final UiObject emailField = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
@@ -148,7 +148,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     }
 
     public void handleSignInWithoutPrompt() {
-        UiAutomatorUtils.handleButtonClick("com.msft.oneauth.testapp:id/sign_in_button");
+        UiAutomatorUtils.handleButtonClick(getResourceId("sign_in_button"));
         assertSuccess();
     }
 
@@ -165,17 +165,17 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     }
 
     public void handleUserNameInput(@NonNull final String input) {
-        final UiObject accountHint = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/account_hints_edittext");
+        final UiObject accountHint = UiAutomatorUtils.obtainUiObjectWithResourceId(getResourceId("account_hints_edittext"));
         try {
             scrollToElement(accountHint);
-            UiAutomatorUtils.handleInput("com.msft.oneauth.testapp:id/account_hints_edittext", input);
+            UiAutomatorUtils.handleInput(getResourceId("account_hints_edittext"), input);
         } catch (UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
     }
 
     public void handlePreferBrokerSwitchButton() {
-        final UiObject preferBrokerSwitchBtn = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/prefer_broker_switch_button");
+        final UiObject preferBrokerSwitchBtn = UiAutomatorUtils.obtainUiObjectWithResourceId(getResourceId("prefer_broker_switch_button"));
         try {
             scrollToElement(preferBrokerSwitchBtn);
             preferBrokerSwitchBtn.click();
@@ -189,7 +189,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
             final UiObject configureFlightsBtn = UiAutomatorUtils.obtainUiObjectWithText("Configure flights");
             scrollToElement(configureFlightsBtn);
             configureFlightsBtn.click();
-        UiAutomatorUtils.handleButtonClick("com.msft.oneauth.testapp:id/android_broker_for_msa");
+        UiAutomatorUtils.handleButtonClick(getResourceId("android_broker_for_msa"));
         final UiObject doneBtn = UiAutomatorUtils.obtainUiObjectWithText("DONE");
         doneBtn.click();
         } catch (final UiObjectNotFoundException e) {
@@ -204,7 +204,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     }
 
     public void selectFromAppConfiguration(@NonNull final String text)  {
-        final UiObject appConfigurationSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/app_configuration_spinner");
+        final UiObject appConfigurationSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId(getResourceId("app_configuration_spinner"));
         try {
             scrollToElement(appConfigurationSpinner);
             appConfigurationSpinner.click();
@@ -224,7 +224,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     @Override
     public void confirmAccount(@NonNull final String username) {
         // Make sure we are seeing the output text view
-        final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/txtGeneralInfo");
+        final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId(getResourceId("txtGeneralInfo"));
         try {
             Assert.assertTrue(resultUIObject.getText().contains("Result: Success"));
         } catch (final UiObjectNotFoundException e) {
@@ -234,10 +234,10 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
 
     public void assertSuccess() {
         try {
-            final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/txtGeneralInfo");
+            final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId(getResourceId("txtGeneralInfo"));
             resultUIObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
 
-            final UiObject accountIdObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/txtAccountId");
+            final UiObject accountIdObject = UiAutomatorUtils.obtainUiObjectWithResourceId(getResourceId("txtAccountId"));
             accountIdObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
 
             Assert.assertTrue(resultUIObject.getText().contains("Result: Success"));
@@ -253,8 +253,8 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
      */
     public List<String> getAllAccounts() {
         final List<String> accountsList = new ArrayList<>();
-        UiAutomatorUtils.handleButtonClick("com.msft.oneauth.testapp:id/get_all_accounts_button");
-        final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/all_accounts_list");
+        UiAutomatorUtils.handleButtonClick(getResourceId("get_all_accounts_button"));
+        final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId(getResourceId("all_accounts_list"));
         try {
             int childCount = resultUIObject.getChildCount();
             for (int i = 0; i < childCount; i++) {
@@ -268,11 +268,21 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     }
 
     public String getTokenSecret() {
-        final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.oneauth.testapp:id/txtSecret");
+        final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId(getResourceId("txtSecret"));
         try {
             return resultUIObject.getText();
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
+    }
+
+    /**
+     * Get the complete resource id for this app by combining the package name and the internal resource id.
+     *
+     * @param internalResourceId the resource id for the element
+     * @return the complete resource id
+     */
+    private String getResourceId(@NonNull final String internalResourceId) {
+        return CommonUtils.getResourceId(getPackageName(), internalResourceId);
     }
 }
