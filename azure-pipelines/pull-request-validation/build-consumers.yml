@@ -64,12 +64,11 @@ stages:
   variables:
     prLabels: $[ stageDependencies.getLabel.getLabelsJob.outputs['fetchPrCILabel.prLabels'] ]
     commonBranch: $[ stageDependencies.validateConsumers.setupBranch.outputs['setvarStep.commonBranch'] ]  # Centralized common branch variable
-    shouldRunJob: $[ and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) ) ]  # Centralized condition
   jobs:
   # setup
   - job: setupBranch
     displayName: Setup branch
-    condition: variables['shouldRunJob']
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
     - checkout: none
     - task: PowerShell@2
@@ -109,7 +108,7 @@ stages:
     displayName: Publish Common
     dependsOn:
       - setupBranch
-    condition: variables['shouldRunJob']
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
       - checkout: self
         displayName: Checkout common repository
@@ -128,7 +127,7 @@ stages:
     displayName: MSAL
     dependsOn:
       - setupBranch
-    condition: variables['shouldRunJob']
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
     - checkout: msal
       displayName: Checkout msal repository
@@ -165,7 +164,7 @@ stages:
     timeoutInMinutes: 120
     dependsOn:
       - setupBranch
-    condition: variables['shouldRunJob']
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     pool:
       name: MSSecurity-1ES-Build-Agents-Pool
       image: MSSecurity-1ES-Windows-2022
@@ -205,7 +204,7 @@ stages:
     displayName: Linux Broker
     dependsOn:
       - setupBranch
-    condition: variables['shouldRunJob']
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     pool:
       vmImage: 'ubuntu-22.04'
     steps:
@@ -281,7 +280,7 @@ stages:
     displayName: ADAL
     dependsOn:
       - setupBranch
-    condition: variables['shouldRunJob']
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
     steps:
     - checkout: adal
       displayName: Checkout adal repository
