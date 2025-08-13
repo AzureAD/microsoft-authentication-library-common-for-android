@@ -116,7 +116,10 @@ stages:
         displayName: Checkout common repository
         clean: true
         persistCredentials: True
-      - template: ../templates/steps/automation-cert.yml
+      - bash: |
+          echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME]VSTS"
+          echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)"
+        displayName: 'Set Environmnet variables'
       - task: Gradle@3
         displayName: Assemble Common 4j
         inputs:
