@@ -1,5 +1,7 @@
 vNext
 ----------
+- [MINOR] [SDL Assessment task] Secure webview settings (#2715)
+
 
 Version 22.0.1
 ----------
