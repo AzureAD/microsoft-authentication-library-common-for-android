@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Fix DualScreenActivity theme color constant (#2737)
 
 Version 22.0.1
 ----------
