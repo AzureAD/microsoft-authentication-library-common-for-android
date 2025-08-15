@@ -312,6 +312,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             webSettings.setAllowContentAccess(false);
             webSettings.setAllowFileAccessFromFileURLs(false);
             webSettings.setAllowUniversalAccessFromFileURLs(false);
+            webSettings.setGeolocationEnabled(false);
         }
 
         mWebView.requestFocus(View.FOCUS_DOWN);
