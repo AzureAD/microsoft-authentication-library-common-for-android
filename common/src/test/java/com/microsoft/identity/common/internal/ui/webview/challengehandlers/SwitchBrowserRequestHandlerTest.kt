@@ -61,7 +61,7 @@ class SwitchBrowserRequestHandlerTest {
         val context = mock(Context::class.java)
         val customTabsManager = mock(CustomTabsManager::class.java)
         val challenge = mock(SwitchBrowserChallenge::class.java)
-        `when`(challenge.processUri).thenReturn(Uri.parse("https://example.com?state=123"))
+        `when`(challenge.processUri).thenReturn(Uri.parse("https://login.microsoft.com?state=123"))
         `when`(challenge.authorizationUrl).thenReturn("https://auth.com?state=123")
         val browserSelector = // Browser available
             IBrowserSelector { _, _ -> Browser("fakeBrowser", emptySet(), "browser", false) }
@@ -83,7 +83,7 @@ class SwitchBrowserRequestHandlerTest {
         val context = mock(Context::class.java)
         val customTabsManager = mock(CustomTabsManager::class.java)
         val challenge = mock(SwitchBrowserChallenge::class.java)
-        `when`(challenge.processUri).thenReturn(Uri.parse("https://example.com"))
+        `when`(challenge.processUri).thenReturn(Uri.parse("https://login.microsoft.com"))
         `when`(challenge.authorizationUrl).thenReturn("https://auth.com")
         val browserSelector = // Browser available
             IBrowserSelector { _, _ -> Browser("fakeBrowser", emptySet(), "browser", false) }
@@ -100,7 +100,7 @@ class SwitchBrowserRequestHandlerTest {
         val context = mock(Context::class.java)
         val customTabsManager = mock(CustomTabsManager::class.java)
         val challenge = mock(SwitchBrowserChallenge::class.java)
-        `when`(challenge.processUri).thenReturn(Uri.parse("https://example.com?state=123"))
+        `when`(challenge.processUri).thenReturn(Uri.parse("https://login.microsoft.com?state=123"))
         `when`(challenge.authorizationUrl).thenReturn("https://auth.com?state=123")
         val browserSelector = IBrowserSelector { _, _ -> null } // No browser available
         val handler = SwitchBrowserRequestHandler(activity, context, customTabsManager, browserSelector, null)
@@ -119,7 +119,7 @@ class SwitchBrowserRequestHandlerTest {
         val context = mock(Context::class.java)
         val customTabsManager = mock(CustomTabsManager::class.java)
         val challenge = mock(SwitchBrowserChallenge::class.java)
-        `when`(challenge.processUri).thenReturn(Uri.parse("https://example.com?state=123"))
+        `when`(challenge.processUri).thenReturn(Uri.parse("https://login.microsoft.com?state=123"))
         `when`(challenge.authorizationUrl).thenReturn("https://auth.com?state=456")
         val browserSelector = // Browser available
             IBrowserSelector { _, _ -> Browser("fakeBrowser", emptySet(), "browser", false) }
@@ -129,6 +129,31 @@ class SwitchBrowserRequestHandlerTest {
         }
         Assert.assertEquals(ClientException.STATE_MISMATCH, exception.errorCode)
         Assert.assertEquals("State does not match with the auth request state.", exception.message)
+    }
+
+    @Test
+    fun `test processChallenge invalid host authority`() {
+        // Mock parameters
+        val mockActivity = mock<Activity>()
+        val context = mock(Context::class.java)
+        val customTabsManager = mock(CustomTabsManager::class.java)
+        val challenge = mock(SwitchBrowserChallenge::class.java)
+
+        // Set up challenge with invalid authority host
+        `when`(challenge.processUri).thenReturn(Uri.parse("https://invalid.authority.com/path?state=123"))
+        `when`(challenge.authorizationUrl).thenReturn("https://auth.com?state=123")
+
+        val browserSelector = // Browser available
+            IBrowserSelector { _, _ -> Browser("fakeBrowser", emptySet(), "browser", false) }
+
+        val handler = SwitchBrowserRequestHandler(mockActivity, context, customTabsManager, browserSelector, null)
+
+        val exception = Assert.assertThrows(ClientException::class.java) {
+            handler.processChallenge(challenge)
+        }
+
+        Assert.assertEquals(ClientException.UNKNOWN_AUTHORITY, exception.errorCode)
+        Assert.assertTrue(exception.message!!.contains("Authority 'invalid.authority.com' is not a valid AAD authority"))
     }
 
     private fun isStateRequired(isStateRequired: Boolean) {

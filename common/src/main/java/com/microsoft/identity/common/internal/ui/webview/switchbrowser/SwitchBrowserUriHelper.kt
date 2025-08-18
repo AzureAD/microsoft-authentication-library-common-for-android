@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory
 import com.microsoft.identity.common.logging.Logger
 import io.opentelemetry.api.trace.StatusCode
 
@@ -169,6 +170,76 @@ object SwitchBrowserUriHelper {
             throw clientException
         }
         Logger.info(methodTag, "States match.")
+    }
+
+    /**
+     * Validates that the provided authority is a valid Azure Active Directory (AAD) authority.
+     *
+     * This method performs the following validations:
+     * 1. Checks if the authority parameter is not null or empty
+     * 2. Ensures AzureActiveDirectory is initialized (performs cloud discovery if needed)
+     * 3. Verifies the authority exists in the list of known AAD hosts
+     *
+     * @param authority The authority URL to validate (e.g., "login.microsoftonline.com")
+     *
+     * @throws ClientException with [ClientException.MISSING_PARAMETER] if authority is null or empty
+     * @throws ClientException with [ClientException.UNKNOWN_AUTHORITY] if authority is not a valid AAD authority
+     *
+     * @see AzureActiveDirectory.getHosts
+     * @see AzureActiveDirectory.performCloudDiscovery
+     */
+    fun validateAadAuthority(authority: String?) {
+        val methodTag = "$TAG:validateAadAuthority"
+        val span = SpanExtension.current()
+
+        // Early validation for null or empty authority
+        if (authority.isNullOrEmpty() || authority.isBlank()) {
+            val errorMessage = "Authority is null or empty."
+            val clientException = ClientException(
+                ClientException.MISSING_PARAMETER,
+                errorMessage
+            )
+            Logger.error(methodTag, errorMessage, clientException)
+            span.setStatus(StatusCode.ERROR)
+            span.recordException(clientException)
+            throw clientException
+        }
+
+        // Ensure AzureActiveDirectory is properly initialized
+        if (!AzureActiveDirectory.isInitialized()) {
+            Logger.warn(methodTag, "AzureActiveDirectory is not initialized. Performing cloud discovery.")
+            try {
+                AzureActiveDirectory.performCloudDiscovery()
+            } catch (e: Exception) {
+                val errorMessage = "Failed to perform cloud discovery for AAD authorities."
+                Logger.error(methodTag, errorMessage, e)
+                val clientException = ClientException(
+                    ClientException.UNKNOWN_AUTHORITY,
+                    errorMessage,
+                    e
+                )
+                span.setStatus(StatusCode.ERROR)
+                span.recordException(clientException)
+                throw clientException
+            }
+        }
+
+        // Validate authority against known AAD hosts
+        val authorityFound = AzureActiveDirectory.getHosts().any { host ->
+            host.equals(authority, ignoreCase = true)
+        }
+
+        if (!authorityFound) {
+            val errorMessage = "Authority '$authority' is not a valid AAD authority."
+            val clientException = ClientException(
+                ClientException.UNKNOWN_AUTHORITY,
+                errorMessage
+            )
+            Logger.error(methodTag, errorMessage, clientException)
+            span.setStatus(StatusCode.ERROR)
+            span.recordException(clientException)
+            throw clientException
+        }
     }
 
     /**
