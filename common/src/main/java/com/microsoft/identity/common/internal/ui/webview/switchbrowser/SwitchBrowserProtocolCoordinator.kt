@@ -134,6 +134,7 @@ class SwitchBrowserProtocolCoordinator(
             SwitchBrowserUriHelper.statesMatch(authorizationRequest, state)
             // Validate the state from auth request and redirect URL is the same
             val resumeUri = SwitchBrowserUriHelper.buildResumeUri(actionUri, state)
+            SwitchBrowserUriHelper.validateAadAuthority(resumeUri.authority)
             val authorizationHeaderValue = "Bearer $code"
             val headers = hashMapOf(AUTHORIZATION to authorizationHeaderValue)
             onSuccessAction(resumeUri, headers)
