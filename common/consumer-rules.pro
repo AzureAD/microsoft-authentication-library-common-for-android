@@ -50,9 +50,13 @@
 # keep everything in this package from being removed or renamed
 -keep class io.opentelemetry.** { *; }
 
+# keep names
+-keepnames class com.microsoft.identity.** { *; }
+
 # Prevent R8 from leaving Data object members always null
--keepclassmembers,allowobfuscation class * {
+-keepclassmembers class * {
   @com.google.gson.annotations.SerializedName <fields>;
+  @com.squareup.moshi.Json <fields>;
 }
 
 #For Android Credential Manager: https://developer.android.com/training/sign-in/passkeys#proguard
@@ -60,3 +64,17 @@
 -keep class androidx.credentials.playservices.** {
   *;
 }
+
+-keep class net.jcip.annotations.GuardedBy
+-keep class net.jcip.annotations.Immutable
+-keep class net.jcip.annotations.ThreadSafe
+
+# Compile time annotations
+-dontwarn edu.umd.cs.findbugs.annotations.NonNull
+-dontwarn edu.umd.cs.findbugs.annotations.Nullable
+-dontwarn edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+
+-dontwarn com.google.auto.value.AutoValue$CopyAnnotations
+-dontwarn com.google.auto.value.AutoValue
+-dontwarn com.google.auto.value.extension.memoized.Memoized
+

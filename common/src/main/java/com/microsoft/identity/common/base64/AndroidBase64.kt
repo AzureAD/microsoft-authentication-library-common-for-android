@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.base64
 
+import androidx.annotation.Keep
 import com.microsoft.identity.common.java.base64.Base64Flags
 import com.microsoft.identity.common.java.base64.Base64Util
 import com.microsoft.identity.common.java.base64.IBase64
@@ -34,7 +35,7 @@ import com.microsoft.identity.common.java.base64.IBase64
  *
  * see [Base64Util] for more info.
  **/
-
+@Keep
 class AndroidBase64 : IBase64 {
 
     override fun encode(input: ByteArray, vararg flags: Base64Flags): ByteArray {
