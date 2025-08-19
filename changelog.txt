@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Enable ShouldPreserveWebViewFlowOnSslError in Common
 - [PATCH] Fix DualScreenActivity theme color constant (#2737)
 - [MINOR] [SDL Assessment task] Secure webview settings (#2715)
 
