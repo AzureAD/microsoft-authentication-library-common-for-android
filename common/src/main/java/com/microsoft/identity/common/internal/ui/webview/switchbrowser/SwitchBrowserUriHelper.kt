@@ -193,7 +193,8 @@ object SwitchBrowserUriHelper {
         val span = SpanExtension.current()
 
         // Early validation for null or empty authority
-        if (authority.isNullOrEmpty() || authority.isBlank()) {
+        // Early validation for null, empty, or blank authority
+        if (authority.isNullOrBlank()) {
             val errorMessage = "Authority is null or empty."
             val clientException = ClientException(
                 ClientException.MISSING_PARAMETER,
