@@ -26,10 +26,8 @@ import android.net.Uri
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
 import com.microsoft.identity.common.java.exception.ClientException
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory
 import io.mockk.every
 import io.mockk.mockkObject
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert
@@ -213,95 +211,6 @@ class SwitchBrowserUriHelperTest {
             "State does not match with the auth request state.",
             exception.message
         )
-    }
-
-    @Test
-    fun `test validateAadAuthority with valid authority`() {
-        // Setup mocks
-        mockkStatic(AzureActiveDirectory::class)
-        every { AzureActiveDirectory.isInitialized() } returns true
-        every { AzureActiveDirectory.getHosts() } returns setOf("login.microsoftonline.com", "login.windows.net")
-
-        // Test with valid authority
-        SwitchBrowserUriHelper.validateAadAuthority("login.microsoftonline.com")
-
-        // Should not throw any exception
-    }
-
-    @Test
-    fun `test validateAadAuthority with null authority`() {
-        val exception = Assert.assertThrows(ClientException::class.java) {
-            SwitchBrowserUriHelper.validateAadAuthority(null)
-        }
-
-        Assert.assertEquals(ClientException.MISSING_PARAMETER, exception.errorCode)
-        Assert.assertEquals("Authority is null or empty.", exception.message)
-    }
-
-    @Test
-    fun `test validateAadAuthority with empty authority`() {
-        val exception = Assert.assertThrows(ClientException::class.java) {
-            SwitchBrowserUriHelper.validateAadAuthority("")
-        }
-
-        Assert.assertEquals(ClientException.MISSING_PARAMETER, exception.errorCode)
-        Assert.assertEquals("Authority is null or empty.", exception.message)
-    }
-
-    @Test
-    fun `test validateAadAuthority with blank authority`() {
-        val exception = Assert.assertThrows(ClientException::class.java) {
-            SwitchBrowserUriHelper.validateAadAuthority("   ")
-        }
-
-        Assert.assertEquals(ClientException.MISSING_PARAMETER, exception.errorCode)
-        Assert.assertEquals("Authority is null or empty.", exception.message)
-    }
-
-    @Test
-    fun `test validateAadAuthority with uninitialized AAD performs cloud discovery`() {
-        // Setup mocks
-        mockkStatic(AzureActiveDirectory::class)
-        every { AzureActiveDirectory.isInitialized() } returns false
-        every { AzureActiveDirectory.performCloudDiscovery() } returns Unit
-        every { AzureActiveDirectory.getHosts() } returns setOf("login.microsoftonline.com", "login.windows.net")
-
-        // Test with valid authority
-        SwitchBrowserUriHelper.validateAadAuthority("login.microsoftonline.com")
-
-        // Should not throw any exception and should have performed cloud discovery
-    }
-
-    @Test
-    fun `test validateAadAuthority with cloud discovery failure`() {
-        // Setup mocks
-        mockkStatic(AzureActiveDirectory::class)
-        every { AzureActiveDirectory.isInitialized() } returns false
-        every { AzureActiveDirectory.performCloudDiscovery() } throws RuntimeException("Cloud discovery failed")
-
-        val exception = Assert.assertThrows(ClientException::class.java) {
-            SwitchBrowserUriHelper.validateAadAuthority("login.microsoftonline.com")
-        }
-
-        Assert.assertEquals(ClientException.UNKNOWN_AUTHORITY, exception.errorCode)
-        Assert.assertEquals("Failed to perform cloud discovery for AAD authorities.", exception.message)
-        Assert.assertNotNull(exception.cause)
-        Assert.assertTrue(exception.cause is RuntimeException)
-    }
-
-    @Test
-    fun `test validateAadAuthority with invalid authority`() {
-        // Setup mocks
-        mockkStatic(AzureActiveDirectory::class)
-        every { AzureActiveDirectory.isInitialized() } returns true
-        every { AzureActiveDirectory.getHosts() } returns setOf("login.microsoftonline.com", "login.windows.net")
-
-        val exception = Assert.assertThrows(ClientException::class.java) {
-            SwitchBrowserUriHelper.validateAadAuthority("invalid.authority.com")
-        }
-
-        Assert.assertEquals(ClientException.UNKNOWN_AUTHORITY, exception.errorCode)
-        Assert.assertTrue(exception.message!!.contains("Authority 'invalid.authority.com' is not a valid AAD authority"))
     }
 
     private fun isStateRequired(isStateRequired: Boolean) {

@@ -87,7 +87,6 @@ class SwitchBrowserRequestHandler(
             
             val state = switchBrowserChallenge.processUri.getQueryParameter(SWITCH_BROWSER.STATE)
             SwitchBrowserUriHelper.statesMatch(switchBrowserChallenge.authorizationUrl, state)
-            SwitchBrowserUriHelper.validateAadAuthority(switchBrowserChallenge.processUri.authority)
 
             // Select a browser to handle the switch browser challenge
             val browser = browserSelector.selectBrowser(

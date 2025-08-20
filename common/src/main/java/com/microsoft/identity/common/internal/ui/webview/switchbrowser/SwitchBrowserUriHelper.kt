@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory
 import com.microsoft.identity.common.logging.Logger
 import io.opentelemetry.api.trace.StatusCode
+import java.net.URL
 
 /**
  * SwitchBrowserUriHelper is a helper class to build URIs for the switch browser challenge.
@@ -73,13 +74,14 @@ object SwitchBrowserUriHelper {
         val actionUri = uri.getQueryParameter(
             SWITCH_BROWSER.ACTION_URI
         )
-        if (actionUri.isNullOrEmpty()) {
-            // This should never happen, but if it does, we should log it and throw.
-            val errorMessage = "switch browser action uri is null or empty"
+        if (actionUri.isNullOrBlank()) {
+            val errorMessage = "switch browser action uri is null or blank"
             val exception = ClientException(ClientException.MALFORMED_URL, errorMessage)
             Logger.error(methodTag, errorMessage, exception)
             throw exception
         }
+        validateActionUri(actionUri)
+
         val state = uri.getQueryParameter(
             SWITCH_BROWSER.STATE
         )
@@ -102,6 +104,7 @@ object SwitchBrowserUriHelper {
      */
     fun buildResumeUri(actionUri: String, state: String?): Uri {
         val methodTag = "$TAG:buildResumeUri"
+        validateActionUri(actionUri)
         // Construct the uri to the resume endpoint.
         val queryParams = hashMapOf<String, String>()
         addStateToQueryParams(queryParams, state, methodTag)
@@ -173,77 +176,6 @@ object SwitchBrowserUriHelper {
     }
 
     /**
-     * Validates that the provided authority is a valid Azure Active Directory (AAD) authority.
-     *
-     * This method performs the following validations:
-     * 1. Checks if the authority parameter is not null or empty
-     * 2. Ensures AzureActiveDirectory is initialized (performs cloud discovery if needed)
-     * 3. Verifies the authority exists in the list of known AAD hosts
-     *
-     * @param authority The authority URL to validate (e.g., "login.microsoftonline.com")
-     *
-     * @throws ClientException with [ClientException.MISSING_PARAMETER] if authority is null or empty
-     * @throws ClientException with [ClientException.UNKNOWN_AUTHORITY] if authority is not a valid AAD authority
-     *
-     * @see AzureActiveDirectory.getHosts
-     * @see AzureActiveDirectory.performCloudDiscovery
-     */
-    fun validateAadAuthority(authority: String?) {
-        val methodTag = "$TAG:validateAadAuthority"
-        val span = SpanExtension.current()
-
-        // Early validation for null or empty authority
-        // Early validation for null, empty, or blank authority
-        if (authority.isNullOrBlank()) {
-            val errorMessage = "Authority is null or empty."
-            val clientException = ClientException(
-                ClientException.MISSING_PARAMETER,
-                errorMessage
-            )
-            Logger.error(methodTag, errorMessage, clientException)
-            span.setStatus(StatusCode.ERROR)
-            span.recordException(clientException)
-            throw clientException
-        }
-
-        // Ensure AzureActiveDirectory is properly initialized
-        if (!AzureActiveDirectory.isInitialized()) {
-            Logger.warn(methodTag, "AzureActiveDirectory is not initialized. Performing cloud discovery.")
-            try {
-                AzureActiveDirectory.performCloudDiscovery()
-            } catch (e: Exception) {
-                val errorMessage = "Failed to perform cloud discovery for AAD authorities."
-                Logger.error(methodTag, errorMessage, e)
-                val clientException = ClientException(
-                    ClientException.UNKNOWN_AUTHORITY,
-                    errorMessage,
-                    e
-                )
-                span.setStatus(StatusCode.ERROR)
-                span.recordException(clientException)
-                throw clientException
-            }
-        }
-
-        // Validate authority against known AAD hosts
-        val authorityFound = AzureActiveDirectory.getHosts().any { host ->
-            host.equals(authority, ignoreCase = true)
-        }
-
-        if (!authorityFound) {
-            val errorMessage = "Authority '$authority' is not a valid AAD authority."
-            val clientException = ClientException(
-                ClientException.UNKNOWN_AUTHORITY,
-                errorMessage
-            )
-            Logger.error(methodTag, errorMessage, clientException)
-            span.setStatus(StatusCode.ERROR)
-            span.recordException(clientException)
-            throw clientException
-        }
-    }
-
-    /**
      * Add state to the query parameters If STATE_VALIDATION_REQUIRED is enabled.
      * If STATE_VALIDATION_REQUIRED is disabled, this method does nothing.
      * If STATE_VALIDATION_REQUIRED is enabled and state is null or empty, this method throws an exception.
@@ -283,5 +215,31 @@ object SwitchBrowserUriHelper {
             uriBuilder.appendQueryParameter(key, value)
         }
         return uriBuilder.build()
+    }
+
+    private fun validateActionUri(actionUriString: String) {
+        val methodTag = "$TAG:validateActionUri"
+        // Check if AzureActiveDirectory is initialized, if not, perform cloud discovery.
+        if (!AzureActiveDirectory.isInitialized()) {
+            Logger.warn(
+                methodTag,
+                "AzureActiveDirectory is not initialized. Performing cloud discovery."
+            )
+            try {
+                AzureActiveDirectory.performCloudDiscovery()
+            } catch (e: Exception) {
+                val errorMessage = "Failed to perform cloud discovery for AAD authorities."
+                Logger.error(methodTag, errorMessage, e)
+                throw ClientException(ClientException.IO_ERROR, errorMessage, e)
+            }
+        }
+        // Validate the action uri is not null or empty.
+        val actionUrl = URL(actionUriString)
+        if (!AzureActiveDirectory.isValidCloudHost(actionUrl)) {
+            val errorMessage = "Authority '${actionUrl.host}' is not a valid AAD authority"
+            val exception = ClientException(ClientException.UNKNOWN_AUTHORITY, errorMessage)
+            Logger.error(methodTag, errorMessage, exception)
+            throw exception
+        }
     }
 }
