@@ -26,6 +26,7 @@ import static com.microsoft.identity.common.java.exception.ClientException.INVAL
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
@@ -34,10 +35,13 @@ import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsManager;
 import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.util.FileUtil;
 import com.microsoft.identity.common.logging.Logger;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -78,7 +82,6 @@ public class KeyStoreBackedSecretKeyProviderInstrumentedTest {
         AndroidKeyStoreUtil.deleteKey(MOCK_KEY_ALIAS);
         FileUtil.deleteFile(getKeyFile());
 
-        final Context mockContext = Mockito.mock(Context.class);
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         Mockito.when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY))
                 .thenReturn(true);
@@ -86,43 +89,37 @@ public class KeyStoreBackedSecretKeyProviderInstrumentedTest {
                 .thenReturn(true);
         Mockito.when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING))
                 .thenReturn(false);
-        final CryptoParameterSpecFactory cryptoParameterSpecFactory = new CryptoParameterSpecFactory(
-                mockContext,
-                MOCK_KEY_ALIAS,
-                mockFlightsProvider
-        );
+
+        // Create anonymous IFlightsManager
+        IFlightsManager anonymousFlightsManager = new IFlightsManager() {
+            @Override
+            public @NotNull IFlightsProvider getFlightsProvider(long waitForConfigsWithTimeoutInMs) {
+                return mockFlightsProvider;
+            }
+            @Override
+            public @NotNull IFlightsProvider getFlightsProviderForTenant(@NotNull String tenantId, long waitForConfigsWithTimeoutInMs) {
+                return mockFlightsProvider;
+            }
+            @Override
+            public @NotNull IFlightsProvider getFlightsProviderForTenant(@NotNull String tenantId) {
+                return mockFlightsProvider;
+            }
+            @NonNull
+            @Override
+            public IFlightsProvider getFlightsProvider() {
+                return mockFlightsProvider;
+            }
+        };
+
+        // Initialize CommonFlightsManager with the anonymous implementation
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(anonymousFlightsManager);
         keyProvider = new KeyStoreBackedSecretKeyProvider(
                 context,
                 MOCK_KEY_ALIAS,
-                MOCK_KEY_FILE_PATH,
-                cryptoParameterSpecFactory
+                MOCK_KEY_FILE_PATH
         );
     }
-
-
-    private KeyStoreBackedSecretKeyProvider getOAEPKeyProvider() {
-        // Clean slate for each test
-        final Context mockContext = Mockito.mock(Context.class);
-        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
-        Mockito.when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY))
-                .thenReturn(true);
-        Mockito.when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY))
-                .thenReturn(true);
-        Mockito.when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING))
-                .thenReturn(true);
-        final CryptoParameterSpecFactory cryptoParameterSpecFactory = new CryptoParameterSpecFactory(
-                mockContext,
-                MOCK_KEY_ALIAS,
-                mockFlightsProvider
-        );
-        return new KeyStoreBackedSecretKeyProvider(
-                context,
-                MOCK_KEY_ALIAS,
-                MOCK_KEY_FILE_PATH,
-                cryptoParameterSpecFactory
-        );
-    }
-
+    
     @After
     public void tearDown() throws Exception {
         // Clean up after each test
@@ -425,52 +422,5 @@ public class KeyStoreBackedSecretKeyProviderInstrumentedTest {
         String rolledBackThumbprint = KeyUtil.getKeyThumbPrint(rolledBackKey);
         Assert.assertEquals("Thumbprints should match after rollback", originalThumbprint, rolledBackThumbprint);
 
-    }
-
-    // Compatibility Tests KeyStoreBackedSecretKeyProvider using PKCS1 and OAEP providers
-
-    @Test
-    public void testBackwardCompatibility_PKCS1ToOAEP_KeyCreation() throws ClientException {
-        // Test that a key created with PKCS1 provider can be read by OAEP provider
-
-        // Step 1: Create key with PKCS1 provider (regular keyProvider)
-        SecretKey pkcs1Key = keyProvider.generateNewSecretKey();
-        Assert.assertNotNull("PKCS1 provider key should not be null", pkcs1Key);
-        String pkcs1Thumbprint = KeyUtil.getKeyThumbPrint(pkcs1Key);
-
-        // Step 2: Try to read the same key with OAEP provider
-        KeyStoreBackedSecretKeyProvider oaepProvider = getOAEPKeyProvider();
-        SecretKey oaepReadKey = oaepProvider.readSecretKeyFromStorage();
-
-        Assert.assertNotNull("OAEP provider should read PKCS1 created key", oaepReadKey);
-        String oaepThumbprint = KeyUtil.getKeyThumbPrint(oaepReadKey);
-        Assert.assertEquals("Thumbprints should match between PKCS1 and OAEP", pkcs1Thumbprint, oaepThumbprint);
-
-        // Step 3: Verify both providers use same key type identifier and cipher transformation
-        Assert.assertEquals("Key type identifiers should match",
-                keyProvider.getKeyTypeIdentifier(), oaepProvider.getKeyTypeIdentifier());
-        Assert.assertEquals("Cipher transformations should match",
-                keyProvider.getCipherTransformation(), oaepProvider.getCipherTransformation());
-    }
-
-    @Test
-    public void testBackwardCompatibility_OAEPToPKCS1_CachedKey() throws ClientException {
-        // Test cached key compatibility between OAEP and PKCS1 providers
-
-        // Step 1: Generate and cache key with OAEP provider
-        KeyStoreBackedSecretKeyProvider oaepProvider = getOAEPKeyProvider();
-        SecretKey oaepKey = oaepProvider.getKey();
-        Assert.assertNotNull("OAEP cached key should not be null", oaepProvider.getKeyFromCache());
-
-        keyProvider.clearKeyFromCache();
-        // Step 2: PKCS1 provider should be able to read the same key
-        SecretKey pkcs1Key = keyProvider.getKey();
-
-        Assert.assertNotNull("PKCS1 provider should get key", pkcs1Key);
-
-        // Step 3: Keys should have same thumbprint
-        String oaepThumbprint = KeyUtil.getKeyThumbPrint(oaepKey);
-        String pkcs1Thumbprint = KeyUtil.getKeyThumbPrint(pkcs1Key);
-        Assert.assertEquals("Cached keys should have same thumbprint", oaepThumbprint, pkcs1Thumbprint);
     }
 }

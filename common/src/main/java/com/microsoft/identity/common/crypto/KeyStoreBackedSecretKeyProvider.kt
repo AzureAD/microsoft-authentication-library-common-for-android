@@ -51,14 +51,10 @@ import javax.crypto.SecretKey
  * @param filePath The file path where the wrapped secret key is stored.
  * @param context The context used to access the Android KeyStore and file system.
  */
-class KeyStoreBackedSecretKeyProvider @JvmOverloads constructor(
+class KeyStoreBackedSecretKeyProvider(
     context: Context,
     override val alias: String,
-    private val filePath: String,
-    private val cryptoParameterSpecFactory: CryptoParameterSpecFactory = CryptoParameterSpecFactory(
-        context,
-        alias
-    )
+    private val filePath: String
 ) : ISecretKeyProvider {
     companion object {
         private const val TAG = "KeyStoreBackedSecretKeyProvider"
@@ -86,6 +82,11 @@ class KeyStoreBackedSecretKeyProvider @JvmOverloads constructor(
 
     override val keyTypeIdentifier = KEY_TYPE_IDENTIFIER
     override val cipherTransformation = AES_CBC_PKCS5_PADDING_TRANSFORMATION
+
+    private val cryptoParameterSpecFactory: CryptoParameterSpecFactory = CryptoParameterSpecFactory(
+        context,
+        alias
+    )
 
     /**
      * File where the wrapped secret key is stored.
