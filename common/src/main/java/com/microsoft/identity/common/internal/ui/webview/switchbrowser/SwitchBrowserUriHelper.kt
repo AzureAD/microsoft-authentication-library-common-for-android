@@ -234,7 +234,14 @@ object SwitchBrowserUriHelper {
             }
         }
         // Validate the action uri is not null or empty.
-        val actionUrl = URL(actionUriString)
+        val actionUrl: URL
+        try {
+            actionUrl = URL(actionUriString)
+        } catch (e: java.net.MalformedURLException) {
+            val errorMessage = "Malformed action URI: '$actionUriString'"
+            Logger.error(methodTag, errorMessage, e)
+            throw ClientException(ClientException.INVALID_URL, errorMessage, e)
+        }
         if (!AzureActiveDirectory.isValidCloudHost(actionUrl)) {
             val errorMessage = "Authority '${actionUrl.host}' is not a valid AAD authority"
             val exception = ClientException(ClientException.UNKNOWN_AUTHORITY, errorMessage)
