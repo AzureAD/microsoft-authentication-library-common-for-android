@@ -74,8 +74,9 @@ object SwitchBrowserUriHelper {
         val actionUri = uri.getQueryParameter(
             SWITCH_BROWSER.ACTION_URI
         )
-        if (actionUri.isNullOrBlank()) {
-            val errorMessage = "switch browser action uri is null or blank"
+        if (actionUri.isNullOrEmpty()) {
+            // This should never happen, but if it does, we should log it and throw.
+            val errorMessage = "switch browser action uri is null or empty"
             val exception = ClientException(ClientException.MALFORMED_URL, errorMessage)
             Logger.error(methodTag, errorMessage, exception)
             throw exception
@@ -240,7 +241,7 @@ object SwitchBrowserUriHelper {
         } catch (e: java.net.MalformedURLException) {
             val errorMessage = "Malformed action URI: '$actionUriString'"
             Logger.error(methodTag, errorMessage, e)
-            throw ClientException(ClientException.INVALID_URL, errorMessage, e)
+            throw ClientException(ClientException.MALFORMED_URL, errorMessage, e)
         }
         if (!AzureActiveDirectory.isValidCloudHost(actionUrl)) {
             val errorMessage = "Authority '${actionUrl.host}' is not a valid AAD authority"
