@@ -29,8 +29,15 @@ import com.microsoft.identity.common.java.util.FileUtil
 import com.microsoft.identity.common.logging.Logger
 import org.json.JSONObject
 import java.io.File
+import java.io.IOException
 import java.nio.ByteBuffer
 
+/**
+ * Represents a wrapped secret key with metadata for algorithm and cipher transformation.
+ *
+ * This class supports both old and new storage formats for wrapped keys.
+ * The new format includes metadata header for better compatibility and extensibility.
+ */
 class WrappedSecretKey(
     val byteArray: ByteArray,
     val algorithm: String,
@@ -51,28 +58,9 @@ class WrappedSecretKey(
                     .isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT)
 
             if (useNewFormat) {
-                // New format: Store metadata header + raw key data
-                val metadata = JSONObject().apply {
-                    put("algorithm", algorithm)
-                    put("cipherTransformation", cipherTransformation)
-                    put("version", NEW_FORMAT_VERSION)
-                    put("keyDataLength", byteArray.size)
-                }
-                val metadataBytes = metadata.toString().toByteArray(Charsets.UTF_8)
-
-                // Use ByteBuffer for cleaner header writing
-                val output = ByteBuffer.allocate(4 + metadataBytes.size + byteArray.size)
-                    .putInt(metadataBytes.size)  // Write header length (4 bytes, big-endian)
-                    .put(metadataBytes)          // Write metadata
-                    .put(byteArray)              // Write raw key data
-                    .array()
-
-                FileUtil.writeDataToFile(output, file)
-                Logger.info(methodTag, "Key successfully stored on disk using optimized new format.")
+                storeOnFileNewFormat(file)
             } else {
-                // Old format: Store only raw key bytes
                 FileUtil.writeDataToFile(byteArray, file)
-                Logger.info(methodTag, "Key successfully stored on disk using old format.")
             }
         } catch (e: Exception) {
             Logger.error(methodTag, "Failed to store key on disk", e)
@@ -80,11 +68,50 @@ class WrappedSecretKey(
         }
     }
 
+    /**
+     * Stores the wrapped secret key in the new binary format.
+     *
+     * The new format structure is:
+     * - Header identifier (4 bytes)
+     * - Metadata length (4 bytes)
+     * - Protobuf-serialized metadata
+     * - Raw key data
+     *
+     * @param file The file to store the key data
+     */
+    private fun storeOnFileNewFormat(file: File) {
+        val methodTag = "$TAG:storeOnFileNewFormat"
+
+        // New format: Store metadata header + raw key data
+        val metadata = JSONObject().apply {
+            put("algorithm", algorithm)
+            put("cipherTransformation", cipherTransformation)
+            put("version", FORMAT_VERSION_1)
+            put("keyDataLength", byteArray.size)
+        }
+
+        val metadataBytes = metadata.toString().toByteArray(Charsets.UTF_8)
+
+        // Use ByteBuffer for cleaner header writing
+        val output = ByteBuffer.allocate(Int.SIZE_BYTES + Int.SIZE_BYTES + metadataBytes.size + byteArray.size)
+            .putInt(NEW_FORMAT_HEADER_IDENTIFIER)  // Write header length (4 bytes, big-endian)
+            .putInt(metadataBytes.size)  // Write metadata length (4 bytes, big-endian)
+            .put(metadataBytes)          // Write metadata
+            .put(byteArray)              // Write raw key data
+            .array()
+
+        FileUtil.writeDataToFile(output, file)
+        Logger.info(methodTag, "Key successfully stored on disk using optimized new format.")
+    }
+
+
     companion object {
+
         private const val TAG = "WrappedSecretKey"
-        private const val NEW_FORMAT_VERSION = "1.0"
+        private const val FORMAT_VERSION_1 = 1
         private const val DEFAULT_ALGORITHM = "AES"
         private const val DEFAULT_CIPHER_TRANSFORMATION = "RSA/ECB/PKCS1Padding"
+        private const val NEW_FORMAT_HEADER_IDENTIFIER = 0x00FF12AB
 
         /**
          * Loads a wrapped secret key from file, automatically detecting the storage format.
@@ -115,7 +142,7 @@ class WrappedSecretKey(
                 }
             } catch (e: Exception) {
                 Logger.error(methodTag, "Failed to load key from file", e)
-                throw ClientException(ClientException.IO_ERROR, "Failed to load key from file", e)
+                throw ClientException(ClientException.KEY_LOAD_FAILURE, "Failed to load key from file", e)
             }
         }
 
@@ -126,57 +153,55 @@ class WrappedSecretKey(
          * @return true if data is in new format, false if old format
          */
         private fun isNewFormat(rawData: ByteArray): Boolean {
-            return try {
-                // New format starts with 4-byte header length, followed by JSON metadata
-                if (rawData.size < 4) return false
-
-                val buffer = ByteBuffer.wrap(rawData)
-                val headerLength = buffer.getInt()
-
-                // Sanity check: header length should be reasonable
-                if (headerLength < 10 || headerLength > rawData.size - 4) return false
-
-                // Try to parse the metadata JSON
-                val metadataBytes = ByteArray(headerLength)
-                buffer.get(metadataBytes)
-                val jsonString = String(metadataBytes, Charsets.UTF_8)
-                val json = JSONObject(jsonString)
-
-                // Check if it has the expected new format fields
-                json.has("algorithm") && json.has("cipherTransformation") && json.has("version")
-            } catch (e: Exception) {
-                // If parsing fails, assume it's old format
-                false
-            }
+            if (rawData.size < 8) return false
+            val buffer = ByteBuffer.wrap(rawData)
+            return buffer.getInt() == NEW_FORMAT_HEADER_IDENTIFIER
         }
 
         /**
          * Loads wrapped secret key from new binary format.
          *
+         * The new format structure is:
+         * - Header identifier (4 bytes)
+         * - Metadata length (4 bytes)
+         * - Protobuf-serialized metadata
+         * - Raw key data
+         *
          * @param rawData The raw binary data
          * @return WrappedSecretKey instance
+         * @throws ClientException if the data format is invalid or parsing fails
          */
+        @Throws(IOException::class)
         private fun loadFromNewFormat(rawData: ByteArray): WrappedSecretKey {
             val methodTag = "$TAG:loadFromNewFormat"
             Logger.info(methodTag, "Loading key using optimized new binary format")
-
             val buffer = ByteBuffer.wrap(rawData)
-            val headerLength = buffer.getInt()
 
-            // Extract and parse metadata
-            val metadataBytes = ByteArray(headerLength)
+            // Skip header identifier (already validated in isNewFormat)
+            buffer.getInt()
+
+            // Read metadata length
+            val metadataLength = buffer.getInt()
+
+            // Extract and parse protobuf metadata
+            val metadataBytes = ByteArray(metadataLength)
             buffer.get(metadataBytes)
+
             val jsonString = String(metadataBytes, Charsets.UTF_8)
             val json = JSONObject(jsonString)
-
             val algorithm = json.getString("algorithm")
             val cipherTransformation = json.getString("cipherTransformation")
-            val keyDataLength = json.optInt("keyDataLength", buffer.remaining())
+            val keyDataLength = json.getInt("keyDataLength")
 
-            // Extract raw key data
-            val keyBytes = ByteArray(keyDataLength)
+            // Validate key data length
+            if (keyDataLength != buffer.remaining()) {
+                Logger.warn(methodTag, "Key data length mismatch. Expected: $keyDataLength, Actual: ${buffer.remaining()}")
+            }
+
+            val keyBytes = ByteArray(buffer.remaining())
             buffer.get(keyBytes)
 
+            Logger.verbose(methodTag, "Successfully loaded key with algorithm: $algorithm, transformation: $cipherTransformation")
             return WrappedSecretKey(keyBytes, algorithm, cipherTransformation)
         }
 
