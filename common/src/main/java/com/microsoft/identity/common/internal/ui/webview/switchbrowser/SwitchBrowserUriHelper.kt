@@ -218,6 +218,23 @@ object SwitchBrowserUriHelper {
         return uriBuilder.build()
     }
 
+    /**
+     * Validates the action URI to ensure it is well-formed and points to a valid Azure Active Directory authority.
+     *
+     * This function performs the following validations:
+     * 1. Ensures Azure Active Directory cloud discovery has been performed
+     * 2. Validates that the action URI string can be parsed as a valid URL
+     * 3. Verifies that the URI host is a recognized AAD authority
+     *
+     * @param actionUriString The action URI string to validate. Must be a well-formed URL pointing to a valid AAD authority.
+     *
+     * @throws ClientException with error code [ClientException.IO_ERROR] if cloud discovery fails
+     * @throws ClientException with error code [ClientException.MALFORMED_URL] if the URI string is malformed
+     * @throws ClientException with error code [ClientException.UNKNOWN_AUTHORITY] if the URI host is not a valid AAD authority
+     *
+     * @see AzureActiveDirectory.performCloudDiscovery
+     * @see AzureActiveDirectory.isValidCloudHost
+     */
     private fun validateActionUri(actionUriString: String) {
         val methodTag = "$TAG:validateActionUri"
         // Check if AzureActiveDirectory is initialized, if not, perform cloud discovery.
