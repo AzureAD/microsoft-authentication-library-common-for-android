@@ -28,8 +28,10 @@ import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory
 import com.microsoft.identity.common.logging.Logger
 import io.opentelemetry.api.trace.StatusCode
+import java.net.URL
 
 /**
  * SwitchBrowserUriHelper is a helper class to build URIs for the switch browser challenge.
@@ -79,6 +81,8 @@ object SwitchBrowserUriHelper {
             Logger.error(methodTag, errorMessage, exception)
             throw exception
         }
+        validateActionUri(actionUri)
+
         val state = uri.getQueryParameter(
             SWITCH_BROWSER.STATE
         )
@@ -101,6 +105,7 @@ object SwitchBrowserUriHelper {
      */
     fun buildResumeUri(actionUri: String, state: String?): Uri {
         val methodTag = "$TAG:buildResumeUri"
+        validateActionUri(actionUri)
         // Construct the uri to the resume endpoint.
         val queryParams = hashMapOf<String, String>()
         addStateToQueryParams(queryParams, state, methodTag)
@@ -211,5 +216,55 @@ object SwitchBrowserUriHelper {
             uriBuilder.appendQueryParameter(key, value)
         }
         return uriBuilder.build()
+    }
+
+    /**
+     * Validates the action URI to ensure it is well-formed and points to a valid Azure Active Directory authority.
+     *
+     * This function performs the following validations:
+     * 1. Ensures Azure Active Directory cloud discovery has been performed
+     * 2. Validates that the action URI string can be parsed as a valid URL
+     * 3. Verifies that the URI host is a recognized AAD authority
+     *
+     * @param actionUriString The action URI string to validate. Must be a well-formed URL pointing to a valid AAD authority.
+     *
+     * @throws ClientException with error code [ClientException.IO_ERROR] if cloud discovery fails
+     * @throws ClientException with error code [ClientException.MALFORMED_URL] if the URI string is malformed
+     * @throws ClientException with error code [ClientException.UNKNOWN_AUTHORITY] if the URI host is not a valid AAD authority
+     *
+     * @see AzureActiveDirectory.performCloudDiscovery
+     * @see AzureActiveDirectory.isValidCloudHost
+     */
+    private fun validateActionUri(actionUriString: String) {
+        val methodTag = "$TAG:validateActionUri"
+        // Check if AzureActiveDirectory is initialized, if not, perform cloud discovery.
+        if (!AzureActiveDirectory.isInitialized()) {
+            Logger.warn(
+                methodTag,
+                "AzureActiveDirectory is not initialized. Performing cloud discovery."
+            )
+            try {
+                AzureActiveDirectory.performCloudDiscovery()
+            } catch (e: Exception) {
+                val errorMessage = "Failed to perform cloud discovery for AAD authorities."
+                Logger.error(methodTag, errorMessage, e)
+                throw ClientException(ClientException.IO_ERROR, errorMessage, e)
+            }
+        }
+        // Validate the action uri is not null or empty.
+        val actionUrl: URL
+        try {
+            actionUrl = URL(actionUriString)
+        } catch (e: java.net.MalformedURLException) {
+            val errorMessage = "Malformed action URI: '$actionUriString'"
+            Logger.error(methodTag, errorMessage, e)
+            throw ClientException(ClientException.MALFORMED_URL, errorMessage, e)
+        }
+        if (!AzureActiveDirectory.isValidCloudHost(actionUrl)) {
+            val errorMessage = "Authority '${actionUrl.host}' is not a valid AAD authority"
+            val exception = ClientException(ClientException.UNKNOWN_AUTHORITY, errorMessage)
+            Logger.error(methodTag, errorMessage, exception)
+            throw exception
+        }
     }
 }
