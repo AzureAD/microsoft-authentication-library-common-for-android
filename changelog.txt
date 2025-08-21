@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Enable ShouldPreserveWebViewFlowOnSslError in Common (#2741)
 - [MINOR] Add AAD authority validation for DUNA flow (#2740)
 - [PATCH] Fix DualScreenActivity theme color constant (#2737)
 - [MINOR] [SDL Assessment task] Secure webview settings (#2715)
