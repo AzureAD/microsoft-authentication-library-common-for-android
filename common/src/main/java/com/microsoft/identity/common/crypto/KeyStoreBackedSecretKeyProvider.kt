@@ -118,7 +118,8 @@ class KeyStoreBackedSecretKeyProvider(
     }
 
     private fun clearCachedKeyIfCantLoadOrFileDoesNotExist() {
-        val shouldClearCache = !KeyStoreBackedSecretKeyProviderFactory.skipKeyInvalidationCheck &&
+        // TODO: Replace on next OneAuth major release.
+        val shouldClearCache = !AndroidWrappedKeyProvider.sSkipKeyInvalidationCheck &&
                 (!AndroidKeyStoreUtil.canLoadKey(alias) || !keyFile.exists())
         if (shouldClearCache) {
             sKeyCacheMap.remove(filePath)

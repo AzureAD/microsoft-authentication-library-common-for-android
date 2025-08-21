@@ -64,6 +64,7 @@ import javax.crypto.SecretKey;
 import javax.security.auth.x500.X500Principal;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Scope;
@@ -85,6 +86,12 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
     private static final String CIPHER_TRANSFORMATION = "AES/CBC/PKCS5Padding";
 
     private static final String TAG = AndroidWrappedKeyProvider.class.getSimpleName() + "#";
+
+    /**
+     * Should KeyStore and key file check for validity before every key load be skipped.
+     */
+    @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
+    public static boolean sSkipKeyInvalidationCheck = false;
 
     /**
      * Algorithm for key wrapping.
@@ -126,7 +133,7 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
     @VisibleForTesting
     /* package */ SecretKey getKeyFromCache() {
         final String methodTag = TAG + ":getKeyFromCache";
-        if (!KeyStoreBackedSecretKeyProviderFactory.skipKeyInvalidationCheck &&
+        if (!sSkipKeyInvalidationCheck &&
                 (!AndroidKeyStoreUtil.canLoadKey(mAlias) || !this.getKeyFile().exists())) {
             Logger.warn(methodTag, "Key is invalid, removing from cache");
             clearKeyFromCache();

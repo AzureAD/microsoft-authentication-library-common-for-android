@@ -36,19 +36,6 @@ import com.microsoft.identity.common.java.flighting.CommonFlightsManager
  *
  */
 object KeyStoreBackedSecretKeyProviderFactory {
-
-    /**
-     * Controls whether key invalidation checks should be skipped during key loading operations.
-     *
-     * When set to `true`, the key providers will skip validation checks for KeyStore and key file
-     * integrity before every key load operation. This can improve performance but may reduce
-     * security guarantees.
-     *
-     * Default: `false` (key invalidation checks are performed)
-     */
-    @JvmField
-    var skipKeyInvalidationCheck: Boolean = false
-
     /**
      * Creates an appropriate [ISecretKeyProvider] instance based on current feature flag settings.
      *
