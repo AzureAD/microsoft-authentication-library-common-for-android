@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.telemetry.events;
 
 import com.microsoft.identity.common.java.cache.CacheRecord;
+import com.microsoft.identity.common.java.eststelemetry.TelemetryUtils;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
@@ -71,7 +72,9 @@ public class CacheEndEvent extends com.microsoft.identity.common.java.telemetry.
         put(Key.ID_TOKEN_STATUS, cacheRecord.getIdToken() == null ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
         put(Key.V1_ID_TOKEN_STATUS, cacheRecord.getV1IdToken() == null ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
         put(Key.ACCOUNT_STATUS, cacheRecord.getAccount() == null ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
-        EstsTelemetry.getInstance().emit(this.getProperties());
+        TelemetryUtils.executeIfEstsTelemetryEnabled( () -> {
+            EstsTelemetry.getInstance().emit(this.getProperties());
+        });
         return this;
     }
 

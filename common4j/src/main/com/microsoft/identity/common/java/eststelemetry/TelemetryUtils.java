@@ -22,6 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.eststelemetry;
 
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.util.StringUtil;
 
@@ -29,6 +34,8 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 public class TelemetryUtils {
+
+    private static final String TAG = TelemetryUtils.class.getSimpleName();
 
     static boolean getBooleanFromString(@Nullable final String val) {
         return val != null && val.equals(SchemaConstants.Value.TRUE);
@@ -48,6 +55,33 @@ public class TelemetryUtils {
             return SchemaConstants.Value.FALSE;
         } else {
             return s;
+        }
+    }
+
+    /**
+     * Functional interface for executing ests telemetry-related code.
+     */
+    public interface EstsAction {
+        void execute();
+    }
+
+    /**
+     * Checks if ESTS telemetry related code should be executed based on feature flag, and executes
+     * the provided action.
+     *
+     * @param action The action to execute if ESTS telemetry should be emitted
+     */
+    public static void executeIfEstsTelemetryEnabled(@NonNull final EstsAction action) {
+        final String methodTag = TAG + ":executeIfEstsTelemetryEnabled";
+        final boolean shouldSkipEstsTelemetry = CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.SKIP_ESTS_TELEMETRY);
+
+        if (!shouldSkipEstsTelemetry) {
+            Logger.info(methodTag, "Executing ESTS telemetry action");
+            action.execute();
+            SpanExtension.current().setAttribute(AttributeName.skipped_ests_telemetry.name(), false);
+        } else {
+            Logger.info(methodTag, "Skipping ESTS telemetry action due to feature flag");
+            SpanExtension.current().setAttribute(AttributeName.skipped_ests_telemetry.name(), true);
         }
     }
 }
