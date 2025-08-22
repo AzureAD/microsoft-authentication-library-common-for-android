@@ -34,7 +34,10 @@ import org.robolectric.annotation.Config;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import androidx.annotation.NonNull;
@@ -57,7 +60,8 @@ public class DialogHolderTest {
 
     @Test
     @Config(shadows={ShadowUserChoiceDialog.class})
-    public void testExceptionThrownFromUserChoiceDialog() {
+    public void testExceptionThrownFromUserChoiceDialog() throws InterruptedException {
+        final CountDownLatch latch = new CountDownLatch(1);
         mDialogHolder.showUserChoiceDialog(
                 new UserChoiceDialog.PositiveButtonListener() {
                     @Override
@@ -70,14 +74,17 @@ public class DialogHolderTest {
                     @Override
                     public void onCancel() {
                         // If we get here, the test has passed.
+                        latch.countDown();
                     }
                 }
         );
+        assertTrue("Cancel callback was not called", latch.await(500, TimeUnit.MILLISECONDS));
     }
 
     @Test
     @Config(shadows={ShadowSmartcardCertPickerDialog.class})
-    public void testExceptionThrownFromCertPickerDialog() {
+    public void testExceptionThrownFromCertPickerDialog() throws InterruptedException {
+        final CountDownLatch latch = new CountDownLatch(1);
         final List<ICertDetails> certList = new ArrayList<>();
         mDialogHolder.showCertPickerDialog(
                 certList,
@@ -92,14 +99,17 @@ public class DialogHolderTest {
                     @Override
                     public void onCancel() {
                         // If we get here, the test has passed.
+                        latch.countDown();
                     }
                 }
         );
+        assertTrue("Cancel callback was not called", latch.await(500, TimeUnit.MILLISECONDS));
     }
 
     @Test
     @Config(shadows={ShadowSmartcardPinDialog.class})
-    public void testExceptionThrownFromPinDialog() {
+    public void testExceptionThrownFromPinDialog() throws InterruptedException {
+        final CountDownLatch latch = new CountDownLatch(1);
         mDialogHolder.showPinDialog(
                 new SmartcardPinDialog.PositiveButtonListener() {
                     @Override
@@ -112,9 +122,11 @@ public class DialogHolderTest {
                     @Override
                     public void onCancel() {
                         // If we get here, the test has passed.
+                        latch.countDown();
                     }
                 }
         );
+        assertTrue("Cancel callback was not called", latch.await(500, TimeUnit.MILLISECONDS));
     }
 
     @Test
@@ -142,15 +154,18 @@ public class DialogHolderTest {
 
     @Test
     @Config(shadows={ShadowSmartcardPromptDialog.class})
-    public void testExceptionThrownFromSmartcardPromptDialog() {
+    public void testExceptionThrownFromSmartcardPromptDialog() throws InterruptedException {
+        final CountDownLatch latch = new CountDownLatch(1);
         mDialogHolder.showSmartcardPromptDialog(
                 new ICancelCbaCallback() {
                     @Override
                     public void onCancel() {
                         // If we get here, the test has passed.
+                        latch.countDown();
                     }
                 }
         );
+        assertTrue("Cancel callback was not called", latch.await(500, TimeUnit.MILLISECONDS));
     }
 
     @Test
@@ -162,40 +177,49 @@ public class DialogHolderTest {
 
     @Test
     @Config(shadows={ShadowSmartcardNfcPromptDialog.class})
-    public void testExceptionThrownFromSmartcardNfcPromptDialog() {
+    public void testExceptionThrownFromSmartcardNfcPromptDialog() throws InterruptedException {
+        final CountDownLatch latch = new CountDownLatch(1);
         mDialogHolder.showSmartcardNfcPromptDialog(
                 new ICancelCbaCallback() {
                     @Override
                     public void onCancel() {
                         // If we get here, the test has passed.
+                        latch.countDown();
                     }
                 }
         );
+        assertTrue("Cancel callback was not called", latch.await(500, TimeUnit.MILLISECONDS));
     }
 
     @Test
     @Config(shadows={ShadowSmartcardNfcReminderDialog.class})
-    public void testExceptionThrownFromSmartcardNfcReminderDialog() {
+    public void testExceptionThrownFromSmartcardNfcReminderDialog() throws InterruptedException {
+        final CountDownLatch latch = new CountDownLatch(1);
         mDialogHolder.showSmartcardNfcReminderDialog(
                 new IDismissCallback() {
                     @Override
                     public void onDismiss() {
                         // If we get here, the test has passed.
+                        latch.countDown();
                     }
                 }
         );
+        assertTrue("Dismiss callback was not called", latch.await(500, TimeUnit.MILLISECONDS));
     }
 
     @Test
     @Config(shadows={ShadowSmartcardRemovalPromptDialog.class})
-    public void testExceptionThrownFromSmartcardRemovalPromptDialog() {
+    public void testExceptionThrownFromSmartcardRemovalPromptDialog() throws InterruptedException {
+        final CountDownLatch latch = new CountDownLatch(1);
         mDialogHolder.showSmartcardRemovalPromptDialog(
                 new IDismissCallback() {
                     @Override
                     public void onDismiss() {
                         // If we get here, the test has passed.
+                        latch.countDown();
                     }
                 }
         );
+        assertTrue("Dismiss callback was not called", latch.await(500, TimeUnit.MILLISECONDS));
     }
 }
