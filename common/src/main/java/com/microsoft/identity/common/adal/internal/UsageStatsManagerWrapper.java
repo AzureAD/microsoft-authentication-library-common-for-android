@@ -22,10 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
-import android.annotation.TargetApi;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
 import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 /**
  * Wrapper class for UsageStatsManager.
@@ -62,7 +63,7 @@ public class UsageStatsManagerWrapper {
      * @param connectionContext Context used to query app active state.
      * @return true if the app is inactive.
      */
-    @TargetApi(Build.VERSION_CODES.M)
+    @RequiresApi(Build.VERSION_CODES.M)
     public boolean isAppInactive(final Context connectionContext) {
         return ((UsageStatsManager) connectionContext.getSystemService(Context.USAGE_STATS_SERVICE)).isAppInactive(connectionContext.getPackageName());
     }

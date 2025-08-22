@@ -124,7 +124,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable handling the UI in edge to edge mode
      */
-    ENABLE_HANDLING_FOR_EDGE_TO_EDGE("EnableHandlingEdgeToEdge", false),
+    ENABLE_HANDLING_FOR_EDGE_TO_EDGE("EnableHandlingEdgeToEdge", true),
 
     /**
      * Flight to enable the Web CP in WebView.
@@ -135,17 +135,27 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable the Playstore URL launch for broker apps.
      */
     ENABLE_PLAYSTORE_URL_LAUNCH("EnablePlaystoreUrlLaunch", false),
-    
-    /**
-     * Flight to enable the Web CP for a tenant list.
-     */
-    TENANT_LIST_TO_ENABLE_WEB_CP_IN_WEBVIEW("TenantListToEnableWebCpInWebView", ""),
 
     /**
      * Flight to enable the WebView flow to not cancel and preserve WebView flow on SSL errors.
      * The web resource running into SSL will itself not be loaded.
      */
-    SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR("ShouldPreserveWebViewFlowOnSslError", false);
+    SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR("ShouldPreserveWebViewFlowOnSslError", true),
+
+    /**
+     * Flight to enable adding username field in broker request for UiRequiredException from broker.
+     */
+    ADD_USERNAME_IN_UI_REQUIRED_EXCEPTION_BROKER_RESULT("AddUsernameInUiRequiredExceptionBrokerResult", true),
+
+    /**
+     * Flight to control the timeout to wait for tenant based flight in WebCP.
+     */
+    WEB_CP_WAIT_TIMEOUT_FOR_FLIGHTS("WebCpWaitTimeoutForFlights", 3000),
+
+    /**
+     * Flight to enable WebView security settings to prevent unauthorized access.
+     */
+    ENABLE_WEBVIEW_SECURITY_SETTINGS("EnableWebViewSecuritySettings", false);
 
     private String key;
     private Object defaultValue;

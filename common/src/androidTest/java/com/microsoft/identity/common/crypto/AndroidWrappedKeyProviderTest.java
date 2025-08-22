@@ -222,7 +222,7 @@ public class AndroidWrappedKeyProviderTest {
 
     // 23s With Google Pixel XL, OS Version 29 (100 loop)
     @Test
-    @Ignore
+    @Ignore("Performance test, ignore in normal test run")
     public void testPerf_NoCachedKey() throws ClientException {
         final AndroidWrappedKeyProvider keyProvider = new AndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
 

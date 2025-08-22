@@ -338,6 +338,12 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             }
         }
 
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ADD_USERNAME_IN_UI_REQUIRED_EXCEPTION_BROKER_RESULT)
+                && exception instanceof UiRequiredException
+        ) {
+            builder.userName(exception.getUsername());
+        }
+
         if (exception instanceof IntuneAppProtectionPolicyRequiredException) {
             // Record MAM flow in telemetry
             SpanExtension.current().setAttribute(AttributeName.is_mam_flow.name(), true);
@@ -691,6 +697,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         if (OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(errorCode) ||
                 OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode)) {
             exception.setSubErrorCode(brokerResult.getSubErrorCode());
+        }
+        if (!StringUtil.isNullOrEmpty(brokerResult.getUserName())) {
+            exception.setUsername(brokerResult.getUserName());
         }
         return exception;
     }

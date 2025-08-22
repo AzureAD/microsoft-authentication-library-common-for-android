@@ -1283,6 +1283,11 @@ public final class AuthenticationConstants {
         public static final String BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "&ismdmurl=1";
 
         /**
+         * The scheme for HTTPS URLs.
+         */
+        public static final String HTTPS_SCHEME = "https";
+
+        /**
          * Activity name to launch company portal.
          */
         public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = Broker.COMPANY_PORTAL_APP_PACKAGE_NAME + ".views.SplashActivity";
@@ -2028,6 +2033,8 @@ public final class AuthenticationConstants {
         public static final String WEB_VIEW_ZOOM_ENABLED = "com.microsoft.identity.web.view.zoom.enabled";
 
         public static final String OTEL_CONTEXT_CARRIER = "otel_context_carrier";
+
+        public static final String WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT = "com.microsoft.identity.web.view.silent.authorization.flow.timeout";
     }
 
     public static final class AuthorizationIntentAction {

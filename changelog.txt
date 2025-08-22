@@ -1,12 +1,31 @@
 vNext
 ----------
 - [MINOR] Update Broker ATS flow for Resource Account (#2704)
-- [Minor] Improve tenant-based flighting for broker supporting code (#2717)
-- [PATCH] Fix caching of secret key and add retries for InvalidKeyException during unwrap (#2659)
+- [MINOR] Enable ShouldPreserveWebViewFlowOnSslError in Common (#2741)
+- [MINOR] Add AAD authority validation for DUNA flow (#2740)
+- [PATCH] Fix DualScreenActivity theme color constant (#2737)
+- [MINOR] [SDL Assessment task] Secure webview settings (#2715)
+
+Version 22.0.1
+----------
+- [PATCH] Handling https scheme for device enrollment link (#2732)
+- [PATCH] Remove System Gesture Inset (#2730)
+
+Version 22.0.0
+----------
+- [MINOR] Ensure username is set in Broker Result when UiRequiredException is sent in the result (#2720)
+- [MINOR] Add support to allow OneAuth to run silent/invisible authorization flow (#2722)
+- [MINOR] Full edge to edge support (#2721)
+- [MAJOR] Bump TargetSdk to 35, minSdk to 24, AGP to 8.10.0 (#2713)
+- [MINOR] Improve tenant-based flighting for broker supporting code (#2717)
+- [PATCH] Fix caching of secret key during unwrap (#2659)
 - [MINOR] Replace AbstractSecretKeyLoader with ISecretKeyProvider (#2666)
 - [MINOR] Update IP phone app teams signature constants to use SHA-512 format (#2700)
 - [MINOR] Using Baggage to propagate attributes from parent Span (#2671)
 - [PATCH] Fix a few small switch browser bugs (#2710)
+- [MINOR] Update Nimbus version (#2724)
+- [MINOR] Using tenant based flighting for webcp (#2723)
+- [PATCH] Fix for enrollment id not sent to /token from local controller (#2726)
 
 Version 21.4.0
 ----------

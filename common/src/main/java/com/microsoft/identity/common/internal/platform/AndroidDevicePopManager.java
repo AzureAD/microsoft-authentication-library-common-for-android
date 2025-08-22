@@ -450,7 +450,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                 | KeyProperties.PURPOSE_VERIFY
                 | KeyProperties.PURPOSE_ENCRYPT
                 | KeyProperties.PURPOSE_DECRYPT;
-        if (enableImport && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        if (enableImport) {
             purposes |= KeyProperties.PURPOSE_WRAP_KEY;
         }
         KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(
@@ -468,11 +468,11 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                         KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
                 );
 
-        if (trySetAttestationChallenge && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        if (trySetAttestationChallenge) {
             builder = setAttestationChallenge(builder);
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && useStrongbox) {
+        if (useStrongbox) {
             Logger.verbose(
                     TAG,
                     "Attempting to apply StrongBox isolation."

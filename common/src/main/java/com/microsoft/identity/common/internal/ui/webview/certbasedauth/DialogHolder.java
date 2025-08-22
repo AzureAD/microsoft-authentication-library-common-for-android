@@ -29,9 +29,9 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.R;
 
-import net.jcip.annotations.ThreadSafe;
-
 import java.util.List;
+
+import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * Builds and shows SmartcardDialog instances while keeping track of the current dialog being shown to the user.

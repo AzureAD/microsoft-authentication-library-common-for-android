@@ -29,6 +29,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
+import com.microsoft.identity.common.components.InMemoryStorageSupplier;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCacheWithMemoryCache;
@@ -103,8 +104,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
     public void setUp() throws Exception {
         final Context testContext = ApplicationProvider.getApplicationContext();
         mDelegate = new CacheKeyValueDelegate();
-        mSharedPreferencesFileManager = AndroidPlatformComponentsFactory.createFromContext(testContext)
-                .getStorageSupplier()
+        mSharedPreferencesFileManager = new InMemoryStorageSupplier()
                 .getEncryptedNameValueStore(
                     sAccountCredentialSharedPreferences,
                     String.class
