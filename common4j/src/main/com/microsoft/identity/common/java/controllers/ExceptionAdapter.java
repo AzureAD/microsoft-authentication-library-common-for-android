@@ -554,7 +554,7 @@ public class ExceptionAdapter {
      * @param t     The throwable whose stack trace is to be trimmed.
      * @param lines The maximum number of lines to retain in the stack trace.
      * @param <T>   The type of the throwable.
-     * @return A throwable of the same class with a trimmed stack trace.
+     * @return The given throwable but with a trimmed stack trace.
      */
     public static <T extends Throwable> T trimStackTrace(final T t, int lines) {
         // If lines is negative, return the original throwable
