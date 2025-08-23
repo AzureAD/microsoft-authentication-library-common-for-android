@@ -547,4 +547,23 @@ public class ExceptionAdapter {
         return exception.getCliTelemErrorCode() != null &&
                 exception.getCliTelemErrorCode().equalsIgnoreCase(String.valueOf(errorCode));
     }
+
+    /**
+     * Trims the stack trace of a throwable to the specified number of lines.
+     *
+     * @param t     The throwable whose stack trace is to be trimmed.
+     * @param lines The maximum number of lines to retain in the stack trace.
+     * @param <T>   The type of the throwable.
+     * @return A throwable of the same class with a trimmed stack trace.
+     */
+    public static <T extends Throwable> T trimStackTrace(final T t, int lines) {
+        final StackTraceElement[] stack = t.getStackTrace();
+        int numberOfElements = Math.min(lines, stack.length);
+        final StackTraceElement[] trimmedStack = new StackTraceElement[numberOfElements];
+        for (int i = 0; i < numberOfElements; i++) {
+            trimmedStack[i] = stack[i];
+        }
+        t.setStackTrace(trimmedStack);
+        return t;
+    }
 }
