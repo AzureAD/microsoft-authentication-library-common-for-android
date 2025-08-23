@@ -557,6 +557,11 @@ public class ExceptionAdapter {
      * @return A throwable of the same class with a trimmed stack trace.
      */
     public static <T extends Throwable> T trimStackTrace(final T t, int lines) {
+        // If lines is negative, return the original throwable
+        if (lines < 0) {
+            return t;
+        }
+
         final StackTraceElement[] stack = t.getStackTrace();
         int numberOfElements = Math.min(lines, stack.length);
         final StackTraceElement[] trimmedStack = new StackTraceElement[numberOfElements];
