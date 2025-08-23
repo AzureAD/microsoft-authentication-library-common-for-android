@@ -22,16 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.logging.Logger;
@@ -57,7 +56,6 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
     private boolean mCloseCustomTabs = true;
     private BroadcastReceiver redirectReceiver;
 
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,16 +109,9 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
                     startActivity(newIntent);
                 }
             };
-
-            IntentFilter filter = new IntentFilter(REDIRECT_RETURNED_ACTION);
-            // Use backward-compatible receiver registration
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // API 33 = TIRAMISU
-                // Use RECEIVER_NOT_EXPORTED for Android 13+ to prevent external apps from sending broadcasts
-                registerReceiver(redirectReceiver, filter, Context.RECEIVER_NOT_EXPORTED); // 0x4 = RECEIVER_NOT_EXPORTED
-            } else {
-                // For older versions, use RECEIVER_NOT_EXPORTED flag as well to satisfy build requirements
-                registerReceiver(redirectReceiver, filter);
-            }
+            LocalBroadcastManager.getInstance(this).registerReceiver(redirectReceiver,
+                    new IntentFilter(REDIRECT_RETURNED_ACTION)
+            );
         }
     }
 
@@ -135,8 +126,7 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
         super.onNewIntent(intent);
         if (REFRESH_TO_CLOSE.equals(intent.getAction())) {
             final Intent broadcast = new Intent(DESTROY_REDIRECT_RECEIVING_ACTIVITY_ACTION);
-            broadcast.setPackage(getPackageName()); // Restrict to our app only
-            sendBroadcast(broadcast);
+            LocalBroadcastManager.getInstance(this).sendBroadcast(broadcast);
             unregisterAndFinish();
         }
         //IMPORTANT: If you don't call this...
@@ -168,9 +158,7 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
     }
 
     private void unregisterAndFinish() {
-        if (redirectReceiver != null) {
-            unregisterReceiver(redirectReceiver);
-        }
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(redirectReceiver);
         finish();
     }
 }
