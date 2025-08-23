@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Handle BadTokenException gracefully in CBA dialogs (#2731)
 - [MINOR] Enable ShouldPreserveWebViewFlowOnSslError in Common (#2741)
 - [MINOR] Add AAD authority validation for DUNA flow (#2740)
 - [PATCH] Fix DualScreenActivity theme color constant (#2737)
