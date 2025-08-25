@@ -58,6 +58,9 @@ import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
 import com.nimbusds.jose.JOSEException;
@@ -103,6 +106,9 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Scope;
 import lombok.NonNull;
 
 public abstract class AbstractDevicePopManager implements IDevicePopManager {
@@ -877,14 +883,23 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
                                         @NonNull final String accessToken,
                                         @Nullable final String nonce,
                                         @Nullable final String clientClaims) throws ClientException {
-        return mintSignedHttpRequestInternal(
-                httpMethod,
-                timestamp,
-                requestUrl,
-                accessToken,
-                nonce,
-                clientClaims
-        );
+        final Span span = OTelUtility.createSpan(SpanName.DevicePopMintSignedAccessToken.name());
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            return mintSignedHttpRequestInternal(
+                    httpMethod,
+                    timestamp,
+                    requestUrl,
+                    accessToken,
+                    nonce,
+                    clientClaims
+            );
+        } catch (final Exception exception) {
+            span.recordException(exception);
+            span.setStatus(StatusCode.ERROR);
+            throw exception;
+        } finally {
+            span.end();
+        }
     }
 
     @Override

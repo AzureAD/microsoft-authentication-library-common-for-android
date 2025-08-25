@@ -367,18 +367,14 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             initializePre23(context, keyPairGenerator, keySize);
-            return;
-        }
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             initialize23(keyPairGenerator, keySize, useStrongbox, trySetAttestationChallenge, purposes);
-            return;
+        } else {
+            if (!unnecessaryCryptoPurposesDisabled && enableImport) {
+                purposes |= KeyProperties.PURPOSE_WRAP_KEY;
+            }
+            initialize28(keyPairGenerator, keySize, useStrongbox, trySetAttestationChallenge, purposes);
         }
-
-        if (!unnecessaryCryptoPurposesDisabled && enableImport) {
-            purposes |= KeyProperties.PURPOSE_WRAP_KEY;
-        }
-        initialize28(keyPairGenerator, keySize, useStrongbox, trySetAttestationChallenge, purposes);
     }
 
     @SuppressLint("InlinedApi")
