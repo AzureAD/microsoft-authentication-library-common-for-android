@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Move ests telemetry behind feature flag (#2742)
 - [PATCH] Handle BadTokenException gracefully in CBA dialogs (#2731)
 - [MINOR] Enable ShouldPreserveWebViewFlowOnSslError in Common (#2741)
 - [MINOR] Add AAD authority validation for DUNA flow (#2740)
