@@ -87,4 +87,21 @@ public class ExceptionAdapterTests {
         final TimeoutException t = new TimeoutException();
         Assert.assertEquals(ClientException.TIMED_OUT, ExceptionAdapter.clientExceptionFromException(t).getErrorCode());
     }
+
+    @Test
+    public void testTrimStackTrace_TrimsToSpecifiedLines() {
+        Exception ex = new Exception("Test exception");
+        // Add a custom stack trace with 10 elements
+        StackTraceElement[] stack = new StackTraceElement[10];
+        for (int i = 0; i < 10; i++) {
+            stack[i] = new StackTraceElement("Class" + i, "method" + i, "Class" + i + ".java", i);
+        }
+        ex.setStackTrace(stack);
+
+        Exception trimmed = ExceptionAdapter.trimStackTrace(ex, 4);
+        Assert.assertEquals(4, trimmed.getStackTrace().length);
+        for (int i = 0; i < 4; i++) {
+            Assert.assertEquals("Class" + i, trimmed.getStackTrace()[i].getClassName());
+        }
+    }
 }
