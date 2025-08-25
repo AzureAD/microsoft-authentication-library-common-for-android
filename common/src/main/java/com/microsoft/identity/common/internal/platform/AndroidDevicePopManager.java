@@ -40,6 +40,8 @@ import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.platform.AbstractDevicePopManager;
 import com.microsoft.identity.common.logging.Logger;
 import com.nimbusds.jose.crypto.impl.RSAKeyUtils;
@@ -348,19 +350,35 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
      * @param trySetAttestationChallenge True if we should attempt to generate an attestation challenge cert.
      * @throws InvalidAlgorithmParameterException
      */
-    private void initialize(@androidx.annotation.NonNull final Context context,
-                            @androidx.annotation.NonNull final KeyPairGenerator keyPairGenerator,
+    private void initialize(@NonNull final Context context,
+                            @NonNull final KeyPairGenerator keyPairGenerator,
                             final int keySize,
                             final boolean useStrongbox,
                             final boolean enableImport,
                             final boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
+        final boolean unnecessaryCryptoPurposesDisabled =
+                CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.DISABLE_UNNECESSARY_CRYPTO_PURPOSES);
+
+        int purposes = KeyProperties.PURPOSE_SIGN | KeyProperties.PURPOSE_VERIFY;
+        if (!unnecessaryCryptoPurposesDisabled) {
+            // If the flight is not enabled, we can use the key for encryption and decryption.
+            purposes |= KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT;
+        }
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             initializePre23(context, keyPairGenerator, keySize);
-        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-            initialize23(keyPairGenerator, keySize, useStrongbox, trySetAttestationChallenge);
-        } else {
-            initialize28(keyPairGenerator, keySize, useStrongbox, enableImport, trySetAttestationChallenge);
+            return;
         }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            initialize23(keyPairGenerator, keySize, useStrongbox, trySetAttestationChallenge, purposes);
+            return;
+        }
+
+        if (!unnecessaryCryptoPurposesDisabled && enableImport) {
+            purposes |= KeyProperties.PURPOSE_WRAP_KEY;
+        }
+        initialize28(keyPairGenerator, keySize, useStrongbox, trySetAttestationChallenge, purposes);
     }
 
     @SuppressLint("InlinedApi")
@@ -368,14 +386,12 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
     private void initialize23(@androidx.annotation.NonNull final KeyPairGenerator keyPairGenerator,
                               final int keySize,
                               final boolean useStrongbox,
-                              final boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
+                              final boolean trySetAttestationChallenge,
+                              final int purposes) throws InvalidAlgorithmParameterException {
         KeyGenParameterSpec.Builder builder;
+
         builder = new KeyGenParameterSpec.Builder(
-                mKeyManager.getKeyAlias(),
-                KeyProperties.PURPOSE_SIGN
-                        | KeyProperties.PURPOSE_VERIFY
-                        | KeyProperties.PURPOSE_ENCRYPT
-                        | KeyProperties.PURPOSE_DECRYPT
+                mKeyManager.getKeyAlias(), purposes
         )
                 .setKeySize(keySize)
                 .setSignaturePaddings(
@@ -385,9 +401,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                         KeyProperties.DIGEST_NONE,
                         KeyProperties.DIGEST_SHA1,
                         KeyProperties.DIGEST_SHA256
-                ).setEncryptionPaddings(
-                        KeyProperties.ENCRYPTION_PADDING_RSA_OAEP,
-                        KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
                 );
 
         if (trySetAttestationChallenge && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -444,15 +457,8 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
     private void initialize28(@androidx.annotation.NonNull final KeyPairGenerator keyPairGenerator,
                               final int keySize,
                               final boolean useStrongbox,
-                              final boolean enableImport,
-                              final boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
-        int purposes = KeyProperties.PURPOSE_SIGN
-                | KeyProperties.PURPOSE_VERIFY
-                | KeyProperties.PURPOSE_ENCRYPT
-                | KeyProperties.PURPOSE_DECRYPT;
-        if (enableImport) {
-            purposes |= KeyProperties.PURPOSE_WRAP_KEY;
-        }
+                              final boolean trySetAttestationChallenge,
+                              final int purposes) throws InvalidAlgorithmParameterException {
         KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(
                 mKeyManager.getKeyAlias(), purposes)
                 .setKeySize(keySize)
