@@ -43,7 +43,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.File;
-import java.lang.reflect.Constructor;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.spec.AlgorithmParameterSpec;
@@ -57,29 +56,25 @@ import javax.security.auth.x500.X500Principal;
 @RunWith(Parameterized.class)
 public class AndroidWrappedKeyProviderTest {
 
-
     @Parameterized.Parameter(0)
-    public String providerName;
-
-    @Parameterized.Parameter(1)
-    public Class<? extends ISecretKeyProvider> providerClass;
+    public String providerType;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-                {"KeyStoreBackedSecretKeyProvider", KeyStoreBackedSecretKeyProvider.class},
-                {"AndroidWrappedKeyProvider", AndroidWrappedKeyProvider.class}
-                // Add other implementations here
+                {"KEYSTORE_BACKED"},
+                {"ANDROID_WRAPPED"}
+                // Add other provider types here as keywords
         });
     }
 
     private ISecretKeyProvider createProvider() {
-        try {
-            Constructor<? extends ISecretKeyProvider> constructor =
-                    providerClass.getDeclaredConstructor(String.class, String.class, Context.class);
-            return constructor.newInstance(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create provider instance", e);
+        if ("KEYSTORE_BACKED".equals(providerType)) {
+            return new KeyStoreBackedSecretKeyProvider(context, MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH);
+        } else if ("ANDROID_WRAPPED".equals(providerType)) {
+            return new AndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
+        } else {
+            throw new IllegalArgumentException("Unsupported provider type: " + providerType);
         }
     }
 
