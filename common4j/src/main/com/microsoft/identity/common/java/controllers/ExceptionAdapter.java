@@ -317,7 +317,8 @@ public class ExceptionAdapter {
         if (commandParameters instanceof BrokerSilentTokenCommandParameters) {
             final BrokerSilentTokenCommandParameters brokerSilentTokenCommandParameters =
                     (BrokerSilentTokenCommandParameters) commandParameters;
-            // If the request is for a resource account, do not allow UI required exceptions.
+            // For resource account acquire token silent requests, client should not start any interactive requests
+            // hence not sending UiRequiredException, instead error will be sent using ServiceException.
             boolean allowUiRequiredException = !brokerSilentTokenCommandParameters.isRequestForResourceAccount();
             return getExceptionFromTokenErrorResponse(errorResponse, allowUiRequiredException);
         }
