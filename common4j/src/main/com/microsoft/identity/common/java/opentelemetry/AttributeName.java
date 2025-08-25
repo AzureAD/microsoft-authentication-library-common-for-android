@@ -435,7 +435,7 @@ public enum AttributeName {
     web_cp_flight_get_time,
 
     /**
-     * Indicates if ests telemtry was skipeed.
+     * Indicates if ests telemetry was skipped.
      */
     skipped_ests_telemetry
 
