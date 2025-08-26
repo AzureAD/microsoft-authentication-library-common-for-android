@@ -549,26 +549,24 @@ public class ExceptionAdapter {
     }
 
     /**
-     * Trims the stack trace of a throwable to the specified number of lines.
+     * Return a trimmed stack trace of the given throwable, limited to the specified number of lines.
      *
      * @param t     The throwable whose stack trace is to be trimmed.
      * @param lines The maximum number of lines to retain in the stack trace.
-     * @param <T>   The type of the throwable.
-     * @return The given throwable but with a trimmed stack trace.
+     * @return the trimmed stack trace of the exception
      */
-    public static <T extends Throwable> T trimStackTrace(final T t, int lines) {
+    public static StackTraceElement[] trimStackTrace(final Exception t, int lines) {
         // If lines is negative, return the original throwable
         if (lines < 0) {
-            return t;
+            return t.getStackTrace();
         }
 
         final StackTraceElement[] stack = t.getStackTrace();
         int numberOfElements = Math.min(lines, stack.length);
-        final StackTraceElement[] trimmedStack = new StackTraceElement[numberOfElements];
+        final StackTraceElement[] trimmedStackTrace = new StackTraceElement[numberOfElements];
         for (int i = 0; i < numberOfElements; i++) {
-            trimmedStack[i] = stack[i];
+            trimmedStackTrace[i] = stack[i];
         }
-        t.setStackTrace(trimmedStack);
-        return t;
+        return trimmedStackTrace;
     }
 }

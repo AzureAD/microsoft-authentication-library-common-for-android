@@ -91,21 +91,20 @@ public class ExceptionAdapterTests {
 
     @Test
     public void testTrimStackTrace_TrimsToSpecifiedLines() {
-        Exception ex = new Exception("Test exception");
+        final Exception ex = new Exception("Test exception");
         // Add a custom stack trace with 10 elements
-        StackTraceElement[] stack = new StackTraceElement[10];
+        final StackTraceElement[] stack = new StackTraceElement[10];
         for (int i = 0; i < 10; i++) {
-            StackTraceElement element = new StackTraceElement("Class" + i, "method" + i, "Class" + i + ".java", i);
+            final StackTraceElement element = new StackTraceElement("Class" + i, "method" + i, "Class" + i + ".java", i);
             stack[i] = element;
         }
         ex.setStackTrace(stack);
-        System.out.println(Arrays.toString(ex.getStackTrace()));
 
-        Exception trimmed = ExceptionAdapter.trimStackTrace(ex, 4);
-        Assert.assertEquals(4, trimmed.getStackTrace().length);
+        final StackTraceElement[] trimmedStack = ExceptionAdapter.trimStackTrace(ex, 4);
+        ex.setStackTrace(trimmedStack);
+        Assert.assertEquals(4, ex.getStackTrace().length);
         for (int i = 0; i < 4; i++) {
-            Assert.assertEquals("Class" + i, trimmed.getStackTrace()[i].getClassName());
+            Assert.assertEquals("Class" + i, ex.getStackTrace()[i].getClassName());
         }
-        System.out.println(Arrays.toString(trimmed.getStackTrace()));
     }
 }
