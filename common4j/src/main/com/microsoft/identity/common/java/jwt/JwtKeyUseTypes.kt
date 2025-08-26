@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.jwt
 
+/**
+ * Constants for JWT key use types to be used with for "use" claim in JWT header.
+ */
 object JwtKeyUseTypes {
     const val RESOURCE_ACCOUNT: String = "resource_account"
 }
