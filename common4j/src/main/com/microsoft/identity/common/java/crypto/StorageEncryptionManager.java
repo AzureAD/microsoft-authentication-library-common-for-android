@@ -482,8 +482,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
         }
 
         if (result != 0) {
-            final ClientException ex = new ClientException(HMAC_MISMATCH);
-            throw ExceptionAdapter.trimStackTrace(ex, 4);
+            throw new ClientException(HMAC_MISMATCH);
         }
     }
 

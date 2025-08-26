@@ -37,6 +37,7 @@ import org.junit.runners.JUnit4;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Stack;
 import java.util.concurrent.TimeoutException;
 
 @RunWith(JUnit4.class)
@@ -94,14 +95,17 @@ public class ExceptionAdapterTests {
         // Add a custom stack trace with 10 elements
         StackTraceElement[] stack = new StackTraceElement[10];
         for (int i = 0; i < 10; i++) {
-            stack[i] = new StackTraceElement("Class" + i, "method" + i, "Class" + i + ".java", i);
+            StackTraceElement element = new StackTraceElement("Class" + i, "method" + i, "Class" + i + ".java", i);
+            stack[i] = element;
         }
         ex.setStackTrace(stack);
+        System.out.println(Arrays.toString(ex.getStackTrace()));
 
         Exception trimmed = ExceptionAdapter.trimStackTrace(ex, 4);
         Assert.assertEquals(4, trimmed.getStackTrace().length);
         for (int i = 0; i < 4; i++) {
             Assert.assertEquals("Class" + i, trimmed.getStackTrace()[i].getClassName());
         }
+        System.out.println(Arrays.toString(trimmed.getStackTrace()));
     }
 }
