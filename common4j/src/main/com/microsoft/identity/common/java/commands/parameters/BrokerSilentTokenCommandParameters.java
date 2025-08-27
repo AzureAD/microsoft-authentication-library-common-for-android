@@ -66,6 +66,12 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
     @Expose
     private final String homeTenantId;
 
+    /**
+     * Flag to indicate whether the silent token request is for a resource account.
+     */
+    @Expose
+    private final boolean isRequestForResourceAccount;
+
     @Override
     public void validate() throws ArgumentException {
         if (callerUid == 0) {

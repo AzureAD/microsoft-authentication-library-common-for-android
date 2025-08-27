@@ -1,11 +1,16 @@
 vNext
 ----------
 - [MINOR] Move ests telemetry behind feature flag (#2742)
+- [MINOR] Update Broker ATS flow for Resource Account (#2704)
 - [PATCH] Handle BadTokenException gracefully in CBA dialogs (#2731)
 - [MINOR] Enable ShouldPreserveWebViewFlowOnSslError in Common (#2741)
 - [MINOR] Add AAD authority validation for DUNA flow (#2740)
 - [PATCH] Fix DualScreenActivity theme color constant (#2737)
 - [MINOR] [SDL Assessment task] Secure webview settings (#2715)
+
+Version 22.0.3
+----------
+- [PATCH] Fix DualScreenActivity theme color constant (#2737)
 
 Version 22.0.1
 ----------
