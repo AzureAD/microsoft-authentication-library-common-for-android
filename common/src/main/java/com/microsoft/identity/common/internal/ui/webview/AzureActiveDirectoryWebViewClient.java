@@ -616,7 +616,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return url.contains(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
     }
 
-
     private boolean isHttpsScheme(@NonNull final String url) {
         return url.startsWith(AuthenticationConstants.Broker.HTTPS_SCHEME);
     }

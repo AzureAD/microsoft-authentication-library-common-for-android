@@ -20,11 +20,25 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.jwt
+package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
+
+import android.view.WindowManager;
+
+import org.robolectric.annotation.Implementation;
+import org.robolectric.annotation.Implements;
 
 /**
- * Constants for JWT key use types to be used with for "use" claim in JWT header.
+ * Doesn't rely on resources to create a dialog and throws exception upon Show.
  */
-object JwtKeyUseTypes {
-    const val RESOURCE_ACCOUNT: String = "resource_account"
+@Implements(SmartcardDialog.class)
+public class ShadowExceptionSmartcardDialog {
+    @Implementation
+    public void show() {
+        throw new WindowManager.BadTokenException("Thrown from show. Better handle this gracefully!");
+    }
+
+    @Implementation
+    public void dismiss() {
+        throw new WindowManager.BadTokenException("Thrown from dismiss. Better handle this gracefully!");
+    }
 }

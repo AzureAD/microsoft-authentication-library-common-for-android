@@ -28,6 +28,8 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITC
 import com.microsoft.identity.common.java.exception.ClientException
 import io.mockk.every
 import io.mockk.mockkObject
+import io.mockk.unmockkAll
+import org.junit.After
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -151,6 +153,7 @@ class SwitchBrowserUriHelperTest {
 
     @Test
     fun `test buildResumeUri valid params (stateRequired)`() {
+        isStateRequired(true)
         val uri = SwitchBrowserUriHelper.buildResumeUri(
             ACTION_URI, STATE
         )
@@ -213,5 +216,11 @@ class SwitchBrowserUriHelperTest {
     private fun isStateRequired(isStateRequired: Boolean) {
         mockkObject(SwitchBrowserUriHelper)
         every { SwitchBrowserUriHelper.STATE_VALIDATION_REQUIRED } returns isStateRequired
+    }
+
+    @After
+    fun tearDown() {
+        // Clean up mocks after each test
+        unmockkAll()
     }
 }

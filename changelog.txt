@@ -9,6 +9,20 @@ Version 22.0.1
 
 Version 22.0.0
 ----------
+- [MINOR] Update Broker ATS flow for Resource Account (#2704)
+- [PATCH] Handle BadTokenException gracefully in CBA dialogs (#2731)
+- [MINOR] Enable ShouldPreserveWebViewFlowOnSslError in Common (#2741)
+- [MINOR] Add AAD authority validation for DUNA flow (#2740)
+- [PATCH] Fix DualScreenActivity theme color constant (#2737)
+- [MINOR] [SDL Assessment task] Secure webview settings (#2715)
+
+Version 22.0.1
+----------
+- [PATCH] Handling https scheme for device enrollment link (#2732)
+- [PATCH] Remove System Gesture Inset (#2730)
+
+Version 22.0.0
+----------
 - [MINOR] Ensure username is set in Broker Result when UiRequiredException is sent in the result (#2720)
 - [MINOR] Add support to allow OneAuth to run silent/invisible authorization flow (#2722)
 - [MINOR] Full edge to edge support (#2721)
@@ -21,6 +35,7 @@ Version 22.0.0
 - [PATCH] Fix a few small switch browser bugs (#2710)
 - [MINOR] Update Nimbus version (#2724)
 - [MINOR] Using tenant based flighting for webcp (#2723)
+- [PATCH] Fix for enrollment id not sent to /token from local controller (#2726)
 
 Version 21.4.0
 ----------

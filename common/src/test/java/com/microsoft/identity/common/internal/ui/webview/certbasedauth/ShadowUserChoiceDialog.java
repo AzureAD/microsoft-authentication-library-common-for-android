@@ -20,11 +20,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.jwt
+package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
+
+import org.robolectric.annotation.Implementation;
+import org.robolectric.annotation.Implements;
 
 /**
- * Constants for JWT key use types to be used with for "use" claim in JWT header.
+ * Shadow implementation of {@link UserChoiceDialog} for use in unit tests.
  */
-object JwtKeyUseTypes {
-    const val RESOURCE_ACCOUNT: String = "resource_account"
+@Implements(UserChoiceDialog.class)
+public class ShadowUserChoiceDialog extends ShadowExceptionSmartcardDialog {
+    /**
+     * Shadow implementation for createDialog().
+     * This is intentionally left empty to avoid actual UI operations during tests.
+     */
+    @Implementation
+    protected void createDialog() {
+        // Intentionally empty implementation for testing
+    }
 }
