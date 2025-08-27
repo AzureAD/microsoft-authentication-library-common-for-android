@@ -22,11 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.eststelemetry;
 
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
-import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.opentelemetry.AttributeName;
-import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.util.StringUtil;
 
@@ -34,8 +29,6 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 public class TelemetryUtils {
-
-    private static final String TAG = TelemetryUtils.class.getSimpleName();
 
     static boolean getBooleanFromString(@Nullable final String val) {
         return val != null && val.equals(SchemaConstants.Value.TRUE);

@@ -436,6 +436,7 @@ public class CommandDispatcher {
                                 commandParameters.getSdkVersion());
                         EstsTelemetry.getInstance().initTelemetryForCommand(command);
                         EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
+
                         CommandResult commandResult = executeCommand(command);
                         Logger.info(TAG + methodName, "Completed as owner for correlation id : **"
                                 + correlationId + statusMsg(commandResult.getStatus().getLogStatus())

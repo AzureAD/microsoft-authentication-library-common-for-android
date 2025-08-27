@@ -32,6 +32,8 @@ import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
@@ -180,9 +182,11 @@ public class EstsTelemetry {
 
             if (shouldSkipEstsTelemetry) {
                 Logger.verbose(TAG, "SKIP_ESTS_TELEMETRY feature flag enabled, using NoopEstsTelemetry");
+                SpanExtension.current().setAttribute(AttributeName.skipped_ests_telemetry.name(), true);
                 sEstsTelemetryInstance = new NoopEstsTelemetry();
             } else {
                 Logger.verbose(TAG, "SKIP_ESTS_TELEMETRY feature flag disabled, using standard EstsTelemetry");
+                SpanExtension.current().setAttribute(AttributeName.skipped_ests_telemetry.name(), false);
                 sEstsTelemetryInstance = new EstsTelemetry();
             }
         }
