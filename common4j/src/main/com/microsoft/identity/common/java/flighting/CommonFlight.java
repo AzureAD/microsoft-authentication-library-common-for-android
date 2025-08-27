@@ -86,11 +86,6 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC("EnableLegacyFidoSecurityKeyLogic", true),
 
     /**
-     * Flight to enable the re-attachment of new PRT header logic. Default is true.
-     */
-    ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED("EnableAttachNewPrtHeaderWhenNonceExpired", true),
-
-    /**
      * Flight to enable the new key generation spec for wrap key using PURPOSE_WRAP_KEY in key gen spec. Default is true.
      * This is applicable for API >= 28
      */
