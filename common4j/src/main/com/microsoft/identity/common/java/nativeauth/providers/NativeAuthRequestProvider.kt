@@ -421,9 +421,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         headers[AuthenticationConstants.SdkPlatformFields.PRODUCT] = LibraryInfoHelper.getLibraryName()
         headers[AuthenticationConstants.SdkPlatformFields.VERSION] = LibraryInfoHelper.getLibraryVersion()
         headers.putAll(Device.getPlatformIdParameters())
-        if (!CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.SKIP_ESTS_TELEMETRY)) {
-            headers.putAll(EstsTelemetry.getInstance().telemetryHeaders)
-        }
+        headers.putAll(EstsTelemetry.getInstance().telemetryHeaders)
         headers[HttpConstants.HeaderField.CONTENT_TYPE] = "application/x-www-form-urlencoded"
         return headers
     }
