@@ -33,8 +33,6 @@ import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandPa
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.logging.LibraryInfoHelper;

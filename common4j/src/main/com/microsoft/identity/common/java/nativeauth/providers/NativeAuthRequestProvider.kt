@@ -24,8 +24,6 @@ package com.microsoft.identity.common.java.nativeauth.providers
 
 import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry
-import com.microsoft.identity.common.java.eststelemetry.TelemetryUtils
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.java.logging.LibraryInfoHelper
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
