@@ -119,7 +119,6 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
                 // Use RECEIVER_NOT_EXPORTED for Android 13+ to prevent external apps from sending broadcasts
                 registerReceiver(redirectReceiver, filter, Context.RECEIVER_NOT_EXPORTED); // 0x4 = RECEIVER_NOT_EXPORTED
             } else {
-                // For older versions, use RECEIVER_NOT_EXPORTED flag as well to satisfy build requirements
                 registerReceiver(redirectReceiver, filter);
             }
         }
