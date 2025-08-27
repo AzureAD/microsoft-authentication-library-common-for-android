@@ -32,8 +32,9 @@ import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
-import com.microsoft.identity.common.java.eststelemetry.TelemetryUtils;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.logging.LibraryInfoHelper;
@@ -239,9 +240,9 @@ public abstract class OAuth2Strategy
         headers.putAll(Device.getPlatformIdParameters());
         headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, sourceLibraryName);
         headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, sourceLibraryVersion);
-        TelemetryUtils.executeIfEstsTelemetryEnabled( () -> {
+        if (!CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.SKIP_ESTS_TELEMETRY)) {
             headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
-        });
+        }
         headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
 
         if (request instanceof MicrosoftTokenRequest) {
@@ -335,9 +336,9 @@ public abstract class OAuth2Strategy
         final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(authorizationRequest);
         final Map<String, String> headers = new TreeMap<>();
         headers.put(CLIENT_REQUEST_ID, DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
-        TelemetryUtils.executeIfEstsTelemetryEnabled( () -> {
+        if (!CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.SKIP_ESTS_TELEMETRY)) {
             headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
-        });
+        }
         headers.put(HttpConstants.HeaderField.CONTENT_TYPE, DEVICE_CODE_CONTENT_TYPE);
 
         final HttpResponse response = httpClient.post(

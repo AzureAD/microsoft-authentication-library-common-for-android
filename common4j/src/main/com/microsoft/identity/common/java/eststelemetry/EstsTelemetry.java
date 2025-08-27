@@ -26,6 +26,8 @@ import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.ICommandResult;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
@@ -65,6 +67,82 @@ public class EstsTelemetry {
     private final INameValueStorage<Set<FailedRequest>> mSentFailedRequests;
 
     /**
+     * A no-op implementation of EstsTelemetry that silently ignores all operations.
+     * Used when telemetry is disabled via feature flag.
+     */
+    private static class NoopEstsTelemetry extends EstsTelemetry {
+        NoopEstsTelemetry() {
+            super(new InMemoryStorage<CurrentRequestTelemetry>(), new InMemoryStorage<Set<FailedRequest>>());
+        }
+
+        @Override
+        public synchronized void setUp(@NonNull LastRequestTelemetryCache lastRequestTelemetryCache) {
+            // No-op
+        }
+
+        @Override
+        public synchronized void setUp(@NonNull IPlatformComponents platformComponents) {
+            // No-op
+        }
+
+        @Override
+        public void initTelemetryForCommand(@NonNull final ICommand<?> command) {
+            // No-op
+        }
+
+        @Override
+        public void emit(@Nullable Map<String, String> telemetry) {
+            // No-op
+        }
+
+        @Override
+        public void emit(@Nullable String key, String value) {
+            // No-op
+        }
+
+        @Override
+        public void emit(@Nullable String key, int value) {
+            // No-op
+        }
+
+        @Override
+        public void emit(@Nullable String key, long value) {
+            // No-op
+        }
+
+        @Override
+        public void emit(@Nullable String key, boolean value) {
+            // No-op
+        }
+
+        @Override
+        public void emitApiId(@Nullable String apiId) {
+            // No-op
+        }
+
+        @Override
+        public void emitForceRefresh(boolean forceRefresh) {
+            // No-op
+        }
+
+        @Override
+        public synchronized void flush(@NonNull ICommand<?> command, @NonNull ICommandResult commandResult) {
+            // No-op
+        }
+
+        @NonNull
+        @Override
+        public Map<String, String> getTelemetryHeaders() {
+            return Collections.emptyMap();
+        }
+
+        @Override
+        public synchronized void clear() {
+            // No-op
+        }
+    }
+
+    /**
      * A supplemental cache that can used to store telemetry that is captured outside of the
      * DiagnosticContext. We have lots of code that is executed outside of a DiagnosticContext i.e.
      * ThreadLocal is not populated with a correlation Id. Since the current telemetry design is
@@ -89,12 +167,24 @@ public class EstsTelemetry {
     /**
      * Get an instance of {@link EstsTelemetry}. This method will return an existing
      * instance of EstsTelemetry or create and return a new instance if the existing instance is null.
+     * If telemetry is disabled via the SKIP_ESTS_TELEMETRY feature flag, a NoopEstsTelemetry instance
+     * will be returned that safely ignores all telemetry operations.
      *
      * @return EstsTelemetry object instance
      */
     public static synchronized EstsTelemetry getInstance() {
         if (sEstsTelemetryInstance == null) {
-            sEstsTelemetryInstance = new EstsTelemetry();
+            // Check feature flag to decide whether to return NoopEstsTelemetry or real EstsTelemetry
+            final boolean shouldSkipEstsTelemetry =
+                    CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.SKIP_ESTS_TELEMETRY);
+
+            if (shouldSkipEstsTelemetry) {
+                Logger.verbose(TAG, "SKIP_ESTS_TELEMETRY feature flag enabled, using NoopEstsTelemetry");
+                sEstsTelemetryInstance = new NoopEstsTelemetry();
+            } else {
+                Logger.verbose(TAG, "SKIP_ESTS_TELEMETRY feature flag disabled, using standard EstsTelemetry");
+                sEstsTelemetryInstance = new EstsTelemetry();
+            }
         }
 
         return sEstsTelemetryInstance;

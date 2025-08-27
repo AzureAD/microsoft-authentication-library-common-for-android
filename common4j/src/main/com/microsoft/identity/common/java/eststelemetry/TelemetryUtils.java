@@ -57,31 +57,4 @@ public class TelemetryUtils {
             return s;
         }
     }
-
-    /**
-     * Functional interface for executing ests telemetry-related code.
-     */
-    public interface EstsAction {
-        void execute();
-    }
-
-    /**
-     * Checks if ESTS telemetry related code should be executed based on feature flag, and executes
-     * the provided action.
-     *
-     * @param action The action to execute if ESTS telemetry should be emitted
-     */
-    public static void executeIfEstsTelemetryEnabled(@NonNull final EstsAction action) {
-        final String methodTag = TAG + ":executeIfEstsTelemetryEnabled";
-        final boolean shouldSkipEstsTelemetry = CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.SKIP_ESTS_TELEMETRY);
-
-        if (!shouldSkipEstsTelemetry) {
-            Logger.info(methodTag, "Executing ESTS telemetry action");
-            action.execute();
-            SpanExtension.current().setAttribute(AttributeName.skipped_ests_telemetry.name(), false);
-        } else {
-            Logger.info(methodTag, "Skipping ESTS telemetry action due to feature flag");
-            SpanExtension.current().setAttribute(AttributeName.skipped_ests_telemetry.name(), true);
-        }
-    }
 }

@@ -53,7 +53,6 @@ import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
-import com.microsoft.identity.common.java.eststelemetry.TelemetryUtils;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
@@ -351,17 +350,13 @@ public class CommandDispatcher {
 
                         initTelemetryForCommand(command);
 
-                        TelemetryUtils.executeIfEstsTelemetryEnabled( () -> {
-                            EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
-                        });
+                        EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                         CommandResult<?> commandResult = null;
 
                         //Log operation parameters
                         if (command.getParameters() instanceof SilentTokenCommandParameters) {
-                            TelemetryUtils.executeIfEstsTelemetryEnabled( () -> {
-                                EstsTelemetry.getInstance().emitForceRefresh(((SilentTokenCommandParameters) command.getParameters()).isForceRefresh());
-                            });
+                            EstsTelemetry.getInstance().emitForceRefresh(((SilentTokenCommandParameters) command.getParameters()).isForceRefresh());
                         }
 
                         codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_COMMAND_EXECUTION_START : ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START);
@@ -440,9 +435,7 @@ public class CommandDispatcher {
                                         SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
                                 commandParameters.getSdkVersion());
                         EstsTelemetry.getInstance().initTelemetryForCommand(command);
-                        TelemetryUtils.executeIfEstsTelemetryEnabled( () -> {
-                                EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
-                        });
+                        EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
                         CommandResult commandResult = executeCommand(command);
                         Logger.info(TAG + methodName, "Completed as owner for correlation id : **"
                                 + correlationId + statusMsg(commandResult.getStatus().getLogStatus())
@@ -753,9 +746,7 @@ public class CommandDispatcher {
 
                             initTelemetryForCommand(command);
 
-                            TelemetryUtils.executeIfEstsTelemetryEnabled( () -> {
-                                EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
-                            });
+                            EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                             final BaseException[] receiverException = new BaseException[1];
 

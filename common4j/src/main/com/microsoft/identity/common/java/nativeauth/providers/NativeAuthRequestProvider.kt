@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.nativeauth.providers
 import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry
 import com.microsoft.identity.common.java.eststelemetry.TelemetryUtils
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.java.logging.LibraryInfoHelper
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
@@ -420,7 +421,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         headers[AuthenticationConstants.SdkPlatformFields.PRODUCT] = LibraryInfoHelper.getLibraryName()
         headers[AuthenticationConstants.SdkPlatformFields.VERSION] = LibraryInfoHelper.getLibraryVersion()
         headers.putAll(Device.getPlatformIdParameters())
-        TelemetryUtils.executeIfEstsTelemetryEnabled {
+        if (!CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.SKIP_ESTS_TELEMETRY)) {
             headers.putAll(EstsTelemetry.getInstance().telemetryHeaders)
         }
         headers[HttpConstants.HeaderField.CONTENT_TYPE] = "application/x-www-form-urlencoded"
