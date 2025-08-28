@@ -885,7 +885,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
                                         @Nullable final String clientClaims) throws ClientException {
         final Span span = OTelUtility.createSpan(SpanName.DevicePopMintSignedAccessToken.name());
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
-            return mintSignedHttpRequestInternal(
+            final String signedAccessToken = mintSignedHttpRequestInternal(
                     httpMethod,
                     timestamp,
                     requestUrl,
@@ -893,6 +893,8 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
                     nonce,
                     clientClaims
             );
+            span.setStatus(StatusCode.OK);
+            return signedAccessToken;
         } catch (final Exception exception) {
             span.recordException(exception);
             span.setStatus(StatusCode.ERROR);
