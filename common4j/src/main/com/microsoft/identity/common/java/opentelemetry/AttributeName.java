@@ -432,6 +432,12 @@ public enum AttributeName {
     /**
      * Records the time (in milliseconds) spent on flight check for webcp.
      */
-    web_cp_flight_get_time
+    web_cp_flight_get_time,
+
+    /**
+     * Indicates if ests telemetry was skipped.
+     */
+    skipped_ests_telemetry
+
 
 }

@@ -155,7 +155,12 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable WebView security settings to prevent unauthorized access.
      */
-    ENABLE_WEBVIEW_SECURITY_SETTINGS("EnableWebViewSecuritySettings", false);
+    ENABLE_WEBVIEW_SECURITY_SETTINGS("EnableWebViewSecuritySettings", false),
+
+    /**
+     * Flight to skip ests telemetry.
+     */
+    SKIP_ESTS_TELEMETRY("SkipEstsTelemetry", false);
 
     private String key;
     private Object defaultValue;
