@@ -49,6 +49,7 @@ import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerPara
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -211,23 +212,20 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
             UiAutomatorUtils.handleButtonClickForObjectWithText("Other");
 
-            final UiObject describeIssueBox = UiAutomatorUtils.obtainUiObjectWithDescription(
-                    "Describe the issue you are facing"
-            );
-
-            describeIssueBox.setText(INCIDENT_MSG);
+            // Fetch the first edit text and enter the incident message
+            UiAutomatorUtils.obtainAllEditTextObjects(CommonUtils.FIND_UI_ELEMENT_TIMEOUT).get(1).setText(INCIDENT_MSG);
 
             // Send incident button also has send feedback description
             final UiObject sendIncident = UiAutomatorUtils.obtainUiObjectWithDescription("Send feedback");
             sendIncident.click();
 
-            final UiObject postLogSubmissionMsg = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                    "android:id/parentPanel"
+            final UiObject postLogSubmissionMsg = UiAutomatorUtils.obtainUiObjectWithText(
+                    "Thank you for your feedback!"
             );
 
             Assert.assertTrue(postLogSubmissionMsg.exists());
 
-            final UiObject incidentDetails = UiAutomatorUtils.obtainUiObjectWithResourceId("android:id/message");
+            final UiObject incidentDetails = UiAutomatorUtils.obtainUiObjectWithText("Incident ID");
             Assert.assertTrue(incidentDetails.exists());
 
             final String incidentIdText = incidentDetails.getText();

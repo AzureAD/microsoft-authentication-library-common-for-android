@@ -34,6 +34,7 @@ import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.TestContext;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -93,8 +94,8 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
         performDeviceRegistrationHelperWithButtonText(
                 username,
                 password,
-                "Register as shared device",
-                "Register",
+                "Register a shared device",
+                "Register device",
                 false,
                 AUTHENTICATOR_IS_REGISTER_EXPECTED_SHARED
         );
@@ -123,8 +124,8 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
         performDeviceRegistrationHelperWithButtonText(
                 username,
                 password,
-                "Register as shared device",
-                "Register",
+                "Register a shared device",
+                "Register device",
                 false,
                 AUTHENTICATOR_IS_REGISTER_EXPECTED_SHARED
         );
@@ -142,7 +143,6 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
             settings.click();
 
             final UiObject deviceRegistration = UiAutomatorUtils.obtainChildInScrollable(
-                    "settingsScrollView",
                     "Device Registration"
             );
 
@@ -161,18 +161,35 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
         // open device registration page
         openDeviceRegistrationPage();
 
-        // Click the registered account domain
-        UiAutomatorUtils.handleButtonClickForObjectWithText(
-                username.split("@")[1]
-        );
+        // Have to have a try-catch here until the React Native rollout is complete, must handle old and new UI
+        try {
+            // Click the registered account domain
+            UiAutomatorUtils.handleButtonClickForObjectWithDescription(
+                    username.split("@")[1],
+                    CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT
+            );
 
-        // Click enable browser access
-        UiAutomatorUtils.handleButtonClickForObjectWithText(
-                "Enable browser access"
-        );
+            // Click enable browser access
+            UiAutomatorUtils.handleButtonClickForObjectWithDescription(
+                    "Enable browser access"
+            );
 
-        // click continue in Dialog
-        UiAutomatorUtils.handleButtonClick("android:id/button1");
+            // click continue in Dialog
+            UiAutomatorUtils.handleButtonClickForObjectWithExactText("Continue");
+        } catch (AssertionError e) {
+            // Click the registered account domain
+            UiAutomatorUtils.handleButtonClickForObjectWithText(
+                    username.split("@")[1]
+            );
+
+            // Click enable browser access
+            UiAutomatorUtils.handleButtonClickForObjectWithText(
+                    "Enable browser access"
+            );
+
+            // click continue in Dialog
+            UiAutomatorUtils.handleButtonClick("android:id/button1");
+        }
 
         final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
