@@ -53,7 +53,7 @@ public class BrokerResourceAccountCommandParameters extends ResourceAccountComma
     private final String callerAppVersion;
 
     /**
-     * Version of the Broker this request.
+     * Version of the Broker executing this request.
      */
     @Expose
     private final String brokerVersion;
@@ -67,7 +67,7 @@ public class BrokerResourceAccountCommandParameters extends ResourceAccountComma
     private final String homeTenantId;
 
     /**
-     * The user id in home tenant retrieved from {@link #getHomeAccountId()}..
+     * The user id in home tenant retrieved from {@link #getHomeAccountId()}.
      */
     @NonNull
     private final String localAccountId;
@@ -85,7 +85,7 @@ public class BrokerResourceAccountCommandParameters extends ResourceAccountComma
     private final String negotiatedBrokerProtocolVersion;
 
     /**
-     * For this parameter class it is always {@link BrokerRequestType#REGULAR} as this request not started in broker.
+     * For this parameter class it is always {@link BrokerRequestType#REGULAR} as this request is not started in broker.
      */
     private final BrokerRequestType requestType = BrokerRequestType.REGULAR;
 }
