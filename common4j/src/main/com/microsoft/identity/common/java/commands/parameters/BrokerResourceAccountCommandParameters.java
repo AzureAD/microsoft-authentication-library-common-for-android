@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.request.BrokerRequestType;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 /**
@@ -37,15 +38,54 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @SuperBuilder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
-public class BrokerResourceAccountCommandParameters extends ResourceAccountCommandParameters {
+public class BrokerResourceAccountCommandParameters extends ResourceAccountCommandParameters
+        implements IBrokerTokenCommandParameters {
+    /**
+     * UID of the calling application process as seen by the Broker.
+     */
     @Expose
     private final int callerUid;
 
+    /**
+     * Version name/code of the calling application that initiated the request.
+     */
     @Expose
     private final String callerAppVersion;
 
+    /**
+     * Version of the Broker this request.
+     */
     @Expose
     private final String brokerVersion;
 
+    /**
+     * The AAD tenant id (home tenant) for the user account this request is for. It
+     * is derived from the {@link #getHomeAccountId()} value and is used
+     */
+    @Expose
+    @NonNull
+    private final String homeTenantId;
+
+    /**
+     * The user id in home tenant retrieved from {@link #getHomeAccountId()}..
+     */
+    @NonNull
+    private final String localAccountId;
+
+    /**
+     * {@link IBrokerAccount} if already present, otherwise null.
+     */
     private final IBrokerAccount brokerAccount;
+
+    /**
+     * The protocol version that was negotiated between the calling app / library
+     * and the Broker.
+     */
+    @Expose
+    private final String negotiatedBrokerProtocolVersion;
+
+    /**
+     * For this parameter class it is always {@link BrokerRequestType#REGULAR} as this request not started in broker.
+     */
+    private final BrokerRequestType requestType = BrokerRequestType.REGULAR;
 }
