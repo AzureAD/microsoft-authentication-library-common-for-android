@@ -7,6 +7,7 @@ vNext
 - [MINOR] Add AAD authority validation for DUNA flow (#2740)
 - [PATCH] Fix DualScreenActivity theme color constant (#2737)
 - [MINOR] [SDL Assessment task] Secure webview settings (#2715)
+- [MINOR] Add aea app to DUNA browser safelist (#2747)
 
 Version 22.0.3
 ----------
