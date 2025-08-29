@@ -66,11 +66,11 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
             );
         }
         else {
-            performDeviceRegistrationHelperWithButtonText(
+            performDeviceRegistrationHelperWithRegexText(
                     username,
                     password,
                     "Register a new organization",
-                    "Register device",
+                    "Register(?: device)?",
                     isFederatedUser,
                     AUTHENTICATOR_IS_REGISTER_EXPECTED
             );
@@ -91,11 +91,11 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
     public void performSharedDeviceRegistration(@NonNull final String username,
                                                 @NonNull final String password) {
         Logger.i(TAG, "Performing Shared Device Registration for the given account..");
-        performDeviceRegistrationHelperWithButtonText(
+        performDeviceRegistrationHelperWithRegexText(
                 username,
                 password,
-                "Register a shared device",
-                "Register device",
+                "Register (a|as) shared device",
+                "Register(?: device)?",
                 false,
                 AUTHENTICATOR_IS_REGISTER_EXPECTED_SHARED
         );
@@ -121,10 +121,10 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
     public void performSharedDeviceRegistrationDontValidate(@NonNull final String username,
                                                 @NonNull final String password) {
         Logger.i(TAG, "Performing Shared Device Registration for the given account without validating we are in shared device mode.");
-        performDeviceRegistrationHelperWithButtonText(
+        performDeviceRegistrationHelperWithRegexText(
                 username,
                 password,
-                "Register a shared device",
+                "Register (a|as) shared device",
                 "Register device",
                 false,
                 AUTHENTICATOR_IS_REGISTER_EXPECTED_SHARED
