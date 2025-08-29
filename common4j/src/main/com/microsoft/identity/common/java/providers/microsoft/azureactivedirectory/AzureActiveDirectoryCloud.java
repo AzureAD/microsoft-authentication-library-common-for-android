@@ -103,7 +103,7 @@ public class AzureActiveDirectoryCloud {
 
     //TODO: This is set to true if we were able to load the list of valid clouds from the server
     //TODO: Should we really be loading it at all if we were not able to find it?
-    boolean isValidated() {
+    public boolean isValidated() {
         return mIsValidated;
     }
 

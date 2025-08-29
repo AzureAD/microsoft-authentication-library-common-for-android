@@ -437,7 +437,20 @@ public enum AttributeName {
     /**
      * Indicates if ests telemetry was skipped.
      */
-    skipped_ests_telemetry
+    skipped_ests_telemetry,
 
+    /**
+     * Indicates the OpenID issuer returned in the discovery document.
+     */
+    openid_issuer,
 
+    /**
+     * Indicates the reason for an invalid OpenID issuer.
+     */
+    openid_issuer_invalid_reason,
+
+    /**
+     * Indicates the authority used to make the OpenID configuration request.
+     */
+    openid_config_request_authority,
 }

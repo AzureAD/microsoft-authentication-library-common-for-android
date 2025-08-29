@@ -160,7 +160,9 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to skip ests telemetry.
      */
-    SKIP_ESTS_TELEMETRY("SkipEstsTelemetry", false);
+    SKIP_ESTS_TELEMETRY("SkipEstsTelemetry", false),
+
+    ENABLE_OPENID_ISSUER_VALIDATION_REPORTING("EnableOpenIdIssuerValidationReporting", true);
 
     private String key;
     private Object defaultValue;
