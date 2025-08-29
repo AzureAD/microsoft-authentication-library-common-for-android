@@ -3,7 +3,6 @@ package com.microsoft.identity.common.internal.providers.oauth2
 import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
-import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator
 import com.microsoft.identity.common.logging.Logger
 
 class DUNAActivity: FragmentActivity() {
@@ -39,18 +38,9 @@ class DUNAActivity: FragmentActivity() {
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        //setIntent(intent)
         val methodTag = "$TAG:onNewIntent"
-        Logger.info(methodTag, "onNewIntent")
-
-        intent?.dataString?.let { intentData ->
-            val result = SwitchBrowserProtocolCoordinator.getIntentToResumeWebViewAuth(applicationContext, intentData)
-            Logger.info(methodTag, intentData)
-            WebViewAuthorizationFragment.setDunaIntent(result)
-        }
+        Logger.info(methodTag, "onNewIntent: ${intent.toString()}")
+        WebViewAuthorizationFragment.setDunaIntent(intent)
         finishAndRemoveTask()
     }
-
-
-
 }

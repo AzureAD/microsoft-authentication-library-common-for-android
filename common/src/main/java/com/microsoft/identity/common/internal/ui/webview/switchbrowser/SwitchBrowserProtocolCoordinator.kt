@@ -27,9 +27,8 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
-import com.microsoft.identity.common.internal.providers.oauth2.BrokerAuthorizationActivity
+import com.microsoft.identity.common.internal.providers.oauth2.DUNAActivity
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler
 import com.microsoft.identity.common.java.AuthenticationConstants.AAD.AUTHORIZATION
 import com.microsoft.identity.common.java.exception.ClientException
@@ -37,11 +36,11 @@ import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.java.opentelemetry.SpanName
-import com.microsoft.identity.common.java.ui.AuthorizationAgent
 import com.microsoft.identity.common.logging.Logger
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanContext
 import io.opentelemetry.api.trace.StatusCode
+import androidx.core.net.toUri
 
 /**
  * SwitchBrowserProtocolCoordinator is responsible for coordinating the switch browser protocol.
@@ -77,15 +76,9 @@ class SwitchBrowserProtocolCoordinator(
          * Returns the [Intent] used to start the WebView.
          */
         fun getIntentToResumeWebViewAuth(context: Context, intentDataString: String): Intent {
-            val uri = Uri.parse(intentDataString)
-            val intent = Intent(context, BrokerAuthorizationActivity::class.java)
-            intent.putExtra(AUTHORIZATION_AGENT, AuthorizationAgent.WEBVIEW)
-            // Ensures that if the activity is already running at the top of the stack (WebView),
-            // a new instance is not created, but its existing instance is brought to the foreground
-            // instead of launching a new one.
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            val uri = intentDataString.toUri()
+            val intent = Intent(context, DUNAActivity::class.java)
 
-            //intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             intent.putExtra(
                 SWITCH_BROWSER.ACTION_URI,
                 uri.getQueryParameter(SWITCH_BROWSER.ACTION_URI)
