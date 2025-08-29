@@ -80,6 +80,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Objects;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.UTID;
 
@@ -129,10 +130,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private boolean isBrokerRequest = false;
 
+    public static Intent dunaIntent = null;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         final String methodTag = TAG + ":onCreate";
+        Logger.info(methodTag, "WebViewAuthorizationFragment onCreate");
         final FragmentActivity activity = getActivity();
         if (activity != null) {
             WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
@@ -151,8 +155,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Override
     public void onResume() {
         super.onResume();
+        Logger.info(TAG + ":onResume", "WebViewAuthorizationFragment onResume");
+
         if (getSwitchBrowserCoordinator().isExpectingSwitchBrowserResume()) {
             resumeSwitchBrowser(getExtras());
+            dunaIntent = new Intent();
         }
     }
 
@@ -163,15 +170,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      */
     @NonNull
     private Bundle getExtras() {
-        final Activity activity = getActivity();
-        if (activity == null) {
+        if (dunaIntent == null) {
             return Bundle.EMPTY;
         }
-        final Intent intent = activity.getIntent();
-        if (intent == null) {
-            return Bundle.EMPTY;
-        }
-        final Bundle extras =  intent.getExtras();
+        final Bundle extras =  dunaIntent.getExtras();
+        dunaIntent = null;
         return extras == null ? Bundle.EMPTY : extras;
     }
 

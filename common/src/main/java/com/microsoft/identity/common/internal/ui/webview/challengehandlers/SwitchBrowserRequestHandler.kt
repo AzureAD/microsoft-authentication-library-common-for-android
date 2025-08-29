@@ -26,6 +26,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
+import com.microsoft.identity.common.internal.providers.oauth2.DUNAActivity
 import com.microsoft.identity.common.internal.ui.browser.AndroidBrowserSelector
 import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper
@@ -130,7 +131,11 @@ class SwitchBrowserRequestHandler(
             )
             browserIntent.setPackage(browser.packageName)
             browserIntent.setData(switchBrowserChallenge.processUri)
-            activity.startActivity(browserIntent)
+            val dunaIntent = Intent(activity, DUNAActivity::class.java)
+            dunaIntent.putExtra("browser_intent", browserIntent)
+            dunaIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            activity.startActivity(dunaIntent)
+            //activity.startActivity(browserIntent)
             isChallengeHandled = true
             span.setAttribute(
                 AttributeName.is_switch_browser_request_handled.name,

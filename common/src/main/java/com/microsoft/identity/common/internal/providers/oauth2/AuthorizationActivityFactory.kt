@@ -66,7 +66,6 @@ object AuthorizationActivityFactory {
         if (ProcessUtil.isBrokerProcess(parameters.context)) {
             intent = Intent(parameters.context, BrokerAuthorizationActivity::class.java)
             if (parameters.requestUrl.contains(AuthenticationConstants.SWITCH_BROWSER.CLIENT_SUPPORTS_FLOW)) {
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
                 // In the case of a SwitchBrowser protocol, we need to transition from the browser to the WebView.
                 // These flags ensure that we have a new task stack that allows for this transition.
             }

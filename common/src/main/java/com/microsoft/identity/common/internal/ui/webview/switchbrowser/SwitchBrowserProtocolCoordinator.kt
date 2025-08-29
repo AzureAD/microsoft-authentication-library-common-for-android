@@ -83,7 +83,9 @@ class SwitchBrowserProtocolCoordinator(
             // Ensures that if the activity is already running at the top of the stack (WebView),
             // a new instance is not created, but its existing instance is brought to the foreground
             // instead of launching a new one.
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+
+            //intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             intent.putExtra(
                 SWITCH_BROWSER.ACTION_URI,
                 uri.getQueryParameter(SWITCH_BROWSER.ACTION_URI)
