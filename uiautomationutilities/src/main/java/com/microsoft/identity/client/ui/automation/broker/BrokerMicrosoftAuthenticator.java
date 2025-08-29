@@ -30,8 +30,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -49,6 +47,7 @@ import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerPara
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -211,23 +210,20 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
             UiAutomatorUtils.handleButtonClickForObjectWithText("Other");
 
-            final UiObject describeIssueBox = UiAutomatorUtils.obtainUiObjectWithDescription(
-                    "Describe the issue you are facing"
-            );
-
-            describeIssueBox.setText(INCIDENT_MSG);
+            // Fetch the first edit text and enter the incident message
+            UiAutomatorUtils.obtainAllEditTextObjects(CommonUtils.FIND_UI_ELEMENT_TIMEOUT).get(1).setText(INCIDENT_MSG);
 
             // Send incident button also has send feedback description
             final UiObject sendIncident = UiAutomatorUtils.obtainUiObjectWithDescription("Send feedback");
             sendIncident.click();
 
-            final UiObject postLogSubmissionMsg = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                    "android:id/parentPanel"
+            final UiObject postLogSubmissionMsg = UiAutomatorUtils.obtainUiObjectWithText(
+                    "Thank you for your feedback!"
             );
 
             Assert.assertTrue(postLogSubmissionMsg.exists());
 
-            final UiObject incidentDetails = UiAutomatorUtils.obtainUiObjectWithResourceId("android:id/message");
+            final UiObject incidentDetails = UiAutomatorUtils.obtainUiObjectWithText("Incident ID");
             Assert.assertTrue(incidentDetails.exists());
 
             final String incidentIdText = incidentDetails.getText();
@@ -340,18 +336,18 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             aadPromptHandler.handlePrompt(username, password);
         }
     }
-    protected void performDeviceRegistrationHelperWithButtonText(@NonNull final String username,
-                                                   @NonNull final String password,
-                                                   @NonNull final String firstRegisterBtnText,
-                                                   @NonNull final String secondRegisterBtnText,
-                                                   final boolean isFederatedUser,
-                                                   final boolean isRegistrationPageExpected) {
+    protected void performDeviceRegistrationHelperWithRegexText(@NonNull final String username,
+                                                                         @NonNull final String password,
+                                                                         @NonNull final String firstRegisterBtnRegex,
+                                                                         @NonNull final String secondRegisterBtnRegex,
+                                                                         final boolean isFederatedUser,
+                                                                         final boolean isRegistrationPageExpected) {
         Logger.i(TAG, "Execution of Helper for Device Registration..");
         // open device registration page
         openDeviceRegistrationPage();
 
         // click register button
-        UiAutomatorUtils.handleButtonClickForObjectWithText(firstRegisterBtnText);
+        UiAutomatorUtils.handleButtonClickForObjectWithRegexMatch(firstRegisterBtnRegex);
 
         // enter email
         UiAutomatorUtils.handleInputByClass(
@@ -359,7 +355,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                 username
         );
 
-        UiAutomatorUtils.handleButtonClickForObjectWithExactText(secondRegisterBtnText);
+        UiAutomatorUtils.handleButtonClickForObjectWithRegexMatch(secondRegisterBtnRegex);
 
         final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
                 .prompt(PromptParameter.LOGIN)
