@@ -97,6 +97,17 @@ public class BrowserDescriptor implements Serializable {
         );
     }
 
+    static private BrowserDescriptor getBrowserDescriptorForAea() {
+        final HashSet<String> signatureHashes = new HashSet<>();
+        signatureHashes.add("Nd3EDftVD0lR3Lz0Odq8NMkWWyM5CT8lahePkMtzvS6YkVYne_Hn5jaDSxrdXkN1s4AywAnav2RnarZvcqVFJQ==");
+        return new BrowserDescriptor(
+                "com.amazon.enterprise.access.android",
+                signatureHashes,
+                null,
+                null
+        );
+    }
+
     /**
      * Return a list of BrowserDescriptors that are considered safe for the Switch to browser flow.
      */
@@ -104,6 +115,7 @@ public class BrowserDescriptor implements Serializable {
         final List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
         browserDescriptors.add(getBrowserDescriptorForChrome());
         browserDescriptors.add(getBrowserDescriptorForEdge());
+        browserDescriptors.add(getBrowserDescriptorForAea());
         return browserDescriptors;
     }
 
