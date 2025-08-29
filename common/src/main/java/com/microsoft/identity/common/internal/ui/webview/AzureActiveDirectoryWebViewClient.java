@@ -40,6 +40,7 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.ViewTreeLifecycleOwner;
 
+import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.BrokerData;
@@ -649,7 +650,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
             span.setStatus(StatusCode.OK);
         } catch (final Throwable throwable) {
-            Logger.error(methodTag, "Failed to load device CA URL in WebView.", throwable);
+            Logger.error(methodTag, "Failed to load device CA URL", throwable);
             span.recordException(throwable);
             span.setStatus(StatusCode.ERROR);
             returnError(UNKNOWN_ERROR, throwable.getMessage());
@@ -682,6 +683,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             if (isWebCpFlightEnabled) {
                 // Directly enabled via flight rollout.
                 Logger.info(methodTag, "WebCP in WebView feature is enabled.");
+                mIsWebCpInWebViewFeatureEnabled = true;
+                return true;
+            } else if (BuildConfig.DEBUG && BuildConfig.enableWebCpForDebugBuild) {
+                Logger.info(methodTag, "WebCP in WebView feature is enabled in debug build.");
                 mIsWebCpInWebViewFeatureEnabled = true;
                 return true;
             }
