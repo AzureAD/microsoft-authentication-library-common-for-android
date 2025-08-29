@@ -46,7 +46,7 @@ class DUNAActivity: FragmentActivity() {
         intent?.dataString?.let { intentData ->
             val result = SwitchBrowserProtocolCoordinator.getIntentToResumeWebViewAuth(applicationContext, intentData)
             Logger.info(methodTag, intentData)
-            WebViewAuthorizationFragment.dunaIntent = result
+            WebViewAuthorizationFragment.setDunaIntent(result)
         }
         finishAndRemoveTask()
     }

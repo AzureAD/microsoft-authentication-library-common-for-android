@@ -33,7 +33,6 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlat
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -80,7 +79,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Objects;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.UTID;
 
@@ -130,7 +128,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private boolean isBrokerRequest = false;
 
-    public static Intent dunaIntent = null;
+    private static Intent dunaIntent = null;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -479,4 +477,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         }
         return mSwitchBrowserProtocolCoordinator;
     }
+
+    public static void setDunaIntent(Intent intent) {
+        dunaIntent = intent;
+    }
+
 }
