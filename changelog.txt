@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Add Open Id configuration issuer validation in OpenIdProviderConfigurationClient (#2751)
 - [MINOR] Move ests telemetry behind feature flag (#2742)
 - [MINOR] Update Broker ATS flow for Resource Account (#2704)
 - [PATCH] Handle BadTokenException gracefully in CBA dialogs (#2731)
