@@ -128,7 +128,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private boolean isBrokerRequest = false;
 
-    private static Intent dunaIntent = null;
+    private static Intent dunaIntent;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -157,7 +157,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
         if (getSwitchBrowserCoordinator().isExpectingSwitchBrowserResume()) {
             resumeSwitchBrowser(getExtras());
-            dunaIntent = new Intent();
         }
     }
 
@@ -168,12 +167,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      */
     @NonNull
     private Bundle getExtras() {
-        if (dunaIntent == null) {
-            return Bundle.EMPTY;
+        synchronized (WebViewAuthorizationFragment.class) {
+            if (dunaIntent == null) {
+                return Bundle.EMPTY;
+            }
+            final Bundle extras = dunaIntent.getExtras();
+            clearDunaIntent();
+            return extras == null ? Bundle.EMPTY : extras;
         }
-        final Bundle extras =  dunaIntent.getExtras();
-        dunaIntent = null;
-        return extras == null ? Bundle.EMPTY : extras;
     }
 
     /**
@@ -478,8 +479,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         return mSwitchBrowserProtocolCoordinator;
     }
 
-    public static void setDunaIntent(Intent intent) {
+    public static void setDunaIntent(final Intent intent) {
         dunaIntent = intent;
+    }
+
+    public static void clearDunaIntent() {
+        dunaIntent = null;
     }
 
 }
