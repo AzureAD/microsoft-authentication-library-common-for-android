@@ -152,7 +152,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Obtain an instance of the UiObject for the given text.
+     * Obtain an instance of the UiObject for the given description.
      *
      * @param description the description of the element to obtain
      * @return the UiObject associated to the supplied text
@@ -161,6 +161,19 @@ public class UiAutomatorUtils {
         Logger.i(TAG, "Obtain an instance of the UiObject with description:" + description);
         return obtainUiObjectWithUiSelector(new UiSelector().description(description),
                 FIND_UI_ELEMENT_TIMEOUT);
+    }
+
+    /**
+     * Obtain an instance of the UiObject for the given description.
+     *
+     * @param description the description of the element to obtain
+     * @param existsTimeout time to wait until ui object with description exists.
+     * @return the UiObject associated to the supplied text
+     */
+    public static UiObject obtainUiObjectWithDescription(@NonNull final String description, final long existsTimeout) {
+        Logger.i(TAG, "Obtain an instance of the UiObject with description:" + description);
+        return obtainUiObjectWithUiSelector(new UiSelector().description(description),
+                existsTimeout);
     }
 
     /**
@@ -443,6 +456,31 @@ public class UiAutomatorUtils {
     public static void handleButtonClick(@NonNull final String resourceId, final long existsTimeout) {
         Logger.i(TAG, "Clicks the button element associated to the resource id (custom timeout):" + resourceId);
         final UiObject button = obtainUiObjectWithResourceId(resourceId, existsTimeout);
+
+        try {
+            button.click();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    /**
+     * Clicks the button element that contains the supplied description.
+     *
+     * @param desc the description of the button to click
+     */
+    public static void handleButtonClickForObjectWithDescription(@NonNull final String desc) {
+        final UiObject button = obtainUiObjectWithDescription(desc);
+
+        try {
+            button.click();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    public static void handleButtonClickForObjectWithDescription(@NonNull final String desc, final long existsTimeout) {
+        final UiObject button = obtainUiObjectWithDescription(desc, existsTimeout);
 
         try {
             button.click();
