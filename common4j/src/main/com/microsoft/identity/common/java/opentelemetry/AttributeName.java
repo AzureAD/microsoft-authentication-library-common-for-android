@@ -306,6 +306,11 @@ public enum AttributeName {
     keystore_exception_stack_trace,
 
     /**
+     * Indicates the exception message from a Android KeyStore operation exception.
+     */
+    keystore_exception_message,
+
+    /**
      * Indicates the new nonce found in the eSTS request.
      */
     is_sso_nonce_found_in_ests_request,

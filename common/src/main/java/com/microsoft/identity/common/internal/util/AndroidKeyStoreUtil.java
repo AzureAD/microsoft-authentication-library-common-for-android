@@ -87,7 +87,7 @@ public class AndroidKeyStoreUtil {
     private AndroidKeyStoreUtil() {
     }
 
-    private static final LongCounter sFailedAndroidKeyStoreUnwrapOperationCount = OTelUtility.createLongCounter(
+    public static final LongCounter sFailedAndroidKeyStoreUnwrapOperationCount = OTelUtility.createLongCounter(
             "failed_keystore_key_unwrap_operation_count",
             "Number of failed Android KeyStore unwrap operations"
     );
@@ -447,11 +447,17 @@ public class AndroidKeyStoreUtil {
                 exception
         );
         if (exception instanceof InvalidKeyException) {
+            final KeyStoreException keyStoreException = findKeyStoreException(exception);
+            String ksMessage = keyStoreException != null ? keyStoreException.getMessage() : "No Keystore Excerption Found";
+            if (ksMessage == null) {
+                ksMessage = "null";
+            }
             final Attributes attributes = Attributes.builder()
                     .put(AttributeName.keystore_operation.name(), "unwrap")
                     .put(AttributeName.error_code.name(), errCode)
                     .put(AttributeName.error_type.name(), clientException.getClass().getSimpleName())
                     .put(AttributeName.keystore_exception_stack_trace.name(), ThrowableUtil.getStackTraceAsString(clientException))
+                    .put(AttributeName.keystore_exception_message.name(), ksMessage)
                     .build();
             sFailedAndroidKeyStoreUnwrapOperationCount.add(1, attributes);
         }
@@ -464,4 +470,18 @@ public class AndroidKeyStoreUtil {
         throw clientException;
     }
 
+
+    private static @Nullable KeyStoreException findKeyStoreException(@NonNull Throwable throwable) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            while (throwable != null) {
+                if (throwable instanceof android.security.KeyStoreException) {
+                    return (KeyStoreException) throwable;
+                }
+                throwable = throwable.getCause();
+            }
+            return null;
+        } else {
+            return null;
+        }
+    }
 }
