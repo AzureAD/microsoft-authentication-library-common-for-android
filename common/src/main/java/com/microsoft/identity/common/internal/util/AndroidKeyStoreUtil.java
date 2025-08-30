@@ -89,7 +89,7 @@ public class AndroidKeyStoreUtil {
     private AndroidKeyStoreUtil() {
     }
 
-    public static final LongCounter sFailedAndroidKeyStoreUnwrapOperationCount = OTelUtility.createLongCounter(
+    private static final LongCounter sFailedAndroidKeyStoreUnwrapOperationCount = OTelUtility.createLongCounter(
             "failed_keystore_key_unwrap_operation_count",
             "Number of failed Android KeyStore unwrap operations"
     );
