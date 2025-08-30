@@ -47,6 +47,8 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -450,7 +452,7 @@ public class AndroidKeyStoreUtil {
             final KeyStoreException keyStoreException = findKeyStoreException(exception);
             String ksMessage = keyStoreException != null ? keyStoreException.getMessage() : "No Keystore Excerption Found";
             if (ksMessage == null) {
-                ksMessage = "null";
+                ksMessage = "";
             }
             final Attributes attributes = Attributes.builder()
                     .put(AttributeName.keystore_operation.name(), "unwrap")
@@ -458,6 +460,7 @@ public class AndroidKeyStoreUtil {
                     .put(AttributeName.error_type.name(), clientException.getClass().getSimpleName())
                     .put(AttributeName.keystore_exception_stack_trace.name(), ThrowableUtil.getStackTraceAsString(clientException))
                     .put(AttributeName.keystore_exception_message.name(), ksMessage)
+                    .put(AttributeName.keystore_internal_error_code.name(), extractInternalKeystoreCode(ksMessage))
                     .build();
             sFailedAndroidKeyStoreUnwrapOperationCount.add(1, attributes);
         }
@@ -483,5 +486,17 @@ public class AndroidKeyStoreUtil {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Use Regex to pull out the internal error code from the key store exception message
+     * @param message the exception message
+     * @return the internal error code, or "N/A" if it can't be found
+     */
+    private static String extractInternalKeystoreCode(final String message) {
+        if (message == null) return "";
+        Pattern pattern = Pattern.compile("internal Keystore code:\\s*(-?\\d+)");
+        Matcher matcher = pattern.matcher(message);
+        return matcher.find() ? matcher.group(1) : "";
     }
 }
