@@ -90,6 +90,10 @@ class SwitchBrowserProtocolCoordinator(
                     SWITCH_BROWSER.STATE,
                     uri.getQueryParameter(SWITCH_BROWSER.STATE)
                 )
+                putExtra(
+                    SwitchBrowserActivity.RESUME_REQUEST,
+                    true
+                )
             }
         }
     }

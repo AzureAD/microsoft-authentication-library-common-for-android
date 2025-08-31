@@ -61,6 +61,9 @@ import androidx.core.net.toUri
  */
 class SwitchBrowserActivity: FragmentActivity() {
 
+    // Flag to track if a Custom Chrome Tab (CCT) has been launched
+    private var cctLaunched = false
+
     companion object {
         private val TAG: String = SwitchBrowserActivity::class.java.simpleName
 
@@ -72,6 +75,9 @@ class SwitchBrowserActivity: FragmentActivity() {
 
         /** Intent extra key for the URI to process in the browser */
         const val PROCESS_URI = "process_uri"
+
+        /** Intent extra key indicating a resume request from the browser redirect */
+        const val RESUME_REQUEST = "resume_request"
     }
 
     /**
@@ -85,7 +91,23 @@ class SwitchBrowserActivity: FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val methodTag = "$TAG:onCreate"
         super.onCreate(savedInstanceState)
+        Logger.info(methodTag, "SwitchBrowserActivity created - Launching browser")
+        launchBrowser()
+    }
 
+
+    /**
+     * Launches the specified browser for DUNA authentication based on intent extras.
+     *
+     * This method reads the target browser package name, Custom Tabs support flag,
+     * and the process URI from the intent extras. It then constructs and launches
+     * either a Custom Tabs intent or a standard browser intent accordingly.
+     *
+     * If required parameters are missing, it logs an error and finishes the activity.
+     */
+    private fun launchBrowser() {
+        val methodTag = "$TAG:launchBrowser"
+        cctLaunched = false
         // Extract configuration parameters from intent extras
         val extras = this.intent.extras ?: Bundle()
         val browserPackageName = extras.getString(BROWSER_PACKAGE_NAME)
@@ -144,18 +166,74 @@ class SwitchBrowserActivity: FragmentActivity() {
         val methodTag = "$TAG:onNewIntent"
         super.onNewIntent(intent)
         // Update the activity's intent with the new intent containing the auth result
+        Logger.info(methodTag, "On new intent received.")
         setIntent(intent)
 
-        // Pass the authentication result back to WebViewAuthorizationFragment
-        Logger.info(methodTag, "Passing authentication result back to WebViewAuthorizationFragment")
         if (intent != null) {
-            WebViewAuthorizationFragment.setSwitchBrowserBundle(intent.extras)
+            if (intent.hasExtra(PROCESS_URI)) {
+                // Handle scenario where a new browser switch request is received while one is already in progress
+                // This can occur when the user initiates another auth request before completing the first one.
+                Logger.warn(
+                    methodTag,
+                    "Received new switch browser request while one is already in progress" +
+                        " - Restarting browser switch flow"
+                )
+                // Launch the new browser request, which will reset cctLaunched and start fresh
+                launchBrowser()
+                return
+            }
+            if (intent.hasExtra(RESUME_REQUEST)) {
+                WebViewAuthorizationFragment.setSwitchBrowserBundle(intent.extras)
+                // Clean up: finish this activity and remove it from task stack
+                Logger.info(methodTag, "Finishing activity and removing from task stack")
+                finishAndRemoveTask()
+                return
+            }
+        }
+        // Clean up: finish this activity and remove it from task stack
+        Logger.info(methodTag, "Unexpected intent - Finishing activity and removing from task stack")
+        finishAndRemoveTask()
+    }
+
+    /**
+     * Handles the activity resume lifecycle event and manages Custom Chrome Tab (CCT) launch state.
+     *
+     * This method implements a critical part of the browser switch flow by tracking whether a Custom Chrome Tab
+     * has been launched and handling the case where the user returns to this activity without completing
+     * the authentication flow in the browser.
+     *
+     * **Behavior Logic:**
+     * - On first resume (after onCreate): Sets cctLaunched flag to true and continues normally
+     * - On subsequent resumes: If CCT was already launched, assumes user backed out of browser and finishes activity
+     *
+     * **Why This Logic is Needed:**
+     * When a Custom Chrome Tab is launched, this activity goes into the background. If the user presses the back
+     * button in the CCT or otherwise returns to this activity without completing authentication, we need to
+     * clean up and finish this activity to prevent it from remaining in the back stack.
+     *
+     * **Flow Scenarios:**
+     * 1. **Normal Flow**: onCreate → onResume (1st time) → CCT launched → user completes auth → onNewIntent → finish
+     * 2. **User Cancellation**: onCreate → onResume (1st time) → CCT launched → user backs out → onResume (2nd time) → finish
+     *
+     * **Important Notes:**
+     * - This prevents the activity from staying alive indefinitely if authentication is cancelled
+     * - Uses finishAndRemoveTask() to clean up the entire task stack, not just this activity
+     * - The cctLaunched flag is essential for distinguishing between the initial resume and subsequent resumes
+     */
+    override fun onResume() {
+        super.onResume()
+        val methodTag = "$TAG:onResume"
+        Logger.info(methodTag, "onResume called - Managing CCT launch state")
+
+        if (cctLaunched) {
+            // User has returned to this activity after CCT was launched, likely due to backing out
+            Logger.info(methodTag, "CCT was launched previously and user returned - Assuming cancellation, finishing activity")
+            finishAndRemoveTask()
         } else {
-            Logger.error(methodTag, "Received null intent in onNewIntent - Cannot pass result back", null)
+            // First resume after onCreate - mark CCT as launched for future reference
+            Logger.info(methodTag, "First resume after onCreate - Marking CCT as launched")
         }
 
-        // Clean up: finish this activity and remove it from task stack
-        Logger.info(methodTag, "Browser switch complete - Finishing activity and removing from task stack")
-        finishAndRemoveTask()
+        cctLaunched = true
     }
 }
