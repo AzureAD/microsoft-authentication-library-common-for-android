@@ -55,7 +55,7 @@ class SwitchBrowserRequestHandler(
         OTelUtility.createSpanFromParent(SpanName.SwitchBrowserProcess.name, spanContext)
     }
 
-    var switchBrowserChallengeActive: Boolean = false
+    var isSwitchBrowserChallengeActive: Boolean = false
 
     companion object {
         private val TAG = SwitchBrowserRequestHandler::class.simpleName
@@ -118,7 +118,7 @@ class SwitchBrowserRequestHandler(
             }
             activity.startActivity(switchBrowserIntent)
             span.setStatus(StatusCode.OK)
-            switchBrowserChallengeActive = true
+            isSwitchBrowserChallengeActive = true
             span.end()
         }
     }
@@ -143,6 +143,6 @@ class SwitchBrowserRequestHandler(
      * This method is called after processing the switch browser resume action.
      */
     fun resetChallengeState() {
-        switchBrowserChallengeActive = false
+        isSwitchBrowserChallengeActive = false
     }
 }

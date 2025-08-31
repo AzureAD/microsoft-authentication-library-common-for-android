@@ -85,7 +85,6 @@ class SwitchBrowserActivity: FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val methodTag = "$TAG:onCreate"
         super.onCreate(savedInstanceState)
-        Logger.info(methodTag, "SwitchBrowserActivity onCreate - Starting browser switch flow")
 
         // Extract configuration parameters from intent extras
         val extras = this.intent.extras ?: Bundle()
@@ -144,8 +143,6 @@ class SwitchBrowserActivity: FragmentActivity() {
     override fun onNewIntent(intent: Intent?) {
         val methodTag = "$TAG:onNewIntent"
         super.onNewIntent(intent)
-        Logger.info(methodTag, "Received redirect from browser - Processing DUNA authentication result")
-
         // Update the activity's intent with the new intent containing the auth result
         setIntent(intent)
 

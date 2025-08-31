@@ -148,7 +148,7 @@ class SwitchBrowserProtocolCoordinator(
      */
     fun isExpectingSwitchBrowserResume(): Boolean {
         val methodTag = "$TAG:isExpectingSwitchBrowserResume"
-        Logger.verbose(methodTag, "ExpectingRequest: ${switchBrowserRequestHandler.switchBrowserChallengeActive}")
-        return switchBrowserRequestHandler.switchBrowserChallengeActive
+        Logger.verbose(methodTag, "ExpectingRequest: ${switchBrowserRequestHandler.isSwitchBrowserChallengeActive}")
+        return switchBrowserRequestHandler.isSwitchBrowserChallengeActive
     }
 }
