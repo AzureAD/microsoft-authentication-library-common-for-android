@@ -23,12 +23,10 @@
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
-import com.microsoft.identity.common.internal.providers.oauth2.DUNAActivity
+import com.microsoft.identity.common.internal.providers.oauth2.SwitchBrowserActivity
 import com.microsoft.identity.common.internal.ui.browser.AndroidBrowserSelector
-import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl
 import com.microsoft.identity.common.java.browser.IBrowserSelector
@@ -49,8 +47,6 @@ import io.opentelemetry.api.trace.StatusCode
  */
 class SwitchBrowserRequestHandler(
     private val activity: Activity,
-    private val context: Context,
-    private val customTabsManager: CustomTabsManager,
     private val browserSelector: IBrowserSelector,
     private val spanContext: SpanContext?
 ) : IChallengeHandler<SwitchBrowserChallenge, Unit> {
@@ -59,8 +55,7 @@ class SwitchBrowserRequestHandler(
         OTelUtility.createSpanFromParent(SpanName.SwitchBrowserProcess.name, spanContext)
     }
 
-    var isChallengeHandled: Boolean = false
-        private set
+    var switchBrowserChallengeActive: Boolean = false
 
     companion object {
         private val TAG = SwitchBrowserRequestHandler::class.simpleName
@@ -68,8 +63,6 @@ class SwitchBrowserRequestHandler(
 
     constructor(activity: Activity, spanContext: SpanContext?) : this(
         activity,
-        activity.applicationContext,
-        CustomTabsManager(activity.applicationContext),
         AndroidBrowserSelector(activity.applicationContext),
         spanContext
     )
@@ -109,38 +102,6 @@ class SwitchBrowserRequestHandler(
                 span.end()
                 throw exception
             }
-
-            // Create an intent to launch the browser
-            val browserIntent: Intent
-            if (browser.isCustomTabsServiceSupported) {
-                Logger.info(methodTag, "CustomTabsService is supported.")
-                //create customTabsIntent
-                if (!customTabsManager.bind(context, browser.packageName)) {
-                    Logger.warn(methodTag, "Failed to bind CustomTabsService.")
-                    browserIntent = Intent(Intent.ACTION_VIEW)
-                } else {
-                    browserIntent = customTabsManager.customTabsIntent.intent
-                }
-            } else {
-                Logger.warn(methodTag, "CustomTabsService is NOT supported")
-                browserIntent = Intent(Intent.ACTION_VIEW)
-            }
-            Logger.info(
-                methodTag,
-                "Launching switch browser request on browser: ${browser.packageName}"
-            )
-            browserIntent.setPackage(browser.packageName)
-            browserIntent.setData(switchBrowserChallenge.processUri)
-            val dunaIntent = Intent(activity, DUNAActivity::class.java)
-            dunaIntent.putExtra("browser_intent", browserIntent)
-            dunaIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            activity.startActivity(dunaIntent)
-            //activity.startActivity(browserIntent)
-            isChallengeHandled = true
-            span.setAttribute(
-                AttributeName.is_switch_browser_request_handled.name,
-                isChallengeHandled
-            )
             span.setAttribute(
                 AttributeName.browser_package_name.name,
                 browser.packageName
@@ -149,7 +110,15 @@ class SwitchBrowserRequestHandler(
                 AttributeName.is_custom_tabs_supported.name,
                 browser.isCustomTabsServiceSupported
             )
+            val switchBrowserIntent = Intent(activity, SwitchBrowserActivity::class.java).apply {
+                putExtra(SwitchBrowserActivity.BROWSER_PACKAGE_NAME, browser.packageName)
+                putExtra(SwitchBrowserActivity.BROWSER_SUPPORTS_CUSTOM_TABS, browser.isCustomTabsServiceSupported)
+                putExtra(SwitchBrowserActivity.PROCESS_URI, switchBrowserChallenge.processUri.toString())
+                setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            activity.startActivity(switchBrowserIntent)
             span.setStatus(StatusCode.OK)
+            switchBrowserChallengeActive = true
             span.end()
         }
     }
@@ -170,15 +139,10 @@ class SwitchBrowserRequestHandler(
     }
 
     /**
-     * Handles the necessary cleanup after a challenge is completed.
-     * This includes unbinding the custom tabs manager and resetting the challenge handled flag.
+     * Reset the challenge state.
+     * This method is called after processing the switch browser resume action.
      */
     fun resetChallengeState() {
-        // Unbind the custom tabs manager
-        customTabsManager.unbind()
-        // Reset the challenge handled flag
-        isChallengeHandled = false
-
+        switchBrowserChallengeActive = false
     }
-
 }

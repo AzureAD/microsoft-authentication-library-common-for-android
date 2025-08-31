@@ -128,7 +128,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private boolean isBrokerRequest = false;
 
-    private static Intent dunaIntent;
+    private static Bundle switchBrowserBundle;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -154,46 +154,35 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     public void onResume() {
         super.onResume();
         Logger.info(TAG + ":onResume", "WebViewAuthorizationFragment onResume");
-
         if (getSwitchBrowserCoordinator().isExpectingSwitchBrowserResume()) {
-            resumeSwitchBrowser(getExtras());
-        }
-    }
-
-    /**
-     * Get the extras from the activity intent.
-     *
-     * @return Bundle with the extras
-     */
-    @NonNull
-    private Bundle getExtras() {
-        synchronized (WebViewAuthorizationFragment.class) {
-            if (dunaIntent == null) {
-                return Bundle.EMPTY;
-            }
-            final Bundle extras = dunaIntent.getExtras();
-            clearDunaIntent();
-            return extras == null ? Bundle.EMPTY : extras;
+            resumeSwitchBrowser();
+        } else {
+            setSwitchBrowserBundle(null);
         }
     }
 
     /**
      * Resume the switch browser protocol flow.
-     *
-     * @param extras Bundle with the data to resume the switch browser protocol flow.
      */
-    private void resumeSwitchBrowser(@NonNull final Bundle extras) {
+    private void resumeSwitchBrowser() {
         final String methodTag = TAG + ":resumeSwitchBrowser";
         try {
+            if (switchBrowserBundle == null) {
+                throw new ClientException(
+                        ClientException.NULL_OBJECT,
+                        "No switch browser bundle found to resume the flow."
+                );
+            }
             Logger.info(methodTag, "Resuming switch browser flow");
             getSwitchBrowserCoordinator().processSwitchBrowserResume(
                     mAuthorizationRequestUrl,
-                    extras,
+                    switchBrowserBundle,
                     (switchBrowserResumeUri, switchBrowserResumeHeaders) -> {
                         launchWebView(switchBrowserResumeUri.toString(), switchBrowserResumeHeaders);
                         return null;
                     }
             );
+            setSwitchBrowserBundle(null);
         } catch (final ClientException e) {
             Logger.error(methodTag, "Error processing switch browser resume", e);
             sendResult(RawAuthorizationResult.fromException(e));
@@ -479,12 +468,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         return mSwitchBrowserProtocolCoordinator;
     }
 
-    public static void setDunaIntent(final Intent intent) {
-        dunaIntent = intent;
+    public static void setSwitchBrowserBundle(@Nullable final Bundle bundle) {
+        switchBrowserBundle = bundle;
     }
-
-    public static void clearDunaIntent() {
-        dunaIntent = null;
-    }
-
 }

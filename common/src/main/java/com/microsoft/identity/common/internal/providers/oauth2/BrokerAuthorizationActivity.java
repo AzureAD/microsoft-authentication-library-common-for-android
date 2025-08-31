@@ -29,19 +29,4 @@ import android.content.Intent;
  * in AndroidManifest without overriding MSAL's (In case where MSAL and broker is shipped together).
  */
 public class BrokerAuthorizationActivity extends AuthorizationActivity {
-
-    /**
-     * Refreshes the WebView with new intent data after the user completes authentication in the browser.
-     *
-     * <p>In the Switch browser flow, once the user finishes authentication in the browser, ETS will send a request
-     * to the broker containing a code and an action URI. The broker will then send this request data back to the
-     * WebView authorization activity via an intent. This method is used to refresh the WebView with the new intent
-     * data that includes the code and action URI.
-     * see {@link WebViewAuthorizationFragment#onResume()}
-     */
-    @Override
-    protected void onNewIntent(final Intent intent) {
-        super.onNewIntent(intent);
-        setIntent(intent);
-    }
 }

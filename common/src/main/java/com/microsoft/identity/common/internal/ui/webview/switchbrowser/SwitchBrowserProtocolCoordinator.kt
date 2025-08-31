@@ -28,7 +28,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
-import com.microsoft.identity.common.internal.providers.oauth2.DUNAActivity
+import com.microsoft.identity.common.internal.providers.oauth2.SwitchBrowserActivity
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler
 import com.microsoft.identity.common.java.AuthenticationConstants.AAD.AUTHORIZATION
 import com.microsoft.identity.common.java.exception.ClientException
@@ -77,7 +77,7 @@ class SwitchBrowserProtocolCoordinator(
          */
         fun getIntentToResumeWebViewAuth(context: Context, intentDataString: String): Intent {
             val uri = intentDataString.toUri()
-            val intent = Intent(context, DUNAActivity::class.java)
+            val intent = Intent(context, SwitchBrowserActivity::class.java)
 
             intent.putExtra(
                 SWITCH_BROWSER.ACTION_URI,
@@ -149,7 +149,7 @@ class SwitchBrowserProtocolCoordinator(
      */
     fun isExpectingSwitchBrowserResume(): Boolean {
         val methodTag = "$TAG:isExpectingSwitchBrowserResume"
-        Logger.verbose(methodTag, "ExpectingRequest: ${switchBrowserRequestHandler.isChallengeHandled}")
-        return switchBrowserRequestHandler.isChallengeHandled
+        Logger.verbose(methodTag, "ExpectingRequest: ${switchBrowserRequestHandler.switchBrowserChallengeActive}")
+        return switchBrowserRequestHandler.switchBrowserChallengeActive
     }
 }
