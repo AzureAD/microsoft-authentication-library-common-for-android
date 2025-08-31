@@ -134,7 +134,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         final String methodTag = TAG + ":onCreate";
-        Logger.info(methodTag, "WebViewAuthorizationFragment onCreate");
+        Logger.verbose(methodTag, "WebViewAuthorizationFragment onCreate");
         final FragmentActivity activity = getActivity();
         if (activity != null) {
             WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
@@ -153,7 +153,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Override
     public void onResume() {
         super.onResume();
-        Logger.info(TAG + ":onResume", "WebViewAuthorizationFragment onResume");
+        Logger.verbose(TAG + ":onResume", "WebViewAuthorizationFragment onResume");
         if (getSwitchBrowserCoordinator().isExpectingSwitchBrowserResume()) {
             resumeSwitchBrowser();
         } else {
@@ -468,6 +468,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         return mSwitchBrowserProtocolCoordinator;
     }
 
+    /**
+     * Set the switch browser bundle to be used when resuming the flow.
+     * @param bundle The bundle containing the data needed to resume the flow.
+     */
     public static void setSwitchBrowserBundle(@Nullable final Bundle bundle) {
         switchBrowserBundle = bundle;
     }

@@ -77,21 +77,20 @@ class SwitchBrowserProtocolCoordinator(
          */
         fun getIntentToResumeWebViewAuth(context: Context, intentDataString: String): Intent {
             val uri = intentDataString.toUri()
-            val intent = Intent(context, SwitchBrowserActivity::class.java)
-
-            intent.putExtra(
-                SWITCH_BROWSER.ACTION_URI,
-                uri.getQueryParameter(SWITCH_BROWSER.ACTION_URI)
-            )
-            intent.putExtra(
-                SWITCH_BROWSER.CODE,
-                uri.getQueryParameter(SWITCH_BROWSER.CODE)
-            )
-            intent.putExtra(
-                SWITCH_BROWSER.STATE,
-                uri.getQueryParameter(SWITCH_BROWSER.STATE)
-            )
-            return intent
+            return Intent(context, SwitchBrowserActivity::class.java).apply {
+                putExtra(
+                    SWITCH_BROWSER.ACTION_URI,
+                    uri.getQueryParameter(SWITCH_BROWSER.ACTION_URI)
+                )
+                putExtra(
+                    SWITCH_BROWSER.CODE,
+                    uri.getQueryParameter(SWITCH_BROWSER.CODE)
+                )
+                putExtra(
+                    SWITCH_BROWSER.STATE,
+                    uri.getQueryParameter(SWITCH_BROWSER.STATE)
+                )
+            }
         }
     }
 
