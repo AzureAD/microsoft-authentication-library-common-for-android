@@ -59,7 +59,7 @@ import androidx.core.net.toUri
  *
  * @see WebViewAuthorizationFragment
  */
-class SwitchBrowserActivity: FragmentActivity() {
+class SwitchBrowserActivity : FragmentActivity() {
 
     // Flag to track if a Custom Chrome Tab (CCT) has been launched
     private var cctLaunched = false
