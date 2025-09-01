@@ -472,7 +472,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      * Set the switch browser bundle to be used when resuming the flow.
      * @param bundle The bundle containing the data needed to resume the flow.
      */
-    public static void setSwitchBrowserBundle(@Nullable final Bundle bundle) {
+    public static synchronized void setSwitchBrowserBundle(@Nullable final Bundle bundle) {
         switchBrowserBundle = bundle;
     }
 }
