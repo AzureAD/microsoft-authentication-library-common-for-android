@@ -449,7 +449,7 @@ public class AndroidKeyStoreUtil {
                 exception
         );
         if (exception instanceof InvalidKeyException) {
-            final KeyStoreException keyStoreException = findKeyStoreException(exception);
+            final android.security.KeyStoreException keyStoreException = findKeyStoreException(exception);
             String ksMessage = keyStoreException != null ? keyStoreException.getMessage() : "No Keystore Exception Found";
             if (ksMessage == null) {
                 ksMessage = "";
