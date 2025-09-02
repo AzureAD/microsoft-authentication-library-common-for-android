@@ -63,7 +63,9 @@ class WrappedSecretKey(
                 FileUtil.writeDataToFile(byteArray, file)
             }
         } catch (e: Exception) {
-            Logger.error(methodTag, "Failed to store key on disk", e)
+           val errorMessage = "Failed to store key on disk"
+            Logger.error(methodTag, errorMessage , e)
+            throw ClientException(ClientException.IO_ERROR, errorMessage , e)
             throw ClientException(ClientException.IO_ERROR, "Failed to store key on disk", e)
         }
     }
