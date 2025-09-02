@@ -258,8 +258,8 @@ public class OpenIdProviderConfigurationClient {
 
         // For other authorities (e.g. B2C, CIAM), we skip issuer validation
         // since we don't have a clear format of known valid issuers
-        attributesBuilder.
-                put(AttributeName.openid_issuer_invalid_reason.name(), "issuer_validation_skipped") // not necessarily invalid
+        attributesBuilder
+                .put(AttributeName.openid_issuer_invalid_reason.name(), "issuer_validation_skipped") // not necessarily invalid
                 .build();
         sOpenIdProviderConfigurationIssuerValidationFailed.add(1, attributesBuilder.build());
     }
@@ -274,8 +274,3 @@ public class OpenIdProviderConfigurationClient {
         return sanitizedIssuer + V2_0_PATH;
     }
 }
-
-
-
-
-
