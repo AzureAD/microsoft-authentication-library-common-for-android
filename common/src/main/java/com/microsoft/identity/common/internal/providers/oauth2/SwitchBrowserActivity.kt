@@ -24,10 +24,10 @@ package com.microsoft.identity.common.internal.providers.oauth2
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.browser.customtabs.CustomTabsIntent
 import androidx.fragment.app.FragmentActivity
 import com.microsoft.identity.common.logging.Logger
 import androidx.core.net.toUri
+import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
 
 
 /**
@@ -63,6 +63,7 @@ class SwitchBrowserActivity : FragmentActivity() {
 
     // Flag to track if a Custom Chrome Tab (CCT) has been launched
     private var cctLaunched = false
+    private var customTabsManager = CustomTabsManager(this)
 
     companion object {
         private val TAG: String = SwitchBrowserActivity::class.java.simpleName
@@ -131,23 +132,24 @@ class SwitchBrowserActivity : FragmentActivity() {
             "Launching switch browser request on browser: $browserPackageName, Custom Tabs supported: $browserSupportsCustomTabs"
         )
 
-        // Launch browser based on Custom Tabs support
+        // Create an intent to launch the browser
+        val browserIntent: Intent
         if (browserSupportsCustomTabs) {
-            // Use Custom Tabs for better user experience and security
-            Logger.info(methodTag, "Launching Custom Tabs intent for DUNA authentication")
-            val customTabsIntent = CustomTabsIntent.Builder().build().apply {
-                intent.setPackage(browserPackageName)
+            Logger.info(methodTag, "CustomTabsService is supported.")
+            //create customTabsIntent
+            if (!customTabsManager.bind(this, browserPackageName)) {
+                Logger.warn(methodTag, "Failed to bind CustomTabsService.")
+                browserIntent = Intent(Intent.ACTION_VIEW)
+            } else {
+                browserIntent = customTabsManager.customTabsIntent.intent
             }
-            customTabsIntent.launchUrl(this, processUri.toUri())
         } else {
-            // Fallback to standard browser intent
-            Logger.info(methodTag, "Launching standard browser intent for DUNA authentication")
-            val browserIntent = Intent(Intent.ACTION_VIEW).apply {
-                data = processUri.toUri()
-                setPackage(browserPackageName)
-            }
-            startActivity(browserIntent)
+            Logger.warn(methodTag, "CustomTabsService is NOT supported")
+            browserIntent = Intent(Intent.ACTION_VIEW)
         }
+        browserIntent.setPackage(browserPackageName)
+        browserIntent.setData(processUri.toUri())
+        startActivity(browserIntent)
     }
 
     /**
@@ -235,5 +237,10 @@ class SwitchBrowserActivity : FragmentActivity() {
         }
 
         cctLaunched = true
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        customTabsManager.unbind()
     }
 }
