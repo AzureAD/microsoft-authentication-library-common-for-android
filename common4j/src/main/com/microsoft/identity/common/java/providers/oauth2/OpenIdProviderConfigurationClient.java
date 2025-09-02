@@ -241,14 +241,15 @@ public class OpenIdProviderConfigurationClient {
                         .put(AttributeName.openid_issuer_invalid_reason.name(), "issuer_aad_host_mismatch")
                         .build();
                 sOpenIdProviderConfigurationIssuerValidationFailed.add(1, attributesBuilder.build());
+                return;
             }
         } catch (final MalformedURLException e) {
             Logger.error(
                     methodTag,
-                    "Issuer URL is malformed.",
+                    "Request URL is malformed.",
                     e
             );
-        } catch (ClientException e) {
+        } catch (final ClientException e) {
             Logger.error(
                     methodTag,
                     "Failed to complete AAD cloud discovery.",
