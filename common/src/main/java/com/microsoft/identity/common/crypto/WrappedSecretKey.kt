@@ -149,7 +149,7 @@ class WrappedSecretKey(
         }
 
         /**
-         * Determines if the raw data is in new binary format or old binary format.
+         * Determines if the raw data uses the new wrapped key format.
          *
          * @param rawData The raw bytes read from file
          * @return true if data is in new format, false if old format
