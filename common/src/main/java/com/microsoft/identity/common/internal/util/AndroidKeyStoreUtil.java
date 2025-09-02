@@ -474,11 +474,11 @@ public class AndroidKeyStoreUtil {
     }
 
 
-    private static @Nullable KeyStoreException findKeyStoreException(@NonNull Throwable throwable) {
+    private static @Nullable android.security.KeyStoreException findKeyStoreException(@NonNull Throwable throwable) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             while (throwable != null) {
                 if (throwable instanceof android.security.KeyStoreException) {
-                    return (KeyStoreException) throwable;
+                    return (android.security.KeyStoreException) throwable;
                 }
                 throwable = throwable.getCause();
             }
