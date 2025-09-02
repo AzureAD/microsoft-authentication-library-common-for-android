@@ -184,7 +184,7 @@ public class OpenIdProviderConfigurationClient {
      * @param config OpenID Provider configuration
      * @param requestAuthorityStr The authority URL string used to request the configuration document.
      */
-    private void validateIssuer(
+    void validateIssuer(
             @NonNull final OpenIdProviderConfiguration config,
             @NonNull final String requestAuthorityStr
     ) {
@@ -226,15 +226,10 @@ public class OpenIdProviderConfigurationClient {
             final URL requestAuthorityUrl = new URL(requestAuthorityStr);
             final AzureActiveDirectoryCloud requestCloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(requestAuthorityUrl);
             if (requestCloud != null && requestCloud.isValidated()) {
-                // request target is valid AAD cloud (public or sovereign)
-                // if request url and issuer url belong to the same cloud, it's valid
                 final AzureActiveDirectoryCloud issuerCloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(issuerUrl);
-                if (Objects.equals(requestCloud, issuerCloud)) {
-                    return;
-                }
-
-                // Clouds don't match, but if request targets public AAD cloud, it's still valid
-                if (AzureActiveDirectory.isPublicAzureActiveDirectoryCloud(requestAuthorityUrl)) {
+                // Valid if clouds match OR (issuer URL is valid AAD cloud AND request targets public AAD cloud)
+                if (issuerCloud != null && issuerCloud.isValidated() &&
+                        (Objects.equals(requestCloud, issuerCloud) || AzureActiveDirectory.isPublicAzureActiveDirectoryCloud(requestAuthorityUrl))) {
                     return;
                 }
                 attributesBuilder
