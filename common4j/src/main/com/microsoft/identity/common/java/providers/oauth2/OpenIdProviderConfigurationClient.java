@@ -100,7 +100,7 @@ public class OpenIdProviderConfigurationClient {
      */
     private synchronized OpenIdProviderConfiguration loadOpenIdProviderConfigurationInternal(@NonNull final String tenantedAuthorityString, final String extraParams)
             throws ServiceException {
-        final String methodName = ":loadOpenIdProviderConfigurationInternal";
+        final String methodTag = TAG + ":loadOpenIdProviderConfigurationInternal";
 
         try {
             final String baseConfigUrlStr = getConfigRequestBaseUrl(tenantedAuthorityString);
@@ -118,19 +118,19 @@ public class OpenIdProviderConfigurationClient {
             // If we found a result, return it...
             if (null != cacheResult) {
                 Logger.info(
-                        TAG + methodName,
+                        methodTag,
                         "Using cached metadata result."
                 );
                 return cacheResult;
             }
 
             Logger.verbose(
-                    TAG + methodName,
+                    methodTag,
                     "Config URL is valid."
             );
 
             Logger.verbosePII(
-                    TAG + methodName,
+                    methodTag,
                     "Using request URL: " + configUri
             );
 
