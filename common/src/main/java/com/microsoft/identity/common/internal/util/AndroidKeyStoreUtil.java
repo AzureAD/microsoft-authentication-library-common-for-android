@@ -455,11 +455,11 @@ public class AndroidKeyStoreUtil {
             if (keyStoreException != null) {
                 ksMessage = keyStoreException.getMessage();
                 if (ksMessage == null) {
-                    ksMessage = "";
+                    ksMessage = "Keystore exception found, no error message";
                 }
                 ksNumericErrorCode = getNumericErrorCodeFromKeyStoreException(keyStoreException);
             } else {
-                ksMessage = "No Keystore Exception Found";
+                ksMessage = "No keystore exception found";
                 ksNumericErrorCode = "";
             }
 
