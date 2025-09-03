@@ -47,8 +47,6 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -449,18 +447,11 @@ public class AndroidKeyStoreUtil {
                 exception
         );
         if (exception instanceof InvalidKeyException) {
-            final android.security.KeyStoreException keyStoreException = findKeyStoreException(exception);
-            String ksMessage = keyStoreException != null ? keyStoreException.getMessage() : "No Keystore Exception Found";
-            if (ksMessage == null) {
-                ksMessage = "";
-            }
             final Attributes attributes = Attributes.builder()
                     .put(AttributeName.keystore_operation.name(), "unwrap")
                     .put(AttributeName.error_code.name(), errCode)
                     .put(AttributeName.error_type.name(), clientException.getClass().getSimpleName())
                     .put(AttributeName.keystore_exception_stack_trace.name(), ThrowableUtil.getStackTraceAsString(clientException))
-                    .put(AttributeName.keystore_exception_message.name(), ksMessage)
-                    .put(AttributeName.keystore_internal_error_code.name(), extractInternalKeystoreCode(ksMessage))
                     .build();
             sFailedAndroidKeyStoreUnwrapOperationCount.add(1, attributes);
         }
@@ -471,32 +462,5 @@ public class AndroidKeyStoreUtil {
         );
 
         throw clientException;
-    }
-
-
-    private static @Nullable android.security.KeyStoreException findKeyStoreException(@NonNull Throwable throwable) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            while (throwable != null) {
-                if (throwable instanceof android.security.KeyStoreException) {
-                    return (android.security.KeyStoreException) throwable;
-                }
-                throwable = throwable.getCause();
-            }
-            return null;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Use Regex to pull out the internal error code from the key store exception message
-     * @param message the exception message
-     * @return the internal error code, or "N/A" if it can't be found
-     */
-    private static String extractInternalKeystoreCode(final String message) {
-        if (message == null) return "";
-        Pattern pattern = Pattern.compile("internal Keystore code:\\s*(-?\\d+)");
-        Matcher matcher = pattern.matcher(message);
-        return matcher.find() ? matcher.group(1) : "";
     }
 }
