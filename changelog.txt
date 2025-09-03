@@ -1,5 +1,8 @@
 vNext
 ----------
+
+Version 22.1.0-RC1
+----------
 - [PATCH] Fix Switch browser back stack (#2750)
 - [MINOR] Move ests telemetry behind feature flag (#2742)
 - [MINOR] Update Broker ATS flow for Resource Account (#2704)
