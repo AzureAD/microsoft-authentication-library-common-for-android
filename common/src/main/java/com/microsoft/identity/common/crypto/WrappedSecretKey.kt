@@ -63,7 +63,9 @@ class WrappedSecretKey(
                 FileUtil.writeDataToFile(wrappedKeyData, file)
             }
         } catch (e: Exception) {
-            Logger.error(methodTag, "Failed to store key on disk", e)
+           val errorMessage = "Failed to store key on disk"
+            Logger.error(methodTag, errorMessage , e)
+            throw ClientException(ClientException.IO_ERROR, errorMessage , e)
             throw ClientException(ClientException.IO_ERROR, "Failed to store key on disk", e)
         }
     }
@@ -147,7 +149,7 @@ class WrappedSecretKey(
         }
 
         /**
-         * Determines if the raw data is in new binary format or old binary format.
+         * Determines if the raw data uses the new wrapped key format.
          *
          * @param rawData The raw bytes read from file
          * @return true if data is in new format, false if old format
