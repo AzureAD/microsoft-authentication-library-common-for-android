@@ -80,9 +80,9 @@ class CryptoParameterSpecFactory(
     }
 
     // Feature flags to control which key generation specs to use. (evaluated every time accessed)
-    private val keySpecWithPurposeKey get() =
+    private val keySpecWithWrapPurposeKey get() =
         flightsProvider.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY)
-    private val keySpecWithoutPurposeKey get() =
+    private val keySpecWithoutWrapPurposeKey get() =
         flightsProvider.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY)
     private val enableKeyGenEncryptionPaddingRsaOaep get() =
         flightsProvider.isFlightEnabled(CommonFlight.ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING)
@@ -93,8 +93,8 @@ class CryptoParameterSpecFactory(
             methodTag,
             "Initialized CryptoParameterSpecFactory - " +
                     "API: ${Build.VERSION.SDK_INT}, " +
-                    "flags: [purposeKey=$keySpecWithPurposeKey, " +
-                    "withoutPurposeKey=$keySpecWithoutPurposeKey, " +
+                    "flags: [keySpecWithWrapPurposeKey=$keySpecWithWrapPurposeKey, " +
+                    "keySpecWithoutWrapPurposeKey=$keySpecWithoutWrapPurposeKey, " +
                     "oaepSupported=$enableKeyGenEncryptionPaddingRsaOaep]"
         )
     }
@@ -118,7 +118,6 @@ class CryptoParameterSpecFactory(
         )
     }
 
-    @delegate:RequiresApi(Build.VERSION_CODES.M)
     private val keyGenParamSpecWithoutPurposeWrapKey by lazy {
         KeyGenSpec(
             keyAlias = keyAlias,
@@ -144,7 +143,6 @@ class CryptoParameterSpecFactory(
         algorithm = RSA_ALGORITHM
     )
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun getEncryptionPaddingsForKeyGen(): List<String> {
         val paddings = mutableListOf(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
         if (enableKeyGenEncryptionPaddingRsaOaep) {
@@ -184,12 +182,12 @@ class CryptoParameterSpecFactory(
         val specs = mutableListOf<IKeyGenSpec>()
 
         // Add specs in order of preference
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && keySpecWithPurposeKey) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && keySpecWithWrapPurposeKey) {
             // First priority: API 28+ with PURPOSE_WRAP_KEY if enabled
             specs.add(keyGenParamSpecWithPurposeWrapKey)
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && keySpecWithoutPurposeKey) {
+        if (keySpecWithoutWrapPurposeKey) {
             // Second priority: API 23+ without PURPOSE_WRAP_KEY
             specs.add(keyGenParamSpecWithoutPurposeWrapKey)
         }

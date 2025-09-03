@@ -39,7 +39,7 @@ import java.nio.ByteBuffer
  * The new format includes metadata header for better compatibility and extensibility.
  */
 class WrappedSecretKey(
-    val byteArray: ByteArray,
+    val wrappedKeyData: ByteArray,
     val algorithm: String,
     val cipherTransformation: String
 ) {
@@ -52,15 +52,15 @@ class WrappedSecretKey(
     fun storeOnFile(file: File) {
         val methodTag = "WrappedSecretKey:storeOnFile"
         try {
-            val useNewFormat =
+            val useNewSecretKeyFormat =
                 CommonFlightsManager
                     .getFlightsProvider()
                     .isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT)
 
-            if (useNewFormat) {
+            if (useNewSecretKeyFormat) {
                 storeOnFileNewFormat(file)
             } else {
-                FileUtil.writeDataToFile(byteArray, file)
+                FileUtil.writeDataToFile(wrappedKeyData, file)
             }
         } catch (e: Exception) {
             Logger.error(methodTag, "Failed to store key on disk", e)
@@ -87,17 +87,17 @@ class WrappedSecretKey(
             put("algorithm", algorithm)
             put("cipherTransformation", cipherTransformation)
             put("version", FORMAT_VERSION_1)
-            put("keyDataLength", byteArray.size)
+            put("keyDataLength", wrappedKeyData.size)
         }
 
         val metadataBytes = metadata.toString().toByteArray(Charsets.UTF_8)
 
         // Use ByteBuffer for cleaner header writing
-        val output = ByteBuffer.allocate(Int.SIZE_BYTES + Int.SIZE_BYTES + metadataBytes.size + byteArray.size)
+        val output = ByteBuffer.allocate(Int.SIZE_BYTES + Int.SIZE_BYTES + metadataBytes.size + wrappedKeyData.size)
             .putInt(NEW_FORMAT_HEADER_IDENTIFIER)  // Write header length (4 bytes, big-endian)
             .putInt(metadataBytes.size)  // Write metadata length (4 bytes, big-endian)
             .put(metadataBytes)          // Write metadata
-            .put(byteArray)              // Write raw key data
+            .put(wrappedKeyData)              // Write raw key data
             .array()
 
         FileUtil.writeDataToFile(output, file)
@@ -217,7 +217,7 @@ class WrappedSecretKey(
             Logger.info(methodTag, "Loading key using old format with default algorithm and cipher transformation")
 
             return WrappedSecretKey(
-                byteArray = rawData,
+                wrappedKeyData = rawData,
                 algorithm = DEFAULT_ALGORITHM,
                 cipherTransformation = DEFAULT_CIPHER_TRANSFORMATION
             )

@@ -201,7 +201,7 @@ class KeyStoreBackedSecretKeyProvider(
             }
         val (keyWrapped, cipher) = wrapSecretKey(newSecretKey, keyPair)
         WrappedSecretKey(
-            byteArray = keyWrapped,
+            wrappedKeyData = keyWrapped,
             algorithm = AES256SecretKeyGenerator.AES_ALGORITHM,
             cipherTransformation = cipher.transformation
         ).storeOnFile(keyFile)
@@ -315,7 +315,7 @@ class KeyStoreBackedSecretKeyProvider(
                 )
                 Logger.info(methodTag, "Unwrapping secret key with cipher spec: $cipherParamsSpec")
                 val key = AndroidKeyStoreUtil.unwrap(
-                    wrappedSecretKey.byteArray,
+                    wrappedSecretKey.wrappedKeyData,
                     wrappedSecretKey.algorithm,
                     keyPair,
                     cipherParamsSpec.transformation,

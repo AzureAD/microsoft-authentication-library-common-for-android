@@ -67,7 +67,7 @@ class WrappedSecretKeyTest {
     fun constructorCreatesWrappedSecretKeyWithCorrectProperties() {
         val wrappedKey = WrappedSecretKey(testKeyBytes, testAlgorithm, testCipherTransformation)
 
-        assertArrayEquals(testKeyBytes, wrappedKey.byteArray)
+        assertArrayEquals(testKeyBytes, wrappedKey.wrappedKeyData)
         assertEquals(testAlgorithm, wrappedKey.algorithm)
         assertEquals(testCipherTransformation, wrappedKey.cipherTransformation)
     }
@@ -105,7 +105,7 @@ class WrappedSecretKeyTest {
         val loadedKey = WrappedSecretKey.loadFromFile(testFile, 1024)
 
         assertNotNull(loadedKey)
-        assertArrayEquals(originalKey.byteArray, loadedKey!!.byteArray)
+        assertArrayEquals(originalKey.wrappedKeyData, loadedKey!!.wrappedKeyData)
         assertEquals(originalKey.algorithm, loadedKey.algorithm)
         assertEquals(originalKey.cipherTransformation, loadedKey.cipherTransformation)
     }
@@ -125,7 +125,7 @@ class WrappedSecretKeyTest {
         val loadedKey = WrappedSecretKey.loadFromFile(testFile, 1024)
 
         assertNotNull(loadedKey)
-        assertArrayEquals(originalKey.byteArray, loadedKey!!.byteArray)
+        assertArrayEquals(originalKey.wrappedKeyData, loadedKey!!.wrappedKeyData)
         assertEquals("AES", loadedKey.algorithm) // Default value
         assertEquals("RSA/ECB/PKCS1Padding", loadedKey.cipherTransformation) // Default value
     }
@@ -202,7 +202,7 @@ class WrappedSecretKeyTest {
         val loadedKey = WrappedSecretKey.loadFromFile(testFile, 10240)
 
         assertNotNull(loadedKey)
-        assertArrayEquals(largeKeyData, loadedKey!!.byteArray)
+        assertArrayEquals(largeKeyData, loadedKey!!.wrappedKeyData)
         assertEquals(testAlgorithm, loadedKey.algorithm)
         assertEquals(testCipherTransformation, loadedKey.cipherTransformation)
     }
@@ -218,7 +218,7 @@ class WrappedSecretKeyTest {
         val loadedKey = WrappedSecretKey.loadFromFile(testFile, 1024)
 
         assertNotNull(loadedKey)
-        assertArrayEquals(binaryData, loadedKey!!.byteArray)
+        assertArrayEquals(binaryData, loadedKey!!.wrappedKeyData)
         assertEquals("AES", loadedKey.algorithm)
         assertEquals("RSA/ECB/PKCS1Padding", loadedKey.cipherTransformation)
     }
@@ -238,7 +238,7 @@ class WrappedSecretKeyTest {
         val loadedKey = WrappedSecretKey.loadFromFile(testFile, 1024)
 
         assertNotNull(loadedKey)
-        assertArrayEquals(invalidData, loadedKey!!.byteArray) // Should load as raw bytes (old format)
+        assertArrayEquals(invalidData, loadedKey!!.wrappedKeyData) // Should load as raw bytes (old format)
         assertEquals("AES", loadedKey.algorithm)
         assertEquals("RSA/ECB/PKCS1Padding", loadedKey.cipherTransformation)
     }
@@ -275,7 +275,7 @@ class WrappedSecretKeyTest {
         // Verify it can be loaded correctly
         val loadedKey = WrappedSecretKey.loadFromFile(testFile, 1024)
         assertNotNull(loadedKey)
-        assertArrayEquals(testKeyBytes, loadedKey!!.byteArray)
+        assertArrayEquals(testKeyBytes, loadedKey!!.wrappedKeyData)
         assertEquals(testAlgorithm, loadedKey.algorithm)
         assertEquals(testCipherTransformation, loadedKey.cipherTransformation)
     }
@@ -303,7 +303,7 @@ class WrappedSecretKeyTest {
         // Verify it can be read with flight enabled
         val keyWithFlightEnabled = WrappedSecretKey.loadFromFile(testFile, 1024)
         assertNotNull("Key should be readable with flight enabled", keyWithFlightEnabled)
-        assertArrayEquals("Key data should match", originalKey.byteArray, keyWithFlightEnabled!!.byteArray)
+        assertArrayEquals("Key data should match", originalKey.wrappedKeyData, keyWithFlightEnabled!!.wrappedKeyData)
         assertEquals("Algorithm should match", originalKey.algorithm, keyWithFlightEnabled.algorithm)
         assertEquals("Cipher transformation should match", originalKey.cipherTransformation, keyWithFlightEnabled.cipherTransformation)
 
@@ -312,15 +312,15 @@ class WrappedSecretKeyTest {
 
         val keyAfterRollback = WrappedSecretKey.loadFromFile(testFile, 1024)
         assertNotNull("Key should still be readable after flight rollback", keyAfterRollback)
-        assertArrayEquals("Key data should remain intact after rollback", originalKey.byteArray, keyAfterRollback!!.byteArray)
+        assertArrayEquals("Key data should remain intact after rollback", originalKey.wrappedKeyData, keyAfterRollback!!.wrappedKeyData)
         assertEquals("Algorithm should be preserved from metadata", originalKey.algorithm, keyAfterRollback.algorithm)
         assertEquals("Cipher transformation should be preserved from metadata", originalKey.cipherTransformation, keyAfterRollback.cipherTransformation)
 
         // Verify that the format detection correctly identifies this as new format
         // even when the flight is disabled (loadFromFile should still work)
         assertEquals("Both reads should return identical key data",
-                     keyWithFlightEnabled.byteArray.contentToString(),
-                     keyAfterRollback.byteArray.contentToString())
+                     keyWithFlightEnabled.wrappedKeyData.contentToString(),
+                     keyAfterRollback.wrappedKeyData.contentToString())
         assertEquals("Both reads should return identical algorithm",
                      keyWithFlightEnabled.algorithm,
                      keyAfterRollback.algorithm)
@@ -351,7 +351,7 @@ class WrappedSecretKeyTest {
         // Verify it can be read with flight disabled (uses default algorithm and cipher)
         val keyWithFlightDisabled = WrappedSecretKey.loadFromFile(testFile, 1024)
         assertNotNull("Key should be readable with flight disabled", keyWithFlightDisabled)
-        assertArrayEquals("Key data should match", originalKey.byteArray, keyWithFlightDisabled!!.byteArray)
+        assertArrayEquals("Key data should match", originalKey.wrappedKeyData, keyWithFlightDisabled!!.wrappedKeyData)
         assertEquals("Should use default algorithm", "AES", keyWithFlightDisabled.algorithm)
         assertEquals("Should use default cipher transformation", "RSA/ECB/PKCS1Padding", keyWithFlightDisabled.cipherTransformation)
 
@@ -360,14 +360,14 @@ class WrappedSecretKeyTest {
 
         val keyAfterRollout = WrappedSecretKey.loadFromFile(testFile, 1024)
         assertNotNull("Key should still be readable after flight rollout", keyAfterRollout)
-        assertArrayEquals("Key data should remain intact after rollout", originalKey.byteArray, keyAfterRollout!!.byteArray)
+        assertArrayEquals("Key data should remain intact after rollout", originalKey.wrappedKeyData, keyAfterRollout!!.wrappedKeyData)
         assertEquals("Should still use default algorithm for old format", "AES", keyAfterRollout.algorithm)
         assertEquals("Should still use default cipher transformation for old format", "RSA/ECB/PKCS1Padding", keyAfterRollout.cipherTransformation)
 
         // Verify that both reads return the same data (backward compatibility maintained)
         assertEquals("Both reads should return identical key data",
-                     keyWithFlightDisabled.byteArray.contentToString(),
-                     keyAfterRollout.byteArray.contentToString())
+                     keyWithFlightDisabled.wrappedKeyData.contentToString(),
+                     keyAfterRollout.wrappedKeyData.contentToString())
         assertEquals("Both reads should return identical algorithm",
                      keyWithFlightDisabled.algorithm,
                      keyAfterRollout.algorithm)
@@ -459,7 +459,7 @@ class WrappedSecretKeyTest {
 
         val loadedKey = WrappedSecretKey.loadFromFile(testFile, 1024)
         assertNotNull("Key should still be readable after flight rollback", loadedKey)
-        assertArrayEquals("Key data should be preserved", originalKey.byteArray, loadedKey!!.byteArray)
+        assertArrayEquals("Key data should be preserved", originalKey.wrappedKeyData, loadedKey!!.wrappedKeyData)
         assertEquals("Algorithm should be preserved from metadata", originalKey.algorithm, loadedKey.algorithm)
         assertEquals("Cipher transformation should be preserved from metadata", originalKey.cipherTransformation, loadedKey.cipherTransformation)
     }
@@ -486,7 +486,7 @@ class WrappedSecretKeyTest {
 
         val loadedKey = WrappedSecretKey.loadFromFile(testFile, 1024)
         assertNotNull("Legacy key should still be readable after flight rollout", loadedKey)
-        assertArrayEquals("Key data should be preserved", originalKey.byteArray, loadedKey!!.byteArray)
+        assertArrayEquals("Key data should be preserved", originalKey.wrappedKeyData, loadedKey!!.wrappedKeyData)
         assertEquals("Should use default algorithm for legacy format", "AES", loadedKey.algorithm)
         assertEquals("Should use default cipher transformation for legacy format", "RSA/ECB/PKCS1Padding", loadedKey.cipherTransformation)
     }
@@ -570,7 +570,7 @@ class WrappedSecretKeyTest {
         val loadedKey = WrappedSecretKey.loadFromFile(testFile, 1024)
 
         assertNotNull("Small file should be treated as old format", loadedKey)
-        assertArrayEquals("Should load as raw bytes", smallData, loadedKey!!.byteArray)
+        assertArrayEquals("Should load as raw bytes", smallData, loadedKey!!.wrappedKeyData)
         assertEquals("Should use default algorithm", "AES", loadedKey.algorithm)
         assertEquals("Should use default cipher transformation", "RSA/ECB/PKCS1Padding", loadedKey.cipherTransformation)
     }
